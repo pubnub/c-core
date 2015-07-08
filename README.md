@@ -19,6 +19,8 @@ The directories of the library repository are:
 
 - `posix` : Modules and Makefile for POSIX OSes (tested mostly on Linux)
 
+- `openssl`: Modules and Makefile(s) for OpenSSL (on POSIX and Windows)
+
 - `contiki` : Modules and Makefile for the Contiki OS
 
 - `freertos` : Modules and Makefile for the FreeRTOS OS
