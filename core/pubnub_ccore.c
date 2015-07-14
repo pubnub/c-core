@@ -130,6 +130,11 @@ static int simple_parse_response(struct pbcc_context *p)
 }
 
 
+int pbcc_parse_publish_response(struct pbcc_context *p)
+{
+    return simple_parse_response(p);
+}
+
 int pbcc_parse_time_response(struct pbcc_context *p)
 {
     return simple_parse_response(p);

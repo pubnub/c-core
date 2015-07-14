@@ -21,6 +21,13 @@ static int finish(struct pubnub *pb)
             return -1;
         }
         break;
+    case PBTT_PUBLISH:
+        if (pbcc_parse_publish_response(&pb->core) != 0) {
+            DEBUG_PRINTF("parse_publish failed\n");
+            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
+            return -1;
+        }
+        break;
     case PBTT_TIME:
         if (pbcc_parse_time_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_time failed\n");
@@ -126,7 +133,7 @@ next_state:
         break;
     case PBS_TX_ORIGIN:
         if (pbpal_sent(pb)) {
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-ConTiki/0.1\r\nConnection: Keep-Alive\r\n\r\n");
+            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/0.1\r\nConnection: Keep-Alive\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }

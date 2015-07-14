@@ -105,6 +105,24 @@ void pubnub_cancel(pubnub_t *p);
 
     You can't publish if a transaction is in progress in @p p context.
 
+    If transaction is successful, the response from the server will
+    be available va pubnub_get(), as three messages:
+
+    1. Result code (JSON integer): 1 - success, 0 - error (i.e.
+    Invalid character in channel name)
+    2. Description of the result (JSON string)
+    3. Time-token of the server (JSON string)
+
+    Keep in mind that the time token from the publish operation
+    response is _not_ parsed by the library, just relayed to the
+    user. Only time-tokens from the subscribe operation are parsed
+    by the library.
+
+    Also, for all error codes known at the time of this writing, the
+    HTTP error will be set also, so the result of the Pubnub operation
+    will not be @c PNR_OK (but you will still be able to get the
+    result code and the description).
+
     @param p The pubnub context. Can't be NULL
     @param channel The string with the channel (or comma-delimited list
     of channels) to publish to.
@@ -122,6 +140,8 @@ enum pubnub_res pubnub_publish(pubnub_t *p, const char *channel, const char *mes
     with some additional options.
 
     You can't publish if a transaction is in progress in @p p context.
+
+    The response 
 
     @param p The pubnub context. Can't be NULL
     @param channel The string with the channel (or comma-delimited list

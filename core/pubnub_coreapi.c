@@ -30,7 +30,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_publish_prep(&pb->core, channel, message, false, false);
+    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
