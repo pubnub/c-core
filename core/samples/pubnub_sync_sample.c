@@ -45,6 +45,13 @@ int main()
     }
     if (PNR_OK == res) {
         puts("Published!");
+        for (;;) {
+            msg = pubnub_get(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
     }
     else {
         printf("Publishing failed with code: %d\n", res);
