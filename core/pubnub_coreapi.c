@@ -34,7 +34,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -55,7 +55,7 @@ enum pubnub_res pubnub_publishv2(pubnub_t *pb, const char *channel, const char *
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -92,7 +92,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;
-	pbnc_fsm(p);
+        pbnc_fsm(p);
     }
     
     return rslt;
@@ -113,7 +113,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_LEAVE;
         p->core.last_result = PNR_STARTED;
-	pbnc_fsm(p);
+        pbnc_fsm(p);
     }
     
     return rslt;
@@ -134,7 +134,7 @@ enum pubnub_res pubnub_time(pubnub_t *p)
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_TIME;
         p->core.last_result = PNR_STARTED;
-	pbnc_fsm(p);
+        pbnc_fsm(p);
     }
     
     return rslt;
@@ -155,7 +155,7 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, const char *ch
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HISTORY;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -176,7 +176,7 @@ enum pubnub_res pubnub_historyv2(pubnub_t *pb, const char *channel, const char *
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HISTORYV2;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -197,7 +197,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *c
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -218,7 +218,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *pb)
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_GLOBAL_HERENOW;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -239,7 +239,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *pb, const char *uuid)
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_WHERENOW;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -260,7 +260,7 @@ enum pubnub_res pubnub_set_state(pubnub_t *pb, char const *channel, char const *
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;
@@ -281,7 +281,7 @@ enum pubnub_res pubnub_state_get(pubnub_t *pb, char const *channel, char const *
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_STATE_GET;
         pb->core.last_result = PNR_STARTED;
-	pbnc_fsm(pb);
+        pbnc_fsm(pb);
     }
     
     return rslt;

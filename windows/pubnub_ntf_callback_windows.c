@@ -117,9 +117,11 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb)
 {
+	u_long iMode = 1;
     EnterCriticalSection(&m_watcher.mutw);
 
 	printf("pb->socket = %d\n", pb->pal.socket);
+	ioctlsocket(pb->pal.socket, FIONBIO, &iMode);
     save_socket(&m_watcher, pb);
     
     LeaveCriticalSection(&m_watcher.mutw);

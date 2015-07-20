@@ -104,7 +104,14 @@ int main()
         return -1;
     }
     if (PNR_OK == res) {
-        puts("Published!");
+        puts("Published! Response:");
+        for (;;) {
+            msg = pubnub_get(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
     }
     else {
         printf("Publishing failed with code: %d\n", res);
@@ -251,7 +258,7 @@ int main()
         printf("Failed to free the Pubnub context\n");
     }
 
-    puts("Pubnub POSIX callback demo over.");
+    puts("Pubnub callback demo over.");
 
     return 0;
 }

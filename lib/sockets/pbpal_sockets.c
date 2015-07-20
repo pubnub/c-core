@@ -130,8 +130,6 @@ bool pbpal_line_read(pubnub_t *pb)
 {
     uint8_t c;
 
-    DEBUG_PRINTF("pbpal_line_read()\n");
-    WATCH(pb->sock_state, "%d");
     if (pb->readlen == 0) {
         int recvres = recv(pb->pal.socket, pb->ptr, pb->left, 0);
         if (recvres <= 0) {
