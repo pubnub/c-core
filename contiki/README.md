@@ -1,50 +1,35 @@
 # Pubnub client library for Contiki OS
 
+NOTE: This library is a work-in-progress, in pre-alpha state.
+
 Pubnub library for Contiki OS is designed for embedded/constrained
-devices. It consists of just two source files (and their header
-files). The public (user) interface (API) of the library is
-fully documented in Doxygen compatible comments.
+devices. It is a part of the "C-core" repository, using most of
+the "core" modules and providing only the PAL ("Platform Abstraction
+Layer") for the Contiki OS.
 
 There are no special requirements of the library, and it should be
 usable as-is on any platform that Contiki is ported to.
 
-It has only the basic operations: publish, subscribe and "leave",
-and is designed with minimal amount of code in mind. It's data memory
+It is designed with minimal amount of code in mind. It's data memory
 requirements can be tweaked by the user, but are by design static
 and brought down to minimum.
 
 
 ## File Organization
 
-The files of the library repository are:
+The core modules are in `../core` directory.
 
-- `pubnub.h` : the public interface of the library, #include this in
-  your code, and search the comments for documentation. You can also
-  generate Doxygen documentation from it.
+Modules and headers in this directory combine to make the PAL for 
+Contiki OS.
 
-- `pubnub.c` : the implementation of the library, compile &link this
-  with your code
+`pubnubDemo.c` is a simple demo of how the library should be used.
+Build this (with pubnub.c and Contiki) for a basic example of how
+stuff works.
 
-- `pubnub_ccore.c` and `pubnub_ccore.h` : internal module. Compile and
-  link the source (`.c`) with your code and "forget" about the header
-  (`.h`).
+`Makefile` is a basic Makefile to build the pubnubDemo "app". 
+Use are is, or look for clues on how to make one for yourself.
 
-- `pubnubDemo.c` : A simple demo of how the library should be used.
-  Build this (with pubnub.c and Contiki) for a basic example of how
-  stuff works.
-
-- `pubnub.t.c` : The unit test. It uses the cgreen unit testing
-  library and has "total" line coverage (only the lines that _can't_
-  be executed - sanity checks - are not covered). You can look at it
-  to see various ways to interact with the library, but as most test
-  code, it's not very user-friendly. You can also build and run it
-  yourself, if you wish.
-
-- `Makefile` : basic Makefile to build the pubnubDemo "app" and
-  pubnub.t unit test. Use are is, or look for clues on how to make one
-  for yourself.
-
-- `LICENSE` and this `README.md` should be self-explanatory.
+`LICENSE` and this `README.md` should be self-explanatory.
   
   
 ## Design considerations
@@ -78,7 +63,7 @@ The fundamental flow for working with the library is this:
 
 This is ilustrated in pubnubDemo.c, similar to this:
 
-    static pubnub_t *m_pb = pubnub_get_ctx(0);
+    static pubnub_t *m_pb = pubnub_alloc();
     pubnub_init(m_pb, pubkey, subkey);
     
     etimer_set(&et, 3*CLOCK_SECOND);
