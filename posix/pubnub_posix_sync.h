@@ -37,6 +37,7 @@
 #include "pubnub_coreapi.h"
 #include "pubnub_ntf_sync.h"
 #include "pubnub_generate_uuid.h"
+#include "pubnub_blocking_io.h"
 
 
 #endif /* !defined INC_PUBNUB_CONTIKI */

@@ -53,6 +53,9 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t *pb)
 {
+    if (PUBNUB_BLOCKING_IO_SETTABLE) {
+        pb->use_blocking_io = true;
+    }
     pal_init();
     pb->pal.socket = -1;
     pb->sock_state = STATE_NONE;
@@ -93,10 +96,8 @@ bool pbpal_sent(pubnub_t *pb)
     }
     pb->sendptr += r;
     pb->sendlen -= r;
-    if (r < pb->sendlen) {
-        return false;
-    }
-    return true;
+
+    return r >= pb->sendlen;
 }
 
 

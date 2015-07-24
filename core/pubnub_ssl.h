@@ -8,12 +8,10 @@
 #include <stdbool.h>
 
 
-/** @file pubnub_coreapi.h 
-    This is the "Core" API of the Pubnub client library.
-    It has the functions that are present in all variants and
-    platforms and have the same interface in all of them.
-    For the most part, they have the same implementation in
-    all of them, too.
+/** @file pubnub_ssl.h 
+    This is the "SSL/TLS" API of the Pubnub client library.
+    It has functions that pertain to using SSL/TLS to connect
+    to Pubnub. It is supported on platforms that have SSL/TLS.
 */
 
 

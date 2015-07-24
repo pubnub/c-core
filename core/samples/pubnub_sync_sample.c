@@ -18,6 +18,8 @@ int main()
         return -1;
     }
     pubnub_init(pbp, "demo", "demo");
+
+    pubnub_set_non_blocking_io(pbp);
     
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
         pubnub_set_uuid(pbp, "zeka-peka-iz-jendeka");

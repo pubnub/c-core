@@ -78,20 +78,20 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 void socket_watcher_thread(void *arg)
 {
     for (;;) {
-		int rslt;
-		DWORD ms = 200;
+        int rslt;
+        DWORD ms = 200;
         
         WaitForSingleObject(m_watcher.condw, ms);
-
+        
         EnterCriticalSection(&m_watcher.mutw);
         if (0 == m_watcher.apoll_size) {
-			LeaveCriticalSection(&m_watcher.mutw);
-			continue;
-		}
+            LeaveCriticalSection(&m_watcher.mutw);
+            continue;
+        }
         rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
         if (SOCKET_ERROR == rslt) {
             /* error? what to do about it? */
-			printf("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
+            printf("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
         }
         else if (rslt > 0) {
             size_t i;
@@ -117,12 +117,11 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb)
 {
-	u_long iMode = 1;
     EnterCriticalSection(&m_watcher.mutw);
 
-	printf("pb->socket = %d\n", pb->pal.socket);
-	ioctlsocket(pb->pal.socket, FIONBIO, &iMode);
     save_socket(&m_watcher, pb);
+    pb->use_blocking_io = false;
+    pbpal_set_blocking_io(pb);
     
     LeaveCriticalSection(&m_watcher.mutw);
 

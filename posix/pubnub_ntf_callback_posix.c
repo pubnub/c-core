@@ -5,8 +5,8 @@
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
+#include "pbpal.h"
 
-#include <fcntl.h>
 #include <sys/poll.h>
 #include <pthread.h>
 
@@ -120,16 +120,11 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 {
-    int flags;
-
     pthread_mutex_lock(&m_watcher.mutw);
 
     save_socket(&m_watcher, pb, socket);
-    if (-1 == (flags = fcntl(socket, F_GETFL, 0))) {
-        flags = 0;
-    }
-    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-    
+    pb->use_blocking_io = false;
+    pbpal_set_blocking_io(pb);
     pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
 

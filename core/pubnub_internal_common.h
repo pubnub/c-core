@@ -85,6 +85,10 @@ struct pubnub {
 
     struct pubnub_pal pal;
 
+#if PUBNUB_BLOCKING_IO_SETTABLE
+    bool use_blocking_io;
+#endif
+
 #if PUBNUB_USE_SSL
     struct pubnub_ssl_options {
         /** Should the PubNub client establish the connection to

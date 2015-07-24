@@ -42,6 +42,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_ntf_callback.h"
+#include "pubnub_generate_uuid.h"
 
 
 #endif /* !defined INC_PUBNUB_CALLBACK */

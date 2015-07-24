@@ -16,6 +16,11 @@ struct pubnub_pal {
 
 };
 
+
+/** On Windows, one can set I/O to be blocking or non-blocking */
+#define PUBNUB_BLOCKING_IO_SETTABLE 1
+
+
 #include "pubnub_internal_common.h"
 
 

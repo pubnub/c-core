@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_sync.h"
 
+#include "pbpal.h"
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 
@@ -15,6 +16,9 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 {
+    if (PUBNUB_BLOCKING_IO_SETTABLE) {
+        pbpal_set_blocking_io(pb);
+    }
     return 0;
 }
 
