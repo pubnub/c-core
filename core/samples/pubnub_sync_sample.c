@@ -19,7 +19,7 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
-    pubnub_set_non_blocking_io(pbp);
+//    pubnub_set_non_blocking_io(pbp);
     
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
         pubnub_set_uuid(pbp, "zeka-peka-iz-jendeka");
@@ -33,7 +33,7 @@ int main()
     pubnub_set_auth(pbp, "danaske");
 
     puts("Publishing...");
-    res = pubnub_publish(pbp, chan, "\"Hello world from POSIX sync!\"");
+    res = pubnub_publish(pbp, chan, "\"Hello world from sync!\n");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -46,14 +46,10 @@ int main()
         return -1;
     }
     if (PNR_OK == res) {
-        puts("Published!");
-        for (;;) {
-            msg = pubnub_get(pbp);
-            if (NULL == msg) {
-                break;
-            }
-            puts(msg);
-        }
+        printf("Published! Response from Pubnub: %s\n", pubnub_last_publish_result(pbp));
+    }
+    else if (PNR_PUBLISH_FAILED == res) {
+        printf("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp));
     }
     else {
         printf("Publishing failed with code: %d\n", res);

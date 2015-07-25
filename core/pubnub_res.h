@@ -35,7 +35,12 @@ enum pubnub_res {
     PNR_TX_BUFF_TOO_SMALL,
     /** Channel specification / name is invalid. 
      */
-    PNR_INVALID_CHANNEL
+    PNR_INVALID_CHANNEL,
+    /** Publish transaction failed - error returned from Pubnub. To
+        see the reason describing the failure, call
+        pubnub_last_publish_result().
+     */
+    PNR_PUBLISH_FAILED
 };
 
 

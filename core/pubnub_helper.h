@@ -1,0 +1,36 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if !defined INC_PUBNUB_HELPER
+#define	INC_PUBNUB_HELPER
+
+
+#include "pubnub_res.h"
+
+
+/** @file pubnub_helper.h 
+
+    This is a set of "Helper" functions of the Pubnub client library.
+    You don't need this to work with Pubnub client, but they may come
+    in handy.
+*/
+
+/** Possible (known) publish results (outcomes) in the description
+    received from Pubnub.
+ */
+enum pubnub_publish_res {
+  /** Publish succeeded, message sent on the channel */
+  PNPUB_SENT,
+  /** Publish failed, the message had invalid JSON */
+  PNPUB_INVALID_JSON,
+  /** Publish failed, the channel had an invalid character in the name */
+  PNPUB_INVALID_CHAR_IN_CHAN_NAME,
+  /** Publish failed, but we were not able to parse the error description */
+  PNPUB_UNKOWN_ERROR,
+};
+
+/** Parses the given publish @p result. You usually obtain this with
+    pubnub_last_publish_result().
+ */
+enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
+
+
+#endif /* defined INC_PUBNUB_HELPER */

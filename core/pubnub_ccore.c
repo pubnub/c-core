@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subscribe_key)
@@ -130,9 +131,31 @@ static int simple_parse_response(struct pbcc_context *p)
 }
 
 
-int pbcc_parse_publish_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
 {
-    return simple_parse_response(p);
+    char *reply = p->http_reply;
+    int replylen = p->http_buf_len;
+    if (replylen < 2) {
+        return PNR_FORMAT_ERROR;
+    }
+    if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
+        return PNR_FORMAT_ERROR;
+    }
+
+    p->chan_ofs = p->chan_end = 0;
+    p->msg_ofs = p->msg_end = 0;
+
+    reply[replylen-1] = '\0';
+
+    if (split_array(reply + 1)) {
+        if (1 != strtol(reply+1, NULL, 10)) {
+            return PNR_PUBLISH_FAILED;
+        }
+        return PNR_OK;
+    }
+    else {
+        return PNR_FORMAT_ERROR;
+    }
 }
 
 int pbcc_parse_time_response(struct pbcc_context *p)

@@ -105,13 +105,9 @@ void pubnub_cancel(pubnub_t *p);
 
     You can't publish if a transaction is in progress in @p p context.
 
-    If transaction is successful, the response from the server will
-    be available va pubnub_get(), as three messages:
-
-    1. Result code (JSON integer): 1 - success, 0 - error (i.e.
-    Invalid character in channel name)
-    2. Description of the result (JSON string)
-    3. Time-token of the server (JSON string)
+    If transaction is not successful (@c PNR_PUBLISH_FAILED), you can 
+    get the string describing the reason for failure by calling
+    pubnub_last_publish_result().
 
     Keep in mind that the time token from the publish operation
     response is _not_ parsed by the library, just relayed to the
@@ -507,6 +503,14 @@ enum pubnub_res pubnub_last_result(pubnub_t const *p);
 /** Returns the HTTP reply code of the last transaction in the @p p
  * context. */
 int pubnub_last_http_code(pubnub_t const *p);
+
+/** Returns the string of the result of the last `publish` transaction,
+    as returned from Pubnub. If the last transaction is not a publish,
+    or there is some other error, it returns NULL. If the Publish
+    was successfull, it will return "Sent", otherwise a description
+    of the error.
+ */
+char const *pubnub_last_publish_result(pubnub_t const *p);
 
 /** Returns the string of the last received time token on the
     @c p context. After pubnub_init() this should be "0".

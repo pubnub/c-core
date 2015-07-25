@@ -8,6 +8,8 @@
 
 #include "pbpal.h"
 
+#include <stdlib.h>
+
 
 void pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key)
 {
@@ -341,4 +343,18 @@ char const *pubnub_last_time_token(pubnub_t const *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     return pb->core.timetoken;
+}
+
+
+char const *pubnub_last_publish_result(pubnub_t const *pb)
+{
+    char *end;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    if (pb->trans != PBTT_PUBLISH) {
+        return NULL;
+    }
+
+    strtol(pb->core.http_reply + 1, &end, 10);
+    return end + 1;
 }

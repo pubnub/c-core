@@ -99,7 +99,7 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_publish_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a time operation
     (transaction). This checks if the response is valid, and, if it

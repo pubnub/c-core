@@ -9,6 +9,7 @@
 
 static int finish(struct pubnub *pb)
 {
+    enum pubnub_res pbres;
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
     DEBUG_PRINTF("finish('%s')\n", pb->core.http_reply);
     
@@ -22,9 +23,10 @@ static int finish(struct pubnub *pb)
         }
         break;
     case PBTT_PUBLISH:
-        if (pbcc_parse_publish_response(&pb->core) != 0) {
+        pbres = pbcc_parse_publish_response(&pb->core);
+        if (pbres != PNR_OK) {
             DEBUG_PRINTF("parse_publish failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
+            pbntf_trans_outcome(pb, pbres);
             return -1;
         }
         break;

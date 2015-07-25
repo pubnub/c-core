@@ -26,7 +26,7 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
         printf("Published, result: %d\n", result);
         break;
     case PBTT_SUBSCRIBE:
-        printf("Published, result: %d\n", result);
+        printf("Subscribed, result: %d\n", result);
         break;
     case PBTT_LEAVE:
         printf("Left, result: %d\n", result);
@@ -39,6 +39,21 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
         break;
     case PBTT_HISTORYV2:
         printf("Historied v2, result: %d\n", result);
+        break;
+    case PBTT_HERENOW:
+        printf("Here now'ed, result: %d\n", result);
+        break;
+    case PBTT_GLOBAL_HERENOW:
+        printf("Global Here now'ed, result: %d\n", result);
+        break;
+    case PBTT_WHERENOW:
+        printf("Where now'ed, result: %d\n", result);
+        break;
+    case PBTT_SET_STATE:
+        printf("State set, result: %d\n", result);
+        break;
+    case PBTT_STATE_GET:
+        printf("State gotten, result: %d\n", result);
         break;
     default:
         printf("None?! result: %d\n", result);
@@ -89,7 +104,7 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
-    res = pubnub_publish(pbp, chan, "\"Hello world from POSIX callback!\"");
+    res = pubnub_publish(pbp, chan, "\"Hello world from callback!");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -104,14 +119,10 @@ int main()
         return -1;
     }
     if (PNR_OK == res) {
-        puts("Published! Response:");
-        for (;;) {
-            msg = pubnub_get(pbp);
-            if (NULL == msg) {
-                break;
-            }
-            puts(msg);
-        }
+        printf("Published! Response from Pubnub: %s\n", pubnub_last_publish_result(pbp));
+    }
+    else if (PNR_PUBLISH_FAILED == res) {
+        printf("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp));
     }
     else {
         printf("Publishing failed with code: %d\n", res);
