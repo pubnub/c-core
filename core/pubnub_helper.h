@@ -32,5 +32,10 @@ enum pubnub_publish_res {
  */
 enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
 
+/** Returns a string (in English) describing a Pubnub result enum value 
+    @p e.
+ */
+char const* pubnub_res_2_string(enum pubnub_res e);
+
 
 #endif /* defined INC_PUBNUB_HELPER */

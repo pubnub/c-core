@@ -69,7 +69,7 @@ enum pubnub_trans {
         channels) operation/transaction */
     PBTT_GLOBAL_HERENOW,
     /** Where-now (get channels in which an user (identified by UUID)
-        is cuurently present) operation/transaction */
+        is currently present) operation/transaction */
     PBTT_WHERENOW,
     /** Set state (for a user (identified by UUID) on channel(s))
      * operation/transaction */

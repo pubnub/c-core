@@ -2,6 +2,9 @@
 #if !defined INC_PUBNUB_ASSERT
 #define      INC_PUBNUB_ASSERT
 
+#include <stdbool.h>
+
+
 /** The Pubnub ASSERT macros. There are several layers:
     - highest (PUBNUB_ASSERT_LEVEL_EX): all checks enabled, 
     even the long lasting ones
