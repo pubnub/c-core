@@ -50,3 +50,13 @@ bool pnfntst_got_messages(pubnub_t *p, ...)
 
     return !missing;
 }
+
+
+bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const *channel)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
+    PUBNUB_ASSERT_OPT(NULL != message);
+    PUBNUB_ASSERT_OPT(NULL != channel);
+
+    return (strcmp(pubnub_get(p), message) == 0) && (strcmp(pubnub_get_channel(p), channel) == 0);
+}

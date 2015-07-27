@@ -63,6 +63,16 @@ static int finish(struct pubnub *pb)
             return -1;
         }
         break;
+    case PBTT_REMOVE_CHANNEL_GROUP:
+    case PBTT_REMOVE_CHANNEL_FROM_GROUP:
+    case PBTT_ADD_CHANNEL_TO_GROUP:
+    case PBTT_LIST_CHANNEL_GROUP:
+        if (pbcc_parse_channel_registry_response(&pb->core) != 0) {
+            DEBUG_PRINTF("parse_channel_registry failed\n");
+            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
+            return -1;
+        }
+        break;
     default:
         break;
     }

@@ -197,6 +197,13 @@ int pbcc_parse_presence_response(struct pbcc_context *p)
 }
 
 
+int pbcc_parse_channel_registry_response(struct pbcc_context *p)
+{
+    /* For now, let's parse it just like the Presence response */
+    return pbcc_parse_presence_response(p);
+}
+
+
 int pbcc_parse_subscribe_response(struct pbcc_context *p)
 {
     int i;
@@ -603,6 +610,44 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context *pb, char const *channel
         pubnub_uname()
         );
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
+    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+
+    return PNR_STARTED;
+}
+
+
+enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context *pb, char const *channel_group)
+{
+    PUBNUB_ASSERT_OPT(channel_group != NULL);
+
+    pb->http_buf_len = snprintf(
+        pb->http_buf, sizeof pb->http_buf,
+        "/v1/channel-registration/sub-key/%s/channel-group/%s/remove?pnsdk=%s",
+        pb->subscribe_key, channel_group, pubnub_uname()
+        );
+    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+
+    return PNR_STARTED;
+}
+
+
+enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context *pb, char const *channel_group, char const *param, char const *channel)
+{
+    PUBNUB_ASSERT_OPT(channel_group != NULL);
+
+    pb->http_buf_len = snprintf(
+        pb->http_buf, sizeof pb->http_buf,
+        "/v1/channel-registration/sub-key/%s/channel-group/%s?pnsdk=%s",
+        pb->subscribe_key, channel_group, pubnub_uname()
+        );
+    if (NULL != param) {
+        PUBNUB_ASSERT_OPT(channel != NULL);
+        APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+        enum pubnub_res rslt = append_url_param(pb, param, strlen(param), channel, '&');
+        if (rslt != PNR_OK) {
+            return rslt;
+        }
+    }
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
 
     return PNR_STARTED;

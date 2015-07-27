@@ -497,6 +497,105 @@ enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *c
 */
 enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *channel_group, const char *uuid);
 
+/** Removes a @p channel_group and all its channels. This actually
+    means "initiate a remove_channel_group transaction". It can be
+    thought of as an update against the "channel group database".
+
+    If transaction is successful, the response will be a available
+    via pubnub_get() as one message, a JSON object with keys:
+
+    - "service": should be "channel-registry"
+    - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+    - "error": true on error, false on success
+    - "message": the string/message describing the status ("OK"...)
+
+    You can't remove a channel group if a transaction is in progress
+    on the context.
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel_group The channel group to remove
+
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_remove_channel_group(pubnub_t *p, char const *channel_group);
+
+/** Removes a @p channel from the @p channel_group . This actually
+    means "initiate a remove_channel_from_channel_group
+    transaction". It can be thought of as an update against the
+    "channel group database".
+
+    You can't remove the last channel from a channel group. To do
+    that, remove the channel group itself.
+
+    If transaction is successful, the response will be a available
+    via pubnub_get() as one message, a JSON object with keys:
+
+    - "service": should be "channel-registry"
+    - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+    - "error": true on error, false on success
+    - "message": the string/message describing the status ("OK"...)
+
+    You can't remove a channel from a channel group if a transaction
+    is in progress on the context.
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel_group The channel to remove
+    @param channel_group The channel group to remove from
+
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channel, char const *channel_group);
+
+/** Adds a @p channel to the @p channel_group . This actually means
+    "initiate a add_channel_to_channel_group transaction". It can be
+    thought of as an update against the "channel group database".
+
+    If the channel group doesn't exist, this implicitly adds (creates)
+    it.
+
+    If transaction is successful, the response will be a available
+    via pubnub_get() as one message, a JSON object with keys:
+
+    - "service": should be "channel-registry"
+    - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+    - "error": true on error, false on success
+    - "message": the string/message describing the status ("OK"...)
+
+    You can't add a channel to a channel group if a transaction
+    is in progress on the context.
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel_group The channel to add
+    @param channel_group The channel group to add to
+
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, char const *channel_group);
+
+/** Lists all channels of a @p channel_group. This actually
+    means "initiate a list_channel_group transaction". It can be
+    thought of as a query against the "channel group database".
+
+    If transaction is successful, the response will be a available
+    via pubnub_get() as one message, a JSON object with keys:
+
+    - "service": should be "channel-registry"
+    - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+    - "error": true on error, false on success
+    - "payload": JSON object with keys "group" with value the string
+    of the channel group name and "channels" with value a JSON array
+    of strings with names of the channels that belong to the group
+
+    You can't remove a channel group if a transaction is in progress
+    on the context.
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel_group The channel group to remove
+
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group);
+
 /** Returns the result of the last transaction in the @p p context. */
 enum pubnub_res pubnub_last_result(pubnub_t const *p);
 
@@ -518,6 +617,7 @@ char const *pubnub_last_publish_result(pubnub_t const *p);
     @return A read only string of the last received time token
  */
 char const *pubnub_last_time_token(pubnub_t const *p);
+
 
 
 #endif /* defined INC_PUBNUB_COREAPI */

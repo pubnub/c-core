@@ -77,6 +77,18 @@ enum pubnub_trans {
     /** Get state (for a user (identified by UUID) on channel(s))
      * operation/transaction */
     PBTT_STATE_GET,
+    /** Remove a channel group (from the channel-registry)
+     * operation/transaction */
+    PBTT_REMOVE_CHANNEL_GROUP,
+    /** Remove a channel from a channel group (in the channel-registry)
+     * operation/transaction */
+    PBTT_REMOVE_CHANNEL_FROM_GROUP,
+    /** Add a channel to a channel group (in the channel-registry)
+     * operation/transaction */
+    PBTT_ADD_CHANNEL_TO_GROUP,
+    /** Get a list of all channels in a channel group (from the
+     * channel-registry) operation/transaction */
+    PBTT_LIST_CHANNEL_GROUP,
 };
 
 

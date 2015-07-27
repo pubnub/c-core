@@ -142,6 +142,19 @@ int pbcc_parse_historyv2_response(struct pbcc_context *p);
 */
 int pbcc_parse_presence_response(struct pbcc_context *p);
 
+/** Parses the string received as a response for a channel-registry
+    operation (transaction). It is done on several user requests
+    (add/remove channel (from/to) channel group, list (channels
+    in a) channel group, remove channel group).
+
+    This checks if the response is valid (a JSON object), and, if it
+    is, enables getting it, as a whole, in one pubnub_get().
+
+    @param p The Pubnub C core context to parse the response "in"
+    @return 0: OK, -1: error (invalid response)
+*/
+int pbcc_parse_channel_registry_response(struct pbcc_context *p);
+
 /** Prepares the Publish operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
@@ -191,5 +204,15 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context *p, char const *channel,
     formatting the URI of the HTTP request.
 */
 enum pubnub_res pbcc_state_get_prep(struct pbcc_context *p, char const *channel, char const *channel_group, const char *uuid);
+
+/** Preparse the Remove channel group operation (transaction) , mostly by
+    formatting the URI of the HTTP request.
+*/
+enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context *p, char const *channel_group);
+
+/** Preparse an operation (transaction) against the channel registry,
+    mostly by formatting the URI of the HTTP request.
+*/
+enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context *p, char const *channel_group, char const *param, char const *channel);
 
 #endif /* !defined INC_PUBNUB_CCORE */

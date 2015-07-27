@@ -290,6 +290,90 @@ enum pubnub_res pubnub_state_get(pubnub_t *pb, char const *channel, char const *
 }
 
 
+enum pubnub_res pubnub_remove_channel_group(pubnub_t *pb, char const *channel_group)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    if (pb->state != PBS_IDLE) {
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_remove_channel_group_prep(&pb->core, channel_group);
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_REMOVE_CHANNEL_GROUP;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+    }
+    
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *pb, char const *channel, char const *channel_group)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    if (pb->state != PBS_IDLE) {
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_channel_registry_prep(&pb->core, channel_group, "remove", channel);
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_REMOVE_CHANNEL_FROM_GROUP;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+    }
+    
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_add_channel_to_group(pubnub_t *pb, char const *channel, char const *channel_group)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    if (pb->state != PBS_IDLE) {
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_channel_registry_prep(&pb->core, channel_group, "add", channel);
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_ADD_CHANNEL_TO_GROUP;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+    }
+    
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_list_channel_group(pubnub_t *pb, char const *channel_group)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    if (pb->state != PBS_IDLE) {
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_channel_registry_prep(&pb->core, channel_group, NULL, NULL);
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_LIST_CHANNEL_GROUP;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+    }
+    
+    return rslt;
+}
+
+
 void pubnub_cancel(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
