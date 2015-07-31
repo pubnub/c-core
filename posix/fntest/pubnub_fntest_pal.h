@@ -25,6 +25,16 @@
 
 #define TEST_YIELD() sched_yield()
 
+#define TEST_SLEEP_FOR(ms)                              \
+    do {                                                \
+        struct timespec req_ = {0};                     \
+        time_t sec_ = (int)((ms) / 1000);               \
+        req_.tv_sec = sec_;                             \
+        req_.tv_nsec = ((ms) - (sec_*1000)) * 1000000L; \
+        while (nanosleep(&req_, &req_) == -1)           \
+            continue;                                   \
+    } while(0)
+
 #define expect(exp)                                                     \
     if (exp) {}                                                         \
     else {                                                              \
@@ -143,6 +153,7 @@
     } while (0)
 
 
+#define await_console() /* TBD */
 
 
 #endif /* !defined INC_PUBNUB_FNTEST_PAL */
