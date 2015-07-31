@@ -266,7 +266,7 @@ bool pbpal_closed(pubnub_t *pb)
 
 void pbpal_forget(pubnub_t *pb)
 {
-    /* a no-op under POSIX / sockets */
+    /* a no-op under BSD-ish sockets */
 }
 
 
@@ -278,6 +278,7 @@ void pbpal_close(pubnub_t *pb)
         pbntf_lost_socket(pb, pb->pal.socket);
         closesocket(pb->pal.socket);
         pb->pal.socket = -1;
+		pb->sock_state = STATE_NONE;
     }
 }
 
