@@ -2,6 +2,7 @@
 #include "pubnub_fntest.h"
 
 #include "pubnub_fntest_basic.h"
+#include "pubnub_fntest_medium.h"
 
 #include <pthread.h>
 
@@ -24,14 +25,31 @@ struct TestData {
 
 
 static struct TestData m_aTest[] =  {
-    LIST_TEST(basic_conn_pub),
-    LIST_TEST(basic_conn_rx),
-/*    LIST_TEST(medium_conn_pub),
-    LIST_TEST(medium_conn_rx),
-    LIST_TEST(medium_complex_rx_tx),
-    LIST_TEST(medium_conn_disc_conn_again),
-    LIST_TEST(medium_wrong_api),
-    LIST_TEST(medium_cloud_err)*/
+    LIST_TEST(simple_connect_and_send_over_single_channel),
+    LIST_TEST(connect_and_send_over_several_channels_simultaneously),
+	LIST_TEST(simple_connect_and_send_over_single_channel_in_group),
+	LIST_TEST(connect_and_send_over_several_channels_in_group_simultaneously),
+	LIST_TEST(connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
+	LIST_TEST(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
+	LIST_TEST(simple_connect_and_receiver_over_single_channel),
+	LIST_TEST(connect_and_receive_over_several_channels_simultaneously),
+	LIST_TEST(simple_connect_and_receiver_over_single_channel_in_group),
+	LIST_TEST(connect_and_receive_over_several_channels_in_group_simultaneously),
+	LIST_TEST(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
+	LIST_TEST(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
+/*	LIST_TEST(broken_connection_test),
+	LIST_TEST(broken_connection_test_multi),
+	LIST_TEST(broken_connection_test_group),
+	LIST_TEST(broken_connection_test_multi_in_group),
+	LIST_TEST(broken_connection_test_group_in_group_out),
+	LIST_TEST(broken_connection_test_group_multichannel_out),*/
+
+	LIST_TEST(complex_send_and_receive_over_several_channels_simultaneously),
+	LIST_TEST(complex_send_and_receive_over_channel_plus_group_simultaneously),
+	LIST_TEST(connect_disconnect_and_connect_again),
+/*	LIST_TEST(connect_disconnect_and_connect_again_group),
+	LIST_TEST(connect_disconnect_and_connect_again_combo),
+	LIST_TEST(wrong_api_usage),*/
 };
 
 #define TEST_COUNT (sizeof m_aTest / sizeof m_aTest[0])
