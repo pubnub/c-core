@@ -331,7 +331,7 @@ int main()
         printf("Failed to free the Pubnub context\n");
     }
 
-    puts("Pubnub POSIX sync demo over.");
+    puts("Pubnub sync demo over.");
 
     return 0;
 }
