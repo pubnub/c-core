@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_posix_sync.h"
+#include "pubnub_sync.h"
 
 #include <stdio.h>
 
