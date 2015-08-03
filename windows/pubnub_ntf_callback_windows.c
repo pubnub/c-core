@@ -141,11 +141,11 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
-void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_res result)
+void pbntf_trans_outcome(pubnub_t *pb)
 {
-    PBNTF_TRANS_OUTCOME_COMMON(pb, result);
+    PBNTF_TRANS_OUTCOME_COMMON(pb);
     if (pb->cb != NULL) {
-        pb->cb(pb, pb->trans, result);
+        pb->cb(pb, pb->trans, pb->core.last_result);
     }
 }
 

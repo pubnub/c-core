@@ -104,7 +104,7 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
-    res = pubnub_publish(pbp, chan, "\"Hello world from callback!");
+    res = pubnub_publish(pbp, chan, "\"Hello world from callback!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);

@@ -10,16 +10,18 @@
 	by a particular message.
 
 */
-#define PBNTF_TRANS_OUTCOME_COMMON(pb, result) do {                     \
-        (pb)->core.last_result = result;                                \
-        DEBUG_PRINTF("Pubnub: Transaction outcome: %d, HTTP code: %d\n", (result), (pb)->core.http_code); \
-        switch (result) {												\
-		case PNR_FORMAT_ERROR:											\
-		case PNR_TIMEOUT:												\
-		case PNR_IO_ERROR:												\
+#define PBNTF_TRANS_OUTCOME_COMMON(pb) do {                     \
+        enum pubnub_res M_pbrslt_ = (pb)->core.last_result;             \
+        DEBUG_PRINTF("Pubnub: Transaction outcome: %d, HTTP code: %d\n", M_pbrslt_, (pb)->core.http_code); \
+        switch (M_pbrslt_) {                                            \
+        case PNR_FORMAT_ERROR:                                          \
+        case PNR_TIMEOUT:                                               \
+        case PNR_IO_ERROR:                                              \
             (pb)->core.timetoken[0] = '0';                              \
             (pb)->core.timetoken[1] = '\0';                             \
-			break;														\
+            break;                                                      \
+        default:                                                        \
+            break;                                                      \
         }                                                               \
         (pb)->state = PBS_IDLE;                                         \
     } while(0)

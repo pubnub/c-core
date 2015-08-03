@@ -2,7 +2,7 @@ PROJECT_SOURCEFILES = pubnub_coreapi.c pubnub_ccore.c pubnub_netcore.c pubnub_al
 
 all: unittest
 
-CFLAGS += -D VERBOSE_DEBUG -I. -I test
+CFLAGS +=-g -D VERBOSE_DEBUG -I. -I test
 
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 	gcc -o pubnub_core_unit_test.so -shared $(CFLAGS) -Wall -fprofile-arcs -ftest-coverage -fPIC $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm

@@ -7,48 +7,50 @@
 #include <string.h>
 
 
-static int finish(struct pubnub *pb)
+static void outcome_detected(struct pubnub *pb, enum pubnub_res rslt)
 {
-    enum pubnub_res pbres;
+    pbpal_close(pb);
+    pb->core.last_result = rslt;
+    pb->state = PBS_WAIT_CLOSE;
+}
+
+
+static void finish(struct pubnub *pb)
+{
+    enum pubnub_res pbres = PNR_OK;
+
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
     DEBUG_PRINTF("finish('%s')\n", pb->core.http_reply);
     
-    pbpal_close(pb);
     switch (pb->trans) {
     case PBTT_SUBSCRIBE:
         if (pbcc_parse_subscribe_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_subscribe failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_PUBLISH:
         pbres = pbcc_parse_publish_response(&pb->core);
         if (pbres != PNR_OK) {
             DEBUG_PRINTF("parse_publish failed\n");
-            pbntf_trans_outcome(pb, pbres);
-            return -1;
         }
         break;
     case PBTT_TIME:
         if (pbcc_parse_time_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_time failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_HISTORY:
         if (pbcc_parse_history_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_history failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_HISTORYV2:
         if (pbcc_parse_historyv2_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_historyv2 failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_LEAVE:
@@ -59,8 +61,7 @@ static int finish(struct pubnub *pb)
     case PBTT_STATE_GET:
         if (pbcc_parse_presence_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_presence failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_REMOVE_CHANNEL_GROUP:
@@ -69,15 +70,18 @@ static int finish(struct pubnub *pb)
     case PBTT_LIST_CHANNEL_GROUP:
         if (pbcc_parse_channel_registry_response(&pb->core) != 0) {
             DEBUG_PRINTF("parse_channel_registry failed\n");
-            pbntf_trans_outcome(pb, PNR_FORMAT_ERROR);
-            return -1;
+            pbres = PNR_FORMAT_ERROR;
         }
         break;
     default:
         break;
     }
-    
-    return 0;
+
+    if ((PNR_OK == pbres) && ((pb->core.http_code / 100) != 2)) {
+        pbres = PNR_HTTP_ERROR;
+    }
+
+    outcome_detected(pb, pbres);
 }
 
 
@@ -86,6 +90,7 @@ int pbnc_fsm(struct pubnub *pb)
     enum pubnub_res pbrslt;
 
     DEBUG_PRINTF("pbnc_fsm()\n");
+
 next_state:
     WATCH(pb->state, "%d");
     switch (pb->state) {
@@ -95,19 +100,20 @@ next_state:
     case PBS_WAIT_DNS:
         pbrslt = pbpal_resolv_and_connect(pb);
         switch (pbrslt) {
-		case PNR_IN_PROGRESS:
+        case PNR_IN_PROGRESS:
             pb->state = PBS_WAIT_DNS;
             break;
-		case PNR_STARTED:
+        case PNR_STARTED:
             pb->state = PBS_CONNECT;
             break;
-		case PNR_OK:
+        case PNR_OK:
             pb->state = PBS_CONNECT;
             goto next_state;
-		default:
-			pbntf_trans_outcome(pb, pbrslt);
-			break;
-		}
+        default:
+            pb->core.last_result = pbrslt;
+            pbntf_trans_outcome(pb);
+            break;
+        }
         break;
     case PBS_CONNECT:
         if (pbpal_connected(pb)) {
@@ -120,8 +126,7 @@ next_state:
         if (pbpal_sent(pb)) {
             pb->state = PBS_TX_PATH;
             if (-1 == pbpal_send_str(pb, pb->core.http_buf)) {
-                pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                pbpal_close(pb);
+                outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
             goto next_state;
@@ -138,8 +143,7 @@ next_state:
         if (pbpal_sent(pb)) {
             pb->state = PBS_TX_ORIGIN;
             if (-1 == pbpal_send_str(pb, PUBNUB_ORIGIN)) {
-                pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                pbpal_close(pb);
+                outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
             goto next_state;
@@ -164,8 +168,7 @@ next_state:
         DEBUG_PRINTF("PBS_RX_HTTP_VER\n");
         if (pbpal_line_read(pb)) {
             if (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0) {
-                pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                pbpal_close(pb);
+                outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
             pb->core.http_code = atoi(pb->core.http_buf + 9);
@@ -200,8 +203,7 @@ next_state:
             else if (strncmp(pb->core.http_buf, h_length, sizeof h_length - 1) == 0) {
                 pb->core.http_content_len = atoi(pb->core.http_buf + sizeof h_length - 1);
                 if (pb->core.http_content_len > PUBNUB_REPLY_MAXLEN) {
-                    pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                    pbpal_close(pb);
+                    outcome_detected(pb, PNR_IO_ERROR);
                     break;
                 }
             }
@@ -216,12 +218,7 @@ next_state:
             pb->state = PBS_RX_BODY_WAIT;
         }
         else {
-            if (0 == finish(pb)) {
-                pb->state = PBS_WAIT_CLOSE;
-            }
-            else {
-                break;
-            }
+            finish(pb);
         }
         goto next_state;
     case PBS_RX_BODY_WAIT:
@@ -247,24 +244,18 @@ next_state:
             pb->core.http_content_len = strtoul(pb->core.http_buf, NULL, 16);
             DEBUG_PRINTF("About to read a chunk w/length: %d\n", pb->core.http_content_len);
             if (pb->core.http_content_len == 0) {
-                if (0 == finish(pb)) {
-                    pb->state = PBS_WAIT_CLOSE;
-                    goto next_state;
-                }
-                break;
+                finish(pb);
             }
-            if (pb->core.http_content_len > sizeof pb->core.http_buf) {
-                pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                pbpal_close(pb);
-                break;
+            else if (pb->core.http_content_len > sizeof pb->core.http_buf) {
+                outcome_detected(pb, PNR_IO_ERROR);
             }
-            if (pb->core.http_buf_len + pb->core.http_content_len > PUBNUB_REPLY_MAXLEN) {
-                pbntf_trans_outcome(pb, PNR_IO_ERROR);
-                pbpal_close(pb);
-                break;
+            else if (pb->core.http_buf_len + pb->core.http_content_len > PUBNUB_REPLY_MAXLEN) {
+                outcome_detected(pb, PNR_IO_ERROR);
             }
-            pbpal_start_read(pb, pb->core.http_content_len + 2);
-            pb->state = PBS_RX_BODY_CHUNK;
+            else {
+                pbpal_start_read(pb, pb->core.http_content_len + 2);
+                pb->state = PBS_RX_BODY_CHUNK;
+            }
             goto next_state;
         }
         break;
@@ -283,7 +274,7 @@ next_state:
     case PBS_WAIT_CLOSE:
         if (pbpal_closed(pb)) {
             pbpal_forget(pb);
-            pbntf_trans_outcome(pb, (pb->core.http_code / 100 == 2) ? PNR_OK : PNR_HTTP_ERROR);
+            pbntf_trans_outcome(pb);
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -294,7 +285,8 @@ next_state:
         if (pbpal_closed(pb)) {
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
-            pbntf_trans_outcome(pb, PNR_CANCELLED);
+            pb->core.last_result = PNR_CANCELLED;
+            pbntf_trans_outcome(pb);
         }
         break;
     }

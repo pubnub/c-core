@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_callback.h"
 
-#define PUBNUB_CALLBACK_API
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
@@ -79,8 +78,10 @@ void* socket_watcher_thread(void *arg)
 {
     for (;;) {
         struct timespec timspec;
-        timspec.tv_sec = time(NULL) + 1;
-        timspec.tv_nsec = 0;
+
+        clock_gettime(CLOCK_MONOTONIC, &timspec);
+        timspec.tv_sec = (timspec.tv_nsec + 300) / 1000;
+        timspec.tv_nsec = (timspec.tv_nsec + 300) % 1000;
         
         pthread_mutex_lock(&m_watcher.mutw);
         
@@ -93,7 +94,7 @@ void* socket_watcher_thread(void *arg)
         else if (rslt > 0) {
             size_t i;
             for (i = 0; i < m_watcher.apoll_size; ++i) {
-                if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
+                if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT | POLLHUP)) {
                     pbnc_fsm(m_watcher.apb[i]);
                 }
             }
@@ -141,11 +142,11 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
-void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_res result)
+void pbntf_trans_outcome(pubnub_t *pb)
 {
-    PBNTF_TRANS_OUTCOME_COMMON(pb, result);
+    PBNTF_TRANS_OUTCOME_COMMON(pb);
     if (pb->cb != NULL) {
-        pb->cb(pb, pb->trans, result);
+        pb->cb(pb, pb->trans, pb->core.last_result);
     }
 }
 

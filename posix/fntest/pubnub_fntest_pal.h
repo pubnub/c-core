@@ -153,7 +153,7 @@
     } while (0)
 
 
-#define await_console() /* TBD */
+#define await_console() do {} while ('\n' != getchar())
 
 
 #endif /* !defined INC_PUBNUB_FNTEST_PAL */

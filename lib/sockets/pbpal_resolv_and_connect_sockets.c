@@ -38,7 +38,6 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     for (res = result; res != NULL; res = res->ai_next) {
         pb->pal.socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (pb->pal.socket == INVALID_SOCKET) {
-			printf("socket() failed, WSAGetLastError() == %d\n", WSAGetLastError());
             continue;
         }
         if (connect(pb->pal.socket, res->ai_addr, res->ai_addrlen) == SOCKET_ERROR) {

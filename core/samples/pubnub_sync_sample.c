@@ -33,7 +33,7 @@ int main()
     pubnub_set_auth(pbp, "danaske");
 
     puts("Publishing...");
-    res = pubnub_publish(pbp, chan, "\"Hello world from sync!\n");
+    res = pubnub_publish(pbp, chan, "\"Hello world from sync!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
