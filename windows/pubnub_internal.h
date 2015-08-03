@@ -21,8 +21,15 @@ struct pubnub_pal {
 #define PUBNUB_BLOCKING_IO_SETTABLE 1
 
 
-#include "pubnub_internal_common.h"
+#if defined(_MSC_VER)
+/** Microsoft C compiler (at least up to VS2015) does not provide a 
+	standard-conforming snprintf(), so we bring our own.
+	*/
+int snprintf(char *buffer, size_t n, const char *format, ...);
+#endif
 
+
+#include "pubnub_internal_common.h"
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL */

@@ -232,7 +232,7 @@ int main()
         }
     }
     else {
-        printf("Getting time failed with code: %d\n", res);
+        printf("Getting history failed with code: %d\n", res);
     }
 
     puts("Getting history v2 with include_token...");
@@ -261,7 +261,7 @@ int main()
         }
     }
     else {
-        printf("Getting time failed with code: %d\n", res);
+        printf("Getting historyv2 failed with code: %d\n", res);
     }
 
     /* We're done */

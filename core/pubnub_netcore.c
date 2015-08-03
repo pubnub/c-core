@@ -83,7 +83,7 @@ static int finish(struct pubnub *pb)
 
 int pbnc_fsm(struct pubnub *pb)
 {
-    int rslt;
+    enum pubnub_res pbrslt;
 
     DEBUG_PRINTF("pbnc_fsm()\n");
 next_state:
@@ -93,19 +93,21 @@ next_state:
         break;
     case PBS_IDLE:
     case PBS_WAIT_DNS:
-        rslt = pbpal_resolv_and_connect(pb);
-        if (-1 == rslt) {
+        pbrslt = pbpal_resolv_and_connect(pb);
+        switch (pbrslt) {
+		case PNR_IN_PROGRESS:
             pb->state = PBS_WAIT_DNS;
             break;
-        }
-        else if (+1 == rslt) {
+		case PNR_STARTED:
             pb->state = PBS_CONNECT;
             break;
-        }
-        else {
+		case PNR_OK:
             pb->state = PBS_CONNECT;
             goto next_state;
-        }
+		default:
+			pbntf_trans_outcome(pb, pbrslt);
+			break;
+		}
         break;
     case PBS_CONNECT:
         if (pbpal_connected(pb)) {

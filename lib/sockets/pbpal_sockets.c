@@ -236,7 +236,7 @@ bool pbpal_read_over(pubnub_t *pb)
     pb->left -= pb->readlen;
     pb->readlen = 0;
 
-    if (pbpal_read_len(pb) >= pb->len) {
+    if (pbpal_read_len(pb) >= (int)pb->len) {
         /* If we have read all that was requested, we're done. */
         DEBUG_PRINTF("Read all that was to be read.\n");
         pb->sock_state = STATE_NONE;

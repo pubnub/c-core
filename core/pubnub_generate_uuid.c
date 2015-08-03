@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_config.h"
+#include "pubnub_internal.h"
 #include "pubnub_generate_uuid.h"
 
 #include <string.h>

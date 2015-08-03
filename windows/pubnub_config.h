@@ -34,7 +34,7 @@
  * the memory size of the whole pubnub context, but it is also an
  * upper bound on URL-encoded form of published message, so if you
  * need to construct big messages, you may need to raise this.  */
-#define PUBNUB_BUF_MAXLEN 256
+#define PUBNUB_BUF_MAXLEN 1024
 
 /** Maximum length of the HTTP reply. The other major component of the
  * memory size of the PubNub context, beside #PUBNUB_BUF_MAXLEN.
@@ -42,15 +42,7 @@
  * instead, #PNR_FORMAT_ERROR will be reported. Specifically, this may
  * cause lost messages returned by subscribe if too many too large
  * messages got queued on the Pubnub server. */
-#define PUBNUB_REPLY_MAXLEN 1024
-
-/** If defined, the PubNub implementation will not try to catch-up on
- * messages it could miss while subscribe failed with an IO error or
- * such.  Use this if missing some messages is not a problem.  
- *
- * @note messages may sometimes still be lost due to potential @ref
- * PUBNUB_REPLY_MAXLEN overrun issue */
-#define PUBNUB_MISSMSG_OK 1
+#define PUBNUB_REPLY_MAXLEN 2048
 
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
@@ -59,15 +51,6 @@
 
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
-
-#if !defined PUBNUB_USE_MDNS
-/** If `1`, the MDNS module will be used to handle the DNS
-        resolving. If `0` the "resolv" module will be used.
-        This is a temporary solution, it is expected that ConTiki
-        will unify those two modules.
-*/
-#define PUBNUB_USE_MDNS 1
-#endif
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */

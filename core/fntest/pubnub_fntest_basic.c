@@ -448,7 +448,7 @@ TEST_DEF(broken_connection_test) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch", NULL), PNR_STARTED);
@@ -458,7 +458,7 @@ TEST_DEF(broken_connection_test) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 3\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
 
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
@@ -496,7 +496,7 @@ TEST_DEF(broken_connection_test_multi) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
@@ -521,9 +521,14 @@ TEST_DEF(broken_connection_test_group) {
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, "demo", "demo");
 
+    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
+    await_timed(5*SECONDS, PNR_OK, pbp);
+	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
 	pubnub_get(pbp);
+
+	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
 
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -539,7 +544,7 @@ TEST_DEF(broken_connection_test_group) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
@@ -549,7 +554,7 @@ TEST_DEF(broken_connection_test_group) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 3\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
 
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
@@ -573,9 +578,14 @@ TEST_DEF(broken_connection_test_multi_in_group) {
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, "demo", "demo");
 
+    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
+    await_timed(5*SECONDS, PNR_OK, pbp);
+	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "ch,two", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
 	pubnub_get(pbp);
+
+	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
 
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -595,7 +605,7 @@ TEST_DEF(broken_connection_test_multi_in_group) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
@@ -624,9 +634,14 @@ TEST_DEF(broken_connection_test_group_in_group_out) {
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, "demo", "demo");
 
+    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
+    await_timed(5*SECONDS, PNR_OK, pbp);
+	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
 	pubnub_get(pbp);
+
+	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
 
     expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -646,7 +661,7 @@ TEST_DEF(broken_connection_test_group_in_group_out) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
@@ -675,9 +690,14 @@ TEST_DEF(broken_connection_test_group_multichannel_out) {
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, "demo", "demo");
 
+    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
+    await_timed(5*SECONDS, PNR_OK, pbp);
+	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "three", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
 	pubnub_get(pbp);
+
+	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
 
     expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -701,7 +721,7 @@ TEST_DEF(broken_connection_test_group_multichannel_out) {
     printf("Please disconnect from Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_TIMEOUT, pbp);
+    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
     printf("Please reconnect to Internet. Press Enter when done.");
     await_console();
     expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);

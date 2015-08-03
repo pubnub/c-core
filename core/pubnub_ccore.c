@@ -2,6 +2,7 @@
 #include "pubnub_ccore.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
+#include "pubnub_internal.h"
 
 #include <string.h>
 #include <stdio.h>

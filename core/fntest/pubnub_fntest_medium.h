@@ -11,6 +11,7 @@ TEST_DECL(connect_disconnect_and_connect_again);
 TEST_DECL(connect_disconnect_and_connect_again_group);
 TEST_DECL(connect_disconnect_and_connect_again_combo);
 TEST_DECL(wrong_api_usage);
+TEST_DECL(handling_errors_from_pubnub);
 
 
 #endif /* !defined INC_PUBNUB_FNTEST_MEDIUM */

@@ -6,6 +6,10 @@
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
 
+#if defined(PUBNUB_CALLBACK_API)
+#include "pubnub_ntf_callback.h"
+#endif
+
 #include <stdint.h>
 
 
