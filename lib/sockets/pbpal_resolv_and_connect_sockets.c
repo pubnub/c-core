@@ -22,7 +22,7 @@
 #define HTTP_PORT_STRING "80"
 
 
-int pbpal_resolv_and_connect(pubnub_t *pb)
+enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 {
     struct addrinfo *result;
     struct addrinfo *res;
@@ -33,7 +33,7 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
 
     error = getaddrinfo(PUBNUB_ORIGIN, HTTP_PORT_STRING, NULL, &result);
     if (error != 0) {
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
     for (res = result; res != NULL; res = res->ai_next) {
         pb->pal.socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -50,8 +50,18 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
     freeaddrinfo(result);
 
     if (NULL == res) {
-        return -1;
+        return PNR_CONNECT_FAILED;
     }
     
-    return pbntf_got_socket(pb, pb->pal.socket);
+    switch (pbntf_got_socket(pb, pb->pal.socket)) {
+	case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
+	case +1: return PNR_STARTED;
+	case -1: default: return PNR_CONNECT_FAILED;
+	}
+	/* If we return PNR_OK, then the whole transaction can finish
+		in one call to Netcore FSM. That would be nice, but some
+		tests want to be able to cancel a request, which would
+		then be impossible. So, until we figure out how to handle
+		that, we shall return PNR_STARTED.
+		*/
 }

@@ -6,6 +6,10 @@
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
 
+#if defined(PUBNUB_CALLBACK_API)
+#include "pubnub_ntf_callback.h"
+#endif
+
 #include <stdint.h>
 
 
@@ -119,7 +123,7 @@ typedef struct pubnub pubnub_t;
 /** Internal function, to be called when the outcome of a
     REST call / transaction has been reached.
 */
-void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_res result);
+void pbntf_trans_outcome(pubnub_t *pb);
 
 int pbntf_init(void);
 

@@ -36,12 +36,15 @@
 
 /* -- You should not change anything below this line -- */
 
-#define PUBNUB_CALLBACK_API
+#if !defined(PUBNUB_CALLBACK_API)
+#error You have to define PUBNUB_CALLBACK_API
+#endif
 
 #include "pubnub_alloc.h"
 #include "pubnub_assert.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_ntf_callback.h"
+#include "pubnub_generate_uuid.h"
 
 
 #endif /* !defined INC_PUBNUB_CALLBACK */

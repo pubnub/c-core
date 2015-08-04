@@ -28,16 +28,18 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
-void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_res result)
+void pbntf_trans_outcome(pubnub_t *pb)
 {
-    PBNTF_TRANS_OUTCOME_COMMON(pb, result);
+    PBNTF_TRANS_OUTCOME_COMMON(pb);
 }
 
 
 enum pubnub_res pubnub_last_result(pubnub_t const *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    pbnc_fsm((pubnub_t*)pb);
+    if (pb->state != PBS_IDLE) {
+        pbnc_fsm((pubnub_t*)pb);
+    }
     return pb->core.last_result;
 }
 
@@ -45,7 +47,7 @@ enum pubnub_res pubnub_last_result(pubnub_t const *pb)
 enum pubnub_res pubnub_await(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    while (PNR_STARTED == pb->core.last_result) {
+    while (pb->state != PBS_IDLE) {
         pbnc_fsm(pb);
     }
     return pb->core.last_result;

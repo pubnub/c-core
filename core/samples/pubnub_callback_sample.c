@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_posix_callback.h"
+#include "pubnub_callback.h"
 
 #if defined _WIN32
 #include <windows.h>
@@ -15,6 +15,7 @@ static CRITICAL_SECTION mutw;
 static HANDLE condw;
 #else
 static pthread_mutex_t mutw;
+static bool triggered;
 static pthread_cond_t condw;
 #endif
 
@@ -62,7 +63,10 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
 #if defined _WIN32
     SetEvent(condw);
 #else
+    pthread_mutex_lock(&mutw);
+    triggered = true;
     pthread_cond_signal(&condw);
+    pthread_mutex_unlock(&mutw);
 #endif
 }
 
@@ -74,7 +78,10 @@ static void await(void)
     WaitForSingleObject(condw, INFINITE);
 #else
     pthread_mutex_lock(&mutw);
-    pthread_cond_wait(&condw, &mutw);
+    triggered = false;
+    while (!triggered) {
+        pthread_cond_wait(&condw, &mutw);
+    }
     pthread_mutex_unlock(&mutw);
 #endif
 }
@@ -104,7 +111,7 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
-    res = pubnub_publish(pbp, chan, "\"Hello world from callback!");
+    res = pubnub_publish(pbp, chan, "\"Hello world from callback!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -232,7 +239,7 @@ int main()
         }
     }
     else {
-        printf("Getting time failed with code: %d\n", res);
+        printf("Getting history failed with code: %d\n", res);
     }
 
     puts("Getting history v2 with include_token...");
@@ -261,7 +268,7 @@ int main()
         }
     }
     else {
-        printf("Getting time failed with code: %d\n", res);
+        printf("Getting historyv2 failed with code: %d\n", res);
     }
 
     /* We're done */

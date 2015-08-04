@@ -3,58 +3,82 @@
 #define	INC_PUBNUB_FNTEST_PAL
 
 #include "pubnub_helper.h"
+#include "pubnub_assert.h"
 
-#include <pthread.h>
+#include <process.h>
 
 #include <stdio.h>
+#include <windows.h>
 
+#define TEST_MAX_DEFFERED 16
+#define TEST_BEGIN() typedef void (*pfdeffered_t)(void*);  \
+  pfdeffered_t aDeffered_[TEST_MAX_DEFFERED]; \
+  void *aDeffered_pd[TEST_MAX_DEFFERED]; \
+  unsigned iDeffered = 0;
 
-#define TEST_BEGIN()
+#define TEST_DEFER(f, d) PUBNUB_ASSERT_OPT(iDeffered < TEST_MAX_DEFFERED);\
+  aDeffered_[iDeffered] = (f); \
+  aDeffered_pd[iDeffered] = (d); \
+  ++iDeffered;
 
-#define TEST_DEFER(f, d) pthread_cleanup_push((f), (d))
+#define TEST_POP_DEFERRED PUBNUB_ASSERT_OPT(iDeffered > 0); \
+  --iDeffered; \
+  aDeffered_[iDeffered](aDeffered_pd[iDeffered]);
 
-#define TEST_POP_DEFERRED pthread_cleanup_pop(1)
+#define TEST_DECL(tst) unsigned __stdcall pnfn_test_##tst(void* pResult);
 
-#define TEST_DECL(tst) void *pnfn_test_##tst(void* pResult);
+#define TEST_DEF(tst) unsigned __stdcall pnfn_test_##tst(void* pResult) { TEST_BEGIN();
 
-#define TEST_DEF(tst) void *pnfn_test_##tst(void* pResult) { TEST_BEGIN();
-
-#define TEST_END()    *(enum PNFNTestResult *)pResult = trPass; return NULL
+#define TEST_END()    *(enum PNFNTestResult *)pResult = trPass; return 0
 
 #define TEST_ENDDEF TEST_END(); }
 
-#define TEST_YIELD() sched_yield()
+#define TEST_YIELD() Sleep(0)
 
-#define TEST_SLEEP_FOR(ms)                              \
-    do {                                                \
-        struct timespec req_ = {0};                     \
-        time_t sec_ = (int)((ms) / 1000);               \
-        req_.tv_sec = sec_;                             \
-        req_.tv_nsec = ((ms) - (sec_*1000)) * 1000000L; \
-        while (nanosleep(&req_, &req_) == -1)           \
-            continue;                                   \
-    } while(0)
+#define TEST_SLEEP_FOR(ms) Sleep(ms)
+
+#define TEST_EXIT                                       \
+	while (iDeffered > 0) { TEST_POP_DEFERRED; }		\
+	_endthreadex(0);
 
 #define expect(exp)                                                     \
     if (exp) {}                                                         \
     else {                                                              \
-        printf("\x1b[31m expect(%s) failed, file %s function %s line %d\x1b[0m\n", #exp, __FILE__, __FUNCTION__, __LINE__); \
+		HANDLE hstdout_ = GetStdHandle(STD_OUTPUT_HANDLE);				\
+		CONSOLE_SCREEN_BUFFER_INFO csbiInfo_; 							\
+		WORD wOldColorAttrs_ = FOREGROUND_INTENSITY;					\
+		PUBNUB_ASSERT_OPT(hstdout_ != INVALID_HANDLE_VALUE); 			\
+		if (GetConsoleScreenBufferInfo(hstdout_, &csbiInfo_)) {			\
+			wOldColorAttrs_ = csbiInfo_.wAttributes; 					\
+		}																\
+		SetConsoleTextAttribute(hstdout_, FOREGROUND_RED | FOREGROUND_INTENSITY); \
+        printf(" expect(%s) failed, file %s function %s line %d\n", #exp, __FILE__, __FUNCTION__, __LINE__); \
+		SetConsoleTextAttribute(hstdout_, wOldColorAttrs_);				\
         *(enum PNFNTestResult *)pResult = trFail;                       \
-        pthread_exit(NULL);                                             \
+        TEST_EXIT;                                                 		\
     }
 
 #define expect_pnr(rslt, exp_rslt)                                      \
     if ((rslt) != (exp_rslt)) {                                         \
-        printf("\x1b[31m Expected result %d (%s) but got %d (%s), file %s function %s line %d\x1b[0m\n", (exp_rslt), #exp_rslt, (rslt), pubnub_res_2_string(rslt), __FILE__, __FUNCTION__, __LINE__); \
+		HANDLE hstdout_ = GetStdHandle(STD_OUTPUT_HANDLE);				\
+		CONSOLE_SCREEN_BUFFER_INFO csbiInfo_; 							\
+		WORD wOldColorAttrs_ = FOREGROUND_INTENSITY;					\
+		PUBNUB_ASSERT_OPT(hstdout_ != INVALID_HANDLE_VALUE); 			\
+		if (GetConsoleScreenBufferInfo(hstdout_, &csbiInfo_)) {			\
+			wOldColorAttrs_ = csbiInfo_.wAttributes; 					\
+		}																\
+		SetConsoleTextAttribute(hstdout_, FOREGROUND_RED | FOREGROUND_INTENSITY); \
+        printf(" Expected result %d (%s) but got %d (%s), file %s function %s line %d\n", (exp_rslt), #exp_rslt, (rslt), pubnub_res_2_string(rslt), __FILE__, __FUNCTION__, __LINE__); \
+		SetConsoleTextAttribute(hstdout_, wOldColorAttrs_);				\
         *(enum PNFNTestResult *)pResult = trFail;                       \
-        pthread_exit(NULL);                                             \
+        TEST_EXIT;                                                \
     }
 
 #define expect_last_result(rslt, exp_rslt) {                            \
         if ((rslt) == (exp_rslt)) {}                                    \
         else if ((rslt) == PNR_ABORTED) {                               \
             *(enum PNFNTestResult *)pResult = trIndeterminate;          \
-            pthread_exit(NULL);                                         \
+            TEST_EXIT;                                             \
         }                                                               \
         else {                                                          \
             expect_pnr((rslt), exp_rslt);                               \
@@ -80,7 +104,7 @@
         TEST_DEFER(pnfntst_free_timer, M_t_);                           \
         pnfntst_start_timer(M_t_, (ms));                                \
         await_w_timer(M_t_, (rslt), (pbp));                             \
-        pthread_cleanup_pop(1);                                         \
+        TEST_POP_DEFERRED;                                              \
     } while (0)
 
 
@@ -112,13 +136,13 @@
         TEST_DEFER(pnfntst_free_timer, M_t_);                           \
         pnfntst_start_timer(M_t_, (ms));                                \
         await_w_timer_2(M_t_, (rslt), (pbp), (rslt2), (pbp2));          \
-        pthread_cleanup_pop(1);                                         \
+        TEST_POP_DEFERRED;                                              \
     } while (0)
 
 
 #define await_w_timer_3(tmr, rslt, pbp, rslt2, pbp2, rslt3, pbp3)       \
     do {                                                                \
-        enum pubnub_res M_rslt = PNR_STARRTED;                          \
+        enum pubnub_res M_rslt = PNR_STARTED;                          	\
         enum pubnub_res M_rslt_2 = PNR_STARTED;                         \
         enum pubnub_res M_rslt_3 = PNR_STARTED;                         \
         while (pnfntst_timer_is_running(tmr)) {                         \
@@ -149,7 +173,7 @@
         TEST_DEFER(pnfntst_free_timer, M_t_);                           \
         pnfntst_start_timer(M_t_, (ms));                                \
         await_w_timer_3(M_t_, (rslt), (pbp), (rslt2), (pbp2), (rslt3), (pbp3)); \
-        pthread_cleanup_pop(1);                                         \
+        TEST_POP_DEFERRED;                                              \
     } while (0)
 
 

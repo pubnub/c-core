@@ -46,6 +46,8 @@ bool pnfntst_got_messages(pubnub_t *p, ...);
 bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const *channel);
 
 
+bool pnfntst_subscribe_and_check(pubnub_t *p, char const *chan, char const*chgroup, unsigned ms, ...);
+
 #include "pubnub_fntest_pal.h"
 
 #endif /* !defined INC_PUBNUB_FNTEST */

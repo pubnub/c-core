@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_posix_sync.h"
+#include "pubnub_sync.h"
 
 #include <stdio.h>
 
@@ -33,7 +33,7 @@ int main()
     pubnub_set_auth(pbp, "danaske");
 
     puts("Publishing...");
-    res = pubnub_publish(pbp, chan, "\"Hello world from sync!\n");
+    res = pubnub_publish(pbp, chan, "\"Hello world from sync!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -331,7 +331,7 @@ int main()
         printf("Failed to free the Pubnub context\n");
     }
 
-    puts("Pubnub POSIX sync demo over.");
+    puts("Pubnub sync demo over.");
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #include "pubnub_ccore.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
+#include "pubnub_internal.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ char const *pbcc_get_msg(struct pbcc_context *pb)
             return rslt;
         }
     }
-    
+
     return NULL;
 }
 
@@ -42,7 +43,7 @@ char const *pbcc_get_channel(struct pbcc_context *pb)
             return rslt;
         }
     }
-    
+
     return NULL;
 }
 
@@ -86,7 +87,7 @@ static bool split_array(char *buf)
     for (; *buf != '\0'; ++buf) {
         if (escaped) {
             escaped = false;
-        } 
+        }
         else if ('"' == *buf) {
             in_string = !in_string;
         }
@@ -213,63 +214,78 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
         return -1;
     }
     if (reply[replylen-1] != ']' && replylen > 2) {
-        replylen -= 2; // XXX: this seems required by Manxiang
+        replylen -= 2; /* XXX: this seems required by Manxiang */
     }
     if ((reply[0] != '[') || (reply[replylen-1] != ']') || (reply[replylen-2] != '"')) {
         return -1;
     }
-    
+
     /* Extract the last argument. */
     i = find_string_start(reply, replylen-2);
     if (i < 0) {
         return -1;
     }
     reply[replylen - 2] = 0;
-    
-    /* Now, the last argument may either be a timetoken or a channel list. */
+
+    /* Now, the last argument may either be a timetoken, a channel group list
+		or a channel list. */
     if (reply[i-2] == '"') {
         int k;
-        /* It is a channel list, there is another string argument in front
+		/* It is a channel list, there is another string argument in front
          * of us. Process the channel list ... */
         for (k = replylen - 2; k > i+1; --k) {
             if (reply[k] == ',') {
-                reply[k] = 0;
+                reply[k] = '\0';
             }
         }
-        
-        /* ... and look for timetoken again. */
-        reply[i-2] = 0;
+
+        /* The previous argument is either a timetoken or a channel group
+			list. */
+        reply[i-2] = '\0';
         p->chan_ofs = i+1;
+        p->chan_end = replylen - 1;
         i = find_string_start(reply, i-2);
         if (i < 0) {
             p->chan_ofs = 0;
             p->chan_end = 0;
             return -1;
         }
-        p->chan_end = replylen - 1;
-    } 
+		if (reply[i-2] == '"') {
+			/* It is a channel group list. For now, we shall skip it. In
+				the future, we may process it like we do the channel list.
+				*/
+			reply[i-2] = '\0';
+			i = find_string_start(reply, i-2);
+			if (i < 0) {
+				return -1;
+			}
+		}
+    }
     else {
         p->chan_ofs = 0;
         p->chan_end = 0;
     }
-    
+
     /* Now, i points at
      * [[1,2,3],"5678"]
      * [[1,2,3],"5678","a,b,c"]
+     * [[1,2,3],"5678","gr-a,gr-b,gr-c","a,b,c"]
      *          ^-- here */
-    
+
     /* Setup timetoken. */
-    if (replylen-2 - (i+1) >= sizeof p->timetoken) {
-        return -1;
-    }
-    strcpy(p->timetoken, reply + i+1);
-    reply[i-2] = 0; // terminate the [] message array (before the ]!)
-    
+	strncpy(p->timetoken, reply + i+1, sizeof p->timetoken);
+	p->timetoken[sizeof p->timetoken - 1] = '\0';
+	/*TODO: this (just) truncates a too long timetoken, it would be nice 
+		to detect this "overflow" and report an error. */
+	
+	/* terminate the [] message array (before the ]!) */
+    reply[i-2] = 0; 
+
     /* Set up the message list - offset, length and NUL-characters
      * splitting the messages. */
     p->msg_ofs = 2;
     p->msg_end = i-2;
-    
+
     return split_array(reply + p->msg_ofs) ? 0 : -1;
 }
 
@@ -277,13 +293,14 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
 static enum pubnub_res append_url_param(struct pbcc_context *pb, char const *param_name, size_t param_name_len, char const *param_val, char separator)
 {
     size_t param_val_len = strlen(param_val);
-    if (pb->http_buf_len + 1 + param_name_len + param_val_len > sizeof pb->http_buf) {
+    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
     }
 
     pb->http_buf[pb->http_buf_len++] = separator;
     memcpy(pb->http_buf + pb->http_buf_len, param_name, param_name_len);
     pb->http_buf_len += param_name_len;
+    pb->http_buf[pb->http_buf_len++] = '=';
     memcpy(pb->http_buf + pb->http_buf_len, param_val, param_val_len+1);
     pb->http_buf_len += param_val_len;
 
@@ -293,10 +310,10 @@ static enum pubnub_res append_url_param(struct pbcc_context *pb, char const *par
 
 #define APPEND_URL_PARAM_M(pbc, name, var, separator)                   \
     if ((var) != NULL) {                                                \
-        const char param_[] = name "=";                                 \
-        enum pubnub_res rslt = append_url_param((pbc), param_, sizeof param_ - 1, (var), (separator)); \
-        if (rslt != PNR_OK) {                                           \
-            return rslt;                                                \
+        const char param_[] = name;                                 	\
+        enum pubnub_res rslt_ = append_url_param((pbc), param_, sizeof param_ - 1, (var), (separator)); \
+        if (rslt_ != PNR_OK) {                                          \
+            return rslt_;                                               \
         }                                                               \
     }
 
@@ -320,10 +337,10 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, 
     char const *pmessage = message;
 
     pb->http_content_len = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
-        "/publish/%s/%s/0/%s/0/", 
+        "/publish/%s/%s/0/%s/0/",
         pb->publish_key, pb->subscribe_key, channel
         );
 
@@ -365,7 +382,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, 
     if (eat_after_reading) {
         APPEND_URL_PARAM_BOOL_M(pb, "ear", eat_after_reading, '?');
     }
-    
+
     return PNR_STARTED;
 }
 
@@ -384,7 +401,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel,
 
     p->http_content_len = 0;
     p->msg_ofs = 0;
-    
+
     p->http_buf_len = snprintf(
         p->http_buf, sizeof(p->http_buf),
         "/subscribe/%s/%s/0/%s?pnsdk=%s",
@@ -408,11 +425,11 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context *pb, const char *channel, co
         channel = ",";
     }
     pb->http_content_len = 0;
-    
+
     /* Make sure next subscribe() will be a join. */
     pb->timetoken[0] = '0';
     pb->timetoken[1] = '\0';
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/v2/presence/sub-key/%s/channel/%s/leave?pnsdk=%s",
@@ -435,7 +452,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *pb)
 
     pb->http_content_len = 0;
     pb->msg_ofs = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/time/0?pnsdk=%s",
@@ -460,10 +477,10 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
-    
+
     pb->http_content_len = 0;
     pb->msg_ofs = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/history/%s/%s/0/%d?pnsdk=%s",
@@ -488,10 +505,10 @@ enum pubnub_res pbcc_historyv2_prep(struct pbcc_context *pb, const char *channel
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
-    
+
     pb->http_content_len = 0;
     pb->msg_ofs = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/v2/history/sub-key/%s/channel/%s?pnsdk=%s",
@@ -518,16 +535,16 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel,
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
-    
+
     pb->http_content_len = 0;
     pb->msg_ofs = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/v2/presence/sub-key/%s%s%s?pnsdk=%s",
-        pb->subscribe_key, 
-        channel ? "/channel/" : "", 
-        channel ? channel : "", 
+        pb->subscribe_key,
+        channel ? "/channel/" : "",
+        channel ? channel : "",
         pubnub_uname()
         );
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
@@ -545,10 +562,10 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context *pb, const char *uuid)
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
-    
+
     pb->http_content_len = 0;
     pb->msg_ofs = 0;
-    
+
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
         "/v2/presence/sub-key/%s/uuid/%s?pnsdk=%s",
@@ -641,9 +658,9 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context *pb, char const *
         pb->subscribe_key, channel_group, pubnub_uname()
         );
     if (NULL != param) {
+        enum pubnub_res rslt;
         PUBNUB_ASSERT_OPT(channel != NULL);
-        APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-        enum pubnub_res rslt = append_url_param(pb, param, strlen(param), channel, '&');
+        rslt = append_url_param(pb, param, strlen(param), channel, '&');
         if (rslt != PNR_OK) {
             return rslt;
         }

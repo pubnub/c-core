@@ -7,7 +7,25 @@
 enum pubnub_res {
     /** Success. Transaction finished successfully. */
     PNR_OK,
-    /** Time out before the request has completed. */
+    /** Pubnub host name resolution failed. We failed to get
+        an IP address from the Pubnub host name ("origin").
+        Most of the time, this comes down to a DNS error.
+    */
+    PNR_ADDR_RESOLUTION_FAILED,
+    /** Connecting to Pubnub server failed. Most often,
+        this means a network outage, but could be many things.
+        If using SSL/TLS, it could be some of its errors.
+    */
+    PNR_CONNECT_FAILED,
+    /** A time-out happened in the network. Mostly, this is because
+        a network outage happened while being connected to the Pubnub
+        server, but could be other things.
+    */
+    PNR_CONNECTION_TIMEOUT,
+    /** Time-out before the request has completed. This is reported
+        for a time-out detected by Pubnub client itself, not some
+        reported by others (i.e. the TCP/IP stack). 
+	*/
     PNR_TIMEOUT,
     /** Connection to Pubnub aborted (in most cases, a TCP reset was
         received) */
