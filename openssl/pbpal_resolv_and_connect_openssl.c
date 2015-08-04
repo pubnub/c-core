@@ -12,21 +12,36 @@
 #define HTTP_PORT_STRING "80"
 
 
-static int resolv_and_connect_wout_SSL(pubnub_t *pb)
+static enum pubnub_res resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     DEBUG_PRINTF("resolv_and_connect_wout_SSL\n");
     pb->pal.bio = BIO_new_connect(PUBNUB_ORIGIN ":" HTTP_PORT_STRING);
     if (NULL == pb->pal.bio) {
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
 
-    if (BIO_do_connect(pb->pal.bio) <= 0) {
+    BIO_set_nbio(pb->pal.bio, !pb->use_blocking_io);
+
+    while (BIO_do_connect(pb->pal.bio) <= 0) {
+        if (!pb->use_blocking_io && BIO_should_retry(pb->pal.bio)) {
+            continue;
+        }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.bio);
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
     
-    return pbntf_got_socket(pb, pb->pal.bio);
+    switch (pbntf_got_socket(pb, pb->pal.bio)) {
+    case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
+    case +1: return PNR_STARTED;
+    case -1: default: return PNR_CONNECT_FAILED;
+    }
+    /* If we return PNR_OK, then the whole transaction can finish
+       in one call to Netcore FSM. That would be nice, but some
+       tests want to be able to cancel a request, which would
+       then be impossible. So, until we figure out how to handle
+       that, we shall return PNR_STARTED.
+    */
 }
 
 
@@ -90,7 +105,7 @@ static int add_pubnub_cert(SSL_CTX *sslCtx)
 }
 
 
-int pbpal_resolv_and_connect(pubnub_t *pb)
+enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 {
     SSL *ssl;
 
@@ -105,7 +120,7 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == pb->pal.ctx) {
         ERR_print_errors_fp(stderr);
         DEBUG_PRINTF("SSL_CTX_new failed\n");
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
 
     DEBUG_PRINTF("Got SSL_CTX\n");
@@ -114,7 +129,7 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
     pb->pal.bio = BIO_new_ssl_connect(pb->pal.ctx);
     if (NULL == pb->pal.bio) {
         SSL_CTX_free(pb->pal.ctx);
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
 
     DEBUG_PRINTF("Got BIO_new_ssl\n");
@@ -124,11 +139,16 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
 
     BIO_set_conn_hostname(pb->pal.bio, PUBNUB_ORIGIN ":https");
 
-    if (BIO_do_connect(pb->pal.bio) <= 0) {
+    BIO_set_nbio(pb->pal.bio, !pb->use_blocking_io);
+
+    while (BIO_do_connect(pb->pal.bio) <= 0) {
+        if (!pb->use_blocking_io && BIO_should_retry(pb->pal.bio)) {
+            continue;
+        }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.bio);
         SSL_CTX_free(pb->pal.ctx);
-        return -1;
+        return PNR_ADDR_RESOLUTION_FAILED;
     }
 
     DEBUG_PRINTF("BIO connected\n");
@@ -144,8 +164,12 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
             pb->pal.ctx = NULL;
             return resolv_and_connect_wout_SSL(pb);
         }
-        return -1;
+        return PNR_CONNECT_FAILED;
     }
     
-    return pbntf_got_socket(pb, pb->pal.bio);
+    switch (pbntf_got_socket(pb, pb->pal.bio)) {
+    case 0: return PNR_STARTED; /* see pubnub_res resolv_and_connect_wout_SSL */
+    case +1: return PNR_STARTED;
+    case -1: default: return PNR_CONNECT_FAILED;
+    }
 }

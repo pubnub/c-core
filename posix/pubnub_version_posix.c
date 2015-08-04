@@ -2,7 +2,7 @@
 #include "pubnub_version.h"
 
 #define PUBNUB_SDK_NAME "POSIX"
-#define PUBNUB_SDK_VERSION "1.1"
+#define PUBNUB_SDK_VERSION "2.0"
 
 
 char const *pubnub_sdk_name(void)

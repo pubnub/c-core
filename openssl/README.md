@@ -25,4 +25,8 @@ system with a GCC compiler (probably with any
 other too, but that would require some changes to the
 Makefile).
 
-We shall add sample Makefile for Windows soon.
+# Notes
+
+- The callback API is not yet functional. For now,
+  use the sync API.
+- We shall add sample Makefile for Windows soon.

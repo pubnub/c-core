@@ -2,7 +2,7 @@
 #include "pubnub_version.h"
 
 #define PUBNUB_SDK_NAME "OpenSSL"
-#define PUBNUB_SDK_VERSION "1.0"
+#define PUBNUB_SDK_VERSION "2.0"
 
 
 char const *pubnub_sdk_name(void)

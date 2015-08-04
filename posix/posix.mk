@@ -19,4 +19,4 @@ pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic
 	gcc -o pubnub_fntest $(CFLAGS) ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c -lpthread
 
 clean:
-	rm pubnub_sync_sample pubnub_callback_sample pubnub_fntest
+	rm pubnub_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest

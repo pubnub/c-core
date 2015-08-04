@@ -52,15 +52,6 @@
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 
-#if !defined PUBNUB_USE_MDNS
-/** If `1`, the MDNS module will be used to handle the DNS
-        resolving. If `0` the "resolv" module will be used.
-        This is a temporary solution, it is expected that ConTiki
-        will unify those two modules.
-*/
-#define PUBNUB_USE_MDNS 1
-#endif
-
 
 /** Define to 0 to disable SSL support */
 #define PUBNUB_USE_SSL 1

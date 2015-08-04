@@ -28,6 +28,9 @@ char const* pubnub_res_2_string(enum pubnub_res e)
 {
     switch (e) {
     case PNR_OK: return "OK";
+    case PNR_ADDR_RESOLUTION_FAILED: return "Pubnub host name resolution failed";
+    case PNR_CONNECT_FAILED: return "Connecting to Pubnub server failed";
+    case PNR_CONNECTION_TIMEOUT: return "A time-out happened in the network";
     case PNR_TIMEOUT: return "Timeout";
     case PNR_ABORTED: return "Aborted";
     case PNR_IO_ERROR: return "I/O (communication) error";
