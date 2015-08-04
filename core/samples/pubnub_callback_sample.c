@@ -15,6 +15,7 @@ static CRITICAL_SECTION mutw;
 static HANDLE condw;
 #else
 static pthread_mutex_t mutw;
+static bool triggered;
 static pthread_cond_t condw;
 #endif
 
@@ -62,7 +63,10 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
 #if defined _WIN32
     SetEvent(condw);
 #else
+    pthread_mutex_lock(&mutw);
+    triggered = true;
     pthread_cond_signal(&condw);
+    pthread_mutex_unlock(&mutw);
 #endif
 }
 
@@ -74,7 +78,10 @@ static void await(void)
     WaitForSingleObject(condw, INFINITE);
 #else
     pthread_mutex_lock(&mutw);
-    pthread_cond_wait(&condw, &mutw);
+    triggered = false;
+    while (!triggered) {
+        pthread_cond_wait(&condw, &mutw);
+    }
     pthread_mutex_unlock(&mutw);
 #endif
 }

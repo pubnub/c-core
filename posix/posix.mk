@@ -3,7 +3,7 @@ SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_net
 CFLAGS =-g -D VERBOSE_DEBUG -I ../core -I . -I fntest -I ../core/fntest -Wall 
 # -g enables debugging, remove to get a smaller executable
 
-all: pubnub_sync_sample pubnub_callback_sample pubnub_fntest
+all: pubnub_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest
 
 
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
@@ -11,6 +11,9 @@ pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/
 
 pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_posix.c
 	gcc -o pubnub_callback_sample -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/pubnub_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) -lpthread
+
+subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_posix.c
+	gcc -o subscribe_publish_callback_sample -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/subscribe_publish_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) -lpthread
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c
 	gcc -o pubnub_fntest $(CFLAGS) ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c -lpthread
