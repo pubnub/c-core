@@ -1,2 +1,2 @@
-pubnub_posix_sync_console
-pubnub_posix_callback_console
+pubnub_sync_console
+pubnub_callback_console

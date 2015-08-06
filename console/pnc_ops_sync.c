@@ -3,65 +3,41 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <json/json.h>
 
 void pnc_ops_init() {
   // Nothing todo in sync version
 }
 
-void pnc_ops_subscribe(pubnub_t *pn, char *channel) {
-  // TODO: add check for connected
-  puts("Subscription is sync and will return to operations loop after the first message received");
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, channel, NULL), pn);
+void pnc_ops_subscribe(pubnub_t *pn_sub) {
+  puts("Subscribe will show the first message and return to select operation loop.");
 
-  // Now you connected to your channel.
-  // To start listening for messages you should invoke it again
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, channel, NULL), pn);
+  char channels_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+  char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+  pnc_subscribe_list_channels(channels_string);
+  pnc_subscribe_list_channel_groups(channel_groups_string);
+
+  int i;
+  enum pubnub_res res;
+
+  for (i = 0; i < 2; i++) {
+    puts("Subscribe loop...");
+
+    if (strlen(channels_string) == 0 && strlen(channel_groups_string) == 0) {
+      puts("You need add some channels or channel groups first. Ignoring");
+    } else if (strlen(channel_groups_string) == 0) {
+      res = pubnub_subscribe(pn_sub, channels_string, NULL);
+    } else if (strlen(channels_string) == 0) {
+      res = pubnub_subscribe(pn_sub, NULL, channel_groups_string);
+    } else {
+      res = pubnub_subscribe(pn_sub, channels_string, channel_groups_string);
+    }
+
+    pnc_ops_parse_response("pubnub_subscribe()", res, pn_sub);
+  }
 }
 
-void pnc_ops_cg_subscribe(pubnub_t *pn, char *channel_group) {
-  puts("Subscription is sync and will return to operations loop after the first message received");
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, NULL, channel_group), pn);
-
-  // Now you connected to your channel group.
-  // To start listening for messages you should invoke it again
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, NULL, channel_group), pn);
-}
-
-void pnc_ops_presence(pubnub_t *pn, char *channel) {
-  char presence_channel[PNC_CHANNEL_NAME_SIZE + strlen(PNC_PRESENCE_SUFFIX)];
-
-  strcpy(presence_channel, channel);
-  strcat(presence_channel, PNC_PRESENCE_SUFFIX);
-
-  puts("Presence is sync and will return to operations loop after the first message received");
-  printf("Subscribing to %s\n", presence_channel);
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, presence_channel, NULL), pn);
-
-  // Now you connected to your presence channel.
-  // To start listening for events you should invoke it again
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, presence_channel, NULL), pn);
-}
-
-void pnc_ops_unsubscribe() {
-  puts("ERROR: pnc_ops_unsubscribe() is not implemented in sync version of console");
-}
-
-void pnc_ops_presence_unsubscribe() {
-  puts("ERROR: pnc_ops_presence_unsubscribe() is not implemented in sync version of console");
-}
-
-void pnc_ops_disconnect_and_resubscribe() {
-  puts("ERROR: pnc_ops_disconnect_and_resubscribe() is not implemented in sync version of console");
+void pnc_ops_unsubscribe(pubnub_t *pn) {
+  puts("Not implemented in sync version");
 }
 
 void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub_t *pn) {
@@ -86,7 +62,9 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
   }
 
   if (PNR_OK == res) {
-    printf("%s success!\n", method_name);
+    puts("\n****************************************");
+    printf("Result for %s: success!\n", method_name);
+    puts("****************************************");
     for (;;) {
       msg = pubnub_get(pn);
       if (NULL == msg) {
@@ -94,6 +72,7 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
       }
       puts(msg);
     }
+    puts("****************************************");
   } else {
     printf("%s failed! res code is %d\n", method_name, res);
   }

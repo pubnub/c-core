@@ -1,5 +1,5 @@
+#include "pubnub_callback.h"
 #include "pnc_ops_callback.h"
-#include "pnc_config.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -7,15 +7,26 @@
 #include <pthread.h>
 
 static pthread_mutex_t mutw;
+static pthread_mutex_t mutw_sub;
 static pthread_cond_t condw;
+static pthread_cond_t condw_sub;
 
-void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result)
-{
+static bool loop_enabled = true;
+pthread_t sub_thread;
+
+void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub) {
+  pthread_mutex_init(&mutw, NULL);
+  pthread_mutex_init(&mutw_sub, NULL);
+
+  pubnub_register_callback(pn, ops_callback);
+  pubnub_register_callback(pn_sub, subscribe_callback);
+}
+
+void ops_callback(pubnub_t *pn, enum pubnub_trans trans, enum pubnub_res result) {
+  puts("\n");
+
   switch (trans) {
     case PBTT_PUBLISH:
-      printf("Published, result: %d\n", result);
-      break;
-    case PBTT_SUBSCRIBE:
       printf("Published, result: %d\n", result);
       break;
     case PBTT_LEAVE:
@@ -35,101 +46,99 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
       break;
   }
 
-  //pthread_cond_signal(&condw);
+  pnc_ops_parse_callback(trans, result, pn);
+  pthread_cond_signal(&condw);
   pthread_mutex_unlock(&mutw);
-  pnc_ops_parse_response2(trans, result, pb);
 }
 
-void pnc_ops_init(pubnub_t *pn) {
-  pthread_mutex_init(&mutw, NULL);
-  pthread_cond_init(&condw, NULL);
-  pubnub_register_callback(pn, sample_callback);
+void subscribe_callback(pubnub_t *pn_sub, enum pubnub_trans trans, enum pubnub_res result) {
+  if (trans != PBTT_SUBSCRIBE) {
+      printf("Non-subsribe response on subscribe instance: %d\n", result);
+      return;
+  }
+
+  pnc_ops_parse_callback(trans, result, pn_sub);
+  pthread_cond_signal(&condw_sub);
+  pthread_mutex_unlock(&mutw_sub);
 }
 
-void pnc_ops_subscribe(pubnub_t *pn, char *channel) {
-  // TODO: add separate thread for subscription
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, channel, NULL), pn);
-
-  // Now you connected to your channel.
-  // Then you should invoke it again to start listenting for messages.
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, channel, NULL), pn);
+void pnc_ops_subscribe(pubnub_t *pn_sub) {
+  pthread_create(&sub_thread, NULL, (void *) pnc_ops_subscribe_thr, (void *) pn_sub);
 }
 
-void pnc_ops_cg_subscribe(pubnub_t *pn, char *channel_group) {
-  puts("Subscription is sync and will return to operations loop after the first message received");
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, NULL, channel_group), pn);
+void pnc_ops_subscribe_thr(void *pn_sub_addr) {
+  puts("Subscribe thread created");
 
-  // Now you connected to your channel group.
-  // To start listening for messages you should invoke it again
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, NULL, channel_group), pn);
+  pubnub_t *pn_sub = (pubnub_t *) pn_sub_addr;
+  enum pubnub_res res;
+
+  char channels_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+  char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+
+  while (loop_enabled) {
+    puts("Subscribe loop...");
+
+    pnc_subscribe_list_channels(channels_string);
+    pnc_subscribe_list_channel_groups(channel_groups_string);
+
+    pthread_mutex_lock(&mutw_sub);
+
+    if (strlen(channels_string) == 0 && strlen(channel_groups_string) == 0) {
+      puts("You need add some channels or channel groups first. Ignoring");
+    } else if (strlen(channel_groups_string) == 0) {
+      res = pubnub_subscribe(pn_sub, channels_string, NULL);
+    } else if (strlen(channels_string) == 0) {
+      res = pubnub_subscribe(pn_sub, NULL, channel_groups_string);
+    } else {
+      res = pubnub_subscribe(pn_sub, channels_string, channel_groups_string);
+    }
+
+    if (res != PNR_STARTED) {
+      printf("%s returned unexpected: %d\n", "pubnub_subscribe()", res);
+      break;
+    }
+
+    pthread_cond_wait(&condw_sub, &mutw_sub);
+  }
+
+  pthread_exit(NULL);
 }
 
-void pnc_ops_presence(pubnub_t *pn, char *channel) {
-  char presence_channel[PNC_CHANNEL_NAME_SIZE + strlen(PNC_PRESENCE_SUFFIX)];
-
-  strcpy(presence_channel, channel);
-  strcat(presence_channel, PNC_PRESENCE_SUFFIX);
-
-  puts("Presence is sync and will return to operations loop after the first message received");
-  printf("Subscribing to %s\n", presence_channel);
-  // The first invokation of pubnub_subscribe() will fetch initial timetoken.
-  pnc_ops_parse_response("pubnub_subscribe() connect",
-      pubnub_subscribe(pn, presence_channel, NULL), pn);
-
-  // Now you connected to your presence channel.
-  // To start listening for events you should invoke it again
-  pnc_ops_parse_response("pubnub_subscribe() message",
-      pubnub_subscribe(pn, presence_channel, NULL), pn);
-}
-
-void pnc_ops_unsubscribe() {
-  puts("TBD");
-}
-
-void pnc_ops_presence_unsubscribe() {
-  puts("TBD");
-}
-
-void pnc_ops_disconnect_and_resubscribe() {
-  puts("TBD");
+void pnc_ops_unsubscribe(pubnub_t *pn_sub) {
+  loop_enabled = false;
+  puts("Subscription loop is disabled and will be stopped after the next message received");
+  // pthread_cancel(sub_thread);
 }
 
 void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub_t *pn) {
-
   if (res != PNR_STARTED) {
     printf("%s returned unexpected: %d\n", method_name, res);
-    pubnub_free(pn);
     return;
   }
 
   pthread_mutex_lock(&mutw);
+  pthread_cond_wait(&condw, &mutw);
 }
 
-void pnc_ops_parse_response2(enum pubnub_trans method_name, enum pubnub_res res, pubnub_t *pn) {
+void pnc_ops_parse_callback(enum pubnub_trans method_name, enum pubnub_res res, pubnub_t *pn) {
   const char *msg;
   res = pubnub_last_result(pn);
 
   if (res == PNR_HTTP_ERROR) {
     printf("%d failed to parse message as string. HTTP code: %d\n",
         method_name, pubnub_last_http_code(pn));
-    pubnub_free(pn);
     return;
   }
 
   if (res == PNR_STARTED) {
     printf("%d returned unexpected: PNR_STARTED(%d)\n", method_name, res);
-    pubnub_free(pn);
     return;
   }
 
   if (PNR_OK == res) {
-    printf("%d success!\n", method_name);
+    puts("***************************");
+    printf("Result for %d: success!\n", method_name);
+    puts("***************************");
     for (;;) {
       msg = pubnub_get(pn);
       if (NULL == msg) {
@@ -137,6 +146,7 @@ void pnc_ops_parse_response2(enum pubnub_trans method_name, enum pubnub_res res,
       }
       puts(msg);
     }
+    puts("***************************");
   } else {
     printf("%d failed!\n", method_name);
   }

@@ -11,14 +11,20 @@ static const char channel[] = "hello_world";
 int main()
 {
   pubnub_t *pn = pubnub_alloc();
+  pubnub_t *pn_sub = pubnub_alloc();
 
-  if (NULL == pn) {
+  if (NULL == pn || NULL == pn_sub) {
     printf("Failed to allocate pubnub context");
+    return -1;
   }
 
-  pnc_ops_init(pn);
+  pnc_ops_init(pn, pn_sub);
+
   pubnub_init(pn, pubkey, pubkey);
+  pubnub_init(pn_sub, pubkey, pubkey);
   pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
+  pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
+  pnc_subscribe_add_channel("blah");
 
   displayMenuOptions(pn);
 
@@ -30,7 +36,7 @@ int main()
   char uuid[PNC_UUID_SIZE];
   char state[2048];
 
-  while(option != 9) {
+  while(option != 99) {
     fgets(opt_string, sizeof(opt_string), stdin);
     opt_string[strlen(opt_string) - 1] = '\0';
     option = atoi(opt_string);
@@ -38,28 +44,8 @@ int main()
 
     switch (option) {
       case 0:
-        displayMenuOptions(pn);
         break;
       case 1:
-        // Subscribe
-        {
-          bool isGroup;
-
-          pnc_read_bool_from_console("Group", &isGroup);
-
-          if (isGroup) {
-            pnc_read_string_from_console("Subscribe: Enter Group name",
-                channel, PNC_CHANNEL_NAME_SIZE);
-            pnc_ops_cg_subscribe(pn, channel) ;
-          } else {
-            pnc_read_string_from_console("Subscribe: Enter Channel name",
-                channel, PNC_CHANNEL_NAME_SIZE);
-            pnc_ops_subscribe(pn, channel) ;
-          }
-        }
-
-        break;
-      case 2:
         // Publish
         {
           bool store = false;
@@ -98,15 +84,7 @@ int main()
         }
 
         break;
-      case 3:
-        // Presence
-        pnc_read_string_from_console("Channel name",
-            channel, PNC_CHANNEL_NAME_SIZE);
-
-        pnc_ops_presence(pn, channel);
-
-        break;
-      case 4:
+      case 2:
         // History
         {
           int count = 100;
@@ -121,6 +99,9 @@ int main()
 
           pnc_read_string_from_console("Channel Name",
               channel, PNC_CHANNEL_NAME_SIZE);
+
+          // WARNING: Default buffer can be not big enough to get 100-items
+          // history response with timetokens
           pnc_read_bool_from_console("Include timetokens", &include_token);
 
           pnc_ops_parse_response("pubnub_historyv2()",
@@ -128,7 +109,7 @@ int main()
         }
 
         break;
-      case 5:
+      case 3:
         // Here now
         pnc_read_string_from_console_optional("Channel Name",
             channel, PNC_CHANNEL_NAME_SIZE, true);
@@ -136,36 +117,23 @@ int main()
         pnc_ops_parse_response("pubnub_here_now()",
             pubnub_here_now(pn, channel, NULL), pn);
         break;
-      case 6:
-        pnc_ops_unsubscribe();
-        break;
-      case 7:
-        pnc_ops_presence_unsubscribe();
-        break;
-      case 8:
+      case 4:
         // Time
         pnc_ops_parse_response("pubnub_time()", pubnub_time(pn), pn);
         break;
-      case 10:
-        pnc_ops_disconnect_and_resubscribe();
-        break;
-      case 11:
-        pnc_ops_disconnect_and_resubscribe();
-        break;
-      case 12:
+      case 5:
         // Set Auth
-        pnc_read_string_from_console("Auth key",
-            auth_key, PNC_AUTH_KEY_SIZE);
+        pnc_read_string_from_console("Auth key", auth_key, PNC_AUTH_KEY_SIZE);
         pubnub_set_auth(pn, auth_key);
 
         break;
-      case 13:
+      case 6:
         // Set UUID
         pnc_read_string_from_console("UUID", uuid, PNC_UUID_SIZE);
         pubnub_set_uuid(pn, uuid);
 
         break;
-      case 14:
+      case 7:
         // Get State
         pnc_read_string_from_console("Channel Name",
             channel, PNC_CHANNEL_NAME_SIZE);
@@ -179,7 +147,7 @@ int main()
         pnc_ops_parse_response("pubnub_get_state()",
             pubnub_state_get(pn, channel, NULL, uuid), pn);
         break;
-      case 15:
+      case 8:
         // Set State
         pnc_read_string_from_console("Channel Name",
             channel, PNC_CHANNEL_NAME_SIZE);
@@ -188,18 +156,66 @@ int main()
         pnc_ops_parse_response("pubnub_set_state()",
             pubnub_set_state(pn, channel, NULL, pubnub_get_uuid(pn), state), pn);
         break;
-      case 16:
+      case 9:
         // Where Now
         pnc_read_string_from_console_optional("UUID",
             uuid, PNC_UUID_SIZE, true);
+        if (strlen(uuid) == 0) {
+          puts("Using current UUID");
+          strcpy(uuid, PNC_DEFAULT_UUID);
+        }
+
         pnc_ops_parse_response("pubnub_where_now()",
             pubnub_where_now(pn, uuid), pn);
         break;
+      case 10:
+        // [Current Subscription] Add Presence Channel
+        {
+          pnc_read_string_from_console("Channel name",
+              channel, PNC_CHANNEL_NAME_SIZE);
+
+          char presence_channel[PNC_CHANNEL_NAME_SIZE + strlen(PNC_PRESENCE_SUFFIX)];
+
+          strcpy(presence_channel, channel);
+          strcat(presence_channel, PNC_PRESENCE_SUFFIX);
+
+          pnc_subscribe_add_channel(presence_channel);
+        }
+
+        break;
+      case 11:
+        // [Current Subscription] Subscribe
+        pnc_ops_subscribe(pn_sub);
+        break;
+      case 12:
+        // [Current Subscription] Unsubscribe
+        pnc_ops_unsubscribe(pn_sub);
+        break;
+      case 13:
+        // [Current Subscription] Add Channel
+        pnc_read_string_from_console("Enter Channel name",
+            channel, PNC_CHANNEL_NAME_SIZE);
+        pnc_subscribe_add_channel(channel);
+        break;
+      case 14:
+        // [Current Subscription] Add Channel Group
+        pnc_read_string_from_console("Enter Group name",
+            channel, PNC_CHANNEL_NAME_SIZE);
+        pnc_subscribe_add_channel_group(channel);
+        break;
+      case 15:
+        // [Current Subscription] Remove Channel
+        puts("Not implemented yet");
+        break;
+      case 16:
+        // [Current Subscription] Remove Channel Group
+        puts("Not implemented yet");
+        break;
       case 17:
-        // Add channel
-        pnc_read_string_from_console("Group",
+        // [Channel Group] Add channel
+        pnc_read_string_from_console("Group name",
             channel_group, PNC_CHANNEL_NAME_SIZE);
-        pnc_read_string_from_console("Channel",
+        pnc_read_string_from_console("Channel to add",
             channel, PNC_CHANNEL_NAME_SIZE);
 
         pnc_ops_parse_response("pubnub_add_channel_to_group()",
@@ -208,9 +224,9 @@ int main()
         break;
       case 18:
         // Remove channel
-        pnc_read_string_from_console("Group",
+        pnc_read_string_from_console("Group name",
             channel_group, PNC_CHANNEL_NAME_SIZE);
-        pnc_read_string_from_console("Channel",
+        pnc_read_string_from_console("Channel to remove",
             channel, PNC_CHANNEL_NAME_SIZE);
 
         pnc_ops_parse_response("pubnub_remove_channel_from_group()",
@@ -219,7 +235,7 @@ int main()
         break;
       case 19:
         // List channels
-        pnc_read_string_from_console("Group",
+        pnc_read_string_from_console("Group to list",
             channel_group, PNC_CHANNEL_NAME_SIZE);
 
         pnc_ops_parse_response("pubnub_list_channel_group()",
@@ -227,8 +243,10 @@ int main()
 
         break;
       case 20:
-        // List groups
-        puts("Not implemented yet");
+        // Remove Group
+        pnc_read_string_from_console("Group to remove",
+            channel, PNC_CHANNEL_NAME_SIZE);
+        pubnub_remove_channel_group(pn, channel);
         break;
       default:
         printf("Invalid input: %d\n", option);
@@ -248,27 +266,38 @@ int main()
 }
 
 void displayMenuOptions(pubnub_t *pn) {
-  printf("ENTER 1  FOR Subscribe (Currently subscribed to %s)\n", "nothing");
-  puts("ENTER 2  FOR Publish");
-  puts("ENTER 3  FOR Presence");
-  puts("ENTER 4  FOR History");
-  puts("ENTER 5  FOR Here Now");
-  puts("ENTER 6  FOR Unsubscribe(Only async)");
-  puts("ENTER 7  FOR Presence-Unsubscribe(Only async)");
-  puts("ENTER 8  FOR Time");
-  puts("ENTER 9  FOR EXIT OR QUIT");
-  puts("ENTER 10 FOR Disconnect-And-Resubscribe");
-  puts("ENTER 11 FOR Disconnect-And-Resubscribe with timetoken");
-  printf("ENTER 12 FOR Setting/Unsetting auth key ( current: %s )\n", pnc_get_auth(pn));
-  printf("ENTER 13 FOR Setting UUID ( current: %s)\n", pnc_get_uuid(pn));
-  puts("ENTER 14 FOR Getting Subscriber State");
-  puts("ENTER 15 FOR Setting Subscriber State");
-  puts("ENTER 16 FOR Where Now");
+  char channels_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+  char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+  pnc_subscribe_list_channels(channels_string);
+  pnc_subscribe_list_channel_groups(channel_groups_string);
+
+
+  printf("Active Channels/Channel Groups are: \"%s\"/\"%s\"\n\n",
+      channels_string, channel_groups_string);
+
+  puts("ENTER 1  FOR Publish");
+  puts("ENTER 2  FOR History");
+  puts("ENTER 3  FOR Here Now");
+  puts("ENTER 4  FOR Time");
+  printf("ENTER 5  FOR Setting/Unsetting auth key ( current: %s )\n", pnc_get_auth(pn));
+  printf("ENTER 6  FOR Setting UUID ( current: %s)\n", pnc_get_uuid(pn));
+  puts("ENTER 7  FOR Getting Subscriber State");
+  puts("ENTER 8  FOR Setting Subscriber State");
+  puts("ENTER 9  FOR Where Now");
+  puts("ENTER 10 FOR [Current Subscription] Add Presence Channel");
+  puts("ENTER 11 FOR [Current Subscription] Subscribe");
+  puts("ENTER 12 FOR [Current Subscription] Unsubscribe");
+  puts("ENTER 13 FOR [Current Subscription] Add Channel");
+  puts("ENTER 14 FOR [Current Subscription] Add Channel Group");
+  puts("ENTER 15 FOR [Current Subscription] Remove Channel");
+  puts("ENTER 16 FOR [Current Subscription] Remove Channel Group");
   puts("ENTER 17 FOR [Channel Group] Add Channel");
   puts("ENTER 18 FOR [Channel Group] Remove Channel");
   puts("ENTER 19 FOR [Channel Group] List Channels");
-  puts("ENTER 20 FOR [Channel Group] List Groups");
-  puts("ENTER 21 FOR [Channel Group] Remove Group");
+  puts("ENTER 20 FOR [Channel Group] Remove Group");
+  puts("\nENTER 0 to display this menu");
+  puts("ENTER 99 FOR EXIT OR QUIT");
+  printf("> ");
 }
 
 char const *pnc_get_auth(pubnub_t *pb) {
