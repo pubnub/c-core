@@ -72,8 +72,7 @@ void pnc_subscribe_add_channel(char *channel) {
   char channels_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
   pnc_subscribe_list_channels(channels_string);
 
-  puts("Success!");
-  printf("Channels list now contains %d items: %s\n", channels_length, channels_string);
+  puts("Channel successfully added!");
 }
 
 void pnc_subscribe_add_channel_group(char *channel_group) {
@@ -94,7 +93,37 @@ void pnc_subscribe_add_channel_group(char *channel_group) {
   char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
   pnc_subscribe_list_channel_groups(channel_groups_string);
 
-  puts("Success!");
-  printf("Channels list now contains %d items: %s\n", channel_groups_length, channel_groups_string);
+  puts("Channel Group successfully added!");
 }
 
+void pnc_subscribe_remove_channel(char *channel) {
+  int i;
+
+  for (i = 0; i < channels_length; i++) {
+    if (strcmp(channel, (char *) channels[i]) == 0) {
+      puts("Exists");
+      memmove(&channels[i], &channels[i + 1],
+          ((PNC_SUBSCRIBE_CHANNELS_LIMIT - 1) - i) * PNC_CHANNEL_NAME_SIZE);
+      channels_length--;
+      break;
+    }
+  }
+
+  puts("Channel successfully removed!");
+}
+
+void pnc_subscribe_remove_channel_group(char *channel_group) {
+  int i;
+
+  for (i = 0; i < channel_groups_length; i++) {
+    if (strcmp(channel_group, (char *) channel_groups[i]) == 0) {
+      puts("Exists");
+      memmove(&channel_groups[i], &channel_groups[i + 1],
+          ((PNC_SUBSCRIBE_CHANNELS_LIMIT - 1) - i) * PNC_CHANNEL_NAME_SIZE);
+      channel_groups_length--;
+      break;
+    }
+  }
+
+  puts("Channel Group successfully removed!");
+}

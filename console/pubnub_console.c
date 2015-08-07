@@ -24,7 +24,6 @@ int main()
   pubnub_init(pn_sub, pubkey, pubkey);
   pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
   pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
-  pnc_subscribe_add_channel("blah");
 
   displayMenuOptions(pn);
 
@@ -205,11 +204,15 @@ int main()
         break;
       case 15:
         // [Current Subscription] Remove Channel
-        puts("Not implemented yet");
+        pnc_read_string_from_console("Enter Channel name",
+            channel, PNC_CHANNEL_NAME_SIZE);
+        pnc_subscribe_remove_channel(channel);
         break;
       case 16:
         // [Current Subscription] Remove Channel Group
-        puts("Not implemented yet");
+        pnc_read_string_from_console("Enter Group name",
+            channel, PNC_CHANNEL_NAME_SIZE);
+        pnc_subscribe_remove_channel_group(channel);
         break;
       case 17:
         // [Channel Group] Add channel
