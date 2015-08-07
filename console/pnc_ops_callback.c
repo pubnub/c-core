@@ -11,7 +11,7 @@ static pthread_mutex_t mutw_sub;
 static pthread_cond_t condw;
 static pthread_cond_t condw_sub;
 
-static bool loop_enabled = true;
+static bool loop_enabled = false;
 pthread_t sub_thread;
 
 void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub) {
@@ -67,7 +67,8 @@ void pnc_ops_subscribe(pubnub_t *pn_sub) {
 }
 
 void pnc_ops_subscribe_thr(void *pn_sub_addr) {
-  puts("Subscribe thread created");
+  puts("\nSubscribe thread created");
+  loop_enabled = true;
 
   pubnub_t *pn_sub = (pubnub_t *) pn_sub_addr;
   enum pubnub_res res;
@@ -105,9 +106,13 @@ void pnc_ops_subscribe_thr(void *pn_sub_addr) {
 }
 
 void pnc_ops_unsubscribe(pubnub_t *pn_sub) {
-  loop_enabled = false;
-  puts("Subscription loop is disabled and will be stopped after the next message received");
-  // pthread_cancel(sub_thread);
+  if (loop_enabled) {
+    loop_enabled = false;
+    puts("Subscription loop is disabled and will be stopped after the next message received.");
+    pthread_cond_signal(&condw);
+  } else {
+    puts("Subscription loop is already disabled.");
+  }
 }
 
 void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub_t *pn) {
