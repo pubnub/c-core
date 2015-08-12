@@ -82,8 +82,10 @@ void pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key
 void pubnub_set_uuid(pubnub_t *p, const char *uuid);
 
 /** Get the UUID identification of PubNub client context @p p.
+    After pubnub_init(), it will return `NULL` until you change it
+    to non-`NULL` via pubnub_set_uuid().
     */
-char const *pubnub_get_uuid(pubnub_t *p);
+char const *pubnub_uuid_get(pubnub_t const *p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.
@@ -94,6 +96,13 @@ char const *pubnub_get_uuid(pubnub_t *p);
     the whole software/ firmware stops working). So, the contents of
     the auth string is not copied to the Pubnub context @p p.  */
 void pubnub_set_auth(pubnub_t *p, const char *auth);
+
+/** Returns the current authentication information for the
+    context @p p.
+    After pubnub_init(), it will return `NULL` until you change it
+    to non-`NULL` via pubnub_set_auth().
+*/
+char const *pubnub_auth_get(pubnub_t const *p);
 
 /** Cancel an ongoing API transaction. The outcome of the transaction
     in progress, if any, will be #PNR_CANCELLED. */

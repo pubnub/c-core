@@ -403,7 +403,7 @@ void pubnub_set_uuid(pubnub_t *pb, const char *uuid)
 }
 
 
-char const *pubnub_get_uuid(pubnub_t *pb)
+char const *pubnub_uuid_get(pubnub_t const *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     return pb->core.uuid;
@@ -414,6 +414,13 @@ void pubnub_set_auth(pubnub_t *pb, const char *auth)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pbcc_set_auth(&pb->core, auth);
+}
+
+
+char const *pubnub_auth_get(pubnub_t const *pb)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    return pb->core.auth;
 }
 
 

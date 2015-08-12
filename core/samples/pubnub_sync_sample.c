@@ -243,7 +243,7 @@ int main()
 #endif
 
     puts("Getting where_now presence...");
-    res = pubnub_where_now(pbp, pubnub_get_uuid(pbp));
+    res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_where_now() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -271,7 +271,7 @@ int main()
     }
 
     puts("Setting state...");
-    res = pubnub_set_state(pbp, chan, NULL, pubnub_get_uuid(pbp), "{\"x\":5}");
+    res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
     if (res != PNR_STARTED) {
         printf("pubnub_set_state() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -299,7 +299,7 @@ int main()
     }
 
     puts("Getting state...");
-    res = pubnub_state_get(pbp, chan, NULL, pubnub_get_uuid(pbp));
+    res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_state_get() returned unexpected: %d\n", res);
         pubnub_free(pbp);
