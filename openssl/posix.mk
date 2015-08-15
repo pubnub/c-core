@@ -1,4 +1,4 @@
-SOURCEFILES += ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_helper.c pubnub_version_openssl.c  ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c
+SOURCEFILES += ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_json_parse.c ../core/pubnub_helper.c pubnub_version_openssl.c  ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c
 
 CFLAGS =-g -D VERBOSE_DEBUG -I ../core -I . -I ../posix/fntest -I ../core/fntest -I ../posix -Wall
 # -g enables debugging, remove to get a smaller executable
