@@ -68,7 +68,8 @@ static void finish(struct pubnub *pb)
     case PBTT_REMOVE_CHANNEL_FROM_GROUP:
     case PBTT_ADD_CHANNEL_TO_GROUP:
     case PBTT_LIST_CHANNEL_GROUP:
-        if (pbcc_parse_channel_registry_response(&pb->core) != 0) {
+        pbres = pbcc_parse_channel_registry_response(&pb->core);
+        if (pbres != PNR_OK) {
             DEBUG_PRINTF("parse_channel_registry failed\n");
             pbres = PNR_FORMAT_ERROR;
         }

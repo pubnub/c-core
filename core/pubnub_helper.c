@@ -43,6 +43,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_TX_BUFF_TOO_SMALL:  return "Tx buffer too small for sending/publishing the message";
     case PNR_INVALID_CHANNEL: return "Invalid channel";
     case PNR_PUBLISH_FAILED: return "Publish failed";
+    case PNR_CHANNEL_REGISTRY_ERROR: return "A transaction related to channel registry failed";
     default: return "!?!?!";
     }
 }

@@ -510,8 +510,8 @@ enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *c
     means "initiate a remove_channel_group transaction". It can be
     thought of as an update against the "channel group database".
 
-    If transaction is successful, the response will be a available
-    via pubnub_get() as one message, a JSON object with keys:
+    If transaction is successful, the response will be a available via
+    pubnub_get_channel() as one "channel", a JSON object with keys:
 
     - "service": should be "channel-registry"
     - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
@@ -536,8 +536,8 @@ enum pubnub_res pubnub_remove_channel_group(pubnub_t *p, char const *channel_gro
     You can't remove the last channel from a channel group. To do
     that, remove the channel group itself.
 
-    If transaction is successful, the response will be a available
-    via pubnub_get() as one message, a JSON object with keys:
+    If transaction is successful, the response will be a available via
+    pubnub_get_channel() as one "channel", a JSON object with keys:
 
     - "service": should be "channel-registry"
     - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
@@ -563,7 +563,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channe
     it.
 
     If transaction is successful, the response will be a available
-    via pubnub_get() as one message, a JSON object with keys:
+    via pubnub_get_channel() as one "channel", a JSON object with keys:
 
     - "service": should be "channel-registry"
     - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
@@ -585,8 +585,8 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, ch
     means "initiate a list_channel_group transaction". It can be
     thought of as a query against the "channel group database".
 
-    If transaction is successful, the response will be a available
-    via pubnub_get() as one message, a JSON object with keys:
+    If transaction is successful, the response will be a available via
+    pubnub_get_channel() as one "channel", a JSON object with keys:
 
     - "service": should be "channel-registry"
     - "status": the HTTP status of the operation (200 OK, 40x error, etc.)

@@ -48,7 +48,7 @@ enum pubnub_res {
         subscription not allowed.
     */
     PNR_RX_BUFF_NOT_EMPTY,
-    /** The buffer is to small. Increase #PUBNUB_BUF_MAXLEN.
+    /** The buffer is too small. Increase #PUBNUB_BUF_MAXLEN.
     */
     PNR_TX_BUFF_TOO_SMALL,
     /** Channel specification / name is invalid. 
@@ -58,7 +58,14 @@ enum pubnub_res {
         see the reason describing the failure, call
         pubnub_last_publish_result().
      */
-    PNR_PUBLISH_FAILED
+    PNR_PUBLISH_FAILED,
+    /** A transaction related to channel registry failed - error
+        returned from Pubnub. To see the reason describing the
+        failure, get the value for key "message" from the response
+        (which is a JSON object) and value for key "status" for the
+        numeric code of the error.
+     */
+    PNR_CHANNEL_REGISTRY_ERROR
 };
 
 

@@ -97,7 +97,8 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p);
     `subscribe`).
 
     @param p The Pubnub C core context to parse the response "in"
-    @return 0: OK, -1: error (invalid response)
+    @return The result of the parsing, expressed as the "Pubnub
+    result" enum
 */
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p);
 
@@ -151,9 +152,10 @@ int pbcc_parse_presence_response(struct pbcc_context *p);
     is, enables getting it, as a whole, in one pubnub_get().
 
     @param p The Pubnub C core context to parse the response "in"
-    @return 0: OK, -1: error (invalid response)
+    @return The result of the parsing, expressed as the "Pubnub
+    result" enum
 */
-int pbcc_parse_channel_registry_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p);
 
 /** Prepares the Publish operation (transaction), mostly by
     formatting the URI of the HTTP request.

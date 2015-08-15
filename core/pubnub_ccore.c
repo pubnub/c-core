@@ -3,6 +3,7 @@
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
+#include "pubnub_json_parse.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -198,10 +199,33 @@ int pbcc_parse_presence_response(struct pbcc_context *p)
 }
 
 
-int pbcc_parse_channel_registry_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
 {
-    /* For now, let's parse it just like the Presence response */
-    return pbcc_parse_presence_response(p);
+    enum pbjson_object_name_parse_result result;
+    struct pbjson_elem el = { p->http_reply, p->http_reply + p->http_buf_len };
+    struct pbjson_elem found;
+    p->chan_ofs = 0;
+    p->chan_end = p->http_buf_len;
+
+    p->msg_ofs = 0;
+    p->msg_end = 0;
+
+    /* We should probably also check that there is a key "service"
+       with value "channel-registry".  Maybe even that there is a key
+       "status" (with value 200).
+    */
+    result = pbjson_get_object_value(&el, "error", &found);
+    if (jonmpOK == result) {
+        if (pbjson_elem_equals_string(&found, "false")) {
+            return PNR_OK;
+        }
+        else {
+            return PNR_CHANNEL_REGISTRY_ERROR;
+        }
+    }
+    else {
+        return PNR_FORMAT_ERROR;
+    }
 }
 
 
