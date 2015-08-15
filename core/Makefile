@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pubnub_coreapi.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c
+PROJECT_SOURCEFILES = pubnub_coreapi.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c
 
 all: unittest
 

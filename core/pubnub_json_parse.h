@@ -42,6 +42,10 @@ enum pbjson_object_name_parse_result {
     /** A comma `,`, delimiting key-value pairs in a JSON
         object, is missing.*/
     jonmpMissingValueSeparator,
+    /** The key was not found in the JSON object definition */
+    jonmpKeyNotFound,
+    /** The name of the key is empty or otherwise not valid */
+    jonmpInvalidKeyName,
     /** Parsed OK, JSON (object) is valid */
     jonmpOK
 };

@@ -4,7 +4,6 @@
 #include <string.h>
 
 
-
 char const* pbjson_skip_whitespace(char const *start, char const *end)
 {
     for (; start < end; ++start) {
@@ -145,6 +144,9 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
     bool found = false;
     char const *end;
 
+    if (0 == name_len) {
+        return jonmpInvalidKeyName;
+    }
     if (*s != '{') {
         return jonmpNoStartCurly;
     }
@@ -163,9 +165,7 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
         if (*end != '"') {
             return jonmpStringNotTerminated;
         }
-        if (0 == strncmp(s+1, name, name_len)) {
-            found = true;
-        }
+        found = (end-s-1 == name_len) && (0 == memcmp(s+1, name, name_len));
         s = pbjson_skip_whitespace(end+1, p->end);
         if (s == p->end) {
             return jonmpMissingColon;
@@ -188,8 +188,8 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
             return jonmpMissingValueSeparator;
         }
     }
-    
-    return jonmpObjectIncomplete;
+
+    return (s < p->end) ? jonmpKeyNotFound : jonmpObjectIncomplete;
 }
 
 
@@ -215,106 +215,9 @@ char const *pbjson_object_name_parse_result_2_string(enum pbjson_object_name_par
     case jonmpMissingColon: return "Missing Colon";
     case jonmpObjectIncomplete: return "Object Incomplete";
     case jonmpMissingValueSeparator: return "Missing Value Separator";
+    case jonmpKeyNotFound: return "Key Not Found";
+    case jonmpInvalidKeyName: return "Invalid Key Name";
     case jonmpOK: return "OK";
     default: return "?!?";
     }
 }
-
-
-#if 0
-
-int main()
-{
-    char const *json = "{\"service\": \"xxx\", \"error\": true, \"payload\":{\"group\":\"gr\",\"chan\":[1,2,3]}, \"message\":0}";
-    struct pbjson_elem elem = { json, json + strlen(json) };
-    struct pbjson_elem parsed;
-    enum json_object_name_parse_result x;
-    
-    x = parse_json_object_name(&elem, "error", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpOK == x);
-    assert(json_elem_equals_string(&parsed, "true"));
-    
-    x = pbjson_get_object_value(&elem, "service", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpOK == x);
-    assert(json_elem_equals_string(&parsed, "\"xxx\""));
-    
-    x = pbjson_get_object_value(&elem, "message", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpOK == x);
-    assert(json_elem_equals_string(&parsed, "0"));
-    
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpOK == x);
-    assert(json_elem_equals_string(&parsed, "{\"group\":\"gr\",\"chan\":[1,2,3]}"));
-
-    elem.end = elem.start;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpObjectIncomplete == x);
-
-    elem.end = elem.start+1;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpKeyMissing == x);
-
-    elem.end = elem.start+2;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpStringNotTerminated == x);
-
-    elem.end = elem.start+10;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingColon == x);
-
-    elem.end = elem.start+11;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingValueSeparator == x);
-
-    elem.end = elem.start+12;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingValueSeparator == x);
-
-    elem.end = elem.start+13;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingValueSeparator == x);
-
-    elem.end = elem.start+17;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpObjectIncomplete == x);
-
-    elem.end = elem.start+18;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpKeyMissing == x);
-
-    elem.end = elem.start+19;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpKeyMissing == x);
-
-    elem.end = elem.start+20;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpStringNotTerminated == x);
-
-    elem.end = elem.start+26;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingColon == x);
-
-    elem.end = elem.start+27;
-    x = pbjson_get_object_value(&elem, "payload", &parsed);
-    printf("x = %s, elem.start=%s, elem.length=%ld\n", json_object_name_parse_result_2_string(x), parsed.start, parsed.end - parsed.start);
-    assert(jonmpMissingValueSeparator == x);
-
-    return 0;
-}
-#endif

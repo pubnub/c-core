@@ -8,6 +8,8 @@
 
 #include "pubnub_internal.h"
 
+#include "pubnub_json_parse.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -299,6 +301,105 @@ void assert_handler(char const *s, const char *file, long i)
 
 
 /* The tests themselves */
+
+
+Ensure(/*pbjson_parse, */get_object_value_valid) {
+    char const *json = "{\"service\": \"xxx\", \"error\": true, \"payload\":{\"group\":\"gr\",\"chan\":[1,2,3]}, \"message\":0}";
+    struct pbjson_elem elem = { json, json + strlen(json) };
+    struct pbjson_elem parsed;
+    
+    attest(pbjson_get_object_value(&elem, "error", &parsed), equals(jonmpOK));
+    attest(pbjson_elem_equals_string(&parsed, "true"), is_true);
+    
+    attest(pbjson_get_object_value(&elem, "service", &parsed), equals(jonmpOK));
+    attest(pbjson_elem_equals_string(&parsed, "\"xxx\""), is_true);
+    
+    attest(pbjson_get_object_value(&elem, "message", &parsed), equals(jonmpOK));
+    attest(pbjson_elem_equals_string(&parsed, "0"), is_true);
+    
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpOK));
+    attest(pbjson_elem_equals_string(&parsed, "{\"group\":\"gr\",\"chan\":[1,2,3]}"), is_true);
+}
+
+
+Ensure(/*pbjson_parse, */ get_object_value_invalid) {
+    char const *json = "{\"service\": \"xxx\", \"error\": true, \"payload\":{\"group\":\"gr\",\"chan\":[1,2,3]}, \"message\":0}";
+    struct pbjson_elem elem = { json, json + strlen(json) };
+    struct pbjson_elem parsed;
+
+    attest(pbjson_get_object_value(&elem, "", &parsed), equals(jonmpInvalidKeyName));
+
+    elem.end = elem.start;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpObjectIncomplete));
+
+    elem.end = elem.start+1;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpKeyMissing));
+
+    elem.end = elem.start+2;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpStringNotTerminated));
+
+    elem.end = elem.start+10;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingColon));
+
+    elem.end = elem.start+11;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingValueSeparator));
+
+    elem.end = elem.start+12;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingValueSeparator));
+
+    elem.end = elem.start+13;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingValueSeparator));
+
+    elem.end = elem.start+17;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpObjectIncomplete));
+
+    elem.end = elem.start+18;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpKeyMissing));
+
+    elem.end = elem.start+19;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpKeyMissing));
+
+    elem.end = elem.start+20;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpStringNotTerminated));
+
+    elem.end = elem.start+26;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingColon));
+           
+    elem.end = elem.start+27;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingValueSeparator));
+
+    elem.start = json+1;
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpNoStartCurly));
+
+    char const* json_2 = "{x:2}";
+    elem.start = json_2;
+    elem.end = json_2 + strlen(json_2);
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpKeyNotString));
+
+    char const* json_no_colon = "{\"x\" 2}";
+    elem.start = json_no_colon;
+    elem.end = json_no_colon + strlen(json_no_colon);
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpMissingColon));
+}
+
+
+Ensure(/*pbjson_parse, */ get_object_value_key_doesnt_exist) {
+    char const *json = "{\"service\": \"xxx\", \"error\": true, \"payload\":{\"group\":\"gr\",\"chan\":[1,2,3]}, \"message\":0}";
+    struct pbjson_elem elem = { json, json + strlen(json) };
+    struct pbjson_elem parsed;
+
+    attest(pbjson_get_object_value(&elem, "zec", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "xxx", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "\"service\"", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "servic", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "ervice", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "essage", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "messag", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "messagg", &parsed), equals(jonmpKeyNotFound));
+    attest(pbjson_get_object_value(&elem, "mmessag", &parsed), equals(jonmpKeyNotFound));
+
+}
+
 
 Describe(single_context_pubnub);
 
