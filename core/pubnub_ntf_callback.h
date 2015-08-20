@@ -3,7 +3,8 @@
 #define      INC_PUBNUB_NTF_CALLBACK
 
 
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
+
 
 /** @file pubnub_ntf_callback.h 
     This is the "callback" notification interface.
@@ -28,8 +29,6 @@
     (other) threads that might be trying to use it at the same time.
 */
 
-struct pubnub;
-typedef struct pubnub pubnub_t;
 
 /** Pointer to a function to be called on the outcome of a Pubnub
     transaction.
@@ -52,8 +51,6 @@ typedef void (*pubnub_callback_t)(pubnub_t *pb, enum pubnub_trans trans, enum pu
     @param cb Pointer to function to call on end of transaction
 */
 enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb);
-
-
 
 
 #endif /* !defined INC_PUBNUB_NTF_CALLBACK */

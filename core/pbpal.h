@@ -7,8 +7,7 @@
 #include <stdlib.h>
 
 
-struct pubnub;
-typedef struct pubnub pubnub_t;
+#include "pubnub_api_types.h"
 
 
 /** Initializes the Pubnub PAL for the given Pubnub context.

@@ -3,7 +3,7 @@
 #define	INC_PUBNUB_BLOCKING_IO
 
 
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
 
 #include <stdbool.h>
 
@@ -18,15 +18,6 @@
     most of these functions provide more of a hint, rather than
     a command.
 */
-
-
-struct pubnub;
-
-/** A pubnub context. An opaque data structure that holds all the
-    data needed for a context.
- */
-typedef struct pubnub pubnub_t;
-
 
 
 /** Sets the usage of non-blocking I/O for a context. If non-blocking

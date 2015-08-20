@@ -23,8 +23,7 @@ bool pnfntst_timer_is_running(pnfntst_timer_t *t);
 void pnfntst_free_timer(pnfntst_timer_t *t);
 
 
-struct pubnub;
-typedef struct pubnub pubnub_t;
+#include "pubnub_api_types.h"
 
 /** Returns whether the messages specified as strings in the
     variable-arguments (which must end with NULL), have been received

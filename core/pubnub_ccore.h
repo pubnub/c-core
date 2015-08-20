@@ -3,7 +3,7 @@
 #define      INC_PUBNUB_CCORE
 
 #include "pubnub_config.h"
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
 
 #include <stdbool.h>
 

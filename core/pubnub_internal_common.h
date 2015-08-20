@@ -118,7 +118,6 @@ struct pubnub {
 };
 
 
-typedef struct pubnub pubnub_t;
 
 /** Internal function, to be called when the outcome of a
     REST call / transaction has been reached.

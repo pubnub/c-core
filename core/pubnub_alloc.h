@@ -3,9 +3,8 @@
 #define      INC_PUBNUB_ALLOC
 
 
-struct pubnub;
+#include "pubnub_api_types.h"
 
-typedef struct pubnub pubnub_t;
 
 /** Returns an allocated context. After successful allocation, please
     call pubnub_init() to prepare the context for regular use.

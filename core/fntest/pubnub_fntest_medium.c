@@ -40,6 +40,7 @@ TEST_DEF(complex_send_and_receive_over_several_channels_simultaneously) {
     TEST_POP_DEFERRED;
     } TEST_ENDDEF
 
+
 TEST_DEF(complex_send_and_receive_over_channel_plus_group_simultaneously) {
 
     static pubnub_t *pbp;
@@ -53,12 +54,10 @@ TEST_DEF(complex_send_and_receive_over_channel_plus_group_simultaneously) {
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "two,three", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
 
-	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
     
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
     expect_pnr(pubnub_subscribe(pbp_2, "ch", NULL), PNR_STARTED);
@@ -78,7 +77,6 @@ TEST_DEF(complex_send_and_receive_over_channel_plus_group_simultaneously) {
 
     expect_pnr(pubnub_remove_channel_from_group(pbp, "two,three", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
 
     TEST_POP_DEFERRED;
     TEST_POP_DEFERRED;
@@ -128,16 +126,14 @@ TEST_DEF(connect_disconnect_and_connect_again_group) {
     
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
-
-	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
-
+    
+    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-
+    
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test M4\""), PNR_STARTED);
     pubnub_cancel(pbp);
     await_timed(5*SECONDS, PNR_CANCELLED, pbp);
@@ -160,7 +156,6 @@ TEST_DEF(connect_disconnect_and_connect_again_group) {
 
     expect_pnr(pubnub_remove_channel_from_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
 
     TEST_POP_DEFERRED;
     } TEST_ENDDEF
@@ -179,12 +174,10 @@ TEST_DEF(connect_disconnect_and_connect_again_combo) {
     
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
     expect_pnr(pubnub_add_channel_to_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
 
-	TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
 
     expect_pnr(pubnub_subscribe(pbp, NULL, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -216,7 +209,6 @@ TEST_DEF(connect_disconnect_and_connect_again_combo) {
 
     expect_pnr(pubnub_remove_channel_from_group(pbp, "ch", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
-	pubnub_get(pbp);
 
     TEST_POP_DEFERRED;
     TEST_POP_DEFERRED;
@@ -260,14 +252,13 @@ TEST_DEF(handling_errors_from_pubnub) {
     
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test "), PNR_STARTED);
     await_timed(5*SECONDS, PNR_PUBLISH_FAILED, pbp);
-	expect(400 == pubnub_last_http_code(pbp));
-	expect(pubnub_parse_publish_result(pubnub_last_publish_result(pbp)) == PNPUB_INVALID_JSON);
-
+    expect(400 == pubnub_last_http_code(pbp));
+    expect(pubnub_parse_publish_result(pubnub_last_publish_result(pbp)) == PNPUB_INVALID_JSON);
+    
     expect_pnr(pubnub_publish(pbp, ",", "\"Test \""), PNR_STARTED);
     await_timed(5*SECONDS, PNR_PUBLISH_FAILED, pbp);
-	expect(400 == pubnub_last_http_code(pbp));
-	expect(pubnub_parse_publish_result(pubnub_last_publish_result(pbp)) == PNPUB_INVALID_CHAR_IN_CHAN_NAME);
-
+    expect(400 == pubnub_last_http_code(pbp));
+    expect(pubnub_parse_publish_result(pubnub_last_publish_result(pbp)) == PNPUB_INVALID_CHAR_IN_CHAN_NAME);
 
     TEST_POP_DEFERRED;
     } TEST_ENDDEF

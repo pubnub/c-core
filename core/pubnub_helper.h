@@ -3,7 +3,7 @@
 #define	INC_PUBNUB_HELPER
 
 
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
 
 
 /** @file pubnub_helper.h 
@@ -12,6 +12,7 @@
     You don't need this to work with Pubnub client, but they may come
     in handy.
 */
+
 
 /** Possible (known) publish results (outcomes) in the description
     received from Pubnub.

@@ -3,6 +3,9 @@
 #define	INC_PUBNUB_NTF_SYNC
 
 
+#include "pubnub_api_types.h"
+
+
 /** @file pubnub_ntf_sync.h 
     This is the "sync" notification interface.
 
@@ -28,8 +31,6 @@
     pubnub_await() is not.
 */
 
-struct pubnub;
-typedef struct pubnub pubnub_t;
 
 /** Waits, in a loop, for the current transaction to finish. */
 enum pubnub_res pubnub_await(pubnub_t *p);

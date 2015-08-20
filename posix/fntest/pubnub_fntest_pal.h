@@ -27,7 +27,7 @@
 
 #define TEST_SLEEP_FOR(ms)                              \
     do {                                                \
-        struct timespec req_ = {0};                     \
+        struct timespec req_ = {0, 0};                  \
         time_t sec_ = (int)((ms) / 1000);               \
         req_.tv_sec = sec_;                             \
         req_.tv_nsec = ((ms) - (sec_*1000)) * 1000000L; \

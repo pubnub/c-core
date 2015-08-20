@@ -3,7 +3,7 @@
 #define	INC_PUBNUB_SSL
 
 
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
 
 #include <stdbool.h>
 
@@ -13,15 +13,6 @@
     It has functions that pertain to using SSL/TLS to connect
     to Pubnub. It is supported on platforms that have SSL/TLS.
 */
-
-
-struct pubnub;
-
-/** A pubnub context. An opaque data structure that holds all the
-    data needed for a context.
- */
-typedef struct pubnub pubnub_t;
-
 
 
 /** Sets the SSL options for a context. If SSL support is enabled,

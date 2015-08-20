@@ -3,7 +3,7 @@
 #define	INC_PUBNUB_COREAPI
 
 
-#include "pubnub_res.h"
+#include "pubnub_api_types.h"
 
 #include <stdbool.h>
 
@@ -15,14 +15,6 @@
     For the most part, they have the same implementation in
     all of them, too.
 */
-
-
-struct pubnub;
-
-/** A pubnub context. An opaque data structure that holds all the
-    data needed for a context.
- */
-typedef struct pubnub pubnub_t;
 
 
 /** Append this to a name of the channel to form the name of its
