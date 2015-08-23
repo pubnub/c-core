@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-static void outcome_detected(struct pubnub *pb, enum pubnub_res rslt)
+static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
     pbpal_close(pb);
     pb->core.last_result = rslt;
@@ -15,7 +15,7 @@ static void outcome_detected(struct pubnub *pb, enum pubnub_res rslt)
 }
 
 
-static void finish(struct pubnub *pb)
+static void finish(struct pubnub_ *pb)
 {
     enum pubnub_res pbres = PNR_OK;
 
@@ -86,7 +86,7 @@ static void finish(struct pubnub *pb)
 }
 
 
-int pbnc_fsm(struct pubnub *pb)
+int pbnc_fsm(struct pubnub_ *pb)
 {
     enum pubnub_res pbrslt;
 

@@ -2,6 +2,12 @@
 #if !defined INC_PUBNUB_NETCORE
 #define      INC_PUBNUB_NETCORE
 
+/** @file pubnub_netcore.h
+
+    This is the interface of the Pubnub C-core network module.
+    It is internal, users should not include this or use any
+    of its definitions.
+ */
 
 
 /** States of a context */
@@ -52,14 +58,14 @@ enum pubnub_state {
 };
 
 
-struct pubnub;
+struct pubnub_;
 
 /** The Finite State Machine (FSM) of the net-core module.  It's
     "universal", in the sense that it is portable to all platforms,
     with the porting being done by implementing some functions it
     needs in the PAL (Platform Abstraction Layer).
  */
-int pbnc_fsm(struct pubnub *pb);
+int pbnc_fsm(struct pubnub_ *pb);
 
 
 #endif  /* !defined INC_PUBNUB_NETCORE */

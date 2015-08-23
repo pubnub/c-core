@@ -54,7 +54,7 @@ enum PBSocketState {
 
 
 /** The Pubnub context */
-struct pubnub {
+struct pubnub_ {
     struct pbcc_context core;
 
     /** Network communication state */
@@ -114,6 +114,7 @@ struct pubnub {
 
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
+    void *user_data;
 #endif
 };
 

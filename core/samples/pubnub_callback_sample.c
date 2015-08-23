@@ -10,18 +10,22 @@
 #include <stdio.h>
 
 
+struct UserData {
 #if defined _WIN32
-static CRITICAL_SECTION mutw;
-static HANDLE condw;
+    CRITICAL_SECTION mutw;
+    HANDLE condw;
 #else
-static pthread_mutex_t mutw;
-static bool triggered;
-static pthread_cond_t condw;
+    pthread_mutex_t mutw;
+    bool triggered;
+    pthread_cond_t condw;
 #endif
+    pubnub_t *pb;
+};
 
-
-void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result)
+void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
 {
+    struct UserData *pUserData = (struct UserData*)user_data;
+    
     switch (trans) {
     case PBTT_PUBLISH:
         printf("Published, result: %d\n", result);
@@ -61,35 +65,51 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
         break;
     }
 #if defined _WIN32
-    SetEvent(condw);
+    SetEvent(pUserData->condw);
 #else
-    pthread_mutex_lock(&mutw);
-    triggered = true;
-    pthread_cond_signal(&condw);
-    pthread_mutex_unlock(&mutw);
+    pthread_mutex_lock(&pUserData->mutw);
+    pUserData->triggered = true;
+    pthread_cond_signal(&pUserData->condw);
+    pthread_mutex_unlock(&pUserData->mutw);
 #endif
 }
 
 
-static void await(void)
+static enum pubnub_res await(struct UserData *pUserData)
 {
 #if defined _WIN32	
-    ResetEvent(condw);
-    WaitForSingleObject(condw, INFINITE);
+    ResetEvent(pUserData->condw);
+    WaitForSingleObject(pUserData->condw, INFINITE);
 #else
-    pthread_mutex_lock(&mutw);
-    triggered = false;
-    while (!triggered) {
-        pthread_cond_wait(&condw, &mutw);
+    pthread_mutex_lock(&pUserData->mutw);
+    pUserData->triggered = false;
+    while (!pUserData->triggered) {
+        pthread_cond_wait(&pUserData->condw, &pUserData->mutw);
     }
-    pthread_mutex_unlock(&mutw);
+    pthread_mutex_unlock(&pUserData->mutw);
 #endif
+    return pubnub_last_result(pUserData->pb);
 }
+
+
+static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
+{
+#if defined _WIN32
+    InitializeCriticalSection(&pUserData->mutw);
+    pUserData->condw = CreateEvent(NULL, TRUE, FALSE, NULL);
+#else
+    pthread_mutex_init(&pUserData->mutw, NULL);
+    pthread_cond_init(&pUserData->condw, NULL);
+#endif
+    pUserData->pb = pb;
+}
+
 
 int main()
 {
     char const *msg;
     enum pubnub_res res;
+    struct UserData user_data;
     char const *chan = "hello_world";
     pubnub_t *pbp = pubnub_alloc();
     if (NULL == pbp) {
@@ -97,16 +117,10 @@ int main()
         return -1;
     }
 
-#if defined _WIN32
-    InitializeCriticalSection(&mutw);
-    condw = CreateEvent(NULL, TRUE, FALSE, NULL);
-#else
-    pthread_mutex_init(&mutw, NULL);
-    pthread_cond_init(&condw, NULL);
-#endif
+    InitUserData(&user_data, pbp);
 
     pubnub_init(pbp, "demo", "demo");
-    pubnub_register_callback(pbp, sample_callback);
+    pubnub_register_callback(pbp, sample_callback, &user_data);
 
     puts("-----------------------");
     puts("Publishing...");
@@ -118,10 +132,9 @@ int main()
         return -1;
     }
 
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -145,10 +158,9 @@ int main()
         return -1;
     }
 
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -167,10 +179,9 @@ int main()
         return -1;
     }
 
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -197,10 +208,9 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -220,10 +230,9 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -249,10 +258,9 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }

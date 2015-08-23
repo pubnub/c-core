@@ -64,7 +64,7 @@ void pbpal_init(pubnub_t *pb)
 }
 
 
-int pbpal_send(pubnub_t *pb, void *data, size_t n)
+int pbpal_send(pubnub_t *pb, void const *data, size_t n)
 {
     if (n == 0) {
         return 0;
@@ -73,7 +73,7 @@ int pbpal_send(pubnub_t *pb, void *data, size_t n)
         DEBUG_PRINTF("pbpal_send(): pb->sock_state != STATE_NONE (=%d)\n", pb->sock_state);
         return -1;
     }
-    pb->sendptr = data;
+    pb->sendptr = (uint8_t*)data;
     pb->sendlen = n;
     pb->sock_state = STATE_NONE;
 
@@ -81,7 +81,7 @@ int pbpal_send(pubnub_t *pb, void *data, size_t n)
 }
 
 
-int pbpal_send_str(pubnub_t *pb, char *s)
+int pbpal_send_str(pubnub_t *pb, char const *s)
 {
     return pbpal_send(pb, s, strlen(s));
 }

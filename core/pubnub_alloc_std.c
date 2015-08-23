@@ -18,7 +18,7 @@ static void save_allocated(pubnub_t *pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
     if (m_n == m_cap) {
-        pubnub_t **npalloc = realloc(m_allocated, sizeof m_allocated[0] * (m_n+1));
+        pubnub_t **npalloc = (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n+1));
         if (NULL == npalloc) {
             return;
         }
@@ -68,7 +68,7 @@ bool pb_valid_ctx_ptr(pubnub_t const *pb)
 
 pubnub_t *pubnub_alloc(void)
 {
-    pubnub_t *pb = malloc(sizeof(pubnub_t));
+    pubnub_t *pb = (pubnub_t*)malloc(sizeof(pubnub_t));
     if (pb != NULL) {
         save_allocated(pb);
     }

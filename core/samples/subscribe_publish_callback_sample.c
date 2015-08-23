@@ -10,23 +10,22 @@
 #include <stdio.h>
 
 
+struct UserData {
 #if defined _WIN32
-static CRITICAL_SECTION mutw;
-static HANDLE condw;
-static CRITICAL_SECTION mutw_2;
-static HANDLE condw_2;
+    CRITICAL_SECTION mutw;
+    HANDLE condw;
 #else
-static pthread_mutex_t mutw;
-static bool triggered;
-static pthread_cond_t condw;
-static pthread_mutex_t mutw_2;
-static bool triggered_2;
-static pthread_cond_t condw_2;
+    pthread_mutex_t mutw;
+    bool triggered;
+    pthread_cond_t condw;
 #endif
+    pubnub_t *pb;
+};
 
 
-void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result)
+void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
 {
+    struct UserData *pUserData = (struct UserData*)user_data;
     switch (trans) {
     case PBTT_SUBSCRIBE:
         /* One could do all handling here, and not signal the `condw`, or use
@@ -35,24 +34,6 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
         */
         printf("Subscribed, result: %d\n", result);
         break;
-    default:
-        printf("Some other transaction: result: %d\n", result);
-        break;
-    }
-#if defined _WIN32
-    SetEvent(condw);
-#else
-    pthread_mutex_lock(&mutw);
-    triggered = true;
-    pthread_cond_signal(&condw);
-    pthread_mutex_unlock(&mutw);
-#endif
-}
-
-
-void sample_callback_2(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result)
-{
-    switch (trans) {
     case PBTT_PUBLISH:
         printf("Published, result: %d\n", result);
         break;
@@ -61,62 +42,60 @@ void sample_callback_2(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res re
         break;
     }
 #if defined _WIN32
-    SetEvent(condw_2);
+    SetEvent(pUserData->condw);
 #else
-    pthread_mutex_lock(&mutw_2);
-    triggered_2 = true;
-    pthread_cond_signal(&condw_2);
-    pthread_mutex_unlock(&mutw_2);
-#endif
-}
-
-static void start_await(void)
-{
-#if defined _WIN32	
-    ResetEvent(condw);
-#else
-    pthread_mutex_lock(&mutw);
-    triggered = false;
-    pthread_mutex_unlock(&mutw);
+    pthread_mutex_lock(&pUserData->mutw);
+    pUserData->triggered = true;
+    pthread_cond_signal(&pUserData->condw);
+    pthread_mutex_unlock(&pUserData->mutw);
 #endif
 }
 
 
-static void end_await(void)
+static void start_await(struct UserData *pUserData)
 {
 #if defined _WIN32	
-    WaitForSingleObject(condw, INFINITE);
+    ResetEvent(pUserData->condw);
 #else
-    pthread_mutex_lock(&mutw);
-    while (!triggered) {
-        pthread_cond_wait(&condw, &mutw);
+    pthread_mutex_lock(&pUserData->mutw);
+    pUserData->triggered = false;
+    pthread_mutex_unlock(&pUserData->mutw);
+#endif
+}
+
+
+static enum pubnub_res end_await(struct UserData *pUserData)
+{
+#if defined _WIN32	
+    WaitForSingleObject(pUserData->condw, INFINITE);
+#else
+    pthread_mutex_lock(&pUserData->mutw);
+    while (!pUserData->triggered) {
+        pthread_cond_wait(&pUserData->condw, &pUserData->mutw);
     }
-    pthread_mutex_unlock(&mutw);
+    pthread_mutex_unlock(&pUserData->mutw);
 #endif
+    return pubnub_last_result(pUserData->pb);
 }
 
 
-static void await(void)
+static enum pubnub_res await(struct UserData *pUserData)
 {
-    start_await();
-    end_await();
+    start_await(pUserData);
+    return end_await(pUserData);
 }
 
 
-
-static void await_2(void)
+static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
 {
-#if defined _WIN32	
-    ResetEvent(condw_2);
-    WaitForSingleObject(condw_2, INFINITE);
+#if defined _WIN32
+    InitializeCriticalSection(&pUserData->mutw);
+    pUserData->condw = CreateEvent(NULL, TRUE, FALSE, NULL);
 #else
-    pthread_mutex_lock(&mutw_2);
-    triggered_2 = false;
-    while (!triggered_2) {
-        pthread_cond_wait(&condw_2, &mutw_2);
-    }
-    pthread_mutex_unlock(&mutw_2);
+    pthread_mutex_init(&pUserData->mutw, NULL);
+    pthread_cond_init(&pUserData->condw, NULL);
 #endif
+    pUserData->pb = pb;
 }
 
 
@@ -124,6 +103,8 @@ int main()
 {
     char const *msg;
     enum pubnub_res res;
+    struct UserData user_data;
+    struct UserData user_data_2;
     char const *chan = "hello_world";
     pubnub_t *pbp = pubnub_alloc();
     pubnub_t *pbp_2 = pubnub_alloc();
@@ -136,30 +117,19 @@ int main()
         return -1;
     }
 
-#if defined _WIN32
-    InitializeCriticalSection(&mutw);
-    condw = CreateEvent(NULL, TRUE, FALSE, NULL);
-    InitializeCriticalSection(&mutw_2);
-    condw_2 = CreateEvent(NULL, TRUE, FALSE, NULL);
-#else
-    pthread_mutex_init(&mutw, NULL);
-    triggered = false;
-    pthread_cond_init(&condw, NULL);
-    pthread_mutex_init(&mutw_2, NULL);
-    triggered_2 = false;
-    pthread_cond_init(&condw_2, NULL);
-#endif
+    InitUserData(&user_data, pbp);
+    InitUserData(&user_data_2, pbp_2);
 
     pubnub_init(pbp, "demo", "demo");
-    pubnub_register_callback(pbp, sample_callback);
+    pubnub_register_callback(pbp, sample_callback, &user_data);
     pubnub_init(pbp_2, "demo", "demo");
-    pubnub_register_callback(pbp_2, sample_callback_2);
+    pubnub_register_callback(pbp_2, sample_callback, &user_data_2);
 
     puts("-----------------------");
     puts("Subscribing...");
     puts("-----------------------");
 	
-	/* First subscribe, to get the time token */
+    /* First subscribe, to get the time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
@@ -169,10 +139,9 @@ int main()
     }
 
     puts("Await subscribe");
-    await();
-    res = pubnub_last_result(pbp);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         pubnub_free(pbp_2);
         return -1;
@@ -194,7 +163,7 @@ int main()
     }
 	
     /* Don't do "full" await here, because we didn't publish anything yet! */
-    start_await();
+    start_await(&user_data);
     
     puts("-----------------------");
     puts("Publishing...");
@@ -202,7 +171,7 @@ int main()
     /* Since the subscribe is ongoing in the `pbp` context, we can't
        publish on it, so we use a different context to publish
     */
-    res = pubnub_publish(pbp_2, chan, "\"Hello world from callback!\"");
+    res = pubnub_publish(pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -211,10 +180,9 @@ int main()
     }
 
     puts("Await publish");
-    await_2();
-    res = pubnub_last_result(pbp_2);
+    res = await(&user_data_2);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         pubnub_free(pbp_2);
         return -1;
@@ -229,17 +197,16 @@ int main()
         printf("Publishing failed with code: %d\n", res);
     }
 	
-	/* Don't need `pbp_2` no more */
+    /* Don't need `pbp_2` no more */
     if (pubnub_free(pbp_2) != 0) {
         printf("Failed to free the Pubnub context `pbp_2`\n");
     }
 	
-	/* Now we await the subscribe on `pbp` */
-	puts("Await subscribe");
-	end_await();
-    res = pubnub_last_result(pbp);
+    /* Now we await the subscribe on `pbp` */
+    puts("Await subscribe");
+    res = end_await(&user_data);
     if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
         return -1;
     }
@@ -263,7 +230,7 @@ int main()
         printf("Failed to free the Pubnub context `pbp`\n");
     }
 
-    puts("Pubnub callback demo over.");
+    puts("Pubnub subscribe-publish callback demo over.");
 
     return 0;
 }

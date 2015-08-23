@@ -52,7 +52,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb);
     @return 0: sent, -1: error: sending already in progress, 
     +1: sending started, not finished
 */
-int pbpal_send(pubnub_t *pb, void *data, size_t n);
+int pbpal_send(pubnub_t *pb, void const *data, size_t n);
 
 /** Helper macro for optimisation of sending of literal strings.
     We know their length, we don't have to call strlen().
@@ -67,7 +67,7 @@ int pbpal_send(pubnub_t *pb, void *data, size_t n);
 
     But, it doesn't have to be implemented that way.
 */
-int pbpal_send_str(pubnub_t *pb, char *s);
+int pbpal_send_str(pubnub_t *pb, char const *s);
 
 /** Returns whether sending of data is done. Don't try another
     sending until previous is complete.

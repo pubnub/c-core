@@ -106,7 +106,7 @@ static bool split_array(char *buf)
         }
     }
 
-    printf("escaped = %d, in_string = %d, bracket_level = %d\n", escaped, in_string, bracket_level);
+    DEBUG_PRINTF("escaped = %d, in_string = %d, bracket_level = %d\n", escaped, in_string, bracket_level);
     return !(escaped || in_string || (bracket_level > 0));
 }
 
