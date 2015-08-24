@@ -1,0 +1,94 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub.hpp"
+
+#include "pubnub_ntf_callback.h"
+
+#include <pthread.h>
+
+#include <stdexcept>
+
+
+namespace pubnub {
+    
+class futres::impl {
+public:
+    impl() : d_triggered(false) {
+        pthread_mutex_init(&d_mutex, NULL);
+        pthread_cond_init(&d_cond, NULL);
+    }
+    void await() {
+        pthread_mutex_lock(&d_mutex);
+        d_triggered = false;
+        while (!d_triggered) {
+            pthread_cond_wait(&d_cond, &d_mutex);
+        }
+        pthread_mutex_unlock(&d_mutex);
+    }
+    void signal() {
+        pthread_mutex_lock(&d_mutex);
+        d_triggered = true;
+        pthread_cond_signal(&d_cond);
+        pthread_mutex_unlock(&d_mutex);
+    }
+    bool is_ready() const {
+        bool rslt;
+        pthread_mutex_lock(&d_mutex);
+        rslt = d_triggered;
+        pthread_mutex_unlock(&d_mutex);
+        return rslt;
+    }
+
+private:
+    mutable pthread_mutex_t d_mutex;
+    bool d_triggered;
+    pthread_cond_t d_cond;
+};
+
+
+static void futres_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
+{
+    futres::impl *p = static_cast<futres::impl*>(user_data);
+    p->signal();
+}
+
+
+futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) : 
+    d_pb(pb), d_ctx(ctx), d_result(initial), d_pimpl(new impl) 
+{
+    if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
+        throw std::logic_error("Failed to register callback");
+    }
+}
+
+
+futres::~futres() 
+{
+    delete d_pimpl;
+}
+
+
+pubnub_res futres::last_result()
+{
+    return pubnub_last_result(d_pb);
+}
+
+ 
+pubnub_res futres::await()
+{
+    d_pimpl->await();
+    return pubnub_last_result(d_pb);
+}
+
+
+bool futres::valid() const
+{
+    return d_pimpl != NULL;
+}
+
+
+bool futres::is_ready() const
+{
+    return d_pimpl->is_ready();
+}
+
+}
