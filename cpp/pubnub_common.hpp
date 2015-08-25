@@ -17,6 +17,54 @@
 
 namespace pubnub {
 
+    /** An algorithm to join (contatenate) the elements of the given
+        range [first, last) to a string-like object, separating
+        elements with the @p separator. 
+
+        It is implied that the range is from a container of elements
+        that have the same type as the @p separator, or of types
+        that can be `added` to the type of the @p separator.
+
+        The string-like type only has to support the `+=` operator,
+        be default constructible and copy or move constructible.
+
+        @param first Input iterator of the start of the range
+        @param last Input iterator of the end of the range (one past the
+        last element)
+        @param separator The string-like object to put between elements
+        in the result.
+        @return A string-like object containing all the elements from
+        the range [first, last], separated with @p separator. If range
+        is empty, a default-constructed element of the type of the
+        @p separator (i.e. an empty string)
+     */
+    template <typename I, typename S>
+    S join(I first, I last, S const &separator) {
+        S result;
+        if (first == last) {
+            return result;
+        }
+        I prev = first;
+        I next = first;
+        for (++next; next != last; ++next) {
+            result += *prev;
+            result += separator;
+            prev = next;
+        }
+        result += *prev;
+        return result;
+    }
+
+    /** Pass a container for @p container, well do the join from
+        container.begin() to container.end(). A helper function to use
+        you know that you want to join all the elements of a
+        container.
+     */
+    template <typename C, typename S>
+    S join(C container, S const &separator) {
+        return join(container.begin(), container.end(), separator);
+    }
+
     /** Options for Publish v2. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
      * (bit-and and bit-or) operators.
@@ -183,10 +231,17 @@ namespace pubnub {
             pubnub_cancel(d_pb);
         }
         
-        /// Publishes a @p message on the @p channel
+        /// Publishes a @p message on the @p channel. The @p channel
+        /// can have many channels separated by a comma
         /// @see pubnub_publish
         futres publish(std::string const &channel, std::string const &message) {
             return doit(pubnub_publish(d_pb, channel.c_str(), message.c_str()));
+        }
+
+        /// Pass a vector of channels in the @p channel and we will
+        /// put commas between them. A helper function.
+        futres publish(std::vector<std::string> const &channel, std::string const &message) {
+            return publish(join(channel, ","), message);
         }
 
         /// Publishes a @p message on the @p channel using v2, with the
@@ -196,6 +251,12 @@ namespace pubnub {
                          pubv2_opt options) {
             return doit(pubnub_publishv2(d_pb, channel.c_str(), message.c_str(), options & store_in_history, options & eat_after_reading));
         }
+
+        /// Pass a vector of channels in the @p channel and we will
+        /// put commas between them. A helper function.
+        futres publishv2(std::vector<std::string> const &channel, std::string const &message, pubv2_opt options) {
+            return publishv2(join(channel, ","), message, options);
+        }
         
         /// Subscribes to @p channel and/or @p channel_group
         /// @see pubnub_subscribe
@@ -203,10 +264,24 @@ namespace pubnub {
             return doit(pubnub_subscribe(d_pb, channel.c_str(), channel_group.c_str()));
         }
 
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres subscribe(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return subscribe(join(channel","), join(channel_group, ","));
+        }
+
         /// Leaves a @p channel and/or @p channel_group
         /// @see pubnub_leave
         futres leave(std::string const &channel, std::string const &channel_group) {
             return doit(pubnub_leave(d_pb, channel.c_str(), channel_group.c_str()));
+        }
+
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres leave(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return leave(join(channel ","), join(channel_group, ","));
         }
 
         /// Starts a "get time" transaction
@@ -223,6 +298,13 @@ namespace pubnub {
             return doit(pubnub_history(d_pb, channel.c_str(), channel_group.c_str(), count));
         }
 
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres history(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100) {
+            return history(join(channel, ","), join(channel_group, ","), count);
+        }
+
         /// Starts a transaction to get message history for @p channel
         /// and/or @pchannel_group, with the limit of max @p count
         /// messages to retrieve, and optionally @p include_token to get
@@ -232,11 +314,25 @@ namespace pubnub {
             return doit(pubnub_historyv2(d_pb, channel.c_str(), channel_group.c_str(), count, include_token));
         }
 
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres historyv2(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100, bool include_token = false) {
+            return historyv2(join(channel, ","), join(channel_group, ","), count, include_token);
+        }
+
         /// Starts a transaction to get a list of currently present
         /// UUIDs on a @p channel and/or @p channel_group
         /// @see pubnub_here_now
         futres here_now(std::string const &channel, std::string const &channel_group = "") {
             return doit(pubnub_here_now(d_pb, channel.c_str(), channel_group.c_str()));
+        }
+
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres here_now(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return here_now(join(channel, ","), join(channel_group, ","));
         }
 
         /// Starts a transaction to get a list of currently present
@@ -261,12 +357,22 @@ namespace pubnub {
             return doit(pubnub_set_state(d_pb, channel.c_str(), channel_group.c_str(), uuid.c_str(), state.c_str()));
         }
 
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres set_state(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid, std::string const &state) {
+            return set_state(join(channel, ","), join(channel_group, ","), uuid, state);
+        }
+
         /// Starts a transaction to get the state JSON object for the
         /// given @p channel and/or @pchannel_group of the given @p
         /// uuid 
         /// @see pubnub_set_state
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
             return doit(pubnub_state_get(d_pb, channel.c_str(), channel_group.c_str(), uuid.empty() ? NULL : uuid.c_str()));
+        }
+        futres state_get(std::string const &channel, std::string const &channel_group, std::string const &uuid = "") {
+            return state_get(join(channel, ","), join(channel_group, ","), uuid);
         }
 
         /// Starts a transaction to remove a @p channel_group.
@@ -275,10 +381,23 @@ namespace pubnub {
             return doit(pubnub_remove_channel_group(d_pb, channel_group.c_str()));
         }
 
+        /// Pass a vector of channel groups for @p channel_group and
+        /// we will put commas between them. A helper function.
+        futres remove_channel_group(std::vector<std::string> const &channel_group) {
+            return remove_channel_group(join(channel_group, ","));
+        }
+
         /// Starts a transaction to remove a @p channel from a @p channel_group.
         /// @see pubnub_remove_channel_from_group
         futres remove_channel_from_group(std::string const &channel, std::string const &channel_group) {
             return doit(pubnub_remove_channel_from_group(d_pb, channel.c_str(), channel_group.c_str()));
+        }
+
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres remove_channel_from_group(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return remove_channel_from_group(join(channel, ","), join(channel_group, ","));
         }
 
         /// Starts a transaction to add a @p channel to a @p channel_group.
@@ -287,11 +406,21 @@ namespace pubnub {
             return doit(pubnub_add_channel_to_group(d_pb, channel.c_str(), channel_group.c_str()));
         }
 
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres add_channel_to_group(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return add_channel_to_group(join(channel, ","), join(channel_group, ","));
+        }
+
         /// Starts a transaction to get a list of channels belonging
         /// to a @p channel_group.
         /// @see pubnub_list_channel_group
         futres list_channel_group(std::string const &channel_group) {
             return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
+        }
+        futres list_channel_group(std::vector<std::string> const &channel_group) {
+            return list_channel_group(join(channel_group, ","));
         }
         
         /// Return the HTTP code (result) of the last transaction.
