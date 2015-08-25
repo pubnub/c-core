@@ -16,9 +16,13 @@ public:
         pthread_mutex_init(&d_mutex, NULL);
         pthread_cond_init(&d_cond, NULL);
     }
-    void await() {
+    void start_await() {
         pthread_mutex_lock(&d_mutex);
         d_triggered = false;
+        pthread_mutex_unlock(&d_mutex);
+    }
+    void end_await() {
+        pthread_mutex_lock(&d_mutex);
         while (!d_triggered) {
             pthread_cond_wait(&d_cond, &d_mutex);
         }
@@ -73,9 +77,14 @@ pubnub_res futres::last_result()
 }
 
  
-pubnub_res futres::await()
+void futres::start_await()
 {
-    d_pimpl->await();
+    d_pimpl->start_await();
+}
+
+pubnub_res futres::end_await()
+{
+    d_pimpl->end_await();
     return pubnub_last_result(d_pb);
 }
 

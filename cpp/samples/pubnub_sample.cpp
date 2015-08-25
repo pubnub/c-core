@@ -5,6 +5,14 @@
 #include <exception>
 
 
+/* Please note that this sample is the same whether you use the Pubnub
+   C "sync" or "callback" interface during the build.
+
+   Also, code that assumes C++ 11 features is protected by the
+   standard "feature test" macro, hopefully your compiler has
+   implemented it correctly.
+ */
+
 int main()
 {
     try {
@@ -44,12 +52,15 @@ int main()
         }
         if (PNR_OK ==  pb.subscribe(chan).await()) {
             std::cout << "Subscribed! Got messages:" << std::endl;
-            std::vector<std::string> msg = pb.get_all();
+            /// Lets illustrate getting all the message in a vector,
+            /// and iterating over it
 #if __cplusplus >= 201103L
+            auto msg = pb.get_all();
             for (auto it = msg.begin(); it != msg.end(); ++it) {
                 std::cout << *it << std::endl;
             }
 #else
+            std::vector<std::string> msg = pb.get_all();
             for (std::vector<std::string>::iterator it = msg.begin(); it != msg.end(); ++it) {
                 std::cout << *it << std::endl;
             }
@@ -70,12 +81,16 @@ int main()
         std::cout << "Getting history" << std::endl;
         if (PNR_OK ==  pb.history(chan).await()) {
             std::cout << "Got history! Messages:" << std::endl;
-            std::vector<std::string> msg = pb.get_all();
+            /// Lets illustrate getting all the message in a vector,
+            /// and then accessing each vector index in a loop
 #if __cplusplus >= 201103L
+            auto msg = pb.get_all();
+            /// a for-each loop for C++11
             for (auto &&m : msg) {
                 std::cout << m << std::endl;
             }
 #else
+            std::vector<std::string> msg = pb.get_all();
             for (unsigned i = 0; i < msg.size(); ++i) {
                 std::cout << msg.at(i) << std::endl;
             }
@@ -88,13 +103,12 @@ int main()
         std::cout << "Getting history v2 with `include_token`" << std::endl;
         if (PNR_OK ==  pb.historyv2(chan, "", 10, true).await()) {
             std::cout << "Got history v2! Messages:" << std::endl;
-            for (;;) {
-                std::string msg = pb.get();
-                if (msg.empty()) {
-                    break;
-                }
+            /// Here we illustrate getting the messages one-by-one
+            std::string msg;
+            do {
+                msg = pb.get();
                 std::cout << msg << std::endl;
-            }
+            } while (!msg.empty());
         }
         else {
             std::cout << "Getting history v2 failed!" << std::endl;
@@ -145,7 +159,6 @@ int main()
         else {
             std::cout << "Getting state failed!" << std::endl;
         }
-
     }
     catch (std::exception &exc) {
         std::cout << "Caught exception: " << exc.what() << std::endl;

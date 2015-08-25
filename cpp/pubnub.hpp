@@ -3,6 +3,14 @@
 #define      INC_PUBNUB_HPP
 
 
+/** @file pubnub.hpp
+ *
+ * The header that C++ Pubnub API/SDK client users use/include. This
+ * is a wrapper of the Pubnub C client, not a "native" C++
+ * implementation.
+ */
+
+
 //extern "C" {
 #include "pubnub_api_types.h"
 //}
@@ -10,8 +18,13 @@
 namespace pubnub {
     class context;
 
-    /** A future result of a Pubnub transaction/operation/request.
-     * It is somewhat similar to the std::future<> from C++11.
+    /** A future (pending) result of a Pubnub
+     * transaction/operation/request.  It is somewhat similar to the
+     * std::future<> from C++11.
+     *
+     * It has the same interface for both Pubnub C client's "sync" and
+     * "callback" interfaces, so the C++ user code is always the same,
+     * you just select the "back-end" during the build.
      */
     class futres {
     public:
@@ -22,9 +35,22 @@ namespace pubnub {
         futres(pubnub_t *pb, context &ctx, pubnub_res initial);
         ~futres();
 
+        /// Gets the last (or latest) result of the transaction.
         pubnub_res last_result();
 
-        pubnub_res await();
+        /// Starts the await. Only useful for the callback interface
+        void start_await();
+
+        /// Ends the await of the transaction to end and returns the
+        /// final result (outcome)
+        pubnub_res end_await();
+
+        /// Awaits the end of transaction and returns its final
+        /// result (outcome).
+        pubnub_res await() {
+            start_await();
+            return end_await();
+        }
 
         // C++11 std::future<> compatible API
         pubnub_res get() {
@@ -46,9 +72,10 @@ namespace pubnub {
         // Pubnub future result is non-copyable
         //futres(futres const &x);
 
+        /// The C Pubnub context that we are "wrapping"
         pubnub_t *d_pb;
 
-        /// The pubnub context of this future result
+        /// The C++ Pubnub context of this future result
         context &d_ctx;
 
         /// The current result

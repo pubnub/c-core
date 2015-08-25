@@ -28,8 +28,14 @@ pubnub_res futres::last_result()
   }
 }
 
+
+void futres::start_await()
+{
+    // nothing to do to "start" a sync await...
+}
+
  
-pubnub_res futres::await()
+pubnub_res futres::end_await()
 {
   return d_result = pubnub_await(d_pb);
 }
