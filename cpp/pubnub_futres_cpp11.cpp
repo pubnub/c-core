@@ -3,7 +3,7 @@
 
 #include "pubnub_ntf_callback.h"
 
-#include <pthread.h>
+#include <condition_variable>
 
 #include <stdexcept>
 
@@ -13,39 +13,31 @@ namespace pubnub {
 class futres::impl {
 public:
     impl() : d_triggered(false) {
-        pthread_mutex_init(&d_mutex, NULL);
-        pthread_cond_init(&d_cond, NULL);
     }
     void start_await() {
-        pthread_mutex_lock(&d_mutex);
+        std::lock_guard<std::mutex> lk(d_mutex);
         d_triggered = false;
-        pthread_mutex_unlock(&d_mutex);
     }
     void end_await() {
-        pthread_mutex_lock(&d_mutex);
-        while (!d_triggered) {
-            pthread_cond_wait(&d_cond, &d_mutex);
-        }
-        pthread_mutex_unlock(&d_mutex);
+        std::unique_lock<std::mutex> lk(d_mutex);
+        d_cond.wait(lk, [&] { return d_triggered; });
     }
     void signal() {
-        pthread_mutex_lock(&d_mutex);
-        d_triggered = true;
-        pthread_cond_signal(&d_cond);
-        pthread_mutex_unlock(&d_mutex);
+        {
+            std::lock_guard<std::mutex> lk(d_mutex);
+            d_triggered = true;
+        }
+        d_cond.notify_one();
     }
     bool is_ready() const {
-        bool rslt;
-        pthread_mutex_lock(&d_mutex);
-        rslt = d_triggered;
-        pthread_mutex_unlock(&d_mutex);
-        return rslt;
+        std::lock_guard<std::mutex> lk(d_mutex);
+        return d_triggered;
     }
 
 private:
-    mutable pthread_mutex_t d_mutex;
+    mutable std::mutex d_mutex;
     bool d_triggered;
-    pthread_cond_t d_cond;
+    std::condition_variable d_cond;
 };
 
 

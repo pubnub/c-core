@@ -45,32 +45,56 @@ namespace pubnub {
         /// final result (outcome)
         pubnub_res end_await();
 
-        /// Awaits the end of transaction and returns its final
-        /// result (outcome).
+        /// Awaits the end of transaction and returns its final result
+        /// (outcome).
         pubnub_res await() {
             start_await();
             return end_await();
         }
 
         // C++11 std::future<> compatible API
+
+        /// Same as await()
         pubnub_res get() {
             return await();
         }
+
+        /// Return whether this object is valid
         bool valid() const;
+
+        /// Just wait for the transaction to end, don't get the
+        /// outcome
         void wait() /*const*/ {
             await();
         }
 
         // C++17 (somewhat) compatbile API
-        template<typename F>
-        void then(F f) {
+
+        /// Pass a function, function object (or lambda in C++11)
+        /// which accepts a Pubnub context and pubnub_res and it will
+        /// be called when the transaction ends.
+        template<typename F> void then(F f) {
             f(d_ctx, await());
         }
+
+        /// Returns if the transaction is over
         bool is_ready() const;
         
+        /// We can construct from a temporary
+#if __cplusplus >= 201103L
+        futres(futres &&x) :
+            d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(x.d_pimpl) {
+            x.d_pb = nullptr; 
+            x.d_pimpl = nullptr; 
+        }
+#else
+        futres(futres const &x) :
+            d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(x.d_pimpl) {}
+#endif
+
     private:
         // Pubnub future result is non-copyable
-        //futres(futres const &x);
+        futres(futres &x);
 
         /// The C Pubnub context that we are "wrapping"
         pubnub_t *d_pb;

@@ -3,7 +3,7 @@
 
 #include "pubnub_ntf_callback.h"
 
-#include <pthread.h>
+#include <windows.h>
 
 #include <stdexcept>
 
@@ -12,40 +12,23 @@ namespace pubnub {
     
 class futres::impl {
 public:
-    impl() : d_triggered(false) {
-        pthread_mutex_init(&d_mutex, NULL);
-        pthread_cond_init(&d_cond, NULL);
+    impl() : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL)) {
     }
     void start_await() {
-        pthread_mutex_lock(&d_mutex);
-        d_triggered = false;
-        pthread_mutex_unlock(&d_mutex);
+        ResetEvent(d_wevent);
     }
     void end_await() {
-        pthread_mutex_lock(&d_mutex);
-        while (!d_triggered) {
-            pthread_cond_wait(&d_cond, &d_mutex);
-        }
-        pthread_mutex_unlock(&d_mutex);
+        WaitForSingleObject(d_wevent, INFINITE);
     }
     void signal() {
-        pthread_mutex_lock(&d_mutex);
-        d_triggered = true;
-        pthread_cond_signal(&d_cond);
-        pthread_mutex_unlock(&d_mutex);
+        SetEvent(d_wevent);
     }
     bool is_ready() const {
-        bool rslt;
-        pthread_mutex_lock(&d_mutex);
-        rslt = d_triggered;
-        pthread_mutex_unlock(&d_mutex);
-        return rslt;
+        return WAIT_OBJECT_0 == WaitForSingleObject(d_wevent, 0);
     }
 
 private:
-    mutable pthread_mutex_t d_mutex;
-    bool d_triggered;
-    pthread_cond_t d_cond;
+    HANDLE d_wevent;
 };
 
 
