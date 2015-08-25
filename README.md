@@ -21,6 +21,8 @@ The directories of the library repository are:
 
 - `openssl`: Modules and Makefile(s) for OpenSSL (on POSIX and Windows)
 
+- `cpp`: Modules, Makefile(s) and examples for the C++ wrapper
+
 - `contiki` : Modules and Makefile for the Contiki OS
 
 - `freertos` : Modules and Makefile for the FreeRTOS OS
