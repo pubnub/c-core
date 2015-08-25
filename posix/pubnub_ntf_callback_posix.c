@@ -29,8 +29,8 @@ static struct SocketWatcherData m_watcher;
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_socket_t socket)
 {
     if (watcher->apoll_size == watcher->apoll_cap) {
-        struct pollfd *npalloc = realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
-        pubnub_t **npapb = realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
+        struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
+        pubnub_t **npapb = (pubnub_t **)realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
         if (NULL == npalloc) {
             if (npapb != NULL) {
                 watcher->apb = npapb;
