@@ -160,6 +160,13 @@ enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, voi
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pb->cb = cb;
-	pb->user_data = user_data;
+    pb->user_data = user_data;
     return PNR_OK;
+}
+
+
+void *pubnub_get_user_data(pubnub_t *pb)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    return pb>user_data;
 }

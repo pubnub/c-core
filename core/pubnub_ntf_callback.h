@@ -57,6 +57,10 @@ typedef void (*pubnub_callback_t)(pubnub_t *pb, enum pubnub_trans trans, enum pu
 */
 enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data);
 
+/** Returns the user data set with pubnub_register_callback().
+ */
+void *pubnub_get_user_data(pubnub_t *pb);
+
 
 #endif /* !defined INC_PUBNUB_NTF_CALLBACK */
 
