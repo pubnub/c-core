@@ -11,7 +11,7 @@
 
 
 namespace pubnub {
-    
+
 class futres::impl {
 public:
     impl() : d_triggered(false) {
@@ -50,8 +50,8 @@ static void futres_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_r
 }
 
 
-futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) : 
-    d_pb(pb), d_ctx(ctx), d_result(initial), d_pimpl(new impl) 
+futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
+    d_pb(pb), d_ctx(ctx), d_result(initial), d_pimpl(new impl)
 {
     if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
         throw std::logic_error("Failed to register callback");
@@ -59,10 +59,15 @@ futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
 }
 
 
+#if __cplusplus < 201103L
 futres::futres(futres const &x) :
 	d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(new impl)
 {
+    if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
+        throw std::logic_error("Failed to register callback");
+    }
 }
+#endif
 
 
 
