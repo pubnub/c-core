@@ -75,7 +75,3 @@ switches should work, but were not tested.
 Keep in mind that MSVS compilers don't support full C++11 as of this
 writing, thus didn't "bump" `__cplusplus` to `201103L`, which means that
 Pubnub C++ wrapper will not use C++11 features itself.
-	
-# Notes
-
-- We shall add sample Makefile for Windows soon.
