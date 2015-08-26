@@ -1,7 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub.hpp"
 
+//extern "C" {
 #include "pubnub_ntf_callback.h"
+//}
 
 #include <windows.h>
 
@@ -45,6 +47,12 @@ futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
     if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
         throw std::logic_error("Failed to register callback");
     }
+}
+
+
+futres::futres(futres const &x) :
+	d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(new impl)
+{
 }
 
 

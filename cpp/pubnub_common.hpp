@@ -65,6 +65,8 @@ namespace pubnub {
         return join(container.begin(), container.end(), separator);
     }
 
+	static const std::string comma = ",";
+	
     /** Options for Publish v2. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
      * (bit-and and bit-or) operators.
@@ -241,7 +243,7 @@ namespace pubnub {
         /// Pass a vector of channels in the @p channel and we will
         /// put commas between them. A helper function.
         futres publish(std::vector<std::string> const &channel, std::string const &message) {
-            return publish(join(channel, ","), message);
+            return publish(join(channel, comma), message);
         }
 
         /// Publishes a @p message on the @p channel using v2, with the
@@ -249,13 +251,13 @@ namespace pubnub {
         /// @see pubnub_publishv2
         futres publishv2(std::string const &channel, std::string const &message,
                          pubv2_opt options) {
-            return doit(pubnub_publishv2(d_pb, channel.c_str(), message.c_str(), options & store_in_history, options & eat_after_reading));
+            return doit(pubnub_publishv2(d_pb, channel.c_str(), message.c_str(), (options & store_in_history) != 0, (options & eat_after_reading) != 0));
         }
 
         /// Pass a vector of channels in the @p channel and we will
         /// put commas between them. A helper function.
         futres publishv2(std::vector<std::string> const &channel, std::string const &message, pubv2_opt options) {
-            return publishv2(join(channel, ","), message, options);
+            return publishv2(join(channel, comma), message, options);
         }
         
         /// Subscribes to @p channel and/or @p channel_group
@@ -268,7 +270,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres subscribe(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return subscribe(join(channel","), join(channel_group, ","));
+            return subscribe(join(channel, comma), join(channel_group, comma));
         }
 
         /// Leaves a @p channel and/or @p channel_group
@@ -281,7 +283,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres leave(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return leave(join(channel ","), join(channel_group, ","));
+            return leave(join(channel, comma), join(channel_group, comma));
         }
 
         /// Starts a "get time" transaction
@@ -302,7 +304,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres history(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100) {
-            return history(join(channel, ","), join(channel_group, ","), count);
+            return history(join(channel, comma), join(channel_group, comma), count);
         }
 
         /// Starts a transaction to get message history for @p channel
@@ -318,7 +320,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres historyv2(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100, bool include_token = false) {
-            return historyv2(join(channel, ","), join(channel_group, ","), count, include_token);
+            return historyv2(join(channel, comma), join(channel_group, comma), count, include_token);
         }
 
         /// Starts a transaction to get a list of currently present
@@ -332,7 +334,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres here_now(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return here_now(join(channel, ","), join(channel_group, ","));
+            return here_now(join(channel, comma), join(channel_group, comma));
         }
 
         /// Starts a transaction to get a list of currently present
@@ -361,7 +363,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres set_state(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid, std::string const &state) {
-            return set_state(join(channel, ","), join(channel_group, ","), uuid, state);
+            return set_state(join(channel, comma), join(channel_group, comma), uuid, state);
         }
 
         /// Starts a transaction to get the state JSON object for the
@@ -371,8 +373,8 @@ namespace pubnub {
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
             return doit(pubnub_state_get(d_pb, channel.c_str(), channel_group.c_str(), uuid.empty() ? NULL : uuid.c_str()));
         }
-        futres state_get(std::string const &channel, std::string const &channel_group, std::string const &uuid = "") {
-            return state_get(join(channel, ","), join(channel_group, ","), uuid);
+        futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid = "") {
+            return state_get(join(channel, comma), join(channel_group, comma), uuid);
         }
 
         /// Starts a transaction to remove a @p channel_group.
@@ -384,7 +386,7 @@ namespace pubnub {
         /// Pass a vector of channel groups for @p channel_group and
         /// we will put commas between them. A helper function.
         futres remove_channel_group(std::vector<std::string> const &channel_group) {
-            return remove_channel_group(join(channel_group, ","));
+            return remove_channel_group(join(channel_group, comma));
         }
 
         /// Starts a transaction to remove a @p channel from a @p channel_group.
@@ -397,7 +399,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres remove_channel_from_group(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return remove_channel_from_group(join(channel, ","), join(channel_group, ","));
+            return remove_channel_from_group(join(channel, comma), join(channel_group, comma));
         }
 
         /// Starts a transaction to add a @p channel to a @p channel_group.
@@ -410,7 +412,7 @@ namespace pubnub {
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
         futres add_channel_to_group(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return add_channel_to_group(join(channel, ","), join(channel_group, ","));
+            return add_channel_to_group(join(channel, comma), join(channel_group, comma));
         }
 
         /// Starts a transaction to get a list of channels belonging
@@ -420,7 +422,7 @@ namespace pubnub {
             return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
         }
         futres list_channel_group(std::vector<std::string> const &channel_group) {
-            return list_channel_group(join(channel_group, ","));
+            return list_channel_group(join(channel_group, comma));
         }
         
         /// Return the HTTP code (result) of the last transaction.
@@ -457,9 +459,9 @@ namespace pubnub {
         void set_ssl_options(ssl_opt options) {
             pubnub_set_ssl_options(
                 d_pb, 
-                options & useSSL,
-                options & reduceSecurityOnError,
-                options & ignoreSecureConnectionRequirement
+                (options & useSSL) != 0,
+                (options & reduceSecurityOnError) != 0,
+                (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
         

@@ -80,7 +80,7 @@ namespace pubnub {
         /// Returns if the transaction is over
         bool is_ready() const;
         
-        /// We can construct from a temporary
+        // We can construct from a temporary
 #if __cplusplus >= 201103L
         futres(futres &&x) :
             d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(x.d_pimpl) {
@@ -88,8 +88,7 @@ namespace pubnub {
             x.d_pimpl = nullptr; 
         }
 #else
-        futres(futres const &x) :
-            d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(x.d_pimpl) {}
+        futres(futres const &x);
 #endif
 
     private:

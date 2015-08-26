@@ -33,7 +33,7 @@ int main()
         
         std::cout << "--------------------------" << std::endl <<
             "Subscribe loop starting..." << std::endl <<
-            "--------------------------";
+            "--------------------------" << std::endl;
 	
         for (;;) {
             time_t t = time(NULL);
@@ -42,7 +42,7 @@ int main()
             
             /* Don't await here, 'cause it will loop until done */
             while (!stop) {
-                res = pb.last_result();
+                pubnub_res res = futres.last_result();
                 if (res == PNR_STARTED) {
                     /* Here we simulate the "get out of subscribe loop"
                        external signal with a random number. Basically,
@@ -72,7 +72,7 @@ int main()
             if (stop) {
                 std::cout << "---------------------------" << std::endl <<
                     "Cancelling the Subscribe..." << std::endl <<
-                    "---------------------------";
+                    "---------------------------" << std::endl;
                 pb.cancel();
                 /* Now it's OK to await, since we don't have anything else
                    to do

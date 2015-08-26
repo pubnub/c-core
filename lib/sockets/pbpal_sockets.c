@@ -89,7 +89,7 @@ int pbpal_send_str(pubnub_t *pb, char const *s)
 
 bool pbpal_sent(pubnub_t *pb)
 {
-    int r = send(pb->pal.socket, pb->sendptr, pb->sendlen, 0);
+    int r = send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
     if (r < 0) {
         /* Maybe an error should be handled somehow... */
         return false;
@@ -132,7 +132,7 @@ bool pbpal_line_read(pubnub_t *pb)
     uint8_t c;
 
     if (pb->readlen == 0) {
-        int recvres = recv(pb->pal.socket, pb->ptr, pb->left, 0);
+        int recvres = recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...
@@ -221,7 +221,7 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
-        recvres = recv(pb->pal.socket, pb->ptr, to_read, 0);
+        recvres = recv(pb->pal.socket, (char*)pb->ptr, to_read, 0);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...

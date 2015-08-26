@@ -79,7 +79,8 @@ int main()
         }
 
         std::cout << "Getting history" << std::endl;
-        if (PNR_OK ==  pb.history(chan).await()) {
+		res = pb.history(chan).await();
+        if (PNR_OK ==  res) {
             std::cout << "Got history! Messages:" << std::endl;
             /// Lets illustrate getting all the message in a vector,
             /// and then accessing each vector index in a loop
@@ -97,7 +98,7 @@ int main()
 #endif
         }
         else {
-            std::cout << "Getting history failed!" << std::endl;
+            std::cout << "Getting history failed! error code: " << res << std::endl;
         }
 
         std::cout << "Getting history v2 with `include_token`" << std::endl;

@@ -46,11 +46,13 @@ programs on POSIX:
   code/module - built from the same source as the
   `futres_nesting_sync` and `futres_nesting_callback`
 
+The Makefile for Windows: `windows.mk` will build the same examples,
+but they will have the `.exe` extension.
 
 The sources of the samples are in `samples` and they are portable
 across all or most hosted platforms (POSIX, Windows...).
 
-So, to build the samples, just run:
+So, to build the samples on POSIX, just run:
 
 	make -f posix.mk
 	
@@ -61,6 +63,19 @@ use a compiler of your choice (rather than the default one), say,
 
 	make -f posix.mk CXX=clang++
 
+On Windows, the Makefile is intended to be used with Microsoft (Visual
+Studio) tool-chain. Visual Studio 2010 or later should work. From
+Visual Studio command prompt (or "Developer command prompt"), run:
+
+	nmake -f windows.mak
+	
+Other compilers (or frontends) that respect the Microsoft command line
+switches should work, but were not tested.
+
+Keep in mind that MSVS compilers don't support full C++11 as of this
+writing, thus didn't "bump" `__cplusplus` to `201103L`, which means that
+Pubnub C++ wrapper will not use C++11 features itself.
+	
 # Notes
 
 - We shall add sample Makefile for Windows soon.

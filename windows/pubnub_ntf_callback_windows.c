@@ -30,8 +30,8 @@ static struct SocketWatcherData m_watcher;
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     if (watcher->apoll_size == watcher->apoll_cap) {
-        WSAPOLLFD *npalloc = realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
-        pubnub_t **npapb = realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
+        WSAPOLLFD *npalloc = (WSAPOLLFD*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
+        pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
         if (NULL == npalloc) {
             if (npapb != NULL) {
                 watcher->apb = npapb;
@@ -45,7 +45,6 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
         watcher->apoll = npalloc;
         watcher->apb = npapb;
         watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
-		printf("watcher->apoll_size=%d, pb->socket = %d\n", watcher->apoll_size, pb->pal.socket);
         watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
         watcher->apb[watcher->apoll_size] = pb;
         watcher->apoll_cap = ++watcher->apoll_size;
@@ -92,7 +91,7 @@ void socket_watcher_thread(void *arg)
         rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
         if (SOCKET_ERROR == rslt) {
             /* error? what to do about it? */
-            printf("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
+            DEBUG_PRINTF("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
         }
         else if (rslt > 0) {
             size_t i;
@@ -145,7 +144,7 @@ void pbntf_trans_outcome(pubnub_t *pb)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb);
     if (pb->cb != NULL) {
-        pb->cb(pb, pb->trans, pb->core.last_result);
+        pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }
 
@@ -157,9 +156,10 @@ enum pubnub_res pubnub_last_result(pubnub_t const *pb)
 }
 
 
-enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb)
+enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pb->cb = cb;
+	pb->user_data = user_data;
     return PNR_OK;
 }
