@@ -54,7 +54,7 @@
     Pubnub context @p p.
 
     @pre Call this after TCP initialization.
-    @param p The Context to initialize (use pubnub_get_ctx() to
+    @param p The Context to initialize (use pubnub_alloc() to
     obtain it)
     @param publish_key The string of the key to use when publishing
     messages
