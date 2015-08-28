@@ -591,7 +591,7 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, ch
     on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel_group The channel group to remove
+    @param channel_group The channel group to list
 
     @return #PNR_STARTED on success, an error otherwise
 */
