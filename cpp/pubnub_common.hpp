@@ -263,7 +263,9 @@ namespace pubnub {
         /// Subscribes to @p channel and/or @p channel_group
         /// @see pubnub_subscribe
         futres subscribe(std::string const &channel, std::string const &channel_group = "") {
-            return doit(pubnub_subscribe(d_pb, channel.c_str(), channel_group.c_str()));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_subscribe(d_pb, ch, gr));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -276,7 +278,9 @@ namespace pubnub {
         /// Leaves a @p channel and/or @p channel_group
         /// @see pubnub_leave
         futres leave(std::string const &channel, std::string const &channel_group) {
-            return doit(pubnub_leave(d_pb, channel.c_str(), channel_group.c_str()));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_leave(d_pb, ch, gr));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -297,7 +301,9 @@ namespace pubnub {
         /// messages to retrieve
         /// @see pubnub_history
         futres history(std::string const &channel, std::string const &channel_group = "", unsigned count = 100) {
-            return doit(pubnub_history(d_pb, channel.c_str(), channel_group.c_str(), count));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_history(d_pb, ch, gr, count));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -313,7 +319,9 @@ namespace pubnub {
         /// a time token for each message. Uses the v2 protocol.
         /// @see pubnub_historyv2
         futres historyv2(std::string const &channel, std::string const &channel_group = "", unsigned count = 100, bool include_token = false) {
-            return doit(pubnub_historyv2(d_pb, channel.c_str(), channel_group.c_str(), count, include_token));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_historyv2(d_pb, ch, gr, count, include_token));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -327,7 +335,9 @@ namespace pubnub {
         /// UUIDs on a @p channel and/or @p channel_group
         /// @see pubnub_here_now
         futres here_now(std::string const &channel, std::string const &channel_group = "") {
-            return doit(pubnub_here_now(d_pb, channel.c_str(), channel_group.c_str()));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_here_now(d_pb, ch, gr));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -356,7 +366,9 @@ namespace pubnub {
         /// given @p channel and/or @pchannel_group of the given @p uuid
         /// @see pubnub_set_state
         futres set_state(std::string const &channel, std::string const &channel_group, std::string const &uuid, std::string const &state) {
-            return doit(pubnub_set_state(d_pb, channel.c_str(), channel_group.c_str(), uuid.c_str(), state.c_str()));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_set_state(d_pb, ch, gr, uuid.c_str(), state.c_str()));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -371,7 +383,9 @@ namespace pubnub {
         /// uuid 
         /// @see pubnub_set_state
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
-            return doit(pubnub_state_get(d_pb, channel.c_str(), channel_group.c_str(), uuid.empty() ? NULL : uuid.c_str()));
+			char const *ch = channel.empty() ? 0 : channel.c_str();
+			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_state_get(d_pb, ch, gr, uuid.empty() ? NULL : uuid.c_str()));
         }
         futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid = "") {
             return state_get(join(channel, comma), join(channel_group, comma), uuid);

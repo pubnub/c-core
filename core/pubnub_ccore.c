@@ -115,6 +115,7 @@ static int simple_parse_response(struct pbcc_context *p)
 {
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
+	DEBUG_PRINTF("simple_parse_response()\n");
     if (replylen < 2) {
         return -1;
     }
@@ -168,6 +169,7 @@ int pbcc_parse_time_response(struct pbcc_context *p)
 
 int pbcc_parse_history_response(struct pbcc_context *p)
 {
+	DEBUG_PRINTF("pbcc_parse_history_response()\n");
     return simple_parse_response(p);
 }
 
@@ -189,8 +191,7 @@ int pbcc_parse_presence_response(struct pbcc_context *p)
         return -1;
     }
 
-    p->chan_ofs = 0;
-    p->chan_end = 0;
+    p->chan_ofs = p->chan_end = 0;
 
     p->msg_ofs = 0;
     p->msg_end = replylen;
@@ -207,8 +208,7 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
     p->chan_ofs = 0;
     p->chan_end = p->http_buf_len;
 
-    p->msg_ofs = 0;
-    p->msg_end = 0;
+    p->msg_ofs = p->msg_end = 0;
 
     /* We should probably also check that there is a key "service"
        with value "channel-registry".  Maybe even that there is a key
@@ -424,7 +424,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel,
     }
 
     p->http_content_len = 0;
-    p->msg_ofs = 0;
+    p->msg_ofs = p->msg_end = 0;
 
     p->http_buf_len = snprintf(
         p->http_buf, sizeof(p->http_buf),
@@ -475,7 +475,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *pb)
     }
 
     pb->http_content_len = 0;
-    pb->msg_ofs = 0;
+    pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
@@ -503,7 +503,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
     }
 
     pb->http_content_len = 0;
-    pb->msg_ofs = 0;
+    pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
@@ -531,7 +531,7 @@ enum pubnub_res pbcc_historyv2_prep(struct pbcc_context *pb, const char *channel
     }
 
     pb->http_content_len = 0;
-    pb->msg_ofs = 0;
+    pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
@@ -561,7 +561,7 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel,
     }
 
     pb->http_content_len = 0;
-    pb->msg_ofs = 0;
+    pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
@@ -588,7 +588,7 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context *pb, const char *uuid)
     }
 
     pb->http_content_len = 0;
-    pb->msg_ofs = 0;
+    pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf,
