@@ -298,6 +298,7 @@ int main()
         printf("Setting state failed with code: %d\n", res);
     }
 
+
     puts("Getting state...");
     res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
     if (res != PNR_STARTED) {
@@ -326,6 +327,34 @@ int main()
         printf("Getting state failed with code: %d\n", res);
     }
 
+    puts("List channel group...");
+    res = pubnub_list_channel_group(pbp, "channel-group");
+    if (res != PNR_STARTED) {
+        printf("pubnub_state_get() returned unexpected: %d\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        puts("Got channel group list!");
+        for (;;) {
+            msg = pubnub_get_channel(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Getting channel group list failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
+    }
+	
     /* We're done */
     if (pubnub_free(pbp) != 0) {
         printf("Failed to free the Pubnub context\n");

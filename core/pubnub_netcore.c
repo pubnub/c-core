@@ -71,7 +71,6 @@ static void finish(struct pubnub_ *pb)
         pbres = pbcc_parse_channel_registry_response(&pb->core);
         if (pbres != PNR_OK) {
             DEBUG_PRINTF("parse_channel_registry failed\n");
-            pbres = PNR_FORMAT_ERROR;
         }
         break;
     default:
