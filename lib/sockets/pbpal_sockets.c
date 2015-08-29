@@ -89,15 +89,23 @@ int pbpal_send_str(pubnub_t *pb, char const *s)
 
 bool pbpal_sent(pubnub_t *pb)
 {
-    int r = send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
+    int r;
+    if (0 == pb->sendlen) {
+        return true;
+    }
+    r = send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
     if (r < 0) {
         /* Maybe an error should be handled somehow... */
         return false;
     }
+    if (r > pb->sendlen) {
+        DEBUG_PRINTF("That's some over-achieving socket!\n");
+        r = pb->sendlen;
+    }
     pb->sendptr += r;
     pb->sendlen -= r;
 
-    return r >= pb->sendlen;
+    return 0 == pb->sendlen;
 }
 
 
