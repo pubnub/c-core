@@ -25,3 +25,16 @@ build on any regular POSIX system with a C compiler. To use a compiler
 of your choice (rather than the default one), say, `clang`, run:
 
 	make -f posix.mk CC=clang
+
+
+## OSX / Darwin remarks
+
+While being a "mostly POSIX" compliant environment, OSX, in its
+"Darwin" OS base, doesn't support POSIX standard `clock_gettime()`
+API. It is strange as this is a well-known and often complained
+about, and the actual code to implement it is rather simple.
+
+Anyway, to be able to work on OSX / Darwin, we have a small module
+that abstracts "getting a monotonic clock time", with an
+implementation for POSIX and another for Darwin. You have to link the
+right one, and we do that in `posix.mk`.

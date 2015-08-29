@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_callback.h"
 
+#include "monotonic_clock_get_time.h"
+
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
@@ -79,9 +81,9 @@ void* socket_watcher_thread(void *arg)
     for (;;) {
         struct timespec timspec;
 
-        clock_gettime(CLOCK_MONOTONIC, &timspec);
-        timspec.tv_sec = (timspec.tv_nsec + 300) / 1000;
-        timspec.tv_nsec = (timspec.tv_nsec + 300) % 1000;
+        monotonic_clock_get_time(&timspec);
+        timspec.tv_sec = (timspec.tv_nsec + 300*MILLI_IN_NANO) / UNIT_IN_NANO;
+        timspec.tv_nsec = (timspec.tv_nsec + 300*MILLI_IN_NANO) % UNIT_IN_NANO;
         
         pthread_mutex_lock(&m_watcher.mutw);
         pthread_cond_timedwait(&m_watcher.condw, &m_watcher.mutw, &timspec);
