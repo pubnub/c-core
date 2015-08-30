@@ -25,22 +25,29 @@
 enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 {
     struct addrinfo *result;
-    struct addrinfo *res;
+    struct addrinfo *it;
+    struct addrinfo hint;
     int error;
     
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
 
-    error = getaddrinfo(PUBNUB_ORIGIN, HTTP_PORT_STRING, NULL, &result);
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_family = AF_UNSPEC;
+    hint.ai_protocol = hint.ai_flags = hint.ai_addrlen = 0;
+    hint.ai_addr = NULL;
+    hint.ai_canonname = NULL;
+    hint.ai_next = NULL; 
+    error = getaddrinfo(PUBNUB_ORIGIN, HTTP_PORT_STRING, &hint, &result);
     if (error != 0) {
         return PNR_ADDR_RESOLUTION_FAILED;
     }
-    for (res = result; res != NULL; res = res->ai_next) {
-        pb->pal.socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    for (it = result; it != NULL; it = it->ai_next) {
+        pb->pal.socket = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
         if (pb->pal.socket == INVALID_SOCKET) {
             continue;
         }
-        if (connect(pb->pal.socket, res->ai_addr, res->ai_addrlen) == SOCKET_ERROR) {
+        if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
             closesocket(pb->pal.socket);
             pb->pal.socket = -1;
             continue;
@@ -49,7 +56,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     }
     freeaddrinfo(result);
 
-    if (NULL == res) {
+    if (NULL == it) {
         return PNR_CONNECT_FAILED;
     }
     
