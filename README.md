@@ -1,4 +1,6 @@
-# Pubnub C/C++ client libraries
+# Please direct all Support Questions and Concerns to Support@PubNub.com
+
+## Pubnub C/C++ client libraries
 
 This repository has the source for the C/C++ client libraries,
 designed mostly for embedded systems, but perfectly suitable for
@@ -28,3 +30,4 @@ The directories of the library repository are:
 - `freertos` : Modules and Makefile for the FreeRTOS OS
 
   
+# Please direct all Support Questions and Concerns to Support@PubNub.com
