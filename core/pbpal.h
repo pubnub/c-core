@@ -69,10 +69,13 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n);
 */
 int pbpal_send_str(pubnub_t *pb, char const *s);
 
-/** Returns whether sending of data is done. Don't try another
+/** Returns the status of sending. Don't try another
     sending until previous is complete.
+
+    @return 0: sending finished, +1: sending still in progress
+    -1: sending failed
 */
-bool pbpal_sent(pubnub_t *pb);
+int pbpal_send_status(pubnub_t *pb);
 
 /** Starts reading a line from the TCP connection. In other words,
     reading until it finds a newline character.
@@ -82,10 +85,12 @@ bool pbpal_sent(pubnub_t *pb);
 */
 int pbpal_start_read_line(pubnub_t *pb);
 
-/** Returns whether a line was read. Line reading was
+/** Returns the status of reading a line. Line reading was
     started with pbpal_start_read_line().
+    @return 0: line was read, +1: line reading still in progress
+    -1: line reading failed
 */
-bool pbpal_line_read(pubnub_t *pb);
+int pbpal_line_read_status(pubnub_t *pb);
 
 /** Returns the length of the data in the receive buffer
     at this time.

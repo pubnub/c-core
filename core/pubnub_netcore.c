@@ -88,6 +88,7 @@ static void finish(struct pubnub_ *pb)
 int pbnc_fsm(struct pubnub_ *pb)
 {
     enum pubnub_res pbrslt;
+    int i;
 
     DEBUG_PRINTF("pbnc_fsm()\n");
 
@@ -123,9 +124,10 @@ next_state:
         }
         break;
     case PBS_TX_GET:
-        if (pbpal_sent(pb)) {
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
             pb->state = PBS_TX_PATH;
-            if (-1 == pbpal_send_str(pb, pb->core.http_buf)) {
+            if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -133,16 +135,21 @@ next_state:
         }
         break;
     case PBS_TX_PATH:
-        if (pbpal_sent(pb)) {
+        i = pbpal_send_status(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             pbpal_send_literal_str(pb, " HTTP/1.1\r\nHost: ");
             pb->state = PBS_TX_VER;
             goto next_state;
         }
         break;
     case PBS_TX_VER:
-        if (pbpal_sent(pb)) {
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
             pb->state = PBS_TX_ORIGIN;
-            if (-1 == pbpal_send_str(pb, PUBNUB_ORIGIN)) {
+            if ((i < 0) || (-1 == pbpal_send_str(pb, PUBNUB_ORIGIN))) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -150,7 +157,11 @@ next_state:
         }
         break;
     case PBS_TX_ORIGIN:
-        if (pbpal_sent(pb)) {
+        i = pbpal_send_status(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/0.1\r\nConnection: Keep-Alive\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
@@ -158,7 +169,11 @@ next_state:
         break;
     case PBS_TX_FIN_HEAD:
         DEBUG_PRINTF("PBS_TX_FIN_HEAD\n");
-        if (pbpal_sent(pb)) {
+        i = pbpal_send_status(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             pbpal_start_read_line(pb);
             pb->state = PBS_RX_HTTP_VER;
             goto next_state;
@@ -166,8 +181,9 @@ next_state:
         break;
     case PBS_RX_HTTP_VER:
         DEBUG_PRINTF("PBS_RX_HTTP_VER\n");
-        if (pbpal_line_read(pb)) {
-            if (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0) {
+        i = pbpal_line_read_status(pb);
+        if (i <= 0) {
+            if ((i < 0) || (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0)) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -187,7 +203,11 @@ next_state:
         goto next_state;
     case PBS_RX_HEADER_LINE:
         DEBUG_PRINTF("PBS_RX_HEADER_LINE\n");
-        if (pbpal_line_read(pb)) {
+        i = pbpal_line_read_status(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[] = "Content-Length: ";
             DEBUG_PRINTF("header line was read: %.*s\n", pbpal_read_len(pb), pb->core.http_buf);
@@ -240,7 +260,11 @@ next_state:
         pb->state = PBS_RX_CHUNK_LEN_LINE;
         goto next_state;
     case PBS_RX_CHUNK_LEN_LINE:
-        if (pbpal_line_read(pb)) {
+        i = pbpal_line_read_status(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             pb->core.http_content_len = strtoul(pb->core.http_buf, NULL, 16);
             DEBUG_PRINTF("About to read a chunk w/length: %d\n", pb->core.http_content_len);
             if (pb->core.http_content_len == 0) {

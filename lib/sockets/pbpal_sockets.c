@@ -19,6 +19,7 @@
 #endif
 
 #include <string.h>
+#include <errno.h>
 
 
 #define HTTP_PORT 80
@@ -77,7 +78,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
     pb->sendlen = n;
     pb->sock_state = STATE_NONE;
 
-    return pbpal_sent(pb) ? 0 : +1;
+    return pbpal_send_status(pb);
 }
 
 
@@ -87,16 +88,19 @@ int pbpal_send_str(pubnub_t *pb, char const *s)
 }
 
 
-bool pbpal_sent(pubnub_t *pb)
+int pbpal_send_status(pubnub_t *pb)
 {
     int r;
     if (0 == pb->sendlen) {
-        return true;
+        return 0;
     }
     r = send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
     if (r < 0) {
-        /* Maybe an error should be handled somehow... */
-        return false;
+#if defined _WIN32
+            return (WSAGetLastError() == WSAEWOULDBLOCK) ? +1 :-1;
+#else
+            return (errno == EWOULDBLOCK) ? +1 :-1;
+#endif
     }
     if (r > pb->sendlen) {
         DEBUG_PRINTF("That's some over-achieving socket!\n");
@@ -105,7 +109,7 @@ bool pbpal_sent(pubnub_t *pb)
     pb->sendptr += r;
     pb->sendlen -= r;
 
-    return 0 == pb->sendlen;
+    return (0 == pb->sendlen) ? 0 : +1;
 }
 
 
@@ -135,17 +139,21 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-bool pbpal_line_read(pubnub_t *pb)
+int pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
         int recvres = recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
+            /* This is error or connection close, but, since it is an
+               unexpected close, we treat it like an error.
              */
-            return false;
+#if defined _WIN32
+            return (WSAGetLastError() == WSAEWOULDBLOCK) ? +1 :-1;
+#else
+            return (errno == EWOULDBLOCK) ? +1 :-1;
+#endif
         }
         DEBUG_PRINTF("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
@@ -161,7 +169,7 @@ bool pbpal_line_read(pubnub_t *pb)
         if (c == '\n') {
             DEBUG_PRINTF("\\n found: "); WATCH(pbpal_read_len(pb), "%d"); WATCH(pb->readlen, "%d");
             pb->sock_state = STATE_NONE;
-            return true;
+            return 0;
         }
     }
 
@@ -180,7 +188,7 @@ bool pbpal_line_read(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
-    return false;
+    return +1;
 }
 
 
