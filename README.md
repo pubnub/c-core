@@ -28,3 +28,9 @@ The directories of the library repository are:
 - `freertos` : Modules and Makefile for the FreeRTOS OS
 
   
+## Files
+
+In this root directory we have some file, too:
+
+- `posix.mk`: a "master" Makefile for POSIX - will run all the POSIX
+  Makefiles there are

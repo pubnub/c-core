@@ -24,13 +24,14 @@ So, to build the samples, just run:
 
 	make -f posix.mk
 	
-There are no special requirements for C-core on POSIX, it should just
-build on any regular POSIX system with a C compiler. To use a compiler
-of your choice (rather than the default one), say, `clang`, run:
+The only requirement / prerequisite of this Makefile is that you have
+an OpenSSL package installed, which should be true for most modern
+POSIX systems. In that's met, it should just build with the default C
+compiler. To use a compiler of your choice (rather than the default
+one), say, `clang`, run:
 
 	make -f posix.mk CC=clang
 
 # Notes
 
-- The callback API is not yet functional. For now, use the sync API.
 - We shall add sample Makefile for Windows soon.
