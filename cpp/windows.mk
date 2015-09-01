@@ -1,7 +1,8 @@
 SOURCEFILES = ..\core\pubnub_coreapi.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  ..\lib\sockets\pbpal_sockets.c ..\lib\sockets\pbpal_resolv_and_connect_sockets.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_blocking_io.c ..\core\pubnub_json_parse.c ..\core\pubnub_helper.c  ..\windows\pubnub_version_windows.c ..\windows\pubnub_generate_uuid_windows.c ..\windows\pbpal_windows_blocking_io.c ..\core\c99\snprintf.c
 
-CFLAGS = /EHsc /Zi /TP /I ..\core /I . /I ..\core\c99 /I ..\windows /W3
+CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\core\c99 /I ..\windows /W3
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 
+# /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /TP means "compile all files as C++"
 # /EHsc enables (standard) exception support
 
