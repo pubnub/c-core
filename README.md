@@ -1,4 +1,6 @@
-# Pubnub C/C++ client libraries
+# Please direct all Support Questions and Concerns to Support@PubNub.com
+
+## Pubnub C/C++ client libraries
 
 This repository has the source for the C/C++ client libraries,
 designed mostly for embedded systems, but perfectly suitable for
@@ -30,7 +32,9 @@ The directories of the library repository are:
   
 ## Files
 
-In this root directory we have some file, too:
+In this root directory we have some files, too:
 
 - `posix.mk`: a "master" Makefile for POSIX - will run all the POSIX
   Makefiles there are
+
+# Please direct all Support Questions and Concerns to Support@PubNub.com
