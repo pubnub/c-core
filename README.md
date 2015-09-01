@@ -34,7 +34,11 @@ The directories of the library repository are:
 
 In this root directory we have some files, too:
 
-- `posix.mk`: a "master" Makefile for POSIX - will run all the POSIX
+- `posix.mk`: a "master" Makefile for POSIX - will build all the POSIX
   Makefiles there are
+- `windows.mk`: a "master" Makefile for Windows - will build all the 
+  Windows Makefiles there are
+- `VERSION`: Identifies the latest stable / recommended release 
 
+  
 # Please direct all Support Questions and Concerns to Support@PubNub.com
