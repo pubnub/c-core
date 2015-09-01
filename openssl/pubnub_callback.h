@@ -2,10 +2,10 @@
 #if !defined INC_PUBNUB_POSIX_CALLBACK
 #define	INC_PUBNUB_POSIX_CALLBACK
 
-/** @mainpage The POSIX Pubnub client library - callback interface
+/** @mainpage The OpenSSL Pubnub client library - callback interface
 
     This is the "callback" interface of the Pubnub client library for
-    POSIX compatible OSes (Linux, BSD...). 
+    OpenSSL (for any platform that OpenSSL supports).
 
     The "callback" interface has these characteristics:
     - It is not thread safe. 

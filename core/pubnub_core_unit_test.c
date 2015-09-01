@@ -51,6 +51,35 @@ bool pbpal_connected(pubnub_t *pb)
     return (bool)mock(pb);
 }
 
+#if 0
+#include <execinfo.h>
+static void my_stack_trace(void)
+{
+    void *trace[16];
+    char **messages = NULL;
+    int i, trace_size = 0;
+
+    trace_size = backtrace(trace, sizeof trace / sizeof trace[0]);
+    messages = backtrace_symbols(trace, trace_size);
+    for (i = 1; i < trace_size; ++i) {
+        printf("[bt] #%d %s \n", i, messages[i]);
+        /* find first occurence of '(' or ' ' in message[i] and assume
+         * everything before that is the file name. (Don't go beyond 0 though
+         * (string terminator)*/
+        size_t p = 0;
+        while(messages[i][p] != '(' && messages[i][p] != ' '
+              && messages[i][p] != 0) 
+            ++p;
+        
+        char syscom[256];
+        snprintf(syscom, sizeof syscom, "addr2line %p -e %.*s", trace[i], p, messages[i]);
+        //last parameter is the file name of the symbol
+        system(syscom);
+    }
+}
+#endif
+
+
 int pbpal_send(pubnub_t *pb, void *data, size_t n)
 {
     return (int)mock(pb, data, n);
@@ -61,7 +90,7 @@ int pbpal_send_str(pubnub_t *pb, char *s)
     return (int)mock(pb, s);
 }
 
-bool pbpal_sent(pubnub_t *pb)
+int pbpal_send_status(pubnub_t *pb)
 {
     return (bool)mock(pb);
 }
@@ -116,17 +145,14 @@ static int my_recv(void *p, size_t n)
     return to_read;
 }
 
-bool pbpal_line_read(pubnub_t *pb)
+int pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
         int recvres = my_recv(pb->ptr, pb->left);
-        if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+        if (recvres < 0) {
+            return -1;
         }
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
@@ -140,7 +166,7 @@ bool pbpal_line_read(pubnub_t *pb)
         
         if (c == '\n') {
             pb->sock_state = STATE_NONE;
-            return true;
+            return 0;
         }
     }
 
@@ -159,7 +185,7 @@ bool pbpal_line_read(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
-    return false;
+    return +1;
 }
 
 int pbpal_start_read(pubnub_t *pb, size_t n)
@@ -428,15 +454,15 @@ void expect_have_dns_for_pubnub_origin()
 
 inline void expect_outgoing_with_url(char const *url) {
     expect(pbpal_send, when(data, streqs("GET ")), returns(0));
-    expect(pbpal_sent, returns(true));
+    expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(url)), returns(0));
-    expect(pbpal_sent, returns(true));
+    expect(pbpal_send_status, returns(0));
     expect(pbpal_send, when(data, streqs(" HTTP/1.1\r\nHost: ")), returns(0));
-    expect(pbpal_sent, returns(true));
+    expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(PUBNUB_ORIGIN)), returns(0));
-    expect(pbpal_sent, returns(true));
+    expect(pbpal_send_status, returns(0));
     expect(pbpal_send, when(data, streqs("\r\nUser-Agent: PubNub-C-core/0.1\r\nConnection: Keep-Alive\r\n\r\n")), returns(0));
-    expect(pbpal_sent, returns(true));
+    expect(pbpal_send_status, returns(0));
 }
 
 
@@ -452,8 +478,21 @@ inline void incoming_and_close(char const *str) {
     expect(pbpal_forget, when(pb, equals(pbp)));
 }
 
-/* -- LEAVE operation -- */
 
+static void cancel_and_cleanup(pubnub_t *pbp)
+{
+    pubnub_cancel(pbp);
+
+    expect(pbpal_close, when(pb, equals(pbp)));
+    attest(pbnc_fsm(pbp), equals(0));
+    expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
+    expect(pbpal_forget, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_CANCELLED));
+}
+
+/* -- LEAVE operation -- */
 Ensure(single_context_pubnub, leave_have_dns) {
     pubnub_init(pbp, "pubkey", "subkey");
 
@@ -537,18 +576,6 @@ Ensure(single_context_pubnub, leave_wait_tcp) {
 }
 
 
-static void cancel_and_cleanup(pubnub_t *pbp)
-{
-    pubnub_cancel(pbp);
-
-    expect(pbpal_close, when(pb, equals(pbp)));
-    attest(pbnc_fsm(pbp), equals(0));
-    expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
-    expect(pbpal_forget, when(pb, equals(pbp)));
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_CANCELLED));
-}
 
 
 
@@ -709,6 +736,7 @@ Ensure(single_context_pubnub, time_in_progress) {
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/time/0?pnsdk=unit-test-0.1");
     incoming("HTTP/1.1 200\r\n");
+//    expect(pbpal_close, when(pb, equals(pbp)));
     attest(pubnub_time(pbp), equals(PNR_STARTED));
     attest(pubnub_time(pbp), equals(PNR_IN_PROGRESS));
 
@@ -717,7 +745,6 @@ Ensure(single_context_pubnub, time_in_progress) {
 
 
 /* -- PUBLISH operation -- */
-
 
 Ensure(single_context_pubnub, publish) {
     pubnub_init(pbp, "publkey", "subkey");
@@ -1094,3 +1121,13 @@ Ensure(single_context_pubnub, illegal_context_fires_assert) {
 
     expect_assert_in(pubnub_free((pubnub_t*)((char*)pbp + 10000)), "pubnub_alloc_static.c");
 }
+
+
+#if 0
+int main(int argc, char *argv[])
+{
+    TestSuite *suite = create_test_suite();
+    add_test_with_context(suite, single_context_pubnub, time_in_progress);    
+    run_test_suite(suite, create_text_reporter());
+}
+#endif

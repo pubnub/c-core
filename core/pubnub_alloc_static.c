@@ -1,11 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-//#include "pubnub.h"
 
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 
 
-static struct pubnub m_aCtx[PUBNUB_CTX_MAX];
+static struct pubnub_ m_aCtx[PUBNUB_CTX_MAX];
 
 
 bool pb_valid_ctx_ptr(pubnub_t const *pb)

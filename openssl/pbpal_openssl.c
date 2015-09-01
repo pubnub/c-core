@@ -51,7 +51,7 @@ void pbpal_init(pubnub_t *pb)
 }
 
 
-int pbpal_send(pubnub_t *pb, void *data, size_t n)
+int pbpal_send(pubnub_t *pb, void const *data, size_t n)
 {
     if (n == 0) {
         return 0;
@@ -64,25 +64,33 @@ int pbpal_send(pubnub_t *pb, void *data, size_t n)
     pb->sendlen = n;
     pb->sock_state = STATE_NONE;
 
-    return pbpal_sent(pb) ? 0 : +1;
+    return pbpal_send_status(pb);
 }
 
 
-int pbpal_send_str(pubnub_t *pb, char *s)
+int pbpal_send_str(pubnub_t *pb, char const *s)
 {
     return pbpal_send(pb, s, strlen(s));
 }
 
 
-bool pbpal_sent(pubnub_t *pb)
+int pbpal_send_status(pubnub_t *pb)
 {
-    DEBUG_PRINTF("pbpal_sent(): pb->sendlen = %d\n", pb->sendlen);
-    int r = BIO_write(pb->pal.bio, pb->sendptr, pb->sendlen);
+    int r;
+    if (0 == pb->sendlen) {
+        return 0;
+    }
+    r = BIO_write(pb->pal.bio, pb->sendptr, pb->sendlen);
     if (r < 0) {
-        DEBUG_PRINTF("pbpal_sent(): r = %d\n", r);
+        if (BIO_should_retry(pb->pal.bio)) {
+            return +1;
+        }
         ERR_print_errors_fp(stderr);
-        /* Maybe an error should be handled somehow... */
-        return false;
+        return -1;
+    }
+    if (r > pb->sendlen) {
+        DEBUG_PRINTF("That's some over-achieving BIO!\n");
+        r = pb->sendlen;
     }
     pb->sendptr += r;
     pb->sendlen -= r;
@@ -116,19 +124,18 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-bool pbpal_line_read(pubnub_t *pb)
+int pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
-    DEBUG_PRINTF("pbpal_line_read()\n");
-    WATCH(pb->sock_state, "%d");
     if (pb->readlen == 0) {
         int recvres = BIO_read(pb->pal.bio, pb->ptr, pb->left);
         if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+            if (BIO_should_retry(pb->pal.bio)) {
+                return +1;
+            }
+            ERR_print_errors_fp(stderr);
+            return -1;
         }
         DEBUG_PRINTF("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
@@ -144,7 +151,7 @@ bool pbpal_line_read(pubnub_t *pb)
         if (c == '\n') {
             DEBUG_PRINTF("\\n found: "); WATCH(pbpal_read_len(pb), "%d"); WATCH(pb->readlen, "%d");
             pb->sock_state = STATE_NONE;
-            return true;
+            return 0;
         }
     }
 
@@ -163,7 +170,7 @@ bool pbpal_line_read(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
-    return false;
+    return +1;
 }
 
 

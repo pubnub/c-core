@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#if !defined INC_PUBNUB_POSIX_SYNC
-#define	INC_PUBNUB_POSIX_SYNC
+#if !defined INC_PUBNUB_OPENSSL_SYNC
+#define	INC_PUBNUB_OPENSSL_SYNC
 
-/** @mainpage The POSIX Pubnub client library - sync interface
+/** @mainpage The OpenSSL Pubnub client library - sync interface
 
     This is the "sync" interface of the Pubnub client library for
-    POSIX compatible OSes (Linux, BSD...). 
+    OpenSSL (on any platform that OpenSSL supports).
 
     The "sync" interface has these characteristics:
     - It is not thread safe. Please, always call all Pubnub functions
@@ -40,4 +40,4 @@
 #include "pubnub_blocking_io.h"
 
 
-#endif /* !defined INC_PUBNUB_POSIX_SYNC */
+#endif /* !defined INC_OPENSSL_SYNC */

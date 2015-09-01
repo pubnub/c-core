@@ -6,6 +6,6 @@ CFLAGS +=-g -D VERBOSE_DEBUG -I. -I test
 
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 	gcc -o pubnub_core_unit_test.so -shared $(CFLAGS) -Wall -fprofile-arcs -ftest-coverage -fPIC $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
+#	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall -fprofile-arcs -ftest-coverage $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 	valgrind --quiet cgreen-runner ./pubnub_core_unit_test.so
-	#cgreen-runner  ./pubnub_core_unit_test.so
 	gcovr -r . --html --html-details -o coverage.html
