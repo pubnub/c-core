@@ -2,10 +2,18 @@
 
 This is the part of C-core for the OpenSSL library/platform.  OpenSSL
 is portable across POSIX and Windows, so the same code is used on all
-and thus we deem it "library/platform".
+and thus we deem OpenSSL a "library/platform".
 
-It has the (OpenSSL) library/platform-specific files and a sample
-Makefile (`posix.mk`), which will build sample programs on POSIX:
+Unfortunately, OpenSSL portability is only on the source level and
+only for the communication functions. There are some "peripheral" 
+differences which we'll explore below.
+
+
+## Pubnub OpenSSL on POSIX
+
+OpenSSL doesn't cover threads, so there is some POSIX-specific code
+for `pthreads`. There is a sample Makefile (`posix.mk`), which will 
+build sample programs on  POSIX:
 
 - `pubnub_sync_sample`: a "walk-through" of the "sync" interface (API)
 - `pubnub_callback_sample`: a "walk-through" of the "callback"
@@ -16,7 +24,6 @@ Makefile (`posix.mk`), which will build sample programs on POSIX:
   outstanding publish and one outstanding subscribe transaction/operation
   at the same time, using the "callback" interface.
 
-
 The sources of the samples are in `../core/samples`, as they are
 portable across all or most hosted platforms (POSIX, Windows...).
 
@@ -26,12 +33,60 @@ So, to build the samples, just run:
 	
 The only requirement / prerequisite of this Makefile is that you have
 an OpenSSL package installed, which should be true for most modern
-POSIX systems. In that's met, it should just build with the default C
+POSIX systems. If that's met, it should just build with the default C
 compiler. To use a compiler of your choice (rather than the default
 one), say, `clang`, run:
 
 	make -f posix.mk CC=clang
 
-# Notes
+## Pubnub OpenSSL on Windows
 
-- We shall add sample Makefile for Windows soon.
+OpenSSL doesn't cover threads, so there is some Windows-specific code. 
+
+But, the biggest issue is that OpenSSL is not a part of any Windows installation
+`per se`. Actually, a typical Windows computer has dozens of OpenSSL libraries
+used by various programs. We provide one solution for this in our sample
+Makefile (`windows.mk`) as described below.
+
+You should decide what OpenSSL you want to compile & link against. To do
+that, pass the path of your OpenSSL of choice as macro `OPENSSLPATH` to
+`nmake`. We have found that "Shinning Light Productions" OpenSSL "distribution"
+(could be found here https://slproweb.com/products/Win32OpenSSL.html
+at the time of this writing) works fine.
+
+For example, the default install directory of the "Shinning Light Productions" 
+OpenSSL "distribution" for 32-bit OpenSSL for Windows is 
+`c:\OpenSSL-Win32`, so to use that, you would:
+
+	nmake -f windows.mk OPENSSLPATH=c:\OpenSSL-Win32
+
+If you don't pass `OPENSSLPATH`, it will use a default, which might not be
+good for you, so please check the default in `windows.mk` before invoking 
+nmake without setting `OPENSSLPATH`.
+
+We expect that the `OPENSSLPATH` has two sub-directories:
+
+- `include`: with the OpenSSL include files
+- `lib`: with OpenSSL (import) library files
+
+In general, this should work with both import library files (for DLLs) and
+static libraries, but that depends on your OpenSSL of choice. The important
+thing here is that if you use import libraries, you will have to distribute
+the DLLs that are a part of your OpenSSL with your applications.
+	
+The sample Makefile (`windows.mk`) will build the same sample 
+programs on Windows as are built on POSIX (the executables just have 
+`.exe` extension on Windows).
+
+The sample Makefile is designed to work with MS Visual Studio compilers
+(MSVS 2008 or newer should work fine). Rewriting it to use some other
+compiler should not be too hard, mostly would involve changing the compiler
+switches. But, if you have a compiler that supports MSVC switches
+(like some Clang "distributions"), you should be able to use it instead
+of the MSVC standard  `cl`, like:
+
+	nmake -f windows.mk CC=clang
+
+## Notes
+
+We have not tested Pubnub OpenSSL on OSX yet.

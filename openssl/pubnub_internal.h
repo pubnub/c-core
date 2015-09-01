@@ -9,7 +9,7 @@
 
 typedef BIO * pb_socket_t;
 
-/** The Pubnub POSIX context */
+/** The Pubnub OpenSSL context */
 struct pubnub_pal {
     BIO *bio;
     SSL_CTX *ctx;

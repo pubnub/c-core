@@ -384,11 +384,6 @@ void pubnub_cancel(pubnub_t *pb)
     case PBS_IDLE:
     case PBS_NULL:
         break;
-    case PBS_WAIT_DNS:
-        pb->core.msg_ofs = pb->core.msg_end = 0;
-        pb->core.last_result = PNR_CANCELLED;
-        pbntf_trans_outcome(pb);
-        break;
     default:
         pb->state = PBS_WAIT_CANCEL;
         break;                        

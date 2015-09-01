@@ -273,7 +273,7 @@ void pbpal_close(pubnub_t *pb)
     DEBUG_PRINTF("pbpal_close()\n");
     pb->readlen = 0;
     if (pb->pal.bio != NULL) {
-        pbntf_lost_socket(pb, (pb_socket_t)pb->pal.bio);
+        pbntf_lost_socket(pb, pb->pal.bio);
         BIO_free_all(pb->pal.bio);
         pb->pal.bio = NULL;
         if (pb->pal.ctx != NULL) {
