@@ -30,10 +30,16 @@ static struct SocketWatcherData m_watcher;
 
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_socket_t pb_socket)
 {
+    size_t i;
     int socket;
     if (-1 == BIO_get_fd(pb_socket, &socket)) {
         DEBUG_PRINTF("Uninitialized BIO!\n");
         return;
+    }
+    for (i = 0; i < watcher->apoll_size; ++i) {
+        if (watcher->apoll[i].fd == socket) {
+            return;
+        }
     }
     if (watcher->apoll_size == watcher->apoll_cap) {
         struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
