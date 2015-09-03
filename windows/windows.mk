@@ -4,10 +4,13 @@ CFLAGS = /Zi /MP /D VERBOSE_DEBUG /I ..\core /I . /I fntest /I ../core/fntest /I
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 
-all: pubnub_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe
+all: pubnub_sync_sample.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe
 
 pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c
 	$(CC) $(CFLAGS) ..\core\samples\pubnub_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c ws2_32.lib rpcrt4.lib
+
+cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c
+	$(CC) $(CFLAGS) ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c ws2_32.lib rpcrt4.lib
 
 pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_windows.c
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\pubnub_callback_sample.c  $(SOURCEFILES) pubnub_ntf_callback_windows.c ws2_32.lib rpcrt4.lib

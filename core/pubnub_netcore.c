@@ -85,12 +85,14 @@ static void finish(struct pubnub_ *pb)
 }
 
 
+enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb);
+
 int pbnc_fsm(struct pubnub_ *pb)
 {
     enum pubnub_res pbrslt;
     int i;
 
-    DEBUG_PRINTF("pbnc_fsm()\n");
+    DEBUG_PRINTF("pbnc_fsm()\t");
 
 next_state:
     WATCH(pb->state, "%d");
@@ -98,11 +100,27 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
-    case PBS_WAIT_DNS:
         pbrslt = pbpal_resolv_and_connect(pb);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             pb->state = PBS_WAIT_DNS;
+            break;
+        case PNR_STARTED:
+            pb->state = PBS_CONNECT;
+            break;
+        case PNR_OK:
+            pb->state = PBS_CONNECT;
+            goto next_state;
+        default:
+            pb->core.last_result = pbrslt;
+            pbntf_trans_outcome(pb);
+            break;
+        }
+        break;
+    case PBS_WAIT_DNS:
+        pbrslt = pbpal_check_resolv_and_connect(pb);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
             break;
         case PNR_STARTED:
             pb->state = PBS_CONNECT;
@@ -168,7 +186,6 @@ next_state:
         }
         break;
     case PBS_TX_FIN_HEAD:
-        DEBUG_PRINTF("PBS_TX_FIN_HEAD\n");
         i = pbpal_send_status(pb);
         if (i < 0) {
             outcome_detected(pb, PNR_IO_ERROR);
@@ -180,7 +197,6 @@ next_state:
         }
         break;
     case PBS_RX_HTTP_VER:
-        DEBUG_PRINTF("PBS_RX_HTTP_VER\n");
         i = pbpal_line_read_status(pb);
         if (i <= 0) {
             if ((i < 0) || (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0)) {
