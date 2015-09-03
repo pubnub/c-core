@@ -4,7 +4,8 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #else
-#include <select.h>
+#include <sys/select.h>
+#define SOCKET_ERROR -1
 #endif
 
 #include "pubnub_internal.h"
