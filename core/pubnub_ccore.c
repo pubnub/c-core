@@ -9,6 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Should do this in a more portable way, but, for now, let's
+	just spoon-feed MSVC...
+	*/
+#ifdef _WIN32
+int snprintf(char *buffer, size_t n, const char *format, ...);
+#endif
 
 void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subscribe_key)
 {

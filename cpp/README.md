@@ -78,13 +78,16 @@ Pubnub C++ wrapper will not use C++11 features itself.
 
 ## OpenSSL
 
-We also have a sample Makefile for OpenSSL. The C++ wrapper source
+We also have sample Makefiles for OpenSSL. The C++ wrapper source
 code is the same as for "plain" POSIX and "plain" Windows. We just
-link with OpenSSL modules.
+link with OpenSSL modules (instead of "plain" ones).
 
 The `posix_openssl.mk` will build the same executables on a POSIX
 compatible system as `posix.mk`, but linking OpenSSL, thus using
 SSL/TLS to communicate with PubNub. The will be located in the
 `openssl` sub-directory.
 
-Note: We shall make an example Makefile for OpenSSL on Windows soon.
+For Windows, we have `windows_openssl.mk`, which will build the 
+same executables on a Windows system as `windows.mk`, but linking 
+OpenSSL, thus using SSL/TLS to communicate with PubNub. The will be 
+located in the `openssl` sub-directory.

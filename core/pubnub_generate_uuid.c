@@ -14,6 +14,13 @@
 #include "sha1.h"
 #endif
 
+/* Should do this in a more portable way, but, for now, let's
+	just spoon-feed MSVC...
+	*/
+#ifdef _WIN32
+int snprintf(char *buffer, size_t n, const char *format, ...);
+#endif
+
 
 /** Here we provide functions that are not dependent on the platform */
 
