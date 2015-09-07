@@ -60,7 +60,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
         DEBUG_PRINTF("pbpal_send(): pb->sock_state != STATE_NONE (=%d)\n", pb->sock_state);
         return -1;
     }
-    pb->sendptr = data;
+    pb->sendptr = (uint8_t*)data;
     pb->sendlen = n;
     pb->sock_state = STATE_NONE;
 

@@ -5,7 +5,7 @@ on any platform that supports C++ and has a reasonably
 feature-complete implementation of C-core. There are some modules
 that are platform specific, but only if you use C++98. For C++11 or
 later, code in the Pubnub C-core C++ wrapper is fully portable and
-writen in standard C++(11+).
+written in standard C++(11+).
 
 C++ wrapper is usable with C++98, but has some improvements if you
 use C++11.
@@ -75,3 +75,16 @@ switches should work, but were not tested.
 Keep in mind that MSVS compilers don't support full C++11 as of this
 writing, thus didn't "bump" `__cplusplus` to `201103L`, which means that
 Pubnub C++ wrapper will not use C++11 features itself.
+
+## OpenSSL
+
+We also have a sample Makefile for OpenSSL. The C++ wrapper source
+code is the same as for "plain" POSIX and "plain" Windows. We just
+link with OpenSSL modules.
+
+The `posix_openssl.mk` will build the same executables on a POSIX
+compatible system as `posix.mk`, but linking OpenSSL, thus using
+SSL/TLS to communicate with PubNub. The will be located in the
+`openssl` sub-directory.
+
+Note: We shall make an example Makefile for OpenSSL on Windows soon.
