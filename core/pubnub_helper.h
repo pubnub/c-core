@@ -24,6 +24,8 @@ enum pubnub_publish_res {
   PNPUB_INVALID_JSON,
   /** Publish failed, the channel had an invalid character in the name */
   PNPUB_INVALID_CHAR_IN_CHAN_NAME,
+  /** The publishing quota for this account was exceeded */
+  PNPUB_ACCOUNT_QUOTA_EXCEEDED,
   /** Publish failed, but we were not able to parse the error description */
   PNPUB_UNKOWN_ERROR,
 };
