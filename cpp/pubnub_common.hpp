@@ -65,7 +65,7 @@ namespace pubnub {
         return join(container.begin(), container.end(), separator);
     }
 
-	static const std::string comma = ",";
+    static const std::string comma = ",";
 	
     /** Options for Publish v2. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
