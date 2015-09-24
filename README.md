@@ -25,6 +25,8 @@ The directories of the library repository are:
 
 - `cpp`: Modules, Makefile(s) and examples for the C++ wrapper
 
+- `qt`: Modules, Qt projects and examples for Qt
+
 - `contiki` : Modules and Makefile for the Contiki OS
 
 - `freertos` : Modules and Makefile for the FreeRTOS OS
@@ -35,9 +37,9 @@ The directories of the library repository are:
 In this root directory we have some files, too:
 
 - `posix.mk`: a "master" Makefile for POSIX - will build all the POSIX
-  Makefiles there are
+  Makefiles there are (doesn't build Qt - you might not have Qt)
 - `windows.mk`: a "master" Makefile for Windows - will build all the 
-  Windows Makefiles there are
+  Windows Makefiles there are (doesn't build Qt, you might not have Qt)
 - `VERSION`: Identifies the latest stable / recommended release 
 
   
