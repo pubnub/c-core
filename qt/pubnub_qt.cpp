@@ -35,7 +35,6 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
 {
     if (PNR_STARTED == result) {
         QUrl url(d_origin + QString::fromLatin1(d_context->http_buf, d_context->http_buf_len));
-        qDebug() << "URL === " << url;
         d_trans = transaction;
 
         QNetworkReply *p = d_reply.take();

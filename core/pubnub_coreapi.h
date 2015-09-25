@@ -138,8 +138,6 @@ enum pubnub_res pubnub_publish(pubnub_t *p, const char *channel, const char *mes
 
     You can't publish if a transaction is in progress in @p p context.
 
-    The response 
-
     @param p The pubnub context. Can't be NULL
     @param channel The string with the channel (or comma-delimited list
     of channels) to publish to.
@@ -192,13 +190,19 @@ char const* pubnub_get(pubnub_t *p);
 char const *pubnub_get_channel(pubnub_t *pb);
 
 /** Subscribe to @p channel and/or @p channel_group. This actually
-    means "initiate a subscribe operation/transaction". The outcome is
-    sent to the process that starts the transaction via process event
-    #pubnub_publish_event, which is a good place to start reading the
-    fetched message(s), via pubnub_get().
+    means "initiate a subscribe operation/transaction". The outcome
+    will be retrieved by the "notification" API, which is different
+    for different platforms. There are two APIs that are widely
+    available - "sync" and "callback".
 
     Messages published on @p channel and/or @p channel_group since the
-    last subscribe transaction will be fetched.
+    last subscribe transaction will be fetched, unless this is the
+    first subscribe on this context after initialization or a serious
+    error. In that "first" case, this will just retrieve the current
+    time token, and that event is called "connect" in many pubnub
+    SDKs, but in C-core we don't treat it any different. For that
+    "first" case, you will receive a notification that subscribe has
+    finished OK, but there will be no messages in the reply.
 
     The @p channel and @p channel_group strings may contain multiple
     comma-separated channel (channel group) names, so only one call is
@@ -213,13 +217,6 @@ char const *pubnub_get_channel(pubnub_t *pb);
 
     Also, you can't subscribe if there are unread messages in the
     context (you read messages with pubnub_get()).
-
-    @note Some of the subscribed messages may be lost when calling
-    publish() after a subscribe() on the same context or subscribe()
-    on different channels in turn on the same context.  But typically,
-    you will want two separate contexts for publish and subscribe
-    anyway. If you are changing the set of channels you subscribe to,
-    you should first call pubnub_leave() on the old set.
 
     @param p The pubnub context. Can't be NULL
     @param channel The string with the channel name (or comma-delimited list
