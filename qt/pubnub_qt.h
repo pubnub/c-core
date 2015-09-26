@@ -18,7 +18,16 @@ QT_END_NAMESPACE
 
 struct pbcc_context;
 
-/** Pubnub client for Qt.
+/** @mainpage Pubnub C-core for Qt
+
+    This is the C-core implementation of the Pubnub client
+    for the Qt framework.
+
+    The user interface class to use is \ref pubnub_qt.
+*/
+
+
+/** Pubnub client "context" for Qt.
  *
  * Represents a Pubnub "context". One context handles at most
  * one Pubnub API transaction/operation at a time.
