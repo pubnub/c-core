@@ -47,8 +47,12 @@ struct pbcc_context {
     unsigned http_buf_len;
     /** The length of total data to be received in a HTTP reply */
     unsigned http_content_len;
-    /** Indicates whether we are receiving chunked or regular HTTP response */
-    bool http_chunked;
+    /** Indicates whether we are receiving chunked or regular HTTP response
+     * @note Don't declare this as `bool`, as there may be alignment issues
+     * when this is included from both C and C++ compilers, especially pre-C99
+     * C compilers (like MSVC (at least until MSVC 2013)).
+     */
+    unsigned http_chunked;
     /** The contents of a HTTP reply/reponse */
     char http_reply[PUBNUB_REPLY_MAXLEN+1];
 
