@@ -73,6 +73,7 @@ public:
         /// retrieval or display
         eat_after_reading = 0x02
     };
+
     Q_DECLARE_FLAGS(pubv2_opts, pubv2_opt)
 
     /** Options for SSL/TLS transport. These are designed to be used as
@@ -93,7 +94,8 @@ public:
         /// across local proxies, firewalls, etc? (default: YES)
         ignoreSecureConnectionRequirement = 0x04
     };
-    Q_DECLARE_FLAGS(ssl_opts, ssl_opt);
+
+    Q_DECLARE_FLAGS(ssl_opts, ssl_opt)
 
     /** Set the authentication key to be used in this context.
      * After construction it is empty (null), thus not used.
@@ -173,7 +175,8 @@ public:
     /** Cancels an ongoing API transaction. The outcome is not
      * guaranteed to be #PNR_CANCELLED like in other C-core based
      * APIs, because it depends on what Qt actually does with our
-     * request to abort.
+     * request to abort. But, in the regular case, it will be
+     * #PNR_CANCELLED.
      */
     void cancel();
 

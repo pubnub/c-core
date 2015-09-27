@@ -62,7 +62,7 @@ pubnub_qt_gui_sample::pubnub_qt_gui_sample()
 
 void pubnub_qt_gui_sample::onPublish(pubnub_res result)
 {
-    QString report =  QString("onPublish! Result: '") + pubnub_res_2_string(result) + "', Response: " + d_pb_publish->last_publish_result() + "\n";
+    QString report =  QString("Publish result: '") + pubnub_res_2_string(result) + "', response: " + d_pb_publish->last_publish_result() + "\n";
 
     d_console->insertPlainText(report);
     QScrollBar *bar = d_console->verticalScrollBar();
@@ -80,10 +80,10 @@ void pubnub_qt_gui_sample::onSubscribe(pubnub_res result)
         for (int i = 0; i < msg.size(); ++i) {
             d_console->insertPlainText(msg[i] + '\n');
         }
-
-        QScrollBar *bar = d_console->verticalScrollBar();
-        bar->setValue(bar->maximum());
     }
+
+    QScrollBar *bar = d_console->verticalScrollBar();
+    bar->setValue(bar->maximum());
 
     result = d_pb_subscribe->subscribe(d_channel->text());
     if (result != PNR_STARTED) {

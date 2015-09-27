@@ -406,8 +406,17 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
 
 void pubnub_qt::httpFinished()
 {
-    if (d_reply->error()) {
-        qDebug() << "error: " << d_reply->errorString();
+    QNetworkReply::NetworkError error = d_reply->error();
+    if (error) {
+        qDebug() << "error: " << d_reply->error() << ", string: " << d_reply->errorString();
+        switch (error) {
+        case QNetworkReply::OperationCanceledError:
+            emit outcome(PNR_CANCELLED);
+            return;
+        case QNetworkReply::TimeoutError:
+            emit outcome(PNR_TIMEOUT);
+            return;
+        }
     }
 
     emit outcome(finish(d_reply->readAll(), d_reply->error()));
