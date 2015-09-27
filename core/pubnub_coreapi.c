@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 
-void pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key)
+pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
@@ -19,6 +19,8 @@ void pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key
     p->state = PBS_IDLE;
     p->trans = PBTT_NONE;
     pbpal_init(p);
+
+    return p;
 }
 
 

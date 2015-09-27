@@ -54,14 +54,16 @@
     Pubnub context @p p.
 
     @pre Call this after TCP initialization.
+    @pre @p subscribe_key can't be NULL
     @param p The Context to initialize (use pubnub_alloc() to
     obtain it)
     @param publish_key The string of the key to use when publishing
-    messages
+    messages (if you don't want to publish, you can pass NULL)
     @param subscribe_key The string of the key to use when subscribing
     to messages
+    @return Returns the @p p context
 */
-void pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key);
+pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key);
 
 /** Set the UUID identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.

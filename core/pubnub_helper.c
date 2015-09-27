@@ -3,7 +3,6 @@
 
 #include "pubnub_assert.h"
 
-//#include <stdlib.h>
 #include <string.h>
 
 
@@ -50,3 +49,4 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     default: return "!?!?!";
     }
 }
+
