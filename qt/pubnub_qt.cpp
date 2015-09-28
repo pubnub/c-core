@@ -409,12 +409,17 @@ void pubnub_qt::httpFinished()
     QNetworkReply::NetworkError error = d_reply->error();
     if (error) {
         qDebug() << "error: " << d_reply->error() << ", string: " << d_reply->errorString();
+        d_context->http_buf_len = 0;
+        d_context->http_reply[0] = '\0';
         switch (error) {
         case QNetworkReply::OperationCanceledError:
             emit outcome(PNR_CANCELLED);
             return;
         case QNetworkReply::TimeoutError:
             emit outcome(PNR_TIMEOUT);
+            return;
+        case QNetworkReply::HostNotFoundError:
+            emit outcome(PNR_ADDR_RESOLUTION_FAILED);
             return;
         }
     }
