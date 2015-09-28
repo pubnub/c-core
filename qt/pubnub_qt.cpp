@@ -18,6 +18,7 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_origin("https://pubsub.pubnub.com")
 #endif
     , d_context(new pbcc_context)
+    , d_http_code(0)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
 
@@ -301,7 +302,7 @@ pubnub_res pubnub_qt::list_channel_group(QString const& channel_group)
 
 int pubnub_qt::last_http_code() const
 {
-    return d_reply ? d_reply->error() : 0;
+    return d_http_code;
 }
 
 
@@ -396,6 +397,9 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
         break;
     }
 
+    QVariant statusCode = d_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    d_http_code = statusCode.isValid() ? statusCode.toInt() : 0;
+
     if ((PNR_OK == pbres) && (http_code != 0) && (http_code / 100 != 2)) {
         return PNR_HTTP_ERROR;
     }
@@ -416,10 +420,14 @@ void pubnub_qt::httpFinished()
             emit outcome(PNR_CANCELLED);
             return;
         case QNetworkReply::TimeoutError:
-            emit outcome(PNR_TIMEOUT);
+            emit outcome(PNR_CONNECTION_TIMEOUT);
             return;
         case QNetworkReply::HostNotFoundError:
             emit outcome(PNR_ADDR_RESOLUTION_FAILED);
+            return;
+        case QNetworkReply::ConnectionRefusedError:
+        case QNetworkReply::ProtocolUnknownError:
+            emit outcome(PNR_CONNECT_FAILED);
             return;
         }
     }

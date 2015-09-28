@@ -565,7 +565,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channe
     is in progress on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel_group The channel to add
+    @param channel The channel to add
     @param channel_group The channel group to add to
 
     @return #PNR_STARTED on success, an error otherwise

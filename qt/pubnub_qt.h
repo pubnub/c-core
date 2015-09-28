@@ -208,13 +208,6 @@ public:
      */
     pubnub_res publish(QString const &channel, QString const &message);
 
-    /** A helper method to publish to several channels by giving a
-     * (string) list thereof.
-     */
-    pubnub_res publish(QStringList const &channel, QString const &message) {
-        return publish(channel.join(","), message);
-    }
-
     /** Publish the @p message (in JSON format) on @p p channel, using the
         @p p context, utilizing the v2 API. This actually means "initiate
         a publish transaction".
@@ -235,14 +228,6 @@ public:
         @return #PNR_STARTED on success, an error otherwise
         */
     pubnub_res publishv2(QString const &channel, QString const &message, pubv2_opts options);
-
-    /** A helper method to publish using V2 API to several channels by giving a
-     * (string) list thereof.
-     */
-    pubnub_res publishv2(QStringList const &channel, QString const &message, pubv2_opts options) {
-        return publishv2(channel.join(","), message, options);
-    }
-
 
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
@@ -608,13 +593,6 @@ public:
     */
     pubnub_res remove_channel_group(QString const& channel_group);
 
-    /** A helper method to remove channel groups by giving a
-     * (string) list of them.
-     */
-    pubnub_res remove_channel_group(QStringList const& channel_group) {
-        return remove_channel_group(channel_group.join(","));
-    }
-
     /** Removes a @p channel from the @p channel_group . This actually
         means "initiate a remove_channel_from_channel_group
         transaction". It can be thought of as an update against the
@@ -641,11 +619,11 @@ public:
     */
     pubnub_res remove_channel_from_group(QString const& channel, QString const& channel_group);
 
-    /** A helper method to remove channels from channel groups by
+    /** A helper method to remove channels from channel group by
      * giving (string) lists of them.
      */
-    pubnub_res remove_channel_from_group(QStringList const& channel, QStringList const& channel_group) {
-        return remove_channel_from_group(channel.join(","), channel_group.join(","));
+    pubnub_res remove_channel_from_group(QStringList const& channel, QString const& channel_group) {
+        return remove_channel_from_group(channel.join(","), channel_group);
     }
 
     /** Adds a @p channel to the @p channel_group . This actually means
@@ -666,18 +644,18 @@ public:
         You can't add a channel to a channel group if a transaction
         is in progress on the context.
 
-        @param channel_group The channel to add
+        @param channel The channel to add
         @param channel_group The channel group to add to
 
         @return #PNR_STARTED on success, an error otherwise
     */
     pubnub_res add_channel_to_group(QString const& channel, QString const& channel_group);
 
-    /** A helper method to add channels to channel groups by
+    /** A helper method to add channels to channel group by
      * giving (string) lists of them.
      */
-    pubnub_res add_channel_to_group(QStringList const& channel, QStringList const& channel_group) {
-        return add_channel_to_group(channel.join(","), channel_group.join(","));
+    pubnub_res add_channel_to_group(QStringList const& channel, QString const& channel_group) {
+        return add_channel_to_group(channel.join(","), channel_group);
     }
 
     /** Lists all channels of a @p channel_group. This actually
@@ -703,13 +681,6 @@ public:
     */
     pubnub_res list_channel_group(QString const& channel_group);
 
-    /** A helper method to list channel groups by
-     * giving a (string) lists of them.
-     */
-    pubnub_res list_channel_group(QStringList const& channel_group) {
-        return list_channel_group(channel_group.join(","));
-    }
-    
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
         */
@@ -780,6 +751,9 @@ private:
 
     /// Last Pubnub transaction
     pubnub_trans d_trans;
+
+    /// Last HTTP code
+    unsigned d_http_code;
 
 #ifndef QT_NO_SSL
     /// SSL options
