@@ -47,12 +47,6 @@ static void finish(struct pubnub_ *pb)
             pbres = PNR_FORMAT_ERROR;
         }
         break;
-    case PBTT_HISTORYV2:
-        if (pbcc_parse_historyv2_response(&pb->core) != 0) {
-            DEBUG_PRINTF("parse_historyv2 failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
     case PBTT_LEAVE:
     case PBTT_HERENOW:
     case PBTT_GLOBAL_HERENOW:

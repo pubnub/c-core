@@ -22,7 +22,6 @@ private slots:
     void onSubscribe(pubnub_res result);
     void onTime(pubnub_res result);
     void onHistory(pubnub_res result);
-    void onHistoryv2(pubnub_res result);
     void onHereNow(pubnub_res result);
     void onWhereNow(pubnub_res result);
     void onSetState(pubnub_res result);

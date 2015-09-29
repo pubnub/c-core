@@ -267,48 +267,14 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
 */
 enum pubnub_res pubnub_time(pubnub_t *p);
 
-/** Get the message history for the @p channel and/or @p
-    channel_group. This actually means "initiate a history
-    transaction".
-
-    If transaction is successful, the gotten messages will be available
-    via the pubnub_get(). 
-    
-    If @p channel is NULL, then @p channel_group cannot be NULL and
-    you will get history only for the channel group. It goes both
-    ways: if @p channel_group is NULL, then @p channel cannot be NULL
-    and you will get history only for the channel.
-
-    You can't get history if a transaction is in progress on the context.
-
-    @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to get message 
-    history for. This _can't_ be a comma separated list of channels.
-    @param channel_group The string with the channel group name to get
-    message history for. This _can't_ be a comma separated list
-    @param count Maximum number of messages to get. If there are less
-    than this available on the @c channel, you'll get less, but you
-    can't get more.
-
-    @return #PNR_STARTED on success, an error otherwise
-*/
-enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, const char *channel_group, unsigned count);
-
-/** Get the message history for the @p channel and/or @p channel_group
-    using the v2 API. This actually means "initiate a history
-    transaction/operation".
+/** Get the message history for the @p channel. This actually
+    means "initiate a history transaction/operation".
 
     If transaction is successful, the gotten messages will be
-    available via the pubnub_get(), but in a different way then
-    pubnub_history().  In our case, pubnub_get() will give you exactly
-    three messages (or, rather, elements).  The first will be a JSON
-    array of gotten messages, and the second and third will be the
-    timestamps of the first and the last message from that array.
-
-    If @p channel is NULL, then @p channel_group cannot be NULL and
-    you will get history only for the channel group. It goes both ways:
-    if @p channel_group is NULL, then @p channel cannot be NULL and
-    you will get history only for the channel.
+    available via the pubnub_get().  Using pubnub_get() will give
+    you exactly three messages (or, rather, elements).  The first will
+    be a JSON array of gotten messages, and the second and third will be
+    the timestamps of the first and the last message from that array.
 
     Also, if you select to @c include_token, then the JSON array
     you get will not be a simple array of gotten messages, but
@@ -321,8 +287,6 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, const char *cha
     @param p The Pubnub context. Can't be NULL. 
     @param channel The string with the channel name to get message 
     history for. This _can't_ be a comma separated list of channels.
-    @param channel_group The string with the channel group name to get
-    message history for. This _can't_ be a comma separated list
     @param count Maximum number of messages to get. If there are less
     than this available on the @c channel, you'll get less, but you
     can't get more.
@@ -331,7 +295,7 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, const char *cha
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_historyv2(pubnub_t *p, const char *channel, const char *channel_group, unsigned count, bool include_token);
+enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count, bool include_token);
 
 /** Get the currently present users on a @p channel and/or @p
     channel_group. This actually means "initiate a here_now

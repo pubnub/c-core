@@ -96,12 +96,9 @@ enum pubnub_trans {
     PBTT_LEAVE,
     /** Time (get from Pubnub server) operation/transaction */
     PBTT_TIME,
-    /** History (get message history for the channel from Pubnub
-     * server) operation/transaction */
-    PBTT_HISTORY,
     /** History V2 (get message history for the channel from Pubnub
      * server) operation/transaction */
-    PBTT_HISTORYV2,
+    PBTT_HISTORY,
     /** Here-now (get UUIDs of currently present users in channel(s))
      * operation/transaction */
     PBTT_HERENOW,

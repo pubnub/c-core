@@ -166,29 +166,15 @@ pubnub_res pubnub_qt::time()
 }
 
 
-pubnub_res pubnub_qt::history(QString const &channel, QString const &channel_group, unsigned count)
+pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool include_token)
 {
     return startRequest(
         pbcc_history_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            count
-            ), PBTT_HISTORY
-        );
-}
-
-
-pubnub_res pubnub_qt::historyv2(QString const &channel, QString const &channel_group, unsigned count, bool include_token)
-{
-    return startRequest(
-        pbcc_historyv2_prep(
-            d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             count,
             include_token
-            ), PBTT_HISTORYV2
+            ), PBTT_HISTORY
         );
 }
 
@@ -369,11 +355,6 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
         break;
     case PBTT_HISTORY:
         if (pbcc_parse_history_response(d_context.data()) != 0) {
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
-    case PBTT_HISTORYV2:
-        if (pbcc_parse_historyv2_response(d_context.data()) != 0) {
             pbres = PNR_FORMAT_ERROR;
         }
         break;

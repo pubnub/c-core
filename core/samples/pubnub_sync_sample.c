@@ -127,8 +127,8 @@ int main()
     }
 
 
-    puts("Getting history...");
-    res = pubnub_history(pbp, chan, NULL, 10);
+    puts("Getting history with include_token...");
+    res = pubnub_history(pbp, chan, 10, true);
     if (res != PNR_STARTED) {
         printf("pubnub_history() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -142,35 +142,7 @@ int main()
     }
 
     if (PNR_OK == res) {
-        puts("Got history! Messages:");
-        for (;;) {
-            msg = pubnub_get(pbp);
-            if (NULL == msg) {
-                break;
-            }
-            puts(msg);
-        }
-    }
-    else {
-        printf("Getting history failed with code: %d\n", res);
-    }
-
-    puts("Getting historyv2 with include_token...");
-    res = pubnub_historyv2(pbp, chan, NULL, 10, true);
-    if (res != PNR_STARTED) {
-        printf("pubnub_historyv2() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-    res = pubnub_await(pbp);
-    if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-
-    if (PNR_OK == res) {
-        puts("Got history v2! Elements:");
+        puts("Got history! Elements:");
         for (;;) {
             msg = pubnub_get(pbp);
             if (NULL == msg) {

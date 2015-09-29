@@ -175,13 +175,6 @@ int pbcc_parse_time_response(struct pbcc_context *p)
 
 int pbcc_parse_history_response(struct pbcc_context *p)
 {
-	DEBUG_PRINTF("pbcc_parse_history_response()\n");
-    return simple_parse_response(p);
-}
-
-
-int pbcc_parse_historyv2_response(struct pbcc_context *p)
-{
     return simple_parse_response(p);
 }
 
@@ -496,42 +489,8 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *pb)
 
 
 
-enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, unsigned count)
+enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, unsigned count, bool include_token)
 {
-    if (NULL == channel) {
-        if (NULL == channel_group) {
-            return PNR_INVALID_CHANNEL;
-        }
-        channel = ",";
-    }
-    if (pb->msg_ofs < pb->msg_end) {
-        return PNR_RX_BUFF_NOT_EMPTY;
-    }
-
-    pb->http_content_len = 0;
-    pb->msg_ofs = pb->msg_end = 0;
-
-    pb->http_buf_len = snprintf(
-        pb->http_buf, sizeof pb->http_buf,
-        "/history/%s/%s/0/%d?pnsdk=%s",
-        pb->subscribe_key, channel, count,
-        pubnub_uname()
-        );
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-
-    return PNR_STARTED;
-}
-
-
-enum pubnub_res pbcc_historyv2_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, unsigned count, bool include_token)
-{
-    if (NULL == channel) {
-        if (NULL == channel_group) {
-            return PNR_INVALID_CHANNEL;
-        }
-        channel = ",";
-    }
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
@@ -545,7 +504,6 @@ enum pubnub_res pbcc_historyv2_prep(struct pbcc_context *pb, const char *channel
         pb->subscribe_key, channel,
         pubnub_uname()
         );
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_INT_M(pb, "count", count, '&');
     APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');

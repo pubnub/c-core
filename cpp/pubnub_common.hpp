@@ -294,46 +294,21 @@ namespace pubnub {
         }
 
         /// Starts a transaction to get message history for @p channel
-        /// and/or @pchannel_group, with the limit of max @p count
-        /// messages to retrieve
-        /// @see pubnub_history
-        futres history(std::string const &channel, std::string const &channel_group = "", unsigned count = 100) {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_history(d_pb, ch, gr, count));
-        }
-
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres history(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100) {
-            return history(join(channel), join(channel_group), count);
-        }
-
-        /// Starts a transaction to get message history for @p channel
-        /// and/or @pchannel_group, with the limit of max @p count
+        /// with the limit of max @p count
         /// messages to retrieve, and optionally @p include_token to get
-        /// a time token for each message. Uses the v2 protocol.
-        /// @see pubnub_historyv2
-        futres historyv2(std::string const &channel, std::string const &channel_group = "", unsigned count = 100, bool include_token = false) {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_historyv2(d_pb, ch, gr, count, include_token));
-        }
-
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres historyv2(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, unsigned count = 100, bool include_token = false) {
-            return historyv2(join(channel), join(channel_group), count, include_token);
+        /// a time token for each message.
+        /// @see pubnub_history
+        futres history(std::string const &channel, unsigned count = 100, bool include_token = false) {
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            return doit(pubnub_history(d_pb, ch, count, include_token));
         }
 
         /// Starts a transaction to get a list of currently present
         /// UUIDs on a @p channel and/or @p channel_group
         /// @see pubnub_here_now
         futres here_now(std::string const &channel, std::string const &channel_group = "") {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
             return doit(pubnub_here_now(d_pb, ch, gr));
         }
 

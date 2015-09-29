@@ -116,15 +116,6 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p);
 */
 int pbcc_parse_time_response(struct pbcc_context *p);
 
-/** Parses the string received as a response for a history operation
-    (transaction). This checks if the response is valid, and, if it
-    is, enables getting the gotten message (like for `subscribe`).
-
-    @param p The Pubnub C core context to parse the response "in"
-    @return 0: OK, -1: error (invalid response)
-*/
-int pbcc_parse_history_response(struct pbcc_context *p);
-
 /** Parses the string received as a response for a history v2
     operation (transaction). This checks if the response is valid,
     and, if it is, enables getting the gotten message, as a JSON
@@ -133,7 +124,7 @@ int pbcc_parse_history_response(struct pbcc_context *p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_historyv2_response(struct pbcc_context *p);
+int pbcc_parse_history_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a presence query
     operation (transaction). Presence query is done on several
@@ -181,15 +172,10 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context *p, const char *channel, con
  */
 enum pubnub_res pbcc_time_prep(struct pbcc_context *p);
 
-/** Prepares the History operation (transaction), mostly by
-    formatting the URI of the HTTP request.
- */
-enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, const char *channel_group, unsigned count);
-
 /** Prepares the History v2 operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_historyv2_prep(struct pbcc_context *p, const char *channel, const char *channel_group, unsigned count, bool include_token);
+enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token);
 
 /** Prepares the Here-now operation (transaction), mostly by
     formatting the URI of the HTTP request.

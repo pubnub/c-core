@@ -79,7 +79,7 @@ int main()
         }
 
         std::cout << "Getting history" << std::endl;
-		res = pb.history(chan).await();
+        res = pb.history(chan).await();
         if (PNR_OK ==  res) {
             std::cout << "Got history! Messages:" << std::endl;
             /// Lets illustrate getting all the message in a vector,
@@ -101,9 +101,9 @@ int main()
             std::cout << "Getting history failed! error code: " << res << std::endl;
         }
 
-        std::cout << "Getting history v2 with `include_token`" << std::endl;
-        if (PNR_OK ==  pb.historyv2(chan, "", 10, true).await()) {
-            std::cout << "Got history v2! Messages:" << std::endl;
+        std::cout << "Getting history with `include_token`" << std::endl;
+        if (PNR_OK ==  pb.history(chan, 10, true).await()) {
+            std::cout << "Got history with time token! Messages:" << std::endl;
             /// Here we illustrate getting the messages one-by-one
             std::string msg;
             do {
@@ -112,7 +112,7 @@ int main()
             } while (!msg.empty());
         }
         else {
-            std::cout << "Getting history v2 failed!" << std::endl;
+            std::cout << "Getting history with time token failed!" << std::endl;
         }
 
         std::cout << "Getting here-now presence" << std::endl;

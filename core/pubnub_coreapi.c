@@ -145,7 +145,7 @@ enum pubnub_res pubnub_time(pubnub_t *p)
 }
 
 
-enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, const char *channel_group, unsigned count)
+enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, unsigned count, bool include_token)
 {
     enum pubnub_res rslt;
 
@@ -155,30 +155,9 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, const char *ch
         return PNR_IN_PROGRESS;
     }
     
-    rslt = pbcc_history_prep(&pb->core, channel, channel_group, count);
+    rslt = pbcc_history_prep(&pb->core, channel, count, include_token);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HISTORY;
-        pb->core.last_result = PNR_STARTED;
-        pbnc_fsm(pb);
-    }
-    
-    return rslt;
-}
-
-
-enum pubnub_res pubnub_historyv2(pubnub_t *pb, const char *channel, const char *channel_group, unsigned count, bool include_token)
-{
-    enum pubnub_res rslt;
-
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-
-    if (pb->state != PBS_IDLE) {
-        return PNR_IN_PROGRESS;
-    }
-    
-    rslt = pbcc_historyv2_prep(&pb->core, channel, channel_group, count, include_token);
-    if (PNR_STARTED == rslt) {
-        pb->trans = PBTT_HISTORYV2;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
     }

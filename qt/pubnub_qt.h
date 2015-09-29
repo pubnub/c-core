@@ -140,10 +140,9 @@ public:
 
     /** Returns the string of an arrived message or other element of the
         response to an operation/transaction. Message(s) arrive on finish
-        of a subscribe operation or history operation, while for some
-        other operations this will give access to the whole response,
-        or the next element of the response. That is documented in
-        the function that starts the operation.
+        of a subscribe operation, while for  other operations this will give
+        access to the whole response or the next element of the response.
+        That is documented in the function that starts the operation.
 
         Subsequent call to this function will return the next message (if
         any). All messages are from the channel(s) the last operation was
@@ -315,55 +314,14 @@ public:
     */
     pubnub_res time();
 
-    /** Get the message history for the @p channel and/or @p
-        channel_group. This actually means "initiate a history
-        transaction".
-
-        If transaction is successful, the gotten messages will be available
-        via the get().
-
-        If @p channel is empty (or null), then @p channel_group cannot be
-        empty (or null) and you will get history only for the channel
-        group. It goes both ways: if @p channel_group is empty, then
-        @p channel cannot be empty and you will get history only for the
-        channel.
-
-        You can't get history if a transaction is in progress on the context.
-
-        @param channel The string with the channel name to get message
-        history for. This _can't_ be a comma separated list of channels.
-        @param channel_group The string with the channel group name to get
-        message history for. This _can't_ be a comma separated list
-        @param count Maximum number of messages to get. If there are less
-        than this available on the @c channel, you'll get less, but you
-        can't get more.
-
-        @return #PNR_STARTED on success, an error otherwise
-    */
-    pubnub_res history(QString const &channel, QString const &channel_group = "", unsigned count = 100);
-
-    /** A helper method to get history from several channels and or channel groups
-     * by giving a (string) list of them.
-     */
-    pubnub_res history(QStringList const &channel, QStringList const &channel_group=QStringList(), unsigned count = 100) {
-        return history(channel.join(","), channel_group.join(","), count);
-    }
-
-    /** Get the message history for the @p channel and/or @p channel_group
-        using the v2 API. This actually means "initiate a history
-        transaction/operation".
+    /** Get the message history for the @p channel. This actually means
+        "initiate a history transaction/operation".
 
         If transaction is successful, the gotten messages will be
-        available via the get(), but in a different way then
-        history().  In our case, get() will give you exactly
+        available via the get(), yielding exactly
         three messages (or, rather, elements).  The first will be a JSON
         array of gotten messages, and the second and third will be the
         timestamps of the first and the last message from that array.
-
-        If @p channel is empty or null, then @p channel_group cannot be
-        empty or null and you will get history only for the channel group.
-        It goes both ways: if @p channel_group is empty, then @p channel
-        cannot be empty and you will get history only for the channel.
 
         Also, if you select to @c include_token, then the JSON array
         you get will not be a simple array of gotten messages, but
@@ -375,8 +333,6 @@ public:
 
         @param channel The string with the channel name to get message
         history for. This _can't_ be a comma separated list of channels.
-        @param channel_group The string with the channel group name to get
-        message history for. This _can't_ be a comma separated list
         @param count Maximum number of messages to get. If there are less
         than this available on the @c channel, you'll get less, but you
         can't get more.
@@ -385,14 +341,7 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res historyv2(QString const &channel, QString const &channel_group = "", unsigned count = 100, bool include_token = false);
-
-    /** A helper method to get history using V2 API from several channels
-     * and or channel groups by giving a (string) list of them.
-     */
-    pubnub_res historyv2(QStringList const &channel, QStringList const &channel_group = QStringList(), unsigned count = 100, bool include_token = false) {
-        return historyv2(channel.join(","), channel_group.join(","), count, include_token);
-    }
+    pubnub_res history(QString const &channel, unsigned count = 100, bool include_token = false);
 
     /** Get the currently present users on a @p channel and/or @p
         channel_group. This actually means "initiate a here_now
@@ -422,9 +371,9 @@ public:
         - "total_occupancy": total number of users present in all channels
 
         If @p channel is empty or null, then @p channel_group cannot be
-        empty or null and you will get history only for the channel group.
+        empty or null and you will get presence info only for the channel group.
         It goes both ways: if @p channel_group is empty, then @p channel
-        cannot be empty and you will get history only for the channel.
+        cannot be empty and you will get presence info only for the channel.
 
         You can't get list of currently present users if a transaction is
         in progress on the context.
@@ -505,9 +454,9 @@ public:
         @p channel and @p channel_group.
 
         If @p channel is empty or null, then @p channel_group cannot be
-        empty or null and you will get history only for the channel group.
+        empty or null and you will set state only for the channel group.
         It goes both ways: if @p channel_group is empty, then @p channel
-        cannot be empty and you will get history only for the channel.
+        cannot be empty and you will set state only for the channel.
 
         You can't set state of channels if a transaction is in progress on
         the context.
@@ -547,9 +496,9 @@ public:
         and their respective values JSON objects of the gotten state
 
         If @p channel is empty or null, then @p channel_group cannot be
-        empty or null and you will get history only for the channel group.
+        empty or null and you will get state only for the channel group.
         It goes both ways: if @p channel_group is empty, then @p channel
-        cannot be empty and you will get history only for the channel.
+        cannot be empty and you will get state only for the channel.
 
         You can't set state of channels if a transaction is in progress on
         the context.

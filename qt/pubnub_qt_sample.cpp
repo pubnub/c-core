@@ -82,24 +82,7 @@ void pubnub_qt_sample::onHistory(pubnub_res result)
         d_out << msg[i].toLatin1().data() << '\n';
     }
 
-    reconnect(SLOT(onHistory(pubnub_res)), SLOT(onHistoryv2(pubnub_res)));
-    result = d_pb.historyv2(chann, "", 10, true);
-    if (result != PNR_STARTED) {
-        d_out << "History v2 failed, result: '"<< pubnub_res_2_string(result) << "'\n";
-        QCoreApplication::instance()->quit();
-    }
-}
-
-
-void pubnub_qt_sample::onHistoryv2(pubnub_res result)
-{
-    d_out << "onHistoryv2! Result: '" << pubnub_res_2_string(result) << "' Messages:\n";
-    QList<QString> msg = d_pb.get_all();
-    for (int i = 0; i < msg.size(); ++i) {
-        d_out << msg[i].toLatin1().data() << '\n';
-    }
-
-    reconnect(SLOT(onHistoryv2(pubnub_res)), SLOT(onHereNow(pubnub_res)));
+    reconnect(SLOT(onHistory(pubnub_res)), SLOT(onHereNow(pubnub_res)));
     result = d_pb.here_now(chann);
     if (result != PNR_STARTED) {
         d_out << "Hhere now failed, result: '"<< pubnub_res_2_string(result) << "'\n";
