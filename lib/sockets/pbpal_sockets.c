@@ -149,6 +149,9 @@ int pbpal_line_read_status(pubnub_t *pb)
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
+            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->use_blocking_io) {
+                return -1;
+            }
 #if defined _WIN32
             return (WSAGetLastError() == WSAEWOULDBLOCK) ? +1 :-1;
 #else
@@ -158,7 +161,7 @@ int pbpal_line_read_status(pubnub_t *pb)
         DEBUG_PRINTF("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
-    } 
+    }
 
     while (pb->left > 0 && pb->readlen > 0) {
         c = *pb->ptr++;

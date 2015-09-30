@@ -28,7 +28,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     struct addrinfo *it;
     struct addrinfo hint;
     int error;
-    
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
 
@@ -59,7 +59,13 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == it) {
         return PNR_CONNECT_FAILED;
     }
-    
+#if defined _WIN32
+    DWORD tmval = 310 * 1000;
+#else
+    struct timeval tmval = { 310, 0 };
+#endif
+    setsockopt(pb->pal.socket, SOL_SOCKET, SO_RCVTIMEO, &tmval, sizeof tmval);
+
     switch (pbntf_got_socket(pb, pb->pal.socket)) {
     case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
     case +1: return PNR_STARTED;
