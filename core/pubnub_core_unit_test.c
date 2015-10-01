@@ -46,6 +46,11 @@ int pbpal_resolv_and_connect(pubnub_t *pb)
     return (int)mock(pb);
 }
 
+int pbpal_check_resolv_and_connect(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
 bool pbpal_connected(pubnub_t *pb)
 {
     return (bool)mock(pb);
@@ -519,11 +524,12 @@ Ensure(single_context_pubnub, leave_wait_dns) {
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... still not available... */
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_IN_PROGRESS));
+    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_IN_PROGRESS));
     attest(pbnc_fsm(pbp), equals(0));
 
     /* ... and here it is: */
-    expect_have_dns_for_pubnub_origin();
+    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
+    expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -544,8 +550,12 @@ Ensure(single_context_pubnub, leave_wait_dns_cancel) {
     /* ... user is impatient... */
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     pubnub_cancel(pbp);
+    expect(pbpal_close, when(pb, equals(pbp)));
+    attest(pbnc_fsm(pbp), equals(0));
+    expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
+    expect(pbpal_forget, when(pb, equals(pbp)));
+    attest(pbnc_fsm(pbp), equals(0));
     attest(pbp->core.last_result, equals(PNR_CANCELLED));
-
 }
 
 
@@ -876,123 +886,13 @@ Ensure(single_context_pubnub, publish_bad_response) {
 Ensure(single_context_pubnub, history) {
     pubnub_init(pbp, "publhis", "subhis");
 
-    expect_have_dns_for_pubnub_origin();
-
-    expect_outgoing_with_url("/history/subhis/ch/0/22?pnsdk=unit-test-0.1");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 30\r\n\r\n[8,\"Bent\",\"ABCD8940800777403\"]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "ch", NULL, 22), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_get(pbp), streqs("8"));
-    attest(pubnub_get(pbp), streqs("\"Bent\""));
-    attest(pubnub_get(pbp), streqs("\"ABCD8940800777403\""));
-    attest(pubnub_get(pbp), equals(NULL));
-    attest(pubnub_last_http_code(pbp), equals(200));
-}
-
-
-Ensure(single_context_pubnub, history_in_progress) {
-    pubnub_init(pbp, "publhis", "subhis");
-
-    expect_have_dns_for_pubnub_origin();
-
-    expect_outgoing_with_url("/history/subhis/ch/0/22?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200\r\n");
-    attest(pubnub_history(pbp, "ch", NULL, 22), equals(PNR_STARTED));
-    attest(pubnub_history(pbp, "x", NULL, 55), equals(PNR_IN_PROGRESS));
-
-    cancel_and_cleanup(pbp);
-}
-
-
-Ensure(single_context_pubnub, history_changroup_auth) {
-    pubnub_init(pbp, "pubX", "Xsub");
-
-    /* Use changroup */
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/hc/0/44?pnsdk=unit-test-0.1&channel-group=abel");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "hc", "abel", 44), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* Set auth, too */
-    pubnub_set_auth(pbp, "no-secret-key");
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/chc/0/55?pnsdk=unit-test-0.1&channel-group=babel&auth=no-secret-key");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "chc", "babel", 55), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* Reset auth */
-    pubnub_set_auth(pbp, NULL);
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/hhc/0/43?pnsdk=unit-test-0.1&channel-group=zabel");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "hhc", "zabel", 43), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel group, but with auth */
-    pubnub_set_auth(pbp, "go-secret-key");
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/hhh/0/40?pnsdk=unit-test-0.1&auth=go-secret-key");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "hhh", NULL, 40), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel but with channel group */
-    pubnub_set_auth(pbp, NULL);
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/,/0/90?pnsdk=unit-test-0.1&channel-group=dedel");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, NULL, "dedel", 90), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel or channel group */
-    attest(pubnub_history(pbp, NULL, NULL, 99), equals(PNR_INVALID_CHANNEL));
-}
-
-
-Ensure(single_context_pubnub, history_bad_response) {
-    pubnub_init(pbp, "pubkey", "Xsub");
-
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/history/Xsub/ttt/0/10?pnsdk=unit-test-0.1");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_history(pbp, "ttt", NULL, 10), equals(PNR_STARTED));
-    attest(pbp->core.last_result, equals(PNR_FORMAT_ERROR));
-}
-
-
-/* -- HISTORY v2 operation -- */
-
-
-Ensure(single_context_pubnub, historyv2) {
-    pubnub_init(pbp, "publhis", "subhis");
-
     /* Without time-token */
     expect_have_dns_for_pubnub_origin();
 
     expect_outgoing_with_url("/v2/history/sub-key/subhis/channel/ch?pnsdk=unit-test-0.1&count=22&include_token=false");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 45\r\n\r\n[[1,2,3],14370854953886727,14370864554607266]");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "ch", NULL, 22, false), equals(PNR_STARTED));
+    attest(pubnub_history(pbp, "ch", 22, false), equals(PNR_STARTED));
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_get(pbp), streqs("[1,2,3]"));
@@ -1006,7 +906,7 @@ Ensure(single_context_pubnub, historyv2) {
     expect_outgoing_with_url("/v2/history/sub-key/subhis/channel/ch?pnsdk=unit-test-0.1&count=22&include_token=true");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 171\r\n\r\n[[{\"message\":1,\"timetoken\":14370863460777883},{\"message\":2,\"timetoken\":14370863461279046},{\"message\":3,\"timetoken\":14370863958459501}],14370863460777883,14370863958459501]");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "ch", NULL, 22, true), equals(PNR_STARTED));
+    attest(pubnub_history(pbp, "ch", 22, true), equals(PNR_STARTED));
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_get(pbp), streqs("[{\"message\":1,\"timetoken\":14370863460777883},{\"message\":2,\"timetoken\":14370863461279046},{\"message\":3,\"timetoken\":14370863958459501}]"));
@@ -1017,90 +917,43 @@ Ensure(single_context_pubnub, historyv2) {
 }
 
 
-Ensure(single_context_pubnub, historyv2_in_progress) {
+Ensure(single_context_pubnub, history_in_progress) {
     pubnub_init(pbp, "publhis", "subhis");
 
     expect_have_dns_for_pubnub_origin();
 
     expect_outgoing_with_url("/v2/history/sub-key/subhis/channel/ch?pnsdk=unit-test-0.1&count=22&include_token=false");
     incoming("HTTP/1.1 200\r\n");
-    attest(pubnub_historyv2(pbp, "ch", NULL, 22, false), equals(PNR_STARTED));
-    attest(pubnub_historyv2(pbp, "x", NULL, 55, false), equals(PNR_IN_PROGRESS));
+    attest(pubnub_history(pbp, "ch", 22, false), equals(PNR_STARTED));
+    attest(pubnub_history(pbp, "x", 55, false), equals(PNR_IN_PROGRESS));
 
     cancel_and_cleanup(pbp);
 }
 
 
-Ensure(single_context_pubnub, historyv2_changroup_auth) {
+Ensure(single_context_pubnub, history_auth) {
     pubnub_init(pbp, "pubX", "Xsub");
 
-    /* Use changroup */
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/hc?pnsdk=unit-test-0.1&channel-group=abel&count=44&include_token=false");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "hc", "abel", 44, false), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* Set auth, too */
-    pubnub_set_auth(pbp, "no-secret-key");
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/chc?pnsdk=unit-test-0.1&channel-group=babel&auth=no-secret-key&count=55&include_token=false");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "chc", "babel", 55, false), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* Reset auth */
-    pubnub_set_auth(pbp, NULL);
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/hhc?pnsdk=unit-test-0.1&channel-group=zabel&count=43&include_token=false");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "hhc", "zabel", 43, false), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel group, but with auth */
     pubnub_set_auth(pbp, "go-secret-key");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/hhh?pnsdk=unit-test-0.1&auth=go-secret-key&count=40&include_token=false");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "hhh", NULL, 40, false), equals(PNR_STARTED));
+    attest(pubnub_history(pbp, "hhh", 40, false), equals(PNR_STARTED));
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel but with channel group */
-    pubnub_set_auth(pbp, NULL);
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/,?pnsdk=unit-test-0.1&channel-group=dedel&count=90&include_token=false");    
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n[]");
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, NULL, "dedel", 90, false), equals(PNR_STARTED));
-
-    attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pubnub_last_http_code(pbp), equals(200));
-
-    /* W/out channel or channel group */
-    attest(pubnub_historyv2(pbp, NULL, NULL, 99, true), equals(PNR_INVALID_CHANNEL));
 }
 
 
-Ensure(single_context_pubnub, historyv2_bad_response) {
+Ensure(single_context_pubnub, history_bad_response) {
     pubnub_init(pbp, "pubkey", "Xsub");
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/history/sub-key/Xsub/channel/ttt?pnsdk=unit-test-0.1&count=10&include_token=false");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_historyv2(pbp, "ttt", NULL, 10, false), equals(PNR_STARTED));
+    attest(pubnub_history(pbp, "ttt", 10, false), equals(PNR_STARTED));
     attest(pbp->core.last_result, equals(PNR_FORMAT_ERROR));
 }
 
