@@ -59,12 +59,15 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == it) {
         return PNR_CONNECT_FAILED;
     }
+	
+	{
 #if defined _WIN32
-    DWORD tmval = 310 * 1000;
+        DWORD tmval = 310 * 1000;
 #else
-    struct timeval tmval = { 310, 0 };
+        struct timeval tmval = { 310, 0 };
 #endif
-    setsockopt(pb->pal.socket, SOL_SOCKET, SO_RCVTIMEO, &tmval, sizeof tmval);
+        setsockopt(pb->pal.socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tmval, sizeof tmval);
+	}
 
     switch (pbntf_got_socket(pb, pb->pal.socket)) {
     case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
