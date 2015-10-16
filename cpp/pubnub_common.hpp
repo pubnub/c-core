@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
 
 namespace pubnub {
 
@@ -260,8 +261,8 @@ namespace pubnub {
         /// Subscribes to @p channel and/or @p channel_group
         /// @see pubnub_subscribe
         futres subscribe(std::string const &channel, std::string const &channel_group = "") {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
             return doit(pubnub_subscribe(d_pb, ch, gr));
         }
 

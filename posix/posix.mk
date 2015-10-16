@@ -10,23 +10,25 @@ endif
 CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall
 # -g enables debugging, remove to get a smaller executable
 
+LDLIBS =-lrt
+
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest
 
 
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
-	$(CC) -o $@ $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES)
+	$(CC) -o $@ $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES) $(LDLIBS)
 
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
-	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES)
+	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES) $(LDLIBS)
 
 pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_posix.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) -lpthread
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) $(LDLIBS) -lpthread
 
 subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_posix.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/subscribe_publish_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) -lpthread
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/subscribe_publish_callback_sample.c pubnub_ntf_callback_posix.c $(SOURCEFILES) $(LDLIBS) -lpthread
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c
-	$(CC) -o $@ $(CFLAGS) -D VERBOSE_DEBUG ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c -lpthread
+	$(CC) -o $@ $(CFLAGS) -D VERBOSE_DEBUG ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c $(LDLIBS) -lpthread
 
 clean:
 	rm pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest

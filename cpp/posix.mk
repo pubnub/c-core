@@ -10,35 +10,41 @@ endif
 CFLAGS =-g -I ../core -I ../posix -I . -Wall
 # -g enables debugging, remove to get a smaller executable
 
-all: pubnub_sync_sample pubnub_callback_sample pubnub_callback_cpp11_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback futres_nesting_callback_cpp11
+LDLIBS=-lrt
+
+all: cpp11 cpp98
+
+cpp98: pubnub_sync_sample pubnub_callback_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback
+
+cpp11: pubnub_callback_cpp11_sample futres_nesting_callback_cpp11
 
 
 pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
-	$(CXX) -o $@ $(CFLAGS) samples/pubnub_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES)
+	$(CXX) -o $@ $(CFLAGS) samples/pubnub_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 #-D VERBOSE_DEBUG
 
 cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
-	$(CXX) -o $@ $(CFLAGS) samples/cancel_subscribe_sync_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES)
+	$(CXX) -o $@ $(CFLAGS) samples/cancel_subscribe_sync_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
 futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
-	$(CXX) -o $@ $(CFLAGS) samples/futres_nesting.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES)
+	$(CXX) -o $@ $(CFLAGS) samples/futres_nesting.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 #-D VERBOSE_DEBUG
 
 pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 
 pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 
 subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/subscribe_publish_callback_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/subscribe_publish_callback_sample.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 
 futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 #-D VERBOSE_DEBUG
 
 futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 #-D VERBOSE_DEBUG
 
 

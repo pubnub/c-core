@@ -57,14 +57,24 @@ So, to build the samples on POSIX, just run:
 	make -f posix.mk
 	
 There are no special requirements for C++ wrapper of C-core on POSIX,
-it should just build on any regular POSIX system with a C++ compiler. To
-use a compiler of your choice (rather than the default one), say,
+it should just build on any regular POSIX system with a C++ compiler. 
+Since your compiler might not have the needed C++11 support, you can
+build just the C++98 samples like this:
+
+	make -f posix.mk cpp98
+
+If you wish to build only the C++11 specific samples, you can do this:
+
+	make -f posix.mk cpp11
+
+To use a compiler of your choice (rather than the default one), say,
 `clang`, run:
 
 	make -f posix.mk CXX=clang++
 
 On Windows, the Makefile is intended to be used with Microsoft (Visual
-Studio) tool-chain. Visual Studio 2010 or later should work. From
+Studio) tool-chain. Visual Studio 2010 or later should work (for C++98
+only examples, even older should work). From
 Visual Studio command prompt (or "Developer command prompt"), run:
 
 	nmake -f windows.mak
@@ -89,5 +99,5 @@ SSL/TLS to communicate with PubNub. The will be located in the
 
 For Windows, we have `windows_openssl.mk`, which will build the 
 same executables on a Windows system as `windows.mk`, but linking 
-OpenSSL, thus using SSL/TLS to communicate with PubNub. The will be 
+OpenSSL, thus using SSL/TLS to communicate with PubNub. These will be 
 located in the `openssl` sub-directory.
