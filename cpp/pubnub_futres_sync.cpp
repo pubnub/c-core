@@ -15,10 +15,12 @@ futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
 }
 
 
+#if __cplusplus < 201103L
 futres::futres(futres const &x) :
 	d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(0)
 {
 }
+#endif
 
 
 futres::~futres() 

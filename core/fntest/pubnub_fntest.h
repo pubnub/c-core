@@ -11,6 +11,10 @@ enum PNFNTestResult {
     trPass
 };
 
+extern char const*  g_pubkey;
+extern char const*  g_keysub;
+
+
 struct pnfntst_timer;
 typedef struct pnfntst_timer pnfntst_timer_t;
 

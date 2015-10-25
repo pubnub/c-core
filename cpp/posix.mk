@@ -16,7 +16,7 @@ all: cpp11 cpp98
 
 cpp98: pubnub_sync_sample pubnub_callback_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback
 
-cpp11: pubnub_callback_cpp11_sample futres_nesting_callback_cpp11
+cpp11: pubnub_callback_cpp11_sample futres_nesting_callback_cpp11 fntest_runner
 
 
 pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
@@ -47,6 +47,9 @@ futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../posi
 	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../posix/pubnub_ntf_callback_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
 #-D VERBOSE_DEBUG
 
+fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
+	$(CXX) -o $@ -std=c++11 -D VERBOSE_DEBUG $(CFLAGS) fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
+
 
 clean:
-	rm pubnub_sync_sample pubnub_callback_sample pubnub_callback_cpp11_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback futres_nesting_callback_cpp11
+	rm pubnub_sync_sample pubnub_callback_sample pubnub_callback_cpp11_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback futres_nesting_callback_cpp11 fntest_runner

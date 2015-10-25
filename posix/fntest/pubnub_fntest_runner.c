@@ -7,7 +7,7 @@
 #include <pthread.h>
 
 #include <stdio.h>
-
+#include <stdlib.h>
 
 
 typedef void* (*PF_Test_T)(void *pResult);
@@ -55,12 +55,19 @@ static struct TestData m_aTest[] =  {
 #define TEST_COUNT (sizeof m_aTest / sizeof m_aTest[0])
 
 
-static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_conc_thread)
+char const* g_pubkey;
+char const* g_keysub;
+
+
+static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub)
 {
     unsigned next_test = 0;
     unsigned failed_count = 0;
     unsigned passed_count = 0;
     unsigned indete_count = 0;
+
+    g_pubkey = pubkey;
+    g_keysub = keysub;
 
     printf("Starting Run of %d tests\n", test_count);
     while (next_test < test_count) {
@@ -118,7 +125,9 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
 
 int main(int argc, char *argv[])
 {
-    /* Should parse command-line args here */
-    unsigned max_conc_thread = 1;
-    return run_tests(m_aTest, TEST_COUNT, max_conc_thread);
+    char const *pubkey = (argc > 1) ? argv[1] : "demo";
+    char const *keysub = (argc > 2) ? argv[2] : "demo";
+    unsigned max_conc_thread = (argc > 3) ? atoi(argv[3]) : 1;
+
+    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub);
 }
