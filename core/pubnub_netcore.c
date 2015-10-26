@@ -71,15 +71,13 @@ static void finish(struct pubnub_ *pb)
         break;
     }
 
-    if ((PNR_OK == pbres) && ((pb->core.http_code / 100) != 2)) {
+    if ((PNR_OK == pbres) && ((pb->http_code / 100) != 2)) {
         pbres = PNR_HTTP_ERROR;
     }
 
     outcome_detected(pb, pbres);
 }
 
-
-enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb);
 
 int pbnc_fsm(struct pubnub_ *pb)
 {
@@ -197,11 +195,11 @@ next_state:
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
-            pb->core.http_code = atoi(pb->core.http_buf + 9);
-            WATCH(pb->core.http_code, "%d");
+            pb->http_code = atoi(pb->core.http_buf + 9);
+            WATCH(pb->http_code, "%d");
             WATCH(pbpal_read_len(pb), "%d");
             pb->core.http_content_len = 0;
-            pb->core.http_chunked = false;
+            pb->http_chunked = false;
             pb->state = PBS_RX_HEADERS;
             goto next_state;
         }
@@ -224,18 +222,19 @@ next_state:
             WATCH(pbpal_read_len(pb), "%d");
             if (pbpal_read_len(pb) <= 2) {
                 pb->core.http_buf_len = 0;
-                pb->state = pb->core.http_chunked ? PBS_RX_CHUNK_LEN : PBS_RX_BODY;
+                pb->state = pb->http_chunked ? PBS_RX_CHUNK_LEN : PBS_RX_BODY;
                 goto next_state;
             }
             if (strncmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1) == 0) {
-                pb->core.http_chunked = true;
+                pb->http_chunked = true;
             }
             else if (strncmp(pb->core.http_buf, h_length, sizeof h_length - 1) == 0) {
-                pb->core.http_content_len = atoi(pb->core.http_buf + sizeof h_length - 1);
-                if (pb->core.http_content_len > PUBNUB_REPLY_MAXLEN) {
-                    outcome_detected(pb, PNR_IO_ERROR);
+                size_t len = atoi(pb->core.http_buf + sizeof h_length - 1);
+                if (0 != pbcc_realloc_reply_buffer(&pb->core, len)) {
+                    outcome_detected(pb, PNR_REPLY_TOO_BIG);
                     break;
                 }
+                pb->core.http_content_len = len;
             }
             pb->state = PBS_RX_HEADERS;
             goto next_state;
@@ -275,19 +274,21 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pb->core.http_content_len = strtoul(pb->core.http_buf, NULL, 16);
-            DEBUG_PRINTF("About to read a chunk w/length: %d\n", pb->core.http_content_len);
-            if (pb->core.http_content_len == 0) {
+            unsigned chunk_length = strtoul(pb->core.http_buf, NULL, 16);
+
+            DEBUG_PRINTF("About to read a chunk w/length: %d\n", chunk_length);
+            if (chunk_length == 0) {
                 finish(pb);
             }
-            else if (pb->core.http_content_len > sizeof pb->core.http_buf) {
+            else if (chunk_length > sizeof pb->core.http_buf) {
                 outcome_detected(pb, PNR_IO_ERROR);
             }
-            else if (pb->core.http_buf_len + pb->core.http_content_len > PUBNUB_REPLY_MAXLEN) {
-                outcome_detected(pb, PNR_IO_ERROR);
+            else if (0 != pbcc_realloc_reply_buffer(&pb->core, pb->core.http_buf_len + chunk_length)) {
+                outcome_detected(pb, PNR_REPLY_TOO_BIG);
             }
             else {
-                pbpal_start_read(pb, pb->core.http_content_len + 2);
+                pbpal_start_read(pb, chunk_length + 2);
+                pb->core.http_content_len = chunk_length;
                 pb->state = PBS_RX_BODY_CHUNK;
             }
             goto next_state;

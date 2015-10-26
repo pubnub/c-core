@@ -10,11 +10,12 @@
 #include <stdlib.h>
 
 /* Should do this in a more portable way, but, for now, let's
-	just spoon-feed MSVC...
-	*/
+   just spoon-feed MSVC...
+*/
 #ifdef _WIN32
 int snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
+
 
 void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subscribe_key)
 {
@@ -24,6 +25,39 @@ void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subs
     p->timetoken[1] = '\0';
     p->uuid = p->auth = NULL;
     p->msg_ofs = p->msg_end = 0;
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        p->http_reply = NULL;
+    }
+}
+
+
+void pbcc_deinit(struct pbcc_context *p)
+{
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        if (p->http_reply != NULL) {
+            free(p->http_reply);
+            p->http_reply = NULL;
+        }
+    }
+}
+
+
+int pbcc_realloc_reply_buffer(struct pbcc_context *p, unsigned bytes)
+{
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        char *newbuf = realloc(p->http_reply, bytes + 1);
+        if (NULL == newbuf) {
+            return -1;
+        }
+        p->http_reply = newbuf;
+        return 0;
+    }
+    else {
+        if (bytes < sizeof p->http_reply / sizeof p->http_reply[0]) {
+            return 0;
+        }
+        return -1;
+    }
 }
 
 

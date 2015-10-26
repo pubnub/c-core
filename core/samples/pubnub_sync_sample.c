@@ -184,9 +184,8 @@ int main()
     }
 
 /** Global here_now presence for "demo" subscribe key is _very_
-    long, so we disable it. Enable to try out, or if you use
-    a "real" subscribe key*/
-#if 0
+    long, but we have it here to show that we can handle very long
+    response if the PUBNUB_DYNAMIC_REPLY_BUFFER is "on". */
     puts("Getting global here_now presence...");
     res = pubnub_global_here_now(pbp);
     if (res != PNR_STARTED) {
@@ -214,7 +213,6 @@ int main()
     else {
         printf("Getting global here-now presence failed with code: %d\n", res);
     }
-#endif
 
     puts("Getting where_now presence...");
     res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));

@@ -13,7 +13,6 @@ static unsigned m_cap;
 #endif
 
 
-
 static void save_allocated(pubnub_t *pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
@@ -80,6 +79,7 @@ int pubnub_free(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     if (PBS_IDLE == pb->state) {
+        pbcc_deinit(&pb->core);
         remove_allocated(pb);
         free(pb);
         return 0;

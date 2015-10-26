@@ -9,6 +9,7 @@ endif
 
 CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall
 # -g enables debugging, remove to get a smaller executable
+# -fsanitize=address Use AddressSanitizer
 
 LDLIBS =-lrt
 

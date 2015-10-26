@@ -36,13 +36,25 @@
  * need to construct big messages, you may need to raise this.  */
 #define PUBNUB_BUF_MAXLEN 1024
 
-/** Maximum length of the HTTP reply. The other major component of the
- * memory size of the PubNub context, beside #PUBNUB_BUF_MAXLEN.
- * Replies of API calls longer than this will be discarded and
- * instead, #PNR_FORMAT_ERROR will be reported. Specifically, this may
- * cause lost messages returned by subscribe if too many too large
+/** Set to 0 to use a static buffer and then set its size via
+    #PUBNUB_REPLY_MAXLEN.  Set to anything !=0 to use a dynamic
+    buffer, that is, dynamically try to allocate as much memory as
+    needed for the buffer.
+ */
+#define PUBNUB_DYNAMIC_REPLY_BUFFER 1
+
+
+#if !PUBNUB_DYNAMIC_REPLY_BUFFER
+
+/** Maximum length of the HTTP reply when using a static buffer. The
+ * other major component of the memory size of the PubNub context,
+ * beside #PUBNUB_BUF_MAXLEN.  Replies of API calls longer than this
+ * will be discarded and an error will be reported. Specifically, this
+ * may cause lost messages returned by subscribe if too many too large
  * messages got queued on the Pubnub server. */
 #define PUBNUB_REPLY_MAXLEN 2048
+
+#endif
 
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.

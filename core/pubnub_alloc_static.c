@@ -39,6 +39,7 @@ int pubnub_free(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     if (PBS_IDLE == pb->state) {
+        pbcc_deinit(&pb->core);
         pb->state = PBS_NULL;
         return 0;
     }

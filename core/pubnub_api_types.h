@@ -80,7 +80,12 @@ enum pubnub_res {
         (which is a JSON object) and value for key "status" for the
         numeric code of the error.
      */
-    PNR_CHANNEL_REGISTRY_ERROR
+    PNR_CHANNEL_REGISTRY_ERROR,
+    /** Reply is too big to fit in our reply buffer. This same error
+        is reported if the reply buffer is statically or dynamically
+        allocated.
+    */
+    PNR_REPLY_TOO_BIG,
 };
 
 

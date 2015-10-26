@@ -403,7 +403,7 @@ char const *pubnub_auth_get(pubnub_t const *pb)
 int pubnub_last_http_code(pubnub_t const *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    return pb->core.http_code;
+    return pb->http_code;
 }
 
 

@@ -19,26 +19,28 @@ void pbpal_init(pubnub_t *pb);
     resolving for the context @p pb.  If DNS is already resolved, it
     proceeds to establishing TCP connection. Otherwise, will issue a
     DNS request.
-
+    
     Call this function on start of a transaction or on receiving
     response from DNS server.
-
+    
     It also establishes "a link" between the TCP connection (socket,
     or whatever in a given platform) and the Pubnub context.
-
-	@note This uses a "non-conventional" interpretation of #PNR_IN_PROGRESS.
-	Here it is not an error, but an indication that "DNS resolution is
-	in progress", while #PNR_STARTED means "DNS resolved, TCP connect in
-	progress". We could have provided another enum for results specific to
-	this function, but then would have to map its errors to the generic
-	Pubnub errors, which would take time and code.
-	
+    
+    @note This uses a "non-conventional" interpretation of #PNR_IN_PROGRESS.
+    Here it is not an error, but an indication that "DNS resolution is
+    in progress", while #PNR_STARTED means "DNS resolved, TCP connect in
+    progress". We could have provided another enum for results specific to
+    this function, but then would have to map its errors to the generic
+    Pubnub errors, which would take time and code.
+    
     @param pb The context for which to handle starting of connection
-    @return PNR_IN_PROGRESS: DNS not yet resolved, PNR_STARTED: await TCP connection, 
-	PNR_OK: TCP connected, other: the actual error
+    @return PNR_IN_PROGRESS: DNS not yet resolved, PNR_STARTED: await
+    TCP connection, PNR_OK: TCP connected, other: the actual error
 */
 enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb);
 
+
+enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb);
 
 /** Sends data over an established connection (with the Pubnub server).
     At one time, only one sending of data can take place.

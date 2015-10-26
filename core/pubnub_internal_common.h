@@ -22,13 +22,7 @@
 #define WATCH(x, fmt) do { } while(0)
 #endif
 
-/*
-#if defined(FREERTOS)
 
-typedef xSocket pb_socket_t;
-
-#endif
-*/
 
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
@@ -53,7 +47,13 @@ enum PBSocketState {
 };
 
 
-/** The Pubnub context */
+/** The Pubnub context 
+
+    @note Don't declare any members as `bool`, as there may be
+    alignment issues when this is included from both C and C++
+    compilers, especially pre-C99 C compilers (like MSVC (at least
+    until MSVC 2013)).
+*/
 struct pubnub_ {
     struct pbcc_context core;
 
@@ -62,29 +62,44 @@ struct pubnub_ {
     /** Type of current transaction */
     enum pubnub_trans trans;
 
+    /** Pointer to the next data to be sent. */
+    const uint8_t *sendptr;   
 
-    const uint8_t *sendptr;   /* Pointer to the next data to be sent. */
-    uint16_t sendlen;         /* The number of bytes left to be sent. */
+    /** The number of bytes left to be sent. */
+    uint16_t sendlen;         
 
-    uint8_t *ptr;          /* Pointer to next free byte in the read buffer*/
-    uint16_t readlen;         /* The number of bytes left to be read. */
+    /** Pointer to next free byte in the read buffer*/
+    uint8_t *ptr;          
 
-    unsigned short left;   /* Number of bytes left (empty) in the read buffer */
+    /** The number of bytes left to be read. */
+    uint16_t readlen;         
+
+    /** Number of bytes left (empty) in the read buffer */
+    unsigned short left;   
 
     /** The state of the socket. */
     enum PBSocketState sock_state;   
 
-    unsigned len;          /* Number of bytes to read - given by the user */
+    /** Number of bytes to read - given by the user */
+    unsigned len;          
+
+    /** Indicates whether we are receiving chunked or regular HTTP
+     * response
+     */
+    unsigned http_chunked;
+
+    /** Last received HTTP (result) code */
+    int http_code;
+
+#if defined PUBNUB_HAVE_SET_ORIGIN
+    char const *origin;
+#endif
 
 #if 0
-#if defined(FREERTOS)
-    pb_socket_t socket;
-#else
     /** Process that started last transaction */
     struct process *initiator;
 
     uint8_t *readptr;         /* Pointer to the next data to be read. */
-#endif
 #endif
 
     struct pubnub_pal pal;
