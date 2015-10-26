@@ -452,7 +452,7 @@ int pubnub_origin_set(pubnub_t *pb, char const *origin)
             origin = PUBNUB_ORIGIN;
         }
         pb->origin = origin;
-        return 0;;
+        return 0;
     }
     return -1;
 }

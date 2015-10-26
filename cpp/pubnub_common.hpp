@@ -170,9 +170,9 @@ namespace pubnub {
             To reset to default, pass an empty string.
             @see pubnub_origin_set
          */
-        void set_origin(std::string const &origin) {
+        int set_origin(std::string const &origin) {
             d_origin = origin;
-            pubnub_origin_set(d_pb, origin.empty() ? NULL : origin.c_str());
+            return pubnub_origin_set(d_pb, origin.empty() ? NULL : d_origin.c_str());
         }
         /** Returns the current origin for this context
             @see pubnub_get_origin
@@ -352,8 +352,8 @@ namespace pubnub {
         /// given @p channel and/or @pchannel_group of the given @p uuid
         /// @see pubnub_set_state
         futres set_state(std::string const &channel, std::string const &channel_group, std::string const &uuid, std::string const &state) {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
             return doit(pubnub_set_state(d_pb, ch, gr, uuid.c_str(), state.c_str()));
         }
 
@@ -369,8 +369,8 @@ namespace pubnub {
         /// uuid 
         /// @see pubnub_set_state
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
             return doit(pubnub_state_get(d_pb, ch, gr, uuid.empty() ? NULL : uuid.c_str()));
         }
         futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid = "") {
@@ -478,7 +478,8 @@ namespace pubnub {
         std::string d_auth;
         /// The UUID
         std::string d_uuid;
-        /// The origin set last time
+        /// The origin set last time (doen't have to be the one used,
+        /// the default can be used instead)
         std::string d_origin;
         /// The (C) Pubnub context
         pubnub_t *d_pb;
