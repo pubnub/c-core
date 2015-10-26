@@ -183,35 +183,38 @@ int main()
         printf("Getting here-now presence failed with code: %d\n", res);
     }
 
-/** Global here_now presence for "demo" subscribe key is _very_
-    long, but we have it here to show that we can handle very long
-    response if the PUBNUB_DYNAMIC_REPLY_BUFFER is "on". */
-    puts("Getting global here_now presence...");
-    res = pubnub_global_here_now(pbp);
-    if (res != PNR_STARTED) {
-        printf("pubnub_global_here_now() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-    res = pubnub_await(pbp);
-    if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-
-    if (PNR_OK == res) {
-        puts("Got global here now presence!");
-        for (;;) {
-            msg = pubnub_get(pbp);
-            if (NULL == msg) {
-                break;
-            }
-            puts(msg);
+    /** Global here_now presence for "demo" subscribe key is _very_
+        long, but we have it here to show that we can handle very long
+        response if the PUBNUB_DYNAMIC_REPLY_BUFFER is "on".
+    */
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        puts("Getting global here_now presence...");
+        res = pubnub_global_here_now(pbp);
+        if (res != PNR_STARTED) {
+            printf("pubnub_global_here_now() returned unexpected: %d\n", res);
+            pubnub_free(pbp);
+            return -1;
         }
-    }
-    else {
-        printf("Getting global here-now presence failed with code: %d\n", res);
+        res = pubnub_await(pbp);
+        if (res == PNR_STARTED) {
+            printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+            pubnub_free(pbp);
+            return -1;
+        }
+        
+        if (PNR_OK == res) {
+            puts("Got global here now presence!");
+            for (;;) {
+                msg = pubnub_get(pbp);
+                if (NULL == msg) {
+                    break;
+                }
+                puts(msg);
+            }
+        }
+        else {
+            printf("Getting global here-now presence failed with code: %d\n", res);
+        }
     }
 
     puts("Getting where_now presence...");

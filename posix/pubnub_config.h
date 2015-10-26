@@ -43,7 +43,6 @@
  */
 #define PUBNUB_DYNAMIC_REPLY_BUFFER 1
 
-
 #if !PUBNUB_DYNAMIC_REPLY_BUFFER
 
 /** Maximum length of the HTTP reply when using a static buffer. The
