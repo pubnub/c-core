@@ -16,6 +16,9 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     pbcc_init(&p->core, publish_key, subscribe_key);
+    if (PUBNUB_ORIGIN_SETTABLE) {
+        p->origin = PUBNUB_ORIGIN;
+    }
     p->state = PBS_IDLE;
     p->trans = PBTT_NONE;
     pbpal_init(p);
@@ -419,10 +422,37 @@ char const *pubnub_last_publish_result(pubnub_t const *pb)
     char *end;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    if (pb->trans != PBTT_PUBLISH) {
-        return NULL;
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
+        return "";
+    }
+    if ((pb->trans != PBTT_PUBLISH) || (pb->core.http_reply[0] == '\0')) {
+        return "";
     }
 
     strtol(pb->core.http_reply + 1, &end, 10);
     return end + 1;
+}
+
+
+char const *pubnub_get_origin(pubnub_t const *pb)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    if (PUBNUB_ORIGIN_SETTABLE) {
+        return pb->origin;
+    }
+    return PUBNUB_ORIGIN;
+}
+
+
+int pubnub_origin_set(pubnub_t *pb, char const *origin)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    if (PUBNUB_ORIGIN_SETTABLE) {
+        if (NULL == origin) {
+            origin = PUBNUB_ORIGIN;
+        }
+        pb->origin = origin;
+        return 0;;
+    }
+    return -1;
 }

@@ -28,6 +28,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     struct addrinfo *it;
     struct addrinfo hint;
     int error;
+    char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
@@ -38,7 +39,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     hint.ai_addr = NULL;
     hint.ai_canonname = NULL;
     hint.ai_next = NULL; 
-    error = getaddrinfo(PUBNUB_ORIGIN, HTTP_PORT_STRING, &hint, &result);
+    error = getaddrinfo(origin, HTTP_PORT_STRING, &hint, &result);
     if (error != 0) {
         return PNR_ADDR_RESOLUTION_FAILED;
     }
@@ -85,23 +86,23 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 
 enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
-	fd_set read_set, write_set;
-	int rslt;
-	struct timeval timev = { 0, 300000 };
-
-	FD_ZERO(&read_set);
-	FD_ZERO(&write_set);
-	FD_SET(pb->pal.socket, &read_set);
-	FD_SET(pb->pal.socket, &write_set);
-	rslt = select(pb->pal.socket + 1, &read_set, &write_set, NULL, &timev);
-	if (SOCKET_ERROR == rslt) {
+    fd_set read_set, write_set;
+    int rslt;
+    struct timeval timev = { 0, 300000 };
+    
+    FD_ZERO(&read_set);
+    FD_ZERO(&write_set);
+    FD_SET(pb->pal.socket, &read_set);
+    FD_SET(pb->pal.socket, &write_set);
+    rslt = select(pb->pal.socket + 1, &read_set, &write_set, NULL, &timev);
+    if (SOCKET_ERROR == rslt) {
         DEBUG_PRINTF("select() Error!\n");
         return PNR_CONNECT_FAILED;
-	}
-	else if (rslt > 0) {
-		DEBUG_PRINTF("select() event\n");
+    }
+    else if (rslt > 0) {
+        DEBUG_PRINTF("select() event\n");
         return pbpal_resolv_and_connect(pb);
-	}
-	DEBUG_PRINTF("no select() events\n");
-	return PNR_IN_PROGRESS;
+    }
+    DEBUG_PRINTF("no select() events\n");
+    return PNR_IN_PROGRESS;
 }

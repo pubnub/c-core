@@ -60,6 +60,12 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
+/** Set to 0 to disable changing the origin from the default
+    #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
+    origin (per context).
+ */
+#define PUBNUB_ORIGIN_SETTABLE 1
+
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 

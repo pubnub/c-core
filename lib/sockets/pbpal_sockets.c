@@ -55,7 +55,7 @@ static int pal_init(void)
 void pbpal_init(pubnub_t *pb)
 {
     if (PUBNUB_BLOCKING_IO_SETTABLE) {
-        pb->use_blocking_io = true;
+        pb->options.use_blocking_io = true;
     }
     pal_init();
     pb->pal.socket = -1;
@@ -149,7 +149,7 @@ int pbpal_line_read_status(pubnub_t *pb)
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
-            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->use_blocking_io) {
+            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
                 return -1;
             }
 #if defined _WIN32

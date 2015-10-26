@@ -45,7 +45,7 @@ void pbcc_deinit(struct pbcc_context *p)
 int pbcc_realloc_reply_buffer(struct pbcc_context *p, unsigned bytes)
 {
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        char *newbuf = realloc(p->http_reply, bytes + 1);
+        char *newbuf = (char*)realloc(p->http_reply, bytes + 1);
         if (NULL == newbuf) {
             return -1;
         }

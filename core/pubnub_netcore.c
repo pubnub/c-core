@@ -158,8 +158,9 @@ next_state:
     case PBS_TX_VER:
         i = pbpal_send_status(pb);
         if (i <= 0) {
+            char const* o = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
             pb->state = PBS_TX_ORIGIN;
-            if ((i < 0) || (-1 == pbpal_send_str(pb, PUBNUB_ORIGIN))) {
+            if ((i < 0) || (-1 == pbpal_send_str(pb, o))) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }

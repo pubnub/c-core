@@ -130,7 +130,7 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     pthread_mutex_lock(&m_watcher.mutw);
 
     save_socket(&m_watcher, pb, socket);
-    pb->use_blocking_io = false;
+    pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
 
     pthread_cond_signal(&m_watcher.condw);

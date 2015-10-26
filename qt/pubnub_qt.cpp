@@ -294,6 +294,9 @@ int pubnub_qt::last_http_code() const
 
 QString pubnub_qt::last_publish_result() const
 {
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == d_context->http_reply)) {
+        return "";
+    }
     if ((d_trans != PBTT_PUBLISH) || (d_context->http_reply[0] == '\0')) {
         return "";
     }
@@ -328,14 +331,19 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 
 pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
 {
-    if ((unsigned)data.size() >= sizeof d_context->http_reply) {
-        return PNR_IO_ERROR;
-    }
-
     pubnub_res pbres = PNR_OK;
-    d_context->http_buf_len = data.size();
-    memcpy(d_context->http_reply, data.data(), data.size());
-    d_context->http_reply[d_context->http_buf_len] = '\0';
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        d_context->http_buf_len = data.size();
+        d_context->http_reply = data.data();
+    }
+    else {
+        if ((unsigned)data.size() >= sizeof d_context->http_reply) {
+            return PNR_REPLY_TOO_BIG;
+        }
+        d_context->http_buf_len = data.size();
+        memcpy(d_context->http_reply, data.data(), data.size());
+        d_context->http_reply[d_context->http_buf_len] = '\0';
+    }
 
     qDebug() << "finish('" << d_context->http_reply << "')";
     
@@ -395,7 +403,12 @@ void pubnub_qt::httpFinished()
     if (error) {
         qDebug() << "error: " << d_reply->error() << ", string: " << d_reply->errorString();
         d_context->http_buf_len = 0;
-        d_context->http_reply[0] = '\0';
+        if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+            d_context->http_reply = NULL;
+        }
+        else {
+            d_context->http_reply[0] = '\0';
+        }
         switch (error) {
         case QNetworkReply::OperationCanceledError:
             emit outcome(PNR_CANCELLED);

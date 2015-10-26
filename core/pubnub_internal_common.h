@@ -63,19 +63,19 @@ struct pubnub_ {
     enum pubnub_trans trans;
 
     /** Pointer to the next data to be sent. */
-    const uint8_t *sendptr;   
+    uint8_t const *sendptr;   
 
     /** The number of bytes left to be sent. */
     uint16_t sendlen;         
 
-    /** Pointer to next free byte in the read buffer*/
-    uint8_t *ptr;          
-
     /** The number of bytes left to be read. */
     uint16_t readlen;         
 
+    /** Pointer to next free byte in the read buffer*/
+    uint8_t *ptr;          
+
     /** Number of bytes left (empty) in the read buffer */
-    unsigned short left;   
+    uint16_t left;   
 
     /** The state of the socket. */
     enum PBSocketState sock_state;   
@@ -86,12 +86,12 @@ struct pubnub_ {
     /** Indicates whether we are receiving chunked or regular HTTP
      * response
      */
-    unsigned http_chunked;
+    uint16_t http_chunked;
 
     /** Last received HTTP (result) code */
-    int http_code;
+    uint16_t http_code;
 
-#if defined PUBNUB_HAVE_SET_ORIGIN
+#if defined PUBNUB_ORIGIN_SETTABLE
     char const *origin;
 #endif
 
@@ -104,28 +104,29 @@ struct pubnub_ {
 
     struct pubnub_pal pal;
 
+    struct pubnub_options {
+
 #if PUBNUB_BLOCKING_IO_SETTABLE
-    bool use_blocking_io;
+        bool use_blocking_io : 1;
 #endif
 
 #if PUBNUB_USE_SSL
-    struct pubnub_ssl_options {
         /** Should the PubNub client establish the connection to
          * PubNub using SSL? */
-        bool use : 1;
+        bool useSSL : 1;
         /** When SSL is enabled, should PubNub client ignore all SSL
          * certificate-handshake issues and still continue in SSL mode
          * if it experiences issues handshaking across local proxies,
          * firewalls, etc?
           */
-        bool ignore : 1;
+        bool ignoreSSL : 1;
         /** When SSL is enabled, should the client fallback to a
          * non-SSL connection if it experiences issues handshaking
          * across local proxies, firewalls, etc?
          */
-        bool fallback : 1;
-    } ssl;
+        bool fallbackSSL : 1;
 #endif
+    } options;
 
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;

@@ -582,6 +582,25 @@ char const *pubnub_last_publish_result(pubnub_t const *p);
  */
 char const *pubnub_last_time_token(pubnub_t const *p);
 
+/** Gets the origin to be used for the context @p p.
+    If setting of the origin is not enabled, this will return
+    the default origin.
+    @param p Pubnub context to get the origin from
+    @return A read only string of origin used for context @p p
+ */
+char const *pubnub_get_origin(pubnub_t const *p);
+
+/** Sets the origin to be used for the context @p p.  If setting of
+    the origin is not enabled, this will fail.  It may also fail if it
+    detects an invalid origin, but NULL is not an invalid origin - it
+    resets the origin to default.
+
+    @param p Pubnub context to set the origin for
+    @param origin The origin to use for context @p p. If NULL,
+    the default origin will be set
+    @return 0: success, -1: fail
+*/
+int pubnub_origin_set(pubnub_t *p, char const *origin);
 
 
 #endif /* defined INC_PUBNUB_COREAPI */

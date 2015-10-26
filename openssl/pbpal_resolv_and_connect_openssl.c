@@ -23,20 +23,22 @@
 static enum pubnub_res resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     DEBUG_PRINTF("resolv_and_connect_wout_SSL\n");
-	if (NULL == pb->pal.bio) {
-		DEBUG_PRINTF("pb=%p: Don't have BIO\n", pb);
-		pb->pal.bio = BIO_new_connect(PUBNUB_ORIGIN ":" HTTP_PORT_STRING);
-	}
+    if (NULL == pb->pal.bio) {
+        char const*origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+        DEBUG_PRINTF("pb=%p: Don't have BIO\n", pb);
+        pb->pal.bio = BIO_new_connect((char*)origin);
+    }
     if (NULL == pb->pal.bio) {
         return PNR_ADDR_RESOLUTION_FAILED;
     }
-
-    BIO_set_nbio(pb->pal.bio, !pb->use_blocking_io);
-
-	WATCH(pb->use_blocking_io, "%d");
+    BIO_set_conn_port(pb->pal.bio, HTTP_PORT_STRING);
+    
+    BIO_set_nbio(pb->pal.bio, !pb->options.use_blocking_io);
+    
+    WATCH(pb->options.use_blocking_io, "%d");
     if (BIO_do_connect(pb->pal.bio) <= 0) {
         if (BIO_should_retry(pb->pal.bio)) {
-			return (pbntf_got_socket(pb, pb->pal.bio) < 0) ? PNR_CONNECT_FAILED : PNR_IN_PROGRESS;
+            return (pbntf_got_socket(pb, pb->pal.bio) < 0) ? PNR_CONNECT_FAILED : PNR_IN_PROGRESS;
         }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.bio);
@@ -124,58 +126,60 @@ static int add_pubnub_cert(SSL_CTX *sslCtx)
 enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 {
     SSL *ssl;
-	int rslt;
-
+    int rslt;
+    char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+        
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
 
-    if (!pb->ssl.use) {
+    if (!pb->options.useSSL) {
         return resolv_and_connect_wout_SSL(pb);
     }
     
-	if (NULL == pb->pal.ctx) {
-		DEBUG_PRINTF("pb=%p: Don't have SSL_CTX\n", pb);
-		pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
-	    if (NULL == pb->pal.ctx) {
+    if (NULL == pb->pal.ctx) {
+        DEBUG_PRINTF("pb=%p: Don't have SSL_CTX\n", pb);
+        pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
+        if (NULL == pb->pal.ctx) {
             ERR_print_errors_fp(stderr);
             DEBUG_PRINTF("pb=%p SSL_CTX_new failed\n", pb);
             return PNR_ADDR_RESOLUTION_FAILED;
         }
         DEBUG_PRINTF("pb=%p: Got SSL_CTX\n", pb);
         add_pubnub_cert(pb->pal.ctx);
-	}
-
-	if (NULL == pb->pal.bio) {
-		DEBUG_PRINTF("pb=%p: Don't have BIO\n", pb);
-		pb->pal.bio = BIO_new_ssl_connect(pb->pal.ctx);
-	}
+    }
+    
+    if (NULL == pb->pal.bio) {
+        DEBUG_PRINTF("pb=%p: Don't have BIO\n", pb);
+        pb->pal.bio = BIO_new_ssl_connect(pb->pal.ctx);
+    }
     if (NULL == pb->pal.bio) {
         ERR_print_errors_fp(stderr);
         SSL_CTX_free(pb->pal.ctx);
-		pb->pal.ctx = NULL;
+        pb->pal.ctx = NULL;
         return PNR_ADDR_RESOLUTION_FAILED;
     }
-
+    
     DEBUG_PRINTF("pb=%p: Got BIO_new_ssl\n", pb);
-
+    
     BIO_get_ssl(pb->pal.bio, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
 
-    BIO_set_conn_hostname(pb->pal.bio, PUBNUB_ORIGIN ":https");
+    BIO_set_conn_hostname(pb->pal.bio, origin);
+    BIO_set_conn_port(pb->pal.bio, "https");
 
-    BIO_set_nbio(pb->pal.bio, !pb->use_blocking_io);
+    BIO_set_nbio(pb->pal.bio, !pb->options.use_blocking_io);
 
-	WATCH(pb->use_blocking_io, "%d");
+    WATCH(pb->options.use_blocking_io, "%d");
     if (BIO_do_connect(pb->pal.bio) <= 0) {
         if (BIO_should_retry(pb->pal.bio)) {
-			DEBUG_PRINTF("BIO_should_retry\n");
-			return (pbntf_got_socket(pb, pb->pal.bio) < 0) ? PNR_CONNECT_FAILED : PNR_IN_PROGRESS;
+            DEBUG_PRINTF("BIO_should_retry\n");
+            return (pbntf_got_socket(pb, pb->pal.bio) < 0) ? PNR_CONNECT_FAILED : PNR_IN_PROGRESS;
         }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.bio);
-		pb->pal.bio = NULL;
+        pb->pal.bio = NULL;
         SSL_CTX_free(pb->pal.ctx);
-		pb->pal.ctx = NULL;
+        pb->pal.ctx = NULL;
         DEBUG_PRINTF("BIO_do_connect failed\n");
         return PNR_ADDR_RESOLUTION_FAILED;
     }
@@ -190,7 +194,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         pb->pal.bio = NULL;
         SSL_CTX_free(pb->pal.ctx);
         pb->pal.ctx = NULL;
-        if (pb->ssl.fallback) {
+        if (pb->options.fallbackSSL) {
             return resolv_and_connect_wout_SSL(pb);
         }
         return PNR_CONNECT_FAILED;
@@ -206,28 +210,28 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 
 enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
-	fd_set read_set, write_set;
+    fd_set read_set, write_set;
     int socket;
-	int rslt;
-	struct timeval timev = { 0, 300000 };
-
+    int rslt;
+    struct timeval timev = { 0, 300000 };
+    
     if (-1 == BIO_get_fd(pb->pal.bio, &socket)) {
         DEBUG_PRINTF("Uninitialized BIO!\n");
         return PNR_CONNECT_FAILED;
     }
-	FD_ZERO(&read_set);
-	FD_ZERO(&write_set);
-	FD_SET(socket, &read_set);
-	FD_SET(socket, &write_set);
-	rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
-	if (SOCKET_ERROR == rslt) {
+    FD_ZERO(&read_set);
+    FD_ZERO(&write_set);
+    FD_SET(socket, &read_set);
+    FD_SET(socket, &write_set);
+    rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
+    if (SOCKET_ERROR == rslt) {
         DEBUG_PRINTF("select() Error!\n");
         return PNR_CONNECT_FAILED;
-	}
-	else if (rslt > 0) {
-		DEBUG_PRINTF("select() event\n");
+    }
+    else if (rslt > 0) {
+        DEBUG_PRINTF("select() event\n");
         return pbpal_resolv_and_connect(pb);
-	}
-	DEBUG_PRINTF("no select() events\n");
-	return PNR_IN_PROGRESS;
+    }
+    DEBUG_PRINTF("no select() events\n");
+    return PNR_IN_PROGRESS;
 }

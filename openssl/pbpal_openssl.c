@@ -43,8 +43,8 @@ void pbpal_init(pubnub_t *pb)
     pal_init();
     pb->pal.bio = NULL;
     pb->pal.ctx = NULL;
-    pb->use_blocking_io = true;
-    pb->ssl.use = pb->ssl.fallback = pb->ssl.ignore = true;
+    pb->options.use_blocking_io = true;
+    pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->sock_state = STATE_NONE;
     pb->readlen = 0;
     buf_setup(pb);
