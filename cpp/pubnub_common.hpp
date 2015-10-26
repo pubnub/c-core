@@ -165,6 +165,19 @@ namespace pubnub {
             }
             pubnub_init(d_pb, d_pubk.c_str(), d_ksub.c_str());
         }
+
+        /** Sets the origin to @p origin on this context. This may fail.
+            To reset to default, pass an empty string.
+            @see pubnub_origin_set
+         */
+        void set_origin(std::string const &origin) {
+            d_origin = origin;
+            pubnub_origin_set(d_pb, origin.empty() ? NULL : origin.c_str());
+        }
+        /** Returns the current origin for this context
+            @see pubnub_get_origin
+         */
+        std::string origin() const { return pubnub_get_origin(d_pb); }
         
         /** Sets the `auth` key to @p auth. If @p auth is an
             empty string, `auth` will not be used.
@@ -465,6 +478,8 @@ namespace pubnub {
         std::string d_auth;
         /// The UUID
         std::string d_uuid;
+        /// The origin set last time
+        std::string d_origin;
         /// The (C) Pubnub context
         pubnub_t *d_pb;
     };
