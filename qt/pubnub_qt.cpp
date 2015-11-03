@@ -12,16 +12,17 @@ extern "C" {
 pubnub_qt::pubnub_qt(QString pubkey, QString keysub) 
     : d_pubkey(pubkey.toLatin1())
     , d_keysub(keysub.toLatin1())
-#ifdef QT_NO_SSL
-    , d_origin("http://pubsub.pubnub.com")
-#else
-    , d_origin("https://pubsub.pubnub.com")
-#endif
     , d_context(new pbcc_context)
     , d_http_code(0)
+#ifdef QT_NO_SSL
+    , d_origin("http://pubsub.pubnub.com")
+    , d_ssl_opts(0)
+#else
+    , d_origin("https://pubsub.pubnub.com")
+    , d_ssl_opts(useSSL)
+#endif
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
-
     connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
             this, SLOT(sslErrors(QNetworkReply*,QList<QSslError>)));
 }
@@ -29,6 +30,7 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
 
 pubnub_qt::~pubnub_qt()
 {
+    pbcc_deinit(d_context.data());
 }
 
 
@@ -141,7 +143,7 @@ pubnub_res pubnub_qt::subscribe(QString const &channel, QString const &channel_g
     return startRequest(
         pbcc_subscribe_prep(
             d_context.data(), 
-            channel.toLatin1().data(), 
+            channel.isEmpty() ? 0 : channel.toLatin1().data(), 
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
             ), PBTT_SUBSCRIBE
         );
@@ -329,12 +331,24 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 }
 
 
+void pubnub_qt::set_origin(QString const& origin)
+{
+    d_origin = origin;
+    if (!origin.startsWith("http:") && !origin.startsWith("https:")) {
+        d_origin.prepend("http://");
+        set_ssl_options(d_ssl_opts);
+    }
+}
+
+
 pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
 {
     pubnub_res pbres = PNR_OK;
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
+        pbcc_realloc_reply_buffer(d_context.data(), data.size());
+        memcpy(d_context->http_reply, data.data(), data.size());
         d_context->http_buf_len = data.size();
-        d_context->http_reply = data.data();
+        d_context->http_reply[data.size()] = '\0';
     }
     else {
         if ((unsigned)data.size() >= sizeof d_context->http_reply) {

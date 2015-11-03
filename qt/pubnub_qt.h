@@ -129,9 +129,7 @@ public:
      * is https, unless SSL support is not included in
      * your Qt.
      */
-    void set_origin(QString const& origin) {
-        d_origin = origin;
-    }
+    void set_origin(QString const& origin);
 
     /** Returns the current origin */
     QString const& origin() const {
@@ -686,9 +684,6 @@ private:
     /// Auth key to use (can be empty - none)
     QByteArray d_auth;
 
-    /// Origin (protocol and host of the URL) to use
-    QString d_origin;
-
     /// Qt's Network Access Manager
     QNetworkAccessManager d_qnam;
 
@@ -703,6 +698,9 @@ private:
 
     /// Last HTTP code
     unsigned d_http_code;
+
+    /// Origin (protocol and host of the URL) to use
+    QString d_origin;
 
 #ifndef QT_NO_SSL
     /// SSL options
