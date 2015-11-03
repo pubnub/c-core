@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include <QtNetwork>
+#include <QString>
 
 
 
@@ -334,7 +335,14 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
     pubnub_res pbres = PNR_OK;
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
         d_context->http_buf_len = data.size();
-        d_context->http_reply = data.data();
+        char *newbuf = (char*)realloc(d_context->http_reply, data.size() +1);
+        if (NULL == newbuf) {
+        }
+        d_context->http_reply = newbuf;
+        for (int i = 0; i <= d_context->http_buf_len; i++)
+        {
+            d_context->http_reply[i] = data.data()[i];
+        }
     }
     else {
         if ((unsigned)data.size() >= sizeof d_context->http_reply) {
