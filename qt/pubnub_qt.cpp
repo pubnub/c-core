@@ -6,7 +6,6 @@ extern "C" {
 }
 
 #include <QtNetwork>
-#include <QString>
 
 
 
