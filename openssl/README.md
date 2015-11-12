@@ -90,3 +90,11 @@ of the MSVC standard  `cl`, like:
 ## Notes
 
 We have not tested Pubnub OpenSSL on OSX yet.
+
+## Makefile remarks
+
+The Makefiles are designed to be minimal and illustrate what modules
+you need and what `#define`s and compiler/link options, to build
+C-core. It is _not_ designed to be just copy-pasted into a production
+Makefile, because that is pretty much impossible - there are way too
+many ways to "make a Makefile", we can't cover them all.

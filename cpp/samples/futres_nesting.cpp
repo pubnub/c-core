@@ -28,7 +28,7 @@ static void on_time(pubnub::context &pb, pubnub_res res)
     else {
         std::cout << "Getting time failed!" << std::endl;
     }
-    // We could go on here, but I've had enough of the "callback hell".
+    // We could go on here, but I've had enough of the "callback hell" :)
 }
 
 
@@ -157,6 +157,10 @@ int main()
     try {
         pubnub::context pb("demo", "demo");
  
+        /* Leave this commented out to use the default - which is
+           blocking I/O on most platforms. Uncomment to use non-
+           blocking I/O.
+        */
 //       pb.set_blocking_io(pubnub::non_blocking);
 
 #if __cplusplus >= 201103L

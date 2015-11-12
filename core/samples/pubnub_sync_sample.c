@@ -6,14 +6,29 @@
 #include <stdio.h>
 
 
+static void generate_uuid(pubnub_t *pbp)
+{
+    char const *uuid_default = "zeka-peka-iz-jendeka";
+    struct Pubnub_UUID uuid;
+    static struct Pubnub_UUID_String str_uuid;
+
+    if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
+        pubnub_set_uuid(pbp, uuid_default);
+    }
+    else {
+        str_uuid = pubnub_uuid_to_string(&uuid);
+        pubnub_set_uuid(pbp, str_uuid.uuid);
+        printf("Generated UUID: %s\n", str_uuid.uuid);
+    }
+}
+
+
 int main()
 {
     char const *msg;
     enum pubnub_res res;
     char const *chan = "hello_world";
     pubnub_t *pbp = pubnub_alloc();
-    struct Pubnub_UUID uuid;
-    struct Pubnub_UUID_String str_uuid;
 
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
@@ -21,16 +36,13 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
+    /* Leave this commented out to use the default - which is
+       blocking I/O on most platforms. Uncomment to use non-
+       blocking I/O.
+    */
 //    pubnub_set_non_blocking_io(pbp);
-    
-    if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, "zeka-peka-iz-jendeka");
-    }
-    else {
-        str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
-        printf("Generated UUID: %s\n", str_uuid.uuid);
-    }
+
+    generate_uuid(pbp);
 
     pubnub_set_auth(pbp, "danaske");
 
@@ -125,7 +137,6 @@ int main()
     else {
         printf("Getting time failed with code: %d\n", res);
     }
-
 
     puts("Getting history with include_token...");
     res = pubnub_history(pbp, chan, 10, true);
@@ -272,7 +283,6 @@ int main()
     else {
         printf("Setting state failed with code: %d\n", res);
     }
-
 
     puts("Getting state...");
     res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));

@@ -38,3 +38,11 @@ There is a Makefile for a `gcc` compatible compiler - `windows-gcc.mk`.
 So, if you have MINGW, this should work:
 
     mingw32-make -f windows-gcc.mk
+
+## Makefile remarks
+
+The Makefile is designed to be minimal and illustrate what modules you
+need and what `#define`s and compiler/link options, to build
+C-core. It is _not_ designed to be just copy-pasted into a production
+Makefile, because that is pretty much impossible - there are way too
+many ways to "make a Makefile", we can't cover them all.

@@ -78,6 +78,7 @@ int main()
             puts("Cancelling the Subscribe...");
             puts("---------------------------");
             pubnub_cancel(pbp);
+
             /* Now it's OK to await, since we don't have anything else
                to do
             */

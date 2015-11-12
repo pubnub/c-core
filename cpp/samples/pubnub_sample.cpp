@@ -20,6 +20,10 @@ int main()
         std::string chan("hello_world");
         pubnub::context pb("demo", "demo");
  
+        /* Leave this commented out to use the default - which is
+           blocking I/O on most platforms. Uncomment to use non-
+           blocking I/O.
+        */
 //       pb.set_blocking_io(pubnub::non_blocking);
         
         if (0 != pb.set_uuid_v4_random()) {

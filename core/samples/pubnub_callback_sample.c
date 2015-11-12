@@ -10,6 +10,11 @@
 #include <stdio.h>
 
 
+/** Data that we pass to the Pubnub context and will get back via
+    callback. To signal reception of response from Pubnub, that we get
+    via callback, we use a condition variable w/pthreads and an Event
+    on Windows.
+*/
 struct UserData {
 #if defined _WIN32
     CRITICAL_SECTION mutw;
@@ -21,6 +26,7 @@ struct UserData {
 #endif
     pubnub_t *pb;
 };
+
 
 void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
 {
@@ -57,10 +63,23 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
     case PBTT_STATE_GET:
         printf("State gotten, result: %d\n", result);
         break;
+    case PBTT_REMOVE_CHANNEL_GROUP:
+        printf("Remove channel group, result: %d\n", result);
+        break;
+    case PBTT_REMOVE_CHANNEL_FROM_GROUP:
+        printf("Remove channel from group, result: %d\n", result);
+        break;
+    case PBTT_ADD_CHANNEL_TO_GROUP:
+        printf("Add channel to group, result: %d\n", result);
+        break;
+    case PBTT_LIST_CHANNEL_GROUP:
+        printf("List (members of) channel group, result: %d\n", result);
+        break;
     default:
         printf("None?! result: %d\n", result);
         break;
     }
+    
 #if defined _WIN32
     SetEvent(pUserData->condw);
 #else
@@ -128,7 +147,6 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
@@ -154,7 +172,6 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
@@ -175,7 +192,6 @@ int main()
         pubnub_free(pbp);
         return -1;
     }
-
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);

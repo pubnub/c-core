@@ -10,6 +10,11 @@
 #include <stdio.h>
 
 
+/** Data that we pass to the Pubnub context and will get back via
+    callback. To signal reception of response from Pubnub, that we get
+    via callback, we use a condition variable w/pthreads and an Event
+    on Windows.
+*/
 struct UserData {
 #if defined _WIN32
     CRITICAL_SECTION mutw;
@@ -168,6 +173,7 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
+
     /* Since the subscribe is ongoing in the `pbp` context, we can't
        publish on it, so we use a different context to publish
     */
