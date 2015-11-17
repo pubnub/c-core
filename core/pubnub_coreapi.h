@@ -560,7 +560,13 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, ch
 */
 enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group);
 
-/** Returns the result of the last transaction in the @p p context. */
+/** Returns the result of the last transaction in the @p p context.
+    This _may_ block if using blocking I/O. It will _not_ block if using
+    non-blocking I/O.  
+
+    @see pubnub_set_blocking_io
+    @see pubnub_set_non_blocking_io
+*/
 enum pubnub_res pubnub_last_result(pubnub_t const *p);
 
 /** Returns the HTTP reply code of the last transaction in the @p p
