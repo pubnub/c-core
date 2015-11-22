@@ -31,10 +31,10 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         return PNR_CONNECT_FAILED;
     }
 
-	{/*
-		TickType_t tmval = pdMS_TO_TICKS(310 * 1000);
-		FreeRTOS_setsockopt(pb->pal.socket, 0, FREERTOS_SO_RCVTIMEO, &tmval, sizeof tmval);
-	*/}
+    {
+        TickType_t tmval = pdMS_TO_TICKS(310 * 1000);
+        FreeRTOS_setsockopt(pb->pal.socket, 0, FREERTOS_SO_RCVTIMEO, &tmval, sizeof tmval);
+    }
     
     return PNR_STARTED;/* Should really be PNR_OK, see below */
     /* If we return PNR_OK, then the whole transaction can finish
