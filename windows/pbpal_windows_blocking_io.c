@@ -6,9 +6,15 @@
 #include <windows.h>
 
 
+int socket_platform_init(void)
+{
+    WSADATA wsadata;
+    return WSAStartup(MAKEWORD(2,2), &wsadata);
+}
+
 int pbpal_set_blocking_io(pubnub_t *pb)
 {
-    u_long iMode = !pb->use_blocking_io;
+    u_long iMode = !pb->options.use_blocking_io;
     ioctlsocket(pb->pal.socket, FIONBIO, &iMode);
 
     return 0;

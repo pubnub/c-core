@@ -124,18 +124,21 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-int pbpal_line_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
         int recvres = BIO_read(pb->pal.bio, pb->ptr, pb->left);
-        if (recvres <= 0) {
+        if (recvres < 0) {
             if (BIO_should_retry(pb->pal.bio)) {
-                return +1;
+                return PNR_IN_PROGRESS;
             }
             ERR_print_errors_fp(stderr);
-            return -1;
+            return PNR_IO_ERROR;
+        }
+        else if (0 == recvres) {
+            return PNR_TIMEOUT;
         }
         DEBUG_PRINTF("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
@@ -151,7 +154,7 @@ int pbpal_line_read_status(pubnub_t *pb)
         if (c == '\n') {
             DEBUG_PRINTF("\\n found: "); WATCH(pbpal_read_len(pb), "%d"); WATCH(pb->readlen, "%d");
             pb->sock_state = STATE_NONE;
-            return 0;
+            return PNR_OK;
         }
     }
 
@@ -170,7 +173,7 @@ int pbpal_line_read_status(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
-    return +1;
+    return PNR_IN_PROGRESS;
 }
 
 

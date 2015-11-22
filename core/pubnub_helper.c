@@ -22,7 +22,7 @@ enum pubnub_publish_res pubnub_parse_publish_result(char const *result)
     if (strncmp(result, "\"Account quota exceeded", 23) == 0) {
         return PNPUB_ACCOUNT_QUOTA_EXCEEDED;
     }
-    return PNPUB_UNKOWN_ERROR;
+    return PNPUB_UNKNOWN_ERROR;
 }
 
 

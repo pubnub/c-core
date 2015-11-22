@@ -36,7 +36,7 @@ struct pbcc_context {
     char const *auth;
 
     /** The last used time token. */
-    char timetoken[64];
+    char timetoken[20];
 
     /** The result of the last Pubnub transaction */
     enum pubnub_res last_result;

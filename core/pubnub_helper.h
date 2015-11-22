@@ -27,7 +27,7 @@ enum pubnub_publish_res {
   /** The publishing quota for this account was exceeded */
   PNPUB_ACCOUNT_QUOTA_EXCEEDED,
   /** Publish failed, but we were not able to parse the error description */
-  PNPUB_UNKOWN_ERROR,
+  PNPUB_UNKNOWN_ERROR,
 };
 
 /** Parses the given publish @p result. You usually obtain this with

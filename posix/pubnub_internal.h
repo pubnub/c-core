@@ -7,10 +7,19 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-#define closesocket(x) close(x)
-
 
 typedef int pb_socket_t;
+
+#define socket_close(socket) close(socket)
+#define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
+#define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
+
+#define socket_would_block() (errno == EWOULDBLOCK)
+
+#define socket_platform_init 0
+
+#define SOCKET_INVALID -1
+
 
 /** The Pubnub POSIX context */
 struct pubnub_pal {

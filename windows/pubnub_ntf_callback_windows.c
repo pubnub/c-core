@@ -120,7 +120,7 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     EnterCriticalSection(&m_watcher.mutw);
 
     save_socket(&m_watcher, pb);
-    pb->use_blocking_io = false;
+    pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
     
     LeaveCriticalSection(&m_watcher.mutw);

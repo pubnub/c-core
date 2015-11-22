@@ -9,13 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Should do this in a more portable way, but, for now, let's
-   just spoon-feed MSVC...
-*/
-#ifdef _WIN32
-int snprintf(char *buffer, size_t n, const char *format, ...);
-#endif
-
 
 void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subscribe_key)
 {
@@ -236,8 +229,11 @@ int pbcc_parse_presence_response(struct pbcc_context *p)
 enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
 {
     enum pbjson_object_name_parse_result result;
-    struct pbjson_elem el = { p->http_reply, p->http_reply + p->http_buf_len };
+    struct pbjson_elem el;
     struct pbjson_elem found;
+
+	el.start = p->http_reply;
+	el.end = p->http_reply + p->http_buf_len;
     p->chan_ofs = 0;
     p->chan_end = p->http_buf_len;
 
@@ -265,6 +261,8 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
 int pbcc_parse_subscribe_response(struct pbcc_context *p)
 {
     int i;
+	int previous_i;
+	unsigned time_token_length;
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
     if (replylen < 2) {
@@ -278,7 +276,8 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
     }
 
     /* Extract the last argument. */
-    i = find_string_start(reply, replylen-2);
+	previous_i = replylen - 2;
+    i = find_string_start(reply, previous_i);
     if (i < 0) {
         return -1;
     }
@@ -301,7 +300,8 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
         reply[i-2] = '\0';
         p->chan_ofs = i+1;
         p->chan_end = replylen - 1;
-        i = find_string_start(reply, i-2);
+		previous_i = i-2;
+        i = find_string_start(reply, previous_i);
         if (i < 0) {
             p->chan_ofs = 0;
             p->chan_end = 0;
@@ -312,7 +312,8 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
 				the future, we may process it like we do the channel list.
 				*/
 			reply[i-2] = '\0';
-			i = find_string_start(reply, i-2);
+			previous_i = i-2;
+			i = find_string_start(reply, previous_i);
 			if (i < 0) {
 				return -1;
 			}
@@ -323,19 +324,21 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
         p->chan_end = 0;
     }
 
-    /* Now, i points at
+    /* Now, `i` points to:
      * [[1,2,3],"5678"]
      * [[1,2,3],"5678","a,b,c"]
      * [[1,2,3],"5678","gr-a,gr-b,gr-c","a,b,c"]
      *          ^-- here */
 
     /* Setup timetoken. */
-	strncpy(p->timetoken, reply + i+1, sizeof p->timetoken);
-	p->timetoken[sizeof p->timetoken - 1] = '\0';
-	/*TODO: this (just) truncates a too long timetoken, it would be nice 
-		to detect this "overflow" and report an error. */
+	time_token_length = previous_i - (i+1);
+	if (time_token_length >= sizeof p->timetoken) {
+		p->timetoken[0] = '\0';
+		return -1;
+	}
+	memcpy(p->timetoken, reply + i+1, time_token_length+1);
 	
-	/* terminate the [] message array (before the ]!) */
+	/* terminate the [] message array (before the `]`!) */
     reply[i-2] = 0; 
 
     /* Set up the message list - offset, length and NUL-characters

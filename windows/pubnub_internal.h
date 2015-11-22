@@ -10,10 +10,21 @@
 typedef SOCKET pb_socket_t;
 
 
-/** The Pubnub POSIX context */
+#define socket_close(socket) closesocket(socket)
+#define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
+#define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
+
+#define socket_would_block() (WSAGetLastError() == WSAEWOULDBLOCK)
+
+/** On Windows, one needs to call WSAStartup(), which is not trivial */
+int socket_platform_init(void);
+
+#define SOCKET_INVALID INVALID_SOCKET
+
+
+/** The Pubnub Windows context */
 struct pubnub_pal {
     pb_socket_t socket;
-
 };
 
 
@@ -23,8 +34,8 @@ struct pubnub_pal {
 
 #if defined(_MSC_VER)
 /** Microsoft C compiler (at least up to VS2015) does not provide a 
-	standard-conforming snprintf(), so we bring our own.
-	*/
+    standard-conforming snprintf(), so we bring our own.
+    */
 int snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
 

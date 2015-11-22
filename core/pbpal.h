@@ -92,7 +92,7 @@ int pbpal_start_read_line(pubnub_t *pb);
     @return 0: line was read, +1: line reading still in progress
     -1: line reading failed
 */
-int pbpal_line_read_status(pubnub_t *pb);
+enum pubnub_res pbpal_line_read_status(pubnub_t *pb);
 
 /** Returns the length of the data in the receive buffer
     at this time.

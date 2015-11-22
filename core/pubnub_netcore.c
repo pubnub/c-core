@@ -173,7 +173,7 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/0.1\r\nConnection: Keep-Alive\r\n\r\n");
+            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.1\r\nConnection: Keep-Alive\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }
@@ -190,9 +190,12 @@ next_state:
         }
         break;
     case PBS_RX_HTTP_VER:
-        i = pbpal_line_read_status(pb);
-        if (i <= 0) {
-            if ((i < 0) || (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0)) {
+        pbrslt = pbpal_line_read_status(pb);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
+            break;
+        case PNR_OK:
+            if (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -203,6 +206,9 @@ next_state:
             pb->http_chunked = false;
             pb->state = PBS_RX_HEADERS;
             goto next_state;
+        default:
+            outcome_detected(pb, pbrslt);
+            break;
         }
         break;
     case PBS_RX_HEADERS:
@@ -212,11 +218,12 @@ next_state:
         goto next_state;
     case PBS_RX_HEADER_LINE:
         DEBUG_PRINTF("PBS_RX_HEADER_LINE\n");
-        i = pbpal_line_read_status(pb);
-        if (i < 0) {
-            outcome_detected(pb, PNR_IO_ERROR);
-        }
-        else if (0 == i) {
+        pbrslt = pbpal_line_read_status(pb);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
+            break;
+        case PNR_OK:
+        {
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[] = "Content-Length: ";
             DEBUG_PRINTF("header line was read: %.*s\n", pbpal_read_len(pb), pb->core.http_buf);
@@ -239,6 +246,10 @@ next_state:
             }
             pb->state = PBS_RX_HEADERS;
             goto next_state;
+        }
+        default:
+            outcome_detected(pb, pbrslt);
+            break;
         }
         break;
     case PBS_RX_BODY:
@@ -270,11 +281,12 @@ next_state:
         pb->state = PBS_RX_CHUNK_LEN_LINE;
         goto next_state;
     case PBS_RX_CHUNK_LEN_LINE:
-        i = pbpal_line_read_status(pb);
-        if (i < 0) {
-            outcome_detected(pb, PNR_IO_ERROR);
-        }
-        else if (0 == i) {
+        pbrslt = pbpal_line_read_status(pb);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
+            break;
+        case PNR_OK:
+        {
             unsigned chunk_length = strtoul(pb->core.http_buf, NULL, 16);
 
             DEBUG_PRINTF("About to read a chunk w/length: %d\n", chunk_length);
@@ -293,6 +305,10 @@ next_state:
                 pb->state = PBS_RX_BODY_CHUNK;
             }
             goto next_state;
+        }
+        default:
+            outcome_detected(pb, pbrslt);
+            break;
         }
         break;
     case PBS_RX_BODY_CHUNK:

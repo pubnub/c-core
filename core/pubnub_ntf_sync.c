@@ -13,9 +13,9 @@ int pbntf_init(void)
     return 0;
 }
 
-
 int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 {
+	PUBNUB_UNUSED(socket);
     if (PUBNUB_BLOCKING_IO_SETTABLE) {
         pbpal_set_blocking_io(pb);
     }
@@ -25,6 +25,8 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
+	PUBNUB_UNUSED(socket);
+	PUBNUB_UNUSED(pb);
 }
 
 

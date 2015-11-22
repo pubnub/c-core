@@ -20,19 +20,18 @@ int main()
     }
 
     pubnub_init(pbp, "demo", "demo");
-    srand(time(NULL));
+    srand((unsigned)time(NULL));
 
-    /* This is essential, as otherwise waiting for incoming data will
-       block! Since we're doing this, be sure to not enable verbose
-       debugging, as you won't see a thing except endless lines of
-       some tracing.
+    /* Using non-blocking I/O is essential, otherwise waiting for 
+        incoming data will block! We recommend you not enable verbose
+        debugging, as it will be filled up with tracing.
     */
     pubnub_set_non_blocking_io(pbp);
 
     puts("--------------------------");
     puts("Subscribe loop starting...");
     puts("--------------------------");
-	
+
     for (;;) {
         time_t t = time(NULL);
         bool stop = false;
@@ -87,7 +86,7 @@ int main()
         }
     }
 
-	
+
     /* We're done */
     if (pubnub_free(pbp) != 0) {
         printf("Failed to free the Pubnub context `pbp`\n");

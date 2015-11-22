@@ -105,10 +105,13 @@ struct pubnub_ {
     struct pubnub_pal pal;
 
     struct pubnub_options {
-
-#if PUBNUB_BLOCKING_IO_SETTABLE
+        /** Indicates whether to use blocking I/O. Ignored if 
+            choosing between blocking and non-blocking is not supported
+            on a platform. Would be ifdef-ed out, but then it would be
+            possible for this struct to have no members which is 
+            prohibited by the ISO C standard.
+        */
         bool use_blocking_io : 1;
-#endif
 
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to

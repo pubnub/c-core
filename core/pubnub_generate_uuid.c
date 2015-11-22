@@ -3,6 +3,8 @@
 #include "pubnub_internal.h"
 #include "pubnub_generate_uuid.h"
 
+#include "pubnub_assert.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -12,13 +14,6 @@
 
 #if PUBNUB_HAVE_SHA1
 #include "sha1.h"
-#endif
-
-/* Should do this in a more portable way, but, for now, let's
-	just spoon-feed MSVC...
-	*/
-#ifdef _WIN32
-int snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
 
 
@@ -34,11 +29,12 @@ struct Pubnub_UUID_decomposed {
 };
 
 
-int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
-				 uint16_t *io_clock_seq,
-				 uint8_t const i_timestamp[8],
-				 uint8_t const i_node[6]
-				 )
+int pubnub_generate_uuid_v1_time(
+	struct Pubnub_UUID *o_uuid,
+	uint16_t *io_clock_seq,
+	uint8_t const i_timestamp[8],
+	uint8_t const i_node[6]
+	)
 {
     static uint8_t s_timestamp[8];
     struct Pubnub_UUID_decomposed *ud = (struct Pubnub_UUID_decomposed *)o_uuid;
@@ -62,10 +58,11 @@ int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
 }
 
 
-int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
-				     struct Pubnub_UUID *nsid,
-				     void *name,
-				     unsigned namelen
+int pubnub_generate_uuid_v3_name_md5(
+	struct Pubnub_UUID *uuid,
+	struct Pubnub_UUID *nsid,
+	void *name,
+	unsigned namelen
     )
 {
 #if PUBNUB_HAVE_MD5
@@ -83,15 +80,21 @@ int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
     
     return 0;
 #else
-    return -1;
+	PUBNUB_UNUSED(uuid);
+	PUBNUB_UNUSED(nsid);
+	PUBNUB_UNUSED(name);
+	PUBNUB_UNUSED(namelen);
+
+	return -1;
 #endif
 }
 
 
-int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
-				     struct Pubnub_UUID *nsid,
-				     void *name,
-				     unsigned namelen
+int pubnub_generate_uuid_v5_name_sha1(
+	struct Pubnub_UUID *uuid,
+	struct Pubnub_UUID *nsid,
+	void *name,
+	unsigned namelen
     )
 {
 #if PUBNUB_HAVE_SHA1
@@ -112,6 +115,10 @@ int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
     
     return 0;
 #else
+	PUBNUB_UNUSED(uuid);
+	PUBNUB_UNUSED(nsid);
+	PUBNUB_UNUSED(name);
+	PUBNUB_UNUSED(namelen);
     return -1;
 #endif
 }

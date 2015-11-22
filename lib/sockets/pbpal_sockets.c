@@ -8,21 +8,8 @@
 
 #include <sys/types.h>
 
-#if defined FREERTOS
-
-#include "FreeRTOS_sockets.h"
-
-#define recv(x, y, z, w) FreeRTOS_recv((x), (y), (z), (w))
-#define send(x, y, z, w) FreeRTOS_send((x), (y), (z), (w))
-#define closesocket(x) FreeRTOS_closesocket(x)
-
-#endif
-
 #include <string.h>
 #include <errno.h>
-
-
-#define HTTP_PORT 80
 
 
 static void buf_setup(pubnub_t *pb)
@@ -36,14 +23,9 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-#if defined _WIN32
-        WSADATA wsaData;
-        int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if (iResult != 0) {
-            DEBUG_PRINTF("WSAStartup failed: %d\n", iResult);
-            return -1;
-        }
-#endif
+		if (0 != socket_platform_init()) {
+			return -1;
+		}
         pbntf_init();
         s_init = true;
     }
@@ -58,7 +40,7 @@ void pbpal_init(pubnub_t *pb)
         pb->options.use_blocking_io = true;
     }
     pal_init();
-    pb->pal.socket = -1;
+    pb->pal.socket = SOCKET_INVALID;
     pb->sock_state = STATE_NONE;
     pb->readlen = 0;
     buf_setup(pb);
@@ -94,13 +76,9 @@ int pbpal_send_status(pubnub_t *pb)
     if (0 == pb->sendlen) {
         return 0;
     }
-    r = send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
+    r = socket_send(pb->pal.socket, (char*)pb->sendptr, pb->sendlen, 0);
     if (r < 0) {
-#if defined _WIN32
-            return (WSAGetLastError() == WSAEWOULDBLOCK) ? +1 :-1;
-#else
-            return (errno == EWOULDBLOCK) ? +1 :-1;
-#endif
+		return socket_would_block() ? +1 : -1;
     }
     if (r > pb->sendlen) {
         DEBUG_PRINTF("That's some over-achieving socket!\n");
@@ -139,24 +117,23 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-int pbpal_line_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
-        int recvres = recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
-        if (recvres <= 0) {
+        int recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
+        if (recvres < 0) {
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
             if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                return -1;
+                return PNR_IO_ERROR;
             }
-#if defined _WIN32
-            return (WSAGetLastError() == WSAEWOULDBLOCK) ? +1 :-1;
-#else
-            return (errno == EWOULDBLOCK) ? +1 :-1;
-#endif
+			return socket_would_block() ? PNR_IN_PROGRESS : PNR_IO_ERROR;
+        }
+        else if (0 == recvres) {
+            return PNR_TIMEOUT;
         }
         DEBUG_PRINTF("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
@@ -170,9 +147,9 @@ int pbpal_line_read_status(pubnub_t *pb)
         --pb->left;
         
         if (c == '\n') {
-            DEBUG_PRINTF("\\n found: "); WATCH(pbpal_read_len(pb), "%d"); WATCH(pb->readlen, "%d");
+            DEBUG_PRINTF("\n found: "); WATCH(pbpal_read_len(pb), "%d"); WATCH(pb->readlen, "%d");
             pb->sock_state = STATE_NONE;
-            return 0;
+            return PNR_OK;
         }
     }
 
@@ -191,7 +168,7 @@ int pbpal_line_read_status(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
-    return +1;
+    return PNR_IN_PROGRESS;
 }
 
 
@@ -240,7 +217,7 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
-        recvres = recv(pb->pal.socket, (char*)pb->ptr, to_read, 0);
+        recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, to_read, 0);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...
@@ -279,13 +256,14 @@ bool pbpal_read_over(pubnub_t *pb)
 
 bool pbpal_closed(pubnub_t *pb)
 {
-    return pb->pal.socket == -1;
+    return pb->pal.socket == SOCKET_INVALID;
 }
 
 
 void pbpal_forget(pubnub_t *pb)
 {
     /* a no-op under BSD-ish sockets */
+	PUBNUB_UNUSED(pb);
 }
 
 
@@ -293,10 +271,10 @@ void pbpal_close(pubnub_t *pb)
 {
     DEBUG_PRINTF("pbpal_close()\n");
     pb->readlen = 0;
-    if (pb->pal.socket != -1) {
+    if (pb->pal.socket != SOCKET_INVALID) {
         pbntf_lost_socket(pb, pb->pal.socket);
-        closesocket(pb->pal.socket);
-        pb->pal.socket = -1;
+        socket_close(pb->pal.socket);
+        pb->pal.socket = SOCKET_INVALID;
 		pb->sock_state = STATE_NONE;
     }
 }
@@ -304,5 +282,5 @@ void pbpal_close(pubnub_t *pb)
 
 bool pbpal_connected(pubnub_t *pb)
 {
-    return pb->pal.socket != -1;
+    return pb->pal.socket != SOCKET_INVALID;
 }
