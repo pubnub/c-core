@@ -6,16 +6,8 @@
 
 #include <sys/types.h>
 
-#if defined _WIN32
-#include <winsock2.h>
-#else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#if !defined _WIN32
 #include <sys/select.h>
-#define closesocket(x) close(x)
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
 #endif
 
 
@@ -45,10 +37,10 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     }
     for (it = result; it != NULL; it = it->ai_next) {
         pb->pal.socket = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-        if (pb->pal.socket == INVALID_SOCKET) {
+        if (pb->pal.socket == SOCKET_INVALID) {
             continue;
         }
-        if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
+        if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == -1) {
             closesocket(pb->pal.socket);
             pb->pal.socket = -1;
             continue;
@@ -60,15 +52,15 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == it) {
         return PNR_CONNECT_FAILED;
     }
-	
-	{
+
+    {
 #if defined _WIN32
         DWORD tmval = 310 * 1000;
 #else
         struct timeval tmval = { 310, 0 };
 #endif
         setsockopt(pb->pal.socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tmval, sizeof tmval);
-	}
+    }
 
     switch (pbntf_got_socket(pb, pb->pal.socket)) {
     case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
@@ -95,7 +87,7 @@ enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
     FD_SET(pb->pal.socket, &read_set);
     FD_SET(pb->pal.socket, &write_set);
     rslt = select(pb->pal.socket + 1, &read_set, &write_set, NULL, &timev);
-    if (SOCKET_ERROR == rslt) {
+    if (-1 == rslt) {
         DEBUG_PRINTF("select() Error!\n");
         return PNR_CONNECT_FAILED;
     }
