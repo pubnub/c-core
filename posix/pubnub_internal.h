@@ -16,7 +16,7 @@ typedef int pb_socket_t;
 
 #define socket_would_block() (errno == EWOULDBLOCK)
 
-#define socket_platform_init 0
+#define socket_platform_init() 0
 
 #define SOCKET_INVALID -1
 

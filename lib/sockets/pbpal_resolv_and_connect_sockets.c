@@ -41,7 +41,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
             continue;
         }
         if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == -1) {
-            closesocket(pb->pal.socket);
+            socket_close(pb->pal.socket);
             pb->pal.socket = -1;
             continue;
         }
