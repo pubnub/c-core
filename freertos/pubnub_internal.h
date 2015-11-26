@@ -26,6 +26,8 @@
     */
 #define socket_platform_init() 0
 
+#define socket_is_connected(socket) (pdTRUE == FreeRTOS_issocketconnected(socket))
+
 #define SOCKET_INVALID FREERTOS_INVALID_SOCKET
 
 

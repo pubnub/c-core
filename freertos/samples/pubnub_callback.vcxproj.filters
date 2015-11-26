@@ -40,9 +40,6 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
     <ClCompile Include="demo_logging.c" />
-    <ClCompile Include="DemoTasks\PubnubSyncSampleTask.c">
-      <Filter>DemoTasks</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS_Labs\FreeRTOS-Plus\Source\FreeRTOS-Plus-TCP\portable\BufferManagement\BufferAllocation_2.c">
       <Filter>FreeRTOS+\FreeRTOS+TCP\portable</Filter>
     </ClCompile>
@@ -106,9 +103,6 @@
     <ClCompile Include="..\..\core\pubnub_netcore.c">
       <Filter>Pubnub</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\core\pubnub_ntf_sync.c">
-      <Filter>Pubnub</Filter>
-    </ClCompile>
     <ClCompile Include="..\pubnub_version_freertos.c">
       <Filter>Pubnub</Filter>
     </ClCompile>
@@ -138,6 +132,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS_Labs\FreeRTOS\Source\list.c">
       <Filter>FreeRTOS\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pubnub_ntf_callback_freertos.c">
+      <Filter>Pubnub</Filter>
+    </ClCompile>
+    <ClCompile Include="DemoTasks\PubnubCallbackSampleTask.c">
+      <Filter>DemoTasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

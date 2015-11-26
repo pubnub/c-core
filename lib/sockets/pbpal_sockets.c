@@ -262,25 +262,28 @@ bool pbpal_closed(pubnub_t *pb)
 
 void pbpal_forget(pubnub_t *pb)
 {
-    /* a no-op under BSD-ish sockets */
-	PUBNUB_UNUSED(pb);
+    /* `socket_close` pretty much means "forget" in BSD-ish sockets */
+    PUBNUB_UNUSED(pb);
 }
 
 
-void pbpal_close(pubnub_t *pb)
+int pbpal_close(pubnub_t *pb)
 {
-    DEBUG_PRINTF("pbpal_close()\n");
     pb->readlen = 0;
     if (pb->pal.socket != SOCKET_INVALID) {
         pbntf_lost_socket(pb, pb->pal.socket);
         socket_close(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
-		pb->sock_state = STATE_NONE;
+	    pb->sock_state = STATE_NONE;
     }
+
+    DEBUG_PRINTF("pbpal_close() returning 0\n");
+
+    return 0;
 }
 
 
 bool pbpal_connected(pubnub_t *pb)
 {
-    return pb->pal.socket != SOCKET_INVALID;
+    return (pb->pal.socket != SOCKET_INVALID) && socket_is_connected(pb->pal.socket);
 }

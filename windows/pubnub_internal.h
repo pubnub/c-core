@@ -21,6 +21,16 @@ int socket_platform_init(void);
 
 #define SOCKET_INVALID INVALID_SOCKET
 
+/* Maybe we could use `getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, &len)`,
+    but, its utility is questionable, so probably test extensively to see if it 
+    really works for us.
+    */
+#define socket_is_connected(socket) true
+
+#define socket_set_rcv_timeout(socket, seconds) do {                            \
+    DWORD M_tm = (seconds) * 1000;                                             \
+    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
+    } while(0)
 
 /** The Pubnub Windows context */
 struct pubnub_pal {

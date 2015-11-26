@@ -9,9 +9,14 @@
 
 static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
-    pbpal_close(pb);
     pb->core.last_result = rslt;
-    pb->state = PBS_WAIT_CLOSE;
+    if (pbpal_close(pb) <= 0) {
+        pbpal_forget(pb);
+        pbntf_trans_outcome(pb);
+    }
+    else {
+        pb->state = PBS_WAIT_CLOSE;
+    }
 }
 
 
@@ -94,15 +99,26 @@ next_state:
     case PBS_IDLE:
         pbrslt = pbpal_resolv_and_connect(pb);
         switch (pbrslt) {
-        case PNR_IN_PROGRESS:
-            pb->state = PBS_WAIT_DNS;
-            break;
         case PNR_STARTED:
-            pb->state = PBS_CONNECT;
+            pb->state = PBS_WAIT_DNS;
             break;
         case PNR_OK:
             pb->state = PBS_CONNECT;
-            goto next_state;
+            switch (pbntf_got_socket(pb, pb->pal.socket)) {
+            case 0: break; /* Should really be `goto next_state;` read below */
+            case +1: break;;
+            case -1: default: 
+                pb->core.last_result = PNR_CONNECT_FAILED;
+                pbntf_trans_outcome(pb);
+                break;
+            }
+            /* If we `goto next_state;`, then the whole transaction can finish
+               in one call to Netcore FSM. That would be nice, but some
+               tests want to be able to cancel a request, which would
+               then be impossible. So, until we figure out how to handle
+               that, we shall return PNR_STARTED.
+            */
+            break;
         default:
             pb->core.last_result = pbrslt;
             pbntf_trans_outcome(pb);
@@ -114,12 +130,17 @@ next_state:
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
-        case PNR_STARTED:
-            pb->state = PBS_CONNECT;
-            break;
         case PNR_OK:
             pb->state = PBS_CONNECT;
-            goto next_state;
+            switch (pbntf_got_socket(pb, pb->pal.socket)) {
+            case 0: break; /* Should really be `goto next_state;` read above */
+            case +1: break;;
+            case -1: default: 
+                pb->core.last_result = PNR_CONNECT_FAILED;
+                pbntf_trans_outcome(pb);
+                break;
+            }
+            break;
         default:
             pb->core.last_result = pbrslt;
             pbntf_trans_outcome(pb);
@@ -257,11 +278,12 @@ next_state:
         if (pb->core.http_buf_len < pb->core.http_content_len) {
             pbpal_start_read(pb, pb->core.http_content_len - pb->core.http_buf_len);
             pb->state = PBS_RX_BODY_WAIT;
+            goto next_state;
         }
         else {
-            finish(pb);
+            finish(pb);       
         }
-        goto next_state;
+        break;
     case PBS_RX_BODY_WAIT:
         DEBUG_PRINTF("PBS_RX_BODY_WAIT\n");
         if (pbpal_read_over(pb)) {
@@ -303,8 +325,9 @@ next_state:
                 pbpal_start_read(pb, chunk_length + 2);
                 pb->core.http_content_len = chunk_length;
                 pb->state = PBS_RX_BODY_CHUNK;
+                goto next_state;
             }
-            goto next_state;
+            break;
         }
         default:
             outcome_detected(pb, pbrslt);

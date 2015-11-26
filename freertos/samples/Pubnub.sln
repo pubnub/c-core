@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_sync_sample", "WIN32.vcxproj", "{C686325E-3261-42F7-AEB1-DDE5280E1CEB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_sync_sample", "pubnub_callback.vcxproj", "{65948225-7E3F-45A5-BCD1-E04734AA0719}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FreeRTOS_Plus_TCP_Minimal.vsmdi
@@ -16,6 +18,10 @@ Global
 		{C686325E-3261-42F7-AEB1-DDE5280E1CEB}.Debug|Win32.Build.0 = Debug|Win32
 		{C686325E-3261-42F7-AEB1-DDE5280E1CEB}.Release|Win32.ActiveCfg = Release|Win32
 		{C686325E-3261-42F7-AEB1-DDE5280E1CEB}.Release|Win32.Build.0 = Release|Win32
+		{65948225-7E3F-45A5-BCD1-E04734AA0719}.Debug|Win32.ActiveCfg = Debug|Win32
+		{65948225-7E3F-45A5-BCD1-E04734AA0719}.Debug|Win32.Build.0 = Debug|Win32
+		{65948225-7E3F-45A5-BCD1-E04734AA0719}.Release|Win32.ActiveCfg = Release|Win32
+		{65948225-7E3F-45A5-BCD1-E04734AA0719}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

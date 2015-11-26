@@ -53,26 +53,9 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         return PNR_CONNECT_FAILED;
     }
 
-    {
-#if defined _WIN32
-        DWORD tmval = 310 * 1000;
-#else
-        struct timeval tmval = { 310, 0 };
-#endif
-        setsockopt(pb->pal.socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tmval, sizeof tmval);
-    }
+    socket_set_rcv_timeout(pb->pal.socket, 310);
 
-    switch (pbntf_got_socket(pb, pb->pal.socket)) {
-    case 0: return PNR_STARTED; /* Should really be PNR_OK, see below */
-    case +1: return PNR_STARTED;
-    case -1: default: return PNR_CONNECT_FAILED;
-    }
-    /* If we return PNR_OK, then the whole transaction can finish
-       in one call to Netcore FSM. That would be nice, but some
-       tests want to be able to cancel a request, which would
-       then be impossible. So, until we figure out how to handle
-       that, we shall return PNR_STARTED.
-    */
+    return PNR_OK;
 }
 
 

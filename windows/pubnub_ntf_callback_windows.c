@@ -30,8 +30,9 @@ static struct SocketWatcherData m_watcher;
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     if (watcher->apoll_size == watcher->apoll_cap) {
-        WSAPOLLFD *npalloc = (WSAPOLLFD*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
-        pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
+        size_t newcap = watcher->apoll_cap + 2;
+        WSAPOLLFD *npalloc = (WSAPOLLFD*)realloc(watcher->apoll, sizeof watcher->apoll[0] * newcap);
+        pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
         if (NULL == npalloc) {
             if (npapb != NULL) {
                 watcher->apb = npapb;
@@ -44,17 +45,13 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
         }
         watcher->apoll = npalloc;
         watcher->apb = npapb;
-        watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        watcher->apoll_cap = ++watcher->apoll_size;
+        watcher->apoll_cap = newcap;
     }
-    else {
-        watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        ++watcher->apoll_size;
-    }
+
+    watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
+    watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
+    watcher->apb[watcher->apoll_size] = pb;
+    ++watcher->apoll_size;
 }
 
 
@@ -63,10 +60,11 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     size_t i;
     for (i = 0; i < watcher->apoll_size; ++i) {
         if (watcher->apoll[i].fd == pb->pal.socket) {
+            size_t to_move = watcher->apoll_size - i - 1;
             PUBNUB_ASSERT(watcher->apb[i] == pb);
-            if (i != watcher->apoll_size - 1) {
-                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * (watcher->apoll_size - i - 1));
-                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * (watcher->apoll_size - i - 1));
+            if (to_move > 0) {
+                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * to_move);
+                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
             }
             --watcher->apoll_size;
             break;

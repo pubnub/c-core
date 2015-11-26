@@ -35,14 +35,8 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         TickType_t tmval = pdMS_TO_TICKS(310 * 1000);
         FreeRTOS_setsockopt(pb->pal.socket, 0, FREERTOS_SO_RCVTIMEO, &tmval, sizeof tmval);
     }
-    
-    return PNR_STARTED;/* Should really be PNR_OK, see below */
-    /* If we return PNR_OK, then the whole transaction can finish
-       in one call to Netcore FSM. That would be nice, but some
-       tests want to be able to cancel a request, which would
-       then be impossible. So, until we figure out how to handle
-       that, we shall return PNR_STARTED.
-    */
+
+    return PNR_OK;
 }
 
 

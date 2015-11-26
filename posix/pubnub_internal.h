@@ -20,6 +20,17 @@ typedef int pb_socket_t;
 
 #define SOCKET_INVALID -1
 
+/* Maybe we could use `getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, &len)`,
+    but, its utility is questionable, so probably test extensively to see if it 
+    really works for us.
+    */
+#define socket_is_connected(socket) true
+
+#define socket_set_rcv_timeout(socket, seconds) do {                            \
+    struct timeval M_tm = { (seconds), 0 };                                     \
+    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
+    } while(0)
+
 
 /** The Pubnub POSIX context */
 struct pubnub_pal {
