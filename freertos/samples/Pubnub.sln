@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_sync_sample", "WIN32.vcxproj", "{C686325E-3261-42F7-AEB1-DDE5280E1CEB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_sync_sample", "pubnub_callback.vcxproj", "{65948225-7E3F-45A5-BCD1-E04734AA0719}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_callback_sample", "pubnub_callback.vcxproj", "{65948225-7E3F-45A5-BCD1-E04734AA0719}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
