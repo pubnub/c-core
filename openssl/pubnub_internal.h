@@ -11,7 +11,7 @@ typedef BIO * pb_socket_t;
 
 /** The Pubnub OpenSSL context */
 struct pubnub_pal {
-    BIO *bio;
+    BIO *socket;
     SSL_CTX *ctx;
 };
 

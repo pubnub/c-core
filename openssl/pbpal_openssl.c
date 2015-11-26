@@ -41,7 +41,7 @@ static int pal_init(void)
 void pbpal_init(pubnub_t *pb)
 {
     pal_init();
-    pb->pal.bio = NULL;
+    pb->pal.socket = NULL;
     pb->pal.ctx = NULL;
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
@@ -80,9 +80,9 @@ int pbpal_send_status(pubnub_t *pb)
     if (0 == pb->sendlen) {
         return 0;
     }
-    r = BIO_write(pb->pal.bio, pb->sendptr, pb->sendlen);
+    r = BIO_write(pb->pal.socket, pb->sendptr, pb->sendlen);
     if (r < 0) {
-        if (BIO_should_retry(pb->pal.bio)) {
+        if (BIO_should_retry(pb->pal.socket)) {
             return +1;
         }
         ERR_print_errors_fp(stderr);
@@ -129,9 +129,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     uint8_t c;
 
     if (pb->readlen == 0) {
-        int recvres = BIO_read(pb->pal.bio, pb->ptr, pb->left);
+        int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
         if (recvres < 0) {
-            if (BIO_should_retry(pb->pal.bio)) {
+            if (BIO_should_retry(pb->pal.socket)) {
                 return PNR_IN_PROGRESS;
             }
             ERR_print_errors_fp(stderr);
@@ -222,7 +222,7 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
-        recvres = BIO_read(pb->pal.bio, pb->ptr, to_read);
+        recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...
@@ -261,7 +261,7 @@ bool pbpal_read_over(pubnub_t *pb)
 
 bool pbpal_closed(pubnub_t *pb)
 {
-    return pb->pal.bio == NULL;
+    return pb->pal.socket == NULL;
 }
 
 
@@ -271,23 +271,26 @@ void pbpal_forget(pubnub_t *pb)
 }
 
 
-void pbpal_close(pubnub_t *pb)
+int pbpal_close(pubnub_t *pb)
 {
-    DEBUG_PRINTF("pbpal_close()\n");
     pb->readlen = 0;
-    if (pb->pal.bio != NULL) {
-        pbntf_lost_socket(pb, pb->pal.bio);
-        BIO_free_all(pb->pal.bio);
-        pb->pal.bio = NULL;
+    if (pb->pal.socket != NULL) {
+        pbntf_lost_socket(pb, pb->pal.socket);
+        BIO_free_all(pb->pal.socket);
+        pb->pal.socket = NULL;
         if (pb->pal.ctx != NULL) {
             SSL_CTX_free(pb->pal.ctx);
             pb->pal.ctx = NULL;
         }
     }
+
+    DEBUG_PRINTF("pbpal_close() returning 0\n");
+
+    return 0;
 }
 
 
 bool pbpal_connected(pubnub_t *pb)
 {
-    return pb->pal.bio != NULL;
+    return pb->pal.socket != NULL;
 }

@@ -129,6 +129,7 @@ next_state:
         pbrslt = pbpal_check_resolv_and_connect(pb);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
+        case PNR_STARTED:
             break;
         case PNR_OK:
             pb->state = PBS_CONNECT;
