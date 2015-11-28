@@ -6,6 +6,7 @@ platform-specific files and a sample VisualStudio 2010 solution (the file
 FreeRTOS(+TCP) Windows simulator:
 
 - `pubnub_sync_sample`: a "walk-through" of the "sync" interface (API)
+- `pubnub_callback_sample`: a "walk-through" of the "callback" interface
 
 So, to build the samples load the solution in the VisualStudio 2010
 and build, or use `msbuild` from VisualStudio command prompt.
