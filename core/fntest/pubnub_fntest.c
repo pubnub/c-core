@@ -34,7 +34,7 @@ bool pnfntst_got_messages(pubnub_t *p, ...)
     }
 
     missing = (0x01 << count) - 1;
-    while (missing) {
+    for (;;) {
         size_t i;
         char const *msg = pubnub_get(p);
         if (NULL == msg) {
@@ -107,8 +107,8 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
     }
     pnfntst_start_timer(tmr, ms);
     while (pnfntst_timer_is_running(tmr) && missing) {
-        enum pubnub_res pbres;
-        if (PNR_STARTED != pubnub_subscribe(p, channel, chgroup)) {
+        enum pubnub_res pbres = pubnub_subscribe(p, channel, chgroup);
+        if (PNR_STARTED != pbres) {
             puts("subscribe and check: subscribe failed");
             break;
         }
@@ -123,7 +123,7 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
             break;
         }
 	
-        do {
+        for (;;) {
             size_t i;
             char const *msg = pubnub_get(p);
             char const *chan = pubnub_get_channel(p);
@@ -138,7 +138,7 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
                     break;
                 }
             }
-        } while (missing);
+        }
     }
     
     pnfntst_free_timer(tmr);

@@ -2,6 +2,7 @@
 #include "pubnub_sync.h"
 
 #include "pubnub_fntest.h"
+#include "pubnub_blocking_io.h"
 
 #define SECONDS 1000
 #define CHANNEL_REGISTRY_PROPAGATION_DELAY 800
