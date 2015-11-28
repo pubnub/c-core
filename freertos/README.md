@@ -15,7 +15,7 @@ tree in the right place in order for this to work. The tree should
 look like this (just the main directories shown):
 
     +- c-core ----------+- core
-                        +- lib      - sockets
+                        +- lib ------ sockets
     |                   +- freertos
     |
     +- FreeRTOS_Labs ---+- FreeRTOS
@@ -42,10 +42,7 @@ projects/makefiles for others at this time.
 
 ## Remarks
 
-As of this writing, only the Pubnub "sync" interface is supported.
-Support for the "callback" interface will be added shortly.
-
-The FreeRTOS+TCP is not the only available TCP/IP stack for FreeRTOS.
-Pubnub may provide support for other stacks in the future.
+Pubnub may provide support for other TCP/IP stacks on FreeRTOS in the 
+future
 
 There is yet no support for a SSL/TLS library.
