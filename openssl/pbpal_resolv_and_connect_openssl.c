@@ -95,6 +95,7 @@ static int add_pubnub_cert(SSL_CTX *sslCtx)
     
     // set certificate to sslCtx
     X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert);
+	X509_free(cert);
 
     /* In principle, it would be nice to use this instead, if we
        had a way to find out what is the file and/or path
