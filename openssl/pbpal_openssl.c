@@ -274,6 +274,7 @@ void pbpal_forget(pubnub_t *pb)
 int pbpal_close(pubnub_t *pb)
 {
     pb->readlen = 0;
+    pb->sock_state = STATE_NONE;
     if (pb->pal.socket != NULL) {
         pbntf_lost_socket(pb, pb->pal.socket);
         BIO_free_all(pb->pal.socket);
