@@ -131,6 +131,12 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     if (pb->readlen == 0) {
         int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
         if (recvres < 0) {
+            /* This is error or connection close, but, since it is an
+               unexpected close, we treat it like an error.
+             */
+            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
+                return PNR_IO_ERROR;
+            }
             if (BIO_should_retry(pb->pal.socket)) {
                 return PNR_IN_PROGRESS;
             }

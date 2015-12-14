@@ -48,6 +48,8 @@ static enum pubnub_res resolv_and_connect_wout_SSL(pubnub_t *pb)
     }
 
     DEBUG_PRINTF("pb=%p: BIO connected\n", pb);
+    int fd = BIO_get_fd(pb->pal.socket, NULL);
+    socket_set_rcv_timeout(fd, 310);
 
     return PNR_OK;
 }
@@ -176,6 +178,8 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     }
 
     DEBUG_PRINTF("pb=%p: BIO connected\n", pb);
+    int fd = BIO_get_fd(pb->pal.socket, NULL);
+    socket_set_rcv_timeout(fd, 310);
 
     rslt = SSL_get_verify_result(ssl);
     if (rslt != X509_V_OK) {
