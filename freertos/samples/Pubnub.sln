@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_sync_sample", "WIN32.vcxproj", "{C686325E-3261-42F7-AEB1-DDE5280E1CEB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pubnub_callback_sample", "pubnub_callback.vcxproj", "{65948225-7E3F-45A5-BCD1-E04734AA0719}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C686325E-3261-42F7-AEB1-DDE5280E1CEB} = {C686325E-3261-42F7-AEB1-DDE5280E1CEB}
+	EndProjectSection
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = FreeRTOS_Plus_TCP_Minimal.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -25,5 +25,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = FreeRTOS_Plus_TCP_Minimal.vsmdi
 	EndGlobalSection
 EndGlobal

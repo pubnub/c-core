@@ -1,4 +1,4 @@
-SOURCEFILES = ..\core\pubnub_coreapi.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_blocking_io.c ..\core\pubnub_json_parse.c ..\core\pubnub_helper.c pubnub_version_openssl.c  ..\windows\pubnub_generate_uuid_windows.c pbpal_openssl_blocking_io.c ..\core\c99\snprintf.c
+SOURCEFILES = ..\core\pubnub_coreapi.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_blocking_io.c ..\core\pubnub_timers.c ..\core\pubnub_json_parse.c ..\core\pubnub_helper.c pubnub_version_openssl.c  ..\windows\pubnub_generate_uuid_windows.c pbpal_openssl_blocking_io.c ..\core\c99\snprintf.c
 
 !ifndef OPENSSLPATH
 OPENSSLPATH=c:\OpenSSL-Win32

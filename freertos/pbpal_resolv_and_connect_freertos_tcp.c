@@ -32,7 +32,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     }
 
     {
-        TickType_t tmval = pdMS_TO_TICKS(310 * 1000);
+        TickType_t tmval = pdMS_TO_TICKS(pb->transaction_timeout_ms);
         FreeRTOS_setsockopt(pb->pal.socket, 0, FREERTOS_SO_RCVTIMEO, &tmval, sizeof tmval);
     }
 

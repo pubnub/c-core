@@ -19,6 +19,12 @@
     doesn't make sense */
 #define socket_would_block() 0
 
+/** FreeRTOS+TCP returns 0 on timeout - since we already treat that as
+    a timeout, further checking is only in situations when it certainly
+    isn't a timeout.
+    */
+#define socket_timed_out() 0
+
 /** Although the FreeRTOS+TCP requires TCP/IP initialization,
     we expect the user to do it elsewhere, to avoid coupling
     the TCP/IP stack initiliazation to Pubnub, as TCP/IP may
@@ -38,7 +44,6 @@ struct pubnub_pal {
     pb_socket_t socket;
 };
 
-
 /** The sockets interface of FreeRTOS+TCP, doesn't provide a
     non-blocking blocking I/O. Another implementation may be
     provided that uses the FreeRTOS+TCP callback interface
@@ -46,6 +51,8 @@ struct pubnub_pal {
     really documented as a user API, yet).
     */
 #define PUBNUB_BLOCKING_IO_SETTABLE 0
+
+#define PUBNUB_TIMERS_API 1
 
 
 #include "pubnub_internal_common.h"

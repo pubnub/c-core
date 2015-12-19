@@ -139,6 +139,9 @@
     <ClCompile Include="..\..\..\FreeRTOS_Labs\FreeRTOS\Source\list.c">
       <Filter>FreeRTOS\Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\core\pubnub_timers.c">
+      <Filter>Pubnub</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeRTOSConfig.h" />

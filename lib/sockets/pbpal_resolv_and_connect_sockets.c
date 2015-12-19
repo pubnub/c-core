@@ -35,6 +35,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     if (error != 0) {
         return PNR_ADDR_RESOLUTION_FAILED;
     }
+
     for (it = result; it != NULL; it = it->ai_next) {
         pb->pal.socket = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
         if (pb->pal.socket == SOCKET_INVALID) {
@@ -53,7 +54,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         return PNR_CONNECT_FAILED;
     }
 
-    socket_set_rcv_timeout(pb->pal.socket, 310);
+    socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
     return PNR_OK;
 }

@@ -124,9 +124,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     if (pb->readlen == 0) {
         int recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres < 0) {
-            /* This is error or connection close, but, since it is an
-               unexpected close, we treat it like an error.
-             */
+            if (socket_timed_out()) {
+                return PNR_TIMEOUT;
+            }
             if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
                 return PNR_IO_ERROR;
             }

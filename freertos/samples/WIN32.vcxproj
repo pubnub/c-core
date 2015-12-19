@@ -86,7 +86,7 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalDependencies>wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\WinPCap</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\FreeRTOS_Labs\FreeRTOS-Plus\Demo\FreeRTOS_Plus_TCP_Minimal_Windows_Simulator\WinPCap</AdditionalLibraryDirectories>
       <Profile>false</Profile>
     </Link>
     <Bscmake>
@@ -126,7 +126,7 @@
       <ProgramDatabaseFile>.\Release/WIN32.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>.\WinPCap</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\FreeRTOS_Labs\FreeRTOS-Plus\Demo\FreeRTOS_Plus_TCP_Minimal_Windows_Simulator\WinPCap</AdditionalLibraryDirectories>
       <AdditionalDependencies>wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
@@ -143,6 +143,7 @@
     <ClCompile Include="..\..\core\pubnub_json_parse.c" />
     <ClCompile Include="..\..\core\pubnub_netcore.c" />
     <ClCompile Include="..\..\core\pubnub_ntf_sync.c" />
+    <ClCompile Include="..\..\core\pubnub_timers.c" />
     <ClCompile Include="..\..\lib\sockets\pbpal_sockets.c" />
     <ClCompile Include="..\pbpal_freertos_blocking_io.c" />
     <ClCompile Include="..\pbpal_resolv_and_connect_freertos_tcp.c" />

@@ -16,6 +16,9 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     pbcc_init(&p->core, publish_key, subscribe_key);
+    if (PUBNUB_TIMERS_API) {
+        p->transaction_timeout_ms = PUBNUB_DEFAULT_TRANSACTION_TIMER;
+    }
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
     }

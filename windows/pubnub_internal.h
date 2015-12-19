@@ -16,6 +16,8 @@ typedef SOCKET pb_socket_t;
 
 #define socket_would_block() (WSAGetLastError() == WSAEWOULDBLOCK)
 
+#define socket_timed_out() (WSAGetLastError() == WSAETIMEDOUT)
+
 /** On Windows, one needs to call WSAStartup(), which is not trivial */
 int socket_platform_init(void);
 
@@ -27,8 +29,8 @@ int socket_platform_init(void);
     */
 #define socket_is_connected(socket) true
 
-#define socket_set_rcv_timeout(socket, seconds) do {                            \
-    DWORD M_tm = (seconds) * 1000;                                             \
+#define socket_set_rcv_timeout(socket, milliseconds) do {                       \
+    DWORD M_tm = (milliseconds);                                                \
     setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
     } while(0)
 
@@ -41,6 +43,7 @@ struct pubnub_pal {
 /** On Windows, one can set I/O to be blocking or non-blocking */
 #define PUBNUB_BLOCKING_IO_SETTABLE 1
 
+#define PUBNUB_TIMERS_API 1
 
 #if defined(_MSC_VER)
 /** Microsoft C compiler (at least up to VS2015) does not provide a 

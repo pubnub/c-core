@@ -131,6 +131,11 @@ struct pubnub_ {
 #endif
     } options;
 
+#if defined(PUBNUB_TIMERS_API)
+    /** Duration of the transaction timeout, in milliseconds */
+    unsigned transaction_timeout_ms;
+#endif
+
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
     void *user_data;

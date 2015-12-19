@@ -16,6 +16,8 @@ typedef int pb_socket_t;
 
 #define socket_would_block() (errno == EWOULDBLOCK)
 
+#define socket_timed_out() (errnor == ETIMEDOUT)
+
 #define socket_platform_init() 0
 
 #define SOCKET_INVALID -1
@@ -26,9 +28,9 @@ typedef int pb_socket_t;
     */
 #define socket_is_connected(socket) true
 
-#define socket_set_rcv_timeout(socket, seconds) do {                            \
-    struct timeval M_tm = { (seconds), 0 };                                     \
-    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
+#define socket_set_rcv_timeout(socket, milliseconds) do {                           \
+    struct timeval M_tm = { (milliseconds)/1000, ((milliseconds)%1000) * 1000 };    \
+    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);       \
     } while(0)
 
 
@@ -40,6 +42,9 @@ struct pubnub_pal {
 
 /** On POSIX, one can set I/O to be blocking or non-blocking */
 #define PUBNUB_BLOCKING_IO_SETTABLE 1
+
+
+#define PUBNUB_TIMERS_API 1
 
 
 #include "pubnub_internal_common.h"

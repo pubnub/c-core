@@ -3,8 +3,6 @@
 #define      INC_PUBNUB_INTERNAL
 
 
-#include <unistd.h>
-#include <sys/socket.h>
 #include "openssl/bio.h"
 #include "openssl/err.h"
 
@@ -17,15 +15,26 @@ struct pubnub_pal {
     SSL_CTX *ctx;
 };
 
+#ifdef _WIN32
+#define socket_set_rcv_timeout(socket, milliseconds) do {                       \
+    DWORD M_tm = (milliseconds);                                                \
+    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
+    } while(0)
+#else
+#include <unistd.h>
+#include <sys/socket.h>
 #define socket_set_rcv_timeout(socket, seconds) do {                            \
     struct timeval M_tm = { (seconds), 0 };                                     \
     setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
     } while(0)
+#endif
 
 /** With OpenSSL, one can set I/O to be blocking or non-blocking,
     though it can only be done before establishing the connection.
 */
 #define PUBNUB_BLOCKING_IO_SETTABLE 1
+
+#define PUBNUB_TIMERS_API 1
 
 #include "pubnub_internal_common.h"
 

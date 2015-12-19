@@ -2,6 +2,7 @@
 #include "pubnub_sync.h"
 
 #include "pubnub_helper.h"
+#include "pubnub_timers.h"
 
 #include <stdio.h>
 
@@ -36,6 +37,8 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
+    pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
+    
     /* Leave this commented out to use the default - which is
        blocking I/O on most platforms. Uncomment to use non-
        blocking I/O.
