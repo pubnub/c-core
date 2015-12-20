@@ -16,7 +16,7 @@ typedef int pb_socket_t;
 
 #define socket_would_block() (errno == EWOULDBLOCK)
 
-#define socket_timed_out() (errnor == ETIMEDOUT)
+#define socket_timed_out() (errno == ETIMEDOUT)
 
 #define socket_platform_init() 0
 
