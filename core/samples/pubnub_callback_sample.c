@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
+#include "pubnub_timers.h"
+
 #if defined _WIN32
 #include <windows.h>
 #else
@@ -137,6 +139,8 @@ int main()
 
     pubnub_init(pbp, "demo", "demo");
     pubnub_register_callback(pbp, sample_callback, &user_data);
+
+	pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
     puts("-----------------------");
     puts("Publishing...");

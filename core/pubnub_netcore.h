@@ -68,4 +68,13 @@ struct pubnub_;
 int pbnc_fsm(struct pubnub_ *pb);
 
 
+/** Issues a stop command to the FSM of the net-core module. The
+	FSM will close a connection (if it is already open) and then
+	inform the user of the outcome (as specified) when it is called.
+
+	@note This function will _not_ call pbnc_fsm().
+*/
+void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report);
+
+
 #endif  /* !defined INC_PUBNUB_NETCORE */

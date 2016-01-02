@@ -50,8 +50,15 @@
 #define PUBNUB_ASSERT_LEVEL_EX
 #endif
 
+#ifdef _MSC_VER
+#define PUBNUB_ANALYSIS_ASSUME(X) __analysis_assume(X)
+#else
+#define PUBNUB_ANALYSIS_ASSUME(X)
+#endif
+
 /** The common ASSERT implementation */
 #define PUBNUB_ASSERT_IMPL(X) do {                                      \
+        PUBNUB_ANALYSIS_ASSUME(X);										\
         (X) ? (void)0 : pubnub_assert_failed(#X, __FILE__, __LINE__);   \
     } while (false)
 

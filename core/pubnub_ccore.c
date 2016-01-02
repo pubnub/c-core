@@ -37,20 +37,19 @@ void pbcc_deinit(struct pbcc_context *p)
 
 int pbcc_realloc_reply_buffer(struct pbcc_context *p, unsigned bytes)
 {
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        char *newbuf = (char*)realloc(p->http_reply, bytes + 1);
-        if (NULL == newbuf) {
-            return -1;
-        }
-        p->http_reply = newbuf;
-        return 0;
-    }
-    else {
-        if (bytes < sizeof p->http_reply / sizeof p->http_reply[0]) {
-            return 0;
-        }
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    char *newbuf = (char*)realloc(p->http_reply, bytes + 1);
+    if (NULL == newbuf) {
         return -1;
     }
+    p->http_reply = newbuf;
+    return 0;
+#else
+    if (bytes < sizeof p->http_reply / sizeof p->http_reply[0]) {
+        return 0;
+    }
+    return -1;
+#endif
 }
 
 
@@ -385,6 +384,13 @@ static enum pubnub_res append_url_param(struct pbcc_context *pb, char const *par
     } while (0)
 
 
+#define APPEND_URL_PARAM_UNSIGNED_M(pbc, name, var, separator)          \
+    do { char v_[20];                                                   \
+        snprintf(v_, sizeof v_, "%u", (var));                           \
+        APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
+    } while (0)
+
+
 #define APPEND_URL_PARAM_BOOL_M(pbc, name, var, separator)              \
     do { char const *v_ = (var) ? "true" : "false";                     \
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
@@ -542,7 +548,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
         pubnub_uname()
         );
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_INT_M(pb, "count", count, '&');
+    APPEND_URL_PARAM_UNSIGNED_M(pb, "count", count, '&');
     APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');
 
     return PNR_STARTED;

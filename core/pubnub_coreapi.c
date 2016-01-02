@@ -9,6 +9,7 @@
 #include "pbpal.h"
 
 #include <stdlib.h>
+#include <ctype.h>
 
 
 pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key)
@@ -365,16 +366,7 @@ void pubnub_cancel(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     
-    switch (pb->state) {
-    case PBS_WAIT_CANCEL:
-    case PBS_WAIT_CANCEL_CLOSE:
-    case PBS_IDLE:
-    case PBS_NULL:
-        break;
-    default:
-        pb->state = PBS_WAIT_CANCEL;
-        break;                        
-    }
+	pbnc_stop(pb, PNR_CANCELLED);
 }
 
 
@@ -431,8 +423,9 @@ char const *pubnub_last_publish_result(pubnub_t const *pb)
     if ((pb->trans != PBTT_PUBLISH) || (pb->core.http_reply[0] == '\0')) {
         return "";
     }
-
-    strtol(pb->core.http_reply + 1, &end, 10);
+    for (end = pb->core.http_reply + 1; isdigit((unsigned)*end); ++end) {
+        continue;
+    }
     return end + 1;
 }
 

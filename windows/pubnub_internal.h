@@ -45,8 +45,8 @@ struct pubnub_pal {
 
 #define PUBNUB_TIMERS_API 1
 
-#if defined(_MSC_VER)
-/** Microsoft C compiler (at least up to VS2015) does not provide a 
+#if _MSC_VER < 1900
+/** Microsoft C compiler (before VS2015) does not provide a 
     standard-conforming snprintf(), so we bring our own.
     */
 int snprintf(char *buffer, size_t n, const char *format, ...);

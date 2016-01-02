@@ -354,17 +354,34 @@ next_state:
         }
         break;
     case PBS_WAIT_CANCEL:
-        pbpal_close(pb);
         pb->state = PBS_WAIT_CANCEL_CLOSE;
+        if (pbpal_close(pb) <= 0) {
+            goto next_state;
+        }
         break;
     case PBS_WAIT_CANCEL_CLOSE:
         if (pbpal_closed(pb)) {
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
-            pb->core.last_result = PNR_CANCELLED;
             pbntf_trans_outcome(pb);
         }
         break;
     }
     return 0;
+}
+
+
+void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report)
+{
+	pb->core.last_result = outcome_to_report;
+	switch (pb->state) {
+	case PBS_WAIT_CANCEL:
+	case PBS_WAIT_CANCEL_CLOSE:
+	case PBS_IDLE:
+	case PBS_NULL:
+		break;
+	default:
+		pb->state = PBS_WAIT_CANCEL;
+		break;
+	}
 }
