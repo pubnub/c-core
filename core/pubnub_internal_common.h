@@ -124,6 +124,7 @@ struct pubnub_ {
           */
         bool ignoreSSL : 1;
         /** When SSL is enabled, should the client fallback to a
+
          * non-SSL connection if it experiences issues handshaking
          * across local proxies, firewalls, etc?
          */
@@ -133,7 +134,14 @@ struct pubnub_ {
 
 #if defined(PUBNUB_TIMERS_API)
     /** Duration of the transaction timeout, in milliseconds */
-    unsigned transaction_timeout_ms;
+    int transaction_timeout_ms;
+
+#if defined(PUBNUB_CALLBACK_API)
+    struct pubnub_ *previous;
+    struct pubnub_ *next;
+    int timeout_left_ms;
+#endif
+
 #endif
 
 #if defined(PUBNUB_CALLBACK_API)

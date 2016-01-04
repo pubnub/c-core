@@ -40,19 +40,21 @@
     fine with you, you don't have to call this function.
 
     @pre Call this after pubnub_init() on the context
+    @pre duration_ms > 0
     @param p The Context to set transaction timeout for
     @param duration_ms Duration of the timeout, in milliseconds
 
     @return 0: OK, otherwise: error, timers not supported  
 */
-int pubnub_set_transaction_timeout(pubnub_t *p, unsigned duration_ms);
+int pubnub_set_transaction_timeout(pubnub_t *p, int duration_ms);
 
 /** Returns the current transaction timeout for the context.
 
     @pre Call this after pubnub_init() on the context
     @param p The Context for which to get the transaction timeout
-    @return Current transaction timeout, in milliseconds
+    @return Current transaction timeout, in milliseconds (should
+    always be > 0)
 */
-unsigned pubnub_transaction_timeout_get(pubnub_t *p);
+int pubnub_transaction_timeout_get(pubnub_t *p);
 
 #endif /* defined INC_PUBNUB_TIMERS_IO */

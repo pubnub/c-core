@@ -130,7 +130,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
             if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
                 return PNR_IO_ERROR;
             }
-			return socket_would_block() ? PNR_IN_PROGRESS : PNR_IO_ERROR;
+            return socket_would_block() ? PNR_IN_PROGRESS : PNR_IO_ERROR;
         }
         else if (0 == recvres) {
             return PNR_TIMEOUT;

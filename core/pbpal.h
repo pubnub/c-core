@@ -126,9 +126,10 @@ bool pbpal_closed(pubnub_t *pb);
 void pbpal_forget(pubnub_t *pb);
 
 /** Closes (or starts the closing of) the TCP connection of the given
- * Pubnub context 
- * @return 0: OK, closed; +1: close initiated, call pbpal_closed() later to check
- * -1: error, can't close socket
+    Pubnub context 
+
+    @return 0: OK, closed; +1: close initiated, call pbpal_closed()
+    later to check; -1: error, can't close socket
 */
 int pbpal_close(pubnub_t *pb);
 

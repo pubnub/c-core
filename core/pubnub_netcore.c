@@ -105,19 +105,13 @@ next_state:
         case PNR_OK:
             pb->state = PBS_CONNECT;
             switch (pbntf_got_socket(pb, pb->pal.socket)) {
-            case 0: break; /* Should really be `goto next_state;` read below */
-            case +1: break;;
+            case 0: goto next_state;
+            case +1: break;
             case -1: default: 
                 pb->core.last_result = PNR_CONNECT_FAILED;
                 pbntf_trans_outcome(pb);
                 break;
             }
-            /* If we `goto next_state;`, then the whole transaction can finish
-               in one call to Netcore FSM. That would be nice, but some
-               tests want to be able to cancel a request, which would
-               then be impossible. So, until we figure out how to handle
-               that, we shall return PNR_STARTED.
-            */
             break;
         default:
             pb->core.last_result = pbrslt;
@@ -134,7 +128,7 @@ next_state:
         case PNR_OK:
             pb->state = PBS_CONNECT;
             switch (pbntf_got_socket(pb, pb->pal.socket)) {
-            case 0: break; /* Should really be `goto next_state;` read above */
+            case 0: goto next_state;
             case +1: break;;
             case -1: default: 
                 pb->core.last_result = PNR_CONNECT_FAILED;
@@ -373,15 +367,15 @@ next_state:
 
 void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report)
 {
-	pb->core.last_result = outcome_to_report;
-	switch (pb->state) {
-	case PBS_WAIT_CANCEL:
-	case PBS_WAIT_CANCEL_CLOSE:
-	case PBS_IDLE:
-	case PBS_NULL:
-		break;
-	default:
-		pb->state = PBS_WAIT_CANCEL;
-		break;
-	}
+    pb->core.last_result = outcome_to_report;
+    switch (pb->state) {
+    case PBS_WAIT_CANCEL:
+    case PBS_WAIT_CANCEL_CLOSE:
+    case PBS_IDLE:
+    case PBS_NULL:
+        break;
+    default:
+        pb->state = PBS_WAIT_CANCEL;
+        break;
+    }
 }

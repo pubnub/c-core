@@ -5,6 +5,7 @@
 #include "pubnub_netcore.h"
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_timers.h"
 
 #include "pbpal.h"
 
@@ -46,6 +47,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
         pb->trans = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -67,6 +69,7 @@ enum pubnub_res pubnub_publishv2(pubnub_t *pb, const char *channel, const char *
         pb->trans = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -104,6 +107,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
         p->trans = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;
         pbnc_fsm(p);
+        rslt = p->core.last_result;
     }
     
     return rslt;
@@ -125,6 +129,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
         p->trans = PBTT_LEAVE;
         p->core.last_result = PNR_STARTED;
         pbnc_fsm(p);
+        rslt = p->core.last_result;
     }
     
     return rslt;
@@ -146,6 +151,7 @@ enum pubnub_res pubnub_time(pubnub_t *p)
         p->trans = PBTT_TIME;
         p->core.last_result = PNR_STARTED;
         pbnc_fsm(p);
+        rslt = p->core.last_result;
     }
     
     return rslt;
@@ -167,6 +173,7 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, unsigned count
         pb->trans = PBTT_HISTORY;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -188,6 +195,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *c
         pb->trans = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -209,6 +217,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *pb)
         pb->trans = PBTT_GLOBAL_HERENOW;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -230,6 +239,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *pb, const char *uuid)
         pb->trans = PBTT_WHERENOW;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -251,6 +261,7 @@ enum pubnub_res pubnub_set_state(pubnub_t *pb, char const *channel, char const *
         pb->trans = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -272,6 +283,7 @@ enum pubnub_res pubnub_state_get(pubnub_t *pb, char const *channel, char const *
         pb->trans = PBTT_STATE_GET;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -293,6 +305,7 @@ enum pubnub_res pubnub_remove_channel_group(pubnub_t *pb, char const *channel_gr
         pb->trans = PBTT_REMOVE_CHANNEL_GROUP;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -314,6 +327,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *pb, char const *chann
         pb->trans = PBTT_REMOVE_CHANNEL_FROM_GROUP;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -335,6 +349,7 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *pb, char const *channel, c
         pb->trans = PBTT_ADD_CHANNEL_TO_GROUP;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -356,6 +371,7 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *pb, char const *channel_grou
         pb->trans = PBTT_LIST_CHANNEL_GROUP;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
+        rslt = pb->core.last_result;
     }
     
     return rslt;
@@ -365,8 +381,8 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *pb, char const *channel_grou
 void pubnub_cancel(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
-	pbnc_stop(pb, PNR_CANCELLED);
+
+    pbnc_stop(pb, PNR_CANCELLED);
 }
 
 

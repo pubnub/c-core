@@ -28,7 +28,7 @@
  * This isn't as bad as it sounds, but may be a source of headaches
  * (lost messages, etc).
  */
-#define PUBNUB_CTX_MAX 2
+#define PUBNUB_CTX_MAX 4
 
 /** Maximum length of the HTTP buffer. This is a major component of
  * the memory size of the whole pubnub context, but it is also an
@@ -68,6 +68,8 @@
 */
 #define PUBNUB_USE_MDNS 1
 #endif
+
+#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */
