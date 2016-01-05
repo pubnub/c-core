@@ -34,6 +34,7 @@ void pbcc_deinit(struct pbcc_context *p)
 
 
 Describe(pubnub_timer_list);
+
 pubnub_t *m_list;
 
 
@@ -328,6 +329,12 @@ Ensure(pubnub_timer_list, expire_first) {
 
     pubnub_free(pbp_two);
     pubnub_free(pbp);
+}
+
+
+Ensure(pubnub_timer_list, expire_when_empty) {
+    pubnub_t *list = NULL;
+    attest(NULL == pubnub_timer_list_as_time_goes_by(&list, 1));
 }
 
 

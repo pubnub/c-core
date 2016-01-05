@@ -94,10 +94,12 @@ pubnub_t *pubnub_timer_list_as_time_goes_by(pubnub_t **pplist, int time_passed_m
     pubnub_t *expired_list = NULL;
 
     PUBNUB_ASSERT_OPT(pplist != NULL);
-    list = *pplist;
-    PUBNUB_ASSERT_OPT(list != NULL);
     PUBNUB_ASSERT_OPT(time_passed_ms > 0);
 
+    list = *pplist;
+    if (NULL == list) {
+        return NULL;
+    }
     if (list->timeout_left_ms > time_passed_ms) {
         list->timeout_left_ms -= time_passed_ms;
         return NULL;
