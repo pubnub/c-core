@@ -126,6 +126,7 @@ void* socket_watcher_thread(void *arg)
                     pbnc_stop(expired, PNR_TIMEOUT);
                     
                     expired->next = NULL;
+                    expired->previous = NULL;
                     expired = next;
                 }
                 prev_timspec = timspec;
@@ -176,9 +177,11 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 
 static void remove_timer_safe(pubnub_t *to_remove)
 {
-    if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
-        || (to_remove == m_watcher.timer_head)) {
-        m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+    if (PUBNUB_TIMERS_API) {
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+            || (to_remove == m_watcher.timer_head)) {
+            m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+        }
     }
 }
 
