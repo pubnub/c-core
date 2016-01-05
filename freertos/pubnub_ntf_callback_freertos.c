@@ -4,6 +4,7 @@
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
+#include "pubnub_timer_list.h"
 
 #include "pbpal.h"
 
@@ -19,6 +20,9 @@ struct SocketWatcherData {
     xSocketSet_t xFD_set;
     SemaphoreHandle_t  mutw;
     TaskHandle_t task;
+#if PUBNUB_TIMERS_API
+    pubnub_t *timer_head;
+#endif
 };
 
 static struct SocketWatcherData m_watcher;
@@ -62,9 +66,15 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     }
 }
 
+int elapsed_ms(TickType_t prev, TickType_t now)
+{
+    return (now - prev);
+}
+
 
 void socket_watcher_task(void *arg)
 {
+    TickType_t xTimePrev = xTaskGetTickCount();
     struct SocketWatcherData *pWatcher = (struct SocketWatcherData *)arg;
 
     for (;;) {
@@ -85,6 +95,25 @@ void socket_watcher_task(void *arg)
                 }
             }
         }
+
+        if (PUBNUB_TIMERS_API) {
+            TickType_t xTimeNow = xTaskGetTickCount();
+            int elapsed = elapsed_ms(xTimePrev, xTimeNow);
+            if (elapsed > 0) {
+                pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
+                while (expired != NULL) {
+                    pubnub_t *next = expired->next;
+                    
+                    pbnc_stop(expired, PNR_TIMEOUT);
+                    
+                    expired->previous = NULL;
+                    expired->next = NULL;
+                    expired = next;
+                }
+                xTimePrev = xTimeNow;
+            }
+        }
+
         xSemaphoreGiveRecursive(m_watcher.mutw);
     }
 }
@@ -130,6 +159,9 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     }
      
     save_socket(&m_watcher, pb);
+    if (PUBNUB_TIMERS_API) {
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+    }
     
     xSemaphoreGiveRecursive(m_watcher.mutw);
 
@@ -139,6 +171,14 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+static void remove_timer_safe(pubnub_t *to_remove)
+{
+    if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+        || (to_remove == m_watcher.timer_head)) {
+        m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+    }
+}
+
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
     PUBNUB_UNUSED(socket);
@@ -146,6 +186,8 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
         return ;
     }
     remove_socket(&m_watcher, pb);
+    remove_timer_safe(pb);
+
     xSemaphoreGiveRecursive(m_watcher.mutw);
     xTaskNotifyGive(m_watcher.task);
 }

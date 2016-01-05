@@ -139,6 +139,12 @@
     <ClCompile Include="DemoTasks\PubnubCallbackSampleTask.c">
       <Filter>DemoTasks</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\core\pubnub_timer_list.c">
+      <Filter>Pubnub</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\core\pubnub_timers.c">
+      <Filter>Pubnub</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeRTOSConfig.h" />

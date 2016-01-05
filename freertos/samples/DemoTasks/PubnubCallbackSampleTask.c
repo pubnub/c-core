@@ -6,7 +6,7 @@
 
 #include "pubnub_callback.h"
 #include "pubnub_helper.h"
-
+#include "pubnub_timers.h"
 
 
 static void PubnubTask(void *pvParameters);
@@ -65,6 +65,8 @@ static void PubnubCallbackSample(pubnub_t *pbp, enum pubnub_trans trans, enum pu
 		    return ;
 	    }
 	    pubnub_init(pbp, "demo", "demo");
+
+        pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
         res = pubnub_register_callback(pbp, PubnubCallbackSample, pData);
         if (PNR_OK != res) {

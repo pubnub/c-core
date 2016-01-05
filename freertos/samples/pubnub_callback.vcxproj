@@ -142,6 +142,8 @@
     <ClCompile Include="..\..\core\pubnub_helper.c" />
     <ClCompile Include="..\..\core\pubnub_json_parse.c" />
     <ClCompile Include="..\..\core\pubnub_netcore.c" />
+    <ClCompile Include="..\..\core\pubnub_timers.c" />
+    <ClCompile Include="..\..\core\pubnub_timer_list.c" />
     <ClCompile Include="..\..\lib\sockets\pbpal_sockets.c" />
     <ClCompile Include="..\pbpal_freertos_blocking_io.c" />
     <ClCompile Include="..\pbpal_resolv_and_connect_freertos_tcp.c" />
