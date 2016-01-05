@@ -66,7 +66,7 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     }
 }
 
-int elapsed_ms(TickType_t prev, TickType_t now)
+static int elapsed_ms(TickType_t prev, TickType_t now)
 {
     return (now - prev);
 }
@@ -173,9 +173,11 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 
 static void remove_timer_safe(pubnub_t *to_remove)
 {
-    if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
-        || (to_remove == m_watcher.timer_head)) {
-        m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+    if (PUBNUB_TIMERS_API) {
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+            || (to_remove == m_watcher.timer_head)) {
+            m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+        }
     }
 }
 
