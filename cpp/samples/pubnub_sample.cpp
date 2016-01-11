@@ -34,6 +34,14 @@ int main()
         }
         pb.set_auth("danaske");
 
+        pb.set_transaction_timeout(
+#if __cplusplus >= 201103L
+            std::chrono::seconds(10)
+#else
+            10000
+#endif
+            );
+
         std::cout << "Publishing" << std::endl;
         pubnub::futres futres = pb.publish(chan, "\"Hello world from C++!\"");
         res = futres.await();

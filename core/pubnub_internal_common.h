@@ -132,7 +132,7 @@ struct pubnub_ {
 #endif
     } options;
 
-#if defined(PUBNUB_TIMERS_API)
+#if PUBNUB_TIMERS_API
     /** Duration of the transaction timeout, in milliseconds */
     int transaction_timeout_ms;
 

@@ -8,13 +8,19 @@
 #include "pubnub_generate_uuid.h"
 #include "pubnub_blocking_io.h"
 #include "pubnub_ssl.h"
+#include "pubnub_timers.h"
 //}
 
 
 #include <string>
 #include <vector>
 
+#if __cplusplus >= 201103L
+#include <chrono>
+#endif
+
 #include <iostream>
+
 
 namespace pubnub {
 
@@ -453,6 +459,27 @@ namespace pubnub {
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
+
+#if __cplusplus >= 201103L
+        /// Sets the transaction timeout duration
+        int set_transaction_timeout(std::chrono::milliseconds duration) {
+            return pubnub_set_transaction_timeout(d_pb, duration.count());
+        }
+        /// Returns the transaction timeout duration
+        std::chrono::milliseconds transaction_timeout_get() {
+            std::chrono::milliseconds result(pubnub_transaction_timeout_get(d_pb));
+            return result;
+                                             
+        }
+#else
+        /// Returns the transaction timeout duration
+        int set_transaction_timeout(int duration_ms) {
+            return pubnub_set_transaction_timeout(d_pb, duration_ms);
+        }
+        int transaction_timeout_get() {
+            return pubnub_transaction_timeout_get(d_pb);
+        }
+#endif
         
         /// Frees the context and any other thing that needs to be
         /// freed/released.
