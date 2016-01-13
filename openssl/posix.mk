@@ -1,4 +1,4 @@
-SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_json_parse.c ../core/pubnub_helper.c ../core/pubnub_timers.c pubnub_version_openssl.c ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c
+SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  pbpal_openssl.c pbpal_resolv_and_connect_openssl.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../core/pubnub_helper.c pubnub_version_openssl.c ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
@@ -19,11 +19,11 @@ pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
 	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES) -lssl -lcrypto
 
-pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_openssl_posix.c
-	$(CC) -o $@ $(CFLAGS) -D PUBNUB_CALLBACK_API ../core/samples/pubnub_callback_sample.c pubnub_ntf_callback_openssl_posix.c $(SOURCEFILES) -lpthread -lssl -lcrypto
+pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_openssl_posix.c
+	$(CC) -o $@ $(CFLAGS) -D PUBNUB_CALLBACK_API ../core/samples/pubnub_callback_sample.c  ../core/pubnub_timer_list.c pubnub_ntf_callback_openssl_posix.c $(SOURCEFILES) -lpthread -lssl -lcrypto
 
-subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_openssl_posix.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/subscribe_publish_callback_sample.c pubnub_ntf_callback_openssl_posix.c $(SOURCEFILES) -lpthread -lssl -lcrypto
+subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_openssl_posix.c
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/subscribe_publish_callback_sample.c  ../core/pubnub_timer_list.c pubnub_ntf_callback_openssl_posix.c $(SOURCEFILES) -lpthread -lssl -lcrypto
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c ../posix/fntest/pubnub_fntest_posix.c ../posix/fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c
 	$(CC) -o $@ $(CFLAGS) ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  ../posix/fntest/pubnub_fntest_posix.c ../posix/fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c -lpthread -lssl -lcrypto

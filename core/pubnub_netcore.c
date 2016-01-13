@@ -101,6 +101,14 @@ next_state:
         switch (pbrslt) {
         case PNR_STARTED:
             pb->state = PBS_WAIT_DNS;
+            switch (pbntf_got_socket(pb, pb->pal.socket)) {
+            case 0: goto next_state;
+            case +1: break;
+            case -1: default: 
+                pb->core.last_result = PNR_CONNECT_FAILED;
+                pbntf_trans_outcome(pb);
+                break;
+            }
             break;
         case PNR_OK:
             pb->state = PBS_CONNECT;
@@ -127,15 +135,7 @@ next_state:
             break;
         case PNR_OK:
             pb->state = PBS_CONNECT;
-            switch (pbntf_got_socket(pb, pb->pal.socket)) {
-            case 0: goto next_state;
-            case +1: break;;
-            case -1: default: 
-                pb->core.last_result = PNR_CONNECT_FAILED;
-                pbntf_trans_outcome(pb);
-                break;
-            }
-            break;
+            goto next_state;
         default:
             pb->core.last_result = pbrslt;
             pbntf_trans_outcome(pb);

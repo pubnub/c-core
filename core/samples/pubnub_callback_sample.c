@@ -218,7 +218,9 @@ int main()
     }
 
 	
+    puts("-----------------------");
     puts("Getting time...");
+    puts("-----------------------");
     res = pubnub_time(pbp);
     if (res != PNR_STARTED) {
         printf("pubnub_time() returned unexpected: %d\n", res);
@@ -240,7 +242,9 @@ int main()
     }
 
 
+    puts("-----------------------");
     puts("Getting history v2 with include_token...");
+    puts("-----------------------");
     res = pubnub_history(pbp, chan, 10, true);
     if (res != PNR_STARTED) {
         printf("pubnub_history() returned unexpected: %d\n", res);

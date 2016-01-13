@@ -6,6 +6,7 @@
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
+#include "pubnub_timer_list.h"
 #include "pbpal.h"
 
 #include <sys/poll.h>
@@ -23,6 +24,9 @@ struct SocketWatcherData {
     pthread_mutex_t mutw;
     pthread_cond_t condw;
     pthread_t thread_id;
+#if PUBNUB_TIMERS_API
+    pubnub_t *timer_head;
+#endif
 };
 
 static struct SocketWatcherData m_watcher;
@@ -42,8 +46,9 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_sock
         }
     }
     if (watcher->apoll_size == watcher->apoll_cap) {
-        struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
-        pubnub_t **npapb = (pubnub_t **)realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
+        size_t newcap = watcher->apoll_size + 2;
+        struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * newcap);
+        pubnub_t **npapb = (pubnub_t **)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
         if (NULL == npalloc) {
             if (npapb != NULL) {
                 watcher->apb = npapb;
@@ -56,17 +61,13 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_sock
         }
         watcher->apoll = npalloc;
         watcher->apb = npapb;
-        watcher->apoll[watcher->apoll_size].fd = socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        watcher->apoll_cap = ++watcher->apoll_size;
+        watcher->apoll_cap = newcap;
     }
-    else {
-        watcher->apoll[watcher->apoll_size].fd = socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        ++watcher->apoll_size;
-    }
+
+    watcher->apoll[watcher->apoll_size].fd = socket;
+    watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
+    watcher->apb[watcher->apoll_size] = pb;
+    ++watcher->apoll_size;
 }
 
 
@@ -80,10 +81,11 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_so
     }
     for (i = 0; i < watcher->apoll_size; ++i) {
         if (watcher->apoll[i].fd == socket) {
+            size_t to_move = watcher->apoll_size - i - 1;
             PUBNUB_ASSERT(watcher->apb[i] == pb);
-            if (i != watcher->apoll_size - 1) {
-                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * (watcher->apoll_size - i - 1));
-                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * (watcher->apoll_size - i - 1));
+            if (to_move > 0) {
+                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * to_move);
+                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
             }
             --watcher->apoll_size;
             break;
@@ -92,13 +94,24 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_so
 }
 
 
+static int elapsed_ms(struct timespec prev_timspec, struct timespec timspec)
+{
+    int s_diff = timspec.tv_sec - prev_timspec.tv_sec;
+    int m_s_diff = (timspec.tv_nsec - prev_timspec.tv_nsec) / MILLI_IN_NANO;
+    return (s_diff * UNIT_IN_MILLI) + m_s_diff;
+}
+
+
 void* socket_watcher_thread(void *arg)
 {
+    struct timespec prev_timspec;
+    monotonic_clock_get_time(&prev_timspec);
+
     for (;;) {
         struct timespec timspec;
 
         monotonic_clock_get_time(&timspec);
-        timspec.tv_sec = (timspec.tv_nsec + 300*MILLI_IN_NANO) / UNIT_IN_NANO;
+        timspec.tv_sec += (timspec.tv_nsec + 300*MILLI_IN_NANO) / UNIT_IN_NANO;
         timspec.tv_nsec = (timspec.tv_nsec + 300*MILLI_IN_NANO) % UNIT_IN_NANO;
         
         pthread_mutex_lock(&m_watcher.mutw);
@@ -118,6 +131,24 @@ void* socket_watcher_thread(void *arg)
                 }
             }
         }
+
+        if (PUBNUB_TIMERS_API) {
+            int elapsed = elapsed_ms(prev_timspec, timspec);
+            if (elapsed > 0) {
+                pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
+                while (expired != NULL) {
+                    pubnub_t *next = expired->next;
+                    
+                    pbnc_stop(expired, PNR_TIMEOUT);
+                    
+                    expired->next = NULL;
+                    expired->previous = NULL;
+                    expired = next;
+                }
+                prev_timspec = timspec;
+            }
+        }
+
         pthread_mutex_unlock(&m_watcher.mutw);
     }
 
@@ -146,6 +177,9 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     pthread_mutex_lock(&m_watcher.mutw);
 
     save_socket(&m_watcher, pb, socket);
+    if (PUBNUB_TIMERS_API) {
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+    }
     pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
 
@@ -156,11 +190,23 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+static void remove_timer_safe(pubnub_t *to_remove)
+{
+    if (PUBNUB_TIMERS_API) {
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+            || (to_remove == m_watcher.timer_head)) {
+            m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+        }
+    }
+}
+
+
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
     pthread_mutex_lock(&m_watcher.mutw);
 
     remove_socket(&m_watcher, pb, socket);
+    remove_timer_safe(pb);
 
     pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);

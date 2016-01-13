@@ -38,7 +38,7 @@ static enum pubnub_res resolv_and_connect_wout_SSL(pubnub_t *pb)
     WATCH(pb->options.use_blocking_io, "%d");
     if (BIO_do_connect(pb->pal.socket) <= 0) {
         if (BIO_should_retry(pb->pal.socket)) {
-            return (pbntf_got_socket(pb, pb->pal.socket) < 0) ? PNR_CONNECT_FAILED : PNR_STARTED;
+            return PNR_STARTED;
         }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
@@ -168,7 +168,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     if (BIO_do_connect(pb->pal.socket) <= 0) {
         if (BIO_should_retry(pb->pal.socket)) {
             DEBUG_PRINTF("BIO_should_retry\n");
-            return (pbntf_got_socket(pb, pb->pal.socket) < 0) ? PNR_CONNECT_FAILED : PNR_STARTED;
+            return PNR_STARTED;
         }
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
