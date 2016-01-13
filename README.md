@@ -15,7 +15,7 @@ The directories of the library repository are:
 - `core` : The core part, with modules portable to all, or most, libraries for
 	specific platforms
 
-- `lib` : Modules for libs that are available on more than one platform
+- `lib` : Modules for libraries that are available on more than one platform
 
 - `windows` : Modules and Makefile for the Windows platform
 
@@ -27,9 +27,9 @@ The directories of the library repository are:
 
 - `qt`: Modules, Qt projects and examples for Qt
 
-- `contiki` : Modules and Makefile for the Contiki OS
+- `freertos` : Modules and Makefile for the FreeRTOS
 
-- `freertos` : Modules and Makefile for the FreeRTOS OS
+- `contiki` : Modules and Makefile for the Contiki OS (work in progress)
 
   
 ## Files
