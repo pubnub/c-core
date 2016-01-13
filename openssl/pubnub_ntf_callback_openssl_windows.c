@@ -5,7 +5,7 @@
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
-
+#include "pubnub_timer_list.h"
 #include "pbpal.h"
 
 #include <winsock2.h>
@@ -24,6 +24,9 @@ struct SocketWatcherData {
     CRITICAL_SECTION mutw;
     HANDLE condw;
     uintptr_t thread_id;
+#if PUBNUB_TIMERS_API
+    pubnub_t *timer_head;
+#endif
 };
 
 static struct SocketWatcherData m_watcher;
@@ -43,8 +46,9 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_sock
 		}
 	}
     if (watcher->apoll_size == watcher->apoll_cap) {
-        WSAPOLLFD *npalloc = (WSAPOLLFD*)realloc(watcher->apoll, sizeof watcher->apoll[0] * (watcher->apoll_size+1));
-        pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * (watcher->apoll_size+1));
+        size_t newcap = watcher->apoll_size + 2;
+        struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * newcap);
+        pubnub_t **npapb = (pubnub_t **)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
         if (NULL == npalloc) {
             if (npapb != NULL) {
                 watcher->apb = npapb;
@@ -57,17 +61,13 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_sock
         }
         watcher->apoll = npalloc;
         watcher->apb = npapb;
-        watcher->apoll[watcher->apoll_size].fd = socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        watcher->apoll_cap = ++watcher->apoll_size;
+        watcher->apoll_cap = newcap;
     }
-    else {
-        watcher->apoll[watcher->apoll_size].fd = socket;
-        watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
-        watcher->apb[watcher->apoll_size] = pb;
-        ++watcher->apoll_size;
-    }
+
+    watcher->apoll[watcher->apoll_size].fd = socket;
+    watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
+    watcher->apb[watcher->apoll_size] = pb;
+    ++watcher->apoll_size;
 }
 
 
@@ -81,10 +81,11 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_so
     }
     for (i = 0; i < watcher->apoll_size; ++i) {
         if (watcher->apoll[i].fd == socket) {
+            size_t to_move = watcher->apoll_size - i - 1;
             PUBNUB_ASSERT(watcher->apb[i] == pb);
-            if (i != watcher->apoll_size - 1) {
-                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * (watcher->apoll_size - i - 1));
-                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * (watcher->apoll_size - i - 1));
+            if (to_move > 0) {
+                memmove(watcher->apoll + i, watcher->apoll + i + 1, sizeof watcher->apoll[0] * to_move);
+                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
             }
             --watcher->apoll_size;
             break;
@@ -93,8 +94,23 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_so
 }
 
 
+static int elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
+{
+    ULARGE_INTEGER prev;
+    ULARGE_INTEGER current;
+    prev.LowPart = prev_timspec.dwLowDateTime;
+    prev.HighPart = prev_timspec.dwHighDateTime;
+    current.LowPart = timspec.dwLowDateTime;
+    current.HighPart = timspec.dwHighDateTime;
+    return (current.QuadPart - prev.QuadPart) / (10*1000);
+}
+
+
 void socket_watcher_thread(void *arg)
 {
+    FILETIME prev_time;
+    GetSystemTimeAsFileTime(&prev_time);
+    
     for (;;) {
         int rslt;
         DWORD ms = 200;
@@ -119,6 +135,26 @@ void socket_watcher_thread(void *arg)
                 }
             }
         }
+        if (PUBNUB_TIMERS_API) {
+            FILETIME current_time;
+            int elapsed;
+            GetSystemTimeAsFileTime(&current_time);
+            elapsed = elapsed_ms(prev_time, current_time);
+            if (elapsed > 0) {
+                pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
+                while (expired != NULL) {
+                    pubnub_t *next = expired->next;
+                    
+                    pbnc_stop(expired, PNR_TIMEOUT);
+                    
+                    expired->next = NULL;
+                    expired->previous = NULL;
+                    expired = next;
+                }
+                prev_time = current_time;
+            }
+        }
+
         LeaveCriticalSection(&m_watcher.mutw);
     }
 }
@@ -138,6 +174,9 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     EnterCriticalSection(&m_watcher.mutw);
 
     save_socket(&m_watcher, pb, socket);
+    if (PUBNUB_TIMERS_API) {
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+    }
     pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
     
@@ -149,10 +188,24 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+static void remove_timer_safe(pubnub_t *to_remove)
+{
+    if (PUBNUB_TIMERS_API) {
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+            || (to_remove == m_watcher.timer_head)) {
+            m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+        }
+    }
+}
+
+
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
     EnterCriticalSection(&m_watcher.mutw);
+
     remove_socket(&m_watcher, pb, socket);
+    remove_timer_safe(pb);
+
     LeaveCriticalSection(&m_watcher.mutw);
     SetEvent(m_watcher.condw);
 }
