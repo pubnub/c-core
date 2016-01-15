@@ -142,7 +142,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         DEBUG_PRINTF("pb=%p: Got SSL_CTX\n", pb);
         add_pubnub_cert(pb->pal.ctx);
     }
-    
+
     if (NULL == pb->pal.socket) {
         DEBUG_PRINTF("pb=%p: Don't have BIO\n", pb);
         pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);

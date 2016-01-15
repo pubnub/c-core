@@ -1,4 +1,4 @@
-SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../openssl/pbpal_openssl.c ../openssl/pbpal_resolv_and_connect_openssl.c  ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_json_parse.c ../core/pubnub_helper.c  ../openssl/pubnub_version_openssl.c ../posix/pubnub_generate_uuid_posix.c ../openssl/pbpal_openssl_blocking_io.c
+SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../openssl/pbpal_openssl.c ../openssl/pbpal_resolv_and_connect_openssl.c  ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../core/pubnub_helper.c  ../openssl/pubnub_version_openssl.c ../posix/pubnub_generate_uuid_posix.c ../openssl/pbpal_openssl_blocking_io.c
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
@@ -18,27 +18,27 @@ openssl/pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pub
 #-D VERBOSE_DEBUG
 
 openssl/cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
-	$(CXX) -o $@ $(CFLAGS) samples/cancel_subscribe_sync_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) -lssl -lcrypto
+	$(CXX) -o $@ $(CFLAGS) samples/cancel_subscribe_sync_sample.cpp  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) -lssl -lcrypto
 
 openssl/futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) samples/futres_nesting.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) -lssl -lcrypto
 #-D VERBOSE_DEBUG
 
-openssl/pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
+openssl/pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
 
-openssl/pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
+openssl/pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp
+	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
 
-openssl/subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/subscribe_publish_callback_sample.cpp ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
+openssl/subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples/subscribe_publish_callback_sample.cpp ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
 
-openssl/futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
+openssl/futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_posix.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
 #-D VERBOSE_DEBUG
 
-openssl/futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
+openssl/futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp
+	$(CXX) -o $@ --std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../openssl/pubnub_ntf_callback_openssl_posix.c pubnub_futres_cpp11.cpp $(SOURCEFILES) -lpthread -lssl -lcrypto
 #-D VERBOSE_DEBUG
 
 
