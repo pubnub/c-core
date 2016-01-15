@@ -21,10 +21,14 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_origin("https://pubsub.pubnub.com")
     , d_ssl_opts(useSSL)
 #endif
+    , d_transaction_timeout_duration_ms(10000)
+    , d_transaction_timed_out(false)
+    , d_transactionTimer(new QTimer(this))
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
             this, SLOT(sslErrors(QNetworkReply*,QList<QSslError>)));
+    connect(d_transactionTimer, SIGNAL(timeout()), this, SLOT(transactionTimeout()));
 }
 
 
@@ -44,8 +48,10 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         if (p) {
             p->deleteLater();
         }
+        d_transaction_timed_out = false;
         d_reply.reset(d_qnam.get(QNetworkRequest(url)));
         connect(d_reply.data(), SIGNAL(finished()), this, SLOT(httpFinished()));
+        d_transactionTimer->start(d_transaction_timeout_duration_ms);
     }
     return result;
 }
@@ -411,8 +417,19 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
 }
 
 
+void pubnub_qt::transactionTimeout()
+{
+    if (d_reply) {
+        d_transaction_timed_out = true;
+        d_reply->abort();
+    }
+}
+
+
 void pubnub_qt::httpFinished()
 {
+    d_transactionTimer->stop();
+
     QNetworkReply::NetworkError error = d_reply->error();
     if (error) {
         qDebug() << "error: " << d_reply->error() << ", string: " << d_reply->errorString();
@@ -425,7 +442,12 @@ void pubnub_qt::httpFinished()
         }
         switch (error) {
         case QNetworkReply::OperationCanceledError:
-            emit outcome(PNR_CANCELLED);
+            if (d_transaction_timed_out) {
+                emit outcome(PNR_TIMEOUT);
+            }
+            else {
+                emit outcome(PNR_CANCELLED);
+            }
             return;
         case QNetworkReply::TimeoutError:
             emit outcome(PNR_CONNECTION_TIMEOUT);

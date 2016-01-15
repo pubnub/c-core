@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QUuid>
 #include <QNetworkAccessManager>
+#include <QTimer>
 
 extern "C" {
 #include "pubnub_api_types.h"
@@ -651,8 +652,18 @@ public:
     void set_ssl_options(ssl_opts options);
 #endif
 
+    /** Sets the duration of the transaction timeout.
+     * @param duration_ms the Duration of the transaction timeout, in milliseconds
+     * @return 0: OK, else: error, timeout not set
+     */
+    int set_transaction_timeout(int duration_ms);
+
+    /** Returns the current transaction duration, in milliseconds. */
+    int transaction_timeout_get();
+
 private slots:
     void httpFinished();
+    void transactionTimeout();
 
 #ifndef QT_NO_SSL
     void sslErrors(QNetworkReply* reply, QList<QSslError> const& errors);
@@ -706,6 +717,15 @@ private:
     /// SSL options
     ssl_opts d_ssl_opts;
 #endif
+
+    /// Transaction timeout duration, in milliseconds
+    int d_transaction_timeout_duration_ms;
+
+    /// Transaction timed out indicator
+    bool d_transaction_timed_out;
+
+    /// Transaction timer
+    QTimer *d_transactionTimer;
 };
 
 
