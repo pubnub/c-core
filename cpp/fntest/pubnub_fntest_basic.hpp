@@ -38,6 +38,12 @@ void broken_connection_test_multi(std::string const &pubkey, std::string const &
 
 void broken_connection_test_group(std::string const &pubkey, std::string const &keysub);
 
+void broken_connection_test_multi_in_group(std::string const &pubkey, std::string const &keysub);
+
+void broken_connection_test_group_in_group_out(std::string const &pubkey, std::string const &keysub);
+
+void broken_connection_test_group_multichannel_out(std::string const &pubkey, std::string const &keysub);
+
 
 
 #endif // !defined INC_PUBNUB_FNTEST_BASIC

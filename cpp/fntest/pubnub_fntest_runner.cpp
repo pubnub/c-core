@@ -48,15 +48,14 @@ static TestData m_aTest[] = {
     LIST_TEST(connect_and_receive_over_several_channels_in_group_simultaneously),
     LIST_TEST(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
     LIST_TEST(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
-///*
+/*
 	LIST_TEST(broken_connection_test),
 	LIST_TEST(broken_connection_test_multi),
 	LIST_TEST(broken_connection_test_group),
-/*	LIST_TEST(broken_connection_test_multi_in_group),
+	LIST_TEST(broken_connection_test_multi_in_group),
 	LIST_TEST(broken_connection_test_group_in_group_out),
 	LIST_TEST(broken_connection_test_group_multichannel_out),
-*/
-// */
+ */
     LIST_TEST(complex_send_and_receive_over_several_channels_simultaneously),
     LIST_TEST(complex_send_and_receive_over_channel_plus_group_simultaneously),
     LIST_TEST(connect_disconnect_and_connect_again),

@@ -385,168 +385,122 @@ void broken_connection_test_group(std::string const &pubkey, std::string const &
     SENSE(pbp.remove_channel_from_group("ch", "gr")).in(Td) == PNR_OK;
 }
 
-/*
-TEST_DEF(broken_connection_test_multi_in_group) {
-    static pubnub_t *pbp;
-    pbp = pubnub_alloc();
-    TEST_DEFER(pubnub_free, pbp);
-    pubnub_init(pbp, g_pubkey, g_keysub);
 
-    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_add_channel_to_group(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+void broken_connection_test_multi_in_group(std::string const &pubkey, std::string const &keysub)
+{
+    context pbp(pubkey, keysub);
 
-    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    pbp.set_origin("pubsub-eucentral.pubnub.com");
 
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
+    SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
+    SENSE(pbp.add_channel_to_group("ch,two", "gr")).in(Td) == PNR_OK;
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3\"", "\"Test 4\"", NULL));
+    std::this_thread::sleep_for(T_chan_registry_propagation);
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    printf("Please disconnect from Internet. Press Enter when done.");
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
+
+    SENSE(pbp.publish("ch", "\"Test 3\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3\"", "\"Test 4\""}));
+
+    SENSE(pbp.publish("ch", "\"Test 3 - 2\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 2\"")).in(Td) == PNR_OK;
+
+    std::cout << "Please disconnect from Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
-    printf("Please reconnect to Internet. Press Enter when done.");
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_ADDR_RESOLUTION_FAILED;
+    std::cout << "Please reconnect to Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 2\"", "\"Test 4 - 2\"", NULL));
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 4\"", "\"Test 4 - 4\"", NULL));
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 2\"", "\"Test 4 - 2\""}));
 
-    expect_pnr(pubnub_remove_channel_from_group(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+    SENSE(pbp.publish("ch", "\"Test 3 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 4\"", "\"Test 4 - 4\""}));
 
-    TEST_POP_DEFERRED;
-    } TEST_ENDDEF
+    SENSE(pbp.remove_channel_from_group("ch,two", "gr")).in(Td) == PNR_OK;
+}
 
 
-TEST_DEF(broken_connection_test_group_in_group_out) {
-    static pubnub_t *pbp;
-    pbp = pubnub_alloc();
-    TEST_DEFER(pubnub_free, pbp);
-    pubnub_init(pbp, g_pubkey, g_keysub);
+void broken_connection_test_group_in_group_out(std::string const &pubkey, std::string const &keysub)
+{
+    context pbp(pubkey, keysub);
 
-    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_add_channel_to_group(pbp, "ch", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+    pbp.set_origin("pubsub-eucentral.pubnub.com");
 
-    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
+    SENSE(pbp.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
 
-    expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
+    std::this_thread::sleep_for(T_chan_registry_propagation);
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3\"", "\"Test 4\"", NULL));
+    SENSE(pbp.subscribe("two")).in(Td) == PNR_OK;
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    printf("Please disconnect from Internet. Press Enter when done.");
+    SENSE(pbp.publish("ch", "\"Test 3\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("two", "gr")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3\"", "\"Test 4\""}));
+
+    SENSE(pbp.publish("ch", "\"Test 3 - 2\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 2\"")).in(Td) == PNR_OK;
+
+    std::cout << "Please disconnect from Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
-    printf("Please reconnect to Internet. Press Enter when done.");
+    SENSE(pbp.subscribe("two", "gr")).in(Td) == PNR_ADDR_RESOLUTION_FAILED;
+    std::cout << "Please reconnect to Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 2\"", "\"Test 4 - 2\"", NULL));
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 4\"", "\"Test 4 - 4\"", NULL));
+    SENSE(pbp.subscribe("two", "gr")).in(Td) == PNR_ADDR_RESOLUTION_FAILED;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 2\"", "\"Test 4 - 2\""}));
 
-    expect_pnr(pubnub_remove_channel_from_group(pbp, "ch", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+    SENSE(pbp.publish("ch", "\"Test 3 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("two", "gr")).in(Td) == PNR_ADDR_RESOLUTION_FAILED;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 4\"", "\"Test 4 - 4\""}));
 
-    TEST_POP_DEFERRED;
-    } TEST_ENDDEF
+    SENSE(pbp.remove_channel_from_group("ch", "gr")).in(Td) == PNR_OK;
+}
 
 
-TEST_DEF(broken_connection_test_group_multichannel_out) {
-    static pubnub_t *pbp;
-    pbp = pubnub_alloc();
-    TEST_DEFER(pubnub_free, pbp);
-    pubnub_init(pbp, g_pubkey, g_keysub);
+void broken_connection_test_group_multichannel_out(std::string const &pubkey, std::string const &keysub)
+{
+    context pbp(pubkey, keysub);
 
-    expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_add_channel_to_group(pbp, "three", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+    pbp.set_origin("pubsub-eucentral.pubnub.com");
 
-    TEST_SLEEP_FOR(CHANNEL_REGISTRY_PROPAGATION_DELAY);
+    SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
+    SENSE(pbp.add_channel_to_group("three", "gr")).in(Td) == PNR_OK;
 
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
+    std::this_thread::sleep_for(T_chan_registry_propagation);
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "three", "\"Test 5\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3\"", "\"Test 4\"", "\"Test 5\"", NULL));
+    SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "three", "\"Test 5 - 2\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    printf("Please disconnect from Internet. Press Enter when done.");
+    SENSE(pbp.publish("ch", "\"Test 3\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("three", "\"Test 5\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("ch,two", "gr")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3\"", "\"Test 4\"", "\"Test 5\""}));
+
+    SENSE(pbp.publish("ch", "\"Test 3 - 2\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 2\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("three", "\"Test 5 - 2\"")).in(Td) == PNR_OK;
+
+    std::cout << "Please disconnect from Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_ADDR_RESOLUTION_FAILED, pbp);
-    printf("Please reconnect to Internet. Press Enter when done.");
+    SENSE(pbp.subscribe("ch,two", "gr")).in(Td) == PNR_ADDR_RESOLUTION_FAILED;
+    std::cout << "Please reconnect to Internet. Press Enter when done." << std::endl;
     await_console();
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 2\"", "\"Test 4 - 2\"", "\"Test 5 - 2\"", NULL));
 
-    expect_pnr(pubnub_publish(pbp, "ch", "\"Test 3 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "two", "\"Test 4 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_publish(pbp, "three", "\"Test 5 - 4\""), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect_pnr(pubnub_subscribe(pbp, "ch,two", "gr"), PNR_STARTED);
-    await_timed(6*SECONDS, PNR_OK, pbp);
-    expect(pnfntst_got_messages(pbp, "\"Test 3 - 4\"", "\"Test 4 - 4\"", "\"Test 5 - 4\"", NULL));
+    SENSE(pbp.subscribe("ch,two", "gr")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 2\"", "\"Test 4 - 2\"", "\"Test 5 - 2\""}));
 
-    expect_pnr(pubnub_remove_channel_from_group(pbp, "three", "gr"), PNR_STARTED);
-    await_timed(5*SECONDS, PNR_OK, pbp);
+    SENSE(pbp.publish("ch", "\"Test 3 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("two", "\"Test 4 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.publish("three", "\"Test 5 - 4\"")).in(Td) == PNR_OK;
+    SENSE(pbp.subscribe("ch,two", "gr")).in(Td) == PNR_OK;
+    EXPECT_TRUE(got_messages(pbp, {"\"Test 3 - 4\"", "\"Test 4 - 4\"", "\"Test 5 - 4\""}));
 
-    TEST_POP_DEFERRED;
-    } TEST_ENDDEF
-*/
+    SENSE(pbp.remove_channel_from_group("three", "gr")).in(Td) == PNR_OK;
+}
