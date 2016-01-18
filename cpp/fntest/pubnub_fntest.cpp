@@ -37,6 +37,33 @@ bool wait_for(futres &futr, std::chrono::milliseconds &rel_time, pubnub_res &pbr
 }
 
 
+bool wait_for(futres &futr, futres &futr_2, std::chrono::milliseconds &rel_time, pubnub_res &pbresult)
+{
+    auto const t0 = std::chrono::system_clock::now();
+    auto t_current = std::chrono::system_clock::now();
+    pubnub_res res = PNR_STARTED;
+    pubnub_res res_2 = PNR_STARTED;
+    while ((t_current - t0) < rel_time) {
+        if (res == PNR_STARTED) {
+            res = futr.last_result();
+        }
+        if (res_2 == PNR_STARTED) {
+            res_2 = futr_2.last_result();
+        }
+        if ((res != PNR_STARTED) && (res_2 != PNR_STARTED)) {
+            rel_time -= std::chrono::duration_cast<std::chrono::milliseconds>(t_current - t0);
+            if (res != res_2) {
+                return false;
+            }
+            pbresult = res;
+            return true;
+        }
+        t_current = std::chrono::system_clock::now();
+    }
+    return false;
+}
+
+
 bool subscribe_and_check(context &pb, std::string const&channel, const std::string &chgroup, std::chrono::milliseconds rel_time, std::vector<msg_on_chan> expected)
 {
     std::sort(expected.begin(), expected.end());

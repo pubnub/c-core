@@ -75,6 +75,16 @@ namespace pubnub {
     /// @return true: transaction completed in time, false: timeout
     bool wait_for(futres &futr, std::chrono::milliseconds &rel_time, pubnub_res &pbresult);
 
+    /// Wait for both the @p futr and @p futr_2 to finish a Pubnub
+    /// transaction (each) in @p rel_time and give the result (if it
+    /// finishes) to @p pbresult.  On output, @p rel_time will have
+    /// the time remaining until the timeout (as specificied by the
+    /// input value of @p rel_time).
+    ///
+    /// @return true: transaction completed in time with same result,
+    /// false: timeout or different results
+    bool wait_for(futres &futr, futres &futr_2, std::chrono::milliseconds &rel_time, pubnub_res &pbresult);
+
     /// Do a subscribe operation on context @p pb and channel @p channel
     /// and channel group @p chgroup, wait for @p rel_time, and
     /// check that all the messages (on channels) are received as
@@ -228,8 +238,7 @@ namespace pubnub {
             , d_line(left.line())
             {}
         sense_double &in(std::chrono::milliseconds deadline) {
-            expect<bool>(wait_for(d_left, deadline, d_result), d_expr, d_fname, d_line, "transaction on left context timed out") == true;
-            expect<bool>(wait_for(d_right, deadline, d_result), d_expr, d_fname, d_line, "transaction on right context timed out") == true;
+            expect<bool>(wait_for(d_left, d_right, deadline, d_result), d_expr, d_fname, d_line, "waiting for two contexts failed / timed out") == true;
             return *this;
         }
         sense_double &before(std::chrono::milliseconds deadline) { return in(deadline); }
@@ -265,6 +274,11 @@ namespace pubnub {
 /** Someone might find this easier to read, especially on longer checks.
  */    
 #define EXPECT_TRUE(expr) EXPECT(expr) == true
+
+    inline void await_console() {
+        char s[1024];
+        std::cin.getline(s, sizeof s);
+    }
     
 }
 

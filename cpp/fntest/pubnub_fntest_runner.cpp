@@ -20,7 +20,7 @@ enum class TestResult {
 using TestFN_T = std::function<void(std::string const&,std::string const&)>;
 
 struct TestData {
-     TestFN_T pf;
+    TestFN_T pf;
     char const *name;
     TestResult result;
 };
@@ -39,7 +39,6 @@ static TestData m_aTest[] = {
     LIST_TEST(simple_connect_and_send_over_single_channel),
     LIST_TEST(connect_and_send_over_several_channels_simultaneously),
     LIST_TEST(simple_connect_and_send_over_single_channel_in_group),
-#if 0
     LIST_TEST(connect_and_send_over_several_channels_in_group_simultaneously),
     LIST_TEST(connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
     LIST_TEST(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
@@ -49,21 +48,22 @@ static TestData m_aTest[] = {
     LIST_TEST(connect_and_receive_over_several_channels_in_group_simultaneously),
     LIST_TEST(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
     LIST_TEST(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
-/*	LIST_TEST(broken_connection_test),
+///*
+	LIST_TEST(broken_connection_test),
 	LIST_TEST(broken_connection_test_multi),
 	LIST_TEST(broken_connection_test_group),
-	LIST_TEST(broken_connection_test_multi_in_group),
+/*	LIST_TEST(broken_connection_test_multi_in_group),
 	LIST_TEST(broken_connection_test_group_in_group_out),
-	LIST_TEST(broken_connection_test_group_multichannel_out),*/
-#endif
+	LIST_TEST(broken_connection_test_group_multichannel_out),
+*/
+// */
     LIST_TEST(complex_send_and_receive_over_several_channels_simultaneously),
-#if 0
     LIST_TEST(complex_send_and_receive_over_channel_plus_group_simultaneously),
     LIST_TEST(connect_disconnect_and_connect_again),
-/*	LIST_TEST(connect_disconnect_and_connect_again_group),
-	LIST_TEST(connect_disconnect_and_connect_again_combo),
-	LIST_TEST(wrong_api_usage),*/
-#endif
+    LIST_TEST(connect_disconnect_and_connect_again_group),
+    LIST_TEST(connect_disconnect_and_connect_again_combo),
+    LIST_TEST(wrong_api_usage),
+    LIST_TEST(handling_errors_from_pubnub),
 };
 
 #define TEST_COUNT (sizeof m_aTest / sizeof m_aTest[0])
@@ -86,7 +86,7 @@ static unsigned m_running_tests;
 static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub)
 {
     unsigned next_test = 0;
-    unsigned failed_count = 0;
+    std::vector<unsigned> failed;
     unsigned passed_count = 0;
     unsigned indete_count = 0;
     std::vector<std::thread> runners(test_count);
@@ -103,7 +103,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         for (i = next_test; i < next_test+in_this_pass; ++i) {
             runners[i-next_test] = std::thread([i, pubkey, keysub, aTest] {
                     try {
-                        std::this_thread::sleep_for(std::chrono::seconds(5));
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
                         aTest[i].pf(pubkey, keysub);
                         {
                             std::lock_guard<std::mutex>  lk(m_mtx);
@@ -133,7 +133,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
             runners[i-next_test].join();
             switch (aTest[i].result) {
 	    case TestResult::fail:
-                ++failed_count;
+                failed.push_back(i);
 		break;
 	    case TestResult::pass:
                 ++passed_count;
@@ -154,8 +154,14 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         return 0;
     }
     else {
-        std::cout <<"\x1b[32m " << passed_count << " tests passed\x1b[m, \x1b[41m " << failed_count << " tests failed!\x1b[m, \x1b[33m " << indete_count << " tests indeterminate\x1b[m" << std::endl; 
-        return failed_count + indete_count;
+        std::cout <<"\x1b[32m " << passed_count << " tests passed\x1b[m, \x1b[41m " << failed.size() << " tests failed!\x1b[m, \x1b[33m " << indete_count << " tests indeterminate\x1b[m" << std::endl; 
+        if (!failed.empty()) {
+            std::cout << "Failed tests:\n";
+            for (unsigned i = 0; i < failed.size(); ++i) {
+                std::cout << failed[i] << ". " << aTest[failed[i]].name << '\n';
+            }
+        }
+        return failed.size() + indete_count;
     }
 }
 
