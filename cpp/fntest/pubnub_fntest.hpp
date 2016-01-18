@@ -4,7 +4,9 @@
 
 #include "pubnub.hpp"
 
+extern "C" {
 #include "pubnub_helper.h"
+}
 
 #include <vector>
 #include <string>
@@ -12,9 +14,15 @@
 #include <chrono>
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 
 
 namespace pubnub {
+
+    /// Helper to put a `pubnub_res` to a standard stream
+/*    inline std::ostream& operator<<(std::ostream&out, pubnub_res e) {
+        return out << (int)e << '(' << pubnub_res_2_string(e) << ')';
+        }*/
 
 
     /// A message recevied on a channel
@@ -93,12 +101,6 @@ namespace pubnub {
     /// @return true: subscribe completed and all expected messages
     /// received, false: otherwise
     bool subscribe_and_check(context &pb, std::string const&channel, const std::string &chgroup, std::chrono::milliseconds rel_time, std::vector<msg_on_chan> expected);
-
-    /// Helper to put a `pubnub_res` to a standard stream
-    inline std::ostream& operator<<(std::ostream&out, pubnub_res e) {
-        return out << (int)e << '(' << pubnub_res_2_string(e) << ')';
-    }
-
 
     /** Helper template class to handle "expectations" in tests.
         Usually used with the #EXPECT macro.

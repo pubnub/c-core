@@ -211,10 +211,10 @@ void handling_errors_from_pubnub(std::string const &pubkey, std::string const &k
     
     SENSE(pbp.publish("ch", "\"Test ")).in(Td) == PNR_PUBLISH_FAILED;
     EXPECT(pbp.last_http_code()) == 400;
-    EXPECT(pubnub_parse_publish_result(pbp.last_publish_result().c_str())) == PNPUB_INVALID_JSON;
+    EXPECT(pbp.parse_last_publish_result()) == PNPUB_INVALID_JSON;
     
     SENSE(pbp.publish(",", "\"Test \"")).in(Td) == PNR_PUBLISH_FAILED;
     EXPECT(pbp.last_http_code()) == 400;
-    EXPECT(pubnub_parse_publish_result(pbp.last_publish_result().c_str())) == PNPUB_INVALID_CHAR_IN_CHAN_NAME;
+    EXPECT(pbp.parse_last_publish_result()) == PNPUB_INVALID_CHAR_IN_CHAN_NAME;
 }
 

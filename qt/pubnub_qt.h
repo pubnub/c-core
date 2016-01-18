@@ -9,6 +9,7 @@
 
 extern "C" {
 #include "pubnub_api_types.h"
+#include "pubnub_helper.h"
 }
 
 QT_BEGIN_NAMESPACE
@@ -631,15 +632,20 @@ public:
 
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
-        */
+     */
     int last_http_code() const;
-
+    
     /** Return the result string that Pubnub returned in the
      * reply to the last publish transaction. If the last
      * transaction was not a publish one, will return an
      * empty string, as will do on any other kind of error.
      */
     QString last_publish_result() const;
+
+    /** Return the result of parsing the last publish transaction's
+     * response from the server.
+     */
+    pubnub_publish_res parse_last_publish_result();
 
     /** Returns the time token of the last subscribe
      * operation. After init or a serious error,

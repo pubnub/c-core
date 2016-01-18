@@ -315,6 +315,13 @@ QString pubnub_qt::last_publish_result() const
 }
 
 
+pubnub_publish_res pubnub_qt::parse_last_publish_result()
+{
+    QString toParse = last_publish_result();
+    return pubnub_parse_publish_result(toParse.toLatin1());
+}
+
+
 QString pubnub_qt::last_time_token() const
 {
     return d_context->timetoken;

@@ -2,25 +2,17 @@
 #if !defined INC_PUBNUB_COMMON_HPP
 #define      INC_PUBNUB_COMMON_HPP
 
-//extern "C" {
-#include "pubnub_alloc.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_generate_uuid.h"
-#include "pubnub_blocking_io.h"
-#include "pubnub_ssl.h"
-#include "pubnub_timers.h"
-#include "pubnub_helper.h"
-//}
-
+#include "pubnub_qt.h"
 
 #include <string>
 #include <vector>
 
-#if __cplusplus >= 201103L
-#include <chrono>
-#endif
+#include <QMutexLocker>
+#include <QWaitCondition>
 
-#include <iostream>
+extern "C" {
+#include "pubnub_helper.h"
+}
 
 
 namespace pubnub {
@@ -32,7 +24,7 @@ namespace pubnub {
         A more abstract way to think about this algorithm is
         "accumulate (left fold) with a separator between elements"
         that can be used on any object that has an `+=` operator.
-
+        
         It is implied that the range is from a container of elements
         that have the same type as the @p result, or of types that can
         be added (via `+=`) to the type of the @p result.
@@ -83,6 +75,100 @@ namespace pubnub {
     template <typename C> std::string join(C container) {
         return join(container, comma, std::string());
     }
+
+    class context;
+
+    /** A future (pending) result of a Pubnub
+     * transaction/operation/request.  It is somewhat similar to the
+     * std::future<> from C++11.
+     *
+     * It has the same interface for both Pubnub C client's "sync" and
+     * "callback" interfaces, so the C++ user code is always the same,
+     * you just select the "back-end" during the build.
+     */
+    class futres : public QObject {
+        Q_OBJECT
+
+    private slots:
+        void onOutcome(pubnub_res result) { 
+            signal(result); 
+        }
+
+    public:
+        futres(context &ctx, pubnub_res initial);
+
+        ~futres() {}
+
+        /// Gets the last (or latest) result of the transaction.
+        pubnub_res last_result();
+
+        /// Starts the await. Only useful for the callback interface
+        void start_await();
+
+        /// Ends the await of the transaction to end and returns the
+        /// final result (outcome)
+        pubnub_res end_await();
+
+        /// Awaits the end of transaction and returns its final result
+        /// (outcome).
+        pubnub_res await() {
+            start_await();
+            return end_await();
+        }
+
+        // C++11 std::future<> compatible API
+
+        /// Same as await()
+        pubnub_res get() { return await(); }
+
+        /// Return whether this object is valid
+        bool valid() const { return true; }
+
+        /// Just wait for the transaction to end, don't get the
+        /// outcome
+        void wait() /*const*/ { await(); }
+
+        // C++17 (somewhat) compatbile API
+
+        /// Pass a function, function object (or lambda in C++11)
+        /// which accepts a Pubnub context and pubnub_res and it will
+        /// be called when the transaction ends.
+        template<typename F> void then(F f) {
+            f(d_ctx, await());
+        }
+
+        /// Returns if the transaction is over
+        bool is_ready() const {
+            //QMutexLocker lk(&d_mutex);
+            return d_triggered;
+        }
+        
+        // We can construct from a temporary
+#if __cplusplus >= 201103L
+        futres(futres &&x);
+        futres(futres const &x) = delete;
+#else
+        futres(futres const &x);
+#endif
+
+    private:
+        // Pubnub future result is non-copyable
+        futres(futres &x);
+
+        void signal(pubnub_res result) {
+            qDebug() << "signal" << result << d_triggered << this;
+            d_triggered = true;
+            d_result = result;
+        }
+
+        /// The C++ Pubnub context of this future result
+        context &d_ctx;
+
+        /// The current result
+        pubnub_res d_result;
+
+        bool d_triggered;
+    };
 	
     /** Options for Publish v2. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
@@ -157,133 +243,98 @@ namespace pubnub {
      * documentation, as this is just a wrapper, all of it holds.
      */
     class context {
+        pubnub_qt d_pbqt;
     public:
         /** Create the context, that will use @p pubkey as its
             publish key and @subkey as its subscribe key for its
             lifetime. These cannot be changed, to use another
             pair, create a new context.
-            @see pubnub_alloc, pubnub_init
         */
-        context(std::string pubkey, std::string subkey) :
-            d_pubk(pubkey), d_ksub(subkey) {
-            d_pb = pubnub_alloc();
-            if (0 == d_pb) {
-                throw std::bad_alloc();
-            }
-            pubnub_init(d_pb, d_pubk.c_str(), d_ksub.c_str());
-        }
+        context(std::string pubkey, std::string subkey);
 
         /** Sets the origin to @p origin on this context. This may fail.
             To reset to default, pass an empty string.
-            @see pubnub_origin_set
          */
         int set_origin(std::string const &origin) {
-            d_origin = origin;
-            return pubnub_origin_set(d_pb, origin.empty() ? NULL : d_origin.c_str());
+            d_pbqt.set_origin(QString::fromStdString(origin));
+            return 0;
         }
         /** Returns the current origin for this context
-            @see pubnub_get_origin
          */
-        std::string origin() const { return pubnub_get_origin(d_pb); }
+        std::string origin() const { return d_pbqt.origin().toStdString(); }
         
         /** Sets the `auth` key to @p auth. If @p auth is an
             empty string, `auth` will not be used.
             @see pubnub_set_auth
          */
         void set_auth(std::string const &auth) {
-            d_auth = auth;
-            pubnub_set_auth(d_pb, auth.empty() ? NULL : d_auth.c_str());
+            d_pbqt.set_auth(QString::fromStdString(auth));
         }
         /// Returns the current `auth` key for this context
-        std::string const &auth() const { return d_auth; }
+        std::string auth() const { return d_pbqt.auth().toStdString(); }
 
         /** Sets the UUID to @p uuid. If @p uuid is an empty string,
             UUID will not be used.
-            @see pubnub_set_uuid
          */
         void set_uuid(std::string const &uuid) {
-            d_uuid = uuid;
-            pubnub_set_uuid(d_pb, uuid.empty() ? NULL : d_uuid.c_str());
+            d_pbqt.set_uuid(QString::fromStdString(uuid));
         }
         /// Set the UUID to a random-generated one
-        /// @see pubnub_generate_uuid_v4_random
         int set_uuid_v4_random() {
-            struct Pubnub_UUID uuid;
-            if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-                return -1;
-            }
-            set_uuid(pubnub_uuid_to_string(&uuid).uuid);
+            d_pbqt.set_uuid_v4_random();
             return 0;
         }
         /// Returns the current UUID
-        std::string const &uuid() const { return d_uuid; }
+        std::string uuid() const { return d_pbqt.uuid().toStdString(); }
 
         /// Returns the next message from the context. If there are
         /// none, returns an empty string.
-        /// @see pubnub_get
-        std::string get() const {
-            char const *msg = pubnub_get(d_pb);
-            return (NULL == msg) ? "" : msg;
-        }
+        std::string get() const { return d_pbqt.get().toStdString(); }
+
         /// Returns a vector of all messages from the context.
-        std::vector<std::string> get_all() const {
-            std::vector<std::string> all;
-            while (char const *msg = pubnub_get(d_pb)) {
-                if (NULL == msg) {
-                    break;
-                }
-                all.push_back(msg);
+        std::vector<std::string> get_all() const { 
+            std::vector<std::string> result;
+            QStringList qsl = d_pbqt.get_all();
+            for (int i = 0; i < qsl.size(); ++i) {
+                result.push_back(qsl[i].toStdString());
             }
-            return all;
+            return result;
         }
+
         /// Returns the next channel string from the context.
         /// If there are none, returns an empty string
-        /// @see pubnub_get_channel
-        std::string get_channel() const {
-            char const *chan = pubnub_get_channel(d_pb);
-            return (NULL == chan) ? "" : chan;
-        }
+        std::string get_channel() const { return d_pbqt.get_channel().toStdString(); }
+
         /// Returns a vector of all channel strings from the context
-        /// @see pubnub_get_channel
-        std::vector<std::string> get_all_channels() const {
-            std::vector<std::string> all;
-            while (char const *msg = pubnub_get_channel(d_pb)) {
-                if (NULL == msg) {
-                    break;
-                }
-                all.push_back(msg);
+        std::vector<std::string> get_all_channels() const { 
+            std::vector<std::string> result;
+            QStringList qsl = d_pbqt.get_all_channels();
+            for (int i = 0; i < qsl.size(); ++i) {
+                result.push_back(qsl[i].toStdString());;
             }
-            return all;
+            return result;
         }
         
         /// Cancels the transaction, if any is ongoing. If none is
         /// ongoing, it is ignored.
-        /// @see pubnub_cancel
-        void cancel() {
-            pubnub_cancel(d_pb);
-        }
+        void cancel() { d_pbqt.cancel(); }
         
         /// Publishes a @p message on the @p channel. The @p channel
         /// can have many channels separated by a comma
-        /// @see pubnub_publish
         futres publish(std::string const &channel, std::string const &message) {
-            return doit(pubnub_publish(d_pb, channel.c_str(), message.c_str()));
+            return doit(d_pbqt.publish(QString::fromStdString(channel), QString::fromStdString(message)));
         }
-
+#if 0
         /// Publishes a @p message on the @p channel using v2, with the
         /// options set in @p options.
-        /// @see pubnub_publishv2
         futres publishv2(std::string const &channel, std::string const &message,
                          pubv2_opt options) {
-            return doit(pubnub_publishv2(d_pb, channel.c_str(), message.c_str(), (options & store_in_history) != 0, (options & eat_after_reading) != 0));
+            return doit(d_pbqt.publishv2(QString::fromStdString(channel), QString::fromStdString(message), (options & store_in_history) != 0, (options & eat_after_reading) != 0));
         }
-
+#endif
         /// Subscribes to @p channel and/or @p channel_group
-        /// @see pubnub_subscribe
         futres subscribe(std::string const &channel, std::string const &channel_group = "") {
-            char const *ch = channel.empty() ? 0 : channel.c_str();
-            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_subscribe(d_pb, ch, gr));
+            return doit(d_pbqt.subscribe(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -296,9 +347,7 @@ namespace pubnub {
         /// Leaves a @p channel and/or @p channel_group
         /// @see pubnub_leave
         futres leave(std::string const &channel, std::string const &channel_group) {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_leave(d_pb, ch, gr));
+            return doit(d_pbqt.leave(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -309,28 +358,22 @@ namespace pubnub {
         }
 
         /// Starts a "get time" transaction
-        /// @see pubnub_time
         futres time() {
-            return doit(pubnub_time(d_pb));
+            return doit(d_pbqt.time());
         }
 
         /// Starts a transaction to get message history for @p channel
         /// with the limit of max @p count
         /// messages to retrieve, and optionally @p include_token to get
         /// a time token for each message.
-        /// @see pubnub_history
         futres history(std::string const &channel, unsigned count = 100, bool include_token = false) {
-            char const *ch = channel.empty() ? 0 : channel.c_str();
-            return doit(pubnub_history(d_pb, ch, count, include_token));
+            return doit(d_pbqt.history(QString::fromStdString(channel), count, include_token));
         }
 
         /// Starts a transaction to get a list of currently present
         /// UUIDs on a @p channel and/or @p channel_group
-        /// @see pubnub_here_now
         futres here_now(std::string const &channel, std::string const &channel_group = "") {
-            char const *ch = channel.empty() ? 0 : channel.c_str();
-            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_here_now(d_pb, ch, gr));
+            return doit(d_pbqt.here_now(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -344,7 +387,7 @@ namespace pubnub {
         /// UUIDs on all channels
         /// @see pubnub_global_here_now
         futres global_here_now() {
-            return doit(pubnub_global_here_now(d_pb));
+            return doit(d_pbqt.global_here_now());
         }
         
         /// Starts a transaction to get a list of channels the @p uuid
@@ -352,16 +395,14 @@ namespace pubnub {
         /// empty string) it will 
         /// @see pubnub_where_now
         futres where_now(std::string const &uuid = "") {
-            return doit(pubnub_where_now(d_pb, uuid.empty() ? NULL : uuid.c_str()));
+            return doit(d_pbqt.where_now(QString::fromStdString(uuid)));
         }
 
         /// Starts a transaction to set the @p state JSON object for the
         /// given @p channel and/or @pchannel_group of the given @p uuid
         /// @see pubnub_set_state
         futres set_state(std::string const &channel, std::string const &channel_group, std::string const &uuid, std::string const &state) {
-            char const *ch = channel.empty() ? 0 : channel.c_str();
-            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_set_state(d_pb, ch, gr, uuid.c_str(), state.c_str()));
+            return doit(d_pbqt.set_state(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(uuid), QString::fromStdString(state)));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
@@ -376,9 +417,7 @@ namespace pubnub {
         /// uuid 
         /// @see pubnub_set_state
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
-            char const *ch = channel.empty() ? 0 : channel.c_str();
-            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
-            return doit(pubnub_state_get(d_pb, ch, gr, uuid.empty() ? NULL : uuid.c_str()));
+            return doit(d_pbqt.state_get(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(uuid)));
         }
         futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid = "") {
             return state_get(join(channel), join(channel_group), uuid);
@@ -387,13 +426,13 @@ namespace pubnub {
         /// Starts a transaction to remove a @p channel_group.
         /// @see pubnub_remove_channel_group
         futres remove_channel_group(std::string const &channel_group) {
-            return doit(pubnub_remove_channel_group(d_pb, channel_group.c_str()));
+            return doit(d_pbqt.remove_channel_group(QString::fromStdString(channel_group)));
         }
 
         /// Starts a transaction to remove a @p channel from a @p channel_group.
         /// @see pubnub_remove_channel_from_group
         futres remove_channel_from_group(std::string const &channel, std::string const &channel_group) {
-            return doit(pubnub_remove_channel_from_group(d_pb, channel.c_str(), channel_group.c_str()));
+            return doit(d_pbqt.remove_channel_from_group(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
 
         /// Pass a vector of channels in the @p channel and we will
@@ -405,7 +444,7 @@ namespace pubnub {
         /// Starts a transaction to add a @p channel to a @p channel_group.
         /// @see pubnub_add_channel_to_group
         futres add_channel_to_group(std::string const &channel, std::string const &channel_group) {
-            return doit(pubnub_add_channel_to_group(d_pb, channel.c_str(), channel_group.c_str()));
+            return doit(d_pbqt.add_channel_to_group(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
 
         /// Pass a vector of channels in the @p channel and we will
@@ -416,47 +455,29 @@ namespace pubnub {
 
         /// Starts a transaction to get a list of channels belonging
         /// to a @p channel_group.
-        /// @see pubnub_list_channel_group
         futres list_channel_group(std::string const &channel_group) {
-            return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
+            return doit(d_pbqt.list_channel_group(QString::fromStdString(channel_group)));
         }
         
         /// Return the HTTP code (result) of the last transaction.
-        /// @see pubnub_last_http_code
-        int last_http_code() const { 
-            return pubnub_last_http_code(d_pb);
-        }
+        int last_http_code() const { return d_pbqt.last_http_code(); }
 
         /// Return the string of the last publish transaction.
-        /// @see pubnub_last_publish_result
         std::string last_publish_result() const { 
-            return pubnub_last_publish_result(d_pb);
+            return d_pbqt.last_publish_result().toStdString();
         }
 
-        /// Returns the result of parsing the last publish
-        /// transaction's server response.
-        /// @see pubnub_parse_publish_result
         pubnub_publish_res parse_last_publish_result() {
-            return pubnub_parse_publish_result(pubnub_last_publish_result(d_pb));
+            return d_pbqt.parse_last_publish_result();
         }
-        
+
         /// Return the string of the last time token.
-        /// @see pubnub_last_time_token
-        std::string last_time_token() const { 
-            return pubnub_last_time_token(d_pb);
-        }
+        std::string last_time_token() const { return d_pbqt.last_time_token().toStdString(); }
 
         /// Sets whether to use (non-)blocking I/O according to option @p e.
-        /// @see pubnub_set_blocking_io, pubnub_set_non_blocking_io
-        int set_blocking_io(blocking_io e) {
-            if (blocking == e) {
-                return pubnub_set_blocking_io(d_pb);
-            }
-            else {
-                return pubnub_set_non_blocking_io(d_pb);
-            }
-        }
+        int set_blocking_io(blocking_io /*e*/) { return -1; }
 
+#if 0
         /// Sets the SSL/TLS options according to @p options
         /// @see pubnub_set_ssl_options
         void set_ssl_options(ssl_opt options) {
@@ -467,59 +488,28 @@ namespace pubnub {
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
-
-#if __cplusplus >= 201103L
-        /// Sets the transaction timeout duration
-        int set_transaction_timeout(std::chrono::milliseconds duration) {
-            return pubnub_set_transaction_timeout(d_pb, duration.count());
-        }
-        /// Returns the transaction timeout duration
-        std::chrono::milliseconds transaction_timeout_get() {
-            std::chrono::milliseconds result(pubnub_transaction_timeout_get(d_pb));
-            return result;
-                                             
-        }
-#else
-        /// Returns the transaction timeout duration
-        int set_transaction_timeout(int duration_ms) {
-            return pubnub_set_transaction_timeout(d_pb, duration_ms);
-        }
-        int transaction_timeout_get() {
-            return pubnub_transaction_timeout_get(d_pb);
-        }
-#endif
-        
+#endif        
         /// Frees the context and any other thing that needs to be
         /// freed/released.
-        /// @see pubnub_free
-        ~context() {
-            pubnub_free(d_pb);
-        }
+        ~context() {}
 
     private:
         // pubnub context is not copyable
         context(context const &);
 
+        friend futres;
+
         // internal helper function
         futres doit(pubnub_res e) {
-            return futres(d_pb, *this, e);
+            return futres(*this, e);
         }
 
-        /// The publish key
-        std::string d_pubk;
-        /// The subscribe key
-        std::string d_ksub;
-        /// The auth key
-        std::string d_auth;
-        /// The UUID
-        std::string d_uuid;
-        /// The origin set last time (doen't have to be the one used,
-        /// the default can be used instead)
-        std::string d_origin;
-        /// The (C) Pubnub context
-        pubnub_t *d_pb;
     };
 
 }
+
+/// Helper to put a `pubnub_res` to a standard stream
+std::ostream& operator<<(std::ostream&out, pubnub_res e);
+
 
 #endif // !defined INC_PUBNUB_COMMON_HPP
