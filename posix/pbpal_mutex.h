@@ -16,6 +16,7 @@ typedef pthread_mutex_t pbpal_mutex_t;
 #define pbpal_mutex_destroy(m) pthread_mutex_destroy(&(m))
 #define pbpal_mutex_decl_and_init(m) pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #define pbpal_mutex_static_decl_and_init(m) static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#define pbpal_mutex_init_static(m)
 
 
 #endif /*!defined INC_PBPAL_MUTEX*/

@@ -14,16 +14,18 @@
 #define pubnub_mutex_destroy(m) pbpal_mutex_destroy(m)
 #define pubnub_mutex_decl_and_init(m) pbpal_mutex_decl_and_init(m)
 #define pubnub_mutex_static_decl_and_init(m) pbpal_mutex_static_decl_and_init(m)
+#define pubnub_mutex_init_static(m) pbpal_mutex_init_static(m)
 
 #else
 
-typedef struct {} pubnub_mutex_t;
+typedef struct { int dummy; } pubnub_mutex_t;
 #define pubnub_mutex_init(m)
 #define pubnub_mutex_lock(m)
 #define pubnub_mutex_unlock(m)
 #define pubnub_mutex_destroy(m)
 #define pubnub_mutex_decl_and_init(m)
 #define pubnub_mutex_static_decl_and_init(m)
+#define pubnub_mutex_init_static(m)
 
 #endif
 

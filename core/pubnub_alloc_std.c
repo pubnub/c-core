@@ -17,6 +17,7 @@ pubnub_mutex_static_decl_and_init(m_lock);
 static void save_allocated(pubnub_t *pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
+    pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
     if (m_n == m_cap) {
         pubnub_t **npalloc = (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n+1));
@@ -74,6 +75,7 @@ bool pb_valid_ctx_ptr(pubnub_t const *pb)
 #if defined PUBNUB_ASSERT_LEVEL_EX
     bool result;
 
+    pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
     result = check_ctx_ptr(pb);
     pubnub_mutex_unlock(m_lock);
@@ -100,6 +102,7 @@ int pubnub_free(pubnub_t *pb)
     int result = -1;
 
     pubnub_mutex_lock(pb->monitor);
+    pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
     PUBNUB_ASSERT(check_ctx_ptr(pb));
     if (PBS_IDLE == pb->state) {
