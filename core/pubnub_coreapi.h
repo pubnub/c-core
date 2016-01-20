@@ -79,7 +79,7 @@ void pubnub_set_uuid(pubnub_t *p, const char *uuid);
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_uuid().
     */
-char const *pubnub_uuid_get(pubnub_t const *p);
+char const *pubnub_uuid_get(pubnub_t *p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.
@@ -96,7 +96,7 @@ void pubnub_set_auth(pubnub_t *p, const char *auth);
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_auth().
 */
-char const *pubnub_auth_get(pubnub_t const *p);
+char const *pubnub_auth_get(pubnub_t *p);
 
 /** Cancel an ongoing API transaction. The outcome of the transaction
     in progress, if any, will be #PNR_CANCELLED. */
@@ -567,11 +567,11 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group
     @see pubnub_set_blocking_io
     @see pubnub_set_non_blocking_io
 */
-enum pubnub_res pubnub_last_result(pubnub_t const *p);
+enum pubnub_res pubnub_last_result(pubnub_t *p);
 
 /** Returns the HTTP reply code of the last transaction in the @p p
  * context. */
-int pubnub_last_http_code(pubnub_t const *p);
+int pubnub_last_http_code(pubnub_t *p);
 
 /** Returns the string of the result of the last `publish` transaction,
     as returned from Pubnub. If the last transaction is not a publish,
@@ -579,14 +579,14 @@ int pubnub_last_http_code(pubnub_t const *p);
     was successfull, it will return "Sent", otherwise a description
     of the error.
  */
-char const *pubnub_last_publish_result(pubnub_t const *p);
+char const *pubnub_last_publish_result(pubnub_t *p);
 
 /** Returns the string of the last received time token on the
     @c p context. After pubnub_init() this should be "0".
     @param p Pubnub context to get the last received time token from
     @return A read only string of the last received time token
  */
-char const *pubnub_last_time_token(pubnub_t const *p);
+char const *pubnub_last_time_token(pubnub_t *p);
 
 /** Gets the origin to be used for the context @p p.
     If setting of the origin is not enabled, this will return
@@ -594,7 +594,7 @@ char const *pubnub_last_time_token(pubnub_t const *p);
     @param p Pubnub context to get the origin from
     @return A read only string of origin used for context @p p
  */
-char const *pubnub_get_origin(pubnub_t const *p);
+char const *pubnub_get_origin(pubnub_t *p);
 
 /** Sets the origin to be used for the context @p p.  If setting of
     the origin is not enabled, this will fail.  It may also fail if it

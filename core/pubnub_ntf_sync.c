@@ -36,21 +36,33 @@ void pbntf_trans_outcome(pubnub_t *pb)
 }
 
 
-enum pubnub_res pubnub_last_result(pubnub_t const *pb)
+enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
+    enum pubnub_res result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
     if (pb->state != PBS_IDLE) {
         pbnc_fsm((pubnub_t*)pb);
     }
-    return pb->core.last_result;
+    result = pb->core.last_result;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
 }
 
 
 enum pubnub_res pubnub_await(pubnub_t *pb)
 {
+    enum pubnub_res result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
     while (pb->state != PBS_IDLE) {
         pbnc_fsm(pb);
     }
-    return pb->core.last_result;
+    result = pb->core.last_result;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
 }

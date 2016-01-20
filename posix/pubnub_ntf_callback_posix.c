@@ -111,7 +111,10 @@ void* socket_watcher_thread(void *arg)
                 size_t i;
                 for (i = 0; i < m_watcher.apoll_size; ++i) {
                     if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT | POLLHUP)) {
+
+                        pubnub_mutex_lock(m_watcher.apb[i]->monitor);
                         pbnc_fsm(m_watcher.apb[i]);
+                        pubnub_mutex_unlock(m_watcher.apb[i]->monitor);
                     }
                 }
             }

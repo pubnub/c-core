@@ -92,7 +92,7 @@ int main()
         printf("Failed to free the Pubnub context `pbp`\n");
     }
 
-    puts("Pubnub callback demo over.");
+    puts("Pubnub cancel subscribe sync demo over.");
 
     return 0;
 }

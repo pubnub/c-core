@@ -7,7 +7,7 @@ else
 SOURCEFILES += monotonic_clock_get_time_posix.c
 endif
 
-CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall
+CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 

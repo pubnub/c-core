@@ -5,6 +5,7 @@
 #include "pubnub_config.h"
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
+#include "pubnub_mutex.h"
 
 #if defined(PUBNUB_CALLBACK_API)
 #include "pubnub_ntf_callback.h"
@@ -131,6 +132,10 @@ struct pubnub_ {
         bool fallbackSSL : 1;
 #endif
     } options;
+
+#if PUBNUB_THREADSAFE
+    pubnub_mutex_t monitor;
+#endif
 
 #if PUBNUB_TIMERS_API
     /** Duration of the transaction timeout, in milliseconds */
