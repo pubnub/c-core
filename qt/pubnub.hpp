@@ -252,6 +252,11 @@ namespace pubnub {
         */
         context(std::string pubkey, std::string subkey);
 
+        context(std::string pubkey, std::string subkey, std::string origin) :
+            context(pubkey, subkey) {
+            set_origin(origin);
+        }
+
         /** Sets the origin to @p origin on this context. This may fail.
             To reset to default, pass an empty string.
          */

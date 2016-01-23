@@ -11,10 +11,10 @@ const std::chrono::seconds Td(5);
 const std::chrono::milliseconds T_chan_registry_propagation(1000);
 
 
-void complex_send_and_receive_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub)
+void complex_send_and_receive_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp.subscribe("two,three")).in(Td) == PNR_OK;
     SENSE(pbp_2.subscribe("ch")).in(Td) == PNR_OK;
@@ -33,10 +33,10 @@ void complex_send_and_receive_over_several_channels_simultaneously(std::string c
 }
 
 
-void complex_send_and_receive_over_channel_plus_group_simultaneously(std::string const &pubkey, std::string const &keysub)
+void complex_send_and_receive_over_channel_plus_group_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("two,three", "gr")).in(Td) == PNR_OK;
@@ -61,9 +61,9 @@ void complex_send_and_receive_over_channel_plus_group_simultaneously(std::string
 }
 
 
-void connect_disconnect_and_connect_again(std::string const &pubkey, std::string const &keysub)
+void connect_disconnect_and_connect_again(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
     std::chrono::milliseconds rel_time = Td;
     pubnub_res result = PNR_STARTED;
 
@@ -92,9 +92,9 @@ void connect_disconnect_and_connect_again(std::string const &pubkey, std::string
 }
 
 
-void connect_disconnect_and_connect_again_group(std::string const &pubkey, std::string const &keysub)
+void connect_disconnect_and_connect_again_group(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
     std::chrono::milliseconds rel_time = Td;
     pubnub_res result = PNR_STARTED;
     
@@ -130,10 +130,10 @@ void connect_disconnect_and_connect_again_group(std::string const &pubkey, std::
 }
 
 
-void connect_disconnect_and_connect_again_combo(std::string const &pubkey, std::string const &keysub)
+void connect_disconnect_and_connect_again_combo(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
     std::chrono::milliseconds rel_time = Td;
     pubnub_res result = PNR_STARTED;
 
@@ -176,9 +176,9 @@ void connect_disconnect_and_connect_again_combo(std::string const &pubkey, std::
 }
 
 
-void wrong_api_usage(std::string const &pubkey, std::string const &keysub)
+void wrong_api_usage(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
     std::chrono::milliseconds rel_time = Td;
     pubnub_res result = PNR_STARTED;
     
@@ -205,9 +205,9 @@ void wrong_api_usage(std::string const &pubkey, std::string const &keysub)
 }
 
 
-void handling_errors_from_pubnub(std::string const &pubkey, std::string const &keysub)
+void handling_errors_from_pubnub(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
+    context pbp(pubkey, keysub, origin);
     
     SENSE(pbp.publish("ch", "\"Test ")).in(Td) == PNR_PUBLISH_FAILED;
     EXPECT(pbp.last_http_code()) == 400;

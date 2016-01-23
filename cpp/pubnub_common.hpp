@@ -173,6 +173,16 @@ namespace pubnub {
             pubnub_init(d_pb, d_pubk.c_str(), d_ksub.c_str());
         }
 
+        context(std::string pubkey, std::string subkey, std::string origin) :
+            d_pubk(pubkey), d_ksub(subkey) {
+            d_pb = pubnub_alloc();
+            if (0 == d_pb) {
+                throw std::bad_alloc();
+            }
+            pubnub_init(d_pb, d_pubk.c_str(), d_ksub.c_str());
+            set_origin(origin);
+        }
+
         /** Sets the origin to @p origin on this context. This may fail.
             To reset to default, pass an empty string.
             @see pubnub_origin_set

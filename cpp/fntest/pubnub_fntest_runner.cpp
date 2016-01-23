@@ -17,7 +17,7 @@ enum class TestResult {
     indeterminate
 };
 
-using TestFN_T = std::function<void(std::string const&,std::string const&)>;
+using TestFN_T = std::function<void(std::string const&,std::string const&, std::string const&)>;
 
 struct TestData {
     TestFN_T pf;
@@ -82,7 +82,7 @@ static unsigned m_running_tests;
 /// The "real main" function to run all the tests.  Each test will run
 /// in its own thread, so that they can run in parallel, if we want
 /// them to.
-static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub)
+static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub, char const *origin)
 {
     unsigned next_test = 0;
     std::vector<unsigned> failed;
@@ -100,10 +100,10 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         m_running_tests = in_this_pass;
         /// first, launch the threads, one per and for test
         for (i = next_test; i < next_test+in_this_pass; ++i) {
-            runners[i-next_test] = std::thread([i, pubkey, keysub, aTest] {
+            runners[i-next_test] = std::thread([i, pubkey, keysub, origin, aTest] {
                     try {
                         std::this_thread::sleep_for(std::chrono::seconds(1));
-                        aTest[i].pf(pubkey, keysub);
+                        aTest[i].pf(pubkey, keysub, origin);
                         {
                             std::lock_guard<std::mutex>  lk(m_mtx);
                             --m_running_tests;
@@ -169,9 +169,10 @@ int main(int argc, char *argv[])
 {
     char const *pubkey = (argc > 1) ? argv[1] : "demo";
     char const *keysub = (argc > 2) ? argv[2] : "demo";
-    unsigned max_conc_thread = (argc > 3) ? std::atoi(argv[3]) : 1;
+    char const *origin = (argc > 3) ? argv[3] : "pubsub.pubnub.com";
+    unsigned max_conc_thread = (argc > 4) ? std::atoi(argv[4]) : 1;
 
-    std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << std::endl;
+    std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << ", orign: " << origin << std::endl;
 
-    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub);
+    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
 }

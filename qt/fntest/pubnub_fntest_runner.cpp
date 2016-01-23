@@ -20,7 +20,7 @@ enum class TestResult {
 };
 Q_DECLARE_METATYPE(TestResult);
 
-using TestFN_T = std::function<void(std::string const&,std::string const&)>;
+using TestFN_T = std::function<void(std::string const&,std::string const&, std::string const&)>;
 
 struct TestData {
     TestFN_T pf;
@@ -71,12 +71,13 @@ class TestRunner : public QObject {
     
     QString d_pubkey;
     QString d_keysub;
+    QString d_origin;
     unsigned d_iTest;
     TestFN_T d_pf;
     char const *d_name;
 public:
-    TestRunner(QString const& pubkey, QString const& keysub, unsigned iTest, TestFN_T pf, char const *name)
-        : d_pubkey(pubkey), d_keysub(keysub), d_iTest(iTest), d_pf(pf), d_name(name) {}
+    TestRunner(QString const& pubkey, QString const& keysub, QString const&origin, unsigned iTest, TestFN_T pf, char const *name)
+        : d_pubkey(pubkey), d_keysub(keysub), d_origin(origin), d_iTest(iTest), d_pf(pf), d_name(name) {}
     
     unsigned iTest() const { return d_iTest; }
 
@@ -84,7 +85,7 @@ public slots:
     void doTest() {
         TestResult result = TestResult::pass;
         try {
-            d_pf(d_pubkey.toStdString(), d_keysub.toStdString());
+            d_pf(d_pubkey.toStdString(), d_keysub.toStdString(), d_origin.toStdString());
         }
         catch (std::exception &ex) {
             std::cout << "\n\x1b[41m !! " << d_iTest+1 << ". test '" << d_name << "' failed!\nError description: " << ex.what() << "\x1b[m\n" << std::endl;
@@ -106,6 +107,7 @@ class TestController : public QObject {
 
     QString d_pubkey;
     QString d_keysub;
+    QString d_origin;
     unsigned d_max_conc_thread;
     TestData *d_test;
     unsigned d_test_count;
@@ -116,9 +118,10 @@ class TestController : public QObject {
     unsigned d_indete_count;
 
 public:
-    TestController(TestData aTest[], unsigned test_count, QString const& pubkey, QString const& keysub, unsigned max_conc_thread)
+    TestController(TestData aTest[], unsigned test_count, QString const& pubkey, QString const& keysub, QString const& origin, unsigned max_conc_thread)
         : d_pubkey(pubkey)
         , d_keysub(keysub)
+        , d_origin(origin)
         , d_max_conc_thread(max_conc_thread) 
         , d_test(aTest)
         , d_test_count(test_count) {
@@ -179,7 +182,7 @@ private:
         }
         for (unsigned i = d_next_test; i < d_next_test+in_this_pass; ++i) {
             QThread *pqt = new QThread;
-            TestRunner *runner = new TestRunner(d_pubkey, d_keysub, i, d_test[i].pf, d_test[i].name);
+            TestRunner *runner = new TestRunner(d_pubkey, d_keysub, d_origin, i, d_test[i].pf, d_test[i].name);
             runner->moveToThread(pqt);
             connect(pqt, SIGNAL(finished()), runner, SLOT(deleteLater()));
             connect(runner, SIGNAL(testFinished(TestRunner*,TestResult)), this, SLOT(onTestFinished(TestRunner*,TestResult)));
@@ -200,14 +203,14 @@ int main(int argc, char *argv[])
     qRegisterMetaType<TestResult>();
     char const *pubkey = (argc > 1) ? argv[1] : "demo";
     char const *keysub = (argc > 2) ? argv[2] : "demo";
-    unsigned max_conc_thread = (argc > 3) ? std::atoi(argv[3]) : 1;
+    char const *origin = (argc > 3) ? argv[3] : "demo";
+    unsigned max_conc_thread = (argc > 4) ? std::atoi(argv[4]) : 1;
 
-    std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << std::endl;
+    std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << ", origin == " << origin << std::endl;
 
-    TestController ctrl(m_aTest, TEST_COUNT, pubkey, keysub, max_conc_thread);
+    TestController ctrl(m_aTest, TEST_COUNT, pubkey, keysub, origin, max_conc_thread);
 
     QTimer::singleShot(0, &ctrl, SLOT(execute()));
     
-    return app.exec();
-    
+    return app.exec();    
 }

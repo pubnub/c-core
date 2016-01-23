@@ -11,11 +11,9 @@ const std::chrono::seconds Td(5);
 const std::chrono::milliseconds T_chan_registry_propagation(1000);
 
 
-void simple_connect_and_send_over_single_channel(std::string const &pubkey, std::string const &keysub)
+void simple_connect_and_send_over_single_channel(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pb(pubkey, keysub);
-
-    pb.set_origin("pubsub-eucentral.pubnub.com");
+    context pb(pubkey, keysub, origin);
 
     SENSE(pb.subscribe("ch")).in(Td) == PNR_OK;
 
@@ -27,11 +25,9 @@ void simple_connect_and_send_over_single_channel(std::string const &pubkey, std:
 }
 
 
-void connect_and_send_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_send_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pb(pubkey, keysub);
-
-    pb.set_origin("pubsub-eucentral.pubnub.com");
+    context pb(pubkey, keysub, origin);
 
     SENSE(pb.subscribe("ch")).in(Td) == PNR_OK;
 
@@ -46,11 +42,9 @@ void connect_and_send_over_several_channels_simultaneously(std::string const &pu
 }
 
 
-void simple_connect_and_send_over_single_channel_in_group(std::string const &pubkey, std::string const &keysub)
+void simple_connect_and_send_over_single_channel_in_group(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pb(pubkey, keysub);
-
-    pb.set_origin("pubsub-eucentral.pubnub.com");
+    context pb(pubkey, keysub, origin);
     
     SENSE(pb.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pb.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;;
@@ -69,11 +63,9 @@ void simple_connect_and_send_over_single_channel_in_group(std::string const &pub
 }
 
 
-void connect_and_send_over_several_channels_in_group_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_send_over_several_channels_in_group_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch,two", "gr")).in(Td) == PNR_OK;
@@ -91,11 +83,9 @@ void connect_and_send_over_several_channels_in_group_simultaneously(std::string 
 }
 
 
-void connect_and_send_over_channel_in_group_and_single_channel_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_send_over_channel_in_group_and_single_channel_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
@@ -113,11 +103,9 @@ void connect_and_send_over_channel_in_group_and_single_channel_simultaneously(st
 }
 
 
-void connect_and_send_over_channel_in_group_and_multi_channel_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_send_over_channel_in_group_and_multi_channel_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("three", "gr")).in(Td) == PNR_OK;
@@ -136,13 +124,10 @@ void connect_and_send_over_channel_in_group_and_multi_channel_simultaneously(std
 }
 
 
-void simple_connect_and_receiver_over_single_channel(std::string const &pubkey, std::string const &keysub)
+void simple_connect_and_receiver_over_single_channel(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp_2.subscribe("ch")).in(Td) == PNR_OK;
 
@@ -160,13 +145,10 @@ void simple_connect_and_receiver_over_single_channel(std::string const &pubkey, 
 }
 
 
-void connect_and_receive_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_receive_over_several_channels_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp_2.subscribe("ch,two")).in(Td) == PNR_OK;
 
@@ -178,13 +160,10 @@ void connect_and_receive_over_several_channels_simultaneously(std::string const 
 }
 
 
-void simple_connect_and_receiver_over_single_channel_in_group(std::string const &pubkey, std::string const &keysub)
+void simple_connect_and_receiver_over_single_channel_in_group(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp_2.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp_2.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
@@ -208,13 +187,10 @@ void simple_connect_and_receiver_over_single_channel_in_group(std::string const 
 }
 
 
-void connect_and_receive_over_several_channels_in_group_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_receive_over_several_channels_in_group_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp_2.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp_2.add_channel_to_group("ch,two", "gr")).in(Td) == PNR_OK;
@@ -233,13 +209,10 @@ void connect_and_receive_over_several_channels_in_group_simultaneously(std::stri
 }
 
 
-void connect_and_receive_over_channel_in_group_and_single_channel_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_receive_over_channel_in_group_and_single_channel_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
@@ -258,13 +231,10 @@ void connect_and_receive_over_channel_in_group_and_single_channel_simultaneously
 }
 
 
-void connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously(std::string const &pubkey, std::string const &keysub)
+void connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-    context pbp_2(pubkey, keysub);
-
-    pbp_2.set_origin("pubsub-eucentral.pubnub.com");
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
+    context pbp_2(pubkey, keysub, origin);
 
     SENSE(pbp_2.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp_2.add_channel_to_group("three", "gr")).in(Td) == PNR_OK;
@@ -284,11 +254,9 @@ void connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously(
 }
 
 
-void broken_connection_test(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.subscribe("ch")).in(Td) == PNR_OK;
 
@@ -317,11 +285,9 @@ void broken_connection_test(std::string const &pubkey, std::string const &keysub
 }
 
 
-void broken_connection_test_multi(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test_multi(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.subscribe("ch,two")).in(Td) == PNR_OK;
 
@@ -347,11 +313,9 @@ void broken_connection_test_multi(std::string const &pubkey, std::string const &
 }
 
 
-void broken_connection_test_group(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test_group(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
@@ -386,11 +350,9 @@ void broken_connection_test_group(std::string const &pubkey, std::string const &
 }
 
 
-void broken_connection_test_multi_in_group(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test_multi_in_group(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch,two", "gr")).in(Td) == PNR_OK;
@@ -425,11 +387,9 @@ void broken_connection_test_multi_in_group(std::string const &pubkey, std::strin
 }
 
 
-void broken_connection_test_group_in_group_out(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test_group_in_group_out(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("ch", "gr")).in(Td) == PNR_OK;
@@ -464,11 +424,9 @@ void broken_connection_test_group_in_group_out(std::string const &pubkey, std::s
 }
 
 
-void broken_connection_test_group_multichannel_out(std::string const &pubkey, std::string const &keysub)
+void broken_connection_test_group_multichannel_out(std::string const &pubkey, std::string const &keysub, std::string const &origin)
 {
-    context pbp(pubkey, keysub);
-
-    pbp.set_origin("pubsub-eucentral.pubnub.com");
+    context pbp(pubkey, keysub, origin);
 
     SENSE(pbp.remove_channel_group("gr")).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group("three", "gr")).in(Td) == PNR_OK;
