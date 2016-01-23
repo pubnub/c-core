@@ -180,5 +180,4 @@ bool pb_valid_ctx_ptr(pubnub_t const *pb);
 pubnub_t *pballoc_get_ctx(unsigned idx);
 
 
-
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */

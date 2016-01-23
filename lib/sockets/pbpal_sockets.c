@@ -23,9 +23,9 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-		if (0 != socket_platform_init()) {
-			return -1;
-		}
+        if (0 != socket_platform_init()) {
+            return -1;
+        }
         pbntf_init();
         s_init = true;
     }

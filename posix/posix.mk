@@ -22,11 +22,11 @@ pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
 	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES) $(LDLIBS)
 
-pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c $(SOURCEFILES) $(LDLIBS) -lpthread
+pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/pubnub_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c $(SOURCEFILES) $(LDLIBS) -lpthread
 
-subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/subscribe_publish_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c $(SOURCEFILES) $(LDLIBS) -lpthread
+subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG ../core/samples/subscribe_publish_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c $(SOURCEFILES) $(LDLIBS) -lpthread
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c
 	$(CC) -o $@ $(CFLAGS) -D VERBOSE_DEBUG ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c $(SOURCEFILES)  ../core/pubnub_ntf_sync.c $(LDLIBS) -lpthread

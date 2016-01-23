@@ -154,7 +154,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         return PNR_ADDR_RESOLUTION_FAILED;
     }
     
-    DEBUG_PRINTF("pb=%p: Got BIO_new_ssl\n", pb);
+    DEBUG_PRINTF("pb=%p: Got BIO_new_ssl == %p\n", pb, pb->pal.socket);
     
     BIO_get_ssl(pb->pal.socket, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
