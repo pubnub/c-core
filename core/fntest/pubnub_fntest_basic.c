@@ -14,6 +14,7 @@ TEST_DEF(simple_connect_and_send_over_single_channel) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp, "ch", NULL), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -39,6 +40,7 @@ TEST_DEF(connect_and_send_over_several_channels_simultaneously) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp, "ch", NULL), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -66,6 +68,7 @@ TEST_DEF(simple_connect_and_send_over_single_channel_in_group) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -101,6 +104,7 @@ TEST_DEF(connect_and_send_over_several_channels_in_group_simultaneously) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -131,6 +135,7 @@ TEST_DEF(connect_and_send_over_channel_in_group_and_single_channel_simultaneousl
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -162,6 +167,7 @@ TEST_DEF(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -196,9 +202,11 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp_2, "ch", NULL), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -230,9 +238,11 @@ TEST_DEF(connect_and_receive_over_several_channels_simultaneously) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp_2, "ch,two", NULL), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -258,9 +268,11 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel_in_group) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -302,9 +314,11 @@ TEST_DEF(connect_and_receive_over_several_channels_in_group_simultaneously) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -339,9 +353,11 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_single_channel_simultaneo
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -376,9 +392,11 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneou
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
     pbp_2 = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp_2, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -413,6 +431,7 @@ TEST_DEF(broken_connection_test) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp, "ch", NULL), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -457,6 +476,7 @@ TEST_DEF(broken_connection_test_multi) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_subscribe(pbp, "ch,two", NULL), PNR_STARTED);
     await_timed(6*SECONDS, PNR_OK, pbp);
@@ -500,6 +520,7 @@ TEST_DEF(broken_connection_test_group) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -554,6 +575,7 @@ TEST_DEF(broken_connection_test_multi_in_group) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -607,6 +629,7 @@ TEST_DEF(broken_connection_test_group_in_group_out) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -660,6 +683,7 @@ TEST_DEF(broken_connection_test_group_multichannel_out) {
     pbp = pubnub_alloc();
     TEST_DEFER(pubnub_free, pbp);
     pubnub_init(pbp, g_pubkey, g_keysub);
+    pubnub_origin_set(pbp, g_origin);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);

@@ -13,6 +13,7 @@ enum PNFNTestResult {
 
 extern char const*  g_pubkey;
 extern char const*  g_keysub;
+extern char const*  g_origin;
 
 
 struct pnfntst_timer;

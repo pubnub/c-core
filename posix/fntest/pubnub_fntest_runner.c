@@ -57,9 +57,10 @@ static struct TestData m_aTest[] =  {
 
 char const* g_pubkey;
 char const* g_keysub;
+char const* g_origin;
 
 
-static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub)
+static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub, char const *origin)
 {
     unsigned next_test = 0;
     unsigned failed_count = 0;
@@ -68,6 +69,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
 
     g_pubkey = pubkey;
     g_keysub = keysub;
+    g_origin = origin;
 
     printf("Starting Run of %d tests\n", test_count);
     while (next_test < test_count) {
@@ -127,7 +129,8 @@ int main(int argc, char *argv[])
 {
     char const *pubkey = (argc > 1) ? argv[1] : "demo";
     char const *keysub = (argc > 2) ? argv[2] : "demo";
-    unsigned max_conc_thread = (argc > 3) ? atoi(argv[3]) : 1;
+    char const *origin = (argc > 3) ? argv[3] : "pubsub.pubnub.com";
+    unsigned max_conc_thread = (argc > 4) ? atoi(argv[4]) : 1;
 
-    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub);
+    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
 }

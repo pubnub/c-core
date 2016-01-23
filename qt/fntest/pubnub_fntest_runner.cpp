@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<TestResult>();
     char const *pubkey = (argc > 1) ? argv[1] : "demo";
     char const *keysub = (argc > 2) ? argv[2] : "demo";
-    char const *origin = (argc > 3) ? argv[3] : "demo";
+    char const *origin = (argc > 3) ? argv[3] : "pubsub.pubnub.com";
     unsigned max_conc_thread = (argc > 4) ? std::atoi(argv[4]) : 1;
 
     std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << ", origin == " << origin << std::endl;

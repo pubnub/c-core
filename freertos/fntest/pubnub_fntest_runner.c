@@ -57,6 +57,7 @@ static struct TestData m_aTest[] =  {
 
 char const* g_pubkey;
 char const* g_keysub;
+char const* g_origin;
 unsigned g_max_conc_tests;
 
 

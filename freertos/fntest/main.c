@@ -139,6 +139,7 @@ static UBaseType_t ulNextRand;
 
 extern char *g_pubkey;
 extern char *g_keysub;
+extern char *g_origin;
 extern unsigned g_max_conc_tests;
 
 int main(int argc, char *argv[])
@@ -146,7 +147,8 @@ int main(int argc, char *argv[])
 const uint32_t ulLongTime_ms = pdMS_TO_TICKS( 1000UL );
     g_pubkey = (argc > 1) ? argv[1] : "demo";
     g_keysub = (argc > 2) ? argv[2] : "demo";
-    g_max_conc_tests = (argc > 3) ? atoi(argv[3]) : 1;
+    g_origin = (argc > 3) ? argv[3] : "pubsub.pubnub.com";
+    g_max_conc_tests = (argc > 4) ? atoi(argv[4]) : 1;
 
 	/*
 	 * Instructions for using this project are provided on:
