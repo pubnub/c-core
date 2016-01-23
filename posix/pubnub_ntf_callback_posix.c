@@ -35,7 +35,7 @@ static struct SocketWatcherData m_watcher;
 
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
-    int i;
+    size_t i;
     int socket = pubnub_get_native_socket(pb);
     if (-1 == socket) {
         return;
@@ -73,7 +73,6 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     size_t i;
     int socket = pubnub_get_native_socket(pb);
-    printf("remove_socket, pb=%p, socket=%d\n", pb, socket);
     if (-1 == socket) {
         return;
     }
