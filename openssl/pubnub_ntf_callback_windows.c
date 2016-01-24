@@ -1,5 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-
 #include "pubnub_ntf_callback.h"
 
 #include "pubnub_internal.h"
@@ -7,8 +6,8 @@
 #include "pbntf_trans_outcome_common.h"
 #include "pubnub_timer_list.h"
 #include "pbpal.h"
+#include "pubnub_get_native_socket.h"
 
-#include <winsock2.h>
 #include <windows.h>
 #include <process.h>
 
@@ -17,70 +16,70 @@
 
 
 struct SocketWatcherData {
-    WSAPOLLFD *apoll;
-    size_t apoll_size;
-    size_t apoll_cap;
-    pubnub_t **apb;
+    _Guarded_by_(mutw) size_t apoll_size;
+    _Guarded_by_(mutw) size_t apoll_cap;
+    _Guarded_by_(mutw) _Field_size_(apoll_cap) WSAPOLLFD *apoll;
+    _Guarded_by_(mutw) _Field_size_(apoll_cap) pubnub_t **apb;
     CRITICAL_SECTION mutw;
     HANDLE condw;
     uintptr_t thread_id;
 #if PUBNUB_TIMERS_API
-    pubnub_t *timer_head;
+    _Guarded_by_(mutw) pubnub_t *timer_head;
 #endif
 };
 
 static struct SocketWatcherData m_watcher;
 
 
-static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_socket_t pb_socket)
+static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
-	size_t i;
-    int socket;
-    if (-1 == BIO_get_fd(pb_socket, &socket)) {
-        DEBUG_PRINTF("Uninitialized BIO!\n");
-        return;
+    size_t i;
+    SOCKET sockt = pubnub_get_native_socket(pb);
+
+    PUBNUB_ASSERT(watcher->apoll_size <= watcher->apoll_cap);
+
+    if (INVALID_SOCKET == sockt) {
+        return ;
     }
     for (i = 0; i < watcher->apoll_size; ++i) {
-        if (watcher->apoll[i].fd == socket) {
-			return;
-		}
-	}
+        PUBNUB_ASSERT_OPT(watcher->apoll[i].fd != sockt);
+    }
     if (watcher->apoll_size == watcher->apoll_cap) {
-        size_t newcap = watcher->apoll_size + 2;
-        struct pollfd *npalloc = (struct pollfd*)realloc(watcher->apoll, sizeof watcher->apoll[0] * newcap);
-        pubnub_t **npapb = (pubnub_t **)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
-        if (NULL == npalloc) {
-            if (npapb != NULL) {
-                watcher->apb = npapb;
+        size_t newcap = watcher->apoll_cap + 2;
+        WSAPOLLFD *npapoll = (WSAPOLLFD*)realloc(watcher->apoll, sizeof watcher->apoll[0] * newcap);
+        if (NULL == npapoll) {
+            return;
+        }
+        else {
+            pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
+            watcher->apoll = npapoll;
+            if (NULL == npapb) {
+                return;
             }
-            return;
+            watcher->apb = npapb;
         }
-        else if (NULL == npapb) {
-            watcher->apoll = npalloc;
-            return;
-        }
-        watcher->apoll = npalloc;
-        watcher->apb = npapb;
         watcher->apoll_cap = newcap;
     }
 
-    watcher->apoll[watcher->apoll_size].fd = socket;
+    watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
     watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
     watcher->apb[watcher->apoll_size] = pb;
     ++watcher->apoll_size;
 }
 
 
-static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb, pb_socket_t pb_socket)
+static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     size_t i;
-    int socket;
-    if (-1 == BIO_get_fd(pb_socket, &socket)) {
-        DEBUG_PRINTF("Uninitialized BIO!\n");
-        return;
+    SOCKET sockt = pubnub_get_native_socket(pb);
+
+    PUBNUB_ASSERT(watcher->apoll_size <= watcher->apoll_cap);
+
+    if (INVALID_SOCKET == sockt) {
+        return ;
     }
     for (i = 0; i < watcher->apoll_size; ++i) {
-        if (watcher->apoll[i].fd == socket) {
+        if (watcher->apoll[i].fd == sockt) {
             size_t to_move = watcher->apoll_size - i - 1;
             PUBNUB_ASSERT(watcher->apb[i] == pb);
             if (to_move > 0) {
@@ -102,7 +101,7 @@ static int elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
     prev.HighPart = prev_timspec.dwHighDateTime;
     current.LowPart = timspec.dwLowDateTime;
     current.HighPart = timspec.dwHighDateTime;
-    return (current.QuadPart - prev.QuadPart) / (10*1000);
+    return (int)((current.QuadPart - prev.QuadPart) / (10 * 1000));
 }
 
 
@@ -110,28 +109,31 @@ void socket_watcher_thread(void *arg)
 {
     FILETIME prev_time;
     GetSystemTimeAsFileTime(&prev_time);
-    
+
     for (;;) {
-        int rslt;
-        DWORD ms = 200;
-        
+        const DWORD ms = 100;
+
         WaitForSingleObject(m_watcher.condw, ms);
-        
+
         EnterCriticalSection(&m_watcher.mutw);
         if (0 == m_watcher.apoll_size) {
             LeaveCriticalSection(&m_watcher.mutw);
             continue;
         }
-        rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
-        if (SOCKET_ERROR == rslt) {
-            /* error? what to do about it? */
-            DEBUG_PRINTF("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
-        }
-        else if (rslt > 0) {
-            size_t i;
-            for (i = 0; i < m_watcher.apoll_size; ++i) {
-                if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
-                    pbnc_fsm(m_watcher.apb[i]);
+        {
+            int rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
+            if (SOCKET_ERROR == rslt) {
+                /* error? what to do about it? */
+                DEBUG_PRINTF("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
+            }
+            else if (rslt > 0) {
+                size_t i;
+                for (i = 0; i < m_watcher.apoll_size; ++i) {
+                    if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
+                        pubnub_mutex_lock(m_watcher.apb[i]->monitor);
+                        pbnc_fsm(m_watcher.apb[i]);
+                        pubnub_mutex_unlock(m_watcher.apb[i]->monitor);
+                    }
                 }
             }
         }
@@ -144,9 +146,11 @@ void socket_watcher_thread(void *arg)
                 pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
                 while (expired != NULL) {
                     pubnub_t *next = expired->next;
-                    
+
+                    pubnub_mutex_lock(expired->monitor);
                     pbnc_stop(expired, PNR_TIMEOUT);
-                    
+                    pubnub_mutex_unlock(expired->monitor);
+
                     expired->next = NULL;
                     expired->previous = NULL;
                     expired = next;
@@ -173,7 +177,7 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 {
     EnterCriticalSection(&m_watcher.mutw);
 
-    save_socket(&m_watcher, pb, socket);
+    save_socket(&m_watcher, pb);
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
@@ -191,7 +195,7 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 static void remove_timer_safe(pubnub_t *to_remove)
 {
     if (PUBNUB_TIMERS_API) {
-        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL)
             || (to_remove == m_watcher.timer_head)) {
             m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
         }
@@ -203,7 +207,7 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
     EnterCriticalSection(&m_watcher.mutw);
 
-    remove_socket(&m_watcher, pb, socket);
+    remove_socket(&m_watcher, pb);
     remove_timer_safe(pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
@@ -220,7 +224,7 @@ void pbntf_trans_outcome(pubnub_t *pb)
 }
 
 
-enum pubnub_res pubnub_last_result(pubnub_t const *pb)
+enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     return pb->core.last_result;

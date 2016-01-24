@@ -19,11 +19,11 @@ pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c $(SOURCEFILES) ..\c
 cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c
 	$(CC) $(CFLAGS) ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c $(LIBS)
 
-pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c $(SOURCEFILES) ..\core\pubnub_timer_list.c pubnub_ntf_callback_openssl_windows.c
-	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\pubnub_callback_sample.c  $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_openssl_windows.c $(LIBS)
+pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c $(SOURCEFILES) ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c pubnub_get_native_socket.c
+	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\pubnub_callback_sample.c  $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c  pubnub_get_native_socket.c $(LIBS)
 
-subscribe_publish_callback_sample.exe: ..\core\samples\subscribe_publish_callback_sample.c $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_openssl_windows.c
-	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\subscribe_publish_callback_sample.c  $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_openssl_windows.c $(LIBS)
+subscribe_publish_callback_sample.exe: ..\core\samples\subscribe_publish_callback_sample.c $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c  pubnub_get_native_socket.c
+	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\subscribe_publish_callback_sample.c  $(SOURCEFILES)  ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c  pubnub_get_native_socket.c $(LIBS)
 
 pubnub_fntest.exe: ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c  ..\windows\fntest\pubnub_fntest_windows.c ..\windows\fntest\pubnub_fntest_runner.c $(SOURCEFILES)  ..\core\pubnub_ntf_sync.c
 	$(CC) $(CFLAGS) ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c ..\windows\fntest\pubnub_fntest_windows.c ..\windows\fntest\pubnub_fntest_runner.c $(SOURCEFILES)  ..\core\pubnub_ntf_sync.c $(LIBS)
