@@ -22,21 +22,21 @@ futres_nesting_sync.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnu
 	$(CXX) /Fe$@ $(CFLAGS) samples\futres_nesting.cpp ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
-pubnub_callback_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+pubnub_callback_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp ..\windows\pubnub_get_native_socket.c $(SOURCEFILES) /link $(LIBS)
 
-pubnub_callback_cpp11_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_cpp11.cpp
-	$(CXX) /Fe$@ /D PUBNUB_CALLBACK_API $(CFLAGS) /D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
+pubnub_callback_cpp11_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
+	$(CXX) /Fe$@ /D PUBNUB_CALLBACK_API $(CFLAGS) /D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
 
-subscribe_publish_callback_sample.exe: samples\subscribe_publish_callback_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\subscribe_publish_callback_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+subscribe_publish_callback_sample.exe: samples\subscribe_publish_callback_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\subscribe_publish_callback_sample.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
 
-futres_nesting_callback.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+futres_nesting_callback.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
-futres_nesting_callback_cpp11.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_cpp11.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
+futres_nesting_callback_cpp11.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\windows\pubnub_ntf_callback_windows.c ..\windows\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
 
