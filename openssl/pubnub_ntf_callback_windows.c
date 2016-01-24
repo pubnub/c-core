@@ -1,15 +1,18 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_callback.h"
 
+#include <winsock2.h>
+#include <windows.h>
+#include <process.h>
+
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
 #include "pubnub_timer_list.h"
 #include "pbpal.h"
+/* This should have the same code as the file in `..\windows` directory, but in this directory because of 
+    header inclusion problems, until we find a better solution. Github for Windows doesn't support symlinks. */
 #include "pubnub_get_native_socket.h"
-
-#include <windows.h>
-#include <process.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -61,7 +64,7 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
         watcher->apoll_cap = newcap;
     }
 
-    watcher->apoll[watcher->apoll_size].fd = pb->pal.socket;
+    watcher->apoll[watcher->apoll_size].fd = sockt;
     watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
     watcher->apb[watcher->apoll_size] = pb;
     ++watcher->apoll_size;

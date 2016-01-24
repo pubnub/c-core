@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
+#include <winsock2.h>
+#include <windows.h>
 
+#include "pubnub_get_native_socket.h"
 
 #if defined(_WIN32)
 SOCKET pubnub_get_native_socket(pubnub_t *pb) { SOCKET socket;

@@ -6,7 +6,7 @@ OPENSSLPATH=c:\OpenSSL-Win32
 
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 
-CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\core\c99 /I ..\openssl /I $(OPENSSLPATH)\include /W3
+CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\core\c99 /I ..\openssl /I $(OPENSSLPATH)\include /W3 /D PUBNUB_THREADSAFE
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /TP means "compile all files as C++"
@@ -26,21 +26,21 @@ openssl\futres_nesting_sync.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\co
 	$(CXX) /Fe$@ $(CFLAGS) samples\futres_nesting.cpp ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
-openssl\pubnub_callback_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+openssl\pubnub_callback_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
 
-openssl\pubnub_callback_cpp11_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_cpp11.cpp
-	$(CXX) /Fe$@ /D PUBNUB_CALLBACK_API $(CFLAGS) /D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
+openssl\pubnub_callback_cpp11_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
+	$(CXX) /Fe$@ /D PUBNUB_CALLBACK_API $(CFLAGS) /D VERBOSE_DEBUG samples\pubnub_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
 
-openssl\subscribe_publish_callback_sample.exe: samples\subscribe_publish_callback_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\subscribe_publish_callback_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+openssl\subscribe_publish_callback_sample.exe: samples\subscribe_publish_callback_sample.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D VERBOSE_DEBUG samples\subscribe_publish_callback_sample.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
 
-openssl\futres_nesting_callback.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
+openssl\futres_nesting_callback.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_windows.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
-openssl\futres_nesting_callback_cpp11.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_cpp11.cpp
-	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_openssl_windows.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
+openssl\futres_nesting_callback_cpp11.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
+	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples\futres_nesting.cpp ..\core\pubnub_timer_list.c ..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) /link $(LIBS)
 #-D VERBOSE_DEBUG
 
 

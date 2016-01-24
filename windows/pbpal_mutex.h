@@ -14,7 +14,7 @@ typedef CRITICAL_SECTION pbpal_mutex_t;
 #define pbpal_mutex_lock(m) EnterCriticalSection(&(m))
 #define pbpal_mutex_unlock(m) LeaveCriticalSection(&(m))
 #define pbpal_mutex_destroy(m) DeleteCriticalSection(&(m))
-static inline int pubnub_InitCriticalSection(_Out_ LPCRITICAL_SECTION lpCS) {
+__inline int pubnub_InitCriticalSection(_Out_ LPCRITICAL_SECTION lpCS) {
   InitializeCriticalSection(lpCS);
   return 0;
 }
