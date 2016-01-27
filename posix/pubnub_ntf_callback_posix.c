@@ -63,7 +63,7 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     }
 
     watcher->apoll[watcher->apoll_size].fd = socket;
-    watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
+    watcher->apoll[watcher->apoll_size].events = POLLOUT;
     watcher->apb[watcher->apoll_size] = pb;
     ++watcher->apoll_size;
 }
@@ -122,10 +122,13 @@ void* socket_watcher_thread(void *arg)
             else if (rslt > 0) {
                 size_t i;
                 for (i = 0; i < m_watcher.apoll_size; ++i) {
-                    if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT | POLLHUP)) {
-
+                    if (m_watcher.apoll[i].revents & (m_watcher.apoll[i].events | POLLHUP)) {
                         pubnub_mutex_lock(m_watcher.apb[i]->monitor);
                         pbnc_fsm(m_watcher.apb[i]);
+                        if ((m_watcher.apoll[i].events == POLLOUT) && 
+                            (m_watcher.apb[i]->state >= PBS_RX_HTTP_VER)) {
+                            m_watcher.apoll[i].events = POLLIN;
+                        }
                         pubnub_mutex_unlock(m_watcher.apb[i]->monitor);
                     }
                 }
