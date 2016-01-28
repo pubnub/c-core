@@ -3,6 +3,7 @@
 
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 
 #include <sys/types.h>
 
@@ -72,13 +73,13 @@ enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
     FD_SET(pb->pal.socket, &write_set);
     rslt = select(pb->pal.socket + 1, &read_set, &write_set, NULL, &timev);
     if (-1 == rslt) {
-        DEBUG_PRINTF("select() Error!\n");
+        PUBNUB_LOG_ERROR("select() Error!\n");
         return PNR_CONNECT_FAILED;
     }
     else if (rslt > 0) {
-        DEBUG_PRINTF("select() event\n");
+        PUBNUB_LOG_TRACE("select() event\n");
         return pbpal_resolv_and_connect(pb);
     }
-    DEBUG_PRINTF("no select() events\n");
+    PUBNUB_LOG_TRACE("no select() events\n");
     return PNR_IN_PROGRESS;
 }

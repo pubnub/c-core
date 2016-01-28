@@ -14,17 +14,6 @@
 #include <stdint.h>
 
 
-#if VERBOSE_DEBUG
-#include <stdio.h>
-#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
-#define WATCH(x, fmt) DEBUG_PRINTF(#x " = " fmt "\n", x)
-#else
-#define DEBUG_PRINTF(...) do { } while(0)
-#define WATCH(x, fmt) do { } while(0)
-#endif
-
-
-
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
  */

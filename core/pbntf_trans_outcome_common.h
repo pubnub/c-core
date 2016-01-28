@@ -12,7 +12,7 @@
 */
 #define PBNTF_TRANS_OUTCOME_COMMON(pb) do {                     \
         enum pubnub_res M_pbrslt_ = (pb)->core.last_result;             \
-        DEBUG_PRINTF("Pubnub: Transaction outcome: %d, HTTP code: %d\n", M_pbrslt_, (pb)->http_code); \
+        PUBNUB_LOG_INFO("Pubnub: Transaction outcome: %d, HTTP code: %d\n", M_pbrslt_, (pb)->http_code); \
         switch (M_pbrslt_) {                                            \
         case PNR_FORMAT_ERROR:                                          \
         case PNR_TIMEOUT:                                               \

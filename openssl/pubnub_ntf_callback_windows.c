@@ -7,6 +7,7 @@
 
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 #include "pbntf_trans_outcome_common.h"
 #include "pubnub_timer_list.h"
 #include "pbpal.h"
@@ -127,7 +128,7 @@ void socket_watcher_thread(void *arg)
             int rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
             if (SOCKET_ERROR == rslt) {
                 /* error? what to do about it? */
-                DEBUG_PRINTF("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
+                PUBNUB_LOG_WARNING("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
             }
             else if (rslt > 0) {
                 size_t i;

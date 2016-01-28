@@ -4,6 +4,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
 #include "pubnub_json_parse.h"
+#include "pubnub_log.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -138,7 +139,7 @@ static bool split_array(char *buf)
         }
     }
 
-    DEBUG_PRINTF("escaped = %d, in_string = %d, bracket_level = %d\n", escaped, in_string, bracket_level);
+    PUBNUB_LOG_TRACE("escaped = %d, in_string = %d, bracket_level = %d\n", escaped, in_string, bracket_level);
     return !(escaped || in_string || (bracket_level > 0));
 }
 
@@ -147,7 +148,6 @@ static int simple_parse_response(struct pbcc_context *p)
 {
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
-	DEBUG_PRINTF("simple_parse_response()\n");
     if (replylen < 2) {
         return -1;
     }

@@ -5,6 +5,7 @@
 
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 #include "pbntf_trans_outcome_common.h"
 #include "pubnub_timer_list.h"
 #include "pbpal.h"

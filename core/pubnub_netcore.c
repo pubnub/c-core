@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#include "pubnub_log.h"
 #include "pubnub_ccore.h"
 #include "pbpal.h"
 
@@ -25,30 +26,30 @@ static void finish(struct pubnub_ *pb)
     enum pubnub_res pbres = PNR_OK;
 
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
-    DEBUG_PRINTF("finish('%s')\n", pb->core.http_reply);
+    PUBNUB_LOG_TRACE("finish('%s')\n", pb->core.http_reply);
     
     switch (pb->trans) {
     case PBTT_SUBSCRIBE:
         if (pbcc_parse_subscribe_response(&pb->core) != 0) {
-            DEBUG_PRINTF("parse_subscribe failed\n");
+            PUBNUB_LOG_WARNING("parse_subscribe failed\n");
             pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_PUBLISH:
         pbres = pbcc_parse_publish_response(&pb->core);
         if (pbres != PNR_OK) {
-            DEBUG_PRINTF("parse_publish failed\n");
+            PUBNUB_LOG_WARNING("parse_publish failed\n");
         }
         break;
     case PBTT_TIME:
         if (pbcc_parse_time_response(&pb->core) != 0) {
-            DEBUG_PRINTF("parse_time failed\n");
+            PUBNUB_LOG_WARNING("parse_time failed\n");
             pbres = PNR_FORMAT_ERROR;
         }
         break;
     case PBTT_HISTORY:
         if (pbcc_parse_history_response(&pb->core) != 0) {
-            DEBUG_PRINTF("parse_history failed\n");
+            PUBNUB_LOG_WARNING("parse_history failed\n");
             pbres = PNR_FORMAT_ERROR;
         }
         break;
@@ -59,7 +60,7 @@ static void finish(struct pubnub_ *pb)
     case PBTT_SET_STATE:
     case PBTT_STATE_GET:
         if (pbcc_parse_presence_response(&pb->core) != 0) {
-            DEBUG_PRINTF("parse_presence failed\n");
+            PUBNUB_LOG_WARNING("parse_presence failed\n");
             pbres = PNR_FORMAT_ERROR;
         }
         break;
@@ -69,7 +70,7 @@ static void finish(struct pubnub_ *pb)
     case PBTT_LIST_CHANNEL_GROUP:
         pbres = pbcc_parse_channel_registry_response(&pb->core);
         if (pbres != PNR_OK) {
-            DEBUG_PRINTF("parse_channel_registry failed\n");
+            PUBNUB_LOG_WARNING("parse_channel_registry failed\n");
         }
         break;
     default:
@@ -89,10 +90,10 @@ int pbnc_fsm(struct pubnub_ *pb)
     enum pubnub_res pbrslt;
     int i;
 
-    DEBUG_PRINTF("pbnc_fsm()\t");
+    PUBNUB_LOG_TRACE("pbnc_fsm()\t");
 
 next_state:
-    WATCH(pb->state, "%d");
+    WATCH_ENUM(pb->state);
     switch (pb->state) {
     case PBS_NULL:
         break;
@@ -216,8 +217,7 @@ next_state:
                 break;
             }
             pb->http_code = atoi(pb->core.http_buf + 9);
-            WATCH(pb->http_code, "%d");
-            WATCH(pbpal_read_len(pb), "%d");
+            WATCH_USHORT(pb->http_code);
             pb->core.http_content_len = 0;
             pb->http_chunked = false;
             pb->state = PBS_RX_HEADERS;
@@ -228,12 +228,12 @@ next_state:
         }
         break;
     case PBS_RX_HEADERS:
-        DEBUG_PRINTF("PBS_RX_HEADERS\n");
+        PUBNUB_LOG_TRACE("PBS_RX_HEADERS\n");
         pbpal_start_read_line(pb);
         pb->state = PBS_RX_HEADER_LINE;
         goto next_state;
     case PBS_RX_HEADER_LINE:
-        DEBUG_PRINTF("PBS_RX_HEADER_LINE\n");
+        PUBNUB_LOG_TRACE("PBS_RX_HEADER_LINE\n");
         pbrslt = pbpal_line_read_status(pb);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
@@ -242,9 +242,10 @@ next_state:
         {
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[] = "Content-Length: ";
-            DEBUG_PRINTF("header line was read: %.*s\n", pbpal_read_len(pb), pb->core.http_buf);
-            WATCH(pbpal_read_len(pb), "%d");
-            if (pbpal_read_len(pb) <= 2) {
+            int read_len = pbpal_read_len(pb);
+            PUBNUB_LOG_TRACE("header line was read: %.*s\n", read_len, pb->core.http_buf);
+            WATCH_INT(read_len);
+            if (read_len <= 2) {
                 pb->core.http_buf_len = 0;
                 pb->state = pb->http_chunked ? PBS_RX_CHUNK_LEN : PBS_RX_BODY;
                 goto next_state;
@@ -269,7 +270,7 @@ next_state:
         }
         break;
     case PBS_RX_BODY:
-        DEBUG_PRINTF("PBS_RX_BODY\n");
+        PUBNUB_LOG_TRACE("PBS_RX_BODY\n");
         if (pb->core.http_buf_len < pb->core.http_content_len) {
             pbpal_start_read(pb, pb->core.http_content_len - pb->core.http_buf_len);
             pb->state = PBS_RX_BODY_WAIT;
@@ -280,7 +281,7 @@ next_state:
         }
         break;
     case PBS_RX_BODY_WAIT:
-        DEBUG_PRINTF("PBS_RX_BODY_WAIT\n");
+        PUBNUB_LOG_TRACE("PBS_RX_BODY_WAIT\n");
         if (pbpal_read_over(pb)) {
             unsigned len = pbpal_read_len(pb);
             memcpy(
@@ -306,7 +307,7 @@ next_state:
         {
             unsigned chunk_length = strtoul(pb->core.http_buf, NULL, 16);
 
-            DEBUG_PRINTF("About to read a chunk w/length: %d\n", chunk_length);
+            PUBNUB_LOG_TRACE("About to read a chunk w/length: %d\n", chunk_length);
             if (chunk_length == 0) {
                 finish(pb);
             }
