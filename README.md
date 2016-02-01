@@ -2,6 +2,10 @@
 
 ## Pubnub C/C++ client libraries
 
+### Official Docs 
+Docs for C/C++ for Posix, Windows, as well as FreeRTOS and other embedded platforms are available at 
+https://www.pubnub.com/docs/posix-c/pubnub-c-sdk
+
 This repository has the source for the C/C++ client libraries,
 designed mostly for embedded systems, but perfectly suitable for
 "regular" (POSIX, Windows) systems, too.
