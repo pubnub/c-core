@@ -230,28 +230,38 @@ bool pbpal_read_over(pubnub_t *pb)
         pb->readlen = recvres;
     } 
 
-    pb->ptr += pb->readlen;
-    pb->left -= pb->readlen;
-    pb->readlen = 0;
 
-    if (pbpal_read_len(pb) >= (int)pb->len) {
-        /* If we have read all that was requested, we're done. */
-        PUBNUB_LOG_TRACE("Read all that was to be read.\n");
+    to_read = pb->len;
+    if (pb->readlen < to_read) {
+        to_read = pb->readlen;
+    }
+    pb->ptr += to_read;
+    pb->readlen -= to_read;
+    PUBNUB_ASSERT_OPT(pb->left >= to_read);
+    pb->left -= to_read;
+    pb->len -= to_read;
+
+    if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
         return true;
     }
 
-    if ((pb->left > 0)) {
+    if (pb->left == 0) {
+        /* Buffer has been filled, but the requested block has not been
+         * read.  We have to "reset" this "mini-fsm", as otherwise we
+         * won't read anything any more. This means that we have lost
+         * the current contents of the buffer, which is bad. In some
+         * general code, that should be reported, as the caller could
+         * save the contents of the buffer somewhere else or simply
+         * decide to ignore this block (when it does end eventually).
+         */
+        pb->sock_state = STATE_NONE;
+    }
+    else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
         return false;
     }
 
-    /* Otherwise, we just filled the buffer, but we return 'true', to
-     * enable the user to copy the data from the buffer to some other
-     * storage.
-     */
-    PUBNUB_LOG_WARNING("Filled the buffer, but read %d and should %d\n", pbpal_read_len(pb), pb->len);
-    pb->sock_state = STATE_NONE;
     return true;
 }
 

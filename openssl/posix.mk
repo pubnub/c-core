@@ -7,7 +7,7 @@ else
 SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 endif
 
-CFLAGS =-g -D VERBOSE_DEBUG -I ../core -I . -I ../posix/fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
+CFLAGS =-g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -I ../core -I . -I ../posix/fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest

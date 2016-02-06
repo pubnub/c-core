@@ -4,7 +4,6 @@ SYNC_SOURCEFILES += ../core/pubnub_ntf_sync.c pnc_ops_sync.c
 CALLBACK_SOURCEFILES += ../posix/pubnub_ntf_callback_posix.c pnc_ops_callback.c
 
 CFLAGS += -Wall -I../posix -I../core -I../posix/fntest -I../core/fntest -I.
-#CFLAGS += -D VERBOSE_DEBUG
 
 all: clean pubnub_sync_console pubnub_callback_console
 

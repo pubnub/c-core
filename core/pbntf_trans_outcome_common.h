@@ -5,14 +5,13 @@
     functions.
 
     In case of PubNub protocol error, resets the time-token. This means 
-	some messages were (possibly) lost, but allows us to recover from bad 
-	situations, e.g. too many messages queued or unexpected problem caused 
-	by a particular message.
-
+    some messages were (possibly) lost, but allows us to recover from bad 
+    situations, e.g. too many messages queued or unexpected problem caused 
+    by a particular message.
 */
-#define PBNTF_TRANS_OUTCOME_COMMON(pb) do {                     \
+#define PBNTF_TRANS_OUTCOME_COMMON(pb) do {                             \
         enum pubnub_res M_pbrslt_ = (pb)->core.last_result;             \
-        PUBNUB_LOG_INFO("Pubnub: Transaction outcome: %d, HTTP code: %d\n", M_pbrslt_, (pb)->http_code); \
+        PUBNUB_LOG_INFO("Pubnub Transaction outcome: %d\n", M_pbrslt_); \
         switch (M_pbrslt_) {                                            \
         case PNR_FORMAT_ERROR:                                          \
         case PNR_TIMEOUT:                                               \

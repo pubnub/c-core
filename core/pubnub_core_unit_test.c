@@ -5,6 +5,7 @@
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
+#include "pubnub_log.h"
 
 #include "pubnub_internal.h"
 
@@ -101,6 +102,7 @@ int pbpal_send_str(pubnub_t *pb, char *s)
     return (int)mock(pb, s);
 }
 
+
 int pbpal_send_status(pubnub_t *pb)
 {
     return (bool)mock(pb);
@@ -110,7 +112,7 @@ int pbpal_send_status(pubnub_t *pb)
 int pbpal_start_read_line(pubnub_t *pb)
 {
     if (pb->sock_state != STATE_NONE) {
-        DEBUG_PRINTF("pbpal_start_read_line(): pb->sock_state != STATE_NONE: "); WATCH(pb->sock_state, "%d");
+        PUBNUB_LOG_TRACE("pbpal_start_read_line(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
         return -1;
     }
 
@@ -167,7 +169,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
         }
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
-    } 
+    }
 
     while (pb->left > 0 && pb->readlen > 0) {
         c = *pb->ptr++;
@@ -199,10 +201,11 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     return PNR_IN_PROGRESS;
 }
 
+
 int pbpal_start_read(pubnub_t *pb, size_t n)
 {
     if (pb->sock_state != STATE_NONE) {
-        DEBUG_PRINTF("pbpal_start_read(): pb->sock_state != STATE_NONE: "); WATCH(pb->sock_state, "%d");
+        PUBNUB_LOG_TRACE("pbpal_start_read(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
         return -1;
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
@@ -222,6 +225,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     pb->len = n;
     return +1;
 }
+
 
 bool pbpal_read_over(pubnub_t *pb)
 {
@@ -244,27 +248,37 @@ bool pbpal_read_over(pubnub_t *pb)
         pb->readlen = recvres;
     } 
 
-    pb->ptr += pb->readlen;
-    pb->left -= pb->readlen;
-    pb->readlen = 0;
+    to_read = pb->len;
+    if (pb->readlen < to_read) {
+        to_read = pb->readlen;
+    }
+    pb->ptr += to_read;
+    pb->readlen -= to_read;
+    PUBNUB_ASSERT_OPT(pb->left >= to_read);
+    pb->left -= to_read;
+    pb->len -= to_read;
 
-    if (pbpal_read_len(pb) >= pb->len) {
-        /* If we have read all that was requested, we're done. */
+    if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
         return true;
     }
 
-    if ((pb->left > 0)) {
+    if (pb->left == 0) {
+        /* Buffer has been filled, but the requested block has not been
+         * read.  We have to "reset" this "mini-fsm", as otherwise we
+         * won't read anything any more. This means that we have lost
+         * the current contents of the buffer, which is bad. In some
+         * general code, that should be reported, as the caller could
+         * save the contents of the buffer somewhere else or simply
+         * decide to ignore this block (when it does end eventually).
+         */
+        pb->sock_state = STATE_NONE;
+    }
+    else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
         return false;
     }
 
-    /* Otherwise, we just filled the buffer, but we return 'true', to
-     * enable the user to copy the data from the buffer to some other
-     * storage.
-     */
-    DEBUG_PRINTF("Filled the buffer, but read %d and should %d\n", pbpal_read_len(pb), pb->len);
-    pb->sock_state = STATE_NONE;
     return true;
 }
 
@@ -320,12 +334,14 @@ static char const *m_expect_assert_file;
 void assert_handler(char const *s, const char *file, long i)
 {
 //    mock(s, i);
-    printf("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, i);
+    printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
     
     attest(m_expect_assert);
     attest(m_expect_assert_file, streqs(file));
-    m_expect_assert = false;
-    longjmp(m_assert_exp_jmpbuf, 1);
+    if (m_expect_assert) {
+        m_expect_assert = false;
+        longjmp(m_assert_exp_jmpbuf, 1);
+    }
 }
 
 #define expect_assert_in(expr, file) {          \
@@ -524,6 +540,7 @@ Ensure(single_context_pubnub, leave_wait_dns) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolution not yet available... */
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
     expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
@@ -533,7 +550,6 @@ Ensure(single_context_pubnub, leave_wait_dns) {
 
     /* ... and here it is: */
     expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
-    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
@@ -549,6 +565,7 @@ Ensure(single_context_pubnub, leave_wait_dns_cancel) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolution not yet available... */
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
     expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
@@ -571,13 +588,13 @@ Ensure(single_context_pubnub, leave_wait_tcp) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolved but TCP connection not yet established... */
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
     expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... and here it is: */
     expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
     expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
-    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -756,17 +773,28 @@ Ensure(single_context_pubnub, publish) {
 }
 
 
-Ensure(single_context_pubnub, publish_bad_channel) {
+Ensure(single_context_pubnub, publish_http_chunked) {
+    pubnub_init(pbp, "publkey", "subkey");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/publish/publkey/subkey/0/jarak/0/%22zec%22?pnsdk=unit-test-0.1");
+    incoming_and_close("HTTP/1.1 200\r\nTransfer-Encoding: chunked\r\n\r\n12\r\n[1,\"Sent\",\"1417894\r\n0C\r\n0800777403\"]\r\n0\r\n");
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_publish(pbp, "jarak", "\"zec\""), equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+
+Ensure(single_context_pubnub, http_headers_no_content_length_or_chunked) {
     pubnub_init(pbp, "publkey", "subkey");
 
     expect_have_dns_for_pubnub_origin();
 
     expect_outgoing_with_url("/publish/publkey/subkey/0/,/0/%22zec%22?pnsdk=unit-test-0.1");
-    incoming_and_close("HTTP/1.1 400\r\nContent-Length: 33\r\n\r\n[0,\"Invalid\",\"14178940800999505\"]");
+    incoming_and_close("HTTP/1.1 400\r\n\r\n[0,\"Invalid\",\"14178940800999505\"]");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_publish(pbp, ",", "\"zec\""), equals(PNR_PUBLISH_FAILED));
-    attest(pubnub_last_publish_result(pbp), streqs("\"Invalid\""));
-    attest(pubnub_last_http_code(pbp), equals(400));
+    attest(pubnub_publish(pbp, ",", "\"zec\""), equals(PNR_IO_ERROR));
 }
 
 

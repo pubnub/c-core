@@ -46,6 +46,8 @@ enum pubnub_state {
     PBS_RX_CHUNK_LEN_LINE,
     /** Reading the chunk in HTTP chunked response body */
     PBS_RX_BODY_CHUNK,
+    /** Waiting for new data in HTTP chunked response body */
+    PBS_RX_BODY_CHUNK_WAIT,
     /** Waiting for the TCP connection to close */
     PBS_WAIT_CLOSE,
     /** Waiting to cancel (close before the end of transaction) the

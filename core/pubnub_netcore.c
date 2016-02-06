@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#include "pubnub_assert.h"
 #include "pubnub_log.h"
 #include "pubnub_ccore.h"
 #include "pbpal.h"
@@ -247,7 +248,16 @@ next_state:
             WATCH_INT(read_len);
             if (read_len <= 2) {
                 pb->core.http_buf_len = 0;
-                pb->state = pb->http_chunked ? PBS_RX_CHUNK_LEN : PBS_RX_BODY;
+                if (!pb->http_chunked) {
+                    if (0 == pb->core.http_content_len) {
+                        outcome_detected(pb, PNR_IO_ERROR);
+                        break;
+                    }
+                    pb->state = PBS_RX_BODY;
+                }
+                else {
+                    pb->state = PBS_RX_CHUNK_LEN;
+                }
                 goto next_state;
             }
             if (strncmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1) == 0) {
@@ -284,6 +294,8 @@ next_state:
         PUBNUB_LOG_TRACE("PBS_RX_BODY_WAIT\n");
         if (pbpal_read_over(pb)) {
             unsigned len = pbpal_read_len(pb);
+            WATCH_UINT(len);
+            WATCH_UINT(pb->core.http_buf_len);
             memcpy(
                 pb->core.http_reply + pb->core.http_buf_len, 
                 pb->core.http_buf, 
@@ -295,11 +307,13 @@ next_state:
         }
         break;
     case PBS_RX_CHUNK_LEN:
+        PUBNUB_LOG_TRACE("PBS_RX_CHUNK_LEN\n");
         pbpal_start_read_line(pb);
         pb->state = PBS_RX_CHUNK_LEN_LINE;
         goto next_state;
     case PBS_RX_CHUNK_LEN_LINE:
         pbrslt = pbpal_line_read_status(pb);
+        PUBNUB_LOG_TRACE("PBS_RX_CHUNK_LEN_LINE: pbrslt=%d\n", pbrslt);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
@@ -318,8 +332,7 @@ next_state:
                 outcome_detected(pb, PNR_REPLY_TOO_BIG);
             }
             else {
-                pbpal_start_read(pb, chunk_length + 2);
-                pb->core.http_content_len = chunk_length;
+                pb->core.http_content_len = chunk_length + 2;
                 pb->state = PBS_RX_BODY_CHUNK;
                 goto next_state;
             }
@@ -331,14 +344,37 @@ next_state:
         }
         break;
     case PBS_RX_BODY_CHUNK:
-        if (pbpal_read_over(pb)) {
-            memcpy(
-                pb->core.http_reply + pb->core.http_buf_len, 
-                pb->core.http_buf, 
-                pb->core.http_content_len
-                );
-            pb->core.http_buf_len += pb->core.http_content_len;
+        PUBNUB_LOG_TRACE("PBS_RX_BODY_CHUNK\n");
+        if (pb->core.http_content_len > 0) {
+            pbpal_start_read(pb, pb->core.http_content_len);
+            pb->state = PBS_RX_BODY_CHUNK_WAIT;
+        }
+        else {
             pb->state = PBS_RX_CHUNK_LEN;
+        }
+        goto next_state;
+    case PBS_RX_BODY_CHUNK_WAIT:
+        PUBNUB_LOG_TRACE("PBS_RX_BODY_CHUNK_WAIT\n");
+        if (pbpal_read_over(pb)) {
+            unsigned len = pbpal_read_len(pb);
+
+            PUBNUB_ASSERT_OPT(pb->core.http_content_len >= len);
+            PUBNUB_ASSERT_OPT(len > 0);
+
+            if (pb->core.http_content_len > 2) {
+                unsigned to_copy = pb->core.http_content_len - 2;
+                if (len < to_copy) {
+                    to_copy = len;
+                }
+                memcpy(
+                    pb->core.http_reply + pb->core.http_buf_len, 
+                    pb->core.http_buf, 
+                    to_copy
+                    );
+                pb->core.http_buf_len += to_copy;
+            }
+            pb->core.http_content_len -= len;
+            pb->state = PBS_RX_BODY_CHUNK;
             goto next_state;
         }
         break;
