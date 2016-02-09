@@ -23,9 +23,9 @@ struct pubnub_pal {
 #else
 #include <unistd.h>
 #include <sys/socket.h>
-#define socket_set_rcv_timeout(socket, seconds) do {                            \
-    struct timeval M_tm = { (seconds), 0 };                                     \
-    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
+#define socket_set_rcv_timeout(socket, milliseconds) do {                           \
+    struct timeval M_tm = { (milliseconds)/1000, ((milliseconds)%1000) * 1000 };    \
+    setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);       \
     } while(0)
 #endif
 
