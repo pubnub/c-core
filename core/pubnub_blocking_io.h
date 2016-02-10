@@ -47,7 +47,7 @@
     @pre Call this after pubnub_init() on the context
     @param p The Context to set non-blocking I/O  for
 
-    @return 0: OK, otherwise: error, blocking I/O not supported
+    @return 0: OK, otherwise: error, non-blocking I/O not supported
     
 */
 int pubnub_set_non_blocking_io(pubnub_t *p);
@@ -78,7 +78,7 @@ int pubnub_set_non_blocking_io(pubnub_t *p);
     poorly.
 
     @pre Call this after pubnub_init() on the context
-    @param p The Context to set non-blocking I/O  for
+    @param p The Context to set blocking I/O  for
 
     @return 0: OK, otherwise: error, blocking I/O not supported
     
