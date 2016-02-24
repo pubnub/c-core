@@ -73,9 +73,6 @@ static void ops_callback(pubnub_t *pn, enum pubnub_trans trans, enum pubnub_res 
     case PBTT_HISTORY:
         printf("Historied, result: %d\n", result);
         break;
-    case PBTT_HISTORYV2:
-        printf("Historied v2, result: %d\n", result);
-        break;
     default:
         printf("None?! result: %d\n", result);
         break;

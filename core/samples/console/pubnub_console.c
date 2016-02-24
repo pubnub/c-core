@@ -144,8 +144,8 @@ int main()
             // history response with timetokens
             pnc_read_bool_from_console("Include timetokens", &include_token);
             
-            pnc_ops_parse_response("pubnub_historyv2()",
-                                   pubnub_historyv2(pn, channel, NULL, count, include_token), pn);
+            pnc_ops_parse_response("pubnub_history()",
+                                   pubnub_history(pn, channel, count, include_token), pn);
             break;
         }
         
