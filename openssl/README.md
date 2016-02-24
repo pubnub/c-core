@@ -23,9 +23,14 @@ build sample programs on  POSIX:
 - `subscribe_publish_callback_sample`: an example of how to have one
   outstanding publish and one outstanding subscribe transaction/operation
   at the same time, using the "callback" interface.
+- `pubnub_console_sync`: a simple command-line Pubnub console, using
+  the "sync" interface
+- `pubnub_console_callback`: a simple command-line Pubnub console, using
+  the "callback" interface
 
-The sources of the samples are in `../core/samples`, as they are
-portable across all or most hosted platforms (POSIX, Windows...).
+The sources of the samples are in `../core/samples`, and for the
+console in `../core/samples/console`, as they are portable across all
+or most hosted platforms (POSIX, Windows...).
 
 So, to build the samples, just run:
 
@@ -85,7 +90,7 @@ switches. But, if you have a compiler that supports MSVC switches
 (like some Clang "distributions"), you should be able to use it instead
 of the MSVC standard  `cl`, like:
 
-	nmake -f windows.mk CC=clang
+	nmake -f windows.mk CC=clang-cl
 
 ## Notes
 
