@@ -202,11 +202,9 @@ int main()
             break;
         case MENU_ADD_PRESENCE_CHANNEL:
         {
-            pnc_read_string_from_console("Channel name",
-                                         channel, PNC_CHANNEL_NAME_SIZE);
-            
-            char presence_channel[PNC_CHANNEL_NAME_SIZE + strlen(PNC_PRESENCE_SUFFIX)];
-            
+            char presence_channel[PNC_CHANNEL_NAME_SIZE + sizeof(PNC_PRESENCE_SUFFIX)];
+
+            pnc_read_string_from_console("Channel name", channel, PNC_CHANNEL_NAME_SIZE);
             strcpy(presence_channel, channel);
             strcat(presence_channel, PNC_PRESENCE_SUFFIX);
             
