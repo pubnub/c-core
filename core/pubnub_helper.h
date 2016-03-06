@@ -26,6 +26,8 @@ enum pubnub_publish_res {
   PNPUB_INVALID_CHAR_IN_CHAN_NAME,
   /** The publishing quota for this account was exceeded */
   PNPUB_ACCOUNT_QUOTA_EXCEEDED,
+  /** Message is too large to be published */
+  PNPUB_MESSAGE_TOO_LARGE,
   /** Publish failed, but we were not able to parse the error description */
   PNPUB_UNKNOWN_ERROR,
 };
