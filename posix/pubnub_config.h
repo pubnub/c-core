@@ -34,7 +34,7 @@
  * the memory size of the whole pubnub context, but it is also an
  * upper bound on URL-encoded form of published message, so if you
  * need to construct big messages, you may need to raise this.  */
-#define PUBNUB_BUF_MAXLEN 1024
+#define PUBNUB_BUF_MAXLEN 32000
 
 /** Set to 0 to use a static buffer and then set its size via
     #PUBNUB_REPLY_MAXLEN.  Set to anything !=0 to use a dynamic
@@ -51,7 +51,7 @@
  * will be discarded and an error will be reported. Specifically, this
  * may cause lost messages returned by subscribe if too many too large
  * messages got queued on the Pubnub server. */
-#define PUBNUB_REPLY_MAXLEN 2048
+#define PUBNUB_REPLY_MAXLEN 32000
 
 #endif
 
