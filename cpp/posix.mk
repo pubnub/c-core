@@ -3,14 +3,15 @@ SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_net
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
 SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
+LDLIBS=-lpthread
 else
 SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
+LDLIBS=-lrt -lpthread
 endif
 
 CFLAGS =-g -I ../core -I ../posix -I . -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 
-LDLIBS=-lrt
 
 all: cpp11 cpp98
 
@@ -29,19 +30,19 @@ futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_nt
 	$(CXX) -o $@ $(CFLAGS) samples/futres_nesting.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
 pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) $(LDLIBS)
 
 pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
 
 subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) samples/subscribe_publish_callback_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) samples/subscribe_publish_callback_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
 
 futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
 
 futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS) -lpthread
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
 
 fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
 	$(CXX) -o $@ -std=c++11 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE $(CFLAGS) fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
