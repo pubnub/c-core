@@ -10,7 +10,6 @@
 #include <sys/types.h>
 
 #include <string.h>
-#include <errno.h>
 
 
 static void buf_setup(pubnub_t *pb)

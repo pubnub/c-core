@@ -13,6 +13,10 @@
 
 #include <stdint.h>
 
+#if !defined PUBNUB_USE_ADNS
+#define PUBNUB_USE_ADNS 0
+#endif
+
 
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
@@ -154,6 +158,8 @@ void pbntf_trans_outcome(pubnub_t *pb);
 int pbntf_init(void);
 
 int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket);
+
+void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket);
 
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket);
 

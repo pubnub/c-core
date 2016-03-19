@@ -50,6 +50,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_PUBLISH_FAILED: return "Publish failed";
     case PNR_CHANNEL_REGISTRY_ERROR: return "A transaction related to channel registry failed";
     case PNR_REPLY_TOO_BIG: return "Reply from Pubnub too big to fit in buffer";
+    case PNR_INTERNAL_ERROR: return "Internal error in processing";
     default: return "!?!?!";
     }
 }

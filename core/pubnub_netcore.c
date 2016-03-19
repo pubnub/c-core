@@ -102,18 +102,13 @@ next_state:
         pbrslt = pbpal_resolv_and_connect(pb);
         switch (pbrslt) {
         case PNR_STARTED:
-            pb->state = PBS_WAIT_DNS;
-            switch (pbntf_got_socket(pb, pb->pal.socket)) {
-            case 0: goto next_state;
-            case +1: break;
-            case -1: default: 
-                pb->core.last_result = PNR_CONNECT_FAILED;
-                pbntf_trans_outcome(pb);
-                break;
-            }
-            break;
+        case PNR_IN_PROGRESS:
         case PNR_OK:
-            pb->state = PBS_CONNECT;
+            switch (pbrslt) {
+            case PNR_STARTED: pb->state = PBS_WAIT_DNS; break;
+            case PNR_IN_PROGRESS: pb->state = PBS_WAIT_CONNECT; break;
+            case PNR_OK: default: pb->state = PBS_CONNECTED; break;
+            }
             switch (pbntf_got_socket(pb, pb->pal.socket)) {
             case 0: goto next_state;
             case +1: break;
@@ -132,11 +127,15 @@ next_state:
     case PBS_WAIT_DNS:
         pbrslt = pbpal_check_resolv_and_connect(pb);
         switch (pbrslt) {
-        case PNR_IN_PROGRESS:
         case PNR_STARTED:
             break;
+        case PNR_IN_PROGRESS:
+            pbntf_update_socket(pb, pb->pal.socket);
+            pb->state = PBS_WAIT_CONNECT;
+            break;
         case PNR_OK:
-            pb->state = PBS_CONNECT;
+            pbntf_update_socket(pb, pb->pal.socket);
+            pb->state = PBS_CONNECTED;
             goto next_state;
         default:
             pb->core.last_result = pbrslt;
@@ -144,13 +143,16 @@ next_state:
             break;
         }
         break;
-    case PBS_CONNECT:
+    case PBS_WAIT_CONNECT:
         if (pbpal_connected(pb)) {
-            pbpal_send_literal_str(pb, "GET ");
-            pb->state = PBS_TX_GET;
+            pb->state = PBS_CONNECTED;
             goto next_state;
         }
         break;
+    case PBS_CONNECTED:
+        pbpal_send_literal_str(pb, "GET ");
+        pb->state = PBS_TX_GET;
+        goto next_state;
     case PBS_TX_GET:
         i = pbpal_send_status(pb);
         if (i <= 0) {

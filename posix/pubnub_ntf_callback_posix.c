@@ -92,6 +92,23 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 }
 
 
+static void update_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
+{
+    size_t i;
+    int socket = pubnub_get_native_socket(pb);
+    if (-1 == socket) {
+        return;
+    }
+
+    for (i = 0; i < watcher->apoll_size;  ++i) {
+        if (watcher->apb[i] == pb) {
+            watcher->apoll[i].fd = socket;
+            return;
+        }
+    }
+}
+
+
 static int elapsed_ms(struct timespec prev_timspec, struct timespec timspec)
 {
     int s_diff = timspec.tv_sec - prev_timspec.tv_sec;
@@ -126,9 +143,17 @@ void* socket_watcher_thread(void *arg)
                     if (m_watcher.apoll[i].revents & (m_watcher.apoll[i].events | POLLHUP)) {
                         pubnub_mutex_lock(m_watcher.apb[i]->monitor);
                         pbnc_fsm(m_watcher.apb[i]);
-                        if ((m_watcher.apoll[i].events == POLLOUT) && 
-                            (m_watcher.apb[i]->state >= PBS_RX_HTTP_VER)) {
-                            m_watcher.apoll[i].events = POLLIN;
+                        if (m_watcher.apoll[i].events == POLLOUT) {
+                            if ((m_watcher.apb[i]->state == PBS_WAIT_DNS)  ||
+                                (m_watcher.apb[i]->state >= PBS_RX_HTTP_VER)) {
+                                m_watcher.apoll[i].events = POLLIN;
+                            }
+                        }
+                        else {
+                            if ((m_watcher.apb[i]->state > PBS_WAIT_DNS) &&
+                                (m_watcher.apb[i]->state < PBS_RX_HTTP_VER)) {
+                                m_watcher.apoll[i].events = POLLOUT;
+                            }
                         }
                         pubnub_mutex_unlock(m_watcher.apb[i]->monitor);
                     }
@@ -214,10 +239,25 @@ static void remove_timer_safe(pubnub_t *to_remove)
 
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
+    PUBNUB_UNUSED(socket);
+
     pthread_mutex_lock(&m_watcher.mutw);
 
     remove_socket(&m_watcher, pb);
     remove_timer_safe(pb);
+
+    pthread_cond_signal(&m_watcher.condw);
+    pthread_mutex_unlock(&m_watcher.mutw);
+}
+
+
+void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
+{
+    PUBNUB_UNUSED(socket);
+
+    pthread_mutex_lock(&m_watcher.mutw);
+
+    update_socket(&m_watcher, pb);
 
     pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);

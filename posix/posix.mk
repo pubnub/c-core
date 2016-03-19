@@ -22,8 +22,8 @@ pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c $(SOURCEFILES) ../core/
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c $(SOURCEFILES) ../core/pubnub_ntf_sync.c
 	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c ../core/pubnub_ntf_sync.c $(SOURCEFILES) $(LDLIBS)
 
-pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/pubnub_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c $(SOURCEFILES) $(LDLIBS)
+pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_USE_ADNS=1 ../core/samples/pubnub_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c $(SOURCEFILES) $(LDLIBS)
 
 subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c $(SOURCEFILES) ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/subscribe_publish_callback_sample.c ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c $(SOURCEFILES) $(LDLIBS)

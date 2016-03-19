@@ -86,6 +86,8 @@ enum pubnub_res {
         allocated.
     */
     PNR_REPLY_TOO_BIG,
+    /** An internal error in processing */
+    PNR_INTERNAL_ERROR
 };
 
 

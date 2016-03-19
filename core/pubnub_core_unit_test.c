@@ -53,6 +53,12 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
+{
+    mock(pb, socket);
+}
+
+
 enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     return (int)mock(pb);
@@ -476,7 +482,6 @@ void expect_have_dns_for_pubnub_origin()
 {
     expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
 }
 
 
@@ -545,12 +550,12 @@ Ensure(single_context_pubnub, leave_wait_dns) {
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... still not available... */
-    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_IN_PROGRESS));
+    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
     attest(pbnc_fsm(pbp), equals(0));
 
     /* ... and here it is: */
     expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
-    expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
+    expect(pbntf_update_socket, when(pb, equals(pbp)));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -594,7 +599,7 @@ Ensure(single_context_pubnub, leave_wait_tcp) {
 
     /* ... and here it is: */
     expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
-    expect(pbpal_connected, when(pb, equals(pbp)), returns(true));
+    expect(pbntf_update_socket, when(pb, equals(pbp)));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -612,7 +617,7 @@ Ensure(single_context_pubnub, leave_wait_tcp_cancel) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolved but TCP connection not yet established... */
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_IN_PROGRESS));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect(pbpal_connected, when(pb, equals(pbp)), returns(false));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));

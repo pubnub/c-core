@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <errno.h>
 
 
 typedef int pb_socket_t;
@@ -21,6 +22,7 @@ typedef int pb_socket_t;
 #define socket_platform_init() 0
 
 #define SOCKET_INVALID -1
+#define SOCKET_ERROR -1
 
 /* Maybe we could use `getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, &len)`,
     but, its utility is questionable, so probably test extensively to see if it 
