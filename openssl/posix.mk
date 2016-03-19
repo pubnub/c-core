@@ -3,14 +3,15 @@ SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_ccore.c ../core/pubnub_net
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
 SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
+LDLIBS=-lpthread -lssl -lcrypto
 else
 SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
+LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 
 CFLAGS =-g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -I ../core -I . -I ../posix/fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 
-LDLIBS=-lrt -lpthread -lssl -lcrypto
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback
 
