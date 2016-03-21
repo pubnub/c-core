@@ -11,8 +11,8 @@
 #include "pbntf_trans_outcome_common.h"
 #include "pubnub_timer_list.h"
 #include "pbpal.h"
-/* This should have the same code as the file in `..\windows` directory, but in this directory because of 
-    header inclusion problems, until we find a better solution. Github for Windows doesn't support symlinks. */
+
+
 #include "pubnub_get_native_socket.h"
 
 #include <stdlib.h>
@@ -218,6 +218,35 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
     SetEvent(m_watcher.condw);
 }
 
+
+static void update_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
+{
+    size_t i;
+    int socket = pubnub_get_native_socket(pb);
+    if (-1 == socket) {
+        return;
+    }
+
+    for (i = 0; i < watcher->apoll_size; ++i) {
+        if (watcher->apb[i] == pb) {
+            watcher->apoll[i].fd = socket;
+            return;
+        }
+    }
+}
+
+
+void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
+{
+    PUBNUB_UNUSED(socket);
+
+    EnterCriticalSection(&m_watcher.mutw);
+
+    update_socket(&m_watcher, pb);
+
+    LeaveCriticalSection(&m_watcher.mutw);
+    SetEvent(m_watcher.condw);
+}
 
 void pbntf_trans_outcome(pubnub_t *pb)
 {
