@@ -219,6 +219,35 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+static void update_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
+{
+    size_t i;
+    int socket = pubnub_get_native_socket(pb);
+    if (-1 == socket) {
+        return;
+    }
+
+    for (i = 0; i < watcher->apoll_size; ++i) {
+        if (watcher->apb[i] == pb) {
+            watcher->apoll[i].fd = socket;
+            return;
+        }
+    }
+}
+
+
+void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
+{
+    PUBNUB_UNUSED(socket);
+
+    EnterCriticalSection(&m_watcher.mutw);
+
+    update_socket(&m_watcher, pb);
+
+    LeaveCriticalSection(&m_watcher.mutw);
+    SetEvent(m_watcher.condw);
+}
+
 void pbntf_trans_outcome(pubnub_t *pb)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb);

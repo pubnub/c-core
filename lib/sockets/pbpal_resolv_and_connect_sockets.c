@@ -15,6 +15,12 @@
 #define DNS_PORT 53
 
 
+#if !PUBNUB_USE_ADNS
+#define send_dns_query(x,y,z) -1
+#define read_response(x,y,z,v) -1
+#endif
+
+
 enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
 {
     int error;
@@ -35,10 +41,10 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         pbpal_set_blocking_io(pb);
         dest.sin_family = AF_INET;
         dest.sin_port = htons(DNS_PORT);
-        dest.sin_addr.s_addr = inet_addr("8.8.8.8");
+        inet_pton(AF_INET, "8.8.8.8", &dest.sin_addr.s_addr);
         flags = send_dns_query(skt, (struct sockaddr*)&dest, (unsigned char*)origin);
         if (flags != 0) {
-            close(skt);
+            socket_close(skt);
             return (flags < 0) ? PNR_ADDR_RESOLUTION_FAILED : PNR_STARTED;
         }
         pb->pal.socket = skt;
@@ -94,13 +100,13 @@ enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
         int skt = pb->pal.socket;
         dns_server.sin_family = AF_INET;
         dns_server.sin_port = htons(DNS_PORT);
-        dns_server.sin_addr.s_addr = inet_addr("8.8.8.8");
+        inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
         switch (read_response(skt, (struct sockaddr*)&dns_server, origin, &dest)) {
         case -1: return PNR_ADDR_RESOLUTION_FAILED;
         case +1: return PNR_STARTED;
         case 0: break;
         }
-        close(skt);
+        socket_close(skt);
         skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (SOCKET_INVALID == skt) {
             return PNR_ADDR_RESOLUTION_FAILED;

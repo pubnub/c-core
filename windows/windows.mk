@@ -12,8 +12,8 @@ pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c $(SOURCEFILES) ..\c
 cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c
 	$(CC) $(CFLAGS) ..\core\samples\cancel_subscribe_sync_sample.c $(SOURCEFILES) ..\core\pubnub_ntf_sync.c ws2_32.lib rpcrt4.lib
 
-pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ..\core\pubnub_timer_list.c
-	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\pubnub_callback_sample.c  $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c  ..\core\pubnub_timer_list.c ws2_32.lib rpcrt4.lib
+pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ..\core\pubnub_timer_list.c ..\lib\sockets\pbpal_adns_sockets.c
+	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API -DPUBNUB_USE_ADNS=1 ..\core\samples\pubnub_callback_sample.c  $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c  ..\core\pubnub_timer_list.c ..\lib\sockets\pbpal_adns_sockets.c ws2_32.lib rpcrt4.lib
 
 subscribe_publish_callback_sample.exe: ..\core\samples\subscribe_publish_callback_sample.c $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c  ..\core\pubnub_timer_list.c
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API ..\core\samples\subscribe_publish_callback_sample.c  $(SOURCEFILES) pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ..\core\pubnub_timer_list.c ws2_32.lib rpcrt4.lib

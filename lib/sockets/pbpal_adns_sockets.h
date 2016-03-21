@@ -3,7 +3,10 @@
 #define      INC_PBPAL_ANDS_SOCKETS
 
 
+#ifdef _WIN32
+#else
 #include <arpa/inet.h> //inet_addr , inet_ntoa , ntohs etc
+#endif
 
 
 /**
