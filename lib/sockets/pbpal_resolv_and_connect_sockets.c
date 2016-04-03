@@ -78,7 +78,7 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
                     return PNR_STARTED;
                 }
                 else {
-                    PUBNUB_LOG_WARNING("socket connect() failed, will try another IP address, if available");
+                    PUBNUB_LOG_WARNING("socket connect() failed, will try another IP address, if available\n");
                     socket_close(pb->pal.socket);
                     pb->pal.socket = SOCKET_INVALID;
                     continue;
