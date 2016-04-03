@@ -10,13 +10,105 @@
  * implementation.
  */
 
+#include <functional>
 
 //extern "C" {
 #include "pubnub_api_types.h"
+#include "pubnub_assert.h"
 //}
 
 namespace pubnub {
     class context;
+
+#if __cplusplus < 201103L
+    // See what we had to deal with? :)
+
+    template <class R, class T, class A, class B>
+    class mem_fun2_t : public std::binary_function <A,B,R> {
+        R (T::*pmem)(A, B);
+        T *d_t;
+    public:
+        explicit mem_fun2_t ( R (T::*p)(A, B), T* t) : pmem(p), d_t(t) {}
+        R operator() (A a, B b) const { return (d_t->*pmem)(a, b); }
+    };
+
+    template <class R, class T, class A, class B>
+    class const_mem_fun2_t : public std::binary_function <A,B,R> {
+        R (T::*pmem)(A, B) const;
+        T *d_t;
+    public:
+        explicit const_mem_fun2_t ( R (T::*p)(A, B) const, T* t) : pmem(p), d_t(t) {}
+        R operator() (A a, B b) const { return (d_t->*pmem)(a, b); }
+    };
+
+    template <class R, class T, class A, class B>
+    class mem_fun2_ref_t : public std::binary_function <A,B,R> {
+        R (T::*pmem)(A, B);
+        T &d_t;
+    public:
+        explicit mem_fun2_ref_t ( R (T::*p)(A, B), T& t) : pmem(p), d_t(t) {}
+        R operator() (A a, B b) const { return (d_t.*pmem)(a, b); }
+    };
+
+    template <class R, class T, class A, class B>
+    class const_mem_fun2_ref_t : public std::binary_function <A,B,R> {
+        R (T::*pmem)(A, B) const;
+        T &d_t;
+    public:
+        explicit const_mem_fun2_ref_t(R (T::*p)(A, B) const, T& t) : pmem(p), d_t(t) {}
+        R operator() (A a, B b) const { return (d_t.*pmem)(a, b); }
+    };
+
+    template <class R, class T, class A, class B>
+    mem_fun2_t<R,T,A,B> mem_fun(R (T::*f)(A,B), T* t) {
+        return mem_fun2_t<R,T,A,B>(f, t);
+    }
+    template <class R, class T, class A, class B>
+    const_mem_fun2_t<R,T,A,B> mem_fun(R (T::*f)(A,B) const, T* t) {
+        return const_mem_fun2_t<R,T,A,B>(f, t);
+    }
+    template <class R, class T, class A, class B>
+    mem_fun2_ref_t<R,T,A,B> mem_fun_ref(R (T::*f)(A,B), T& t) {
+        return mem_fun2_ref_t<R,T,A,B>(f, t);
+    }
+    template <class R, class T, class A, class B>
+    const_mem_fun2_ref_t<R,T,A,B> mem_fun_ref(R (T::*f)(A,B) const, T& t) {
+        return const_mem_fun2_ref_t<R,T,A,B>(f, t);
+    }
+    struct caller {
+        virtual void callme(context &ctx, pubnub_res result) = 0;
+        virtual ~caller() {}
+    };
+    template<class T> class caller_adaptor : public caller {
+    public:
+        caller_adaptor(T t) : d_t(t) {}
+        void callme(context &ctx, pubnub_res result) { d_t(ctx, result);}
+        caller *clone() { return new caller_adaptor(d_t); }
+        virtual ~caller_adaptor() {}
+    private:
+        T d_t;
+    };
+    class caller_keeper {
+        caller *d_pcaller;
+    public:
+        caller_keeper() : d_pcaller(0) {}
+        caller_keeper(caller *pc) : d_pcaller(pc) {
+            PUBNUB_ASSERT_OPT(pc != 0);
+        }
+        caller_keeper(caller_keeper& x) : d_pcaller(x.d_pcaller) { 
+            x.d_pcaller = 0; 
+        }
+        void operator=(caller_keeper& x) {
+            d_pcaller = x.d_pcaller;
+            x.d_pcaller = 0; 
+        }
+        ~caller_keeper() { delete d_pcaller; }
+        void operator()(context &ctx, pubnub_res result) { 
+            d_pcaller->callme(ctx, result);
+        }
+        bool operator!() const { return 0 == d_pcaller; }
+    };
+#endif
 
     /** A future (pending) result of a Pubnub
      * transaction/operation/request.  It is somewhat similar to the
@@ -73,19 +165,30 @@ namespace pubnub {
         /// Pass a function, function object (or lambda in C++11)
         /// which accepts a Pubnub context and pubnub_res and it will
         /// be called when the transaction ends.
-        template<typename F> void then(F f) {
-            f(d_ctx, await());
+#if __cplusplus >= 201103L
+        void then(std::function<void(pubnub::context &, pubnub_res)> f);
+#else
+        template<class T>
+        void then(T f) {
+            caller_adaptor<T> x(f);
+            caller *p = x.clone();
+            caller_keeper k(p);
+            thenx(k);
         }
+    private:
+        void thenx(caller_keeper kiper);
+    public:
+#endif
 
-        /// Returns if the transaction is over
+        /// Returns true if the transaction is over, else otherwise
         bool is_ready() const;
-        
+
         // We can construct from a temporary
 #if __cplusplus >= 201103L
         futres(futres &&x) :
             d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(x.d_pimpl) {
-            x.d_pb = nullptr; 
-            x.d_pimpl = nullptr; 
+            x.d_pb = nullptr;
+            x.d_pimpl = nullptr;
         }
 #else
         futres(futres const &x);
@@ -107,7 +210,11 @@ namespace pubnub {
         /// The implementation of the synchronization
         /// between the Pubnub callback and this "future result"
         impl *d_pimpl;
-    };
+
+#if __cplusplus >= 201103L
+        std::function<void(context&, pubnub_res)> d_thenf;
+#endif
+	};
 }
 
 #include "pubnub_common.hpp"

@@ -26,9 +26,14 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
         p->previous = p->next = NULL;
 #endif
     }
-    if (PUBNUB_ORIGIN_SETTABLE) {
+#if defined(PUBNUB_CALLBACK_API)
+	p->cb = NULL;
+	p->user_data = NULL;
+#endif
+	if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
     }
+
     p->state = PBS_IDLE;
     p->trans = PBTT_NONE;
     pbpal_init(p);

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <exception>
 
+#include "pubnub_mutex.hpp"
+
 
 /* Please note that this sample is the same whether you use the Pubnub
    C "sync" or "callback" interface during the build.
@@ -19,6 +21,10 @@
 
 const std::string chan("hello_world");
 
+static pubnub_mutex_t m_done_m;
+static bool m_done;
+
+
 
 static void on_time(pubnub::context &pb, pubnub_res res)
 {
@@ -29,6 +35,8 @@ static void on_time(pubnub::context &pb, pubnub_res res)
         std::cout << "Getting time failed!" << std::endl;
     }
     // We could go on here, but I've had enough of the "callback hell" :)
+    pubnub::lock_guard lck(m_done_m);
+    m_done = true;
 }
 
 
@@ -144,6 +152,8 @@ static void cpp11(pubnub::context &ipb)
                         }
                         // We could go on, but I've had enough of the callback
                         // hell - lambda/node.js style, too
+                        pubnub::lock_guard lck(m_done_m);
+                        m_done = true;
                         });
                     });
                 });
@@ -164,9 +174,26 @@ int main()
 //       pb.set_blocking_io(pubnub::non_blocking);
 
 #if __cplusplus >= 201103L
+        m_done = false;
         cpp11(pb);
+        for (;;) {
+            pubnub::lock_guard lck(m_done_m);
+            if (m_done) {
+                break;
+            }
+        }
 #else
+        pubnub_mutex_init(m_done_m);
         cpp98(pb);
+        for (;;) {
+            bool done;
+            pubnub_mutex_lock(m_done_m);
+            done = m_done;
+            pubnub_mutex_unlock(m_done_m);
+            if (done) {
+                break;
+            }
+        }
 #endif
     }
     catch (std::exception &exc) {

@@ -3,6 +3,7 @@
 
 //extern "C" {
 #include "pubnub_ntf_callback.h"
+#include "pubnub_assert.h"
 //}
 
 #include <windows.h>
@@ -14,7 +15,8 @@ namespace pubnub {
 
 class futres::impl {
 public:
-    impl() : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL)) {
+    impl() : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL))
+		, d_parent(nullptr) {
     }
     void start_await() {
         ResetEvent(d_wevent);
@@ -23,14 +25,24 @@ public:
         WaitForSingleObject(d_wevent, INFINITE);
     }
     void signal() {
-        SetEvent(d_wevent);
+		SetEvent(d_wevent);
+		if (d_thenf && d_parent) {
+			d_thenf(d_parent->d_ctx, d_parent->end_await());
+		}
     }
     bool is_ready() const {
         return WAIT_OBJECT_0 == WaitForSingleObject(d_wevent, 0);
     }
+	void then(std::function<void(context &, pubnub_res)> f, futres *parent) {
+		PUBNUB_ASSERT_OPT(parent != nullptr);
+		d_thenf = f;
+		d_parent = parent;
+	}
 
 private:
     HANDLE d_wevent;
+	std::function<void(context&, pubnub_res)> d_thenf;
+	futres *d_parent;
 };
 
 
@@ -96,4 +108,10 @@ bool futres::is_ready() const
     return d_pimpl->is_ready();
 }
 
+void futres::then(std::function<void(context &, pubnub_res)> f)
+{
+	d_pimpl->then(f, this);
 }
+
+}
+

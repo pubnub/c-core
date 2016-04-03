@@ -117,8 +117,6 @@ void socket_watcher_thread(void *arg)
     for (;;) {
         const DWORD ms = 100;
 
-        WaitForSingleObject(m_watcher.condw, ms);
-
         EnterCriticalSection(&m_watcher.mutw);
         if (0 == m_watcher.apoll_size) {
             LeaveCriticalSection(&m_watcher.mutw);
@@ -129,7 +127,7 @@ void socket_watcher_thread(void *arg)
             if (SOCKET_ERROR == rslt) {
                 /* error? what to do about it? */
                 PUBNUB_LOG_WARNING("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
-            }
+            }\
             else if (rslt > 0) {
                 size_t i;
                 for (i = 0; i < m_watcher.apoll_size; ++i) {
@@ -190,8 +188,6 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     
     LeaveCriticalSection(&m_watcher.mutw);
 
-    SetEvent(m_watcher.condw);
-
     return +1;
 }
 
@@ -215,7 +211,6 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
     remove_timer_safe(pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
-    SetEvent(m_watcher.condw);
 }
 
 
