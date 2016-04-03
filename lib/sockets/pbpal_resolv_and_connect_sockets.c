@@ -71,10 +71,18 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
             if (pb->pal.socket == SOCKET_INVALID) {
                 continue;
             }
+            pbpal_set_blocking_io(pb);
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
-                socket_close(pb->pal.socket);
-                pb->pal.socket = -1;
-                continue;
+                if (socket_would_block()) {
+                    freeaddrinfo(result);
+                    return PNR_STARTED;
+                }
+                else {
+                    PUBNUB_LOG_WARNING("socket connect() failed, will try another IP address, if available");
+                    socket_close(pb->pal.socket);
+                    pb->pal.socket = SOCKET_INVALID;
+                    continue;
+                }
             }
             break;
         }
@@ -119,6 +127,28 @@ enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
         
         return PNR_OK;
     }
-
+#if defined PUBNUB_CALLBACK_API
     return PNR_OK;
+#else
+    {
+        fd_set write_set;
+        int rslt;
+        struct timeval timev = { 0, 300000 };
+        
+        FD_ZERO(&write_set);
+        FD_SET(pb->pal.socket, &write_set);
+        rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
+        if (SOCKET_ERROR == rslt) {
+            PUBNUB_LOG_ERROR("select() Error!\n");
+            return PNR_CONNECT_FAILED;
+        }
+        else if (rslt > 0) {
+            PUBNUB_LOG_TRACE("select() event\n");
+            return PNR_OK;
+        }
+        PUBNUB_LOG_TRACE("no select() events\n");
+        return PNR_IN_PROGRESS;
+    }
+#endif
+
 }

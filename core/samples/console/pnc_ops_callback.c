@@ -1,12 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
-#include "pnc_ops_callback.h"
 
 #include "pubnub_helper.h"
+#include "pubnub_mutex.h"
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
+#include "pnc_ops_callback.h"
 
 #if defined _WIN32
 #include <windows.h>
@@ -14,6 +12,10 @@
 #else
 #include <pthread.h>
 #endif
+
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
 
 struct UserData {
@@ -32,12 +34,11 @@ static struct UserData m_user_data_sub;
 
 
 #if defined _WIN32
-static CRITICAL_SECTION m_loop_enabled_mutex;
 uintptr_t sub_thread;
 #else
-static pthread_mutex_t m_loop_enabled_mutex;
 pthread_t sub_thread;
 #endif
+static pubnub_mutex_t m_loop_enabled_mutex;
 static bool m_loop_enabled = false;
 
 
@@ -130,6 +131,8 @@ static void await(struct UserData *pUserData)
 
 void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub)
 {
+    pubnub_mutex_init(m_loop_enabled_mutex);
+
     InitUserData(&m_user_data, pn);
     InitUserData(&m_user_data_sub, pn_sub);
     
@@ -153,29 +156,16 @@ pnc_ops_subscribe_thr(void *pn_sub_addr)
     char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
 
     puts("\nSubscribe thread created");
-#if defined _WIN32
-    EnterCriticalSection(&m_loop_enabled_mutex);
+    pubnub_mutex_lock(m_loop_enabled_mutex);
     m_loop_enabled = true;
-    LeaveCriticalSection(&m_loop_enabled_mutex);
-#else
-    pthread_mutex_lock(&m_loop_enabled_mutex);
-    m_loop_enabled = true;
-    pthread_mutex_unlock(&m_loop_enabled_mutex);
-#endif
-    
-    
+    pubnub_mutex_unlock(m_loop_enabled_mutex);
+
     for (;;) {
         bool loop_enabled;
 
-#if defined _WIN32
-        EnterCriticalSection(&m_loop_enabled_mutex);
+        pubnub_mutex_lock(m_loop_enabled_mutex);
         loop_enabled = m_loop_enabled;
-        LeaveCriticalSection(&m_loop_enabled_mutex);
-#else
-        pthread_mutex_lock(&m_loop_enabled_mutex);
-        loop_enabled = m_loop_enabled;
-        pthread_mutex_unlock(&m_loop_enabled_mutex);
-#endif
+        pubnub_mutex_unlock(m_loop_enabled_mutex);
         
         if (!loop_enabled) {
             break;
@@ -225,11 +215,7 @@ void pnc_ops_subscribe(pubnub_t *pn_sub)
 
 void pnc_ops_unsubscribe(pubnub_t *pn_sub)
 {
-#if defined _WIN32
-    EnterCriticalSection(&m_loop_enabled_mutex);
-#else
-    pthread_mutex_lock(&m_loop_enabled_mutex);
-#endif
+    pubnub_mutex_lock(m_loop_enabled_mutex);
     if (m_loop_enabled) {
         m_loop_enabled = false;
         puts("Subscription loop is disabled and will be stopped after the next message received.");
@@ -237,11 +223,7 @@ void pnc_ops_unsubscribe(pubnub_t *pn_sub)
     else {
         puts("Subscription loop is already disabled.");
     }
-#if defined _WIN32
-    LeaveCriticalSection(&m_loop_enabled_mutex);
-#else
-    pthread_mutex_unlock(&m_loop_enabled_mutex);
-#endif
+    pubnub_mutex_unlock(m_loop_enabled_mutex);
 }
 
 
