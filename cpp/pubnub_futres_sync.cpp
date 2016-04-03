@@ -62,7 +62,7 @@ bool futres::is_ready() const
   return d_result != PNR_STARTED;
 }
  
-#if __cplusplus >= 201103L
+#if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
 void futres::then(std::function<void(context &, pubnub_res)> f)
 {
     f(d_ctx, await());

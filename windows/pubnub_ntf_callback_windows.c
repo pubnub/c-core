@@ -25,7 +25,6 @@ struct SocketWatcherData {
     _Guarded_by_(mutw) _Field_size_(apoll_cap) WSAPOLLFD *apoll;
     _Guarded_by_(mutw) _Field_size_(apoll_cap) pubnub_t **apb;
     CRITICAL_SECTION mutw;
-    HANDLE condw;
     uintptr_t thread_id;
 #if PUBNUB_TIMERS_API
     _Guarded_by_(mutw) pubnub_t *timer_head;
@@ -127,7 +126,7 @@ void socket_watcher_thread(void *arg)
             if (SOCKET_ERROR == rslt) {
                 /* error? what to do about it? */
                 PUBNUB_LOG_WARNING("poll size = %d, error = %d\n", m_watcher.apoll_size, WSAGetLastError());
-            }\
+            }
             else if (rslt > 0) {
                 size_t i;
                 for (i = 0; i < m_watcher.apoll_size; ++i) {
@@ -240,7 +239,6 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
     update_socket(&m_watcher, pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
-    SetEvent(m_watcher.condw);
 }
 
 void pbntf_trans_outcome(pubnub_t *pb)

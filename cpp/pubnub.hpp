@@ -165,7 +165,7 @@ namespace pubnub {
         /// Pass a function, function object (or lambda in C++11)
         /// which accepts a Pubnub context and pubnub_res and it will
         /// be called when the transaction ends.
-#if __cplusplus >= 201103L
+#if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
         void then(std::function<void(pubnub::context &, pubnub_res)> f);
 #else
         template<class T>
