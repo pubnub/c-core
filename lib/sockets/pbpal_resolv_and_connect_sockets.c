@@ -76,12 +76,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             pbpal_set_blocking_io(pb);
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
                 if (socket_would_block()) {
-                    error = +1;
-                    break;
+                    freeaddrinfo(result);
+                    return PNR_STARTED;
                 }
                 else {
+                    PUBNUB_LOG_WARNING("socket connect() failed, will try another IP address, if available\n");
                     socket_close(pb->pal.socket);
-                    pb->pal.socket = -1;
+                    pb->pal.socket = SOCKET_INVALID;
                     continue;
                 }
             }
@@ -140,18 +141,18 @@ bool pbpal_connected(pubnub_t *pb)
     fd_set write_set;
     int rslt;
     struct timeval timev = { 0, 300000 };
-
+    
     FD_ZERO(&write_set);
     FD_SET(pb->pal.socket, &write_set);
     rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
     if (SOCKET_ERROR == rslt) {
         PUBNUB_LOG_ERROR("select() Error!\n");
-        return false;
+        return PNR_CONNECT_FAILED;
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("select() event\n");
-        return true;
+        return PNR_OK;
     }
     PUBNUB_LOG_TRACE("no select() events\n");
-    return false;
+    return PNR_IN_PROGRESS;
 }

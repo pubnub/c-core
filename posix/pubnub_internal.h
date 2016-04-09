@@ -15,7 +15,10 @@ typedef int pb_socket_t;
 #define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
-#define socket_would_block() (errno == EWOULDBLOCK)
+/* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't 
+   the greatest solution, but it is good for now.
+*/
+#define socket_would_block() ((errno == EWOULDBLOCK) || (errno == EINPROGRESS))
 
 #define socket_timed_out() (errno == ETIMEDOUT)
 

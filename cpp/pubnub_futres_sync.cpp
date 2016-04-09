@@ -17,7 +17,7 @@ futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
 
 #if __cplusplus < 201103L
 futres::futres(futres const &x) :
-	d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(0)
+    d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(0)
 {
 }
 #endif
@@ -62,5 +62,16 @@ bool futres::is_ready() const
   return d_result != PNR_STARTED;
 }
  
+#if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
+void futres::then(std::function<void(context &, pubnub_res)> f)
+{
+    f(d_ctx, await());
+}
+#else
+void futres::thenx(caller_keeper f)
+{
+    f(d_ctx, await());
+}
+#endif
 
 }

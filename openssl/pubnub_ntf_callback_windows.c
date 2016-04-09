@@ -25,7 +25,6 @@ struct SocketWatcherData {
     _Guarded_by_(mutw) _Field_size_(apoll_cap) WSAPOLLFD *apoll;
     _Guarded_by_(mutw) _Field_size_(apoll_cap) pubnub_t **apb;
     CRITICAL_SECTION mutw;
-    HANDLE condw;
     uintptr_t thread_id;
 #if PUBNUB_TIMERS_API
     _Guarded_by_(mutw) pubnub_t *timer_head;
@@ -66,7 +65,7 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     }
 
     watcher->apoll[watcher->apoll_size].fd = sockt;
-    watcher->apoll[watcher->apoll_size].events = POLLIN | POLLOUT;
+    watcher->apoll[watcher->apoll_size].events = POLLOUT;
     watcher->apb[watcher->apoll_size] = pb;
     ++watcher->apoll_size;
 }
@@ -117,8 +116,6 @@ void socket_watcher_thread(void *arg)
     for (;;) {
         const DWORD ms = 100;
 
-        WaitForSingleObject(m_watcher.condw, ms);
-
         EnterCriticalSection(&m_watcher.mutw);
         if (0 == m_watcher.apoll_size) {
             LeaveCriticalSection(&m_watcher.mutw);
@@ -136,6 +133,18 @@ void socket_watcher_thread(void *arg)
                     if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
                         pubnub_mutex_lock(m_watcher.apb[i]->monitor);
                         pbnc_fsm(m_watcher.apb[i]);
+                        if (m_watcher.apoll[i].events == POLLOUT) {
+                            if ((m_watcher.apb[i]->state == PBS_WAIT_DNS) ||
+                                (m_watcher.apb[i]->state >= PBS_RX_HTTP_VER)) {
+                                m_watcher.apoll[i].events = POLLIN;
+                            }
+                        }
+                        else {
+                            if ((m_watcher.apb[i]->state > PBS_WAIT_DNS) &&
+                                (m_watcher.apb[i]->state < PBS_RX_HTTP_VER)) {
+                                m_watcher.apoll[i].events = POLLOUT;
+                            }
+                        }
                         pubnub_mutex_unlock(m_watcher.apb[i]->monitor);
                     }
                 }
@@ -190,8 +199,6 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     
     LeaveCriticalSection(&m_watcher.mutw);
 
-    SetEvent(m_watcher.condw);
-
     return +1;
 }
 
@@ -215,7 +222,6 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
     remove_timer_safe(pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
-    SetEvent(m_watcher.condw);
 }
 
 
@@ -245,7 +251,6 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
     update_socket(&m_watcher, pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
-    SetEvent(m_watcher.condw);
 }
 
 void pbntf_trans_outcome(pubnub_t *pb)

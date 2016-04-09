@@ -63,12 +63,12 @@ int main()
         return -1;
     }
     
-    pnc_ops_init(pn, pn_sub);
-    
     pubnub_init(pn, pubkey, pubkey);
     pubnub_init(pn_sub, pubkey, pubkey);
     pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
     pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
+
+    pnc_ops_init(pn, pn_sub);
     
     displayMenuOptions(pn);
     
@@ -325,4 +325,3 @@ static void displayMenuOptions(pubnub_t *pn)
     puts("ENTER "STRINGIFY(MENU_EXIT)" FOR EXIT OR QUIT");
     puts("> ");
 }
-
