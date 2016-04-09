@@ -21,7 +21,7 @@
 #endif
 
 
-enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
     int error;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
@@ -30,25 +30,27 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
 
     if (PUBNUB_USE_ADNS) {
-        int flags;
         struct sockaddr_in dest;
         int skt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
         if (SOCKET_INVALID == skt) {
-            return PNR_ADDR_RESOLUTION_FAILED;
+            return pbpal_resolv_resource_failure;
         }
         pb->options.use_blocking_io = false;
         pbpal_set_blocking_io(pb);
         dest.sin_family = AF_INET;
         dest.sin_port = htons(DNS_PORT);
         inet_pton(AF_INET, "8.8.8.8", &dest.sin_addr.s_addr);
-        flags = send_dns_query(skt, (struct sockaddr*)&dest, (unsigned char*)origin);
-        if (flags != 0) {
+        error = send_dns_query(skt, (struct sockaddr*)&dest, (unsigned char*)origin);
+        if (error < 0) {
             socket_close(skt);
-            return (flags < 0) ? PNR_ADDR_RESOLUTION_FAILED : PNR_STARTED;
+            return pbpal_resolv_failed_send;
+        }
+        else if (error > 0) {
+            return pbpal_resolv_send_wouldblock;
         }
         pb->pal.socket = skt;
-        return PNR_STARTED;
+        return pbpal_resolv_sent;
     }
     else {
         struct addrinfo *result;
@@ -60,38 +62,45 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         hint.ai_protocol = hint.ai_flags = hint.ai_addrlen = 0;
         hint.ai_addr = NULL;
         hint.ai_canonname = NULL;
-        hint.ai_next = NULL; 
+        hint.ai_next = NULL;
         error = getaddrinfo(origin, HTTP_PORT_STRING, &hint, &result);
         if (error != 0) {
-            return PNR_ADDR_RESOLUTION_FAILED;
+            return pbpal_resolv_failed_processing;
         }
-        
+
         for (it = result; it != NULL; it = it->ai_next) {
             pb->pal.socket = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
             if (pb->pal.socket == SOCKET_INVALID) {
                 continue;
             }
+            pbpal_set_blocking_io(pb);
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
-                socket_close(pb->pal.socket);
-                pb->pal.socket = -1;
-                continue;
+                if (socket_would_block()) {
+                    error = +1;
+                    break;
+                }
+                else {
+                    socket_close(pb->pal.socket);
+                    pb->pal.socket = -1;
+                    continue;
+                }
             }
             break;
         }
         freeaddrinfo(result);
-    
+
         if (NULL == it) {
-            return PNR_CONNECT_FAILED;
+            return pbpal_connect_failed;
         }
 
         socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
-    }
 
-    return PNR_OK;
+        return error ? pbpal_connect_wouldblock : pbpal_connect_success;
+    }
 }
 
 
-enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     if (PUBNUB_USE_ADNS) {
         uint8_t const* origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
@@ -102,23 +111,47 @@ enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
         dns_server.sin_port = htons(DNS_PORT);
         inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
         switch (read_response(skt, (struct sockaddr*)&dns_server, origin, &dest)) {
-        case -1: return PNR_ADDR_RESOLUTION_FAILED;
-        case +1: return PNR_STARTED;
+        case -1: return pbpal_resolv_failed_rcv;
+        case +1: return pbpal_resolv_rcv_wouldblock;
         case 0: break;
         }
         socket_close(skt);
         skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (SOCKET_INVALID == skt) {
-            return PNR_ADDR_RESOLUTION_FAILED;
+            return pbpal_connect_resource_failure;
         }
         pb->pal.socket = skt;
         dest.sin_port = htons(HTTP_PORT);
         if (SOCKET_ERROR == connect(skt, (struct sockaddr*)&dest, sizeof dest)) {
-            return socket_would_block() ? PNR_IN_PROGRESS : PNR_ADDR_RESOLUTION_FAILED;
+            return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
         }
-        
-        return PNR_OK;
+
+        return pbpal_connect_success;
     }
 
-    return PNR_OK;
+    /* Under regular BSD-ish sockets, this function should not be
+       called unless using async DNS, so this is an error */
+    return pbpal_connect_failed;
+}
+
+
+bool pbpal_connected(pubnub_t *pb)
+{
+    fd_set write_set;
+    int rslt;
+    struct timeval timev = { 0, 300000 };
+
+    FD_ZERO(&write_set);
+    FD_SET(pb->pal.socket, &write_set);
+    rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
+    if (SOCKET_ERROR == rslt) {
+        PUBNUB_LOG_ERROR("select() Error!\n");
+        return false;
+    }
+    else if (rslt > 0) {
+        PUBNUB_LOG_TRACE("select() event\n");
+        return true;
+    }
+    PUBNUB_LOG_TRACE("no select() events\n");
+    return false;
 }
