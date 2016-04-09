@@ -306,9 +306,3 @@ int pbpal_close(pubnub_t *pb)
 
     return 0;
 }
-
-
-bool pbpal_connected(pubnub_t *pb)
-{
-    return pb->pal.socket != NULL;
-}
