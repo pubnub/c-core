@@ -15,7 +15,7 @@ https://www.pubnub.com/docs/posix-c/pubnub-c-sdk
 The directories of the library repository are:
 
 - `core` : The core part, with modules portable to all, or most, libraries for
-	specific platforms
+  specific platforms
 
 - `lib` : Modules for libraries that are available on more than one platform
 
@@ -30,6 +30,8 @@ The directories of the library repository are:
 - `qt`: Modules, Qt projects and examples for Qt
 
 - `freertos` : Modules and Makefile for the FreeRTOS
+
+- `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
 
 - `contiki` : Modules and Makefile for the Contiki OS (work in progress)
 
