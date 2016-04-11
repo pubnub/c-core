@@ -426,7 +426,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *p, const char *uuid);
 enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *channel_group, const char *uuid, char const *state);
 
 
-/** Gets some state for the @p channel and/or @channel_group for a
+/** Gets some state for the @p channel and/or @p channel_group for a
     user, identified by @p uuid. This actually means "initiate a get
     state transaction". It can be thought of as a query against the
     "presence database".
@@ -446,16 +446,16 @@ enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *c
     ways: if @p channel_group is NULL, then @p channel cannot be NULL
     and you will get state only for the channel(s).
 
-    You can't set state of channels if a transaction is in progress on
-    the context.
+    You can't get state of channel(s) if a transaction is in progress
+    on the context.
 
     @param p The Pubnub context. Can't be NULL. 
     @param channel The string with the channel name (or
-    comma-delimited list of channel names) to set state for.
+    comma-delimited list of channel names) to get state from.
     @param channel_group The string with the channel name (or
-    comma-delimited list of channel group names) to set state for.
-    @param uuid The UUID of the user for which to set state for.
-    If NULL, the current UUID of the @c p context will be used.
+    comma-delimited list of channel group names) to get state from.
+    @param uuid The UUID of the user for which to get state for.
+    If NULL, the current UUID of the @p p context will be used.
 
     @return #PNR_STARTED on success, an error otherwise
 */

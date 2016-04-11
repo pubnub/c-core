@@ -382,9 +382,9 @@ namespace pubnub {
         }
 
         /// Starts a transaction to get the state JSON object for the
-        /// given @p channel and/or @pchannel_group of the given @p
-        /// uuid 
-        /// @see pubnub_set_state
+        /// given @p channel and/or @p channel_group of the given @p
+        /// uuid.
+        /// @see pubnub_state_get
         futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
             char const *ch = channel.empty() ? 0 : channel.c_str();
             char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
