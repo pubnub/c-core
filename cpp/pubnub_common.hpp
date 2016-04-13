@@ -5,6 +5,7 @@
 //extern "C" {
 #include "pubnub_alloc.h"
 #include "pubnub_coreapi.h"
+#include "pubnub_coreapi_ex.h"
 #include "pubnub_generate_uuid.h"
 #include "pubnub_blocking_io.h"
 #include "pubnub_ssl.h"
@@ -134,6 +135,37 @@ namespace pubnub {
     inline ssl_opt operator&(ssl_opt l, ssl_opt r) {
         return static_cast<ssl_opt>(static_cast<int>(l) & static_cast<int>(r));
     }
+
+    /** A wrapper class for subscribe options, enabling a nicer
+        usage. Something like:
+        
+            pn.subscribe(chan, subscribe_options().heartbeat(412));
+    */
+    class subscribe_options {
+        pubnub_subscribe_options d_;
+    public:
+        subscribe_options() { d_ = pubnub_subscribe_defopts(); }
+        subscribe_options& channel_group(std::string const& chgroup) { d_.channel_group = chgroup.empty() ? 0 : chgroup.c_str(); return *this; }
+        subscribe_options& channel_group(std::vector<std::string> const& chgroup) { return channel_group(join(chgroup)); }
+        subscribe_options& heartbeat(unsigned hb_interval) { d_.heartbeat = hb_interval; return *this; }
+        pubnub_subscribe_options data() { return d_; }
+    };
+
+    /** A wrapper class for here-now options, enabling a nicer
+        usage. Something like:
+        
+            pn.here_now(chan, here_now_options().heartbeat(412));
+    */
+    class here_now_options {
+        pubnub_here_now_options d_;
+    public:
+        here_now_options() { d_ = pubnub_here_now_defopts(); }
+        here_now_options& channel_group(std::string const& chgroup) { d_.channel_group = chgroup.empty() ? 0 : chgroup.c_str(); return *this; }
+        here_now_options& channel_group(std::vector<std::string> const& chgroup) { return channel_group(join(chgroup)); }
+        here_now_options& disable_uuids(bool disable_uuids) { d_.disable_uuids = disable_uuids; return *this; }
+        here_now_options& state(bool state) { d_.state = state; return *this; }
+        pubnub_here_now_options data() { return d_; }
+    };
 
     /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
      * not a "native" C++ implementation.
@@ -303,11 +335,24 @@ namespace pubnub {
             return subscribe(join(channel), join(channel_group));
         }
 
+        /// Subscribes to @p channel with "extended" (full) options
+        /// @see pubnub_subscribe_ex
+        futres subscribe(std::string const &channel, subscribe_options opt) {
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            return doit(pubnub_subscribe_ex(d_pb, ch, opt.data()));
+        }
+
+        /// Pass a vector of channels in the @p channel and we'll put
+        /// commas between them. A helper function.
+        futres subscribe(std::vector<std::string> const &channel, subscribe_options opt) {
+            return subscribe(join(channel), opt);
+        }
+
         /// Leaves a @p channel and/or @p channel_group
         /// @see pubnub_leave
         futres leave(std::string const &channel, std::string const &channel_group) {
-			char const *ch = channel.empty() ? 0 : channel.c_str();
-			char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
             return doit(pubnub_leave(d_pb, ch, gr));
         }
 
@@ -348,6 +393,19 @@ namespace pubnub {
         /// commas between them. A helper function.
         futres here_now(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
             return here_now(join(channel), join(channel_group));
+        }
+
+        /// Starts a "here-now" with extended (full) options
+        /// @see pubnub_here_now_ex
+        futres here_now(std::string const &channel, here_now_options opt) {
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            return doit(pubnub_here_now_ex(d_pb, ch, opt.data()));
+        }
+
+        /// Pass a vector of channels in the @p channel and we'll put
+        /// commas between them. A helper function.
+        futres here_now(std::vector<std::string> const &channel, here_now_options opt) {
+            return here_now(join(channel), opt);
         }
 
         /// Starts a transaction to get a list of currently present

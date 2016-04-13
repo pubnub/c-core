@@ -390,11 +390,23 @@ static enum pubnub_res append_url_param(struct pbcc_context *pb, char const *par
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
     } while (0)
 
+#define APPEND_URL_OPT_PARAM_UNSIGNED_M(pbc, name, var, separator)      \
+    if ((var) != NULL) { char v_[20];                                   \
+        snprintf(v_, sizeof v_, "%u", *(var));                          \
+        APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
+    } while (0)
+
 
 #define APPEND_URL_PARAM_BOOL_M(pbc, name, var, separator)              \
     do { char const *v_ = (var) ? "true" : "false";                     \
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
     } while (0)
+
+#define APPEND_URL_PARAM_TRIBOOL_M(pbc, name, var, separator)           \
+    if ((var) != pbccNotSet) {                                          \
+        char const *v_ = (var) ? "1" : "0";                             \
+        APPEND_URL_PARAM_M(pbc, name, v_, separator);                   \
+    }
 
 
 enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, const char *message, bool store_in_history, bool eat_after_reading)
@@ -453,7 +465,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, 
 }
 
 
-enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel, const char *channel_group)
+enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel, const char *channel_group, unsigned *heartbeat)
 {
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -477,6 +489,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel,
     APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
+    APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
 
     return PNR_STARTED;
 }
@@ -556,7 +569,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
 
 
 
-enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group)
+enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, enum pbcc_tribool disable_uuids, enum pbcc_tribool state)
 {
     if (NULL == channel) {
         if (channel_group != NULL) {
@@ -581,6 +594,10 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel,
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_TRIBOOL_M(pb, "disable_uuids", disable_uuids, '&');
+    APPEND_URL_PARAM_TRIBOOL_M(pb, "state", state, '&');
+
+    printf("here-now prep: %s\n", pb->http_buf);
 
     return PNR_STARTED;
 }
@@ -604,7 +621,6 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context *pb, const char *uuid)
         pubnub_uname()
         );
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-
     return PNR_STARTED;
 }
 

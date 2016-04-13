@@ -117,7 +117,7 @@ int main()
         }
     }
     else {
-        printf("Subscribing failed with code: %d\n", res);
+        printf("Subscribing failed with code %d: %s\n", res, pubnub_res_2_string(res));
     }
 
     puts("Getting time...");

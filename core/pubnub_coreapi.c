@@ -131,7 +131,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
         return PNR_IN_PROGRESS;
     }
     
-    rslt = pbcc_subscribe_prep(&p->core, channel, channel_group);
+    rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;
@@ -231,7 +231,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *c
         return PNR_IN_PROGRESS;
     }
     
-    rslt = pbcc_here_now_prep(&pb->core, channel, channel_group);
+    rslt = pbcc_here_now_prep(&pb->core, channel, channel_group, pbccNotSet, pbccNotSet);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;
@@ -256,7 +256,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *pb)
         return PNR_IN_PROGRESS;
     }
     
-    rslt = pbcc_here_now_prep(&pb->core, NULL, NULL);
+    rslt = pbcc_here_now_prep(&pb->core, NULL, NULL, pbccNotSet, pbccNotSet);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_GLOBAL_HERENOW;
         pb->core.last_result = PNR_STARTED;

@@ -355,8 +355,6 @@ enum pubnub_res pubnub_here_now(pubnub_t *p, const char *channel, const char *ch
     in progress on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name (or
-    comma-delimited list of channel names) to get presence info for.
 
     @return #PNR_STARTED on success, an error otherwise
 */
