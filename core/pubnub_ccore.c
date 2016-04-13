@@ -594,8 +594,6 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *pb, const char *channel
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
 
-    printf("heartbeat: %s\n", pb->http_buf);
-
     return PNR_STARTED;
 }
 
