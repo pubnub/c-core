@@ -30,11 +30,13 @@
  */
 #define PUBNUB_CTX_MAX 2
 
+#ifndef PUBNUB_BUF_MAXLEN
 /** Maximum length of the HTTP buffer. This is a major component of
  * the memory size of the whole pubnub context, but it is also an
  * upper bound on URL-encoded form of published message, so if you
  * need to construct big messages, you may need to raise this.  */
 #define PUBNUB_BUF_MAXLEN 32000
+#endif
 
 /** Set to 0 to use a static buffer and then set its size via
     #PUBNUB_REPLY_MAXLEN.  Set to anything !=0 to use a dynamic
@@ -45,6 +47,7 @@
 
 #if !PUBNUB_DYNAMIC_REPLY_BUFFER
 
+#ifndef PUBNUB_REPLY_MAXLEN
 /** Maximum length of the HTTP reply when using a static buffer. The
  * other major component of the memory size of the PubNub context,
  * beside #PUBNUB_BUF_MAXLEN.  Replies of API calls longer than this
@@ -52,6 +55,7 @@
  * may cause lost messages returned by subscribe if too many too large
  * messages got queued on the Pubnub server. */
 #define PUBNUB_REPLY_MAXLEN 32000
+#endif
 
 #endif
 
