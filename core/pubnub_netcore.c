@@ -60,6 +60,7 @@ static void finish(struct pubnub_ *pb)
     case PBTT_WHERENOW:
     case PBTT_SET_STATE:
     case PBTT_STATE_GET:
+    case PBTT_HEARTBEAT:
         if (pbcc_parse_presence_response(&pb->core) != 0) {
             PUBNUB_LOG_WARNING("parse_presence failed\n");
             pbres = PNR_FORMAT_ERROR;

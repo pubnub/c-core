@@ -297,6 +297,36 @@ enum pubnub_res pubnub_time(pubnub_t *p);
 */
 enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count, bool include_token);
 
+/** Inform Pubnub that we're still working on @p channel and/or @p
+    channel_group.  This actually means "initiate a heartbeat
+    transaction". It can be thought of as an update against the
+    "presence database".
+
+    If transaction is successful, the response will be a available
+    via pubnub_get() as one message, a JSON object. Following keys
+    are always present:
+    - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+    - "message": the string/message describing the status ("OK"...)
+    - "service": should be "Presence"
+
+    If @p channel is NULL, then @p channel_group cannot be NULL and
+    you will subscribe only to the channel group(s). It goes both ways:
+    if @p channel_group is NULL, then @p channel cannot be NULL and
+    you will subscribe only to the channel(s).
+    
+    You can't get list of currently present users if a transaction is
+    in progress on the context.
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel The string with the channel name (or
+    comma-delimited list of channel names) to get presence info for.
+    @param channel_group The string with the channel name (or
+    comma-delimited list of channel group names) to get presence info for.
+
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_heartbeat(pubnub_t *p, const char* channel, const char* channel_group);
+
 /** Get the currently present users on a @p channel and/or @p
     channel_group. This actually means "initiate a here_now
     transaction". It can be thought of as a query against the

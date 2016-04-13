@@ -219,6 +219,31 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, unsigned count
 }
 
 
+enum pubnub_res pubnub_heartbeat(pubnub_t *pb, const char *channel, const char *channel_group)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (pb->state != PBS_IDLE) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_heartbeat_prep(&pb->core, channel, channel_group);
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_HEARTBEAT;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+    }
+    
+    pubnub_mutex_unlock(pb->monitor);
+    return rslt;
+}
+
+
 enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *channel_group)
 {
     enum pubnub_res rslt;

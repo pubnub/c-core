@@ -209,6 +209,11 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *p);
  */
 enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token);
 
+/** Prepares the Heartbeat operation (transaction), mostly by
+    formatting the URI of the HTTP request.
+ */
+enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *p, const char *channel, const char *channel_group);
+
 /** Prepares the Here-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */

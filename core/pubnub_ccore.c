@@ -568,6 +568,37 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
 }
 
 
+enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *pb, const char *channel, const char *channel_group)
+{
+    if (NULL == channel) {
+        if (NULL == channel_group) {
+            return PNR_INVALID_CHANNEL;
+        }
+        channel = ",";
+    }
+    if (pb->msg_ofs < pb->msg_end) {
+        return PNR_RX_BUFF_NOT_EMPTY;
+    }
+
+    pb->http_content_len = 0;
+    pb->msg_ofs = pb->msg_end = 0;
+
+    pb->http_buf_len = snprintf(
+        pb->http_buf, sizeof pb->http_buf,
+        "/v2/presence/sub-key/%s/channel/%s/heartbeat?pnsdk=%s",
+        pb->subscribe_key,
+        channel,
+        pubnub_uname()
+        );
+    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
+    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+
+    printf("heartbeat: %s\n", pb->http_buf);
+
+    return PNR_STARTED;
+}
+
 
 enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, enum pbcc_tribool disable_uuids, enum pbcc_tribool state)
 {

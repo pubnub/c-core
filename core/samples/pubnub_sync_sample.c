@@ -120,6 +120,33 @@ int main()
         printf("Subscribing failed with code %d: %s\n", res, pubnub_res_2_string(res));
     }
 
+    res = pubnub_heartbeat(pbp, chan, NULL);
+    if (res != PNR_STARTED) {
+        printf("pubnub_heartbeat() returned unexpected: %d\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        puts("Heartbeated! Got messages:");
+        for (;;) {
+            msg = pubnub_get(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Heartbeating failed with code %d: %s\n", res, pubnub_res_2_string(res));
+    }
+
     puts("Getting time...");
     res = pubnub_time(pbp);
     if (res != PNR_STARTED) {

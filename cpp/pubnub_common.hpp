@@ -379,6 +379,22 @@ namespace pubnub {
             return doit(pubnub_history(d_pb, ch, count, include_token));
         }
 
+        /// Starts a transaction to inform Pubnub we're working
+        /// on a @p channel and/or @p channel_group
+        /// @see pubnub_heartbeat
+        futres heartbeat(std::string const &channel, std::string const &channel_group = "") {
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            char const *gr = channel_group.empty() ? 0 : channel_group.c_str();
+            return doit(pubnub_heartbeat(d_pb, ch, gr));
+        }
+
+        /// Pass a vector of channels in the @p channel and a vector
+        /// of channel groups for @p channel_group and we will put
+        /// commas between them. A helper function.
+        futres heartbeat(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
+            return heartbeat(join(channel), join(channel_group));
+        }
+
         /// Starts a transaction to get a list of currently present
         /// UUIDs on a @p channel and/or @p channel_group
         /// @see pubnub_here_now

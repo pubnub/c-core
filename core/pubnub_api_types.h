@@ -133,6 +133,9 @@ enum pubnub_trans {
     /** Get a list of all channels in a channel group (from the
      * channel-registry) operation/transaction */
     PBTT_LIST_CHANNEL_GROUP,
+    /** Inform Pubnub that we're still working on @p channel and/or @p
+        channel_group operation/transaction */
+    PBTT_HEARTBEAT,
 };
 
 
