@@ -597,8 +597,6 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel,
     APPEND_URL_PARAM_TRIBOOL_M(pb, "disable_uuids", disable_uuids, '&');
     APPEND_URL_PARAM_TRIBOOL_M(pb, "state", state, '&');
 
-    printf("here-now prep: %s\n", pb->http_buf);
-
     return PNR_STARTED;
 }
 
