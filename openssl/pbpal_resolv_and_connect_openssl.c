@@ -16,11 +16,6 @@
 #include <openssl/ssl.h>
 
 
-
-
-#define HTTP_PORT_STRING "80"
-
-
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL\n");
@@ -32,7 +27,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
     if (NULL == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
-    BIO_set_conn_port(pb->pal.socket, HTTP_PORT_STRING);
+    BIO_set_conn_port(pb->pal.socket, "http");
     
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
     
@@ -150,8 +145,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     }
     if (NULL == pb->pal.socket) {
         ERR_print_errors_fp(stderr);
-        SSL_CTX_free(pb->pal.ctx);
-        pb->pal.ctx = NULL;
         return pbpal_resolv_resource_failure;
     }
     
@@ -159,6 +152,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     
     BIO_get_ssl(pb->pal.socket, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
+    if (pb->pal.session != NULL) {
+        SSL_set_session(ssl, pb->pal.session);
+    }
 
     BIO_set_conn_hostname(pb->pal.socket, origin);
     BIO_set_conn_port(pb->pal.socket, "https");
@@ -174,8 +170,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
-        SSL_CTX_free(pb->pal.ctx);
-        pb->pal.ctx = NULL;
         PUBNUB_LOG_ERROR("BIO_do_connect failed\n");
         return pbpal_connect_failed;
     }
@@ -192,13 +186,17 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
-        SSL_CTX_free(pb->pal.ctx);
-        pb->pal.ctx = NULL;
         if (pb->options.fallbackSSL) {
             return resolv_and_connect_wout_SSL(pb);
         }
         return pbpal_connect_failed;
     }
+
+    PUBNUB_LOG_INFO("SSL session reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
+    if (pb->pal.session != NULL) {
+        SSL_SESSION_free(pb->pal.session);
+    }
+    pb->pal.session = SSL_get1_session(ssl);
 
     return pbpal_connect_success;
 }

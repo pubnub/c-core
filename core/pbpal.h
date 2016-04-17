@@ -157,5 +157,11 @@ bool pbpal_connected(pubnub_t *pb);
 /** Sets blocking I/O option on the context for the communication */
 int pbpal_set_blocking_io(pubnub_t *pb);
 
+/** Frees-up any resources allocated by the PAL for the given
+    context. After this call, context is not safe for use by PAL any
+    more (it is assumed it will be freed-up by the caller).
+*/
+void pbpal_free(pubnub_t *pb);
+
 
 #endif /* !defined INC_PBPAL */

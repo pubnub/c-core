@@ -9,8 +9,9 @@ SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 
-CFLAGS =-g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -I ../core -I . -I ../posix/fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
+CFLAGS =-g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -I ../core -I . -I ../posix/fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
+# -fsanitize=address Use AddressSanitizer
 
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback

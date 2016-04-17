@@ -44,6 +44,7 @@ void pbpal_init(pubnub_t *pb)
     pal_init();
     pb->pal.socket = NULL;
     pb->pal.ctx = NULL;
+    pb->pal.session = NULL;
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->sock_state = STATE_NONE;
@@ -296,13 +297,31 @@ int pbpal_close(pubnub_t *pb)
         pbntf_lost_socket(pb, pb->pal.socket);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
-        if (pb->pal.ctx != NULL) {
-            SSL_CTX_free(pb->pal.ctx);
-            pb->pal.ctx = NULL;
-        }
     }
 
     PUBNUB_LOG_TRACE("pbpal_close() returning 0\n");
 
     return 0;
+}
+
+
+void pbpal_free(pubnub_t *pb)
+{
+    if (pb->pal.socket != NULL) {
+        /* While this should not happen, it doesn't hurt to be paranoid.
+         */
+        pbntf_lost_socket(pb, pb->pal.socket);
+        BIO_free_all(pb->pal.socket);
+    }
+
+    /* The rest, OTOH, is expected */
+    if (pb->pal.ctx != NULL) {
+        SSL_CTX_free(pb->pal.ctx);
+        if (pb->pal.session != NULL) {
+            SSL_SESSION_free(pb->pal.session);
+        }
+    }
+    else {
+        PUBNUB_ASSERT_OPT(NULL == pb->pal.session);
+    }
 }

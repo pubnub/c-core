@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
+#include "pubnub_helper.h"
 #include "pubnub_timers.h"
 
 #if defined _WIN32
@@ -123,8 +124,41 @@ static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
 }
 
 
+static int do_time(pubnub_t *pbp, struct UserData *pUserData)
+{
+    enum pubnub_res res;
+
+    puts("-----------------------");
+    puts("Getting time...");
+    puts("-----------------------");
+    res = pubnub_time(pbp);
+    if (res != PNR_STARTED) {
+        printf("pubnub_time() returned unexpected %d: %s\n", res, pubnub_res_2_string(res));
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = await(pUserData);
+    if (res == PNR_STARTED) {
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        printf("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
+        printf("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
+    }
+    else {
+        printf("Getting time failed with code %d: %s\n", res, pubnub_res_2_string(res));
+    }
+
+    return 0;
+}
+
+
 int main()
 {
+    clock_t clk;
     char const *msg;
     enum pubnub_res res;
     struct UserData user_data;
@@ -140,11 +174,25 @@ int main()
     pubnub_init(pbp, "demo", "demo");
     pubnub_register_callback(pbp, sample_callback, &user_data);
 
+    pubnub_origin_set(pbp, "pubsub-eucentral.pubnub.com");
+
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
+    puts("Time loop");
+    {
+        int i;
+        for (i = 0; i < 200; ++i) {
+            clk = clock();
+            do_time(pbp, &user_data);
+            clk = clock() - clk;
+            printf("Done time for %d clicks, %f seconds.\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
+        }
+    }
+    return 0;
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
+    clk = clock();
     res = pubnub_publish(pbp, chan, "\"Hello world from callback!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
@@ -152,6 +200,9 @@ int main()
         return -1;
     }
     res = await(&user_data);
+    clk = clock() - clk;
+    printf("Publish took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
+  
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
@@ -170,6 +221,7 @@ int main()
     puts("-----------------------");
     puts("Subscribing...");
     puts("-----------------------");
+    clk = clock();
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
@@ -177,6 +229,8 @@ int main()
         return -1;
     }
     res = await(&user_data);
+    clk = clock() - clk;
+    printf("Subscribe-connect took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
@@ -218,29 +272,7 @@ int main()
     }
 
 	
-    puts("-----------------------");
-    puts("Getting time...");
-    puts("-----------------------");
-    res = pubnub_time(pbp);
-    if (res != PNR_STARTED) {
-        printf("pubnub_time() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-    res = await(&user_data);
-    if (res == PNR_STARTED) {
-        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-
-    if (PNR_OK == res) {
-        printf("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
-    }
-    else {
-        printf("Getting time failed with code: %d\n", res);
-    }
-
+    do_time(pbp, &user_data);
 
     puts("-----------------------");
     puts("Getting history v2 with include_token...");

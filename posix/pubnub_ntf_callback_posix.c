@@ -128,7 +128,7 @@ void* socket_watcher_thread(void *arg)
         monotonic_clock_get_time(&timspec);
         timspec.tv_sec += (timspec.tv_nsec + 200*MILLI_IN_NANO) / UNIT_IN_NANO;
         timspec.tv_nsec = (timspec.tv_nsec + 200*MILLI_IN_NANO) % UNIT_IN_NANO;
-        
+
         pthread_mutex_lock(&m_watcher.mutw);
         pthread_cond_timedwait(&m_watcher.condw, &m_watcher.mutw, &timspec);
 

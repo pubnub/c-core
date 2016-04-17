@@ -2,6 +2,8 @@
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 
+#include "pbpal.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -101,12 +103,14 @@ int pubnub_free(pubnub_t *pb)
 {
     int result = -1;
 
+    PUBNUB_ASSERT(check_ctx_ptr(pb));
+
     pubnub_mutex_lock(pb->monitor);
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
-    PUBNUB_ASSERT(check_ctx_ptr(pb));
     if (PBS_IDLE == pb->state) {
         pbcc_deinit(&pb->core);
+        pbpal_free(pb);
         remove_allocated(pb);
         pubnub_mutex_unlock(m_lock);
         pubnub_mutex_unlock(pb->monitor);

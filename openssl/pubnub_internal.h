@@ -4,6 +4,7 @@
 
 
 #include "openssl/bio.h"
+#include "openssl/ssl.h"
 #include "openssl/err.h"
 
 
@@ -13,6 +14,7 @@ typedef BIO * pb_socket_t;
 struct pubnub_pal {
     BIO *socket;
     SSL_CTX *ctx;
+    SSL_SESSION *session;
 };
 
 #ifdef _WIN32

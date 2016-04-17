@@ -9,7 +9,7 @@ SOURCEFILES += monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE
+CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 

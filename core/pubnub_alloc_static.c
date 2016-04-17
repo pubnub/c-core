@@ -1,7 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+
+#include "pbpal.h"
 
 
 static struct pubnub_ m_aCtx[PUBNUB_CTX_MAX];
@@ -49,6 +50,7 @@ int pubnub_free(pubnub_t *pb)
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
         pbcc_deinit(&pb->core);
+        pbpal_free(pb);
         pb->state = PBS_NULL;
         pubnub_mutex_unlock(pb->monitor);
         pubnub_mutex_destroy(pb->monitor);

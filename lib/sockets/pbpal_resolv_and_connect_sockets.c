@@ -104,7 +104,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     if (PUBNUB_USE_ADNS) {
-        uint8_t const* origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
+        uint8_t const* const origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
         struct sockaddr_in dns_server;
         struct sockaddr_in dest;
         int skt = pb->pal.socket;

@@ -5,6 +5,7 @@
 #include "pubnub_timers.h"
 
 #include <stdio.h>
+#include <time.h>
 
 
 static void generate_uuid(pubnub_t *pbp)
@@ -24,8 +25,40 @@ static void generate_uuid(pubnub_t *pbp)
 }
 
 
+static int do_time(pubnub_t *pbp)
+{
+    enum pubnub_res res;
+
+    puts("-----------------------");
+    puts("Getting time...");
+    puts("-----------------------");
+    res = pubnub_time(pbp);
+    if (res != PNR_STARTED) {
+        printf("pubnub_time() returned unexpected %d: %s\n", res, pubnub_res_2_string(res));
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        printf("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
+    }
+    else {
+        printf("Getting time failed with code %d: %s\n", res, pubnub_res_2_string(res));
+    }
+
+    return 0;
+}
+
+
 int main()
 {
+    clock_t clk;
     char const *msg;
     enum pubnub_res res;
     char const *chan = "hello_world";
@@ -37,19 +70,32 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
+    pubnub_origin_set(pbp, "pubsub-eucentral.pubnub.com");
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
     
     /* Leave this commented out to use the default - which is
        blocking I/O on most platforms. Uncomment to use non-
        blocking I/O.
     */
-//    pubnub_set_non_blocking_io(pbp);
+    pubnub_set_non_blocking_io(pbp);
 
     generate_uuid(pbp);
 
     pubnub_set_auth(pbp, "danaske");
 
+    puts("Time loop");
+    {
+        int i;
+        for (i = 0; i < 2; ++i) {
+            clk = clock();
+            do_time(pbp);
+            clk = clock() - clk;
+            printf("Done time for %d clicks, %f seconds.\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
+        }
+    }
+
     puts("Publishing...");
+    clk = clock();
     res = pubnub_publish(pbp, chan, "\"Hello world from sync!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
@@ -57,6 +103,8 @@ int main()
         return -1;
     }
     res = pubnub_await(pbp);
+    clk = clock() - clk;
+    printf("Publish took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
     if (res == PNR_STARTED) {
         printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
@@ -73,6 +121,7 @@ int main()
     }
 
     puts("Subscribing...");
+    clk = clock();
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
@@ -80,6 +129,8 @@ int main()
         return -1;
     }
     res = pubnub_await(pbp);
+    clk = clock() - clk;
+    printf("Subscribe-connect took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
     if (res == PNR_STARTED) {
         printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
