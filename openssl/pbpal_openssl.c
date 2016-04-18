@@ -42,9 +42,7 @@ static int pal_init(void)
 void pbpal_init(pubnub_t *pb)
 {
     pal_init();
-    pb->pal.socket = NULL;
-    pb->pal.ctx = NULL;
-    pb->pal.session = NULL;
+    memset(&pb->pal, 0, sizeof pb->pal);
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->sock_state = STATE_NONE;
