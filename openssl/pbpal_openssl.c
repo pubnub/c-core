@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbpal.h"
 
+#include "pbpal_mutex.h"
 #include "pubnub_ntf_sync.h"
 #include "pubnub_netcore.h"
 #include "pubnub_internal.h"
@@ -15,6 +16,44 @@
 
 #define HTTP_PORT 80
 
+static pbpal_mutex_t *locks;
+
+static void locking_callback(int mode, int type, const char *file, int line)
+{
+#if DEBUG_MODE == 1
+    PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n", CRYPTO_thread_id(),
+                     (mode & CRYPTO_LOCK) ? "l" : "u",
+                     (type & CRYPTO_READ) ? "r" : "w", file, line);
+#endif
+    if (mode & CRYPTO_LOCK) {
+        pbpal_mutex_lock(locks[type]);
+    }
+    else {
+        pbpal_mutex_unlock(locks[type]);
+    }
+}
+
+static unsigned long thread_id(void)
+{
+    unsigned long id;
+
+    id = (unsigned long)pbpal_thread_id();
+    return (id);
+}
+
+static int locks_setup(void)
+{
+    int i;
+    locks = calloc(CRYPTO_num_locks(), sizeof(pbpal_mutex_t));
+    if (!locks)
+        return -1;
+    for (i = 0; i < CRYPTO_num_locks(); ++i) {
+        pbpal_mutex_init_std(locks[i]);
+    }
+    CRYPTO_set_id_callback(thread_id);
+    CRYPTO_set_locking_callback(locking_callback);
+    return 0;
+}
 
 static void buf_setup(pubnub_t *pb)
 {
@@ -31,6 +70,8 @@ static int pal_init(void)
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
+        if (locks_setup())
+            return -1;
 
         pbntf_init();
         s_init = true;
