@@ -70,7 +70,6 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
-    pubnub_origin_set(pbp, "pubsub-eucentral.pubnub.com");
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
     
     /* Leave this commented out to use the default - which is
@@ -82,17 +81,6 @@ int main()
     generate_uuid(pbp);
 
     pubnub_set_auth(pbp, "danaske");
-
-    puts("Time loop");
-    {
-        int i;
-        for (i = 0; i < 2; ++i) {
-            clk = clock();
-            do_time(pbp);
-            clk = clock() - clk;
-            printf("Done time for %d clicks, %f seconds.\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
-        }
-    }
 
     puts("Publishing...");
     clk = clock();
@@ -198,26 +186,7 @@ int main()
         printf("Heartbeating failed with code %d: %s\n", res, pubnub_res_2_string(res));
     }
 
-    puts("Getting time...");
-    res = pubnub_time(pbp);
-    if (res != PNR_STARTED) {
-        printf("pubnub_time() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-    res = pubnub_await(pbp);
-    if (res == PNR_STARTED) {
-        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        return -1;
-    }
-
-    if (PNR_OK == res) {
-        printf("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
-    }
-    else {
-        printf("Getting time failed with code: %d\n", res);
-    }
+    do_time(pbp);
 
     puts("Getting history with include_token...");
     res = pubnub_history(pbp, chan, 10, true);
