@@ -174,21 +174,8 @@ int main()
     pubnub_init(pbp, "demo", "demo");
     pubnub_register_callback(pbp, sample_callback, &user_data);
 
-    pubnub_origin_set(pbp, "pubsub-eucentral.pubnub.com");
-
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
-    puts("Time loop");
-    {
-        int i;
-        for (i = 0; i < 200; ++i) {
-            clk = clock();
-            do_time(pbp, &user_data);
-            clk = clock() - clk;
-            printf("Done time for %d clicks, %f seconds.\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
-        }
-    }
-    return 0;
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
