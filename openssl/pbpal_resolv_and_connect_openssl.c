@@ -158,11 +158,19 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 
     BIO_set_conn_hostname(pb->pal.socket, origin);
     BIO_set_conn_port(pb->pal.socket, "https");
+    if (pb->pal.ip_timeout && pb->pal.ip_timeout < time(NULL)) {
+        pb->pal.ip_timeout = 0;
+    }
+    else if (pb->pal.session != NULL) {
+        BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
+    }
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
 
     WATCH_ENUM(pb->options.use_blocking_io);
     if (BIO_do_connect(pb->pal.socket) <= 0) {
+        /* Expire the IP for the next connect */
+        pb->pal.ip_timeout = time(NULL) - 1;
         if (BIO_should_retry(pb->pal.socket)) {
             PUBNUB_LOG_TRACE("BIO_should_retry\n");
             return pbpal_connect_wouldblock;
@@ -197,6 +205,11 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         SSL_SESSION_free(pb->pal.session);
     }
     pb->pal.session = SSL_get1_session(ssl);
+    if (!pb->pal.ip_timeout) {
+        pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) + SSL_SESSION_get_timeout(pb->pal.session);
+        memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
+    }
+    PUBNUB_LOG_TRACE("connected to IP: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
 
     return pbpal_connect_success;
 }

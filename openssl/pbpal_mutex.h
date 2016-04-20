@@ -27,6 +27,9 @@ __inline int pubnub_InitCriticalSection(_Out_ LPCRITICAL_SECTION lpCS) {
 
 #define pbpal_mutex_init_static(m) do { if (0 == InterlockedExchange(&m_init_##m, 1)) InitializeCriticalSection(&m); } while(0)
 
+#warning "pbpal_thread_id() for windows missing"
+#warning "pbpal_mutex_init_std() for windows missing"
+
 #else
 
 #include <pthread.h>
@@ -45,6 +48,11 @@ typedef pthread_mutex_t pbpal_mutex_t;
 #define pbpal_mutex_decl_and_init(m) pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #define pbpal_mutex_static_decl_and_init(m) static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #define pbpal_mutex_init_static(m)
+#define pbpal_thread_id() pthread_self()
+#define pbpal_mutex_init_std(m)                                                \
+    do {                                                                       \
+        pthread_mutex_init(&(m), NULL);                                        \
+    } while (0)
 
 #endif /* defined(_WIN32) */
 
