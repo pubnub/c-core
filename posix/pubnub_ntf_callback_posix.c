@@ -140,7 +140,7 @@ void* socket_watcher_thread(void *arg)
             else if (rslt > 0) {
                 size_t i;
                 for (i = 0; i < m_watcher.apoll_size; ++i) {
-                    if (m_watcher.apoll[i].revents & (m_watcher.apoll[i].events | POLLHUP)) {
+                    if (m_watcher.apoll[i].revents & (m_watcher.apoll[i].events | POLLHUP | POLLERR | POLLNVAL)) {
                         pubnub_mutex_lock(m_watcher.apb[i]->monitor);
                         pbnc_fsm(m_watcher.apb[i]);
                         if (m_watcher.apoll[i].events == POLLOUT) {
