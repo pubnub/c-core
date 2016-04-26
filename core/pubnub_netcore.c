@@ -119,7 +119,7 @@ next_state:
         default:
             pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
             pbntf_trans_outcome(pb);
-            break;
+            return 0;
         }
         i = pbntf_got_socket(pb, pb->pal.socket);
         if (0 == i) {
