@@ -6,7 +6,7 @@
 #include "pubnub_api_types.h"
 
 
-/** @file pubnub_timers.h 
+/** @file pubnub_timers.h
     This is the "Timer" API of the Pubnub client library.
     Functions here influence the way that Pubnub client library
     works with lower levels (the TCP/IP stack) with respect to
@@ -28,13 +28,13 @@
 
 /** Sets the transaction timeout for the context. This will be
     used for all subsequent transactions. If a transactions is ongoing
-    and its timeout can be changed, it will be, but if it can't, that 
+    and its timeout can be changed, it will be, but if it can't, that
     would not be reported as an error.
-    
+
     Pubnub SDKs, in general, distinguish the "subscribe" timeout and
-    other transactions, but, C-core doesn't, to save space, as most 
+    other transactions, but, C-core doesn't, to save space, as most
     contexts are either used for subscribe or for other transactions.
-    
+
     If timer support is available, pubnub_init() will set a default timeout,
     which is configurable at compile time. So, if the default timeout is
     fine with you, you don't have to call this function.
@@ -44,7 +44,7 @@
     @param p The Context to set transaction timeout for
     @param duration_ms Duration of the timeout, in milliseconds
 
-    @return 0: OK, otherwise: error, timers not supported  
+    @return 0: OK, otherwise: error, timers not supported
 */
 int pubnub_set_transaction_timeout(pubnub_t *p, int duration_ms);
 
@@ -56,5 +56,6 @@ int pubnub_set_transaction_timeout(pubnub_t *p, int duration_ms);
     always be > 0)
 */
 int pubnub_transaction_timeout_get(pubnub_t *p);
+
 
 #endif /* defined INC_PUBNUB_TIMERS_IO */

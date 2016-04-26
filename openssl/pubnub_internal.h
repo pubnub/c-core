@@ -26,7 +26,7 @@ struct pubnub_pal {
     } while(0)
 
 #if _MSC_VER < 1900
-/** Microsoft C compiler (before VS2015) does not provide a 
+/** Microsoft C compiler (before VS2015) does not provide a
     standard-conforming snprintf(), so we bring our own.
     */
 int snprintf(char *buffer, size_t n, const char *format, ...);

@@ -28,9 +28,9 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
         return pbpal_resolv_resource_failure;
     }
     BIO_set_conn_port(pb->pal.socket, "http");
-    
+
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
-    
+
     WATCH_ENUM(pb->options.use_blocking_io);
     if (BIO_do_connect(pb->pal.socket) <= 0) {
         if (BIO_should_retry(pb->pal.socket)) {
@@ -87,16 +87,16 @@ static int add_pubnub_cert(SSL_CTX *sslCtx)
 {
     X509 *cert;
     BIO *mem;
- 
+
     mem = BIO_new(BIO_s_mem());
     BIO_puts(mem, pubnub_cert);
     cert = PEM_read_bio_X509(mem, NULL, 0, NULL);
-    BIO_free(mem); 
-    
+    BIO_free(mem);
+
     // set certificate to sslCtx
     X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert);
     X509_free(cert);
-    
+
     /* In principle, it would be nice to use this instead, if we
        had a way to find out what is the file and/or path
        of the trusted root certificates. It would fix a problem
@@ -119,14 +119,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     SSL *ssl;
     int rslt;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-        
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_CONNECT));
 
     if (!pb->options.useSSL) {
         return resolv_and_connect_wout_SSL(pb);
     }
-    
+
     if (NULL == pb->pal.ctx) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
         pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
@@ -147,9 +147,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         ERR_print_errors_fp(stderr);
         return pbpal_resolv_resource_failure;
     }
-    
+
     PUBNUB_LOG_TRACE("pb=%p: Got BIO_new_ssl == %p\n", pb, pb->pal.socket);
-    
+
     BIO_get_ssl(pb->pal.socket, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
     if (pb->pal.session != NULL) {
@@ -232,7 +232,7 @@ bool pbpal_connected(pubnub_t *pb)
     int socket;
     int rslt;
     struct timeval timev = { 0, 300000 };
-    
+
     if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
         PUBNUB_LOG_ERROR("pbpal_connected(): Uninitialized BIO!\n");
         return false;

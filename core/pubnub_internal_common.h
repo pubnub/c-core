@@ -41,7 +41,7 @@ enum PBSocketState {
 };
 
 
-/** The Pubnub context 
+/** The Pubnub context
 
     @note Don't declare any members as `bool`, as there may be
     alignment issues when this is included from both C and C++
@@ -57,25 +57,25 @@ struct pubnub_ {
     enum pubnub_trans trans;
 
     /** Pointer to the next data to be sent. */
-    uint8_t const *sendptr;   
+    uint8_t const *sendptr;
 
     /** The number of bytes left to be sent. */
-    uint16_t sendlen;         
+    uint16_t sendlen;
 
     /** The number of bytes left to be read. */
-    uint16_t readlen;         
+    uint16_t readlen;
 
     /** Pointer to next free byte in the read buffer*/
-    uint8_t *ptr;          
+    uint8_t *ptr;
 
     /** Number of bytes left (empty) in the read buffer */
-    uint16_t left;   
+    uint16_t left;
 
     /** The state of the socket. */
-    enum PBSocketState sock_state;   
+    enum PBSocketState sock_state;
 
     /** Number of bytes to read - given by the user */
-    unsigned len;          
+    unsigned len;
 
     /** Indicates whether we are receiving chunked or regular HTTP
      * response
@@ -99,10 +99,10 @@ struct pubnub_ {
     struct pubnub_pal pal;
 
     struct pubnub_options {
-        /** Indicates whether to use blocking I/O. Ignored if 
+        /** Indicates whether to use blocking I/O. Ignored if
             choosing between blocking and non-blocking is not supported
             on a platform. Would be ifdef-ed out, but then it would be
-            possible for this struct to have no members which is 
+            possible for this struct to have no members which is
             prohibited by the ISO C standard.
         */
         bool use_blocking_io : 1;
@@ -165,7 +165,7 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket);
 
 
 /** Internal function. Checks if the given pubnub context pointer
-    is valid. 
+    is valid.
 */
 bool pb_valid_ctx_ptr(pubnub_t const *pb);
 

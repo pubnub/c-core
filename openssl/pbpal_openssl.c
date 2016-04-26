@@ -196,14 +196,14 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
         PUBNUB_LOG_TRACE("have new data of length=%d: %s\n", recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
-    } 
+    }
 
     while (pb->left > 0 && pb->readlen > 0) {
         c = *pb->ptr++;
 
         --pb->readlen;
         --pb->left;
-        
+
         if (c == '\n') {
             int pbpal_read_len_ = pbpal_read_len(pb);
             PUBNUB_LOG_TRACE("\\n found: "); WATCH_INT(pbpal_read_len_); WATCH_USHORT(pb->readlen);
@@ -285,7 +285,7 @@ bool pbpal_read_over(pubnub_t *pb)
         }
         pb->sock_state = STATE_READ;
         pb->readlen = recvres;
-    } 
+    }
 
     to_read = pb->len;
     if (pb->readlen < to_read) {
