@@ -242,12 +242,13 @@ bool pbpal_connected(pubnub_t *pb)
     FD_SET(socket, &read_set);
     FD_SET(socket, &write_set);
     rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
-    if (SOCKET_ERROR == rslt) {
-        PUBNUB_LOG_ERROR("pbpal_connected(): select() Error!\n");
-        return false;
-    }
-    else if (rslt > 0) {
-        PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+    if (0 != rslt) {
+        if (SOCKET_ERROR == rslt) {
+            PUBNUB_LOG_ERROR("pbpal_connected(): select(%d) Error!\n", socket);
+        }
+        else {
+            PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+        }
         return pbpal_resolv_and_connect(pb) == pbpal_connect_success;
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
