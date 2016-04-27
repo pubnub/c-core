@@ -133,6 +133,8 @@ struct pubnub_ {
 #if PUBNUB_TIMERS_API
     /** Duration of the transaction timeout, in milliseconds */
     int transaction_timeout_ms;
+    /** Duration of the connection timeout, in seconds */
+    int connection_timeout_s;
 
 #if defined(PUBNUB_CALLBACK_API)
     struct pubnub_ *previous;

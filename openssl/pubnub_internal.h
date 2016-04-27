@@ -16,7 +16,8 @@ struct pubnub_pal {
     SSL_CTX *ctx;
     SSL_SESSION *session;
     char ip[4];
-    long ip_timeout;
+    time_t ip_timeout;
+    time_t connect_timeout;
 };
 
 #ifdef _WIN32

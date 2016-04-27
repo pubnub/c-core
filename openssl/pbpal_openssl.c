@@ -171,12 +171,34 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
+static int pbpal_read(pubnub_t *pb, void *data, int len)
+{
+    if (!pb->options.use_blocking_io) {
+        fd_set read_set, write_set;
+        int socket;
+        struct timeval timev = { 0, 300000 };
+        FD_ZERO(&read_set);
+        FD_ZERO(&write_set);
+        BIO_get_fd(pb->pal.socket, &socket);
+        FD_SET(socket, &read_set);
+        if (BIO_should_write(pb->pal.socket)) {
+            FD_SET(socket, &write_set);
+        }
+        if(-1 == select(socket + 1, &read_set, &write_set, NULL, &timev)) {
+            PUBNUB_LOG_ERROR("select(%d) error: %s\n", socket, strerror(errno));
+            return -1;
+        }
+    }
+    return BIO_read(pb->pal.socket, data, len);
+}
+
+
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
-        int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
+        int recvres = pbpal_read(pb, pb->ptr, pb->left);
         if (recvres < 0) {
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
@@ -276,7 +298,7 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
-        recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
+        recvres = pbpal_read(pb, pb->ptr, to_read);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...

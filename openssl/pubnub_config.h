@@ -76,6 +76,12 @@
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
+/** Duration of the connection timeout used during context initialization,
+    in seconds. Timeout duration in the context can be changed by the
+    user after initialization.
+    */
+#define PUBNUB_DEFAULT_CONNECTION_TIMER    15
+
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 

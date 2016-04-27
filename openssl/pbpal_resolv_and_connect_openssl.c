@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include <string.h>
+
 #include "pbpal.h"
 
 #ifdef _WIN32
@@ -142,6 +144,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == pb->pal.socket) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
         pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
+        pb->pal.connect_timeout = time(NULL) + pb->connection_timeout_s;
     }
     if (NULL == pb->pal.socket) {
         ERR_print_errors_fp(stderr);
@@ -162,6 +165,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         pb->pal.ip_timeout = 0;
     }
     else if (pb->pal.session != NULL) {
+        PUBNUB_LOG_INFO("re-connect to IP: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
         BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
     }
 
@@ -169,12 +173,12 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 
     WATCH_ENUM(pb->options.use_blocking_io);
     if (BIO_do_connect(pb->pal.socket) <= 0) {
-        /* Expire the IP for the next connect */
-        pb->pal.ip_timeout = time(NULL) - 1;
-        if (BIO_should_retry(pb->pal.socket)) {
+        if (BIO_should_retry(pb->pal.socket) && (pb->pal.connect_timeout > time(NULL))) {
             PUBNUB_LOG_TRACE("BIO_should_retry\n");
             return pbpal_connect_wouldblock;
         }
+        /* Expire the IP for the next connect */
+        pb->pal.ip_timeout = time(NULL) - 1;
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
@@ -200,7 +204,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_connect_failed;
     }
 
-    PUBNUB_LOG_INFO("SSL session reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
+    PUBNUB_LOG_TRACE("SSL session reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
     if (pb->pal.session != NULL) {
         SSL_SESSION_free(pb->pal.session);
     }
@@ -233,24 +237,29 @@ bool pbpal_connected(pubnub_t *pb)
     int rslt;
     struct timeval timev = { 0, 300000 };
 
-    if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
-        PUBNUB_LOG_ERROR("pbpal_connected(): Uninitialized BIO!\n");
-        return false;
-    }
-    FD_ZERO(&read_set);
-    FD_ZERO(&write_set);
-    FD_SET(socket, &read_set);
-    FD_SET(socket, &write_set);
-    rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
-    if (0 != rslt) {
-        if (SOCKET_ERROR == rslt) {
-            PUBNUB_LOG_ERROR("pbpal_connected(): select(%d) Error!\n", socket);
+    if (NULL != pb->pal.socket && -1 != BIO_get_fd(pb->pal.socket, &socket)) {
+        FD_ZERO(&read_set);
+        FD_ZERO(&write_set);
+        FD_SET(socket, &read_set);
+        if (BIO_should_write(pb->pal.socket))
+            FD_SET(socket, &write_set);
+        rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
+        if (0 != rslt) {
+            if (SOCKET_ERROR == rslt) {
+                PUBNUB_LOG_ERROR("pbpal_connected(): select(%d) Error: \"%s\"!\n", socket, strerror(errno));
+            }
+            else {
+                if (FD_ISSET(socket, &read_set)) {
+                    PUBNUB_LOG_TRACE("pbpal_connected(): select(%d, read) event\n", socket);
+                }
+                if (FD_ISSET(socket, &write_set)) {
+                    PUBNUB_LOG_TRACE("pbpal_connected(): select(%d, write) event\n", socket);
+                }
+            }
         }
         else {
-            PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+            PUBNUB_LOG_TRACE("pbpal_connected(): no select(%d) events\n", socket);
         }
-        return pbpal_resolv_and_connect(pb) == pbpal_connect_success;
     }
-    PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
-    return false;
+    return pbpal_resolv_and_connect(pb) == pbpal_connect_success;
 }
