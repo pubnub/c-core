@@ -95,7 +95,7 @@ int pbnc_fsm(struct pubnub_ *pb)
     PUBNUB_LOG_TRACE("pbnc_fsm()\t");
 
 next_state:
-    WATCH_ENUM(pb->state);
+    WATCH_ENUM_ONCHANGE(pb->state);
     switch (pb->state) {
     case PBS_NULL:
         break;

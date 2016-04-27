@@ -94,6 +94,9 @@ enum pubnub_log_level {
 /** Helper macro to "watch" an enum like an integer.*/
 #define WATCH_ENUM(X) do { int x_ = (X); PUBNUB_LOG(PUBNUB_LOG_LEVEL_DEBUG, __FILE__ "(%d) in %s: `" #X "` = %d\n", __LINE__, __FUNCTION__, x_); } while (0)
 
+/** Helper macro to "watch" an enum like an integer, but only log when it changes.*/
+#define WATCH_ENUM_ONCHANGE(X) do { static int enum_info_ ## __LINE__ = -666; int x_ = (X); if (x_ != enum_info_ ## __LINE__) { enum_info_ ## __LINE__ = x_; PUBNUB_LOG(PUBNUB_LOG_LEVEL_DEBUG, __FILE__ "(%d) in %s: `" #X "` = %d\n", __LINE__, __FUNCTION__, x_); } } while (0)
+
 /** Helper macro to "watch" a string (char pointer) */
 #define WATCH_STR(X) do { char const*s_ = (X); PUBNUB_LOG(PUBNUB_LOG_LEVEL_DEBUG, __FILE__ "(%d) in %s: `" #X "` = '%s'\n", __LINE__, __FUNCTION__, s_); } while (0)
 
