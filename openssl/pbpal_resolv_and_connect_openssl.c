@@ -182,6 +182,10 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
+        if (pb->pal.session != NULL) {
+            SSL_SESSION_free(pb->pal.session);
+            pb->pal.session = NULL;
+        }
         PUBNUB_LOG_ERROR("BIO_do_connect failed\n");
         return pbpal_connect_failed;
     }
