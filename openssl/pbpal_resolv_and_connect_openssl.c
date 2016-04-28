@@ -161,12 +161,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 
     BIO_set_conn_hostname(pb->pal.socket, origin);
     BIO_set_conn_port(pb->pal.socket, "https");
-    if (pb->pal.ip_timeout && (pb->pal.ip_timeout < time(NULL))) {
-        pb->pal.ip_timeout = 0;
-    }
-    else if (pb->pal.session != NULL) {
-        PUBNUB_LOG_INFO("re-connect to IP: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
-        BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
+    if (0 != pb->pal.ip_timeout) {
+        if (pb->pal.ip_timeout < time(NULL)) {
+            pb->pal.ip_timeout = 0;
+        }
+        else {
+            PUBNUB_LOG_TRACE("re-connect to IP: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
+            BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
+        }
     }
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
@@ -178,7 +180,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             return pbpal_connect_wouldblock;
         }
         /* Expire the IP for the next connect */
-        pb->pal.ip_timeout = time(NULL) - 1;
+        pb->pal.ip_timeout = 0;
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
