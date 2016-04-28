@@ -151,7 +151,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_resolv_resource_failure;
     }
 
-    PUBNUB_LOG_TRACE("pb=%p: Got BIO_new_ssl == %p\n", pb, pb->pal.socket);
+    PUBNUB_LOG_TRACE("pb=%p: Using BIO == %p\n", pb, pb->pal.socket);
 
     BIO_get_ssl(pb->pal.socket, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
