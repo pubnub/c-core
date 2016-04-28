@@ -236,7 +236,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 }
 
 
-bool pbpal_connected(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_connected(pubnub_t *pb)
 {
     fd_set read_set, write_set;
     int socket;
@@ -267,5 +267,5 @@ bool pbpal_connected(pubnub_t *pb)
             PUBNUB_LOG_TRACE("pbpal_connected(): no select(%d) events\n", socket);
         }
     }
-    return pbpal_resolv_and_connect(pb) == pbpal_connect_success;
+    return pbpal_resolv_and_connect(pb);
 }
