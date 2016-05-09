@@ -71,10 +71,16 @@
 #define PUBNUB_ORIGIN_SETTABLE 1
 
 /** Duration of the transaction timeout set during context initialization,
-    in milliseconds. Timeout dration in the context can be changed by the 
+    in milliseconds. Timeout duration in the context can be changed by the
     user after initialization.
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+
+/** Duration of the connection timeout used during context initialization,
+    in seconds. Timeout duration in the context can be changed by the
+    user after initialization.
+    */
+#define PUBNUB_DEFAULT_CONNECTION_TIMER    15
 
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0

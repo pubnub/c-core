@@ -13,10 +13,23 @@ int pubnub_set_transaction_timeout(pubnub_t *p, int duration_ms)
     return 0;
 }
 
-
 int pubnub_transaction_timeout_get(pubnub_t *p)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
     return p->transaction_timeout_ms;
+}
+
+int pubnub_set_connection_timeout(pubnub_t *p, int duration_s)
+{
+    PUBNUB_ASSERT_OPT(p != NULL);
+    PUBNUB_ASSERT_OPT(duration_s > 0);
+    p->connection_timeout_s = duration_s;
+    return 0;
+}
+
+int pubnub_connection_timeout_get(pubnub_t *p)
+{
+    PUBNUB_ASSERT_OPT(p != NULL);
+    return p->connection_timeout_s;
 }
 

@@ -22,6 +22,9 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
     pbcc_init(&p->core, publish_key, subscribe_key);
     if (PUBNUB_TIMERS_API) {
         p->transaction_timeout_ms = PUBNUB_DEFAULT_TRANSACTION_TIMER;
+#if defined(PUBNUB_DEFAULT_CONNECTION_TIMER)
+        p->connection_timeout_s = PUBNUB_DEFAULT_CONNECTION_TIMER;
+#endif
 #if defined(PUBNUB_CALLBACK_API)
         p->previous = p->next = NULL;
 #endif
@@ -48,7 +51,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
+
     pubnub_mutex_lock(pb->monitor);
     if (pb->state != PBS_IDLE) {
         pubnub_mutex_unlock(pb->monitor);
@@ -63,7 +66,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
         rslt = pb->core.last_result;
     }
     pubnub_mutex_unlock(pb->monitor);
-    
+
     return rslt;
 }
 
@@ -73,7 +76,7 @@ enum pubnub_res pubnub_publishv2(pubnub_t *pb, const char *channel, const char *
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
+
     pubnub_mutex_lock(pb->monitor);
     if (pb->state != PBS_IDLE) {
         pubnub_mutex_unlock(pb->monitor);
@@ -87,7 +90,7 @@ enum pubnub_res pubnub_publishv2(pubnub_t *pb, const char *channel, const char *
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -124,13 +127,13 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
-    
+
     pubnub_mutex_lock(p->monitor);
     if (p->state != PBS_IDLE) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_SUBSCRIBE;
@@ -138,7 +141,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
         pbnc_fsm(p);
         rslt = p->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(p->monitor);
     return rslt;
 }
@@ -155,7 +158,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_leave_prep(&p->core, channel, channel_group);
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_LEAVE;
@@ -163,7 +166,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
         pbnc_fsm(p);
         rslt = p->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(p->monitor);
     return rslt;
 }
@@ -180,7 +183,7 @@ enum pubnub_res pubnub_time(pubnub_t *p)
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_time_prep(&p->core);
     if (PNR_STARTED == rslt) {
         p->trans = PBTT_TIME;
@@ -188,7 +191,7 @@ enum pubnub_res pubnub_time(pubnub_t *p)
         pbnc_fsm(p);
         rslt = p->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(p->monitor);
     return rslt;
 }
@@ -205,7 +208,7 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, unsigned count
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_history_prep(&pb->core, channel, count, include_token);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HISTORY;
@@ -213,7 +216,7 @@ enum pubnub_res pubnub_history(pubnub_t *pb, const char *channel, unsigned count
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -230,7 +233,7 @@ enum pubnub_res pubnub_heartbeat(pubnub_t *pb, const char *channel, const char *
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_heartbeat_prep(&pb->core, channel, channel_group);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HEARTBEAT;
@@ -238,7 +241,7 @@ enum pubnub_res pubnub_heartbeat(pubnub_t *pb, const char *channel, const char *
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -255,7 +258,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *c
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_here_now_prep(&pb->core, channel, channel_group, pbccNotSet, pbccNotSet);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_HERENOW;
@@ -263,7 +266,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *pb, const char *channel, const char *c
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -280,7 +283,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *pb)
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_here_now_prep(&pb->core, NULL, NULL, pbccNotSet, pbccNotSet);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_GLOBAL_HERENOW;
@@ -288,7 +291,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *pb)
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -305,7 +308,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *pb, const char *uuid)
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_where_now_prep(&pb->core, uuid ? uuid : pb->core.uuid);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_WHERENOW;
@@ -313,7 +316,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *pb, const char *uuid)
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -330,7 +333,7 @@ enum pubnub_res pubnub_set_state(pubnub_t *pb, char const *channel, char const *
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_set_state_prep(&pb->core, channel, channel_group, uuid ? uuid : pb->core.uuid, state);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_SET_STATE;
@@ -338,7 +341,7 @@ enum pubnub_res pubnub_set_state(pubnub_t *pb, char const *channel, char const *
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -355,7 +358,7 @@ enum pubnub_res pubnub_state_get(pubnub_t *pb, char const *channel, char const *
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_state_get_prep(&pb->core, channel, channel_group, uuid ? uuid : pb->core.uuid);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_STATE_GET;
@@ -363,7 +366,7 @@ enum pubnub_res pubnub_state_get(pubnub_t *pb, char const *channel, char const *
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -380,7 +383,7 @@ enum pubnub_res pubnub_remove_channel_group(pubnub_t *pb, char const *channel_gr
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_remove_channel_group_prep(&pb->core, channel_group);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_REMOVE_CHANNEL_GROUP;
@@ -388,7 +391,7 @@ enum pubnub_res pubnub_remove_channel_group(pubnub_t *pb, char const *channel_gr
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -405,7 +408,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *pb, char const *chann
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_channel_registry_prep(&pb->core, channel_group, "remove", channel);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_REMOVE_CHANNEL_FROM_GROUP;
@@ -413,7 +416,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *pb, char const *chann
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -430,7 +433,7 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *pb, char const *channel, c
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_channel_registry_prep(&pb->core, channel_group, "add", channel);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_ADD_CHANNEL_TO_GROUP;
@@ -438,7 +441,7 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *pb, char const *channel, c
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
@@ -455,7 +458,7 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *pb, char const *channel_grou
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_channel_registry_prep(&pb->core, channel_group, NULL, NULL);
     if (PNR_STARTED == rslt) {
         pb->trans = PBTT_LIST_CHANNEL_GROUP;
@@ -463,7 +466,7 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *pb, char const *channel_grou
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }

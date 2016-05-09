@@ -95,7 +95,7 @@ int pbnc_fsm(struct pubnub_ *pb)
     PUBNUB_LOG_TRACE("pbnc_fsm()\t");
 
 next_state:
-    WATCH_ENUM(pb->state);
+    WATCH_ENUM_ONCHANGE(pb->state);
     switch (pb->state) {
     case PBS_NULL:
         break;
@@ -158,11 +158,26 @@ next_state:
         break;
     }
     case PBS_WAIT_CONNECT:
-        if (pbpal_connected(pb)) {
+    {
+        enum pbpal_resolv_n_connect_result rslv = pbpal_connected(pb);
+        WATCH_ENUM(rslv);
+        switch (rslv) {
+        case pbpal_resolv_resource_failure:
+        case pbpal_connect_resource_failure:
+        case pbpal_connect_failed:
+            pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
+            pbntf_trans_outcome(pb);
+            return 0;
+        case pbpal_connect_success:
             pb->state = PBS_CONNECTED;
             goto next_state;
+        case pbpal_connect_wouldblock:
+        default:
+            pbntf_update_socket(pb, pb->pal.socket);
+            break;
         }
         break;
+    }
     case PBS_CONNECTED:
         pbpal_send_literal_str(pb, "GET ");
         pb->state = PBS_TX_GET;
