@@ -5,11 +5,18 @@
 
 #include "pubnub_api_types.h"
 
-
+/** Initialize the element of the list - so that it is not
+    in the list.
+    @pre pbp != NULL
+    */
 void pubnub_timer_list_init(pubnub_t *pbp);
 
-/** Add/enqueue a Pubnub context to a list of contexts/timers.
-    @param to_add != NULL
+/** Add/enqueue a Pubnub context into a list of contexts/timers.
+    If it gets enqueued to the start of the list, caller needs
+    to remember (i.e. can't ignore) the return value.
+    
+    @pre to_add != NULL
+    @pre list != to_add
     @param list Pointer to the head of the list (can be NULL)
     @param to_add Context to add
     @return The head of the list (may differ from @p list)
@@ -17,6 +24,9 @@ void pubnub_timer_list_init(pubnub_t *pbp);
 pubnub_t *pubnub_timer_list_add(pubnub_t *list, pubnub_t *to_add);
 
 /** Remove/dequeue a Pubnub context from a list of contexts/timers.
+    It is assumed (i.e. it is a precondition) that @p to_remove
+    is in @p list.
+    
     @pre list != NULL
     @pre to_remove != NULL
     @param list Pointer to the head of the list
@@ -38,9 +48,16 @@ pubnub_t *pubnub_timer_list_remove(pubnub_t *list, pubnub_t *to_remove);
  */
 pubnub_t *pubnub_timer_list_as_time_goes_by(pubnub_t **pplist, int time_passed_ms);
 
-
+/** Returns a pointer to the next element in the list for the given
+    element @p p.
+    @pre p != NULL
+    */
 pubnub_t *pubnub_timer_list_next(pubnub_t *p);
 
+/** Returns a pointer to the previous element in the list for the given
+    element @p p.
+    @pre p != NULL
+    */
 pubnub_t *pubnub_timer_list_previous(pubnub_t *p);
 
 
