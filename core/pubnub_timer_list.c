@@ -24,6 +24,8 @@ pubnub_t *pubnub_timer_list_add(pubnub_t *list, pubnub_t *to_add)
         to_add->timeout_left_ms = timeout_to_add_ms;
         return list;
     }
+
+    PUBNUB_ASSERT_OPT(list != to_add);
     if (timeout_to_add_ms < list->timeout_left_ms) {
         list->timeout_left_ms -= timeout_to_add_ms;
         to_add->next = list;
@@ -44,6 +46,7 @@ pubnub_t *pubnub_timer_list_add(pubnub_t *list, pubnub_t *to_add)
             return list;
         }
         pbp = pbp->next;
+        PUBNUB_ASSERT_OPT(pbp != to_add);
     }
 
     pbp->timeout_left_ms -= timeout_to_add_ms;
