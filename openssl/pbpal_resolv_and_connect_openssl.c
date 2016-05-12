@@ -219,14 +219,14 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     /* Under OpenSSL, this function should never be called.  Either
        we're synchrnous and just connected or not, or we're async, in
-       which case, pbpal_connected() will be called.
+       which case, pbpal_check_connect() will be called.
      */
     PUBNUB_ASSERT_OPT(pb == NULL);
     return pbpal_connect_failed;
 }
 
 
-bool pbpal_connected(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 {
     fd_set read_set, write_set;
     int socket;
@@ -235,7 +235,7 @@ bool pbpal_connected(pubnub_t *pb)
     
     if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
         PUBNUB_LOG_ERROR("pbpal_connected(): Uninitialized BIO!\n");
-        return false;
+        return pbpal_connect_resource_failure;
     }
     FD_ZERO(&read_set);
     FD_ZERO(&write_set);
@@ -244,12 +244,12 @@ bool pbpal_connected(pubnub_t *pb)
     rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
     if (SOCKET_ERROR == rslt) {
         PUBNUB_LOG_ERROR("pbpal_connected(): select() Error!\n");
-        return false;
+        return pbpal_connect_resource_failure;
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
-        return pbpal_resolv_and_connect(pb) == pbpal_connect_success;
+        return pbpal_resolv_and_connect(pb);
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
-    return false;
+    return pbpal_connect_wouldblock;
 }

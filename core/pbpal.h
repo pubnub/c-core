@@ -149,10 +149,10 @@ void pbpal_forget(pubnub_t *pb);
 */
 int pbpal_close(pubnub_t *pb);
 
-/** Returns whether a TCP connection has been established for the
-    given Pubnub context.
+/** Checks whether a TCP connection is established. Call after
+    starting a TCP connection (thus, after DNS resolution is over).
 */
-bool pbpal_connected(pubnub_t *pb);
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb);
 
 /** Sets blocking I/O option on the context for the communication */
 int pbpal_set_blocking_io(pubnub_t *pb);

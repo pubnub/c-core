@@ -202,12 +202,7 @@ int main()
     else {
         printf("Publishing failed with code: %d\n", res);
     }
-	
-    /* Don't need `pbp_2` no more */
-    if (pubnub_free(pbp_2) != 0) {
-        printf("Failed to free the Pubnub context `pbp_2`\n");
-    }
-	
+
     /* Now we await the subscribe on `pbp` */
     puts("Await subscribe");
     res = end_await(&user_data);
@@ -232,6 +227,9 @@ int main()
 
 	
     /* We're done */
+    if (pubnub_free(pbp_2) != 0) {
+        printf("Failed to free the Pubnub context `pbp_2`\n");
+    }
     if (pubnub_free(pbp) != 0) {
         printf("Failed to free the Pubnub context `pbp`\n");
     }

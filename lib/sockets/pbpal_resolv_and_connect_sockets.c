@@ -136,7 +136,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 }
 
 
-bool pbpal_connected(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 {
     fd_set write_set;
     int rslt;
@@ -147,12 +147,12 @@ bool pbpal_connected(pubnub_t *pb)
     rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
     if (SOCKET_ERROR == rslt) {
         PUBNUB_LOG_ERROR("pbpal_connected(): select() Error!\n");
-        return false;
+        return pbpal_connect_resource_failure;
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
-        return true;
+        return pbpal_connect_success;
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
-    return false;
+    return pbpal_connect_wouldblock;
 }

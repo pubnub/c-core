@@ -158,11 +158,28 @@ next_state:
         break;
     }
     case PBS_WAIT_CONNECT:
-        if (pbpal_connected(pb)) {
+    {
+        enum pbpal_resolv_n_connect_result rslv = pbpal_check_connect(pb);
+        WATCH_ENUM(rslv);
+        switch (rslv) {
+        case pbpal_resolv_send_wouldblock:
+        case pbpal_resolv_sent:
+        case pbpal_resolv_rcv_wouldblock:
+            pb->core.last_result = PNR_INTERNAL_ERROR;
+            pbntf_trans_outcome(pb);
+            break;
+        case pbpal_connect_wouldblock:
+            break;
+        case pbpal_connect_success:
             pb->state = PBS_CONNECTED;
             goto next_state;
+        default:
+            pb->core.last_result = PNR_CONNECT_FAILED;
+            pbntf_trans_outcome(pb);
+            break;
         }
         break;
+    }
     case PBS_CONNECTED:
         pbpal_send_literal_str(pb, "GET ");
         pb->state = PBS_TX_GET;

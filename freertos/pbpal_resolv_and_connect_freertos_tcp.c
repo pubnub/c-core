@@ -8,7 +8,7 @@
 #define HTTP_PORT 80
 
 
-enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
     struct freertos_sockaddr addr;
 
@@ -18,17 +18,17 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
     addr.sin_port = FreeRTOS_htons(HTTP_PORT);
     addr.sin_addr = FreeRTOS_gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
     if (addr.sin_addr == 0) {
-        return PNR_CONNECT_FAILED;
+        return pbpal_resolv_failed_processing;
     }
 
     pb->pal.socket = FreeRTOS_socket(FREERTOS_AF_INET, FREERTOS_SOCK_STREAM, FREERTOS_IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
-        return PNR_CONNECT_FAILED;
+        return pbpal_connect_resource_failure;
     }
     if (FreeRTOS_connect(pb->pal.socket, &addr, sizeof addr) != 0) {
         FreeRTOS_closesocket(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
-        return PNR_CONNECT_FAILED;
+        return pbpal_connect_failed;
     }
 
     {
@@ -36,13 +36,21 @@ enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
         FreeRTOS_setsockopt(pb->pal.socket, 0, FREERTOS_SO_RCVTIMEO, &tmval, sizeof tmval);
     }
 
-    return PNR_OK;
+    return pbpal_connect_success;
 }
 
 
-enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
-	/* should never be called! */
-	PUBNUB_ASSERT_OPT(pb == NULL);
-	return PNR_CONNECT_FAILED;
+    /* should never be called, as FreeRTOS+TCP is always blocking */
+    PUBNUB_ASSERT_OPT(pb == NULL);
+    return pbpal_connect_resource_failure;
+}
+
+
+enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
+{
+    /* should never be called, as FreeRTOS+TCP is always blocking */
+    PUBNUB_ASSERT_OPT(pb == NULL);
+    return pbpal_connect_resource_failure;
 }
