@@ -16,7 +16,8 @@ struct pubnub_pal {
     SSL_CTX *ctx;
     SSL_SESSION *session;
     char ip[4];
-    long ip_timeout;
+    time_t ip_timeout;
+    time_t connect_timeout;
 };
 
 #ifdef _WIN32
@@ -26,7 +27,7 @@ struct pubnub_pal {
     } while(0)
 
 #if _MSC_VER < 1900
-/** Microsoft C compiler (before VS2015) does not provide a 
+/** Microsoft C compiler (before VS2015) does not provide a
     standard-conforming snprintf(), so we bring our own.
     */
 int snprintf(char *buffer, size_t n, const char *format, ...);

@@ -142,6 +142,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (NULL == pb->pal.socket) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
         pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
+        if (PUBNUB_TIMERS_API) {
+            pb->pal.connect_timeout = time(NULL)  + pb->transaction_timeout_ms/1000;
+        }
     }
     if (NULL == pb->pal.socket) {
         ERR_print_errors_fp(stderr);
@@ -167,17 +170,17 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
         }
     }
-
+    
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
-
+    
     WATCH_ENUM(pb->options.use_blocking_io);
     if (BIO_do_connect(pb->pal.socket) <= 0) {
-        /* Expire the IP for the next connect */
-        pb->pal.ip_timeout = 0;
-        if (BIO_should_retry(pb->pal.socket)) {
-            PUBNUB_LOG_TRACE("BIO_should_retry\n");
+        if (BIO_should_retry(pb->pal.socket) && PUBNUB_TIMERS_API && (pb->pal.connect_timeout > time(NULL))) {
+            PUBNUB_LOG_TRACE("pb=%p: BIO_should_retry\n", pb);
             return pbpal_connect_wouldblock;
         }
+        /* Expire the IP for the next connect */
+        pb->pal.ip_timeout = 0;
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
@@ -185,7 +188,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             SSL_SESSION_free(pb->pal.session);
             pb->pal.session = NULL;
         }
-        PUBNUB_LOG_ERROR("BIO_do_connect failed\n");
+        PUBNUB_LOG_ERROR("pb=%p: BIO_do_connect failed\n", pb);
         return pbpal_connect_failed;
     }
 
@@ -197,7 +200,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 
     rslt = SSL_get_verify_result(ssl);
     if (rslt != X509_V_OK) {
-        PUBNUB_LOG_WARNING("SSL_get_verify_result() failed == %d(%s)\n", rslt, X509_verify_cert_error_string(rslt));
+        PUBNUB_LOG_WARNING("pb=%p: SSL_get_verify_result() failed == %d(%s)\n", pb, rslt, X509_verify_cert_error_string(rslt));
         ERR_print_errors_fp(stderr);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
@@ -207,7 +210,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_connect_failed;
     }
 
-    PUBNUB_LOG_INFO("SSL session reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
+    PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n", pb, SSL_session_reused(ssl) ? "yes" : "no");
     if (pb->pal.session != NULL) {
         SSL_SESSION_free(pb->pal.session);
     }
@@ -216,7 +219,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) + SSL_SESSION_get_timeout(pb->pal.session);
         memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
     }
-    PUBNUB_LOG_TRACE("SSL connected to IP: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
+    PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %d.%d.%d.%d\n", pb, pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
 
     return pbpal_connect_success;
 }
