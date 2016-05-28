@@ -138,13 +138,13 @@ void socket_watcher_thread(void *arg)
                         pbnc_fsm(pbp);
                         if (apoll_size == m_watcher.apoll_size) {
                             if (m_watcher.apoll[i].events == POLLOUT) {
-                                if ((pbp->state == PBS_WAIT_DNS) ||
+                                if ((pbp->state == PBS_WAIT_DNS_RCV) ||
                                     (pbp->state >= PBS_RX_HTTP_VER)) {
                                     m_watcher.apoll[i].events = POLLIN;
                                 }
                             }
                             else {
-                                if ((pbp->state > PBS_WAIT_DNS) &&
+                                if ((pbp->state > PBS_WAIT_DNS_RCV) &&
                                     (pbp->state < PBS_RX_HTTP_VER)) {
                                     m_watcher.apoll[i].events = POLLOUT;
                                 }
