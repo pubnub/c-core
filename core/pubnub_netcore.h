@@ -16,8 +16,10 @@ enum pubnub_state {
     PBS_NULL,
     /** No transaction ongoing */
     PBS_IDLE,
-    /** Waiting for DNS resolution and TCP connection establishment */
-    PBS_WAIT_DNS,
+    /** Waiting for sending a DNS request */
+    PBS_WAIT_DNS_SEND,
+    /** Waiting for DNS resolution (response)  */
+    PBS_WAIT_DNS_RCV,
     /** Waiting for TCP connection establishment */
     PBS_WAIT_CONNECT,
     /** TCP connected, can start */

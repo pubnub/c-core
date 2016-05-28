@@ -82,7 +82,6 @@ void SYS_Tasks ( void )
     /* Maintain Device Drivers */
 
     /* Maintain Middleware & Other Libraries */
-    NET_PRES_Tasks(sysObj.netPres);
     /* Maintain the TCP/IP Stack*/
     TCPIP_STACK_Task(sysObj.tcpip);
 

@@ -24,6 +24,16 @@ struct SocketWatcherData {
 
 static struct SocketWatcherData m_watcher;
 
+static size_t find_pbp(struct SocketWatcherData *watcher, pubnub_t *pb)
+{
+    size_t i;
+    for (i = 0; i < watcher->apb_size; ++i) {
+        if (watcher->apb[i] == pb) {
+            break;
+        }
+    }
+    return i;
+}
 
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
@@ -43,16 +53,13 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 
 static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
-    size_t i;
-    for (i = 0; i < watcher->apb_size; ++i) {
-        if (watcher->apb[i] == pb) {
-            size_t to_move = watcher->apb_size - i - 1;
-            if (to_move > 0) {
-                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
-            }
-            --watcher->apb_size;
-            break;
+    size_t i = find_pbp(watcher, pb);
+    if (i < watcher->apb_size) {
+        size_t to_move = watcher->apb_size - i - 1;
+        if (to_move > 0) {
+            memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
         }
+        --watcher->apb_size;
     }
 }
 
@@ -104,15 +111,14 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 {
-    if (SOCKET_INVALID == socket) {
-        return +1;
+    size_t i = find_pbp(&m_watcher, pb);
+    PUBNUB_ASSERT_OPT(i == m_watcher.apb_size);
+    if (i == m_watcher.apb_size) {
+        save_socket(&m_watcher, pb);
+        if (PUBNUB_TIMERS_API) {
+            m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+        }
     }
-     
-    save_socket(&m_watcher, pb);
-    if (PUBNUB_TIMERS_API) {
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
-    }
-
     return +1;
 }
 

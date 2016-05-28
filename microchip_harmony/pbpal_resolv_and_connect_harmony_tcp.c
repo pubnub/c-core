@@ -12,10 +12,13 @@
 
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
+    char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_Resolve(origin, TCPIP_DNS_TYPE_A);
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
+    PUBNUB_ASSERT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS_SEND) 
+            || (pb->state == PBS_WAIT_DNS_RCV));
     
-    switch (TCPIP_DNS_Resolve(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN, TCPIP_DNS_TYPE_A)) {
+    switch (dns_result) {
         case TCPIP_DNS_RES_OK:
         case TCPIP_DNS_RES_NAME_IS_IPADDRESS:
             return pbpal_check_resolv_and_connect(pb);
@@ -25,7 +28,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
              */
             return pbpal_resolv_failed_send; 
         case TCPIP_DNS_RES_PENDING:
-            /* It might not be the send, but it doesn't matter */
+            return pbpal_resolv_rcv_wouldblock;
+        case TCPIP_DNS_RES_SERVER_TMO:
+        case TCPIP_DNS_RES_NO_INTERFACE:
             return pbpal_resolv_send_wouldblock;
         default:
             return pbpal_resolv_resource_failure;
@@ -37,9 +42,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
     IP_MULTI_ADDRESS ip_addr;
-	PUBNUB_ASSERT_OPT(pb == NULL);
-
-    switch (TCPIP_DNS_IsResolved(origin, &ip_addr, IP_ADDRESS_TYPE_IPV4)) {
+    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_IsResolved(origin, &ip_addr, IP_ADDRESS_TYPE_IPV4);
+	PUBNUB_ASSERT_OPT(pb != NULL);
+    switch (dns_result) {
         case TCPIP_DNS_RES_OK:
             if (SOCKET_INVALID == pb->pal.socket) {
 #if PUBNUB_USE_SSL            
@@ -72,12 +77,13 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 }
 
 
-bool pbpal_connected(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 {
 #if PUBNUB_USE_SSL
-    return !NET_PRES_SocketIsNegotiatingEncryption(pb->pal.socket) &&
+    bool connected = !NET_PRES_SocketIsNegotiatingEncryption(pb->pal.socket) &&
             NET_PRES_SocketIsSecure(pb->pal.socket);
+    return bool ? pbpal_connect_success : pbpal_connect_wouldblock;
 #else
-    return TCPIP_TCP_IsConnected(pb->pal.socket);
+    return TCPIP_TCP_IsConnected(pb->pal.socket) ? pbpal_connect_success : pbpal_connect_wouldblock;
 #endif
 }

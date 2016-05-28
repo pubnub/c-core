@@ -71,10 +71,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "usb/usb_device_cdc.h"
 #include "tcpip/tcpip.h"
 #include "driver/ethmac/drv_ethmac.h"
-#include "net/pres/net_pres.h"
-#include "net/pres/net_pres_encryptionproviderapi.h"
-#include "net/pres/net_pres_transportapi.h"
-#include "net/pres/net_pres_socketapi.h"
 #include "app.h"
 
 
@@ -120,7 +116,6 @@ typedef struct
 
 
     SYS_MODULE_OBJ  tcpip;
-    SYS_MODULE_OBJ  netPres;
 
 } SYSTEM_OBJECTS;
 

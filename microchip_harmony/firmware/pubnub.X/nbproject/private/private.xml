@@ -3,35 +3,23 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_assert_harmony.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/app.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/app_commands.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/app.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_config.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/net/pres/src/net_pres.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_callback.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_netcore.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mx_eth_sk/system_init.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mx_eth_sk/config.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/system/tmr/sys_tmr.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/tcpip/tcpip.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_internal_common.h</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pbpal_resolv_and_connect_harmony_tcp.c</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_generate_uuid.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/system/tmr/src/sys_tmr.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pbpal.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/main.c</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/framework/tcpip/src/tcp.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_ssl.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mx_eth_sk/system_config.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/net/pres/net_pres.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/net/pres/net_pres_socketapi.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pbpal_harmony.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mx_eth_sk/system_definitions.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_assert_harmony.c</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/app.c</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/system/console/src/sys_console.c</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_log.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_netcore.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_config.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_callback.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_netcore.c</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_internal.h</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_generate_uuid_harmony.c</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/pubnub_ntf_harmony.c</file>
             <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/core/pubnub_ccore.c</file>
-            <file>file:/home/srdjan/microchip/harmony/v1_07/framework/tcpip/tcp.h</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mz_ec_sk/system_tasks.c</file>
+            <file>file:/home/srdjan/microchip/harmony/v1_07/apps/c-core/microchip_harmony/firmware/src/system_config/pic32mz_ec_sk/system_exceptions.c</file>
         </group>
     </open-files>
 </project-private>

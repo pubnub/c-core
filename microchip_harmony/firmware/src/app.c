@@ -56,7 +56,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "app.h"
 #include "app_commands.h"
 #include "config.h"
-#include <cyassl/ssl.h>
+//#include <cyassl/ssl.h>
 #include <tcpip/src/hash_fnv.h>
 
 #include "pubnub_callback.h"
@@ -110,7 +110,7 @@ static void generate_uuid(pubnub_t *pbp)
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
         pubnub_set_uuid(pbp, str_uuid.uuid);
-        PUBNUB_LOG_TRACE("Generated UUID: %s\n", str_uuid.uuid);
+        PUBNUB_LOG_INFO("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
 
@@ -136,58 +136,73 @@ static void PubnubCallbackSample(pubnub_t *pbp, enum pubnub_trans trans, enum pu
 
     switch (pData->state) {
     case sastInit:
-        PUBNUB_ASSERT_OPT(pbp == NULL);
-	    pbp = pubnub_alloc();
+        if (pbp == NULL) {
+            pbp = pubnub_alloc();
 
-	    if (NULL == pbp) {
-		    PUBNUB_LOG_TRACE("Failed to allocate Pubnub context!\n");
-		    return ;
-	    }
-	    pubnub_init(pbp, "demo", "demo");
+            if (NULL == pbp) {
+                PUBNUB_LOG_INFO("Failed to allocate Pubnub context!\r\n");
+                return ;
+            }
+            pubnub_init(pbp, "demo", "demo");
 
-        pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
+            pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
-        res = pubnub_register_callback(pbp, PubnubCallbackSample, pData);
-        if (PNR_OK != res) {
-		    PUBNUB_LOG_TRACE("Failed to register callback, error: %d\n", res);
-		    pubnub_free(pbp);
-		    return ;
+            res = pubnub_register_callback(pbp, PubnubCallbackSample, pData);
+            if (PNR_OK != res) {
+                PUBNUB_LOG_INFO("Failed to register callback, error: %d\r\n", res);
+                pubnub_free(pbp);
+                return ;
+            }
+
+            generate_uuid(pbp);
+            pubnub_set_auth(pbp, "danaske");
+
+            PUBNUB_LOG_INFO("Publishing...\r\n");
+            res = pubnub_publish(pbp, chan, "\"Hello world from MPLAB Harmony callback!\"");
+            if (res != PNR_STARTED) {
+                PUBNUB_LOG_INFO("pubnub_publish() returned unexpected: %d\r\n", res);
+                pubnub_free(pbp);
+                return ;
+            }
+            pData->state = sastPublish;
         }
-
-	    generate_uuid(pbp);
-    	pubnub_set_auth(pbp, "danaske");
-
-	    PUBNUB_LOG_TRACE("Publishing...\n");
-	    res = pubnub_publish(pbp, chan, "\"Hello world from MPLAB Harmony callback!\"");
-	    if (res != PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("pubnub_publish() returned unexpected: %d\n", res);
-		    pubnub_free(pbp);
-		    return ;
-	    }
-        pData->state = sastPublish;
+        else {
+            PUBNUB_LOG_INFO("Received unexpected outcome: %d\r\n", res);
+            pubnub_free(pbp);
+            return;
+        }
         break;
     case sastPublish:
         PUBNUB_ASSERT_OPT(PBTT_PUBLISH == trans);
 	    if (res == PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("Publish outcome unexpected: PNR_STARTED(%d)\n", res);
+		    PUBNUB_LOG_INFO("Publish outcome unexpected: PNR_STARTED(%d)\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
 	    }
 	    if (PNR_OK == res) {
-		    PUBNUB_LOG_TRACE("Published! Response from Pubnub: %s\n", pubnub_last_publish_result(pbp));
+		    PUBNUB_LOG_INFO("Published! Response from Pubnub: %s\r\n", pubnub_last_publish_result(pbp));
 	    }
 	    else if (PNR_PUBLISH_FAILED == res) {
-		    PUBNUB_LOG_TRACE("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp));
+		    PUBNUB_LOG_INFO("Published failed on Pubnub, description: %s\r\n", pubnub_last_publish_result(pbp));
 	    }
 	    else {
-		    PUBNUB_LOG_TRACE("Publishing failed with code: %d\n", res);
+		    PUBNUB_LOG_INFO("Publishing failed with code: %d\r\n", res);
+            res = pubnub_publish(pbp, chan, "\"Hello world from MPLAB Harmony callback!\"");
+            if (res != PNR_STARTED) {
+                PUBNUB_LOG_INFO("pubnub_publish() returned unexpected: %d\r\n", res);
+                pubnub_free(pbp);
+                pData->state = sastInit;
+                return ;
+            }
+            pData->state = sastPublish;
+            return;
 	    }
 
-	    PUBNUB_LOG_TRACE("Subscribing...\n");
+	    PUBNUB_LOG_INFO("Subscribing...\r\n");
 	    res = pubnub_subscribe(pbp, chan, NULL);
 	    if (res != PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("pubnub_subscribe() returned unexpected: %d\n", res);
+		    PUBNUB_LOG_INFO("pubnub_subscribe() returned unexpected: %d\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
@@ -197,22 +212,22 @@ static void PubnubCallbackSample(pubnub_t *pbp, enum pubnub_trans trans, enum pu
     case sastFirstSubscribe:
         PUBNUB_ASSERT_OPT(PBTT_SUBSCRIBE == trans);
 	    if (res == PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("Subscribe outcome unexpected: PNR_STARTED(%d)\n", res);
+		    PUBNUB_LOG_INFO("Subscribe outcome unexpected: PNR_STARTED(%d)\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
 	    }
 
 	    if (PNR_OK == res) {
-		    PUBNUB_LOG_TRACE("Subscribed!\n");
+		    PUBNUB_LOG_INFO("Subscribed!\r\n");
 	    }
 	    else {
-		    PUBNUB_LOG_TRACE("Subscribing failed with code: %d\n", res);
+		    PUBNUB_LOG_INFO("Subscribing failed with code: %d\r\n", res);
 	    }
 
 	    res = pubnub_subscribe(pbp, chan, NULL);
 	    if (res != PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("pubnub_subscribe() returned unexpected: %d\n", res);
+		    PUBNUB_LOG_INFO("pubnub_subscribe() returned unexpected: %d\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
@@ -223,29 +238,29 @@ static void PubnubCallbackSample(pubnub_t *pbp, enum pubnub_trans trans, enum pu
     case sastSubscribe:
         PUBNUB_ASSERT_OPT(PBTT_SUBSCRIBE == trans);
 	    if (res == PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("Subscribe outcome unexpected: PNR_STARTED(%d)\n", res);
+		    PUBNUB_LOG_INFO("Subscribe outcome unexpected: PNR_STARTED(%d)\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
 	    }
 	    if (PNR_OK == res) {
-		    PUBNUB_LOG_TRACE("Subscribed! Got messages:\n");
+		    PUBNUB_LOG_INFO("Subscribed! Got messages:\r\n");
 		    for (;;) {
 			    msg = pubnub_get(pbp);
 			    if (NULL == msg) {
 				    break;
 			    }
-			    PUBNUB_LOG_TRACE("%s\n", msg);
+			    PUBNUB_LOG_INFO("%s\r\n", msg);
 		    }
 	    }
 	    else {
-		    PUBNUB_LOG_TRACE("Subscribing failed with code: %d (%s)\n", res, pubnub_res_2_string(res));
+		    PUBNUB_LOG_INFO("Subscribing failed with code: %d (%s)\r\n", res, pubnub_res_2_string(res));
 	    }
 
-	    PUBNUB_LOG_TRACE("Getting time...\n");
+	    PUBNUB_LOG_INFO("Getting time...\r\n");
 	    res = pubnub_time(pbp);
 	    if (res != PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("pubnub_time() returned unexpected: %d\n", res);
+		    PUBNUB_LOG_INFO("pubnub_time() returned unexpected: %d\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
@@ -256,24 +271,24 @@ static void PubnubCallbackSample(pubnub_t *pbp, enum pubnub_trans trans, enum pu
     case sastTime:
         PUBNUB_ASSERT_OPT(PBTT_TIME == trans);
 	    if (res == PNR_STARTED) {
-		    PUBNUB_LOG_TRACE("Time outcome unexpected: PNR_STARTED(%d)\n", res);
+		    PUBNUB_LOG_INFO("Time outcome unexpected: PNR_STARTED(%d)\r\n", res);
 		    pubnub_free(pbp);
             pData->state = sastInit;
 		    return ;
 	    }
 
 	    if (PNR_OK == res) {
-		    PUBNUB_LOG_TRACE("Gotten time: %s; last time token=%s\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
+		    PUBNUB_LOG_INFO("Gotten time: %s; last time token=%s\r\n", pubnub_get(pbp), pubnub_last_time_token(pbp));
 	    }
 	    else {
-		    PUBNUB_LOG_TRACE("Getting time failed with code: %d\n", res);
+		    PUBNUB_LOG_INFO("Getting time failed with code: %d\r\n", res);
 	    }
 
        /* We're done */
         if (pubnub_free(pbp) != 0) {
-            PUBNUB_LOG_TRACE("Failed to free the Pubnub context\n");
+            PUBNUB_LOG_INFO("Failed to free the Pubnub context\r\n");
         }
-        PUBNUB_LOG_TRACE("Pubnub FreeRTOS callback demo over.\n");
+        PUBNUB_LOG_INFO("Pubnub FreeRTOS callback demo over.\r\n");
         pData->state = sastInit;
         break;
     }
@@ -360,13 +375,13 @@ void APP_Tasks ( void )
                     {
                         appData.state = APP_TCPIP_RUNNING_PUBNUB_DEMO;
                         SYS_CONSOLE_MESSAGE("Starting demo\r\n");
+                        PubnubCallbackSample(NULL, PBTT_PUBLISH, PNR_OK, &m_data);
                     }
                 }
             }
             break;
         }
         case APP_TCPIP_RUNNING_PUBNUB_DEMO:
-            PubnubCallbackSample(NULL, PBTT_PUBLISH, PNR_OK, &m_data);
             pubnub_task();
             break;
 

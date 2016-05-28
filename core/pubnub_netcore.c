@@ -105,10 +105,11 @@ next_state:
         WATCH_ENUM(rslv);
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
-            return 0;
+            pb->state = PBS_WAIT_DNS_SEND;
+            break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            pb->state = PBS_WAIT_DNS;
+            pb->state = PBS_WAIT_DNS_RCV;
             break;
         case pbpal_connect_wouldblock:
             pb->state = PBS_WAIT_CONNECT;
@@ -131,7 +132,34 @@ next_state:
         }
         break;
     }
-    case PBS_WAIT_DNS:
+    case PBS_WAIT_DNS_SEND:
+    {
+        enum pbpal_resolv_n_connect_result rslv = pbpal_check_resolv_and_connect(pb);
+        WATCH_ENUM(rslv);
+        switch (rslv) {
+        case pbpal_resolv_send_wouldblock:
+            break;
+        case pbpal_resolv_sent:
+        case pbpal_resolv_rcv_wouldblock:
+            pbntf_update_socket(pb, pb->pal.socket);
+            pb->state = PBS_WAIT_DNS_RCV;
+            break;
+        case pbpal_connect_wouldblock:
+            pbntf_update_socket(pb, pb->pal.socket);
+            pb->state = PBS_WAIT_CONNECT;
+            break;
+        case pbpal_connect_success:
+            pb->state = PBS_CONNECTED;
+            goto next_state;
+        default:
+            pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
+            pbntf_lost_socket(pb, pb->pal.socket);
+            pbntf_trans_outcome(pb);
+            break;
+        }
+        break;
+    }
+    case PBS_WAIT_DNS_RCV:
     {
         enum pbpal_resolv_n_connect_result rslv = pbpal_check_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
@@ -139,6 +167,7 @@ next_state:
         case pbpal_resolv_send_wouldblock:
         case pbpal_resolv_sent:
             pb->core.last_result = PNR_INTERNAL_ERROR;
+            pbntf_lost_socket(pb, pb->pal.socket);
             pbntf_trans_outcome(pb);
             break;
         case pbpal_resolv_rcv_wouldblock:
@@ -152,6 +181,7 @@ next_state:
             goto next_state;
         default:
             pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
+            pbntf_lost_socket(pb, pb->pal.socket);
             pbntf_trans_outcome(pb);
             break;
         }

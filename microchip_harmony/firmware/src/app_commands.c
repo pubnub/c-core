@@ -40,7 +40,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "app_commands.h"
 #include "app.h"
 #include "config.h"
-#include <cyassl/ssl.h>
+//#include <cyassl/ssl.h>
 
 #if defined(TCPIP_STACK_COMMAND_ENABLE)
 

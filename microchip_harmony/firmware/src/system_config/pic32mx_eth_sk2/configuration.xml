@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<configuration version="1.0.7.15">
+<configuration version="1.0.7.16">
   <General>
     <HarmonyPath path="../../.."/>
     <ForceOptimization flag="true"/>
@@ -15,20 +15,8 @@
         <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>zero_conf_helper.h</Name>
-        <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
         <Name>tcpip_heap_alloc.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>ge_low_mem.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>chacha.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>udp_private.h</Name>
@@ -39,24 +27,12 @@
         <Path>Header Files/framework/tcpip</Path>
       </File>
       <File>
-        <Name>dsa.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>chacha20_poly1305.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>random.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>curve25519.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>pkcs7.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>zlib.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>usb_device.c</Name>
@@ -69,10 +45,6 @@
       <File>
         <Name>sys_command.c</Name>
         <Path>Source Files/framework/system/command/src</Path>
-      </File>
-      <File>
-        <Name>blake2-impl.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>sys_console_usb_cdc.c</Name>
@@ -99,14 +71,6 @@
         <Path>Header Files/framework/tcpip</Path>
       </File>
       <File>
-        <Name>io.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>crl.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
         <Name>dhcp.h</Name>
         <Path>Header Files/framework/tcpip</Path>
       </File>
@@ -119,12 +83,20 @@
         <Path>Header Files/framework/tcpip</Path>
       </File>
       <File>
+        <Name>inflate.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
         <Name>sys_reset.h</Name>
         <Path>Header Files/framework/system/reset</Path>
       </File>
       <File>
         <Name>ipv4_private.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>trees.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>drv_tmr.h</Name>
@@ -155,12 +127,12 @@
         <Path>Header Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>chacha.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>drv_ethphy_local.h</Name>
         <Path>Header Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>zconf.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>dns.h</Name>
@@ -172,10 +144,6 @@
       </File>
       <File>
         <Name>tcpip_module_manager.h</Name>
-        <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>zero_conf_link_local_private.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
       </File>
       <File>
@@ -211,20 +179,8 @@
         <Path>Header Files/framework/system/devcon</Path>
       </File>
       <File>
-        <Name>internal.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>nbns.h</Name>
-        <Path>Header Files/framework/tcpip</Path>
-      </File>
-      <File>
         <Name>sys_debug.h</Name>
         <Path>Header Files/framework/system/debug</Path>
-      </File>
-      <File>
-        <Name>tls.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
       </File>
       <File>
         <Name>ipv4_manager.h</Name>
@@ -243,8 +199,8 @@
         <Path>Header Files/framework/net/pres/priv</Path>
       </File>
       <File>
-        <Name>rabbit.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>inffast.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>helpers.c</Name>
@@ -255,28 +211,12 @@
         <Path>Header Files/framework/crypto</Path>
       </File>
       <File>
-        <Name>blake2-int.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>md4.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>bsp_config.h</Name>
         <Path>Header Files/bsp/pic32mx_eth_sk2</Path>
       </File>
       <File>
         <Name>settings.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>certs_test.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>chacha20_poly1305.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>tcp.h</Name>
@@ -289,10 +229,6 @@
       <File>
         <Name>visibility.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>fips_test.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>tfm.c</Name>
@@ -309,10 +245,6 @@
       <File>
         <Name>sys_int_pic32.c</Name>
         <Path>Source Files/framework/system/int/src</Path>
-      </File>
-      <File>
-        <Name>md2.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>coding.h</Name>
@@ -339,10 +271,6 @@
         <Path>Header Files/framework/usb</Path>
       </File>
       <File>
-        <Name>asn_public.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>types.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
       </File>
@@ -355,6 +283,10 @@
         <Path>Header Files/framework/tcpip</Path>
       </File>
       <File>
+        <Name>inftrees.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
         <Name>udp_manager.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
       </File>
@@ -363,12 +295,8 @@
         <Path>Header Files/framework/usb</Path>
       </File>
       <File>
-        <Name>fe_low_mem.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>ocsp.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
+        <Name>zutil.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>port.c</Name>
@@ -391,28 +319,12 @@
         <Path>Source Files/framework/driver/usb/usbfs/src/dynamic</Path>
       </File>
       <File>
-        <Name>blake2b.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>error-crypt.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>tcpip_notify.c</Name>
         <Path>Source Files/framework/tcpip/stack</Path>
       </File>
       <File>
         <Name>link_list.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>sniffer_error.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>camellia.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>asn.h</Name>
@@ -433,10 +345,6 @@
       <File>
         <Name>hash.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>dsa.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>sys_common.h</Name>
@@ -467,16 +375,20 @@
         <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
+        <Name>crc32.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
         <Name>tcpip_private.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>ed25519.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>pwdbased.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>inffixed.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>md5.c</Name>
@@ -487,16 +399,8 @@
         <Path>Source Files/framework/driver/usb/usbfs/src/dynamic</Path>
       </File>
       <File>
-        <Name>poly1305.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>sys_module.h</Name>
         <Path>Header Files/framework/system/common</Path>
-      </File>
-      <File>
-        <Name>sntp_manager.h</Name>
-        <Path>Header Files/framework/tcpip/stack</Path>
       </File>
       <File>
         <Name>tcpip.h</Name>
@@ -507,10 +411,6 @@
         <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>ge_operations.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>coding.c</Name>
         <Path>Source Files/framework/crypto/src</Path>
       </File>
@@ -519,8 +419,8 @@
         <Path>Header Files/framework/system/console/src</Path>
       </File>
       <File>
-        <Name>md2.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>compress.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>sha.h</Name>
@@ -531,8 +431,8 @@
         <Path>Source Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>ripemd.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>infback.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>arp.c</Name>
@@ -547,16 +447,12 @@
         <Path>Header Files/framework/net/pres</Path>
       </File>
       <File>
-        <Name>dh.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>mpi_class.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>tcpip_packet.c</Name>
         <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>inftrees.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>tcpip_heap_alloc.c</Name>
@@ -567,28 +463,12 @@
         <Path>Header Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>zero_conf_helper.c</Name>
-        <Path>Source Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
         <Name>tcpip_commands.h</Name>
         <Path>Header Files/framework/tcpip</Path>
       </File>
       <File>
-        <Name>zero_conf_link_local.h</Name>
-        <Path>Header Files/framework/tcpip</Path>
-      </File>
-      <File>
-        <Name>md4.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>tcpip_packet.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>fe_operations.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>tcpip_helpers_private.h</Name>
@@ -601,14 +481,6 @@
       <File>
         <Name>_eth_dcpt_lists.h</Name>
         <Path>Header Files/framework/driver/ethmac</Path>
-      </File>
-      <File>
-        <Name>ed25519.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>nbns.c</Name>
-        <Path>Source Files/framework/tcpip/stack</Path>
       </File>
       <File>
         <Name>sys_console.h</Name>
@@ -639,24 +511,12 @@
         <Path>Source Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>hc128.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>camellia.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>net_pres_transportapi.h</Name>
         <Path>Header Files/framework/net/pres</Path>
       </File>
       <File>
         <Name>sys_devcon.c</Name>
         <Path>Source Files/framework/system/devcon/src</Path>
-      </File>
-      <File>
-        <Name>error-ssl.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
       </File>
       <File>
         <Name>sys_reset.c</Name>
@@ -687,12 +547,12 @@
         <Path>Source Files/framework/tcpip/stack</Path>
       </File>
       <File>
-        <Name>ssl.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
-      </File>
-      <File>
         <Name>compress.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>deflate.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>ipv4.c</Name>
@@ -707,20 +567,16 @@
         <Path>Header Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>poly1305.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>tcpip_announce.c</Name>
-        <Path>Source Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
         <Name>sys_random.h</Name>
         <Path>Header Files/framework/system/random</Path>
       </File>
       <File>
         <Name>hash_fnv.h</Name>
         <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>uncompr.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>dhcp.c</Name>
@@ -739,8 +595,16 @@
         <Path>Source Files/framework/usb/src/dynamic</Path>
       </File>
       <File>
+        <Name>inflate.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
         <Name>random.c</Name>
         <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>adler32.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>drv_ethmac.h</Name>
@@ -755,20 +619,8 @@
         <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>blake2.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>sniffer.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
-      </File>
-      <File>
         <Name>sys_tmr.c</Name>
         <Path>Source Files/framework/system/tmr/src</Path>
-      </File>
-      <File>
-        <Name>ssl.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
       </File>
       <File>
         <Name>drv_ethmac_lib.h</Name>
@@ -777,10 +629,6 @@
       <File>
         <Name>drv_ethmac.c</Name>
         <Path>Source Files/framework/driver/ethmac</Path>
-      </File>
-      <File>
-        <Name>test.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
       </File>
       <File>
         <Name>memory.c</Name>
@@ -799,16 +647,12 @@
         <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>callbacks.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
+        <Name>deflate.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
-        <Name>sntp.h</Name>
-        <Path>Header Files/framework/tcpip</Path>
-      </File>
-      <File>
-        <Name>ecc_fp.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>inffast.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>ecc.h</Name>
@@ -817,10 +661,6 @@
       <File>
         <Name>hmac.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>dh.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>drv_tmr.c</Name>
@@ -847,28 +687,16 @@
         <Path>Header Files/framework/net/pres</Path>
       </File>
       <File>
-        <Name>mpi_superclass.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>ssl-dummy.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>tcpip_announce_manager.h</Name>
-        <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>pkcs7.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
+        <Name>trees.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>compress.c</Name>
         <Path>Source Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>crl.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>ripemd.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>memory.h</Name>
@@ -903,20 +731,16 @@
         <Path>Header Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>ge_operations.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>sys_ports.h</Name>
         <Path>Header Files/framework/system/ports</Path>
       </File>
       <File>
-        <Name>sniffer.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
         <Name>integer.h</Name>
         <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>crc32.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>error-crypt.h</Name>
@@ -927,18 +751,6 @@
         <Path>Header Files/framework/crypto/src</Path>
       </File>
       <File>
-        <Name>options.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>nbns_manager.h</Name>
-        <Path>Header Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>asm.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>tcpip_commands.c</Name>
         <Path>Source Files/framework/tcpip/stack</Path>
       </File>
@@ -947,48 +759,20 @@
         <Path>Source Files/framework/system/ports/src</Path>
       </File>
       <File>
-        <Name>rabbit.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>curve25519.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
-        <Name>fe_operations.c</Name>
-        <Path>Source Files/third_party/wolfssl/wolfcrypt</Path>
-      </File>
-      <File>
         <Name>pwdbased.c</Name>
         <Path>Source Files/framework/crypto/src</Path>
-      </File>
-      <File>
-        <Name>keys.c</Name>
-        <Path>Source Files/third_party/wolfssl</Path>
       </File>
       <File>
         <Name>sys_debug.c</Name>
         <Path>Source Files/framework/system/debug/src</Path>
       </File>
       <File>
-        <Name>sntp.c</Name>
-        <Path>Source Files/framework/tcpip/stack</Path>
-      </File>
-      <File>
-        <Name>ocsp.h</Name>
-        <Path>Header Files/third_party/wolfssl</Path>
-      </File>
-      <File>
-        <Name>zero_conf_link_local.c</Name>
-        <Path>Source Files/framework/tcpip/stack</Path>
+        <Name>zutil.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
       </File>
       <File>
         <Name>lfsr.h</Name>
         <Path>Header Files/framework/tcpip/common</Path>
-      </File>
-      <File>
-        <Name>hc128.h</Name>
-        <Path>Header Files/third_party/wolfssl/wolfcrypt</Path>
       </File>
       <File>
         <Name>sha256.c</Name>
@@ -1014,11 +798,12 @@
         <Name>net_pres_cert_store.c</Name>
         <Path>Source Files/app/system_config/pic32mx_eth_sk2/framework/net/pres</Path>
         <Checksum>3F4E03EE648D13926A69502089B5DAD5</Checksum>
+        <ProjectFileChecksum>146B2911369405838A3766701DB0967B</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>system_init.c</Name>
         <Path>Source Files/app/system_config/pic32mx_eth_sk2</Path>
-        <Checksum>D25DAC6411FB7E3F1B739D50ED10CE8A</Checksum>
+        <Checksum>079DC10503A26418EA09A87C118AEC93</Checksum>
       </Template>
       <Template>
         <Name>system_exceptions.c</Name>
@@ -1040,11 +825,6 @@
         <Checksum>9285B6A1FA58BCB32BF9519086AC0E21</Checksum>
       </Template>
       <Template>
-        <Name>config.h</Name>
-        <Path>Header Files/app/system_config/pic32mx_eth_sk2</Path>
-        <Checksum>CCF299748BA8C917D854FC816201691B</Checksum>
-      </Template>
-      <Template>
         <Name>sys_clk_static.h</Name>
         <Path>Header Files/app/system_config/pic32mx_eth_sk2/framework/system/clk</Path>
         <Checksum>B4BD59D8D7C4DA95DC5E3B57755FD352</Checksum>
@@ -1056,7 +836,7 @@
       <Template>
         <Name>system_config.h</Name>
         <Path>Header Files/app/system_config/pic32mx_eth_sk2</Path>
-        <Checksum>9E6D7CE54265809CF0299D0EDBA1672D</Checksum>
+        <Checksum>8B99159784B10D3794AD0A92A38060F5</Checksum>
       </Template>
       <Template>
         <Name>net_pres_enc_glue.h</Name>
@@ -1066,7 +846,8 @@
       <Template>
         <Name>net_pres_enc_glue.c</Name>
         <Path>Source Files/app/system_config/pic32mx_eth_sk2/framework/net/pres</Path>
-        <Checksum>1E2631455852A4F9D1A62E2191F1426F</Checksum>
+        <Checksum>9C0A2DCD6D2DA4C15E9B53D7C13116FA</Checksum>
+        <ProjectFileChecksum>9050B905DB787AC400678C48AFDF85E4</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>sys_clk_static.c</Name>
@@ -1077,8 +858,6 @@
     <CompilerItems>
       <C32>
         <Include value="../../../../../bsp/pic32mx_eth_sk2"/>
-        <Define value="HAVE_CONFIG_H"/>
-        <Include value="../../../../../third_party/tcpip/wolfssl"/>
       </C32>
     </CompilerItems>
     <Libraries>

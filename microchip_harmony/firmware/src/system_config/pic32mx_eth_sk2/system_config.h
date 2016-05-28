@@ -57,7 +57,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 /*  This section Includes other configuration headers necessary to completely
     define this configuration.
 */
-
 #include "bsp_config.h"
 
 // DOM-IGNORE-BEGIN
@@ -73,7 +72,6 @@ extern "C" {
 // Section: System Service Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 // *****************************************************************************
 /* Common System Service Configuration Options
 */
@@ -149,7 +147,6 @@ extern "C" {
 // Section: Driver Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 /*** Timer Driver Configuration ***/
 #define DRV_TMR_INTERRUPT_MODE             true
 #define DRV_TMR_INSTANCES_NUMBER           1
@@ -169,16 +166,22 @@ extern "C" {
 #define DRV_TMR_POWER_STATE_IDX0            SYS_MODULE_POWER_RUN_FULL
 
  
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Middleware & Other Library Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 /*** Crypto Library Configuration ***/
 
 #define HAVE_MCAPI
+#define NO_CERTS
+#define NO_PWDBASED
+#define NO_OLD_TLS
+#define NO_MD5
+#define NO_SHA
+#define NO_AES
+#define NO_ASN
+#define NO_RSA
 
 /*** USB Driver Configuration ***/
 
@@ -302,15 +305,6 @@ extern "C" {
 #define TCPIP_ARP_GRATUITOUS_PROBE_COUNT			1
 #define TCPIP_ARP_TASK_PROCESS_RATE		        	2
 
-/*** DHCP Configuration ***/
-#define TCPIP_STACK_USE_DHCP_CLIENT
-#define TCPIP_DHCP_TIMEOUT		        		2
-#define TCPIP_DHCP_TASK_TICK_RATE	    			5
-#define TCPIP_DHCP_HOST_NAME_SIZE	    			20
-#define TCPIP_DHCP_CLIENT_CONNECT_PORT  			68
-#define TCPIP_DHCP_SERVER_LISTEN_PORT				67
-#define TCPIP_DHCP_CLIENT_ENABLED             			true
-
 
 
 /*** DNS Client Configuration ***/
@@ -336,26 +330,8 @@ extern "C" {
 
 
 
-/*** NBNS Configuration ***/
-#define TCPIP_STACK_USE_NBNS
-#define TCPIP_NBNS_TASK_TICK_RATE   110
 
 
-/*** SNTP Configuration ***/
-#define TCPIP_STACK_USE_SNTP_CLIENT
-#define TCPIP_NTP_DEFAULT_IF		        		"PIC32INT"
-#define TCPIP_NTP_VERSION             			    	4
-#define TCPIP_NTP_DEFAULT_CONNECTION_TYPE   			IP_ADDRESS_TYPE_IPV4
-#define TCPIP_NTP_EPOCH		                		2208988800ul
-#define TCPIP_NTP_REPLY_TIMEOUT		        		6
-#define TCPIP_NTP_MAX_STRATUM		        		15
-#define TCPIP_NTP_TIME_STAMP_TMO				660
-#define TCPIP_NTP_SERVER		        		"pool.ntp.org"
-#define TCPIP_NTP_SERVER_MAX_LENGTH				30
-#define TCPIP_NTP_QUERY_INTERVAL				600
-#define TCPIP_NTP_FAST_QUERY_INTERVAL	    			14
-#define TCPIP_NTP_TASK_TICK_RATE				1100
-#define TCPIP_NTP_RX_QUEUE_LIMIT				2
 
 
 
@@ -380,10 +356,6 @@ extern "C" {
 #define TCPIP_TCP_MAX_SOCKETS		            		10
 #define TCPIP_TCP_TASK_TICK_RATE		        	5
 
-/*** announce Configuration ***/
-#define TCPIP_STACK_USE_ANNOUNCE
-#define TCPIP_ANNOUNCE_MAX_PAYLOAD 	512
-#define TCPIP_ANNOUNCE_TASK_RATE    333
 
 /*** TCPIP MAC Configuration ***/
 #define TCPIP_EMAC_TX_DESCRIPTORS				8
@@ -438,33 +410,19 @@ extern "C" {
 
 #define TCPIP_UDP_USE_RX_CHECKSUM             			true
 
-#define TCPIP_STACK_USE_ZEROCONF_LINK_LOCAL
-#define TCPIP_ZC_LL_PROBE_WAIT 1
-#define TCPIP_ZC_LL_PROBE_MIN 1
-#define TCPIP_ZC_LL_PROBE_MAX 2
-#define TCPIP_ZC_LL_PROBE_NUM 3
-#define TCPIP_ZC_LL_ANNOUNCE_WAIT 2
-#define TCPIP_ZC_LL_ANNOUNCE_NUM 2
-#define TCPIP_ZC_LL_ANNOUNCE_INTERVAL 2
-#define TCPIP_ZC_LL_MAX_CONFLICTS 10
-#define TCPIP_ZC_LL_RATE_LIMIT_INTERVAL 60
-#define TCPIP_ZC_LL_DEFEND_INTERVAL 10
-#define TCPIP_ZC_LL_IPV4_LLBASE 0xa9fe0100
-#define TCPIP_ZC_LL_IPV4_LLBASE_MASK 0x0000FFFF
-#define TCPIP_ZC_LL_TASK_TICK_RATE 333
 
 /*** Network Configuration Index 0 ***/
 #define TCPIP_NETWORK_DEFAULT_INTERFACE_NAME 			"PIC32INT"
 #define TCPIP_IF_PIC32INT
 #define TCPIP_NETWORK_DEFAULT_HOST_NAME 			"MCHPBOARD_E"
 #define TCPIP_NETWORK_DEFAULT_MAC_ADDR	 			0
-#define TCPIP_NETWORK_DEFAULT_IP_ADDRESS 			"192.168.100.115"
+#define TCPIP_NETWORK_DEFAULT_IP_ADDRESS 			"192.168.0.115"
 #define TCPIP_NETWORK_DEFAULT_IP_MASK 				"255.255.255.0"
-#define TCPIP_NETWORK_DEFAULT_GATEWAY	 			"192.168.100.1"
-#define TCPIP_NETWORK_DEFAULT_DNS 				"192.168.100.1"
+#define TCPIP_NETWORK_DEFAULT_GATEWAY	 			"192.168.0.1"
+#define TCPIP_NETWORK_DEFAULT_DNS 				"8.8.8.8"
 #define TCPIP_NETWORK_DEFAULT_SECOND_DNS 			"0.0.0.0"
 #define TCPIP_NETWORK_DEFAULT_POWER_MODE 			"full"
-#define TCPIP_NETWORK_DEFAULT_INTERFACE_FLAGS   		TCPIP_NETWORK_CONFIG_DHCP_CLIENT_ON
+#define TCPIP_NETWORK_DEFAULT_INTERFACE_FLAGS   		TCPIP_NETWORK_CONFIG_IP_STATIC
 #define TCPIP_NETWORK_DEFAULT_MAC_DRIVER 		    DRV_ETHMAC_PIC32MACObject
 #define TCPIP_NETWORK_DEFAULT_IPV6_ADDRESS 			0
 #define TCPIP_NETWORK_DEFAULT_IPV6_PREFIX_LENGTH 		0
@@ -490,7 +448,13 @@ extern "C" {
 
 
 
+// *****************************************************************************
+// *****************************************************************************
+// Section: Application Configuration
+// *****************************************************************************
+// *****************************************************************************
 
+/*** Application Instance 0 Configuration ***/
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus

@@ -358,10 +358,6 @@ const TCPIP_ARP_MODULE_CONFIG tcpipARPInitData =
 };
 
 
-/*** Announce Discovery Initialization Data ***/
-const TCPIP_ANNOUNCE_MODULE_CONFIG tcpipAnnounceInitData =
-{ 
-};
 
 /*** UDP Sockets Initialization Data ***/
 const TCPIP_UDP_MODULE_CONFIG tcpipUDPInitData =
@@ -380,35 +376,11 @@ const TCPIP_TCP_MODULE_CONFIG tcpipTCPInitData =
 
 
 
-/*** SNTP Client Initialization Data ***/
-const TCPIP_SNTP_MODULE_CONFIG tcpipSNTPInitData =
-{
-    .ntp_server		        = TCPIP_NTP_SERVER,
-    .ntp_interface		    = TCPIP_NTP_DEFAULT_IF,
-    .ntp_connection_type	= TCPIP_NTP_DEFAULT_CONNECTION_TYPE,
-    .ntp_reply_timeout		= TCPIP_NTP_REPLY_TIMEOUT,
-    .ntp_stamp_timeout		= TCPIP_NTP_TIME_STAMP_TMO,
-    .ntp_success_interval	= TCPIP_NTP_QUERY_INTERVAL,
-    .ntp_error_interval		= TCPIP_NTP_FAST_QUERY_INTERVAL,
-};
-
-
-/*** DHCP client Initialization Data ***/
-const TCPIP_DHCP_MODULE_CONFIG tcpipDHCPInitData =
-{     
-    .dhcpEnable     = TCPIP_DHCP_CLIENT_ENABLED,   
-    .dhcpTmo        = TCPIP_DHCP_TIMEOUT,
-    .dhcpCliPort    = TCPIP_DHCP_CLIENT_CONNECT_PORT,
-    .dhcpSrvPort    = TCPIP_DHCP_SERVER_LISTEN_PORT,
-
-};
 
 
 
-/*** NBNS Server Initialization Data ***/
-const TCPIP_NBNS_MODULE_CONFIG tcpipNBNSInitData =
-{ 
-};
+
+
 
 /*** ETH MAC Initialization Data ***/
 const TCPIP_MODULE_MAC_PIC32INT_CONFIG tcpipMACPIC32INTInitData =
@@ -430,10 +402,6 @@ const TCPIP_MODULE_MAC_PIC32INT_CONFIG tcpipMACPIC32INTInitData =
 
 
 
-/*** Zeroconfig initialization data ***/
-const ZCLL_MODULE_CONFIG tcpipZCLLInitData =
-{
-};
 
 
 
@@ -487,13 +455,8 @@ const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [] =
     {TCPIP_MODULE_ARP,           &tcpipARPInitData},              // TCPIP_MODULE_ARP
     {TCPIP_MODULE_UDP,           &tcpipUDPInitData},              // TCPIP_MODULE_UDP,
     {TCPIP_MODULE_TCP,           &tcpipTCPInitData},              // TCPIP_MODULE_TCP,
-    {TCPIP_MODULE_DHCP_CLIENT,   &tcpipDHCPInitData},             // TCPIP_MODULE_DHCP_CLIENT,
-    {TCPIP_MODULE_ANNOUNCE,      &tcpipAnnounceInitData},                     // TCPIP_MODULE_ANNOUNCE,
     {TCPIP_MODULE_DNS_CLIENT,&tcpipDNSClientInitData}, // TCPIP_MODULE_DNS_CLIENT,
-    {TCPIP_MODULE_NBNS,          &tcpipNBNSInitData},                           // TCPIP_MODULE_NBNS
-    {TCPIP_MODULE_SNTP,    &tcpipSNTPInitData},                            // TCPIP_MODULE_SNTP,
 
-    {TCPIP_MODULE_ZCLL, 0},                                    // TCPIP_MODULE_ZCLL,
     { TCPIP_MODULE_MANAGER,    & tcpipHeapConfig },          // TCPIP_MODULE_MANAGER
     // MAC modules
     {TCPIP_MODULE_MAC_PIC32INT, &tcpipMACPIC32INTInitData},     // TCPIP_MODULE_MAC_PIC32INT
@@ -828,7 +791,7 @@ const USB_DEVICE_INIT usbDevInitData =
     See prototype in system/common/sys_module.h.
  */
 
-void SYS_Initialize ( void *data )
+void SYS_Initialize ( void* data )
 {
     /* Core Processor Initialization */
     SYS_CLK_Initialize( NULL );

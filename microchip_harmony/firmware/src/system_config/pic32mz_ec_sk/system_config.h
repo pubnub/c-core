@@ -57,7 +57,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 /*  This section Includes other configuration headers necessary to completely
     define this configuration.
 */
-
 #include "bsp_config.h"
 
 // DOM-IGNORE-BEGIN
@@ -73,7 +72,6 @@ extern "C" {
 // Section: System Service Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 // *****************************************************************************
 /* Common System Service Configuration Options
 */
@@ -99,19 +97,11 @@ extern "C" {
 
 /*** Ports System Service Configuration ***/
 
-#define SYS_PORT_A_ANSEL        0x422
-#define SYS_PORT_A_TRIS         0xc4ff
-#define SYS_PORT_A_LAT          0x0
-#define SYS_PORT_A_ODC          0x0
-#define SYS_PORT_A_CNPU         0x1
-#define SYS_PORT_A_CNPD         0x0
-#define SYS_PORT_A_CNEN         0x0
-
-#define SYS_PORT_B_ANSEL        0x8fc9
-#define SYS_PORT_B_TRIS         0xffc9
+#define SYS_PORT_B_ANSEL        0x8fdf
+#define SYS_PORT_B_TRIS         0xffdf
 #define SYS_PORT_B_LAT          0x0
 #define SYS_PORT_B_ODC          0x0
-#define SYS_PORT_B_CNPU         0x3000
+#define SYS_PORT_B_CNPU         0x7000
 #define SYS_PORT_B_CNPD         0x0
 #define SYS_PORT_B_CNEN         0x0
 
@@ -123,24 +113,8 @@ extern "C" {
 #define SYS_PORT_C_CNPD         0x0
 #define SYS_PORT_C_CNEN         0x0
 
-#define SYS_PORT_F_ANSEL        0x1000
-#define SYS_PORT_F_TRIS         0x113f
-#define SYS_PORT_F_LAT          0x0
-#define SYS_PORT_F_ODC          0x0
-#define SYS_PORT_F_CNPU         0x0
-#define SYS_PORT_F_CNPD         0x0
-#define SYS_PORT_F_CNEN         0x0
-
-#define SYS_PORT_G_ANSEL        0x8380
-#define SYS_PORT_G_TRIS         0xf3c3
-#define SYS_PORT_G_LAT          0x0
-#define SYS_PORT_G_ODC          0x0
-#define SYS_PORT_G_CNPU         0x0
-#define SYS_PORT_G_CNPD         0x0
-#define SYS_PORT_G_CNEN         0x0
-
-#define SYS_PORT_H_ANSEL        0x0
-#define SYS_PORT_H_TRIS         0xf7b0
+#define SYS_PORT_H_ANSEL        0x40
+#define SYS_PORT_H_TRIS         0xfff8
 #define SYS_PORT_H_LAT          0x0
 #define SYS_PORT_H_ODC          0x0
 #define SYS_PORT_H_CNPU         0x0
@@ -148,20 +122,12 @@ extern "C" {
 #define SYS_PORT_H_CNEN         0x0
 
 #define SYS_PORT_J_ANSEL        0x0
-#define SYS_PORT_J_TRIS         0xeb37
+#define SYS_PORT_J_TRIS         0xffff
 #define SYS_PORT_J_LAT          0x0
 #define SYS_PORT_J_ODC          0x0
 #define SYS_PORT_J_CNPU         0x0
 #define SYS_PORT_J_CNPD         0x0
 #define SYS_PORT_J_CNEN         0x0
-
-#define SYS_PORT_K_ANSEL        0x0
-#define SYS_PORT_K_TRIS         0xdf
-#define SYS_PORT_K_LAT          0x0
-#define SYS_PORT_K_ODC          0x0
-#define SYS_PORT_K_CNPU         0x0
-#define SYS_PORT_K_CNPD         0x0
-#define SYS_PORT_K_CNEN         0x0
 /*** Timer System Service Configuration ***/
 #define SYS_TMR_POWER_STATE             SYS_MODULE_POWER_RUN_FULL
 #define SYS_TMR_DRIVER_INDEX            DRV_TMR_INDEX_0
@@ -188,7 +154,7 @@ extern "C" {
 
 /*** Debug System Service Configuration ***/
 #define SYS_DEBUG_ENABLE
-#define DEBUG_PRINT_BUFFER_SIZE       1024
+#define DEBUG_PRINT_BUFFER_SIZE       512
 #define SYS_DEBUG_BUFFER_DMA_READY        __attribute__((coherent)) __attribute__((aligned(16)))
 #define SYS_DEBUG_USE_CONSOLE
 
@@ -211,7 +177,6 @@ extern "C" {
 // Section: Driver Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 /*** Timer Driver Configuration ***/
 #define DRV_TMR_INTERRUPT_MODE             true
 #define DRV_TMR_INSTANCES_NUMBER           1
@@ -231,16 +196,21 @@ extern "C" {
 #define DRV_TMR_POWER_STATE_IDX0            SYS_MODULE_POWER_RUN_FULL
 
  
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Middleware & Other Library Configuration
 // *****************************************************************************
 // *****************************************************************************
-
 /*** Crypto Library Configuration ***/
 
 #define HAVE_MCAPI
+#define NO_CERTS
+#define NO_PWDBASED
+#define NO_OLD_TLS
+#define NO_SHA
+#define NO_AES
+#define NO_ASN
+#define NO_RSA
 
 /*** USB Driver Configuration ***/
 
@@ -403,21 +373,6 @@ extern "C" {
 #define TCPIP_NBNS_TASK_TICK_RATE   110
 
 
-/*** SNTP Configuration ***/
-#define TCPIP_STACK_USE_SNTP_CLIENT
-#define TCPIP_NTP_DEFAULT_IF		        		"PIC32INT"
-#define TCPIP_NTP_VERSION             			    	4
-#define TCPIP_NTP_DEFAULT_CONNECTION_TYPE   			IP_ADDRESS_TYPE_IPV4
-#define TCPIP_NTP_EPOCH		                		2208988800ul
-#define TCPIP_NTP_REPLY_TIMEOUT		        		6
-#define TCPIP_NTP_MAX_STRATUM		        		15
-#define TCPIP_NTP_TIME_STAMP_TMO				660
-#define TCPIP_NTP_SERVER		        		"pool.ntp.org"
-#define TCPIP_NTP_SERVER_MAX_LENGTH				30
-#define TCPIP_NTP_QUERY_INTERVAL				600
-#define TCPIP_NTP_FAST_QUERY_INTERVAL	    			14
-#define TCPIP_NTP_TASK_TICK_RATE				1100
-#define TCPIP_NTP_RX_QUEUE_LIMIT				2
 
 
 
@@ -489,13 +444,6 @@ extern "C" {
 #define DRV_ETHMAC_INTERRUPT_MODE        			true
 
 
-/*** telnet Configuration ***/
-#define TCPIP_STACK_USE_TELNET_SERVER
-#define TCPIP_TELNET_MAX_CONNECTIONS    2
-#define TCPIP_TELNET_USERNAME           "admin"
-#define TCPIP_TELNET_PASSWORD           "microchip"
-#define TCPIP_TELNET_TASK_TICK_RATE     100
-
 
 /*** UDP Configuration ***/
 #define TCPIP_UDP_MAX_SOCKETS		                	10
@@ -547,10 +495,6 @@ extern "C" {
 
 
 
-/* MPLAB Harmony Net Presentation Layer Definitions*/
-#define NET_PRES_NUM_INSTANCE 1
-#define NET_PRES_NUM_SOCKETS 10
-
 // *****************************************************************************
 /* BSP Configuration Options
 */
@@ -559,7 +503,13 @@ extern "C" {
 
 
 
+// *****************************************************************************
+// *****************************************************************************
+// Section: Application Configuration
+// *****************************************************************************
+// *****************************************************************************
 
+/*** Application Instance 0 Configuration ***/
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
