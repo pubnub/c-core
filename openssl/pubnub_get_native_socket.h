@@ -5,16 +5,22 @@
 #include "pubnub_internal.h"
 
 
-/** Returns the native socket under POSIX of the given Pubnub context.
-    On POSIX, native (BSD) socket is an integer handle.
-    On Windows, native socket is a `SOCKET`, which is a `HANDLE` (most probably)
-    , which is an opaque pointer.
- */
 #if defined(_WIN32)
-SOCKET pubnub_get_native_socket(pubnub_t *pb);
+/// On Windows, native socket is a `SOCKET`, which is a `HANDLE` (most probably), 
+/// which is an opaque pointer.
+typedef SOCKET pbpal_native_socket_t;
 #else
-int pubnub_get_native_socket(pubnub_t *pb);
+/// On POSIX, native(BSD) socket is an integer handle.
+typedef int pbpal_native_socket_t;
 #endif
+
+/** Returns the native socket of the given Pubnub context @p pb.
+    If we're using native platform socket, this is trivial, but, if 
+    we're using some library that "hides" the socket (like OpenSSL),
+    and we need the actual platform socket for some purpose, this 
+    will return the actual platform socket.
+*/
+pbpal_native_socket_t pubnub_get_native_socket(pubnub_t *pb);
 
 
 #endif /* !defined INC_PUBNUB_GET_NATIVE_SOCKET*/

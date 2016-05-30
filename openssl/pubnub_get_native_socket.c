@@ -3,21 +3,16 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <windows.h>
-
-#include "pubnub_get_native_socket.h"
-#include "pubnub_log.h"
-
-SOCKET pubnub_get_native_socket(pubnub_t *pb) { SOCKET socket;
-
-#else
-#include "pubnub_get_native_socket.h"
-#include "pubnub_log.h"
-
-int pubnub_get_native_socket(pubnub_t *pb) { int socket;
 #endif
-    if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
+
+#include "pubnub_get_native_socket.h"
+#include "pubnub_log.h"
+
+pbpal_native_socket_t pubnub_get_native_socket(pubnub_t *pb)
+{
+    pbpal_native_socket_t fd = BIO_get_fd(pb->pal.socket, NULL);
+    if (-1 == fd) {
         PUBNUB_LOG_ERROR("Uninitialized BIO!\n");
-        return -1;
     }
-    return socket;
+    return fd;
 }
