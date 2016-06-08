@@ -205,6 +205,7 @@ next_state:
             goto next_state;
         default:
             pb->core.last_result = PNR_CONNECT_FAILED;
+            pbntf_lost_socket(pb, pb->pal.socket);
             pbntf_trans_outcome(pb);
             break;
         }
