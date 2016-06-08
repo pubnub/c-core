@@ -35,10 +35,12 @@ static void locking_callback(int mode, int type, const char *file, int line)
 }
 
 
+#if !defined(_WIN32)
 static unsigned long thread_id(void)
 {
     return (unsigned long)pbpal_thread_id();
 }
+#endif
 
 
 static int locks_setup(void)

@@ -37,7 +37,7 @@ static struct SocketWatcherData m_watcher;
 static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     size_t i;
-    SOCKET sockt = pubnub_get_native_socket(pb);
+    pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
 
     PUBNUB_ASSERT(watcher->apoll_size <= watcher->apoll_cap);
 
@@ -74,7 +74,7 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     size_t i;
-    SOCKET sockt = pubnub_get_native_socket(pb);
+    pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
 
     PUBNUB_ASSERT(watcher->apoll_size <= watcher->apoll_cap);
 
@@ -238,14 +238,14 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 static void update_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
 {
     size_t i;
-    int socket = pubnub_get_native_socket(pb);
-    if (-1 == socket) {
+    pbpal_native_socket_t scket = pubnub_get_native_socket(pb);
+    if (INVALID_SOCKET == scket) {
         return;
     }
 
     for (i = 0; i < watcher->apoll_size; ++i) {
         if (watcher->apb[i] == pb) {
-            watcher->apoll[i].fd = socket;
+            watcher->apoll[i].fd = scket;
             return;
         }
     }
