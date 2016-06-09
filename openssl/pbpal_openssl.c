@@ -110,7 +110,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
         return -1;
     }
     pb->sendptr = (uint8_t*)data;
-    pb->sendlen = n;
+    pb->sendlen = (uint16_t)n;
     pb->sock_state = STATE_NONE;
 
     return pbpal_send_status(pb);
@@ -155,10 +155,10 @@ int pbpal_start_read_line(pubnub_t *pb)
     }
 
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
-        unsigned distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+        size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
-        pb->left += distance;
+        pb->left += (uint16_t)distance;
     }
     else {
         if (pb->left == 0) {
@@ -246,10 +246,10 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
         return -1;
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
-        unsigned distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+        size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
-        pb->left += distance;
+        pb->left += (uint16_t)distance;
     }
     else {
         if (pb->left == 0) {
@@ -259,7 +259,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
         }
     }
     pb->sock_state = STATE_READ;
-    pb->len = n;
+    pb->len = (unsigned)n;
     return +1;
 }
 

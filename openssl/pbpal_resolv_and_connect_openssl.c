@@ -16,6 +16,17 @@
 #include <openssl/ssl.h>
 
 
+static int print_to_pubnub_log(const char *s, size_t len, void *p)
+{
+    PUBNUB_UNUSED(len);
+    PUBNUB_UNUSED(p);
+
+    PUBNUB_LOG_ERROR(s);
+
+    return 0;
+}
+
+
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL\n");
@@ -36,9 +47,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
         if (BIO_should_retry(pb->pal.socket)) {
             return pbpal_connect_wouldblock;
         }
-        ERR_print_errors_fp(stderr);
-        BIO_free_all(pb->pal.socket);
-        pb->pal.socket = NULL;
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("BIO_do_connect failed\n");
         return pbpal_connect_failed;
     }
@@ -131,7 +140,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
         pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
         if (NULL == pb->pal.ctx) {
-            ERR_print_errors_fp(stderr);
+            ERR_print_errors_cb(print_to_pubnub_log, NULL);
             PUBNUB_LOG_ERROR("pb=%p SSL_CTX_new failed\n", pb);
             return pbpal_resolv_resource_failure;
         }
@@ -147,7 +156,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         }
     }
     if (NULL == pb->pal.socket) {
-        ERR_print_errors_fp(stderr);
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         return pbpal_resolv_resource_failure;
     }
 
@@ -181,9 +190,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         }
         /* Expire the IP for the next connect */
         pb->pal.ip_timeout = 0;
-        ERR_print_errors_fp(stderr);
-        BIO_free_all(pb->pal.socket);
-        pb->pal.socket = NULL;
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         if (pb->pal.session != NULL) {
             SSL_SESSION_free(pb->pal.session);
             pb->pal.session = NULL;
@@ -201,10 +208,10 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     rslt = SSL_get_verify_result(ssl);
     if (rslt != X509_V_OK) {
         PUBNUB_LOG_WARNING("pb=%p: SSL_get_verify_result() failed == %d(%s)\n", pb, rslt, X509_verify_cert_error_string(rslt));
-        ERR_print_errors_fp(stderr);
-        BIO_free_all(pb->pal.socket);
-        pb->pal.socket = NULL;
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         if (pb->options.fallbackSSL) {
+            BIO_free_all(pb->pal.socket);
+            pb->pal.socket = NULL;
             return resolv_and_connect_wout_SSL(pb);
         }
         return pbpal_connect_failed;

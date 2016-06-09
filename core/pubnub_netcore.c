@@ -152,9 +152,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
-            pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
-            pbntf_lost_socket(pb, pb->pal.socket);
-            pbntf_trans_outcome(pb);
+            outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
         }
         break;
@@ -166,9 +164,7 @@ next_state:
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
         case pbpal_resolv_sent:
-            pb->core.last_result = PNR_INTERNAL_ERROR;
-            pbntf_lost_socket(pb, pb->pal.socket);
-            pbntf_trans_outcome(pb);
+            outcome_detected(pb, PNR_INTERNAL_ERROR);
             break;
         case pbpal_resolv_rcv_wouldblock:
             break;
@@ -180,9 +176,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
-            pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
-            pbntf_lost_socket(pb, pb->pal.socket);
-            pbntf_trans_outcome(pb);
+            outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
         }
         break;
@@ -204,9 +198,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
-            pb->core.last_result = PNR_CONNECT_FAILED;
-            pbntf_lost_socket(pb, pb->pal.socket);
-            pbntf_trans_outcome(pb);
+            outcome_detected(pb, PNR_CONNECT_FAILED);
             break;
         }
         break;
@@ -472,11 +464,17 @@ void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report)
     switch (pb->state) {
     case PBS_WAIT_CANCEL:
     case PBS_WAIT_CANCEL_CLOSE:
+        break;
     case PBS_IDLE:
     case PBS_NULL:
+        pbntf_trans_outcome(pb);
         break;
     default:
         pb->state = PBS_WAIT_CANCEL;
+        /* TODO: This "forced" event handling will probably not work on some 
+            unortodox platforms, such as uIP/ContikiOS.
+        */
+        pbnc_fsm(pb);
         break;
     }
 }
