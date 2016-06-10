@@ -29,6 +29,11 @@ struct SocketWatcherData {
 #if PUBNUB_TIMERS_API
     pubnub_t *timer_head;
 #endif
+    pthread_mutex_t queue_lock;
+    size_t queue_size;
+    size_t queue_head;
+    size_t queue_tail;
+    pubnub_t **queue_apb;
 };
 
 static struct SocketWatcherData m_watcher;
@@ -125,6 +130,22 @@ void* socket_watcher_thread(void *arg)
     for (;;) {
         struct timespec timspec;
 
+        pthread_mutex_lock(&m_watcher.queue_lock);
+        if (m_watcher.queue_head != m_watcher.queue_tail) {
+            pubnub_t *pbp = m_watcher.queue_apb[m_watcher.queue_tail++];
+            pthread_mutex_unlock(&m_watcher.queue_lock);
+            if (pbp != NULL) {
+                pubnub_mutex_lock(pbp->monitor);
+                pbnc_fsm(pbp);
+                pubnub_mutex_unlock(pbp->monitor);
+            }
+            pthread_mutex_lock(&m_watcher.queue_lock);
+            if (m_watcher.queue_tail == m_watcher.queue_size) {
+                m_watcher.queue_tail = 0;
+            }
+        }
+        pthread_mutex_unlock(&m_watcher.queue_lock);
+
         monotonic_clock_get_time(&timspec);
         timspec.tv_sec += (timspec.tv_nsec + 200*MILLI_IN_NANO) / UNIT_IN_NANO;
         timspec.tv_nsec = (timspec.tv_nsec + 200*MILLI_IN_NANO) % UNIT_IN_NANO;
@@ -213,7 +234,12 @@ int pbntf_init(void)
 
     pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
 
-    return 0;
+    pthread_mutex_init(&m_watcher.queue_lock, &attr);
+    m_watcher.queue_size = 1024;
+    m_watcher.queue_head = m_watcher.queue_tail = 0;
+    m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
+
+    return (m_watcher.queue_apb == NULL) ? -1 : 0;
 }
 
 
@@ -246,6 +272,23 @@ static void remove_timer_safe(pubnub_t *to_remove)
 }
 
 
+static void remove_from_processing_queue(pubnub_t *pb)
+{
+    size_t i;
+
+    PUBNUB_ASSERT_OPT(pb != NULL);
+
+    pthread_mutex_lock(&m_watcher.queue_lock);
+    for (i = m_watcher.queue_tail; i != m_watcher.queue_head; i = (((i + 1) == m_watcher.queue_size) ? 0 : i + 1)) {
+        if (m_watcher.queue_apb[i] == pb) {
+            m_watcher.queue_apb[i] = NULL;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&m_watcher.queue_lock);
+}
+
+
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 {
     PUBNUB_UNUSED(socket);
@@ -254,6 +297,7 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 
     remove_socket(&m_watcher, pb);
     remove_timer_safe(pb);
+    remove_from_processing_queue(pb);
 
     pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
@@ -280,6 +324,55 @@ void pbntf_trans_outcome(pubnub_t *pb)
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }
+
+
+
+int pbntf_enqueue_for_processing(pubnub_t *pb)
+{
+    int result;
+    size_t next_head;
+
+    PUBNUB_ASSERT_OPT(pb != NULL);
+
+    pthread_mutex_lock(&m_watcher.queue_lock);
+    next_head = m_watcher.queue_head + 1;
+    if (next_head == m_watcher.queue_size) {
+        next_head = 0;
+    }
+    if (next_head != m_watcher.queue_tail) {
+        m_watcher.queue_apb[m_watcher.queue_head] = pb;
+        m_watcher.queue_head = next_head;
+        result = +1;
+    }
+    else {
+        result = -1;
+    }
+    pthread_mutex_unlock(&m_watcher.queue_lock);
+
+    return result;
+}
+
+
+int pbntf_requeue_for_processing(pubnub_t *pb)
+{
+    bool found = false;
+    size_t i;
+
+    PUBNUB_ASSERT_OPT(pb != NULL);
+
+    pthread_mutex_lock(&m_watcher.queue_lock);
+    for (i = m_watcher.queue_tail; i != m_watcher.queue_head; i = (((i + 1) == m_watcher.queue_size) ? 0 : i + 1)) {
+        if (m_watcher.queue_apb[i] == pb) {
+            found = true;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&m_watcher.queue_lock);
+
+    return !found ? pbntf_enqueue_for_processing(pb) : 0;
+}
+
+
 
 
 enum pubnub_res pubnub_last_result(pubnub_t *pb)

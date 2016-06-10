@@ -21,7 +21,7 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
     PUBNUB_UNUSED(len);
     PUBNUB_UNUSED(p);
 
-    PUBNUB_LOG_ERROR(s);
+    PUBNUB_LOG_ERROR("%s", s);
 
     return 0;
 }

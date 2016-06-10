@@ -253,7 +253,6 @@ static void remove_timer_safe(pubnub_t *to_remove)
 
 static void remove_from_processing_queue(pubnub_t *pb)
 {
-    bool found = false;
     size_t i;
 
     PUBNUB_ASSERT_OPT(pb != NULL);
