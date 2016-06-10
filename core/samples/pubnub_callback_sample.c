@@ -11,6 +11,7 @@
 #endif
 
 #include <stdio.h>
+#include <time.h>
 
 
 /** Data that we pass to the Pubnub context and will get back via

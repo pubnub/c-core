@@ -45,6 +45,21 @@ void pbntf_trans_outcome(pubnub_t *pb)
 }
 
 
+int pbntf_enqueue_for_processing(pubnub_t *pb)
+{
+    PUBNUB_UNUSED(pb);
+    return 0;
+}
+
+
+int pbntf_requeue_for_processing(pubnub_t *pb)
+{
+    PUBNUB_UNUSED(pb);
+    
+    return 0;
+}
+
+
 enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
     enum pubnub_res result;
