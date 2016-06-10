@@ -163,6 +163,10 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket);
 
 void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket);
 
+int pbntf_enqueue_for_processing(pubnub_t *pb);
+
+int pbntf_requeue_for_processing(pubnub_t *pb);
+
 
 /** Internal function. Checks if the given pubnub context pointer
     is valid. 

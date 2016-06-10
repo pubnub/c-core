@@ -100,6 +100,19 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
+        pb->state = PBS_READY;
+        switch (pbntf_enqueue_for_processing(pb)) {
+        case -1:
+            pb->core.last_result = PNR_INTERNAL_ERROR;
+            pbntf_trans_outcome(pb);
+            return 0;
+        case 0:
+            goto next_state;
+        case +1:
+            break;
+        }
+        break;
+    case PBS_READY:
     {
         enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
@@ -471,10 +484,7 @@ void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report)
         break;
     default:
         pb->state = PBS_WAIT_CANCEL;
-        /* TODO: This "forced" event handling will probably not work on some 
-            unortodox platforms, such as uIP/ContikiOS.
-        */
-        pbnc_fsm(pb);
+        pbntf_requeue_for_processing(pb);
         break;
     }
 }
