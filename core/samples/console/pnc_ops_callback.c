@@ -178,6 +178,7 @@ pnc_ops_subscribe_thr(void *pn_sub_addr)
         
         if (strlen(channels_string) == 0 && strlen(channel_groups_string) == 0) {
             puts("You need add some channels or channel groups first. Ignoring");
+            break;
         } 
         else if (strlen(channel_groups_string) == 0) {
             res = pubnub_subscribe(pn_sub, channels_string, NULL);

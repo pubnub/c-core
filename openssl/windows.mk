@@ -6,7 +6,7 @@ OPENSSLPATH=c:\OpenSSL-Win32
 
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 
-CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE /I ..\core /I . /I ..\windows\fntest /I ..\core\fntest /I ..\core\c99 /I $(OPENSSLPATH)\include /W3
+CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /I ..\core /I . /I ..\windows\fntest /I ..\core\fntest /I ..\core\c99 /I $(OPENSSLPATH)\include /W3
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 

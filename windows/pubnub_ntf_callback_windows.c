@@ -25,7 +25,7 @@ struct SocketWatcherData {
     _Guarded_by_(mutw) _Field_size_(apoll_cap) WSAPOLLFD *apoll;
     _Guarded_by_(mutw) _Field_size_(apoll_cap) pubnub_t **apb;
     CRITICAL_SECTION mutw;
-    uintptr_t thread_handle;
+    HANDLE thread_handle;
     DWORD thread_id;
 #if PUBNUB_TIMERS_API
     _Guarded_by_(mutw) pubnub_t *timer_head;
@@ -114,6 +114,32 @@ static int elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
 }
 
 
+int pbntf_watch_in_events(pubnub_t *pbp)
+{
+    unsigned i;
+    for (i = 0; i < m_watcher.apoll_size; ++i) {
+        if (m_watcher.apb[i] == pbp) {
+            m_watcher.apoll[i].events = POLLIN;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
+int pbntf_watch_out_events(pubnub_t *pbp)
+{
+    unsigned i;
+    for (i = 0; i < m_watcher.apoll_size; ++i) {
+        if (m_watcher.apb[i] == pbp) {
+            m_watcher.apoll[i].events = POLLOUT;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
 void socket_watcher_thread(void *arg)
 {
     FILETIME prev_time;
@@ -123,20 +149,28 @@ void socket_watcher_thread(void *arg)
         const DWORD ms = 100;
 
         EnterCriticalSection(&m_watcher.queue_lock);
-        if (m_watcher.queue_head != m_watcher.queue_tail) {
+        while (m_watcher.queue_head != m_watcher.queue_tail) {
             pubnub_t *pbp = m_watcher.queue_apb[m_watcher.queue_tail++];
-            LeaveCriticalSection(&m_watcher.queue_lock);
-            if (pbp != NULL) {
-                pubnub_mutex_lock(pbp->monitor);
-                pbnc_fsm(pbp);
-                pubnub_mutex_unlock(pbp->monitor);
-            }
-            EnterCriticalSection(&m_watcher.queue_lock);
             if (m_watcher.queue_tail == m_watcher.queue_size) {
                 m_watcher.queue_tail = 0;
             }
+            LeaveCriticalSection(&m_watcher.queue_lock);
+            if (pbp != NULL) {
+                pubnub_mutex_lock(pbp->monitor);
+                if (pbp->state == PBS_NULL) {
+                    pubnub_mutex_unlock(pbp->monitor);
+                    pballoc_free_at_last(pbp);
+                }
+                else {
+                    pbnc_fsm(pbp);
+                    pubnub_mutex_unlock(pbp->monitor);
+                }
+            }
+            EnterCriticalSection(&m_watcher.queue_lock);
         }
         LeaveCriticalSection(&m_watcher.queue_lock);
+
+        Sleep(1);
 
         EnterCriticalSection(&m_watcher.mutw);
         if (0 == m_watcher.apoll_size) {
@@ -155,28 +189,7 @@ void socket_watcher_thread(void *arg)
                 for (i = 0; i < apoll_size; ++i) {
                     if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
                         pubnub_t *pbp = m_watcher.apb[i];
-                        pubnub_mutex_lock(pbp->monitor);
-                        pbnc_fsm(pbp);
-                        if (apoll_size == m_watcher.apoll_size) {
-                            if (m_watcher.apoll[i].events == POLLOUT) {
-                                if ((pbp->state == PBS_WAIT_DNS_RCV) ||
-                                    (pbp->state >= PBS_RX_HTTP_VER)) {
-                                    m_watcher.apoll[i].events = POLLIN;
-                                }
-                            }
-                            else {
-                                if ((pbp->state > PBS_WAIT_DNS_RCV) &&
-                                    (pbp->state < PBS_RX_HTTP_VER)) {
-                                    m_watcher.apoll[i].events = POLLOUT;
-                                }
-                            }
-                        }
-                        else {
-                            PUBNUB_ASSERT_OPT(apoll_size == m_watcher.apoll_size + 1);
-                            apoll_size = m_watcher.apoll_size;
-                            --i;
-                        }
-                        pubnub_mutex_unlock(pbp->monitor);
+                        pbntf_requeue_for_processing(pbp);
                     }
                 }
             }
@@ -211,7 +224,7 @@ void socket_watcher_thread(void *arg)
 int pbntf_init(void)
 {
     InitializeCriticalSection(&m_watcher.mutw);
-    m_watcher.thread_handle = _beginthread(socket_watcher_thread, 0, NULL);
+    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, 0, NULL);
     m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
     InitializeCriticalSection(&m_watcher.queue_lock);

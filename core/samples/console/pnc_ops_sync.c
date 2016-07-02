@@ -33,7 +33,8 @@ void pnc_ops_subscribe(pubnub_t *pn_sub)
         puts("Subscribe loop...");
         
         if (strlen(channels_string) == 0 && strlen(groups_string) == 0) {
-            puts("You need add some channels or channel groups first. Ignoring");
+            puts("You need to add some channels or channel groups first. Ignoring");
+            return;
         }
         else if (strlen(groups_string) == 0) {
             res = pubnub_subscribe(pn_sub, channels_string, NULL);

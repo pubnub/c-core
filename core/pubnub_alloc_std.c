@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 
 #include "pbpal.h"
 
@@ -99,6 +100,26 @@ pubnub_t *pubnub_alloc(void)
 }
 
 
+void pballoc_free_at_last(pubnub_t *pb)
+{
+    PUBNUB_ASSERT_OPT(pb != NULL);
+
+    pubnub_mutex_init_static(m_lock);
+    pubnub_mutex_lock(m_lock);
+    pubnub_mutex_lock(pb->monitor);
+
+    PUBNUB_ASSERT_OPT(pb->state == PBS_NULL);
+
+    pbcc_deinit(&pb->core);
+    pbpal_free(pb);
+    remove_allocated(pb);
+    pubnub_mutex_unlock(m_lock);
+    pubnub_mutex_unlock(pb->monitor);
+    pubnub_mutex_destroy(pb->monitor);
+    free(pb);
+}
+
+
 int pubnub_free(pubnub_t *pb)
 {
     int result = -1;
@@ -106,20 +127,19 @@ int pubnub_free(pubnub_t *pb)
     PUBNUB_ASSERT(check_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    pubnub_mutex_init_static(m_lock);
-    pubnub_mutex_lock(m_lock);
     if (PBS_IDLE == pb->state) {
-        pbcc_deinit(&pb->core);
-        pbpal_free(pb);
-        remove_allocated(pb);
-        pubnub_mutex_unlock(m_lock);
-        pubnub_mutex_unlock(pb->monitor);
-        pubnub_mutex_destroy(pb->monitor);
-        free(pb);
+        pb->state = PBS_NULL;
+#if defined(PUBNUB_CALLBACK_API)
+            pbntf_requeue_for_processing(pb);
+            pubnub_mutex_unlock(pb->monitor);
+#else
+            pubnub_mutex_unlock(pb->monitor);
+            pballoc_free_at_last(pb);
+#endif
+
         result = 0;
     }
     else {
-        pubnub_mutex_unlock(m_lock);
         pubnub_mutex_unlock(pb->monitor);
     }
 

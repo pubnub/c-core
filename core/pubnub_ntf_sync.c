@@ -60,6 +60,20 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
 }
 
 
+int pbntf_watch_in_events(pubnub_t *pbp)
+{
+    PUBNUB_UNUSED(pbp);
+    return 0;
+}
+
+
+int pbntf_watch_out_events(pubnub_t *pbp)
+{
+    PUBNUB_UNUSED(pbp);
+    return 0;
+}
+
+
 enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
     enum pubnub_res result;

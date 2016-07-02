@@ -123,6 +123,7 @@ next_state:
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
             pb->state = PBS_WAIT_DNS_RCV;
+            pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
             pb->state = PBS_WAIT_CONNECT;
@@ -156,6 +157,7 @@ next_state:
         case pbpal_resolv_rcv_wouldblock:
             pbntf_update_socket(pb, pb->pal.socket);
             pb->state = PBS_WAIT_DNS_RCV;
+            pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
             pbntf_update_socket(pb, pb->pal.socket);
@@ -184,9 +186,11 @@ next_state:
         case pbpal_connect_wouldblock:
             pbntf_update_socket(pb, pb->pal.socket);
             pb->state = PBS_WAIT_CONNECT;
+            pbntf_watch_out_events(pb);
             break;
         case pbpal_connect_success:
             pb->state = PBS_CONNECTED;
+            pbntf_watch_out_events(pb);
             goto next_state;
         default:
             outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
@@ -273,6 +277,7 @@ next_state:
         else if (0 == i) {
             pbpal_start_read_line(pb);
             pb->state = PBS_RX_HTTP_VER;
+            pbntf_watch_in_events(pb);
             goto next_state;
         }
         break;

@@ -41,6 +41,21 @@ pubnub_t *pubnub_alloc(void)
 }
 
 
+void pballoc_free_at_last(pubnub_t *pb)
+{
+    PUBNUB_ASSERT_OPT(pb != NULL);
+
+    pubnub_mutex_lock(pb->monitor);
+
+    PUBNUB_ASSERT_OPT(pb->state == PBS_NULL);
+
+    pbcc_deinit(&pb->core);
+    pbpal_free(pb);
+    pubnub_mutex_unlock(pb->monitor);
+    pubnub_mutex_destroy(pb->monitor);
+}
+
+
 int pubnub_free(pubnub_t *pb)
 {
     int result = -1;
@@ -49,11 +64,14 @@ int pubnub_free(pubnub_t *pb)
 
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
-        pbcc_deinit(&pb->core);
-        pbpal_free(pb);
-        pb->state = PBS_NULL;
-        pubnub_mutex_unlock(pb->monitor);
-        pubnub_mutex_destroy(pb->monitor);
+        if (PUBNUB_CALLBACK_API) {
+            pbntf_requeue_for_processing(pb);
+            pubnub_mutex_unlock(pb->monitor);
+        }
+        else {
+            pubnub_mutex_unlock(pb->monitor);
+            pballoc_free_at_last(pb);
+        }
         result = 0;
     }
     else {

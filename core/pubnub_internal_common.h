@@ -167,6 +167,9 @@ int pbntf_enqueue_for_processing(pubnub_t *pb);
 
 int pbntf_requeue_for_processing(pubnub_t *pb);
 
+int pbntf_watch_in_events(pubnub_t *pb);
+int pbntf_watch_out_events(pubnub_t *pb);
+
 
 /** Internal function. Checks if the given pubnub context pointer
     is valid. 
@@ -177,6 +180,10 @@ bool pb_valid_ctx_ptr(pubnub_t const *pb);
     allocator. Gives a context with the given index.
 */
 pubnub_t *pballoc_get_ctx(unsigned idx);
+
+/** Internal function, the "bottom half" of pubnub_free(), which is 
+    done asynchronously in the callback mode. */
+void pballoc_free_at_last(pubnub_t *pb);
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */
