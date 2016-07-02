@@ -66,7 +66,7 @@ struct pbcc_context {
      */
     unsigned http_content_len;
 
-#if defined PUBNUB_DYNAMIC_REPLY_BUFFER
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
     char *http_reply;
 #else
     /** The contents of a HTTP reply/reponse */
