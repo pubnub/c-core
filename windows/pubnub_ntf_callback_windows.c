@@ -188,8 +188,7 @@ void socket_watcher_thread(void *arg)
                 size_t apoll_size = m_watcher.apoll_size;
                 for (i = 0; i < apoll_size; ++i) {
                     if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
-                        pubnub_t *pbp = m_watcher.apb[i];
-                        pbntf_requeue_for_processing(pbp);
+                        pbntf_requeue_for_processing(m_watcher.apb[i]);
                     }
                 }
             }
@@ -224,13 +223,14 @@ void socket_watcher_thread(void *arg)
 int pbntf_init(void)
 {
     InitializeCriticalSection(&m_watcher.mutw);
-    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, 0, NULL);
-    m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
     InitializeCriticalSection(&m_watcher.queue_lock);
     m_watcher.queue_size = 1024;
     m_watcher.queue_head = m_watcher.queue_tail = 0;
     m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
+
+    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, 0, NULL);
+    m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
     return (m_watcher.queue_apb == NULL) ? -1 : 0;
 }

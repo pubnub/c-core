@@ -122,6 +122,32 @@ static int elapsed_ms(struct timespec prev_timspec, struct timespec timspec)
 }
 
 
+int pbntf_watch_in_events(pubnub_t *pbp)
+{
+    unsigned i;
+    for (i = 0; i < m_watcher.apoll_size; ++i) {
+        if (m_watcher.apb[i] == pbp) {
+            m_watcher.apoll[i].events = POLLIN;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
+int pbntf_watch_out_events(pubnub_t *pbp)
+{
+    unsigned i;
+    for (i = 0; i < m_watcher.apoll_size; ++i) {
+        if (m_watcher.apb[i] == pbp) {
+            m_watcher.apoll[i].events = POLLOUT;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
 void* socket_watcher_thread(void *arg)
 {
     struct timespec prev_timspec;
@@ -131,13 +157,22 @@ void* socket_watcher_thread(void *arg)
         struct timespec timspec;
 
         pthread_mutex_lock(&m_watcher.queue_lock);
-        if (m_watcher.queue_head != m_watcher.queue_tail) {
+        while (m_watcher.queue_head != m_watcher.queue_tail) {
             pubnub_t *pbp = m_watcher.queue_apb[m_watcher.queue_tail++];
+            if (m_watcher.queue_tail == m_watcher.queue_size) {
+                m_watcher.queue_tail = 0;
+            }
             pthread_mutex_unlock(&m_watcher.queue_lock);
             if (pbp != NULL) {
                 pubnub_mutex_lock(pbp->monitor);
-                pbnc_fsm(pbp);
-                pubnub_mutex_unlock(pbp->monitor);
+                if (pbp->state == PBS_NULL) {
+                    pubnub_mutex_unlock(pbp->monitor);
+                    pballoc_free_at_last(pbp);
+                }
+                else {
+                    pbnc_fsm(pbp);
+                    pubnub_mutex_unlock(pbp->monitor);
+                }
             }
             pthread_mutex_lock(&m_watcher.queue_lock);
             if (m_watcher.queue_tail == m_watcher.queue_size) {
@@ -163,29 +198,7 @@ void* socket_watcher_thread(void *arg)
                 size_t apoll_size = m_watcher.apoll_size;
                 for (i = 0; i < apoll_size; ++i) {
                     if (m_watcher.apoll[i].revents & (m_watcher.apoll[i].events | POLLHUP | POLLERR | POLLNVAL)) {
-                        pubnub_t *pbp = m_watcher.apb[i];
-                        pubnub_mutex_lock(pbp->monitor);
-                        pbnc_fsm(pbp);
-                        if (apoll_size == m_watcher.apoll_size) {
-                            if (m_watcher.apoll[i].events == POLLOUT) {
-                                if ((pbp->state == PBS_WAIT_DNS_RCV)  ||
-                                    (pbp->state >= PBS_RX_HTTP_VER)) {
-                                    m_watcher.apoll[i].events = POLLIN;
-                                }
-                            }
-                            else {
-                                if ((pbp->state > PBS_WAIT_DNS_RCV) &&
-                                    (pbp->state < PBS_RX_HTTP_VER)) {
-                                m_watcher.apoll[i].events = POLLOUT;
-                                }
-                            }
-                        }
-                        else {
-                            PUBNUB_ASSERT_OPT(apoll_size == m_watcher.apoll_size + 1);
-                            apoll_size = m_watcher.apoll_size;
-                            --i;
-                        }
-                        pubnub_mutex_unlock(pbp->monitor);
+                        pbntf_requeue_for_processing(m_watcher.apb[i]);
                     }
                 }
             }
@@ -232,12 +245,12 @@ int pbntf_init(void)
 
     pthread_cond_init(&m_watcher.condw, NULL);
 
-    pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
-
-    pthread_mutex_init(&m_watcher.queue_lock, &attr);
     m_watcher.queue_size = 1024;
     m_watcher.queue_head = m_watcher.queue_tail = 0;
     m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
+    pthread_mutex_init(&m_watcher.queue_lock, &attr);
+
+    pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
 
     return (m_watcher.queue_apb == NULL) ? -1 : 0;
 }
