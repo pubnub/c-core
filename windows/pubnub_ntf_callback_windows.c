@@ -34,7 +34,7 @@ struct SocketWatcherData {
     _Guarded_by_(queue_lock) size_t queue_size;
     _Guarded_by_(queue_lock) size_t queue_head;
     _Guarded_by_(queue_lock) size_t queue_tail;
-    _Guarded_by_(queue_lock) pubnub_t **queue_apb;
+    _Guarded_by_(queue_lock) pubnub_t *queue_apb[1024];
 };
 
 static struct SocketWatcherData m_watcher;
@@ -225,14 +225,19 @@ int pbntf_init(void)
     InitializeCriticalSection(&m_watcher.mutw);
 
     InitializeCriticalSection(&m_watcher.queue_lock);
-    m_watcher.queue_size = 1024;
+    m_watcher.queue_size = sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
     m_watcher.queue_head = m_watcher.queue_tail = 0;
-    m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
 
-    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, 0, NULL);
+    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024, NULL);
+    if (m_watcher.thread_handle <= 0) {
+        PUBNUB_LOG_ERROR("Failed to start the polling thread, error code: %d\n", errno);
+        DeleteCriticalSection(&m_watcher.mutw);
+        DeleteCriticalSection(&m_watcher.queue_lock);
+        return -1;
+    }
     m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
-    return (m_watcher.queue_apb == NULL) ? -1 : 0;
+    return 0;
 }
 
 

@@ -33,7 +33,7 @@ struct SocketWatcherData {
     size_t queue_size;
     size_t queue_head;
     size_t queue_tail;
-    pubnub_t **queue_apb;
+    pubnub_t *queue_apb[1024];
 };
 
 static struct SocketWatcherData m_watcher;
@@ -237,22 +237,89 @@ void* socket_watcher_thread(void *arg)
 
 int pbntf_init(void)
 {
+    int rslt;
     pthread_mutexattr_t attr;
 
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&m_watcher.mutw, &attr);
+    rslt = pthread_mutexattr_init(&attr);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to initialize mutex attributes, error code: %d", rslt);
+        return -1;
+    }
+    rslt = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to set mutex attribute type, error code: %d", rslt);
+        pthread_mutexattr_destroy(&attr);
+        return -1;
+    }
+    rslt = pthread_mutex_init(&m_watcher.mutw, &attr);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to initialize mutex, error code: %d", rslt);
+        pthread_mutexattr_destroy(&attr);
+        return -1;
+    }
 
-    pthread_cond_init(&m_watcher.condw, NULL);
+    rslt = pthread_cond_init(&m_watcher.condw, NULL);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to initialize conditional variable, error code: %d", rslt);
+        pthread_mutexattr_destroy(&attr);
+        pthread_mutex_destroy(&m_watcher.mutw);
+        return -1;
+    }
 
-    m_watcher.queue_size = 1024;
+    m_watcher.queue_size = sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
     m_watcher.queue_head = m_watcher.queue_tail = 0;
-    m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
-    pthread_mutex_init(&m_watcher.queue_lock, &attr);
 
-    pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
+    rslt = pthread_mutex_init(&m_watcher.queue_lock, &attr);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to initialize queue mutex, error code: %d", rslt);
+        pthread_mutexattr_destroy(&attr);
+        pthread_mutex_destroy(&m_watcher.mutw);
+        return -1;
+    }
 
-    return (m_watcher.queue_apb == NULL) ? -1 : 0;
+#if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB) && (PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB > 0)
+    {
+        pthread_attr_t thread_attr;
+        
+        rslt = pthread_attr_init(&thread_attr);
+        if (rslt != 0) {
+            PUBNUB_LOG_ERROR("Failed to initialize thread attributes, error code: %d\n", rslt);
+            pthread_mutexattr_destroy(&attr);
+            pthread_mutex_destroy(&m_watcher.mutw);
+            pthread_mutex_destroy(&m_watcher.queue_lock);
+            return -1;
+        }
+        rslt = pthread_attr_setstacksize(&thread_attr, PUBNUB_CALLBACK_THREAD_STACK_SIZE * 1024);
+        if (rslt != 0) {
+            PUBNUB_LOG_ERROR("Failed to set thread stack size to %d kb, error code: %d\n", PUBNUB_CALLBACK_THREAD_STACK_SIZE, rslt);
+            pthread_mutexattr_destroy(&attr);
+            pthread_mutex_destroy(&m_watcher.mutw);
+            pthread_mutex_destroy(&m_watcher.queue_lock);
+            pthread_mutexattr_destroy(&thread_attr);
+            return -1;
+        }
+        rslt = pthread_create(&m_watcher.thread_id, &thread_attr, socket_watcher_thread, NULL);
+        if (rslt != 0) {
+            PUBNUB_LOG_ERROR("Failed to create the polling thread, error code: %d\n", rslt);
+            pthread_mutexattr_destroy(&attr);
+            pthread_mutex_destroy(&m_watcher.mutw);
+            pthread_mutex_destroy(&m_watcher.queue_lock);
+            pthread_mutexattr_destroy(&thread_attr);
+            return -1;
+        }
+    }
+#else
+    rslt = pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to create the polling thread, error code: %d\n", rslt);
+        pthread_mutexattr_destroy(&attr);
+        pthread_mutex_destroy(&m_watcher.mutw);
+        pthread_mutex_destroy(&m_watcher.queue_lock);
+        return -1;
+    }
+#endif
+
+    return 0;
 }
 
 
