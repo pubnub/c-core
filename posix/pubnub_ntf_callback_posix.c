@@ -289,13 +289,13 @@ int pbntf_init(void)
             pthread_mutex_destroy(&m_watcher.queue_lock);
             return -1;
         }
-        rslt = pthread_attr_setstacksize(&thread_attr, PUBNUB_CALLBACK_THREAD_STACK_SIZE * 1024);
+        rslt = pthread_attr_setstacksize(&thread_attr, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024);
         if (rslt != 0) {
-            PUBNUB_LOG_ERROR("Failed to set thread stack size to %d kb, error code: %d\n", PUBNUB_CALLBACK_THREAD_STACK_SIZE, rslt);
+            PUBNUB_LOG_ERROR("Failed to set thread stack size to %d kb, error code: %d\n", PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB, rslt);
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.queue_lock);
-            pthread_mutexattr_destroy(&thread_attr);
+            pthread_attr_destroy(&thread_attr);
             return -1;
         }
         rslt = pthread_create(&m_watcher.thread_id, &thread_attr, socket_watcher_thread, NULL);
@@ -304,7 +304,7 @@ int pbntf_init(void)
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.queue_lock);
-            pthread_mutexattr_destroy(&thread_attr);
+            pthread_attr_destroy(&thread_attr);
             return -1;
         }
     }
