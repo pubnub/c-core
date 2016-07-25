@@ -127,6 +127,7 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p);
     the proxy server.
     
     @return 0: OK, otherwise: error, specified protocol not supported
+    or @p ip_address_or_url too long
 */
 int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url);
 
@@ -184,7 +185,7 @@ int pubnub_set_proxy_authentication_digest(pubnub_t *p, enum pubnub_http_digest_
     @param p The Context to set proxy authentication for
     @return 0: OK, otherwise: error, scheme not supported
  */
-int pubnub_set_proxy_authentication_basic(pubnub_t *p);
+int pubnub_set_proxy_authentication_none(pubnub_t *p);
 
 
 /** Returns the currently set HTTP proxy authentication scheme

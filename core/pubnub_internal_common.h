@@ -11,7 +11,14 @@
 #include "pubnub_ntf_callback.h"
 #endif
 
+#if !defined PUBNUB_PROXY_API
+#define PUBNUB_PROXY_API 0
+#elif PUBNUB_PROXY_API
+#include "pubnub_proxy.h"
+#endif
+
 #include <stdint.h>
+
 
 #if !defined PUBNUB_USE_ADNS
 #define PUBNUB_USE_ADNS 0
@@ -145,6 +152,13 @@ struct pubnub_ {
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
     void *user_data;
+#endif
+
+#if PUBNUB_PROXY_API
+    /** The type (protocol) of the proxy to use */
+    enum pubnub_proxy_type proxy_type;
+    /** Hostname (address) of the proxy server to use */
+    char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 #endif
 };
 

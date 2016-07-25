@@ -227,6 +227,40 @@ next_state:
     case PBS_TX_GET:
         i = pbpal_send_status(pb);
         if (i <= 0) {
+            if (PUBNUB_PROXY_API && (pb->proxy_type == pbproxyHTTP_GET)) {
+                pb->state = PBS_TX_SCHEME;
+                if (i < 0) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
+                pbpal_send_literal_str(pb, "http://")
+            }
+            else {
+                pb->state = PBS_TX_PATH;
+                if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
+            }
+            goto next_state;
+        }
+        break;
+#if PUBNUB_PROXY_API
+    case PBS_TX_SCHEME:
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
+            char const* o = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+            pb->state = PBS_TX_HOST;
+            if ((i < 0) || (-1 == pbpal_send_str(pb, o))) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
+            goto next_state;
+        }
+        break;
+    case PBS_TX_HOST:
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
             pb->state = PBS_TX_PATH;
             if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
                 outcome_detected(pb, PNR_IO_ERROR);
@@ -235,6 +269,7 @@ next_state:
             goto next_state;
         }
         break;
+#endif /* PUBNUB_PROXY_API */
     case PBS_TX_PATH:
         i = pbpal_send_status(pb);
         if (i < 0) {
