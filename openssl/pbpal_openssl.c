@@ -46,7 +46,7 @@ static unsigned long thread_id(void)
 static int locks_setup(void)
 {
     int i;
-    m_locks = calloc(CRYPTO_num_locks(), sizeof(pbpal_mutex_t));
+    m_locks = (pbpal_mutex_t*)calloc(CRYPTO_num_locks(), sizeof(pbpal_mutex_t));
     if (NULL == m_locks) {
         return -1;
     }
