@@ -18,6 +18,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if !defined _Guarded_by_
+#define _Guarded_by_(x)
+#endif
+#if !defined _Field_size_
+#define _Field_size_(x)
+#endif
 
 struct SocketWatcherData {
     _Guarded_by_(mutw) size_t apoll_size;

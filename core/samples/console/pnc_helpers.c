@@ -27,9 +27,11 @@ bool equals_ic(char const *s1, char const *s2)
 
 char *chomp(char *s)
 {
+    size_t n;
+    
     PUBNUB_ASSERT_OPT(s != NULL);
 
-    size_t n = strlen(s);
+    n = strlen(s);
     while (n > 0) {
         switch (s[n-1]) {
         case '\r':
