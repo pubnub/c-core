@@ -55,6 +55,13 @@ static const char channel[] = "hello_world";
 
 int main()
 {
+    int option;
+    char opt_string[4];
+    char channel[PNC_CHANNEL_NAME_SIZE];
+    char channel_group[PNC_CHANNEL_NAME_SIZE];
+    char auth_key[PNC_AUTH_KEY_SIZE];
+    char uuid[PNC_UUID_SIZE + 1];
+    char state[2048];
     pubnub_t *pn = pubnub_alloc();
     pubnub_t *pn_sub = pubnub_alloc();
     
@@ -72,13 +79,7 @@ int main()
     
     displayMenuOptions(pn);
     
-    int option = 0;
-    char opt_string[4];
-    char channel[PNC_CHANNEL_NAME_SIZE];
-    char channel_group[PNC_CHANNEL_NAME_SIZE];
-    char auth_key[PNC_AUTH_KEY_SIZE];
-    char uuid[PNC_UUID_SIZE + 1];
-    char state[2048];
+    option = 0;
     
     while (option != MENU_EXIT) {
         fgets(opt_string, sizeof(opt_string), stdin);

@@ -24,10 +24,10 @@ pubnub_fntest.exe: ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_b
 CONSOLE_SOURCEFILES=..\core\samples\console\pubnub_console.c ..\core\samples\console\pnc_helpers.c ..\core\samples\console\pnc_readers.c ..\core\samples\console\pnc_subscriptions.c
 
 pubnub_console_sync.exe: $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_sync.c  $(SOURCEFILES) ..\core\pubnub_ntf_sync.c 
-	$(CC) /Fe:$@ $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_sync.c  $(SOURCEFILES) ..\core\pubnub_ntf_sync.c ws2_32.lib rpcrt4.lib
+	$(CC) /Fe$@ $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_sync.c  $(SOURCEFILES) ..\core\pubnub_ntf_sync.c ws2_32.lib rpcrt4.lib
 
 pubnub_console_callback.exe: $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_callback.c $(SOURCEFILES) ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c pubnub_get_native_socket.c
-	$(CC) /Fe:$@ $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS -D PUBNUB_CALLBACK_API $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_callback.c $(SOURCEFILES) ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ws2_32.lib rpcrt4.lib
+	$(CC) /Fe$@ $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS -D PUBNUB_CALLBACK_API $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_callback.c $(SOURCEFILES) ..\core\pubnub_timer_list.c pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ws2_32.lib rpcrt4.lib
 
 clean:
 	del *.exe
