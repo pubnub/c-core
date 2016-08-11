@@ -18,6 +18,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if !defined _Guarded_by_
+#define _Guarded_by_(x)
+#endif
+#if !defined _Field_size_
+#define _Field_size_(x)
+#endif
 
 struct SocketWatcherData {
     _Guarded_by_(mutw) size_t apoll_size;
@@ -34,7 +40,7 @@ struct SocketWatcherData {
     _Guarded_by_(queue_lock) size_t queue_size;
     _Guarded_by_(queue_lock) size_t queue_head;
     _Guarded_by_(queue_lock) size_t queue_tail;
-    _Guarded_by_(queue_lock) pubnub_t **queue_apb;
+    _Guarded_by_(queue_lock) pubnub_t *queue_apb[1024];
 };
 
 static struct SocketWatcherData m_watcher;
@@ -188,8 +194,7 @@ void socket_watcher_thread(void *arg)
                 size_t apoll_size = m_watcher.apoll_size;
                 for (i = 0; i < apoll_size; ++i) {
                     if (m_watcher.apoll[i].revents & (POLLIN | POLLOUT)) {
-                        pubnub_t *pbp = m_watcher.apb[i];
-                        pbntf_requeue_for_processing(pbp);
+                        pbntf_requeue_for_processing(m_watcher.apb[i]);
                     }
                 }
             }
@@ -224,15 +229,21 @@ void socket_watcher_thread(void *arg)
 int pbntf_init(void)
 {
     InitializeCriticalSection(&m_watcher.mutw);
-    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, 0, NULL);
-    m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
     InitializeCriticalSection(&m_watcher.queue_lock);
-    m_watcher.queue_size = 1024;
+    m_watcher.queue_size = sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
     m_watcher.queue_head = m_watcher.queue_tail = 0;
-    m_watcher.queue_apb = calloc(m_watcher.queue_size, sizeof m_watcher.queue_apb[0]);
 
-    return (m_watcher.queue_apb == NULL) ? -1 : 0;
+    m_watcher.thread_handle = (HANDLE)_beginthread(socket_watcher_thread, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024, NULL);
+    if (m_watcher.thread_handle <= 0) {
+        PUBNUB_LOG_ERROR("Failed to start the polling thread, error code: %d\n", errno);
+        DeleteCriticalSection(&m_watcher.mutw);
+        DeleteCriticalSection(&m_watcher.queue_lock);
+        return -1;
+    }
+    m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
+
+    return 0;
 }
 
 

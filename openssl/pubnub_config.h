@@ -84,6 +84,17 @@
 #define PUBNUB_USE_SSL 1
 
 
+/** The size of the stack (in kilobytes) for the "polling" thread, when using
+    the callback interface. We don't need much, so, if you want to conserve
+    memory, you can try small values. It's hard to say what is the minumum,
+    as it depends on the OS functions we call, but, you probably
+    shouldn't try less than 64 KB.
+
+    Set to `0` to use the default stack size.
+    */
+#define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
+
+
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
 
