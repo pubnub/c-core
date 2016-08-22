@@ -26,9 +26,21 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     int error;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
 
-    if (PUBNUB_PROXY_API && (pb->proxy_type != pbproxyNONE)) {
+#if PUBNUB_PROXY_API
+    switch (pb->proxy_type) {
+    case pbproxyHTTP_CONNECT:
+        if (!pb->proxy_tunnel_established) {
+            origin = pb->proxy_hostname;
+        }
+        break;
+    case pbproxyHTTP_GET:
         origin = pb->proxy_hostname;
+        break;
+    default:
+        break;
     }
+#endif
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND)  || (pb->state == PBS_WAIT_DNS_RCV));
 
@@ -66,6 +78,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         hint.ai_addr = NULL;
         hint.ai_canonname = NULL;
         hint.ai_next = NULL;
+
         error = getaddrinfo(origin, HTTP_PORT_STRING, &hint, &result);
         if (error != 0) {
             return pbpal_resolv_failed_processing;
@@ -106,36 +119,40 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
-    if (PUBNUB_USE_ADNS) {
-        uint8_t const* const origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
-        struct sockaddr_in dns_server;
-        struct sockaddr_in dest;
-        int skt = pb->pal.socket;
-        dns_server.sin_family = AF_INET;
-        dns_server.sin_port = htons(DNS_PORT);
-        inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
-        switch (read_response(skt, (struct sockaddr*)&dns_server, origin, &dest)) {
-        case -1: return pbpal_resolv_failed_rcv;
-        case +1: return pbpal_resolv_rcv_wouldblock;
-        case 0: break;
-        }
-        socket_close(skt);
-        skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (SOCKET_INVALID == skt) {
-            return pbpal_connect_resource_failure;
-        }
-        pb->pal.socket = skt;
-        dest.sin_port = htons(HTTP_PORT);
-        if (SOCKET_ERROR == connect(skt, (struct sockaddr*)&dest, sizeof dest)) {
-            return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
-        }
+#if PUBNUB_USE_ADNS
 
-        return pbpal_connect_success;
+    uint8_t const* const origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
+    struct sockaddr_in dns_server;
+    struct sockaddr_in dest;
+    int skt = pb->pal.socket;
+    dns_server.sin_family = AF_INET;
+    dns_server.sin_port = htons(DNS_PORT);
+    inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
+    switch (read_response(skt, (struct sockaddr*)&dns_server, origin, &dest)) {
+    case -1: return pbpal_resolv_failed_rcv;
+    case +1: return pbpal_resolv_rcv_wouldblock;
+    case 0: break;
     }
+    socket_close(skt);
+    skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (SOCKET_INVALID == skt) {
+        return pbpal_connect_resource_failure;
+    }
+    pb->pal.socket = skt;
+    dest.sin_port = htons(HTTP_PORT);
+    if (SOCKET_ERROR == connect(skt, (struct sockaddr*)&dest, sizeof dest)) {
+        return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
+    }
+    
+    return pbpal_connect_success;
+
+#else
 
     /* Under regular BSD-ish sockets, this function should not be
        called unless using async DNS, so this is an error */
     return pbpal_connect_failed;
+
+#endif
 }
 
 

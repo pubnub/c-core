@@ -30,12 +30,15 @@ enum pubnub_state {
     PBS_TX_GET,
     /** Sending the path (part of the URL) */
     PBS_TX_PATH,
-    /** Sending the scheme (part of the URL) - utilized when using the
-     "HTTP GET" proxy */
+    /** Sending the scheme (part of the URL - the `http:` part) -
+     utilized when using the "HTTP GET" proxy */
     PBS_TX_SCHEME,
-    /** Sending the host (part of the URL) - utilized when using the
-     "HTTP GET" proxy */
+    /** Sending the host (part of the URL - the `www.pubnub.com` part)
+     - utilized when using the "HTTP GET" proxy */
     PBS_TX_HOST,
+    /** Sending the "port number" (part of the URL - the `:80` part) -
+     utilized when using the "HTTP CONNECT" proxy */
+    PBS_TX_PORT_NUM,
     /** Sending the HTTP version */
     PBS_TX_VER,
     /** Sending the DNS name (part of the URL) */

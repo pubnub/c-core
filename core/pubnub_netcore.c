@@ -22,13 +22,9 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 }
 
 
-static void finish(struct pubnub_ *pb)
+static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
 {
     enum pubnub_res pbres = PNR_OK;
-
-    pb->core.http_reply[pb->core.http_buf_len] = '\0';
-    PUBNUB_LOG_TRACE("finish('%s')\n", pb->core.http_reply);
-
     switch (pb->trans) {
     case PBTT_SUBSCRIBE:
         if (pbcc_parse_subscribe_response(&pb->core) != 0) {
@@ -79,10 +75,36 @@ static void finish(struct pubnub_ *pb)
         break;
     }
 
+    return pbres;
+}
+
+
+static void finish(struct pubnub_ *pb)
+{
+    enum pubnub_res pbres;
+
+#if PUBNUB_PROXY_API
+    if ((pb->proxy_type == pbproxyHTTP_CONNECT) && (!pb->proxy_tunnel_established)) {
+        if ((pb->http_code / 100) != 2) {
+            outcome_detected(pb, PNR_HTTP_ERROR);
+        }
+        else {
+            pb->proxy_tunnel_established = true;
+            pb->state = PBS_CONNECTED;
+        }
+
+        return;
+    }
+#endif
+
+    pb->core.http_reply[pb->core.http_buf_len] = '\0';
+    PUBNUB_LOG_TRACE("finish('%s')\n", pb->core.http_reply);
+
+    pbres = parse_pubnub_result(pb);
     if ((PNR_OK == pbres) && ((pb->http_code / 100) != 2)) {
         pbres = PNR_HTTP_ERROR;
     }
-
+    
     outcome_detected(pb, pbres);
 }
 
@@ -221,19 +243,91 @@ next_state:
         break;
     }
     case PBS_CONNECTED:
+#if PUBNUB_PROXY_API
+        if ((pb->proxy_type == pbproxyHTTP_CONNECT) && (!pb->proxy_tunnel_established)) {
+            pbpal_send_literal_str(pb, "CONNECT ");
+        }
+        else {
+            pbpal_send_literal_str(pb, "GET ");
+        }
+#else
         pbpal_send_literal_str(pb, "GET ");
+#endif
         pb->state = PBS_TX_GET;
         goto next_state;
     case PBS_TX_GET:
         i = pbpal_send_status(pb);
         if (i <= 0) {
-            if (PUBNUB_PROXY_API && (pb->proxy_type == pbproxyHTTP_GET)) {
+#if PUBNUB_PROXY_API
+            switch (pb->proxy_type) {
+            case pbproxyHTTP_GET:
                 pb->state = PBS_TX_SCHEME;
                 if (i < 0) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
                 }
-                pbpal_send_literal_str(pb, "http://")
+                pbpal_send_literal_str(pb, "http://");
+                break;
+            case pbproxyHTTP_CONNECT:
+                pb->state = PBS_TX_SCHEME;
+                if (i < 0) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
+                if (!pb->proxy_tunnel_established) {
+                    strcpy(pb->proxy_saved_path, pb->core.http_buf);
+                }
+                else {
+                    strcpy(pb->core.http_buf, pb->proxy_saved_path);
+                }
+                break;
+            case pbproxyNONE:
+                pb->state = PBS_TX_PATH;
+                if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                }
+                break;
+            default:
+                outcome_detected(pb, PNR_INTERNAL_ERROR);
+                break;
+            }
+#else
+            pb->state = PBS_TX_PATH;
+            if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
+#endif /* PUBNUB_PROXY_API */
+            goto next_state;
+        }
+        break;
+#if PUBNUB_PROXY_API
+    case PBS_TX_SCHEME:
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
+            if ((pb->proxy_type == pbproxyHTTP_CONNECT) && pb->proxy_tunnel_established) {
+                pb->state = PBS_TX_HOST;
+            }
+            else {
+                char const* o = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+                pb->state = PBS_TX_HOST;
+                if ((i < 0) || (-1 == pbpal_send_str(pb, o))) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
+            }
+            goto next_state;
+        }
+        break;
+    case PBS_TX_HOST:
+        i = pbpal_send_status(pb);
+        if (i <= 0) {
+            if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
+                char port_num[20];
+                snprintf(port_num, sizeof port_num, ":%d", 80);
+                pbpal_send_str(pb, port_num);
+                pb->state = PBS_TX_PORT_NUM;
+                goto next_state;
             }
             else {
                 pb->state = PBS_TX_PATH;
@@ -245,24 +339,11 @@ next_state:
             goto next_state;
         }
         break;
-#if PUBNUB_PROXY_API
-    case PBS_TX_SCHEME:
-        i = pbpal_send_status(pb);
-        if (i <= 0) {
-            char const* o = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-            pb->state = PBS_TX_HOST;
-            if ((i < 0) || (-1 == pbpal_send_str(pb, o))) {
-                outcome_detected(pb, PNR_IO_ERROR);
-                break;
-            }
-            goto next_state;
-        }
-        break;
-    case PBS_TX_HOST:
+    case PBS_TX_PORT_NUM:
         i = pbpal_send_status(pb);
         if (i <= 0) {
             pb->state = PBS_TX_PATH;
-            if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
+            if (i < 0) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -359,6 +440,12 @@ next_state:
                 pb->core.http_buf_len = 0;
                 if (!pb->http_chunked) {
                     if (0 == pb->core.http_content_len) {
+#if PUBNUB_PROXY_API
+                        if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
+                            finish(pb);
+                            break;
+                        }
+#endif
                         outcome_detected(pb, PNR_IO_ERROR);
                         break;
                     }

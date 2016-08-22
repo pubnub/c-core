@@ -155,10 +155,24 @@ struct pubnub_ {
 #endif
 
 #if PUBNUB_PROXY_API
+
     /** The type (protocol) of the proxy to use */
     enum pubnub_proxy_type proxy_type;
+
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
+
+    /** Indicates whether this is the "first" HTTP request - that is,
+        the `CONNECT` one. The first is sent to the proxy, while the
+        second (if the first succeeds) is sent to the "real" HTTP
+        server (to which the proxy established a "tunnel".
+    */
+    bool proxy_tunnel_established;
+
+    /** The saved path part of the URL for the Pubnub transaction.
+     */
+    char proxy_saved_path[PUBNUB_BUF_MAXLEN];
+
 #endif
 };
 

@@ -42,6 +42,7 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
 #if PUBNUB_PROXY_API
     p->proxy_type = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
+    p->proxy_tunnel_established = false;
 #endif
 
     return p;
