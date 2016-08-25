@@ -9,7 +9,6 @@
 #include <sys/types.h>
 
 
-#define HTTP_PORT_STRING "80"
 #define HTTP_PORT 80
 
 #define DNS_PORT 53
@@ -24,6 +23,7 @@
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
     int error;
+    uint16_t port = HTTP_PORT;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
 
 #if PUBNUB_PROXY_API
@@ -32,9 +32,11 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         if (!pb->proxy_tunnel_established) {
             origin = pb->proxy_hostname;
         }
+        port = pb->proxy_port;
         break;
     case pbproxyHTTP_GET:
         origin = pb->proxy_hostname;
+        port = pb->proxy_port;
         break;
     default:
         break;
@@ -68,6 +70,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_resolv_sent;
     }
     else {
+        char port_string[20];
         struct addrinfo *result;
         struct addrinfo *it;
         struct addrinfo hint;
@@ -79,7 +82,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         hint.ai_canonname = NULL;
         hint.ai_next = NULL;
 
-        error = getaddrinfo(origin, HTTP_PORT_STRING, &hint, &result);
+        sprintf(port_string, "%d", port);
+        error = getaddrinfo(origin, port_string, &hint, &result);
         if (error != 0) {
             return pbpal_resolv_failed_processing;
         }
@@ -124,7 +128,13 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     uint8_t const* const origin = (uint8_t*)(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
     struct sockaddr_in dns_server;
     struct sockaddr_in dest;
+    uint16_t port = HTTP_PORT;
     int skt = pb->pal.socket;
+
+#if PUBNUB_PROXY_API
+    port = pb->proxy_port;
+#endif
+
     dns_server.sin_family = AF_INET;
     dns_server.sin_port = htons(DNS_PORT);
     inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
@@ -139,7 +149,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
         return pbpal_connect_resource_failure;
     }
     pb->pal.socket = skt;
-    dest.sin_port = htons(HTTP_PORT);
+    dest.sin_port = htons(port);
     if (SOCKET_ERROR == connect(skt, (struct sockaddr*)&dest, sizeof dest)) {
         return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
     }

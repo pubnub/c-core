@@ -162,6 +162,9 @@ struct pubnub_ {
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
+    /** The (TCP) port to use on the proxy. */
+    uint16_t proxy_port;
+
     /** Indicates whether this is the "first" HTTP request - that is,
         the `CONNECT` one. The first is sent to the proxy, while the
         second (if the first succeeds) is sent to the "real" HTTP

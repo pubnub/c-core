@@ -84,16 +84,21 @@ static void finish(struct pubnub_ *pb)
     enum pubnub_res pbres;
 
 #if PUBNUB_PROXY_API
-    if ((pb->proxy_type == pbproxyHTTP_CONNECT) && (!pb->proxy_tunnel_established)) {
-        if ((pb->http_code / 100) != 2) {
-            outcome_detected(pb, PNR_HTTP_ERROR);
+    if (pb->proxy_type == pbproxyHTTP_CONNECT) {
+        if (!pb->proxy_tunnel_established) {
+            if ((pb->http_code / 100) != 2) {
+                outcome_detected(pb, PNR_HTTP_ERROR);
+            }
+            else {
+                pb->proxy_tunnel_established = true;
+                pb->state = PBS_CONNECTED;
+            }
+
+            return;
         }
         else {
-            pb->proxy_tunnel_established = true;
-            pb->state = PBS_CONNECTED;
+            pb->proxy_tunnel_established = false;
         }
-
-        return;
     }
 #endif
 

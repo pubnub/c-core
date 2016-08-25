@@ -5,6 +5,8 @@
 
 #include "pubnub_api_types.h"
 
+#include <stdint.h>
+
 
 /** @file pubnub_proxy.h 
 
@@ -125,11 +127,13 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p);
     @param protocol Proxy protocol to use on @p p context
     @param ip_address_or_url The string with IP address or URL of
     the proxy server.
+    @param port The port number to use on the proxy - there is no standard,
+    the HTTP port (80) is seldom used, while 3128 seems to be a popular one
     
     @return 0: OK, otherwise: error, specified protocol not supported
     or @p ip_address_or_url too long
 */
-int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url);
+int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url, uint16_t port);
 
 /** Sets the configuration for the Internet proxy, by reading from the
     "system" configuration.

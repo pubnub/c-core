@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url)
+int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url, uint16_t port)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(ip_address_or_url != NULL);
@@ -25,6 +25,7 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
         return -1;
     }
     p->proxy_type = protocol;
+    p->proxy_port = port;
     strcpy(p->proxy_hostname, ip_address_or_url);
 
     return 0;
