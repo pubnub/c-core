@@ -4,8 +4,10 @@
 
 
 #include "pubnub_api_types.h"
+#include "pubnub_memory_block.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 
 /** @file pubnub_coreapi_ex.h 
@@ -25,6 +27,47 @@
     to be "future proof", as new versions of Pubnub SDK may introduce
     new options, with defaults added to these functions.
 */
+
+
+/** Options for "extended" publish V1. */
+struct pubnub_publish_options {
+    /** If true, the message is stored in history. If false,
+        the message is _not_ stored in history.
+    */
+    bool store;
+    /** If not NULL, the key used to encrypt the message before
+        sending it to Pubnub. Keep in mind that encryption is a CPU
+        intensive task. Also, it uses more bandwidth, most of which
+        comes from the fact that decrypted data is sent as Base64
+        encoded JSON string. This means that the actual amount of data
+        that can be send encrypted in a message is at least 25%
+        smaller (than un-encrypted). Another point to be made is that
+        it also does some memory management (allocting and
+        deallocating).
+    */
+    char const* cipher_key;
+};
+
+/** This returns the default options for publish V1 transactions.
+    Will set `store = true` and `cipher_key` to NULL.
+ */
+struct pubnub_publish_options pubnub_publish_defopts(void);
+
+/** The extended publish V1. Basically the same as pubnub_publish(),
+    but with added optional parameters in @p opts.
+
+    Basic usage:
+
+        struct pubnub_publish_options opt = pubnub_publish_defopts();
+        opt.store = false;
+        pbresult = pubnub_publish_ex(pn, "my_channel", "42", opt);
+
+    @param p The Pubnub context. Can't be NULL. 
+    @param channel The string with the channel name to publish to.
+    @param opt Publish V1 options
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_publish_ex(pubnub_t *p, const char *channel, const char *message, struct pubnub_publish_options opts);
 
 
 /** Options for "extended" subscribe. */
@@ -112,7 +155,6 @@ enum pubnub_res pubnub_here_now_ex(pubnub_t *p, const char *channel, struct pubn
     @return #PNR_STARTED on success, an error otherwise
 */
 enum pubnub_res pubnub_global_here_now_ex(pubnub_t *p, struct pubnub_here_now_options opt);
-
 
 
 #endif /* defined INC_PUBNUB_COREAPI_EX */

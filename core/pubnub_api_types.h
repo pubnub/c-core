@@ -87,7 +87,9 @@ enum pubnub_res {
     */
     PNR_REPLY_TOO_BIG,
     /** An internal error in processing */
-    PNR_INTERNAL_ERROR
+    PNR_INTERNAL_ERROR,
+    /** Encryption (and decryption) not supported */
+    PNR_CRYPTO_NOT_SUPPORTED
 };
 
 

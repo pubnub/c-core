@@ -85,6 +85,10 @@ struct pbcc_context {
     */
     unsigned chan_ofs, chan_end;
 
+#if PUBNUB_CRYPTO_API
+    /** Secret key to use for encryption/decryption */
+    char const *secret_key;
+#endif
 };
 
 

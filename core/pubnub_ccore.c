@@ -22,6 +22,10 @@ void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subs
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
         p->http_reply = NULL;
     }
+
+#if PUBNUB_CRYPTO_API
+    p->secret_key = NULL;
+#endif
 }
 
 
@@ -413,7 +417,6 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, 
 {
     char const *const uname = pubnub_uname();
     char const *pmessage = message;
-
     pb->http_content_len = 0;
 
     pb->http_buf_len = snprintf(

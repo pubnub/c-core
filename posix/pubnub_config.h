@@ -93,6 +93,9 @@
     that will be saved in the Pubnub context.
 */
 #define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
+
+/** If true (!=0), enable support for message encryption/decryption */
+#define PUBNUB_CRYPTO_API 0
     
 
 #endif /* !defined INC_PUBNUB_CONFIG */

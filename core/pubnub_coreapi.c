@@ -43,6 +43,7 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
     p->proxy_type = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
     p->proxy_tunnel_established = false;
+    p->proxy_port = 80;
 #endif
 
     return p;
