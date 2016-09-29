@@ -4,6 +4,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
 #include "pubnub_coreapi.h"
+#include "pubnub_coreapi_ex.h"
 
 #include "pbmd5.h"
 #include "pbsha256.h"
@@ -191,6 +192,7 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
         return PNR_INTERNAL_ERROR;
     }
     *n = data.size;
+    data.ptr[data.size] = '\0';
 
     return PNR_OK;
 }
@@ -200,22 +202,35 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
 {
     char *msg;
     size_t msg_len;
-    pubnub_bymebl_t result_error = { NULL, 0 };
+    pubnub_bymebl_t result = { NULL, 0 };
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(cipher_key != NULL);
 
     msg = (char*)pubnub_get(pb);
     if (NULL == msg) {
-        return result_error;
+        return result;
     }
     msg_len = strlen(msg);
     if ((msg[0] != '"') || (msg[msg_len-1] != '"')) {
-        return result_error;
+        return result;
     }
     msg[msg_len - 1] = '\0';
 
-    return pubnub_decrypt_alloc(cipher_key, msg + 1);
+    result = pubnub_decrypt_alloc(cipher_key, msg + 1);
+    if (NULL != result.ptr) {
+        result.ptr[result.size] = '\0';
+    }
+
+    return result;
+}
+
+
+enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key)
+{
+    struct pubnub_publish_options opts =  pubnub_publish_defopts();
+    opts.cipher_key = cipher_key;
+    return pubnub_publish_ex(p, channel, message, opts);
 }
 
 

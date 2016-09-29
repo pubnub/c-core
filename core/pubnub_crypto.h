@@ -127,4 +127,16 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
 pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
 
 
+/** Publishes the @p message on @p channel in the context @p p
+    encrypted with the key @p cipher_key
+
+    The effect of this function is similar to:
+   
+        struct pubnub_publish_options opts =  pubnub_publish_defopts();
+        opts.cipher_key = cipher_key;;
+        return pubnub_publish_ex(p, channel, message, opts);
+*/
+enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
+
+
 #endif /* defined INC_PUBNUB_PROXY */
