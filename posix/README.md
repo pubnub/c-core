@@ -17,6 +17,15 @@ build sample programs:
 - `pubnub_console_callback`: a simple command-line Pubnub console, using
   the "callback" interface
 
+During the build, two (static) libraries will be created:
+
+- `pubnub_sync.a`: library for the "sync" interface
+- `pubnub_callback.a`: library for the "callback" interface
+
+You are free to use these libraries in your projects, but keep in mind
+that they are configured for the purposes of the samples. Please check
+if those are right for you before using them.
+
 The sources of the samples are in `../core/samples`, and for the
 console in `../core/samples/console`, as they are portable across all
 or most hosted platforms (POSIX, Windows...).
