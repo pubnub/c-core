@@ -41,6 +41,7 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
 
     This function will allocate memory as needed.
 
+    @pre cipher_key != NULL
     @param cipher_key The key to use when encrypting
     @param msg The memory block (pointer and size) of the data to encrypt
     @param base64_str String (allocated by the user) to write encrypted and
@@ -51,22 +52,23 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
 int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
 
 /** Similar to pubnub_encrypt() - but this function doesn't allocate
-    memory, but uses the memory provided by @p bufferfor its "working
+    memory, it uses the memory provided by @p buffer for its "working
     memory".
 */
 int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
 
-/** Decrypts a message from a Base64 encoded string @p base64_str to 
-    user-allocated memory @p data. On input @p *n holds the number of
-    bytes allocated for @p data. On output @p *n holds the number of
-    bytes written to @p data.
+/** Decrypts a message from a Base64 encoded string @p base64_str to
+    user-allocated memory @p data. On input @p data->size holds the
+    number of bytes allocated for @p data. On output @p data->size
+    holds the number of bytes written to @p data.
 
     This function will allocate memory as needed.
 
     Keep in mind that this function doesn't know what is the actual
-    contents of the ecoded string, so it doesn't assume it's a string
-    and thus doens't `NUL` terminate it.
+    contents (pre-encrypting) of the @p base64_str, so it doesn't
+    assume it's a string and thus doens't `NUL` terminate it.
 
+    @pre cipher_key != NULL
     @param cipher_key The key to use when decrypting
     @param base64_str String to Base64 decode and decrypt
     @param data User allocated memory block to write the decrypted contents to
@@ -75,7 +77,7 @@ int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *b
 int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
 
 /** Similar to pubnub_decrypt(), but never allocates memory - it uses
-    the memory provided by @p buffer.
+    the memory provided by @p buffer as its "working memory".
 */
 int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
 
@@ -88,7 +90,6 @@ int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubn
     message. On failure, pointer will be NULL and size is undefined.
 */
 pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
-
 
 
 /** Decrypts the next message in the context @p p using the key
@@ -116,16 +117,19 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
 enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
 
 /** This function is very similar to pubnub_get_decrypted(), but it
-    allocates the decrypted string and returns it as its result. It is
-    the caller's responsibility to free() thus allocated string.
+    allocates the (memory for the) decrypted string and returns it as
+    its result. It is the caller's responsibility to free() thus
+    allocated string.
 
     Thus, usage of this function can be simpler, as the user doesn't
-    have to "guess" the size of the message.
+    have to "guess" the size of the message. But, keep in mind that
+    you will not be able to tell apart if there was a message and its
+    decrypting failed or if there was no message - and, if decrypting
+    failed, what was the reason for failure.
 
     On failure, a NULL pointer is returned.
 */
 pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
-
 
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key

@@ -55,7 +55,8 @@
 /** Unpadded 'base64url' for "named information" URI's (RFC 6920) */
 #define PBBASE64_ENC_RFC6920 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
-/** Non-standard URL-safe Modification of Base64 used in YUI Library (Y64) */
+/** Non-standard URL-safe Modification of Base64 used in YUI Library
+    (Y64) */
 #define PBBASE64_ENC_NON_STD_YUI "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._"
 
 /** Modified Base64 for XML name tokens (Nmtoken) */
@@ -67,7 +68,8 @@
 /** Modified Base64 for Program identifiers (variant 1, non standard) */
 #define PBBASE64_ENC_NON_STD_PROG_IDENT "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
 
-/** Modified Base64 for Program identifiers (variant 2, non standard) */
+/** Modified Base64 for Program identifiers (variant 2, non
+    standard) */
 #define PBBASE64_ENC_NON_STD_PROG_IDENT_2 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._"
 
 /** Modified Base64 for Regular expressions  (non standard) */
@@ -91,7 +93,9 @@
 #define PBBASE64_SEP_NON_STD_REGEX '\0'
 #define PBBASE64_SEP_NON_STD_URL '='
 
-/** Possible "schemes" of using (line) checksum */
+/** Possible "schemes" of using (line) checksum in a Base64 encoded
+    string. This is rarely used.
+ */
 enum pbbase64_line_checksum {
     /** No line checksum - most often */
     pbbase64_no_line_checksum,
@@ -101,27 +105,39 @@ enum pbbase64_line_checksum {
     pbbase64_luhn_checksum
 };
 
-/** Options for Base64 encoding/decoding */
+/** Options for Base64 encoding/decoding. This is descriptive enough
+    for all known Base64 encoding variants.
+ */
 struct pbbase64_options {
-    /** The alphabet to use */
+    /** The alphabet to use - first 62 characters are the same in
+        all known Base64 encodings.
+     */
     char const* alphabet;
     /** Separator to use - NUL character if no separator */
     char separator;
-    /** Maximum encoded line length - 0 if no maximum. Not yet
-     * supported */
+    /** Maximum encoded line length - 0 if no maximum. It the encoding
+        string lenght exceeds this length (and it is > 0), then a line
+        ending will be inserted in the encoded string. Not yet
+        supported 
+    */
     size_t max_line_length;
-    /** Character sequence used for ending the line. Not yet
-     * supported */
+    /** Character sequence used for ending the line. Only has meaning
+        if there is a maximum encoded line length. Not yet
+        supported.
+    */
     char const* line_end;
     /** If `true` - ignore invalid characters, else - stop
-        processing and report an error.
+        processing and report an error. This, obviously,
+        relevant only for decoding.
     */
     bool ignore_invalid_char;
-    /** Not yet supported */
+    /** The line checksum to use. Only has meaning if there is a
+        maximum encoded line length. Not yet supported */
     enum pbbase64_line_checksum line_cheksum;
 };
 
 
+/** Helper macro to define options for RFC1421 variant of Base64 */
 #define PBBASE64_RFC1421_OPTIONS {		\
         PBBASE64_ENC_RFC1421,			\
             PBBASE64_SEP_RFC1421,               \
@@ -131,6 +147,7 @@ struct pbbase64_options {
             pbbase64_no_line_checksum           \
             }
 
+/** Helper macro to define options for RFC2045 variant of Base64 */
 #define PBBASE64_RFC2045_OPTIONS {		\
         PBBASE64_ENC_RFC2045,			\
             PBBASE64_SEP_RFC2045,               \
@@ -140,6 +157,9 @@ struct pbbase64_options {
             pbbase64_no_line_checksum           \
             }
 
+/** Helper macro to define options for RFC3548 variant of Base64, also
+    known as "standard" Base64.
+ */
 #define PBBASE64_RFC3548_OPTIONS {                                      \
         PBBASE64_ENC_RFC3548                                            \
             , PBBASE64_SEP_RFC3548                                      \
@@ -200,14 +220,14 @@ pubnub_bymebl_t pbbase64_decode_alloc_str(char const* s, struct pbbase64_options
     variant (RFC 3548 or RFC 4648).*/
 int pbbase64_decode_std(char const* s, size_t n, pubnub_bymebl_t *data);
 
-/** Has the effect of ppbase64_decode_std(s, strlen(s), data) */
+/** Has the effect of: ppbase64_decode_std(s, strlen(s), data) */
 int pbbase64_decode_std_str(char const* s, pubnub_bymebl_t *data);
 
-/** Similar to pbbase64_decode_alloc(), but uses the the Base64 "standard"
-    variant (RFC 3548 or RFC 4648).*/
+/** Similar to pbbase64_decode_alloc(), but uses the the Base64
+    "standard" variant (RFC 3548 or RFC 4648).*/
 pubnub_bymebl_t pbbase64_decode_alloc_std(char const* s, size_t n);
 
-/** Has the effect of ppbase64_decode_alloc_std(s, strlen(s)) */
+/** Has the effect of: ppbase64_decode_alloc_std(s, strlen(s)) */
 pubnub_bymebl_t pbbase64_decode_alloc_std_str(char const* s);
 
 
