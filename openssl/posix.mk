@@ -18,7 +18,7 @@ CFLAGS =-g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -I ../core -I . -I ../posix
 # -fsanitize=address Use AddressSanitizer
 
 
-all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback
+all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample
 
 
 pubnub_sync.a : $(SOURCEFILES) ../core/pubnub_ntf_sync.c
@@ -32,6 +32,9 @@ pubnub_callback.a : $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callb
 
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) ../core/samples/pubnub_sync_sample.c pubnub_sync.a $(LDLIBS)
+
+pubnub_crypto_sync_sample: ../core/samples/pubnub_crypto_sync_sample.c pubnub_sync.a
+	$(CC) -o $@ $(CFLAGS) ../core/samples/pubnub_crypto_sync_sample.c pubnub_sync.a $(LDLIBS)
 
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a $(LDLIBS)
@@ -54,4 +57,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 	$(CC) -o $@ $(CFLAGS) -D PUBNUB_CALLBACK_API $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
 
 clean:
-	rm pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a
+	rm pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample pubnub_sync.a pubnub_callback.a
