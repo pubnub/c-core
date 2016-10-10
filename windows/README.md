@@ -14,7 +14,7 @@ sample programs:
   outstanding publish and one outstanding subscribe transaction/operation
   at the same time, using the "callback" interface.
 
-  During the build, two (static) libraries will be created:
+During the build, two (static) libraries will be created:
 
 - `pubnub_sync.lib`: library for the "sync" interface
 - `pubnub_callback.lib`: library for the "callback" interface

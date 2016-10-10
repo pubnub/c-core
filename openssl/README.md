@@ -91,7 +91,8 @@ the DLLs that are a part of your OpenSSL with your applications.
 	
 The sample Makefile (`windows.mk`) will build the same sample 
 programs on Windows as are built on POSIX (the executables just have 
-`.exe` extension on Windows).
+`.exe` extension on Windows). It will also build the same static
+libraries (but they will have `.lib` extension on Windows).
 
 The sample Makefile is designed to work with MS Visual Studio compilers
 (MSVS 2008 or newer should work fine). Rewriting it to use some other
