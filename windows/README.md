@@ -14,6 +14,15 @@ sample programs:
   outstanding publish and one outstanding subscribe transaction/operation
   at the same time, using the "callback" interface.
 
+  During the build, two (static) libraries will be created:
+
+- `pubnub_sync.lib`: library for the "sync" interface
+- `pubnub_callback.lib`: library for the "callback" interface
+
+You are free to use these libraries in your projects, but keep in mind
+that they are configured for the purposes of the samples. Please check
+if those are right for you before using them.
+
 The sources of the samples are in `../core/samples`,
 as they are portable across all or most hosted platforms
 (POSIX, Windows...).
