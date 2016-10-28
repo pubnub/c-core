@@ -22,11 +22,11 @@ all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subs
 
 
 pubnub_sync.a : $(SOURCEFILES) ../core/pubnub_ntf_sync.c
-	gcc -c $(CFLAGS) $(SOURCEFILES) ../core/pubnub_ntf_sync.c
+	$(CC) -c $(CFLAGS) $(SOURCEFILES) ../core/pubnub_ntf_sync.c
 	ar rcs pubnub_sync.a $(OBJFILES) pubnub_ntf_sync.o
 
 pubnub_callback.a : $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
-	gcc -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
+	$(CC) -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c
 	ar rcs pubnub_callback.a $(OBJFILES)  pubnub_timer_list.o pubnub_ntf_callback_posix.o pubnub_get_native_socket.o
 
 
