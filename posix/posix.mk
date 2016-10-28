@@ -13,43 +13,44 @@ OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -I ../core -I . -I fntest -I ../core/fntest -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE
+CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 
+INCLUDES=-I ../core -I . -I fntest -I ../core/fntest 
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback
 
 pubnub_sync.a : $(SOURCEFILES) ../core/pubnub_ntf_sync.c
-	$(CC) -c $(CFLAGS) $(SOURCEFILES) ../core/pubnub_ntf_sync.c
+	$(CC) -c $(CFLAGS) $(INCLUDES) $(SOURCEFILES) ../core/pubnub_ntf_sync.c
 	ar rcs pubnub_sync.a $(OBJFILES) pubnub_ntf_sync.o
 
 pubnub_callback.a : $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c
-	$(CC) -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c
+	$(CC) -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(INCLUDES) $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c
 	ar rcs pubnub_callback.a $(OBJFILES)  pubnub_timer_list.o pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pbpal_adns_sockets.o
 
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c pubnub_sync.a
-	$(CC) -o $@ $(CFLAGS) ../core/samples/pubnub_sync_sample.c pubnub_sync.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_sample.c pubnub_sync.a $(LDLIBS)
 
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a
-	$(CC) -o $@ $(CFLAGS) ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a $(LDLIBS)
 
 pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c pubnub_callback.a
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/pubnub_callback_sample.c pubnub_callback.a $(LDLIBS)
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_callback_sample.c pubnub_callback.a $(LDLIBS)
 
 subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sample.c pubnub_callback.a
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) ../core/samples/subscribe_publish_callback_sample.c pubnub_callback.a $(LDLIBS)
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(INCLUDES) ../core/samples/subscribe_publish_callback_sample.c pubnub_callback.a $(LDLIBS)
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c pubnub_sync.a
-	$(CC) -o $@ $(CFLAGS) ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c pubnub_sync.a $(LDLIBS) -lpthread
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c  fntest/pubnub_fntest_posix.c fntest/pubnub_fntest_runner.c pubnub_sync.a $(LDLIBS) -lpthread
 
 CONSOLE_SOURCEFILES=../core/samples/console/pubnub_console.c ../core/samples/console/pnc_helpers.c ../core/samples/console/pnc_readers.c ../core/samples/console/pnc_subscriptions.c
 
 pubnub_console_sync: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync.c pubnub_sync.a
-	$(CC) -o $@ $(CFLAGS) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync.c  pubnub_sync.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync.c  pubnub_sync.a $(LDLIBS)
 
 pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a
-	$(CC) -o $@ $(CFLAGS) -D PUBNUB_CALLBACK_API $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) -D PUBNUB_CALLBACK_API $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
 
 
 clean:
