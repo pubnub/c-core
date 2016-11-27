@@ -44,7 +44,7 @@ int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char cons
     pbmd5_final(&md5, digest);
 
     snprintf(signature, n, 
-             "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+             "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
              digest[0], digest[1], digest[2], digest[3],
              digest[4], digest[5], digest[6], digest[7],
              digest[8], digest[9], digest[10], digest[11],
@@ -61,7 +61,7 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
     pbsha256_digest_str(cipher_key, digest);
 
     snprintf((char*)hash, 33, 
-             "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+             "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
              digest[0], digest[1], digest[2], digest[3],
              digest[4], digest[5], digest[6], digest[7],
              digest[8], digest[9], digest[10], digest[11],

@@ -2,11 +2,24 @@
 #include "pbaes256.h"
 
 #include "pubnub_log.h"
+#include "pubnub_assert.h"
 
 #include <openssl/evp.h>
+#include <openssl/err.h>
 
 #include <stdlib.h>
 
+
+
+static int print_to_pubnub_log(const char *s, size_t len, void *p)
+{
+    PUBNUB_UNUSED(len);
+    PUBNUB_UNUSED(p);
+
+    PUBNUB_LOG_ERROR("%s", s);
+
+    return 0;
+}
 
 
 static int do_encrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t msg, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t *encrypted)
@@ -14,15 +27,18 @@ static int do_encrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t msg, uint8_t const
     int len = 0;
 
     if (!EVP_EncryptInit_ex(aes256, EVP_aes_256_cbc(), NULL, key, iv)) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("Failed to initialize AES-256 encryption\n");
         return -1;
     }
     if (!EVP_EncryptUpdate(aes256, encrypted->ptr, &len, msg.ptr, msg.size)) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("Failed to AES-256 encrypt the mesage\n");
         return -1;
     }
     encrypted->size = len;
     if (!EVP_EncryptFinal_ex(aes256, encrypted->ptr + len, &len)) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("Failed to finalize AES-256 encryption\n");
         return -1;
     }
@@ -83,18 +99,21 @@ static int do_decrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t data, uint8_t cons
 {
     int len = 0;
     if (!EVP_DecryptInit_ex(aes256, EVP_aes_256_cbc(), NULL, key, iv)) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("Failed to initialize AES-256 decryption\n");
         return -1;
     }
 
     if (!EVP_DecryptUpdate(aes256, msg->ptr, &len, data.ptr, data.size)) {
-        PUBNUB_LOG_ERROR("Failed to AES-256 encrypt the mesage\n");
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        PUBNUB_LOG_ERROR("Failed to AES-256 decrypt the mesage\n");
         return -1;
     }
     msg->size = len;
 
     if (!EVP_DecryptFinal_ex(aes256, msg->ptr + len, &len)) {
-        PUBNUB_LOG_ERROR("Failed to finalize AES-256 encryption\n");
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        PUBNUB_LOG_ERROR("Failed to finalize AES-256 decryption\n");
         return -1;
     }
     msg->size += len;
