@@ -66,7 +66,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
    It was used to sign the server certificate of https://pubsub.pubnub.com.
    (at the time of writing this, 2015-06-04).
  */
-static char pubnub_cert[] = "-----BEGIN CERTIFICATE-----\n"
+static char pubnub_cert_Starfield[] = "-----BEGIN CERTIFICATE-----\n"
 "MIIEDzCCAvegAwIBAgIBADANBgkqhkiG9w0BAQUFADBoMQswCQYDVQQGEwJVUzEl\n"
 "MCMGA1UEChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjEyMDAGA1UECxMp\n"
 "U3RhcmZpZWxkIENsYXNzIDIgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMDQw\n"
@@ -99,7 +99,7 @@ static char pubnub_cert[] = "-----BEGIN CERTIFICATE-----\n"
    i:/C=BE/O=GlobalSign nv-sa/OU=Root CA/CN=GlobalSign Root CA
 
  */
-static char pubnub_cert_class_2[] = "-----BEGIN CERTIFICATE-----\n"
+static char pubnub_cert_GlobalSign[] = "-----BEGIN CERTIFICATE-----\n"
 "MIIDdTCCAl2gAwIBAgILBAAAAAABFUtaw5QwDQYJKoZIhvcNAQEFBQAwVzELMAkG\n"
 "A1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv\n"
 "b3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw05ODA5MDExMjAw\n"
@@ -123,29 +123,39 @@ static char pubnub_cert_class_2[] = "-----BEGIN CERTIFICATE-----\n"
 
 
 
-static int add_pubnub_cert(SSL_CTX *sslCtx)
+static int add_pem_cert(SSL_CTX *sslCtx, char const* pem_cert)
 {
     X509 *cert;
-    BIO *mem;
-
-    mem = BIO_new(BIO_s_mem());
-    BIO_puts(mem, pubnub_cert_class_2);
+    BIO *mem = BIO_new(BIO_s_mem());
+    if (NULL == mem) {
+        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed BIO_new for PEM certificate\n", sslCtx);
+        return -1;
+    }
+    BIO_puts(mem, pem_cert);
     cert = PEM_read_bio_X509(mem, NULL, 0, NULL);
     BIO_free(mem);
+    if (NULL == cert) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed to read PEM certificate\n", sslCtx);
+        return -1;
+    }
 
-    // set certificate to sslCtx
-    X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert);
+    if (0 == X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert)) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed to add PEM certificate\n", sslCtx);
+        X509_free(cert);
+        return -1;
+    }
     X509_free(cert);
 
-    mem = BIO_new(BIO_s_mem());
-    BIO_puts(mem, pubnub_cert);
-    cert = PEM_read_bio_X509(mem, NULL, 0, NULL);
-    BIO_free(mem);
+    return 0;
+}
 
-    // set certificate to sslCtx
-    X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert);
-    X509_free(cert);
 
+static int add_pubnub_cert(SSL_CTX *sslCtx)
+{
+    int rslt = add_pem_cert(sslCtx, pubnub_cert_Starfield);
+    rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_GlobalSign);
 
     /* It would be nice to use this instead, if we had a way to find
        out what is the file and/or path of the trusted root
@@ -159,13 +169,13 @@ static int add_pubnub_cert(SSL_CTX *sslCtx)
 //    SSL_CTX_load_verify_locations(sslCtx, NULL, "/etc/ssl/certs");
     */
 
-    return 0;
+    return rslt;
 }
 
 
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
-    SSL *ssl;
+    SSL *ssl = NULL;
     int rslt;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
 
@@ -195,6 +205,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             pb->pal.connect_timeout = time(NULL)  + pb->transaction_timeout_ms/1000;
         }
     }
+    else {
+        BIO_get_ssl(pb->pal.socket, &ssl);
+        if (NULL == ssl) {
+            return resolv_and_connect_wout_SSL(pb);
+        }
+        ssl = NULL;
+    }
     if (NULL == pb->pal.socket) {
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
         return pbpal_resolv_resource_failure;
@@ -203,6 +220,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     PUBNUB_LOG_TRACE("pb=%p: Using BIO == %p\n", pb, pb->pal.socket);
 
     BIO_get_ssl(pb->pal.socket, &ssl);
+    PUBNUB_ASSERT(NULL != ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
     if (pb->pal.session != NULL) {
         SSL_set_session(ssl, pb->pal.session);
