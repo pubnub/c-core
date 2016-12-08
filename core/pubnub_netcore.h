@@ -41,6 +41,8 @@ enum pubnub_state {
     PBS_TX_PORT_NUM,
     /** Sending the HTTP version */
     PBS_TX_VER,
+    /** Sending Proxy-Authorization HTTP header */
+    PBS_TX_PROXY_AUTHORIZATION,
     /** Sending the DNS name (part of the URL) */
     PBS_TX_ORIGIN,
     /** Sending the rest of the HTTP headers */
@@ -86,10 +88,10 @@ int pbnc_fsm(struct pubnub_ *pb);
 
 
 /** Issues a stop command to the FSM of the net-core module. The
-	FSM will close a connection (if it is already open) and then
-	inform the user of the outcome (as specified) when it is called.
+    FSM will close a connection (if it is already open) and then
+    inform the user of the outcome (as specified) when it is called.
 
-	@note This function will _not_ call pbnc_fsm().
+    @note This function will _not_ call pbnc_fsm().
 */
 void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report);
 

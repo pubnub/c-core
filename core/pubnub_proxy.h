@@ -84,9 +84,8 @@ enum pubnub_proxy_type {
 /** Known HTTP authentication schemes to be used with the HTTP proxy.
  */
 enum pubnub_http_authentication_scheme {
-    /** The basic authentication scheme. It is not secure and should
-        only be used w/HTTPS. This is a placeholder, basic
-        authentication scheme is not yet available.
+    /** The basic authentication scheme. It is not secure and thus
+        should only be used w/HTTPS or private networks.
     */
     pbhtauBasic,
     /** The digest authentication scheme. It's complex and slows the
@@ -96,8 +95,13 @@ enum pubnub_http_authentication_scheme {
         scheme is not yet available.
     */
     pbhtauDigest,
+    /** The propriatery Microsoft NTLM authentication scheme.  It's
+        even more complex than DIGEST. Support for it may be not as
+        advanced (full-featured) on non-Windows platforms.
+     */
+    pbhtauNTLM,
     /** No authentication scheme. This is the default */
-    phtauNone
+    pbhtauNone
 };
 
 
@@ -151,34 +155,24 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
 */
 int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol);
 
-/** Sets the authentication scheme to be used for the Internet proxy
-    to be the "basic" authentication scheme.
+/** Sets the authentication password and scheme to be used for Proxy
+    authentication. 
+
+    The default username and password are the currently logged on
+    username and password, if such info can be acquired at runtime, or
+    the "hardwired" C-core's own default username and password (if it can't
+    be acquired).
 
     @pre Call this after pubnub_init() on the context
-    @pre (realm != NULL) && (username != NULL) && (password != NULL)
     @param p The Context to set proxy authentication for
-    @param realm Authentication realm
-    @param username Authentication username
-    @param password Authentication password
+    @param username Authentication username. Use NULL to let C-core use
+    the default username.
+    @param password Authentication password. USe NULL to let C-core use
+    the default password.
 
-    @return 0: OK, otherwise: error, scheme not supported
+    @return 0: OK, otherwise: error
  */
-int pubnub_set_proxy_authentication_basic(pubnub_t *p, char const *realm, char const *username, char const *password);
-
-/** Sets the authentication scheme to be used for the Internet proxy
-    to be the "digest" authentication scheme.
-
-    @pre Call this after pubnub_init() on the context
-    @pre (realm != NULL) && (username != NULL) && (password != NULL)
-    @param p The Context to set proxy authentication for
-    @param hash The hash (algorithm) to use
-    @param realm Authentication realm
-    @param username Authentication username
-    @param password Authentication password
-
-    @return 0: OK, otherwise: error, scheme not supported
- */
-int pubnub_set_proxy_authentication_digest(pubnub_t *p, enum pubnub_http_digest_hash_algorithm hash, char const *realm, char const *username, char const *password);
+int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *username, char const *password);
 
 /** Set the context @p p to not use _any_ authentication scheme.  This
     is the default, so you only need to call this function if you're

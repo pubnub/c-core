@@ -38,3 +38,16 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p)
 
     return p->proxy_type;
 }
+
+
+int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *username, char const *password)
+{
+    PUBNUB_ASSERT_OPT(p != NULL);
+
+    p->proxy_auth_username = username;
+    p->proxy_auth_password = password;
+
+    return 0;
+}
+
+

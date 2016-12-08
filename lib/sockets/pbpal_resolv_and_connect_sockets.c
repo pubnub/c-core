@@ -37,6 +37,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     case pbproxyHTTP_GET:
         origin = pb->proxy_hostname;
         port = pb->proxy_port;
+        PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
         break;
     default:
         break;

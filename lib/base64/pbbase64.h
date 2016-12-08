@@ -176,6 +176,8 @@ size_t pbbase64_encoded_length(size_t length);
 /** Base64 encodes the memory block @p data to user allocated string @p s
     with size @p *n, using options @p options. On output @p *n will
     hold number of characters written.
+
+    @return 0: OK, -1: error
 */
 int pbbase64_encode(pubnub_bymebl_t data, char *s, size_t *n, struct pbbase64_options const* options);
 
@@ -202,6 +204,8 @@ size_t pbbase64_decoded_length(size_t n);
     be the lenght of @p s, can be smaller) to memory block @p data
     using options @p options. The @p data will be updated with the
     actual number of bytes written to it.
+
+    @return 0: OK, -1: error
 */
 int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbase64_options const* options);
 

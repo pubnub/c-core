@@ -176,6 +176,30 @@ struct pubnub_ {
      */
     char proxy_saved_path[PUBNUB_BUF_MAXLEN];
 
+    /** The authentication scheme to use for the proxy - in
+        general, it's selected by the proxy.
+    */
+    enum pubnub_http_authentication_scheme proxy_auth_scheme;
+
+    /** The username to use for proxy authentication */
+    char const *proxy_auth_username;
+
+    /** The password to use for proxy authentication */
+    char const *proxy_auth_password;
+
+    /** Indicates whether the proxy authorization has already been
+        sent.  Some proxy servers will, on failed authorization, ask
+        for "second attempt", which we do not support. So, we use this
+        flag to know not to send the same authorization again, thus
+        avoiding a sort of "endless loop".
+    */
+    bool proxy_authorization_sent;
+
+    /** Retry the same Pubnub request after closing current TCP
+        connection. Currently, this is only used for Proxy authentication,
+        but, if need arises could be made "general".
+    */
+    bool retry_after_close;
 #endif
 };
 
@@ -215,6 +239,7 @@ pubnub_t *pballoc_get_ctx(unsigned idx);
 /** Internal function, the "bottom half" of pubnub_free(), which is 
     done asynchronously in the callback mode. */
 void pballoc_free_at_last(pubnub_t *pb);
+
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */
