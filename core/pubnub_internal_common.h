@@ -48,6 +48,51 @@ enum PBSocketState {
 };
 
 
+/** Possible states of NTLM mini-FSM */
+enum NPBNTLM_State {
+    /** Idle */
+    pbntlmIdle,
+    /** Waiting to send Type1 message (identity) */
+    pbntlmSendTypeOne,
+    /** Waiting to recieve Type2 message (challenge) */
+    pbntlmRcvTypeTwo,
+    /** Waiting to send Type3 message (challenge response) */
+    pbntlmSendTypeThree,
+    /** NTLM authentication is done (may have succeded or not,
+        does not matter to us).
+     */
+    pbntlmDone
+};
+
+/** Maximum supported length of the NTLM token (message) */
+#define PUBNUB_NTLM_MAX_TOKEN 512
+
+/** The data of the NTLM mini-FSM.
+ */
+struct pbntlm_context {
+    /** Current state of the NTLM mini-FSM */
+    enum NPBNTLM_State state;
+
+    /** Token received in Type2 NTLM message */
+    uint8_t in_token[PUBNUB_NTLM_MAX_TOKEN];
+
+    /** The length, in bytes, of the token received in Type2 NTLM
+     * message */
+    size_t in_token_size;
+
+#if PUBNUB_USE_WIN_SSPI
+    /** The SSPI context handle */
+    CtxtHandle hcontext;
+    /** The SSPI credentials handle */
+    CredHandle hcreds;
+    /** The authentication identity (from username and password (and
+     domain), if supplied. */
+    SEC_WINNT_AUTH_IDENTITY identity;
+#endif
+};
+
+typedef struct pbntlm_context pbntlm_ctx_t;
+
 /** The Pubnub context 
 
     @note Don't declare any members as `bool`, as there may be
@@ -170,7 +215,7 @@ struct pubnub_ {
         second (if the first succeeds) is sent to the "real" HTTP
         server (to which the proxy established a "tunnel".
     */
-    bool proxy_tunnel_established;
+    int proxy_tunnel_established;
 
     /** The saved path part of the URL for the Pubnub transaction.
      */
@@ -193,13 +238,17 @@ struct pubnub_ {
         flag to know not to send the same authorization again, thus
         avoiding a sort of "endless loop".
     */
-    bool proxy_authorization_sent;
+    int proxy_authorization_sent;
 
     /** Retry the same Pubnub request after closing current TCP
         connection. Currently, this is only used for Proxy authentication,
-        but, if need arises could be made "general".
+        but, if need arises, could be made "general".
     */
-    bool retry_after_close;
+    int retry_after_close;
+
+    /** Data about an NTLM authentication */
+    struct pbntlm_context ntlm_context;
+
 #endif
 };
 

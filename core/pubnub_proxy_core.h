@@ -12,8 +12,9 @@
 
     This is the module that deals with Proxy support, mostly
     authentication. Some part of proxy support is embedded in
-    the Pubnut "net-core" FSM,
+    the Pubnub "net-core" FSM,
  */
+
 
 #if PUBNUB_PROXY_API
 /** Processes a proxy related HTTP @p header on the Pubnub context @p

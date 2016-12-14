@@ -15,8 +15,14 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
     if (pbpal_close(pb) <= 0) {
-        pbpal_forget(pb);
-        pbntf_trans_outcome(pb);
+        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n", pb->retry_after_close);
+        if (pb->retry_after_close) {
+            pb->state = PBS_IDLE;
+        }
+        else {
+            pbpal_forget(pb);
+            pbntf_trans_outcome(pb);
+        }
     }
     else {
         pb->state = PBS_WAIT_CLOSE;
@@ -95,6 +101,7 @@ static void finish(struct pubnub_ *pb)
         strcpy(pb->core.http_buf, pb->proxy_saved_path);
         return;
     case pbproxyFinRetryReconnect:
+        PUBNUB_LOG_TRACE("Proxy: Will retry after close\n");
         strcpy(pb->core.http_buf, pb->proxy_saved_path);
         pb->retry_after_close = true;
         break;
@@ -128,6 +135,7 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
+        pb->retry_after_close = false;
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
@@ -477,6 +485,9 @@ next_state:
 #if PUBNUB_PROXY_API
                         if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
                             finish(pb);
+                            if (pb->retry_after_close) {
+                                goto next_state;
+                            }
                             break;
                         }
 #endif
@@ -521,6 +532,9 @@ next_state:
         }
         else {
             finish(pb);
+            if (pb->retry_after_close) {
+                goto next_state;
+            }
         }
         break;
     case PBS_RX_BODY_WAIT:
@@ -557,6 +571,9 @@ next_state:
             PUBNUB_LOG_TRACE("About to read a chunk w/length: %d\n", chunk_length);
             if (chunk_length == 0) {
                 finish(pb);
+                if (pb->retry_after_close) {
+                    goto next_state;
+                }
             }
             else if (chunk_length > sizeof pb->core.http_buf) {
                 outcome_detected(pb, PNR_IO_ERROR);
@@ -613,8 +630,13 @@ next_state:
         break;
     case PBS_WAIT_CLOSE:
         if (pbpal_closed(pb)) {
-            pbpal_forget(pb);
-            pbntf_trans_outcome(pb);
+            if (pb->retry_after_close) {
+                pb->state = PBS_IDLE;
+            }
+            else {
+                pbpal_forget(pb);
+                pbntf_trans_outcome(pb);
+            }
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -625,9 +647,14 @@ next_state:
         break;
     case PBS_WAIT_CANCEL_CLOSE:
         if (pbpal_closed(pb)) {
-            pbpal_forget(pb);
-            pb->core.msg_ofs = pb->core.msg_end = 0;
-            pbntf_trans_outcome(pb);
+            if (pb->retry_after_close) {
+                pb->state = PBS_IDLE;
+            }
+            else {
+                pbpal_forget(pb);
+                pb->core.msg_ofs = pb->core.msg_end = 0;
+                pbntf_trans_outcome(pb);
+            }
         }
         break;
     }
