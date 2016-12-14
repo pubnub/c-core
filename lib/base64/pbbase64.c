@@ -8,7 +8,7 @@
 
 int pbbase64_encode(pubnub_bymebl_t data, char *s, size_t *n, struct pbbase64_options const* options)
 {
-    int i;
+    size_t i;
     char *out = s;
     uint8_t const *in = data.ptr;
     size_t const length = data.size;
@@ -70,7 +70,7 @@ pubnub_bymebl_t pbbase64_encode_alloc(pubnub_bymebl_t data, struct pbbase64_opti
 {
     pubnub_bymebl_t result;
     result.size = (data.size * 4 + 2) / 3 + 2;
-    result.ptr = malloc(result.size);
+    result.ptr = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
         return result;
     }
@@ -125,7 +125,7 @@ size_t pbbase64_decoded_length(size_t n)
 
 int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbase64_options const* options)
 {
-    int i;
+    size_t i;
     uint8_t decode_tab[256];
     uint8_t *out = data->ptr;
 
@@ -190,7 +190,7 @@ pubnub_bymebl_t pbbase64_decode_alloc(char const* s, size_t n, struct pbbase64_o
 {
     pubnub_bymebl_t result;
     result.size = (n * 3 + 3) / 4 + 1;
-    result.ptr = malloc(result.size);
+    result.ptr = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
         return result;
     }
