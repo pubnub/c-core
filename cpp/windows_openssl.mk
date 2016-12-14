@@ -1,4 +1,4 @@
-SOURCEFILES = ..\core\pubnub_coreapi.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  ..\openssl\pbpal_openssl.c ..\openssl\pbpal_resolv_and_connect_openssl.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_timers.c ..\core\pubnub_blocking_io.c ..\core\pubnub_json_parse.c ..\core\pubnub_helper.c  ..\openssl\pubnub_version_openssl.c ..\windows\pubnub_generate_uuid_windows.c ..\openssl\pbpal_openssl_blocking_io.c ..\core\c99\snprintf.c
+SOURCEFILES = ..\core\pubnub_coreapi.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  ..\openssl\pbpal_openssl.c ..\openssl\pbpal_resolv_and_connect_openssl.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_timers.c ..\core\pubnub_blocking_io.c ..\lib\base64\pbbase64.c ..\core\pubnub_json_parse.c  ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\core\pubnub_helper.c  ..\openssl\pubnub_version_openssl.c ..\windows\pubnub_generate_uuid_windows.c ..\openssl\pbpal_openssl_blocking_io.c ..\core\c99\snprintf.c
 
 !ifndef OPENSSLPATH
 OPENSSLPATH=c:\OpenSSL-Win32
@@ -6,7 +6,7 @@ OPENSSLPATH=c:\OpenSSL-Win32
 
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 
-CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\core\c99 /I ..\openssl /I $(OPENSSLPATH)\include /W3 /D PUBNUB_THREADSAFE
+CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\lib\base64 /I ..\core\c99 /I ..\openssl /I $(OPENSSLPATH)\include /W3 /D PUBNUB_THREADSAFE
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /TP means "compile all files as C++"
