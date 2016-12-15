@@ -39,7 +39,7 @@ void pbntlm_core_handle(pubnub_t *pb, char const* base64_msg, size_t length)
     }
     int i = pbbase64_decode_std(base64_msg, length, &data);
     if (0 != i) {
-        PUBNUB_LOG_ERROR("pbntlm_core_handle(): Failed to Base64 decode '%.*s', result: %d\n", length, base64_msg, i);
+        PUBNUB_LOG_ERROR("pbntlm_core_handle(): Failed to Base64 decode '%.*s', result: %d\n", (int)length, base64_msg, i);
         pbntlm_core_deinit(pb);
         return;
     }
