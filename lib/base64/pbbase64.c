@@ -2,6 +2,7 @@
 #include "pbbase64.h"
 
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 
 #include <string.h>
 
@@ -135,7 +136,8 @@ int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbas
     PUBNUB_ASSERT_OPT(options->alphabet != NULL);
     PUBNUB_ASSERT(0 == strncmp(options->alphabet, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 62));
 
-    if (n < (data->size * 3 + 3) / 4 + 1) {
+    if (n > (data->size * 3 + 3) / 4 + 1) {
+        PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = %d, data->size = %d, (data->size * 3 + 3) / 4 + 1 = %d\n", n, data->size, (data->size * 3 + 3) / 4 + 1);
         return -1;
     }
     
@@ -147,11 +149,11 @@ int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbas
         uint8_t word[4];
         word[0] = decode_tab[(int)*s++];
         if ((word[0] == 64) && !options->ignore_invalid_char) {
-            return -1;
+            return -12;
         }
         word[1] = decode_tab[(int)*s++];
         if ((word[0] == 64) && !options->ignore_invalid_char) {
-            return -1;
+            return -13;
         }
         word[2] = decode_tab[(int)*s++];
         word[3] = decode_tab[(int)*s++];
@@ -163,13 +165,13 @@ int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbas
             }
             else {
                 if ((s[-1] != options->separator) && !options->ignore_invalid_char) {
-                    return -1;
+                    return -14;
                 }
             }
         }
         else {
             if ((s[-2] != options->separator) && !options->ignore_invalid_char) {
-                return -1;
+                return -15;
             }
         }
     }

@@ -396,7 +396,7 @@ next_state:
         }
         else if (0 == i) {
 #if PUBNUB_PROXY_API
-            char header_to_send[512] = "\r\n";
+            char header_to_send[1024] = "\r\n";
             if (0 == pbproxy_http_header_to_send(pb, header_to_send+2, sizeof header_to_send-2)) {
                 PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", header_to_send);
                 pb->state = PBS_TX_PROXY_AUTHORIZATION;

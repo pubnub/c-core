@@ -65,7 +65,12 @@ enum NPBNTLM_State {
 };
 
 /** Maximum supported length of the NTLM token (message) */
-#define PUBNUB_NTLM_MAX_TOKEN 512
+#define PUBNUB_NTLM_MAX_TOKEN 1024
+
+#if PUBNUB_USE_WIN_SSPI
+#define SECURITY_WIN32
+#include <sspi.h>
+#endif
 
 /** The data of the NTLM mini-FSM.
  */

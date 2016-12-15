@@ -35,13 +35,14 @@ void pbproxy_handle_http_header(pubnub_t *p, char const* header)
         p->proxy_authorization_sent = false;
     }
     else if (0 == strncmp(contents, scheme_NTLM, sizeof scheme_NTLM -1)) {
-        if (pbhtauNone == p->proxy_auth_scheme) {
+        if (pbhtauNTLM != p->proxy_auth_scheme) {
             pbntlm_core_init(p);
             p->proxy_auth_scheme = pbhtauNTLM;
             p->proxy_authorization_sent = false;
         }
         else {
-            pbntlm_core_handle(p, contents + sizeof scheme_NTLM);
+            char const *base64_msg = contents + sizeof scheme_NTLM;
+            pbntlm_core_handle(p, base64_msg, strcspn(base64_msg, " \r\n"));
         }
     }
     else {
@@ -107,12 +108,15 @@ int pbproxy_http_header_to_send(pubnub_t *p, char* header, size_t n)
     case pbhtauNTLM:
     {
         char prefix[] = "Proxy-Authorization: NTLM ";
-        uint8_t response[256];
+        uint8_t response[PUBNUB_NTLM_MAX_TOKEN];
         pubnub_bymebl_t data = { response, sizeof response };
         int i = pbntlm_core_prep_msg_to_send(p, &data);
 
         if (i != 0) {
             PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): NTLM failed preparing message to send'\n");
+            return -1;
+        }
+        if (0 == data.size) {
             return -1;
         }
 

@@ -1,7 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbntlm_pal.h"
+#include "pbntlm_packer.h"
 
-#include <security.h>
+#include "pubnub_log.h"
+#include "pubnub_assert.h"
 
 
 #pragma comment(lib, "secur32")
@@ -28,21 +29,17 @@ static void fill_sspi_identity(SEC_WINNT_AUTH_IDENTITY *identity, char const* us
     PUBNUB_ASSERT_OPT(NULL != username);
     PUBNUB_ASSERT_OPT(NULL != password);
 
-    identity->User = username;
+    identity->User = (char*)username;
     identity->UserLength = strlen(username);
     
     /* For now, don't use the domain */
     identity->Domain = "";
     identity->DomainLength = 0;
     
-    Curl_unicodefree(useranddomain.tchar_ptr);
-    
-    identity->Password = password;
+    identity->Password = (char*)password;
     identity->PasswordLength = strlen(password);
     
     identity->Flags = SEC_WINNT_AUTH_IDENTITY_ANSI;
-    
-    return CURLE_OK;
 }
 
 
@@ -67,16 +64,16 @@ static void fill_sec_buf_dec_out(SecBuffer *sec_buf, SecBufferDesc *sec_desc, pu
     sec_desc->ulVersion = SECBUFFER_VERSION;
     sec_desc->cBuffers = 1;
     sec_desc->pBuffers = sec_buf;
-    sec_buf.BufferType = SECBUFFER_TOKEN;
-    sec_buf.pvBuffer = msg->ptr;
-    sec_buf.cbBuffer = msg->size;
+    sec_buf->BufferType = SECBUFFER_TOKEN;
+    sec_buf->pvBuffer = msg->ptr;
+    sec_buf->cbBuffer = msg->size;
 }
 
 
-static SECURITY_STATUS acquire_creds(SEC_WINNT_AUTH_IDENTIY *pident, CredHandle *phcreds)
+static SECURITY_STATUS acquire_creds(PSEC_WINNT_AUTH_IDENTITY pident, CredHandle *phcreds)
 {
     TimeStamp expiry;
-    PUBNUB_ASSERT(!SecIsValidHandle(phcred));
+    PUBNUB_ASSERT(!SecIsValidHandle(phcreds));
     return AcquireCredentialsHandleA(NULL,
                                      "NTLM",
                                      SECPKG_CRED_OUTBOUND, 
@@ -93,8 +90,9 @@ static SECURITY_STATUS acquire_creds(SEC_WINNT_AUTH_IDENTIY *pident, CredHandle 
 static SECURITY_STATUS init_sec_ctx(CredHandle *phcreds, CtxtHandle *phctx, SecBufferDesc *in_desc, CtxtHandle *phctx_new, SecBufferDesc *out_desc)
 {
     ULONG context_attrs;
-    PUBNUB_ASSERT(!SecIsValidHandle(&pb->hcontext));
-    return InitializeSecurityContextA(&pb->hcreds, 
+    PUBNUB_ASSERT((NULL == phctx) || SecIsValidHandle(phctx));
+    PUBNUB_ASSERT_OPT(NULL != phctx_new);
+    return InitializeSecurityContextA(phcreds, 
                                       phctx,
                                       "",
                                       0, 
@@ -124,7 +122,6 @@ int pbntlm_pack_type_one(pbntlm_ctx_t *pb, char const* username, char const* pas
     else {
         pident = NULL;
     }
-
     status = acquire_creds(pident, &pb->hcreds);
     if (status != SEC_E_OK) {
         PUBNUB_LOG_ERROR("Failed to acquire credentials for NTLM, code: %d\n", status);
@@ -157,7 +154,7 @@ int pbntlm_unpack_type2(pbntlm_ctx_t *pb, pubnub_bymebl_t msg)
     PUBNUB_ASSERT_OPT(msg.size > 0);
 
     if (msg.size > sizeof pb->in_token) {
-        PUBNUB_LOG_ERROR("NTLM Type2 message too long: %d bytes, max allowed %d\n", len, sizeof pb->in_token);
+        PUBNUB_LOG_ERROR("NTLM Type2 message too long: %d bytes, max allowed %d\n", msg.size, sizeof pb->in_token);
         return -1;
     }
     memcpy(pb->in_token, msg.ptr, msg.size);
@@ -176,8 +173,8 @@ int pbntlm_pack_type3(pbntlm_ctx_t *pb, char const* username, char const* passwo
     SECURITY_STATUS status;
 
     /* For SSPI, we don't need the username and password at this point */
-    PUBNUB_NOT_USED(username);
-    PUBNUB_NOT_USED(password);
+    PUBNUB_UNUSED(username);
+    PUBNUB_UNUSED(password);
 
     type_two_desc.ulVersion = SECBUFFER_VERSION;
     type_two_desc.cBuffers = 1;

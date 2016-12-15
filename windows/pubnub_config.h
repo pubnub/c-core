@@ -89,6 +89,10 @@
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
 
+/** If true (!=0) will use Windows SSPI (for NTLM and such).
+    Otherwise, will use own implementation, if available. */
+#define PUBNUB_USE_WIN_SSPI 1
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
