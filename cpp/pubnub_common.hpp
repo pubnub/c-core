@@ -136,6 +136,25 @@ namespace pubnub {
         return static_cast<ssl_opt>(static_cast<int>(l) & static_cast<int>(r));
     }
 
+    /// Possible proxy types
+    enum proxy_type {
+        /// HTTP GET proxy - the simplest
+        http_get_proxy,
+        /// HTTP CONNECT - tunnel proxy
+        http_connect_proxy,
+        /// No proxy at all
+        none_proxy,
+    };
+
+    /// Return C-core proxy type from C++ (wrapper) proxy type
+    pubnub_proxy_type ccore_proxy_type(proxy_type prtp) {
+        switch (prtp) {
+        case http_get_proxy: return pbproxyHTTP_GET;
+        case http_connect_proxy: return pbproxyHTTP_CONNECT;
+        default: return pbproxyNONE;
+        }
+    }
+
     /** A wrapper class for subscribe options, enabling a nicer
         usage. Something like:
         
@@ -550,6 +569,32 @@ namespace pubnub {
                 (options & reduceSecurityOnError) != 0,
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
+        }
+        
+        /// Manually set a proxy to use
+        /// @see pubnub_set_proxy_manual
+        int set_proxy_manual(proxy_type protocol, std::string const& ip_address_or_url, uint16_t port) {
+            pubnub_proxy_type ccore_proxy_type = ccore_proxy_type(protocol);
+            return pubnub_set_proxy_manual(d_pb, ccore_proxy_type, ip_address_or_url.c_str(), port);
+        }
+
+        /// Set the proxy to use from system configuration.
+        /// @see pubnub_set_proxy_from_system
+        int set_proxy_from_system(proxy_type protocol) {
+            pubnub_proxy_type ccore_proxy_type = ccore_proxy_type(protocol);
+            return pubnub_set_proxy_from_system(d_pb, ccore_proxy_type);
+        }
+
+        /// Sets the authentication scheme to use for proxy
+        /// @see pubnub_set_proxy_authentication
+        int set_proxy_authentication_username_password(std::string const& username, std::string const& password) {
+            return pubnub_set_proxy_authentication_username_password(d_pb, username.c_str(), password.c_str());
+        }
+
+        /// Sets to use no authentication scheme for proxy
+        /// @see pubnub_set_proxy_authentication_scheme_none
+        int set_proxy_authentication_none() {
+            return pubnub_set_proxy_authentication_none(d_pb);
         }
 
 #if __cplusplus >= 201103L
