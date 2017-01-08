@@ -90,8 +90,8 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
     WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ie_proxy_cfg = {0};
     WINHTTP_AUTOPROXY_OPTIONS autoproxy_opts = {0};
     WINHTTP_PROXY_INFO proxy_info = {0};
+    bool use_auto_proxy = true;
     wchar_t *url4proxy = NULL;
-    bool use_auto_proxy;
     int rslt;
 
     if (WinHttpGetIEProxyConfigForCurrentUser(&ie_proxy_cfg)) {
@@ -102,18 +102,15 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
             /* This may be overriden if auto-detect is also on */
         }
 
-        use_auto_proxy = ie_proxy_cfg.fAutoDetect;
-
         if (ie_proxy_cfg.lpszAutoConfigUrl != NULL) {
-            use_auto_proxy = true;
             autoproxy_opts.lpszAutoConfigUrl = ie_proxy_cfg.lpszAutoConfigUrl;
 
             PUBNUB_LOG_INFO("Will use Proxy PAC: %S\n",
                             autoproxy_opts.lpszAutoConfigUrl);
         }
-    }
-    else {
-        use_auto_proxy = true;
+        else {
+            use_auto_proxy = ie_proxy_cfg.fAutoDetect;
+        }
     }
 
     if (use_auto_proxy) {
@@ -127,9 +124,8 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
             PUBNUB_LOG_ERROR("Origin '%s' to wide string failed\n", origin);
             return -1;
         }
-        winhttp =
-            WinHttpOpen(L"C-core", WINHTTP_ACCESS_TYPE_NO_PROXY,
-                        WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        winhttp = WinHttpOpen(L"C-core", WINHTTP_ACCESS_TYPE_NO_PROXY,
+                              WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
         if (NULL != winhttp) {
             if (autoproxy_opts.lpszAutoConfigUrl != NULL) {
                 autoproxy_opts.dwFlags = WINHTTP_AUTOPROXY_CONFIG_URL;
@@ -158,8 +154,7 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
             WinHttpCloseHandle(winhttp);
         }
         else {
-            PUBNUB_LOG_WARNING("Failed creating WinHttp session, code: %d\n",
-                               GetLastError());
+            PUBNUB_LOG_WARNING("WinHttpOpen() error: %d\n", GetLastError());
         }
     }
 
