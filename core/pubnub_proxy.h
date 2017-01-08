@@ -146,6 +146,10 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
     standard way of setting a proxy. On others, there may not be.
     C-core will try to do the best it can on a given platform.
 
+    This function can block for a significant time, if system
+    configuration is to do auto-discovery of the proxy. So, call it
+    only on start, restart, wake-up and similar events.
+
     @pre Call this after pubnub_init() on the context
     @pre (protocol != pbproxyNONE) => (ip_address_or_url != NULL)
     @param p The Context to set proxy configuration for
