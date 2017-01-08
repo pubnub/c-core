@@ -150,7 +150,8 @@ pubnub_res pubnub_qt::subscribe(QString const &channel, QString const &channel_g
         pbcc_subscribe_prep(
             d_context.data(), 
             channel.isEmpty() ? 0 : channel.toLatin1().data(), 
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
+            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
+            0
             ), PBTT_SUBSCRIBE
         );
 }
@@ -193,7 +194,9 @@ pubnub_res pubnub_qt::here_now(QString const &channel, QString const &channel_gr
         pbcc_here_now_prep(
             d_context.data(), 
             channel.isEmpty() ? 0 : channel.toLatin1().data(), 
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
+            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
+            pbccNotSet,
+            pbccNotSet
             ), PBTT_HERENOW
         );
 }
@@ -201,7 +204,7 @@ pubnub_res pubnub_qt::here_now(QString const &channel, QString const &channel_gr
 
 pubnub_res pubnub_qt::global_here_now()
 {
-    return startRequest(pbcc_here_now_prep(d_context.data(), 0, 0), PBTT_GLOBAL_HERENOW);
+    return startRequest(pbcc_here_now_prep(d_context.data(), 0, 0, pbccNotSet, pbccNotSet), PBTT_GLOBAL_HERENOW);
 }
 
 
