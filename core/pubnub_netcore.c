@@ -124,6 +124,42 @@ static void finish(struct pubnub_ *pb)
 }
 
 
+static char const* pbnc_state2str(enum pubnub_state e)
+{
+    switch (e) {
+    case PBS_NULL: return "PBS_NULL";
+    case PBS_IDLE: return "PBS_IDLE";
+    case PBS_READY: return "PBS_READY";
+    case PBS_WAIT_DNS_SEND: return "PBS_WAIT_DNS_SEND";
+    case PBS_WAIT_DNS_RCV: return "PBS_WAIT_DNS_RCV";
+    case PBS_WAIT_CONNECT: return "PBS_WAIT_CONNECT";
+    case PBS_CONNECTED: return "PBS_CONNECTED";
+    case PBS_TX_GET: return "PBS_TX_GET";
+    case PBS_TX_PATH: return "PBS_TX_PATH";
+    case PBS_TX_SCHEME: return "PBS_TX_SCHEME";
+    case PBS_TX_HOST: return "PBS_TX_HOST";
+    case PBS_TX_PORT_NUM: return "PBS_TX_PORT_NUM";
+    case PBS_TX_VER: return "PBS_TX_VER";
+    case PBS_TX_PROXY_AUTHORIZATION: return "PBS_TX_PROXY_AUTHORIZATION";
+    case PBS_TX_ORIGIN: return "PBS_TX_ORIGIN";
+    case PBS_TX_FIN_HEAD: return "PBS_TX_FIN_HEAD";
+    case PBS_RX_HTTP_VER: return "PBS_RX_HTTP_VER";
+    case PBS_RX_HEADERS: return "PBS_RX_HEADERS";
+    case PBS_RX_HEADER_LINE: return "PBS_RX_HEADER_LINE";
+    case PBS_RX_BODY: return "PBS_RX_BODY";
+    case PBS_RX_BODY_WAIT: return "PBS_RX_BODY_WAIT";
+    case PBS_RX_CHUNK_LEN: return "PBS_RX_CHUNK_LEN";
+    case PBS_RX_CHUNK_LEN_LINE: return "PBS_RX_CHUNK_LEN_LINE";
+    case PBS_RX_BODY_CHUNK: return "PBS_RX_BODY_CHUNK";
+    case PBS_RX_BODY_CHUNK_WAIT: return "PBS_RX_BODY_CHUNK_WAIT";
+    case PBS_WAIT_CLOSE: return "PBS_WAIT_CLOSE";
+    case PBS_WAIT_CANCEL: return "PBS_WAIT_CANCEL";
+    case PBS_WAIT_CANCEL_CLOSE: return "PBS_WAIT_CANCEL_CLOSE";
+    default: return "Unknown enum pubnub_state";
+    }
+}
+
+
 int pbnc_fsm(struct pubnub_ *pb)
 {
     enum pubnub_res pbrslt;
@@ -132,7 +168,7 @@ int pbnc_fsm(struct pubnub_ *pb)
     PUBNUB_LOG_TRACE("pbnc_fsm()\t");
 
 next_state:
-    WATCH_ENUM(pb->state);
+    PUBNUB_LOG_TRACE("pb->state = %d (%s)\n", pb->state, pbnc_state2str(pb->state));
     switch (pb->state) {
     case PBS_NULL:
         break;
@@ -463,12 +499,10 @@ next_state:
         }
         break;
     case PBS_RX_HEADERS:
-        PUBNUB_LOG_TRACE("PBS_RX_HEADERS\n");
         pbpal_start_read_line(pb);
         pb->state = PBS_RX_HEADER_LINE;
         goto next_state;
     case PBS_RX_HEADER_LINE:
-        PUBNUB_LOG_TRACE("PBS_RX_HEADER_LINE\n");
         pbrslt = pbpal_line_read_status(pb);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
@@ -489,10 +523,7 @@ next_state:
                         WATCH_INT(pb->proxy_tunnel_established);
                         if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
                             finish(pb);
-                            if (pb->retry_after_close) {
-                                goto next_state;
-                            }
-                            break;
+                            goto next_state;
                         }
 #endif
                         outcome_detected(pb, PNR_IO_ERROR);
@@ -528,7 +559,6 @@ next_state:
         }
         break;
     case PBS_RX_BODY:
-        PUBNUB_LOG_TRACE("PBS_RX_BODY\n");
         if (pb->core.http_buf_len < pb->core.http_content_len) {
             pbpal_start_read(pb, pb->core.http_content_len - pb->core.http_buf_len);
             pb->state = PBS_RX_BODY_WAIT;
@@ -542,7 +572,6 @@ next_state:
         }
         break;
     case PBS_RX_BODY_WAIT:
-        PUBNUB_LOG_TRACE("PBS_RX_BODY_WAIT\n");
         if (pbpal_read_over(pb)) {
             unsigned len = pbpal_read_len(pb);
             WATCH_UINT(len);
@@ -558,7 +587,6 @@ next_state:
         }
         break;
     case PBS_RX_CHUNK_LEN:
-        PUBNUB_LOG_TRACE("PBS_RX_CHUNK_LEN\n");
         pbpal_start_read_line(pb);
         pb->state = PBS_RX_CHUNK_LEN_LINE;
         goto next_state;
@@ -598,7 +626,6 @@ next_state:
         }
         break;
     case PBS_RX_BODY_CHUNK:
-        PUBNUB_LOG_TRACE("PBS_RX_BODY_CHUNK\n");
         if (pb->core.http_content_len > 0) {
             pbpal_start_read(pb, pb->core.http_content_len);
             pb->state = PBS_RX_BODY_CHUNK_WAIT;
@@ -608,7 +635,6 @@ next_state:
         }
         goto next_state;
     case PBS_RX_BODY_CHUNK_WAIT:
-        PUBNUB_LOG_TRACE("PBS_RX_BODY_CHUNK_WAIT\n");
         if (pbpal_read_over(pb)) {
             unsigned len = pbpal_read_len(pb);
 
