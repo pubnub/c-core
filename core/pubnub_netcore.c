@@ -94,9 +94,11 @@ static void finish(struct pubnub_ *pb)
 #if PUBNUB_PROXY_API
     switch (pbproxy_handle_finish(pb)) {
     case pbproxyFinError:
+        PUBNUB_LOG_TRACE("Proxy: Error, close connection\n");
         outcome_detected(pb, PNR_HTTP_ERROR);
         return;
     case pbproxyFinRetryConnected:
+        PUBNUB_LOG_TRACE("Proxy: retry in current connection\n");
         pb->state = PBS_CONNECTED;
         strcpy(pb->core.http_buf, pb->proxy_saved_path);
         return;
@@ -483,6 +485,8 @@ next_state:
                 if (!pb->http_chunked) {
                     if (0 == pb->core.http_content_len) {
 #if PUBNUB_PROXY_API
+                        WATCH_ENUM(pb->proxy_type);
+                        WATCH_INT(pb->proxy_tunnel_established);
                         if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
                             finish(pb);
                             if (pb->retry_after_close) {

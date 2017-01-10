@@ -151,7 +151,6 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
     only on start, restart, wake-up and similar events.
 
     @pre Call this after pubnub_init() on the context
-    @pre (protocol != pbproxyNONE) => (ip_address_or_url != NULL)
     @param p The Context to set proxy configuration for
     @param protocol Proxy protocol to use on @p p context
     

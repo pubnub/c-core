@@ -42,6 +42,7 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
     wchar_t *it;
     wchar_t *end = url4proxy;
 
+    PUBNUB_LOG_TRACE("set_from_url4proxy(url4proxy=%S)\n", url4proxy);
     for (it = url4proxy; *end != '\0'; it = end + 1) {
         wchar_t const *port;
         size_t separator_position = wcscspn(it, L"; ");
@@ -67,9 +68,11 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
             continue;
         }
         p->proxy_hostname[port - it] = '\0';
+        PUBNUB_LOG_TRACE("Set proxy_hostname = %s\n", p->proxy_hostname);
         if (port != end) {
             *end = L'\0';
             p->proxy_port = (uint16_t)wcstol(port + 1, NULL, 10);
+            PUBNUB_LOG_TRACE("Set proxy_port = %d\n", p->proxy_port);
             if (0 == p->proxy_port) {
                 continue;
             }
@@ -164,6 +167,7 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
     }
 
     rslt = (NULL == url4proxy) ? -1 : set_from_url4proxy(p, url4proxy);
+    WATCH_INT(rslt);
     if (0 == rslt) {
         p->proxy_type = protocol;
     }
