@@ -14,6 +14,8 @@
     that we migh provide our own MD5 implementation for some platforms
     in the future.
 
+    To support older OpenSSL versions, we don't examine the return value - 
+    because there was no return value in them (function was void).
 */
 
 #include <openssl/md5.h>
@@ -25,32 +27,28 @@
 
 /** Initializes the MD5 context for a new calculation. 
     @param x Pointer to a MD5 context
-    @return 0: success, -1: error
  */
-#define pbmd5_init(x) MD5_Init(x) ? 0 : -1
+#define pbmd5_init(x) MD5_Init(x)
 
 /** Update the MD5 context with the "next part of the message".
     @param x Pointer to a MD5 context
     @param m Pointer to the start of the "next part of the message"
     @param l Length (in bytes) of the "next part of the message"
-    @return 0: success, -1: error
  */
-#define pbmd5_update(x, m, l) MD5_Update ((x), (m), (l)) ? 0 : -1
+#define pbmd5_update(x, m, l) MD5_Update((x), (m), (l))
 
 /** Update the MD5 context with the "next part of the message".
     Assumes it is an ASCIIZ string.
     @warning This macro uses @p str twice!
     @param x Pointer to a MD5 context
     @param str String being the "next part of the message"
-    @return 0: success, -1: error
  */
-#define pbmd5_update_str(x, str) MD5_Update ((x), (str), strlen(str)) ? 0 : -1
+#define pbmd5_update_str(x, str) MD5_Update((x), (str), strlen(str))
 
 /** Does the final calculations of the MD5 on context @p x and
     stores the digest to @p d.
     @param x Pointer to a MD5 context
     @param d Pointer to an array of (at least) 16 bytes
-    @return 0: success, -1: error
 */
 #define pbmd5_final(x, d) MD5_Final((d), (x))
 
