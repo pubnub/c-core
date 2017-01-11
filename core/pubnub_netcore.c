@@ -174,6 +174,7 @@ next_state:
         break;
     case PBS_IDLE:
         pb->retry_after_close = false;
+        pb->proxy_tunnel_established = false;
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
