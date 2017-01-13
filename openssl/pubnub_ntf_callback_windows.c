@@ -179,11 +179,7 @@ void socket_watcher_thread(void *arg)
         Sleep(1);
 
         EnterCriticalSection(&m_watcher.mutw);
-        if (0 == m_watcher.apoll_size) {
-            LeaveCriticalSection(&m_watcher.mutw);
-            continue;
-        }
-        {
+        if ( m_watcher.apoll_size > 0) {
             int rslt = WSAPoll(m_watcher.apoll, m_watcher.apoll_size, ms);
             if (SOCKET_ERROR == rslt) {
                 /* error? what to do about it? */
