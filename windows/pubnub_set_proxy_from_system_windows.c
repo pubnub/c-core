@@ -44,7 +44,7 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
 
     PUBNUB_LOG_TRACE("set_from_url4proxy(url4proxy=%S)\n", url4proxy);
     for (it = url4proxy; *end != '\0'; it = end + 1) {
-        wchar_t const *port;
+        wchar_t *port;
         size_t separator_position = wcscspn(it, L"; ");
 
         end = it + separator_position;

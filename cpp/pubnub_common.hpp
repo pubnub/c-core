@@ -11,6 +11,9 @@
 #include "pubnub_ssl.h"
 #include "pubnub_timers.h"
 #include "pubnub_helper.h"
+#if PUBNUB_PROXY_API
+#include "pubnub_proxy.h"
+#endif
 //}
 
 
@@ -136,6 +139,7 @@ namespace pubnub {
         return static_cast<ssl_opt>(static_cast<int>(l) & static_cast<int>(r));
     }
 
+#if PUBNUB_PROXY_API
     /// Possible proxy types
     enum proxy_type {
         /// HTTP GET proxy - the simplest
@@ -154,6 +158,7 @@ namespace pubnub {
         default: return pbproxyNONE;
         }
     }
+#endif
 
     /** A wrapper class for subscribe options, enabling a nicer
         usage. Something like:
@@ -570,7 +575,8 @@ namespace pubnub {
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
-        
+
+#if PUBNUB_PROXY_API        
         /// Manually set a proxy to use
         /// @see pubnub_set_proxy_manual
         int set_proxy_manual(proxy_type protocol, std::string const& ip_address_or_url, uint16_t port) {
@@ -596,6 +602,7 @@ namespace pubnub {
         int set_proxy_authentication_none() {
             return pubnub_set_proxy_authentication_none(d_pb);
         }
+#endif
 
 #if __cplusplus >= 201103L
         /// Sets the transaction timeout duration

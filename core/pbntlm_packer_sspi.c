@@ -29,14 +29,14 @@ static void fill_sspi_identity(SEC_WINNT_AUTH_IDENTITY *identity, char const* us
     PUBNUB_ASSERT_OPT(NULL != username);
     PUBNUB_ASSERT_OPT(NULL != password);
 
-    identity->User = (char*)username;
+    identity->User = (unsigned char*)username;
     identity->UserLength = strlen(username);
     
     /* For now, don't use the domain */
-    identity->Domain = "";
+    identity->Domain = (unsigned char*)"";
     identity->DomainLength = 0;
     
-    identity->Password = (char*)password;
+    identity->Password = (unsigned char*)password;
     identity->PasswordLength = strlen(password);
     
     identity->Flags = SEC_WINNT_AUTH_IDENTITY_ANSI;
