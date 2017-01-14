@@ -1,4 +1,4 @@
-SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c  ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c  ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c ../posix/pbpal_posix_blocking_io.c
+SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c  ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c  ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c ../posix/pbpal_posix_blocking_io.c
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
@@ -9,7 +9,7 @@ SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -I ../core -I ../posix -I .  -I ../lib/base64 -Wall -D PUBNUB_THREADSAFE
+CFLAGS =-g -I ../core -I ../posix -I . -I ../lib/base64 -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 
 
