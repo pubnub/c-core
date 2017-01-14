@@ -1,7 +1,8 @@
 # Pubnub C-core for Qt
 
-This is a part of C-core for the Qt. It is tested only with
-Qt5, though it may work with Qt4 without much (if any) changes.
+This is a part of C-core for the Qt. It is tested to work only with
+Qt5. It builds on Qt4, too, but there are some run-time issues, i.e.
+publishing some JSON object fails.
 
 Unlike the C++ wrapper, which wraps a "full featured" C-core
 platform, this is a "Qt-native C-core" of sorts. It provides

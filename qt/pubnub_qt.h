@@ -6,6 +6,8 @@
 #include <QUuid>
 #include <QNetworkAccessManager>
 #include <QTimer>
+#include <QStringList>
+#include <QDebug>
 
 extern "C" {
 #include "pubnub_api_types.h"

@@ -83,7 +83,7 @@ struct pbntlm_context {
 
     /** The length, in bytes, of the token received in Type2 NTLM
      * message */
-    size_t in_token_size;
+    unsigned in_token_size;
 
 #if PUBNUB_USE_WIN_SSPI
     /** The SSPI context handle */
