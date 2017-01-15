@@ -180,8 +180,17 @@ struct pubnub_ {
          * across local proxies, firewalls, etc?
          */
         bool fallbackSSL : 1;
+        /** Use system certificate store (if available) */
+        bool use_system_certificate_store : 1;
 #endif
     } options;
+
+#if PUBNUB_USE_SSL
+    /** Certificate store file */
+    char const* ssl_CAfile;
+    /** Certificate store directory */
+    char const* ssl_CApath;
+#endif
 
 #if PUBNUB_THREADSAFE
     pubnub_mutex_t monitor;

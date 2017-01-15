@@ -8,6 +8,7 @@
 #define SOCKET_ERROR -1
 #endif
 
+#include "pbpal_add_system_certs.h"
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
@@ -30,15 +31,34 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL\n");
+    int port = 80;
+
     if (NULL == pb->pal.socket) {
         char const*origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
         PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
+#if PUBNUB_PROXY_API
+        switch (pb->proxy_type) {
+        case pbproxyHTTP_CONNECT:
+            if (!pb->proxy_tunnel_established) {
+                origin = pb->proxy_hostname;
+            }
+            port = pb->proxy_port;
+            break;
+        case pbproxyHTTP_GET:
+            origin = pb->proxy_hostname;
+            port = pb->proxy_port;
+            PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
+            break;
+        default:
+            break;
+        }
+#endif
         pb->pal.socket = BIO_new_connect((char*)origin);
     }
     if (NULL == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
-    BIO_set_conn_port(pb->pal.socket, "http");
+    BIO_set_conn_int_port(pb->pal.socket, &port);
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
 
@@ -155,21 +175,25 @@ static int add_pem_cert(SSL_CTX *sslCtx, char const* pem_cert)
 static int add_pubnub_cert(SSL_CTX *sslCtx)
 {
     int rslt = add_pem_cert(sslCtx, pubnub_cert_Starfield);
-    rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_GlobalSign);
+    return rslt || add_pem_cert(sslCtx, pubnub_cert_GlobalSign);
+}
 
-    /* It would be nice to use this instead, if we had a way to find
-       out what is the file and/or path of the trusted root
-       certificates. It would fix a problem that would happen if the
-       root certificate used on `https://pubsub.pubnub.com` changes...
 
-       One way to "fix" this would be to add some #defines
-       for these, though it's not a user-friendly solution, so
-       we're not doing it for now.
+static void add_certs(pubnub_t *pb)
+{
+    if (pb->options.use_system_certificate_store && (0 == pbpal_add_system_certs(pb))) {
+        return;
+    }
 
-//    SSL_CTX_load_verify_locations(sslCtx, NULL, "/etc/ssl/certs");
-    */
-
-    return rslt;
+    if ((NULL == pb->ssl_CAfile) && (NULL == pb->ssl_CApath)) {
+        add_pubnub_cert(pb->pal.ctx);
+    }
+    else {
+        if (!SSL_CTX_load_verify_locations(pb->pal.ctx, pb->ssl_CAfile, pb->ssl_CApath)) {
+            ERR_print_errors_cb(print_to_pubnub_log, NULL);
+            PUBNUB_LOG_ERROR("SSL_CTX_load_verify_locations(CAfile=%s, CApath=%s) failed", pb->ssl_CAfile, pb->ssl_CApath);
+        }
+    }
 }
 
 
@@ -178,6 +202,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     SSL *ssl = NULL;
     int rslt;
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+    int port = 443;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_CONNECT));
@@ -185,6 +210,24 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (!pb->options.useSSL) {
         return resolv_and_connect_wout_SSL(pb);
     }
+    
+#if PUBNUB_PROXY_API
+    switch (pb->proxy_type) {
+    case pbproxyHTTP_CONNECT:
+        if (!pb->proxy_tunnel_established) {
+            return resolv_and_connect_wout_SSL(pb);
+        }
+        port = pb->proxy_port;
+        break;
+    case pbproxyHTTP_GET:
+        origin = pb->proxy_hostname;
+        port = pb->proxy_port;
+        PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
+        break;
+    default:
+        break;
+    }
+#endif
 
     if (NULL == pb->pal.ctx) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
@@ -195,7 +238,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             return pbpal_resolv_resource_failure;
         }
         PUBNUB_LOG_TRACE("pb=%p: Got SSL_CTX\n", pb);
-        add_pubnub_cert(pb->pal.ctx);
+        add_certs(pb);
     }
 
     if (NULL == pb->pal.socket) {
@@ -208,7 +251,24 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     else {
         BIO_get_ssl(pb->pal.socket, &ssl);
         if (NULL == ssl) {
+#if PUBNUB_PROXY_API
+            if (pbproxyHTTP_CONNECT == pb->proxy_type) {
+                BIO* ssl_bio = BIO_new_ssl(pb->pal.ctx, 1);
+                if (NULL == ssl_bio) {
+                    ERR_print_errors_cb(print_to_pubnub_log, NULL);
+                    PUBNUB_LOG_ERROR("BIO_new_ssl() failed\n");
+                    return pbpal_resolv_resource_failure;
+                }
+                else {
+                    pb->pal.socket = BIO_push(pb->pal.socket, ssl_bio);
+                }
+            }
+            else {
+                return resolv_and_connect_wout_SSL(pb);
+            }
+#else
             return resolv_and_connect_wout_SSL(pb);
+#endif
         }
         ssl = NULL;
     }
@@ -227,13 +287,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     }
 
     BIO_set_conn_hostname(pb->pal.socket, origin);
-    BIO_set_conn_port(pb->pal.socket, "https");
+    BIO_set_conn_int_port(pb->pal.socket, &port);
     if (pb->pal.ip_timeout != 0) {
         if (pb->pal.ip_timeout < time(NULL)) {
             pb->pal.ip_timeout = 0;
         }
         else {
-            PUBNUB_LOG_TRACE("SSL re-connect to: %d.%d.%d.%d\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
+            PUBNUB_LOG_TRACE("SSL re-connect to: %ud.%ud.%ud.%ud\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
             BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
         }
     }

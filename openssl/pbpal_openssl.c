@@ -94,6 +94,8 @@ void pbpal_init(pubnub_t *pb)
     memset(&pb->pal, 0, sizeof pb->pal);
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
+    pb->options.use_system_certificate_store = false;
+    pb->ssl_CAfile = pb->ssl_CApath = NULL;
     pb->sock_state = STATE_NONE;
     pb->readlen = 0;
     buf_setup(pb);
