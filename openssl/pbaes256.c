@@ -77,7 +77,7 @@ pubnub_bymebl_t pbaes256_encrypt_alloc(pubnub_bymebl_t msg, uint8_t const* key, 
         return result;
     }
 
-    result.ptr = malloc(msg.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()));
+    result.ptr = (uint8_t*)malloc(msg.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()));
     if (NULL == result.ptr) {
         EVP_CIPHER_CTX_free(aes256);
         PUBNUB_LOG_ERROR("Failed to allocate memory for AES-256 encryption\n");
@@ -153,7 +153,7 @@ pubnub_bymebl_t pbaes256_decrypt_alloc(pubnub_bymebl_t data, uint8_t const* key,
     pubnub_bymebl_t result;
 
     result.size = data.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()) + 1;
-    result.ptr = malloc(result.size);
+    result.ptr = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
         return result;
     }

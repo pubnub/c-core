@@ -42,8 +42,21 @@ int main()
 #endif
             );
 
+        std::cout << "First subscribe / connect" << std::endl;
+        if (PNR_OK ==  pb.subscribe(chan).await()) {
+            std::cout << "Subscribe/connected!" << std::endl;
+        }
+        else {
+            std::cout << "Subscribe failed!" << std::endl;
+        }
+
+#if PUBNUB_CRYPTO_API
+        std::cout << "Publishing encrypted" << std::endl;
+        pubnub::futres futres = pb.publish_encrypted(chan, "\"Hello world from C++!\"", "KUKUMENEGRDNA");
+#else
         std::cout << "Publishing" << std::endl;
         pubnub::futres futres = pb.publish(chan, "\"Hello world from C++!\"");
+#endif
         res = futres.await();
         if (PNR_OK == res) {
             std::cout << "Published! Response from Pubnub: " << pb.last_publish_result() << std::endl;
@@ -57,22 +70,24 @@ int main()
 
         std::cout << "Subscribing" << std::endl;
         if (PNR_OK ==  pb.subscribe(chan).await()) {
-            std::cout << "Subscribed!" << std::endl;
-        }
-        else {
-            std::cout << "Subscribe failed!" << std::endl;
-        }
-        if (PNR_OK ==  pb.subscribe(chan).await()) {
             std::cout << "Subscribed! Got messages:" << std::endl;
             /// Lets illustrate getting all the message in a vector,
             /// and iterating over it
 #if __cplusplus >= 201103L
+#if PUBNUB_CRYPTO_API
+            auto msg = pb.get_all_decrypted("KUKUMENEGRDNA");
+#else
             auto msg = pb.get_all();
+#endif
             for (auto it = msg.begin(); it != msg.end(); ++it) {
                 std::cout << *it << std::endl;
             }
 #else
+#if PUBNUB_CRYPTO_API
+            std::vector<std::string> msg = pb.get_all_decrypted("KUKUMENEGRDNA");
+#else
             std::vector<std::string> msg = pb.get_all();
+#endif
             for (std::vector<std::string>::iterator it = msg.begin(); it != msg.end(); ++it) {
                 std::cout << *it << std::endl;
             }

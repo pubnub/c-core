@@ -3,6 +3,7 @@
 #define      INC_PUBNUB_COMMON_HPP
 
 //extern "C" {
+#include "pubnub_config.h"
 #include "pubnub_alloc.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_coreapi_ex.h"
@@ -13,6 +14,9 @@
 #include "pubnub_helper.h"
 #if PUBNUB_PROXY_API
 #include "pubnub_proxy.h"
+#endif
+#if PUBNUB_CRYPTO_API
+#include "pubnub_crypto.h"
 #endif
 //}
 
@@ -151,7 +155,7 @@ namespace pubnub {
     };
 
     /// Return C-core proxy type from C++ (wrapper) proxy type
-    pubnub_proxy_type ccore_proxy_type(proxy_type prtp) {
+    inline enum pubnub_proxy_type ccore_proxy_type(proxy_type prtp) {
         switch (prtp) {
         case http_get_proxy: return pbproxyHTTP_GET;
         case http_connect_proxy: return pbproxyHTTP_CONNECT;
@@ -302,6 +306,39 @@ namespace pubnub {
             }
             return all;
         }
+
+#if PUBNUB_CRYPTO_API
+        /// Returns the next message from the context, decrypted with
+        /// @p cipher_key. If there are none, returns an empty string.
+        /// If decrypting fails, also returns an empty string.
+        /// @see pubnub_get
+        std::string get_decrypted(std::string const& cipher_key) const {
+            pubnub_bymebl_t mebl = pubnub_get_decrypted_alloc(d_pb, cipher_key.c_str());
+            if (NULL == mebl.ptr) {
+                return "";
+            }
+            std::string rslt(reinterpret_cast<char*>(mebl.ptr));
+            free(mebl.ptr);
+            return rslt;
+        }
+        /// Returns the all the remaining messages from the context,
+        /// all decrypted with the same @p cipher_key. If there are
+        /// none, returns an empty vector.  If decrypting of any
+        /// message fails, it will not be in the returned vector.
+        std::vector<std::string> get_all_decrypted(std::string const& cipher_key) const {
+            std::vector<std::string> all;
+            for (;;) {
+                pubnub_bymebl_t mebl = pubnub_get_decrypted_alloc(d_pb, cipher_key.c_str());
+                if (NULL == mebl.ptr) {
+                    break;
+                }
+                all.push_back(reinterpret_cast<char*>(mebl.ptr));
+                free(mebl.ptr);
+            }
+            return all;
+        }
+#endif
+
         /// Returns the next channel string from the context.
         /// If there are none, returns an empty string
         /// @see pubnub_get_channel
@@ -335,6 +372,15 @@ namespace pubnub {
         futres publish(std::string const &channel, std::string const &message) {
             return doit(pubnub_publish(d_pb, channel.c_str(), message.c_str()));
         }
+
+#if PUBNUB_CRYPTO_API
+        /// Publishes a @p message on the @p channel encrypted with @p
+        /// cipher_key.
+        /// @see pubnub_publish_encrypted
+        futres publish_encrypted(std::string const& channel, std::string const& message, std::string const& cipher_key) {
+            return doit(pubnub_publish_encrypted(d_pb, channel.c_str(), message.c_str(), cipher_key.c_str()));
+        }
+#endif
 
         /// Publishes a @p message on the @p channel using v2, with the
         /// options set in @p options.
@@ -580,15 +626,15 @@ namespace pubnub {
         /// Manually set a proxy to use
         /// @see pubnub_set_proxy_manual
         int set_proxy_manual(proxy_type protocol, std::string const& ip_address_or_url, uint16_t port) {
-            pubnub_proxy_type ccore_proxy_type = ccore_proxy_type(protocol);
-            return pubnub_set_proxy_manual(d_pb, ccore_proxy_type, ip_address_or_url.c_str(), port);
+            pubnub_proxy_type ccore_proxy = ccore_proxy_type(protocol);
+            return pubnub_set_proxy_manual(d_pb, ccore_proxy, ip_address_or_url.c_str(), port);
         }
 
         /// Set the proxy to use from system configuration.
         /// @see pubnub_set_proxy_from_system
         int set_proxy_from_system(proxy_type protocol) {
-            pubnub_proxy_type ccore_proxy_type = ccore_proxy_type(protocol);
-            return pubnub_set_proxy_from_system(d_pb, ccore_proxy_type);
+            pubnub_proxy_type ccore_proxy = ccore_proxy_type(protocol);
+            return pubnub_set_proxy_from_system(d_pb, ccore_proxy);
         }
 
         /// Sets the authentication scheme to use for proxy

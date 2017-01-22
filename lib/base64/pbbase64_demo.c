@@ -48,7 +48,7 @@ static void do_encode_alloc(void)
 static void do_decode(void)
 {
     int result;
-    char decoded[sizeof ENC_INPUT_MED];
+    char decoded[sizeof ENC_INPUT_MED + 3 * ((sizeof ENC_INPUT_MED % 3) != 0)];
     pubnub_bymebl_t decoded_mebl = { (uint8_t*)&decoded, sizeof decoded / sizeof decoded[0] };
     
     result = pbbase64_decode_std(ENC_RESULT_MED, sizeof ENC_RESULT_MED - 1, &decoded_mebl);
