@@ -157,4 +157,66 @@ enum pubnub_res pubnub_here_now_ex(pubnub_t *p, const char *channel, struct pubn
 enum pubnub_res pubnub_global_here_now_ex(pubnub_t *p, struct pubnub_here_now_options opt);
 
 
+/** Options for "extended" history. */
+struct pubnub_history_options {
+    /** If false, the returned start and end Timetoken values will be
+     * returned as long ints. If true, the start and end Timetoken
+     * values will be returned as strings. Default is false. */
+    bool string_token;
+    /** The maximum number of messages to return per response. Has to
+     * be between 1 and 100 messages. Default is 100.
+     */
+    int count;
+    /** Direction of time traversal. Default is false, which means
+     * timeline is traversed newest to oldest. */
+    bool reverse;
+    /** If provided (not NULL), lets you select a “start date”, in
+     * Timetoken format. If not provided, it will default to current
+     * time. Page through results by providing a start OR end time
+     * token. Retrieve a slice of the time line by providing both a
+     * start AND end time token. start is ‘exclusive’ – that is, the
+     * first item returned will be the one immediately after the start
+     * Timetoken value. Default is NULL.
+     */
+    char const* start;
+    /** If provided (not NULL), lets you select an “end date”, in
+     * Timetoken format. If not provided, it will provide up to the
+     * number of messages defined in the “count” parameter. Page
+     * through results by providing a start OR end time
+     * token. Retrieve a slice of the time line by providing both a
+     * start AND end time token. End is ‘exclusive’ – that is, if a
+     * message is associated exactly with the end Timetoken, it will
+     * be included in the result. Default is NULL.
+     */
+    char const* end;
+    /** Pass true to recieve a timetoken with each history
+     * message. Defaults to false.
+     */
+    bool include_token;
+};
+
+
+/** This returns the default options for publish V1 transactions.
+    It's best to always call it to initialize the
+    #pubnub_history_options, since it has several parameters.
+ */
+struct pubnub_history_options pubnub_history_defopts(void);
+
+/** The extended "history". It is basically the same as the
+    pubnub_history(), just adding a few options that will be sent.
+
+    Basic usage:
+
+        struct pubnub_history_options opt = pubnub_history_defopts();
+        opt.reverse = true;
+        pbresult = pubnub_history_ex(pn, "my_channel", opt);
+
+    @param pb The Pubnub context. Can't be NULL. 
+    @param channel The string with the channel name to get history for.
+    @param opt History options for this history
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_history_ex(pubnub_t* pb, char const* channel, struct pubnub_history_options opt);
+
+
 #endif /* defined INC_PUBNUB_COREAPI_EX */

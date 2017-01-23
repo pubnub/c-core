@@ -182,7 +182,28 @@ pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool inclu
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             count,
-            include_token
+            include_token,
+            pbccNotSet,
+            pbccNotSet,
+            0,
+            0
+            ), PBTT_HISTORY
+        );
+}
+
+
+pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool include_token, QString const& start, bool reverse, QString const& end, bool string_token)
+{
+    return startRequest(
+        pbcc_history_prep(
+            d_context.data(),
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
+            count,
+            include_token,
+            string_token ? pbccTrue : pbccFalse,
+            reverse ? pbccTrue : pbccFalse,
+            start.isEmpty() ? 0 : start.toLatin1().data(), 
+            end.isEmpty() ? 0 : end.toLatin1().data()
             ), PBTT_HISTORY
         );
 }

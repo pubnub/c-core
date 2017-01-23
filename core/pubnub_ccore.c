@@ -548,7 +548,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *pb)
 
 
 
-enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, unsigned count, bool include_token)
+enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, unsigned count, bool include_token, enum pbcc_tribool string_token, enum pbcc_tribool reverse, char const* start, char const* end)
 {
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
@@ -566,6 +566,10 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, 
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_UNSIGNED_M(pb, "count", count, '&');
     APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');
+    APPEND_URL_PARAM_TRIBOOL_M(pb, "stringtoken", string_token, '&');
+    APPEND_URL_PARAM_TRIBOOL_M(pb, "reverse", reverse, '&');
+    APPEND_URL_PARAM_M(pb, "start", start, '&');
+    APPEND_URL_PARAM_M(pb, "start", end, '&');
 
     return PNR_STARTED;
 }

@@ -345,6 +345,48 @@ public:
     */
     pubnub_res history(QString const &channel, unsigned count = 100, bool include_token = false);
 
+    /** This is the "extended" history, with all the options and no
+        defaults.
+
+        @param channel The string with the channel name to get message
+        history for. This _can't_ be a comma separated list of channels.
+
+        @param count Maximum number of messages to get. If there are less
+        than this available on the @c channel, you'll get less, but you
+        can't get more.
+
+        @param include_token If true, include the time token for every
+        gotten message
+
+        @param start Lets you select a “start date”, in Timetoken
+        format. If not provided, it will default to current time. Page
+        through results by providing a start OR end time
+        token. Retrieve a slice of the time line by providing both a
+        start AND end time token. start is ‘exclusive’ – that is, the
+        first item returned will be the one immediately after the
+        start Timetoken value.
+
+        @param reverse Direction of time traversal. False means
+        timeline is traversed newest to oldest.
+
+        @param end Lets you select an “end date”, in Timetoken
+        format. If not provided, it will provide up to the number of
+        messages defined in the “count” parameter. Page through
+        results by providing a start OR end time token. Retrieve a
+        slice of the time line by providing both a start AND end time
+        token. End is ‘exclusive’ – that is, if a message is
+        associated exactly with the end Timetoken, it will be included
+        in the result.
+
+        @param string_token If false, the returned start and end
+        Timetoken values will be returned as long ints. If 1, or true,
+        the start and end Timetoken values will be returned as
+        strings.
+
+        @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res history(QString const &channel, unsigned count, bool include_token, QString const& start, bool reverse, QString const& end, bool string_token);
+
     /** Get the currently present users on a @p channel and/or @p
         channel_group. This actually means "initiate a here_now
         transaction". It can be thought of as a query against the

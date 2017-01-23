@@ -179,3 +179,52 @@ enum pubnub_res pubnub_global_here_now_ex(pubnub_t *pb, struct pubnub_here_now_o
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
+
+
+struct pubnub_history_options pubnub_history_defopts(void)
+{
+    struct pubnub_history_options rslt;
+
+    rslt.string_token = false;
+    rslt.count = 100;
+    rslt.reverse = false;
+    rslt.start = NULL;
+    rslt.end = NULL;
+    rslt.include_token = false;
+
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_history_ex(pubnub_t* pb, char const* channel, struct pubnub_history_options opt)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (pb->state != PBS_IDLE) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+    
+    rslt = pbcc_history_prep(
+        &pb->core, 
+        channel, 
+        opt.count, 
+        opt.include_token, 
+        opt.string_token ? pbccTrue : pbccFalse,
+        opt.reverse ? pbccTrue : pbccFalse,
+        opt.start, 
+        opt.end
+        );
+    if (PNR_STARTED == rslt) {
+        pb->trans = PBTT_HISTORY;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+    }
+    
+    pubnub_mutex_unlock(pb->monitor);
+    return rslt;
+}

@@ -211,7 +211,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *p);
 /** Prepares the History v2 operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token);
+enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token, enum pbcc_tribool string_token, enum pbcc_tribool reverse, char const* start, char const* end);
 
 /** Prepares the Heartbeat operation (transaction), mostly by
     formatting the URI of the HTTP request.

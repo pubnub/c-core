@@ -195,6 +195,24 @@ namespace pubnub {
         pubnub_here_now_options data() { return d_; }
     };
 
+    /** A wrapper class for history options, enabling a nicer
+        usage. Something like:
+        
+            pn.history(chan, history_options().reverse(true));
+    */
+    class history_options {
+        pubnub_history_options d_;
+    public:
+        history_options() { d_ = pubnub_history_defopts(); }
+        history_options& string_token(bool token_string) { d_.string_token = token_string; return *this; }
+        history_options& count(int cnt) { d_.count = cnt; return *this; }
+        history_options& reverse(bool rev) { d_.reverse = rev; return *this; }
+        history_options& start(std::string const& st) { return d_.start = st.empty() ? 0 : st.c_str(); return *this; }
+        history_options& end(std::string const& e) { return d_.end = e.empty() ? 0 : e.c_str(); return *this; }
+        history_options& include_token(bool inc_token) { d_.include_token = inc_token; return *this; }
+        pubnub_history_options data() { return d_; }
+    };
+
     /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
      * not a "native" C++ implementation.
      *
@@ -447,6 +465,13 @@ namespace pubnub {
         futres history(std::string const &channel, unsigned count = 100, bool include_token = false) {
             char const *ch = channel.empty() ? 0 : channel.c_str();
             return doit(pubnub_history(d_pb, ch, count, include_token));
+        }
+
+        /// Starts a "history" with extended (full) options
+        /// @see pubnub_history_ex
+        futres history(std::string const &channel, history_options opt) {
+            char const *ch = channel.empty() ? 0 : channel.c_str();
+            return doit(pubnub_history_ex(d_pb, ch, opt.data()));
         }
 
         /// Starts a transaction to inform Pubnub we're working
