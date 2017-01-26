@@ -207,8 +207,8 @@ namespace pubnub {
         history_options& string_token(bool token_string) { d_.string_token = token_string; return *this; }
         history_options& count(int cnt) { d_.count = cnt; return *this; }
         history_options& reverse(bool rev) { d_.reverse = rev; return *this; }
-        history_options& start(std::string const& st) { return d_.start = st.empty() ? 0 : st.c_str(); return *this; }
-        history_options& end(std::string const& e) { return d_.end = e.empty() ? 0 : e.c_str(); return *this; }
+        history_options& start(std::string const& st) { d_.start = st.empty() ? 0 : st.c_str(); return *this; }
+        history_options& end(std::string const& e) { d_.end = e.empty() ? 0 : e.c_str(); return *this; }
         history_options& include_token(bool inc_token) { d_.include_token = inc_token; return *this; }
         pubnub_history_options data() { return d_; }
     };
