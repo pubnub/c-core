@@ -5,12 +5,14 @@
 
 #include "openssl/x509.h"
 
+#include <windows.h>
+
 #include <wincrypt.h>
 
 
 int pbpal_add_system_certs(pubnub_t* pb)
 {
-    X509_STORE *cert_store = SSL_CTX_get_cert_store(pb->pal.sslCtx)
+    X509_STORE *cert_store = SSL_CTX_get_cert_store(pb->pal.ctx);
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"ROOT");
     PCCERT_CONTEXT pContext = NULL;
 
