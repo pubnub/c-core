@@ -90,9 +90,7 @@ enum pubnub_http_authentication_scheme {
     pbhtauBasic,
     /** The digest authentication scheme. It's complex and slows the
         HTTP protocol down, but it is reasonably secure even with
-        "plain" HTTP. There are several hashes to choose from with
-        this scheme. This is a placeholder, digest authentication
-        scheme is not yet available.
+        "plain" HTTP.
     */
     pbhtauDigest,
     /** The propriatery Microsoft NTLM authentication scheme.  It's
@@ -102,17 +100,6 @@ enum pubnub_http_authentication_scheme {
     pbhtauNTLM,
     /** No authentication scheme. This is the default */
     pbhtauNone
-};
-
-
-/** The known hashes for HTTP digest authentication scheme */
-enum pubnub_http_digest_hash_algorithm {
-    /** Use MD5 algorithm for HTTP digest */
-    pbhtdhashMD5,
-    /** Use SHA-512-256 algorithm for HTTP digest */
-    pbhtdhashSHA_512_256,
-    /** Use SHA-256 algorithm for HTTP digest */
-    pbhtdhashSHA_256,
 };
 
 

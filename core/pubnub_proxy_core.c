@@ -6,14 +6,17 @@
 
 #include "pbbase64.h"
 #include "pbntlm_core.h"
+#include "pbhttp_digest.h"
 
 #include <string.h>
+
 
 
 
 void pbproxy_handle_http_header(pubnub_t *p, char const* header)
 {
     char scheme_basic[] = "Basic";
+    char scheme_digest[] = "Digest";
     char scheme_NTLM[] = "NTLM";
     char proxy_auth[] = "Proxy-Authenticate: ";
     char const* contents;
@@ -21,10 +24,25 @@ void pbproxy_handle_http_header(pubnub_t *p, char const* header)
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(header != NULL);
 
-    if (strncmp(p->core.http_buf, proxy_auth, sizeof proxy_auth - 1) != 0) {
+    switch (header[0]) {
+    case ' ':
+    case '\t':
+        /* Though this is not very nice, we only support multi-line
+           headers for Digest proxy. In practice, Basic and NTLM never
+           use multi-line headers.
+        */
+        if (p->proxy_auth_scheme != pbhtauDigest) {
+            return;
+        }
+        pbhttp_digest_parse_header(&p->digest_context, header + 1);
         return;
+    default:
+        if (strncmp(header, proxy_auth, sizeof proxy_auth - 1) != 0) {
+            return;
+        }
+        break;
     }
-    contents = p->core.http_buf + sizeof proxy_auth - 1;
+    contents = header + sizeof proxy_auth - 1;
 
     PUBNUB_LOG_TRACE("pbproxy_handle_http_header(header='%s', contents='%s')\n", header, contents);
 
@@ -32,6 +50,14 @@ void pbproxy_handle_http_header(pubnub_t *p, char const* header)
         /* We ignore the "realm" for now */
         PUBNUB_LOG_TRACE("pbproxy_handle_http_header() Basic authentication\n");
         p->proxy_auth_scheme = pbhtauBasic;
+        p->proxy_authorization_sent = false;
+    }
+    if (0 == strncmp(contents, scheme_digest, sizeof scheme_digest -1)) {
+        /* We ignore the "realm" for now */
+        PUBNUB_LOG_TRACE("pbproxy_handle_http_header() Digest authentication\n");
+        p->proxy_auth_scheme = pbhtauDigest;
+        pbhttp_digest_init(&p->digest_context);
+        pbhttp_digest_parse_header(&p->digest_context, contents + sizeof scheme_digest);
         p->proxy_authorization_sent = false;
     }
     else if (0 == strncmp(contents, scheme_NTLM, sizeof scheme_NTLM -1)) {
@@ -104,6 +130,22 @@ int pbproxy_http_header_to_send(pubnub_t *p, char* header, size_t n)
             PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): Basic Failed Base64 encoding of header\n");
         }
         return i;
+    }
+    case pbhtauDigest:
+    {
+        char prefix[] = "Proxy-Authorization: Digest ";
+        pubnub_chamebl_t data = { header + sizeof prefix - 1,  n - (sizeof prefix - 1) };
+
+        memcpy(header, prefix, sizeof prefix);
+        
+        if (0 == pbhttp_digest_prep_header_to_send(&p->digest_context, figure_out_username(p), figure_out_password(p), p->proxy_saved_path, &data)) {
+            PUBNUB_LOG_TRACE("pbproxy_http_header_to_send(): Digest header: '%s'\n", header);
+        }
+        else {
+            PUBNUB_LOG_ERROR("Failed to prepare HTTP digest auth header\n");
+            return -1;
+        }
+        return 0;
     }
     case pbhtauNTLM:
     {

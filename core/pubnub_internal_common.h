@@ -15,6 +15,7 @@
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
 #include "pubnub_proxy.h"
+#include "pbhttp_digest.h"
 #endif
 
 #include <stdint.h>
@@ -260,8 +261,11 @@ struct pubnub_ {
     */
     int retry_after_close;
 
-    /** Data about an NTLM authentication */
+    /** Data about NTLM authentication */
     struct pbntlm_context ntlm_context;
+
+    /** Data about (HTTP) Digest authentication */
+    struct pbhttp_digest_context digest_context;
 
 #endif
 };

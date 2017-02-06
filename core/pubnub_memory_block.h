@@ -32,11 +32,22 @@ struct pubnub_mem_block {
     size_t size;
 };
 
+/** A block of memory whose pointer is pointing to characters.  A
+    convenience to avoid a lot of casting when dealing with strings.
+*/
+struct pubnub_char_mem_block {
+    char *ptr;
+    size_t size;
+};
+
 /** Helper typedef for a general (void) memory block */
 typedef struct pubnub_mem_block pubnub_mebl_t;
 
 /** Helper typedef for a byte memory block */
 typedef struct pubnub_byte_mem_block pubnub_bymebl_t;
+
+/** Helper typedef for a char memory block */
+typedef struct pubnub_char_mem_block pubnub_chamebl_t;
 
 
 #endif /* !defined INC_PUBNUB_MEMORY_BLOCK */
