@@ -389,7 +389,91 @@ int main()
     else {
         printf("Getting channel group list failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
     }
-	
+
+    puts("Add channel to group");
+    res = pubnub_add_channel_to_group(pbp, chan, "channel-group");
+    if (res != PNR_STARTED) {
+        printf("pubnub_add_channel_to_group() returned unexpected: %d\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        puts("Got add channel to group response!");
+        for (;;) {
+            msg = pubnub_get_channel(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Adding channel to group failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
+    }
+
+    puts("Remove channel from group");
+    res = pubnub_remove_channel_from_group(pbp, chan, "channel-group");
+    if (res != PNR_STARTED) {
+        printf("pubnub_remove_channel_from_group() returned unexpected: %d\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        puts("Got remove channel from group response!");
+        for (;;) {
+            msg = pubnub_get_channel(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Removing channel from group failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
+    }
+
+    puts("Remove channel group");
+    res = pubnub_remove_channel_group(pbp, "channel-group");
+    if (res != PNR_STARTED) {
+        printf("pubnub_remove_channel_group() returned unexpected: %d\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+    res = pubnub_await(pbp);
+    if (res == PNR_STARTED) {
+        printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
+        pubnub_free(pbp);
+        return -1;
+    }
+
+    if (PNR_OK == res) {
+        puts("Got remove channel group response!");
+        for (;;) {
+            msg = pubnub_get_channel(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Removing channel group failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
+    }
+
     /* We're done */
     if (pubnub_free(pbp) != 0) {
         printf("Failed to free the Pubnub context\n");
