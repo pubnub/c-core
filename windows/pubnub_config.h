@@ -72,7 +72,6 @@
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
-#define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 
 /** The size of the stack (in kilobytes) for the "polling" thread, when using 

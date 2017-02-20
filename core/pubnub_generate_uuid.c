@@ -8,10 +8,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#if PUBNUB_HAVE_MD5
-#include "md5.h"
-#endif
-
 #if PUBNUB_HAVE_SHA1
 #include "sha1.h"
 #endif
@@ -55,38 +51,6 @@ int pubnub_generate_uuid_v1_time(
     memcpy(s_timestamp, i_timestamp, sizeof s_timestamp);
 
     return 0;
-}
-
-
-int pubnub_generate_uuid_v3_name_md5(
-	struct Pubnub_UUID *uuid,
-	struct Pubnub_UUID *nsid,
-	void *name,
-	unsigned namelen
-    )
-{
-#if PUBNUB_HAVE_MD5
-    MD5_CTX ctx;
-    
-    MD5Init(&ctx);
-    MD5Update(&ctx, nsid, sizeof *nsid);
-    MD5Update(&ctx, name, namelen);
-    MD5Final(uuid, &ctx);
-
-    uuid->uuid[6] &= 0x0F;
-    uuid->uuid[6] |= 0x30;
-    uuid->uuid[8] &= 0x3F;
-    uuid->uuid[8] |= 0x80;
-    
-    return 0;
-#else
-	PUBNUB_UNUSED(uuid);
-	PUBNUB_UNUSED(nsid);
-	PUBNUB_UNUSED(name);
-	PUBNUB_UNUSED(namelen);
-
-	return -1;
-#endif
 }
 
 

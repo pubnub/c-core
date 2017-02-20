@@ -60,7 +60,6 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
-#define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 
 
