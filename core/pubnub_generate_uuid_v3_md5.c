@@ -1,13 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-//#include "pubnub_config.h"
-//#include "pubnub_internal.h"
 #include "pubnub_generate_uuid.h"
 
 #include "pbmd5.h"
 #include "pubnub_assert.h"
 
-//#include <string.h>
-//#include <stdio.h>
+#include <stdlib.h>
 
 
 int pubnub_generate_uuid_v3_name_md5(
@@ -18,7 +15,11 @@ int pubnub_generate_uuid_v3_name_md5(
     )
 {
     PBMD5_CTX ctx;
-    
+
+    PUBNUB_ASSERT_OPT(uuid != NULL);
+    PUBNUB_ASSERT_OPT(nsid != NULL);
+    PUBNUB_ASSERT_OPT(name != NULL);
+
     pbmd5_init(&ctx);
     pbmd5_update(&ctx, nsid, sizeof *nsid);
     pbmd5_update(&ctx, name, namelen);
@@ -28,6 +29,6 @@ int pubnub_generate_uuid_v3_name_md5(
     uuid->uuid[6] |= 0x30;
     uuid->uuid[8] &= 0x3F;
     uuid->uuid[8] |= 0x80;
-    
+
     return 0;
 }
