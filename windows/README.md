@@ -32,8 +32,8 @@ So, to build the samples, just run:
 	nmake windows.mk
 	
 from a Visual Studio Command Prompt. This was tested mainly
-on MSVS 2010 and Windows 7 & 8, but should work with pretty
-much any MSVS since 2005 and Windows since XP.
+on MSVS 2010 and Windows 7 & 10, but should work with pretty
+much any MSVS since 2008 and Windows since XP.
 
 There are no special requirements for C-core on
 Windows, except for a working compiler and Windows SDK - and
