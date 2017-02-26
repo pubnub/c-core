@@ -165,6 +165,45 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
 }
 
 
+char *pubnub_json_string_unescape_slash(char *json_string)
+{
+    char *s = json_string;
+    size_t to_pad = 0;
+    size_t distance;
+    char *dest = s;
+    char *end = s;
+
+    while (*end) {
+        if (('\\' == *end) && ('/' == end[1])) {
+            distance = end - s;
+            if (distance > 0) {
+                memmove(dest, s, distance);
+                dest += distance;
+            }
+            *dest++ = '/';
+            end += 2;
+            s = end;
+            ++to_pad;
+        }
+        else {
+            ++end;
+        }
+    }
+    distance = end - s;
+    if (distance > 0) {
+        memmove(dest, s, distance);
+        dest += distance;
+    }
+
+    if (to_pad > 0) {
+        memset(dest, ' ', to_pad);
+    }
+    PUBNUB_ASSERT_OPT(dest[to_pad] == '\0');
+
+    return json_string;
+}
+
+
 enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n)
 {
     char *msg;
@@ -187,8 +226,11 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
         return PNR_FORMAT_ERROR;
     }
     msg[msg_len - 1] = '\0';
+    ++msg;
 
-    if (0 != pubnub_decrypt_buffered(cipher_key, msg + 1, &data, &buffer)) {
+    pubnub_json_string_unescape_slash(msg);
+
+    if (0 != pubnub_decrypt_buffered(cipher_key, msg, &data, &buffer)) {
         return PNR_INTERNAL_ERROR;
     }
     *n = data.size;
@@ -216,8 +258,11 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
         return result;
     }
     msg[msg_len - 1] = '\0';
+    ++msg;
 
-    result = pubnub_decrypt_alloc(cipher_key, msg + 1);
+    pubnub_json_string_unescape_slash(msg);
+
+    result = pubnub_decrypt_alloc(cipher_key, msg);
     if (NULL != result.ptr) {
         result.ptr[result.size] = '\0';
     }
