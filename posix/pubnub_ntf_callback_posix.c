@@ -19,10 +19,10 @@
 
 
 struct SocketWatcherData {
-    struct pollfd *apoll;
-    size_t apoll_size;
-    size_t apoll_cap;
-    pubnub_t **apb;
+    struct pollfd *apoll pubnub_guarded_by(mutw);
+    size_t apoll_size pubnub_guarded_by(mutw);
+    size_t apoll_cap pubnub_guarded_by(mutw);
+    pubnub_t **apb pubnub_guarded_by(mutw);
     pthread_mutex_t mutw;
     pthread_cond_t condw;
     pthread_t thread_id;
@@ -30,10 +30,10 @@ struct SocketWatcherData {
     pubnub_t *timer_head;
 #endif
     pthread_mutex_t queue_lock;
-    size_t queue_size;
-    size_t queue_head;
-    size_t queue_tail;
-    pubnub_t *queue_apb[1024];
+    size_t queue_size pubnub_guarded_by(queue_lock);
+    size_t queue_head pubnub_guarded_by(queue_lock);
+    size_t queue_tail pubnub_guarded_by(queue_lock);
+    pubnub_t *queue_apb[1024] pubnub_guarded_by(queue_lock);
 };
 
 static struct SocketWatcherData m_watcher;
@@ -453,8 +453,6 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
 }
 
 
-
-
 enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
     enum pubnub_res rslt;
@@ -472,14 +470,37 @@ enum pubnub_res pubnub_last_result(pubnub_t *pb)
 enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    pubnub_mutex_lock(pb->monitor);
     pb->cb = cb;
     pb->user_data = user_data;
+    pubnub_mutex_unlock(pb->monitor);
     return PNR_OK;
 }
 
 
 void *pubnub_get_user_data(pubnub_t *pb)
 {
+    void *result;
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    return pb->user_data;
+
+    pubnub_mutex_lock(pb->monitor);
+    result = pb->user_data;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
+}
+
+
+pubnub_callback_t pubnub_get_callback(pubnub_t *pb)
+{
+    pubnub_callback_t result;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    result = pb->cb;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
 }

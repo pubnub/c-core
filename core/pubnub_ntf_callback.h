@@ -61,6 +61,10 @@ enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, voi
  */
 void *pubnub_get_user_data(pubnub_t *pb);
 
+/** Returns the callback set with pubnub_register_callback().
+ */
+pubnub_callback_t pubnub_get_callback(pubnub_t *pb);
+
 
 #endif /* !defined INC_PUBNUB_NTF_CALLBACK */
 
