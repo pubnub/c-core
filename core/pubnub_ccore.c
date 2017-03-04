@@ -548,7 +548,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *pb)
 
 
 
-enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, unsigned count, bool include_token, enum pbcc_tribool string_token, enum pbcc_tribool reverse, char const* start, char const* end)
+enum pubnub_res pbcc_history_prep(struct pbcc_context *pb, const char *channel, unsigned count, bool include_token, enum pubnub_tribool string_token, enum pubnub_tribool reverse, char const* start, char const* end)
 {
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
@@ -605,7 +605,7 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *pb, const char *channel
 }
 
 
-enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, enum pbcc_tribool disable_uuids, enum pbcc_tribool state)
+enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, enum pubnub_tribool disable_uuids, enum pubnub_tribool state)
 {
     if (NULL == channel) {
         if (channel_group != NULL) {

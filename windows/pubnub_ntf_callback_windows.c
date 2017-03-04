@@ -386,22 +386,52 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
 
 enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
+    enum pubnub_res rslt;
+    
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    return pb->core.last_result;
+    
+    pubnub_mutex_lock(pb->monitor);
+    rslt = pb->core.last_result;
+    pubnub_mutex_unlock(pb->monitor);
+    
+    return rslt;
 }
 
 
 enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    pubnub_mutex_lock(pb->monitor);
     pb->cb = cb;
     pb->user_data = user_data;
+    pubnub_mutex_unlock(pb->monitor);
     return PNR_OK;
 }
 
 
 void *pubnub_get_user_data(pubnub_t *pb)
 {
+    void *result;
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    return pb->user_data;
+
+    pubnub_mutex_lock(pb->monitor);
+    result = pb->user_data;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
+}
+
+
+pubnub_callback_t pubnub_get_callback(pubnub_t *pb)
+{
+    pubnub_callback_t result;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    result = pb->cb;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
 }

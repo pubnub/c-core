@@ -140,5 +140,19 @@ enum pubnub_trans {
     PBTT_HEARTBEAT,
 };
 
+/** The 3-state bool. For Electrical Enginners among you, this could
+    be a digital line utilizing high impedance ("High Z"). For
+    mathematicians, a ternary logic value. For physicts, a quantum
+    binary value (with super-position being the "third" state). 
+    
+    For the rest of us, it has `true`, `false` and the third `not set`
+    or `indeterminate` state.
+*/
+enum pubnub_tribool {
+    pbccFalse,
+    pbccTrue,
+    pbccNotSet
+};
+
 
 #endif /* !defined INC_PUBNUB_API_TYPES */

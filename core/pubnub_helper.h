@@ -42,5 +42,32 @@ enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
  */
 char const* pubnub_res_2_string(enum pubnub_res e);
 
+/** Returns whether retrying a Pubnub transaction makes sense.  This
+    is mostly interesting for publishing, but is useful in general. It
+    is least useful for subscribing, because you will most probably
+    subscribe again at some later point in time, even if you're not in
+    a "subscribe loop".
+
+    @par Basic usage
+    @snippet pubnub_sync_publish_retry.c Publish retry
+
+    @param e The Pubnub result returned by a C-core function, for which
+    the user wants to find out if retrying makes sense
+
+    @retval pbccFalse It doesn't benefit you to re-try the same
+    transaction.
+
+    @retval pbccTrue It's safe to retry, though there is no guarantee
+    that it will help.
+
+    @retval pbccNotSet Retry might help, but, it also can make things
+    worse. For example, for a #PNR_TIMEOUT, it may very well be that
+    the message was delivered to Pubnub, but, the response from Pubnub
+    never reached us due to some networking issue, resulting in a
+    timeout.  In that case, retrying would send the same message
+    again, duplicating it.
+ */
+enum pubnub_tribool pubnub_should_retry(enum pubnub_res e);
+
 
 #endif /* defined INC_PUBNUB_HELPER */

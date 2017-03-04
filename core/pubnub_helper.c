@@ -51,7 +51,35 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_CHANNEL_REGISTRY_ERROR: return "A transaction related to channel registry failed";
     case PNR_REPLY_TOO_BIG: return "Reply from Pubnub too big to fit in buffer";
     case PNR_INTERNAL_ERROR: return "Internal error in processing";
+    case PNR_CRYPTO_NOT_SUPPORTED: return "Encryption/decryption not supported";
     default: return "!?!?!";
     }
 }
 
+
+enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
+{
+    switch (e) {
+    case PNR_OK: return pbccFalse; /* Why? All is good! */
+    case PNR_ADDR_RESOLUTION_FAILED: return pbccTrue;
+    case PNR_CONNECT_FAILED: return pbccTrue;
+    case PNR_CONNECTION_TIMEOUT: return pbccTrue;
+    case PNR_TIMEOUT: return pbccTrue;
+    case PNR_ABORTED: return pbccNotSet;
+    case PNR_IO_ERROR: return pbccNotSet;
+    case PNR_HTTP_ERROR: return pbccFalse; /* For all known HTTP erros it doesn't make sense */
+    case PNR_FORMAT_ERROR: return pbccFalse; /* Fix the format */
+    case PNR_CANCELLED: return pbccFalse; /* User cancelled, what's the use? */
+    case PNR_STARTED: return pbccFalse; /* We haven't finished yet! */
+    case PNR_IN_PROGRESS: return pbccFalse; /* We haven't finished yet! */
+    case PNR_RX_BUFF_NOT_EMPTY: return pbccFalse; /* Clear the buffer first */
+    case PNR_TX_BUFF_TOO_SMALL:  return pbccFalse; /* Publish shorter message */
+    case PNR_INVALID_CHANNEL: return pbccFalse; /* Give the channel a valid name */
+    case PNR_PUBLISH_FAILED: return pbccFalse; /* Fix the error reported */
+    case PNR_CHANNEL_REGISTRY_ERROR: return pbccFalse; /* Fix the error reported */
+    case PNR_REPLY_TOO_BIG: return pbccFalse; /* Rebuild with bigger buffer */
+    case PNR_INTERNAL_ERROR: return pbccFalse; /* Sorry, something went wrong... */
+    case PNR_CRYPTO_NOT_SUPPORTED: return pbccFalse; /* Use a platform that supports encryption, say OpenSSL */
+    default: return pbccFalse;
+    }
+}

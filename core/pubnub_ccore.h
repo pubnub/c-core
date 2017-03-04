@@ -20,18 +20,6 @@
     official and documented API for your environment.
 */
 
-/** The 3-state bool. For Electrical Enginners among you, this would
-    be a digital line utilizing high impedance ("High Z"). For
-    mathematicians, it would be a "Maybe monad". For the rest of us,
-    it has `true`, `false` and the third `not set` or `indeterminate`
-    state.
-*/
-enum pbcc_tribool {
-    pbccFalse,
-    pbccTrue,
-    pbccNotSet
-};
-
 
 /** The Pubnub "(C) core" context, contains context data 
     that is shared among all Pubnub C clients.
@@ -211,7 +199,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context *p);
 /** Prepares the History v2 operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token, enum pbcc_tribool string_token, enum pbcc_tribool reverse, char const* start, char const* end);
+enum pubnub_res pbcc_history_prep(struct pbcc_context *p, const char *channel, unsigned count, bool include_token, enum pubnub_tribool string_token, enum pubnub_tribool reverse, char const* start, char const* end);
 
 /** Prepares the Heartbeat operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -221,7 +209,7 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *p, const char *channel,
 /** Prepares the Here-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_here_now_prep(struct pbcc_context *p, const char *channel, const char *channel_group, enum pbcc_tribool disable_uuids, enum pbcc_tribool state);
+enum pubnub_res pbcc_here_now_prep(struct pbcc_context *p, const char *channel, const char *channel_group, enum pubnub_tribool disable_uuids, enum pubnub_tribool state);
 
 /** Prepares the Where-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
