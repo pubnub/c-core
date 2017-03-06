@@ -196,7 +196,7 @@ char *pubnub_json_string_unescape_slash(char *json_string)
     }
 
     if (to_pad > 0) {
-        memset(dest, ' ', to_pad);
+        *dest = '\0';
     }
     PUBNUB_ASSERT_OPT(dest[to_pad] == '\0');
 

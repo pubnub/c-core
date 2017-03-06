@@ -20,10 +20,11 @@
     the transaction to finish, don't use this function.
 
     @param[in] pbp The context which to free
-    @param[in] millisec Max time to wait for freeing to succeed
+    @param[in] millisec Max time to wait for freeing to succeed,
+    in milliseconds
 
     @retval 0 pubnub_free() succeeded
-    @retval -1 failed to pubnub_free() in @p microsec
+    @retval -1 failed to pubnub_free() in @p millisec
  */
 int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec);
 
