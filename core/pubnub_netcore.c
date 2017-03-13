@@ -15,6 +15,7 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
     if (pbpal_close(pb) <= 0) {
+#if PUBNUB_PROXY_API
         PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n", pb->retry_after_close);
         if (pb->retry_after_close) {
             pb->state = PBS_IDLE;
@@ -23,6 +24,10 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
             pbpal_forget(pb);
             pbntf_trans_outcome(pb);
         }
+#else
+        pbpal_forget(pb);
+        pbntf_trans_outcome(pb);
+#endif
     }
     else {
         pb->state = PBS_WAIT_CLOSE;
@@ -173,8 +178,10 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
+#if PUBNUB_PROXY_API
         pb->retry_after_close = false;
         pb->proxy_tunnel_established = false;
+#endif
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
@@ -567,9 +574,11 @@ next_state:
         }
         else {
             finish(pb);
+#if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
                 goto next_state;
             }
+#endif
         }
         break;
     case PBS_RX_BODY_WAIT:
@@ -604,9 +613,11 @@ next_state:
             PUBNUB_LOG_TRACE("About to read a chunk w/length: %d\n", chunk_length);
             if (chunk_length == 0) {
                 finish(pb);
+#if PUBNUB_PROXY_API
                 if (pb->retry_after_close) {
                     goto next_state;
                 }
+#endif
             }
             else if (chunk_length > sizeof pb->core.http_buf) {
                 outcome_detected(pb, PNR_IO_ERROR);
@@ -661,6 +672,7 @@ next_state:
         break;
     case PBS_WAIT_CLOSE:
         if (pbpal_closed(pb)) {
+#if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
                 pb->state = PBS_IDLE;
             }
@@ -668,6 +680,10 @@ next_state:
                 pbpal_forget(pb);
                 pbntf_trans_outcome(pb);
             }
+#else
+            pbpal_forget(pb);
+            pbntf_trans_outcome(pb);
+#endif
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -678,6 +694,7 @@ next_state:
         break;
     case PBS_WAIT_CANCEL_CLOSE:
         if (pbpal_closed(pb)) {
+#if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
                 pb->state = PBS_IDLE;
             }
@@ -686,6 +703,11 @@ next_state:
                 pb->core.msg_ofs = pb->core.msg_end = 0;
                 pbntf_trans_outcome(pb);
             }
+#else
+            pbpal_forget(pb);
+            pb->core.msg_ofs = pb->core.msg_end = 0;
+            pbntf_trans_outcome(pb);
+#endif
         }
         break;
     }
