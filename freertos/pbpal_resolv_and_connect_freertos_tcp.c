@@ -13,7 +13,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     struct freertos_sockaddr addr;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS));
+    PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND)  || (pb->state == PBS_WAIT_DNS_RCV));
     
     addr.sin_port = FreeRTOS_htons(HTTP_PORT);
     addr.sin_addr = FreeRTOS_gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
@@ -48,7 +48,8 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 }
 
 
-enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
+
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 {
     /* should never be called, as FreeRTOS+TCP is always blocking */
     PUBNUB_ASSERT_OPT(pb == NULL);
