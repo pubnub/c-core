@@ -29,3 +29,43 @@ features:
     - SUBSCRIBE-PRESENCE-CHANNELS
     - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
     - SUBSCRIBE-WILDCARD
+supported-platforms:
+  - 
+    version: PubNub POSIX C SDK
+    platforms:
+      - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
+      - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+  - 
+    version: PubNub POSIX C++ SDK
+    platforms:
+      - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
+      - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - Some features require C++11 or newer compliant compiler, if you don't have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
+  - 
+    version: PubNub Windows C SDK
+    platforms:
+      - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+  - 
+    version: PubNub Windows C++ SDK
+    platforms:
+      - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - Some features require C++11 or newer compliant compiler, if you don't have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
+  - 
+    version: PubNub FreeRTOS SDK
+    platforms:
+      - FreeRTOS+ 150825 or newer is supported. 
+  - 
+    version: PubNub Qt SDK
+    platforms:
+      - Qt5 is fully supported.
+      - Qt4 is not supported, but 'C core' is known to build on Qt4 and some features work.
+      - Older versions are not supported.
+  - 
+    version: PubNub mBed SDK
+    platforms:
+      - mBed 2 is supported.
+      - Newer versions should work, but are not supported out of the box.
