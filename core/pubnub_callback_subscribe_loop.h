@@ -24,7 +24,7 @@ typedef struct pubnub_subloop_descriptor pubnub_subloop_t;
 /** Prototype of a function that will be called back when a message is
     received during a subscribe loop, or on a failed subscribe.
 */
-typedef void (*pubnub_subloop_callback_t)(char const* message, enum pubnub_res result);
+typedef void (*pubnub_subloop_callback_t)(pubnub_t *pbp, char const* message, enum pubnub_res result);
 
 /** Helper to create a subscribe loop descriptor. For the values that
     are part of the descriptor, but are not provided as parameters of

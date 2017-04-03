@@ -9,8 +9,9 @@
 #include <time.h>
 
 
-static void subloop_callback(char const* message, enum pubnub_res result)
+static void subloop_callback(pubnub_t *pbp, char const* message, enum pubnub_res result)
 {
+    PUBNUB_UNUSED(pbp);
     if (PNR_OK == result) {
         printf("Received message '%s'\n", message);
     }

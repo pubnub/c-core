@@ -41,11 +41,11 @@ static void sublup_context_callback(pubnub_t *pb, enum pubnub_trans trans, enum 
         if (PNR_OK == result) {
             char const *msg;
             for (msg = pubnub_get(pb); msg != NULL; msg = pubnub_get(pb)) {
-                pbsld->cb(msg, PNR_OK);
+                pbsld->cb(pb, msg, PNR_OK);
             }
         }
         else {
-            pbsld->cb(NULL, result);
+            pbsld->cb(pb, NULL, result);
         }
         result = pubnub_subscribe_ex(pbsld->pbp, pbsld->channel, pbsld->options);
         if (result != PNR_OK) {
