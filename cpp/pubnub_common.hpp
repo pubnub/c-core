@@ -12,6 +12,7 @@
 #include "pubnub_ssl.h"
 #include "pubnub_timers.h"
 #include "pubnub_helper.h"
+#include "pubnub_free_with_timeout.h"
 #if PUBNUB_PROXY_API
 #include "pubnub_proxy.h"
 #endif
@@ -212,6 +213,7 @@ namespace pubnub {
         history_options& include_token(bool inc_token) { d_.include_token = inc_token; return *this; }
         pubnub_history_options data() { return d_; }
     };
+
 
     /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
      * not a "native" C++ implementation.
@@ -695,12 +697,40 @@ namespace pubnub {
             return pubnub_transaction_timeout_get(d_pb);
         }
 #endif
-        
+
         /// Frees the context and any other thing that needs to be
         /// freed/released.
         /// @see pubnub_free
+        int free() {
+            int rslt = pubnub_free(d_pb);
+            d_pb = 0;
+            return rslt;
+        }
+
+#if __cplusplus >= 201103L
+        /// Frees the context and any other thing that needs to be
+        /// freed/released - with timeout @p duration
+        /// @see pubnub_free_with_timeout()
+        int free_with_timeout(std::chrono::milliseconds duration) {
+            int rslt = pubnub_free_with_timeout(d_pb, duration.count());
+            d_pb = 0;
+            return rslt;
+        }
+#else
+        /// Frees the context and any other thing that needs to be
+        /// freed/released - with timeout @p duration_ms milliseconds
+        /// @see pubnub_free_with_timeout()
+        int free_with_timeout(int duration_ms) {
+            int rslt =  pubnub_free_with_timeout(d_pb, duration_ms);
+            d_pb = 0;
+            return rslt;
+        }
+#endif
+
         ~context() {
-            pubnub_free(d_pb);
+            if (d_pb) {
+                pubnub_free_with_timeout(d_pb, 1000);
+            }
         }
 
     private:

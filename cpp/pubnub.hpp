@@ -11,10 +11,12 @@
  */
 
 #include <functional>
+#include <string>
 
 //extern "C" {
 #include "pubnub_api_types.h"
 #include "pubnub_assert.h"
+#include "pubnub_helper.h"
 //}
 
 namespace pubnub {
@@ -110,6 +112,91 @@ namespace pubnub {
     };
 #endif
 
+    /** A simple C++ tribool type. It has `true`, `false` and
+        `not_set`.
+     */ 
+    class tribool {
+    public:
+        enum not_set_t {
+            not_set = 2
+        };
+        tribool() : d_3log(not_set) {}
+        tribool(enum pubnub_tribool v) : d_3log(v) {}
+        tribool(bool v) : d_3log(v) {}
+        tribool(not_set_t) : d_3log(not_set) {}
+        
+        tribool operator!() const { 
+            static const tribool rslt[3] = { true, false, not_set };
+            return rslt[d_3log];
+        }
+        bool is_set() const { return d_3log != not_set; }
+
+        tribool operator&&(bool t) const {
+            return *this && tribool(t);
+        }
+        tribool operator&&(tribool t) const {
+            static const tribool rslt[3][3] = {
+                false, false,   false,
+                false, true,    not_set,
+                false, not_set, not_set
+            };
+            return rslt[d_3log][t.d_3log];
+        }
+        
+        tribool operator||(bool t) const {
+            return *this || tribool(t);
+        }
+        tribool operator||(tribool t) const {
+            static const tribool rslt[3][3] = {
+                false,   true, not_set,
+                true,    true, true,
+                not_set, true, not_set
+            };
+            return rslt[d_3log][t.d_3log];
+        }
+        
+        tribool operator==(tribool t) const {
+            static const tribool rslt[3][3] = {
+                true,    false,   not_set,
+                false,   true,    not_set,
+                not_set, not_set, not_set
+            };
+            return rslt[d_3log][t.d_3log];
+        }
+        tribool operator==(bool t) const {
+            return !is_set() ? not_set : d_3log == t;
+        }
+        
+        tribool operator!=(tribool t) const {
+            static const tribool rslt[3][3] = {
+                false,   true,    not_set,
+                true,    false,   not_set,
+                not_set, not_set, not_set
+            };
+            return rslt[d_3log][t.d_3log];
+        }
+        tribool operator!=(bool t) const {
+            return !is_set() ? not_set : d_3log != t;
+        }
+        
+        operator bool() const { return true == d_3log; }
+        
+        std::string to_string() const {
+            static char const* rslt[3] = { "false" , "true", "not-set" };
+            return rslt[d_3log];
+        }
+        
+    private:
+        int d_3log;
+    };
+    
+    inline tribool operator==(tribool, tribool::not_set_t) {
+        return tribool::not_set;
+    }
+    inline tribool operator!=(tribool, tribool::not_set_t) {
+        return tribool::not_set;
+    }
+
     /** A future (pending) result of a Pubnub
      * transaction/operation/request.  It is somewhat similar to the
      * std::future<> from C++11.
@@ -194,6 +281,12 @@ namespace pubnub {
         futres(futres const &x);
 #endif
 
+        /// Indicates whether we should retry the last transaction
+        /// @see pubnub_should_retry()
+        tribool should_retry() const {
+            return pubnub_should_retry(d_result);
+        }
+
     private:
         // Pubnub future result is non-copyable
         futres(futres &x);
@@ -214,7 +307,65 @@ namespace pubnub {
 #if __cplusplus >= 201103L
         std::function<void(context&, pubnub_res)> d_thenf;
 #endif
-	};
+    };
+
+    /** A helper class for a subscribe loop. Supports both a
+        "piecemal", message-by-message, interface and a
+        "callback-like" interface.
+     */
+    class subloop {
+    public:
+        /** Creates a subscribe loop, ready to do the looping.  We
+            assume that the @p ctx Pubnub context will be valid
+            throughout the lifetime of this object.
+
+            @param ctx The context to use for the subscribe loop.
+            @param channel The channel to subscribe to in the loop
+        */
+        subloop(context &ctx, std::string channel);
+
+        /** Rather uneventful */
+        ~subloop();
+
+        /** Fetches one message in a subscribe loop.
+
+            @par Basic usage
+            @snippet pubnub_subloop_sample.cpp Fetch - pull interface
+            
+            @param [out] o_msg String with the fetched message
+            @retval PNR_OK Message received
+            @retval other The error code
+         */
+        pubnub_res fetch(std::string &o_msg);
+
+        /** Executes a "full loop", calling the @p f functional object
+            on each message received. To stop the loop, return any
+            integer != 0 from @p f.
+
+            @par Basic usage
+            @snippet pubnub_subloop_sample.cpp Loop - push interface
+        */
+#if __cplusplus >= 201103L
+        void loop(std::function<int(std::string, context&, pubnub_res)> f);
+#else
+        template<class T>
+        void loop(T f) {
+            std::string msg;
+            while (0 == f(msg, d_ctx, fetch(msg))) {
+                continue;
+            }
+        }
+#endif
+
+    private:
+        /// The context on which to do the subscribe loop
+        context &d_ctx;
+        /// Channel on which to subscribe in the loop
+        std::string d_channel;
+        /// Are we currently delivering messages gotten in one
+        /// subscribe
+        bool d_delivering;
+    };
 }
 
 #include "pubnub_common.hpp"
