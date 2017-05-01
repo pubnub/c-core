@@ -2,6 +2,7 @@
 #include "pbpal_add_system_certs.h"
 
 #include "pubnub_internal.h"
+#include "pubnub_log.h"
 
 #include "openssl/x509.h"
 
@@ -9,11 +10,12 @@
 
 #include <wincrypt.h>
 
+#pragma comment(lib, "crypt32")
 
 int pbpal_add_system_certs(pubnub_t* pb)
 {
     X509_STORE *cert_store = SSL_CTX_get_cert_store(pb->pal.ctx);
-    HCERTSTORE hStore = CertOpenSystemStore(NULL, L"ROOT");
+    HCERTSTORE hStore = CertOpenSystemStoreW(0, L"ROOT");
     PCCERT_CONTEXT pContext = NULL;
 
     if (!hStore) {
