@@ -85,8 +85,10 @@
 #define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
 
 
+#if !defined(PUBNUB_PROXY_API)
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
+#endif
 
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */

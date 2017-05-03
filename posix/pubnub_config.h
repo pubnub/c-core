@@ -85,8 +85,10 @@
 #define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
 
 
+#if !defined(PUBNUB_PROXY_API)
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
+#endif
 
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
