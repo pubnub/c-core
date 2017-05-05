@@ -62,3 +62,51 @@ need and what `#define`s and compiler/link options, to build
 C-core. It is _not_ designed to be just copy-pasted into your
 production Makefile, because there are way too many ways to "make a
 Makefile", we can't cover them all.
+
+## Footprint
+
+Since C-core is designed to have low footprint, the question of
+"how big is it" often comes up.
+
+We present some numbers here, but, please keep in mind that these
+are volatile, because they depend on:
+
+1. C-core itself, which changes with time
+2. your usage of the C-core
+3. your compiler and its version
+4. the C standard library you use and its version
+5. the compiler options you pass to compiler (foremost, optimization, but many others too)
+
+So, the number can only give you some idea, and are _not_ to be taken
+for granted.
+
+### Linux 64-bit, taken on 2017-05-03
+
+These are the numbers gotten with the `posix.mk` makefile, with a GCC 4.8.4
+on Linux Mint 17 (based on Ubuntu 14.04).
+
+#### OOB - with proxy support
+
+File | size [KB]
+-----|-------------------
+`pubnub_callback.a` | 496
+`pubnub_sync.a` | 428
+`pubnub_callback_sample` executable | 188
+_stripped_ `pubnub_callback_sample` | 84
+`pubnub_sync_sample` executable | 168
+_stripped_ `pubnub_sync_sample` | 68
+
+#### Without proxy support
+
+This needed slight changes in the makefile (define `PUBNUB_PROXY_API` to `0`
+and remove the proxy modules from the libraries):
+
+
+File | size [KB]
+-----|-------------------
+`pubnub_callback.a` | 393
+`pubnub_sync.a` | 331
+`pubnub_callback_sample` executable | 139
+_stripped_ `pubnub_callback_sample` | 63
+`pubnub_sync_sample` executable | 120
+_stripped_ `pubnub_sync_sample` | 55
