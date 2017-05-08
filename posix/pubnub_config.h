@@ -58,7 +58,7 @@
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN  "pubsub.pubnub.com"
+#define PUBNUB_ORIGIN  "ps.pndsn.com"
 
 /** Set to 0 to disable changing the origin from the default
     #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
@@ -97,6 +97,18 @@
 
 /** If true (!=0), enable support for message encryption/decryption */
 #define PUBNUB_CRYPTO_API 0
-    
+
+
+#if !defined(PUBNUB_ONLY_PUBSUB)
+/** If true (!=0), will enable only publish and subscribe. All
+    other transactions will fail.
+
+    For use in embedded systems and, in general, when you know
+    you won't be needing anything but publish and subscribe,
+    to reduce the memory footprint.
+*/
+#define PUBNUB_ONLY_PUBSUB_API 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

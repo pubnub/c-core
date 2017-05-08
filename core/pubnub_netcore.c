@@ -46,6 +46,21 @@ static PFpbcc_parse_response_T m_aParseResponse[] = {
     dont_parse,
     pbcc_parse_subscribe_response,
     pbcc_parse_publish_response,
+#if PUBNUB_ONLY_PUBSUB_API
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse
+#else
     pbcc_parse_presence_response, /* PBTT_LEAVE */
     pbcc_parse_time_response,
     pbcc_parse_history_response,
@@ -59,6 +74,7 @@ static PFpbcc_parse_response_T m_aParseResponse[] = {
     pbcc_parse_channel_registry_response, /* PBTT_ADD_CHANNEL_TO_GROUP */
     pbcc_parse_channel_registry_response, /* PBTT_LIST_CHANNEL_GROUP */
     pbcc_parse_presence_response /* PBTT_HEARTBEAT */
+#endif
 };
 
 
@@ -69,7 +85,6 @@ static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
 {
     enum pubnub_res pbres;
 
-    PUBNUB_ASSERT(m_aParseResponse[pb->trans] != dont_parse);
     pbres = m_aParseResponse[pb->trans](&pb->core);
     if (pbres != PNR_OK) {
         PUBNUB_LOG_WARNING("parsing response for transaction type #%d failed\n", pb->trans);
