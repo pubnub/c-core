@@ -117,7 +117,7 @@ void pbcc_set_auth(struct pbcc_context *pb, const char *auth);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_subscribe_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a publish operation
     (transaction). This checks if the response is valid, and, if it
@@ -138,7 +138,7 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_time_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_time_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a history v2
     operation (transaction). This checks if the response is valid,
@@ -148,7 +148,7 @@ int pbcc_parse_time_response(struct pbcc_context *p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_history_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_history_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a presence query
     operation (transaction). Presence query is done on several
@@ -160,7 +160,7 @@ int pbcc_parse_history_response(struct pbcc_context *p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-int pbcc_parse_presence_response(struct pbcc_context *p);
+enum pubnub_res pbcc_parse_presence_response(struct pbcc_context *p);
 
 /** Parses the string received as a response for a channel-registry
     operation (transaction). It is done on several user requests
@@ -235,5 +235,6 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context *p, char cons
     mostly by formatting the URI of the HTTP request.
 */
 enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context *p, char const *channel_group, char const *param, char const *channel);
+
 
 #endif /* !defined INC_PUBNUB_CCORE */

@@ -148,15 +148,15 @@ static bool split_array(char *buf)
 }
 
 
-static int simple_parse_response(struct pbcc_context *p)
+static enum pubnub_res simple_parse_response(struct pbcc_context *p)
 {
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
     if (replylen < 2) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
     if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
 
     p->chan_ofs = 0;
@@ -166,7 +166,7 @@ static int simple_parse_response(struct pbcc_context *p)
     p->msg_end = replylen - 1;
     reply[replylen-1] = '\0';
 
-    return split_array(reply + p->msg_ofs) ? 0 : -1;
+    return split_array(reply + p->msg_ofs) ? PNR_OK : PNR_FORMAT_ERROR;
 }
 
 
@@ -202,27 +202,27 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
     }
 }
 
-int pbcc_parse_time_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_time_response(struct pbcc_context *p)
 {
     return simple_parse_response(p);
 }
 
 
-int pbcc_parse_history_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_history_response(struct pbcc_context *p)
 {
     return simple_parse_response(p);
 }
 
 
-int pbcc_parse_presence_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_presence_response(struct pbcc_context *p)
 {
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
     if (replylen < 2) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
     if ((reply[0] != '{') || (reply[replylen-1] != '}')) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
 
     p->chan_ofs = p->chan_end = 0;
@@ -230,7 +230,7 @@ int pbcc_parse_presence_response(struct pbcc_context *p)
     p->msg_ofs = 0;
     p->msg_end = replylen;
 
-    return 0;
+    return PNR_OK;
 }
 
 
@@ -266,36 +266,36 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
 }
 
 
-int pbcc_parse_subscribe_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
 {
     int i;
-	int previous_i;
-	unsigned time_token_length;
+    int previous_i;
+    unsigned time_token_length;
     char *reply = p->http_reply;
     int replylen = p->http_buf_len;
     if (replylen < 2) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
     if (reply[replylen-1] != ']' && replylen > 2) {
         replylen -= 2; /* XXX: this seems required by Manxiang */
     }
     if ((reply[0] != '[') || (reply[replylen-1] != ']') || (reply[replylen-2] != '"')) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
 
     /* Extract the last argument. */
-	previous_i = replylen - 2;
+    previous_i = replylen - 2;
     i = find_string_start(reply, previous_i);
     if (i < 0) {
-        return -1;
+        return PNR_FORMAT_ERROR;
     }
     reply[replylen - 2] = 0;
 
     /* Now, the last argument may either be a timetoken, a channel group list
-		or a channel list. */
+       or a channel list. */
     if (reply[i-2] == '"') {
         int k;
-		/* It is a channel list, there is another string argument in front
+        /* It is a channel list, there is another string argument in front
          * of us. Process the channel list ... */
         for (k = replylen - 2; k > i+1; --k) {
             if (reply[k] == ',') {
@@ -304,28 +304,29 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
         }
 
         /* The previous argument is either a timetoken or a channel group
-			list. */
+           list. */
         reply[i-2] = '\0';
         p->chan_ofs = i+1;
         p->chan_end = replylen - 1;
-		previous_i = i-2;
+        previous_i = i-2;
         i = find_string_start(reply, previous_i);
         if (i < 0) {
             p->chan_ofs = 0;
             p->chan_end = 0;
             return -1;
         }
-		if (reply[i-2] == '"') {
-			/* It is a channel group list. For now, we shall skip it. In
-				the future, we may process it like we do the channel list.
-				*/
-			reply[i-2] = '\0';
-			previous_i = i-2;
-			i = find_string_start(reply, previous_i);
-			if (i < 0) {
-				return -1;
-			}
-		}
+        if (reply[i-2] == '"') {
+            /* It is a channel group list. For now, we shall skip
+               it. In the future, we may process it like we do the
+               channel list.
+            */
+            reply[i-2] = '\0';
+            previous_i = i-2;
+            i = find_string_start(reply, previous_i);
+            if (i < 0) {
+                return -1;
+            }
+        }
     }
     else {
         p->chan_ofs = 0;
@@ -339,14 +340,14 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
      *          ^-- here */
 
     /* Setup timetoken. */
-	time_token_length = previous_i - (i+1);
-	if (time_token_length >= sizeof p->timetoken) {
-		p->timetoken[0] = '\0';
-		return -1;
-	}
-	memcpy(p->timetoken, reply + i+1, time_token_length+1);
-	
-	/* terminate the [] message array (before the `]`!) */
+    time_token_length = previous_i - (i+1);
+    if (time_token_length >= sizeof p->timetoken) {
+        p->timetoken[0] = '\0';
+        return PNR_FORMAT_ERROR;
+    }
+    memcpy(p->timetoken, reply + i+1, time_token_length+1);
+    
+    /* terminate the [] message array (before the `]`!) */
     reply[i-2] = 0; 
 
     /* Set up the message list - offset, length and NUL-characters
@@ -354,7 +355,7 @@ int pbcc_parse_subscribe_response(struct pbcc_context *p)
     p->msg_ofs = 2;
     p->msg_end = i-2;
 
-    return split_array(reply + p->msg_ofs) ? 0 : -1;
+    return split_array(reply + p->msg_ofs) ? PNR_OK : PNR_FORMAT_ERROR;
 }
 
 

@@ -37,31 +37,19 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 
 static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
 {
-    enum pubnub_res pbres = PNR_OK;
+    enum pubnub_res pbres;
     switch (pb->trans) {
     case PBTT_SUBSCRIBE:
-        if (pbcc_parse_subscribe_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_subscribe failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
+        pbres = pbcc_parse_subscribe_response(&pb->core);
         break;
     case PBTT_PUBLISH:
         pbres = pbcc_parse_publish_response(&pb->core);
-        if (pbres != PNR_OK) {
-            PUBNUB_LOG_WARNING("parse_publish failed\n");
-        }
         break;
     case PBTT_TIME:
-        if (pbcc_parse_time_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_time failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
+        pbres = pbcc_parse_time_response(&pb->core);
         break;
     case PBTT_HISTORY:
-        if (pbcc_parse_history_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_history failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
+        pbres = pbcc_parse_history_response(&pb->core);
         break;
     case PBTT_LEAVE:
     case PBTT_HERENOW:
@@ -70,22 +58,21 @@ static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
     case PBTT_SET_STATE:
     case PBTT_STATE_GET:
     case PBTT_HEARTBEAT:
-        if (pbcc_parse_presence_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_presence failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
+        pbres = pbcc_parse_presence_response(&pb->core);
         break;
     case PBTT_REMOVE_CHANNEL_GROUP:
     case PBTT_REMOVE_CHANNEL_FROM_GROUP:
     case PBTT_ADD_CHANNEL_TO_GROUP:
     case PBTT_LIST_CHANNEL_GROUP:
         pbres = pbcc_parse_channel_registry_response(&pb->core);
-        if (pbres != PNR_OK) {
-            PUBNUB_LOG_WARNING("parse_channel_registry failed\n");
-        }
         break;
     default:
+        pbres = PNR_INTERNAL_ERROR;
         break;
+    }
+
+    if (pbres != PNR_OK) {
+        PUBNUB_LOG_WARNING("parsing response for transaction type #%d failed\n", pb->trans);
     }
 
     return pbres;
