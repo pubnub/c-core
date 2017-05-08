@@ -138,6 +138,8 @@ enum pubnub_trans {
     /** Inform Pubnub that we're still working on @p channel and/or @p
         channel_group operation/transaction */
     PBTT_HEARTBEAT,
+    /** Count the number of transaction types */
+    PBTT_MAX
 };
 
 /** The 3-state bool. For Electrical Enginners among you, this could

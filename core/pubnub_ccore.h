@@ -108,6 +108,9 @@ void pbcc_set_uuid(struct pbcc_context *pb, const char *uuid);
 /** Sets the `auth` for the context */
 void pbcc_set_auth(struct pbcc_context *pb, const char *auth);
 
+/** Response parser function prototype */
+typedef enum pubnub_res (*PFpbcc_parse_response_T)(struct pbcc_context *);
+
 /** Parses the string received as a response for a subscribe operation
     (transaction). This checks if the response is valid, and, if it
     is, prepares for giving the messages (and possibly channels) that
