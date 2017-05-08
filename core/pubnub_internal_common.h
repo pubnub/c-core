@@ -191,6 +191,8 @@ struct pubnub_ {
     char const* ssl_CAfile;
     /** Certificate store directory */
     char const* ssl_CApath;
+    /** User-defined, in-memory, PEM certificate to use */
+    char const* ssl_userPEMcert;
 #endif
 
 #if PUBNUB_THREADSAFE

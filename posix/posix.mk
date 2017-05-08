@@ -1,6 +1,15 @@
-SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../lib/md5/md5.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c pubnub_version_posix.c pubnub_generate_uuid_posix.c pbpal_posix_blocking_io.c ../core/pubnub_generate_uuid_v3_md5.c  ../core/pubnub_free_with_timeout_std.c
+SOURCEFILES = ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c pubnub_version_posix.c pubnub_generate_uuid_posix.c pbpal_posix_blocking_io.c ../core/pubnub_generate_uuid_v3_md5.c  ../core/pubnub_free_with_timeout_std.c
 
-OBJFILES = pubnub_coreapi.o pubnub_coreapi_ex.o pubnub_ccore.o pubnub_netcore.o  pbpal_sockets.o pbpal_resolv_and_connect_sockets.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o pubnub_timers.o pubnub_json_parse.o pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o md5.o pbntlm_core.o pbntlm_packer_std.o pbbase64.o pubnub_helper.o  pubnub_version_posix.o  pubnub_generate_uuid_posix.o pbpal_posix_blocking_io.o pubnub_generate_uuid_v3_md5.o  pubnub_free_with_timeout_std.o
+OBJFILES = pubnub_coreapi.o pubnub_coreapi_ex.o pubnub_ccore.o pubnub_netcore.o  pbpal_sockets.o pbpal_resolv_and_connect_sockets.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o pubnub_timers.o pubnub_json_parse.o  md5.o pbbase64.o pubnub_helper.o  pubnub_version_posix.o  pubnub_generate_uuid_posix.o pbpal_posix_blocking_io.o pubnub_generate_uuid_v3_md5.o  pubnub_free_with_timeout_std.o
+
+ifndef USE_PROXY
+USE_PROXY = 1
+endif
+
+ifeq ($(USE_PROXY), 1)
+SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
+OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
+endif
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
@@ -13,7 +22,7 @@ OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE
+CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -D PUBNUB_PROXY_API=$(USE_PROXY)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize-address Use AddressSanitizer
 
