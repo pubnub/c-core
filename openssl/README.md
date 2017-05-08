@@ -54,6 +54,19 @@ one), say, `clang`, run:
 
 	make -f posix.mk CC=clang
 
+### Build without the proxy support
+
+To build without the proxy support, pass `USE_PROXY=0` to Make, like:
+
+    make -f posix.mk USE_PROXY=0
+
+Of course, if you have previously done a build, you will probably want
+to first clean up the artifacts of that previous build by invoking the
+`clean` target, like:
+
+	make -f posix.mk clean
+
+
 ## Pubnub OpenSSL on Windows
 
 OpenSSL doesn't cover threads, so there is some Windows-specific code. 

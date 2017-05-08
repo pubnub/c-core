@@ -41,6 +41,19 @@ of your choice (rather than the default one), say, `clang`, execute:
 	make -f posix.mk CC=clang
 
 
+## Build without the proxy support
+
+To build without the proxy support, pass `USE_PROXY=0` to Make, like:
+
+    make -f posix.mk USE_PROXY=0
+
+Of course, if you have previously done a build, you will probably want
+to first clean up the artifacts of that previous build by invoking the
+`clean` target, like:
+
+	make -f posix.mk clean
+
+
 ## OSX / Darwin remarks
 
 While being a "mostly POSIX" compliant environment, OSX, in its
