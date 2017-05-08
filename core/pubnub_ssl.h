@@ -20,6 +20,7 @@
     If you wish to change them, call this function.
 
     @pre Call this after pubnub_init() on the context
+
     @param p The Context to set SSL options for
 
     @param useSSL Should the PubNub client establish the connection to
@@ -38,7 +39,7 @@
 void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool reduceSecurityOnError, bool ignoreSecureConnectionRequirement);
 
 
-/** Sets the location(s) of CA certifications for verification
+/** Sets the location(s) of CA certificates for verification
     purposes. This is only available on targets that have a file
     system.
 
@@ -48,9 +49,11 @@ void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool reduceSecurityOnError
     your code (update C-core). Using this function, if you keep your
     certificate store up-to-date, you don't need to change the code.
 
-    Both parameteres are kept as pointers, so, the user is responsible
+    Both parameters are kept as pointers, so, the user is responsible
     for making them valid during the lifetime of context @p p - or
     until they are set to NULL.
+
+    @pre @p p is a valid context
 
     @param p Pubnub context
     
@@ -78,6 +81,8 @@ int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const
     If enabled, you can later disable the use of system certificate
     store by calling pubnub_ssl_dont_use_system_certificate_store().
 
+    @pre @p p is a valid context
+
     @param p The context for which to use system certificate store
     @return 0: OK, -1: error (not supported)
  */
@@ -88,12 +93,37 @@ int pubnub_ssl_use_system_certificate_store(pubnub_t *p);
     context @p p, which is also the default.
 
     The only reason to use this functions is to disable use of system
-    certificate store which was previousyl set with
+    certificate store which was previously set with
     pubnub_ssl_use_system_certificate_store().
+
+    @pre @p p is a valid context
 
     @param p The context for which to not use system certificate store
  */
 void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p);
 
+
+/** Sets the contents of a "user-defined", in-memory, PEM certificate
+    to use for @p p context. This will be used in addition to other
+    certificates. Certificate is usually found in a `.pem` file, from
+    which you can read/copy it to a string and pass it to this
+    function.
+
+    Unlike other certificate-handling functions, this one is available
+    on any platform, including deeply embedded ones.
+
+    It is meant primarily for debugging purposes with proxy debuggers
+    (like Fiddler, Charles, etc).
+
+    There is only one "user-defined" PEM certificate per context. 
+
+    @pre @p p is a valid context
+
+    @param p The Pubnub context for which to set the certificate
+    @param contents String containing the PEM certificate. Assumed
+    to be valid during the lifetime of @p p. Use `NULL` if you don't
+    want to use your certificate.
+ */
+void pubnub_ssl_set_usrdef_pem_cert(pubnub_t *p, char const *contents);
 
 #endif /* defined INC_PUBNUB_SSL */

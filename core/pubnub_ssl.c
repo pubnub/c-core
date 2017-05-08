@@ -20,8 +20,10 @@ int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
+    pubnub_mutex_lock(p->monitor);
     p->ssl_CAfile = sCAfile;
     p->ssl_CApath = sCApath;
+    pubnub_mutex_unlock(p->monitor);
 #endif
 
     return 0;
@@ -32,7 +34,9 @@ int pubnub_ssl_use_system_certificate_store(pubnub_t *p)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
+    pubnub_mutex_lock(p->monitor);
     p->options.use_system_certificate_store = true;
+    pubnub_mutex_unlock(p->monitor);
 #endif
 
     return 0;
@@ -43,6 +47,20 @@ void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
+    pubnub_mutex_lock(p->monitor);
     p->options.use_system_certificate_store = false;
+    pubnub_mutex_unlock(p->monitor);
+#endif
+}
+
+
+void pubnub_ssl_set_pem_cert(pubnub_t *p, char const *contents)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
+
+#if PUBNUB_USE_SSL
+    pubnub_mutex_lock(p->monitor);
+    p->ssl_userPEMcert = contents;
+    pubnub_mutex_unlock(p->monitor);
 #endif
 }

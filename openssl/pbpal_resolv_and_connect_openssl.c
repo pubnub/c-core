@@ -142,7 +142,6 @@ static char pubnub_cert_GlobalSign[] = "-----BEGIN CERTIFICATE-----\n"
     "-----END CERTIFICATE-----\n";
 
 
-
 static int add_pem_cert(SSL_CTX *sslCtx, char const* pem_cert)
 {
     X509 *cert;
@@ -183,6 +182,10 @@ static void add_certs(pubnub_t *pb)
 {
     if (pb->options.use_system_certificate_store && (0 == pbpal_add_system_certs(pb))) {
         return;
+    }
+
+    if (NULL != pb->ssl_userPEMcert) {
+        add_pem_cert(pb->pal.ctx, pb->ssl_userPEMcert);
     }
 
     if ((NULL == pb->ssl_CAfile) && (NULL == pb->ssl_CApath)) {
