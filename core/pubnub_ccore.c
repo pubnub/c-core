@@ -177,15 +177,20 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
-    if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
-        return PNR_FORMAT_ERROR;
-    }
 
     p->chan_ofs = p->chan_end = 0;
     p->msg_ofs = p->msg_end = 0;
 
-    reply[replylen-1] = '\0';
+    if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
+        if ((reply[0] != '{') || (reply[replylen-1] != '}')) {
+            return PNR_FORMAT_ERROR;
+        }
+        /* If we got a JSON object in response, publish certainly
+           didn't succeed. No need to parse further. */
+        return PNR_PUBLISH_FAILED;
+    }
 
+    reply[replylen-1] = '\0';
     if (split_array(reply + 1)) {
         if (1 != strtol(reply+1, NULL, 10)) {
             return PNR_PUBLISH_FAILED;
@@ -235,8 +240,8 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context *p)
     struct pbjson_elem el;
     struct pbjson_elem found;
 
-	el.start = p->http_reply;
-	el.end = p->http_reply + p->http_buf_len;
+    el.start = p->http_reply;
+    el.end = p->http_reply + p->http_buf_len;
     p->chan_ofs = 0;
     p->chan_end = p->http_buf_len;
 
