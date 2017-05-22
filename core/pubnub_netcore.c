@@ -4,6 +4,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 #include "pubnub_ccore.h"
+#include "pubnub_ccore_pubsub.h"
 #include "pbpal.h"
 
 #include "pubnub_proxy_core.h"

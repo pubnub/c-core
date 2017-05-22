@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_alloc.h"
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_version.h"
 #include "pubnub_blocking_io.h"

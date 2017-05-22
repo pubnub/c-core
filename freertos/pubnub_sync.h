@@ -34,6 +34,7 @@
 
 #include "pubnub_alloc.h"
 #include "pubnub_assert.h"
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_ntf_sync.h"
 #include "pubnub_generate_uuid.h"

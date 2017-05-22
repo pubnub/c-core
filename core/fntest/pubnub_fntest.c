@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"

@@ -5,6 +5,7 @@
 //extern "C" {
 #include "pubnub_config.h"
 #include "pubnub_alloc.h"
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_coreapi_ex.h"
 #include "pubnub_generate_uuid.h"
@@ -338,7 +339,7 @@ namespace pubnub {
                 return "";
             }
             std::string rslt(reinterpret_cast<char*>(mebl.ptr));
-            free(mebl.ptr);
+            ::free(mebl.ptr);
             return rslt;
         }
         /// Returns the all the remaining messages from the context,
@@ -353,7 +354,7 @@ namespace pubnub {
                     break;
                 }
                 all.push_back(reinterpret_cast<char*>(mebl.ptr));
-                free(mebl.ptr);
+                ::free(mebl.ptr);
             }
             return all;
         }

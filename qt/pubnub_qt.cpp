@@ -2,6 +2,7 @@
 #include "pubnub_qt.h"
 
 extern "C" {
+#include "pubnub_ccore_pubsub.h"
 #include "pubnub_ccore.h"
 }
 

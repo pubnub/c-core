@@ -4,6 +4,7 @@
 #include "pubnub_helper.h"
 #include "pubnub_timers.h"
 
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi_ex.h"
 #include "pubnub_crypto.h"
 

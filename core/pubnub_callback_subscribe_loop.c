@@ -3,7 +3,7 @@
 
 #include "pubnub_callback_subscribe_loop.h"
 
-#include "pubnub_coreapi.h"
+#include "pubnub_pubsubapi.h"
 #include "pubnub_mutex.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
