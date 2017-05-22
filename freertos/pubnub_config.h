@@ -67,20 +67,36 @@
 #define PUBNUB_ORIGIN_SETTABLE 1
 
 /** Duration of the transaction timeout set during context initialization,
-    in milliseconds. Timeout dration in the context can be changed by the 
+    in milliseconds. Timeout duration in the context can be changed by the 
     user after initialization.
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
 #define PUBNUB_HAVE_SHA1 0
 
-#if !defined PUBNUB_USE_MDNS
-/** If `1`, the MDNS module will be used to handle the DNS
-        resolving. If `0` the "resolv" module will be used.
-        This is a temporary solution, it is expected that ConTiki
-        will unify those two modules.
+#if !defined(PUBNUB_PROXY_API)
+/** If true (!=0), enable support for (HTTP/S) proxy */
+#define PUBNUB_PROXY_API 1
+#endif
+
+/** The maximum length (in characters) of the host name of the proxy
+    that will be saved in the Pubnub context.
 */
-#define PUBNUB_USE_MDNS 1
+#define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
+
+/** If true (!=0), enable support for message encryption/decryption */
+#define PUBNUB_CRYPTO_API 0
+
+
+#if !defined(PUBNUB_ONLY_PUBSUB)
+/** If true (!=0), will enable only publish and subscribe. All
+    other transactions will fail.
+
+    For use in embedded systems and, in general, when you know
+    you won't be needing anything but publish and subscribe,
+    to reduce the memory footprint.
+*/
+#define PUBNUB_ONLY_PUBSUB_API 0
 #endif
 
 

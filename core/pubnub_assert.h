@@ -140,12 +140,38 @@ void pubnub_assert_handler_abort(char const *s, char const *file, long line);
 void pubnub_assert_handler_printf(char const *s, char const *file, long line);
 
 
-#define PUBNUB_CTASTR2(pre,post,lex) pre ## post ## lex
-#define PUBNUB_CTASTR(pre,post,lex) PUBNUB_CTASTR2(pre,post,lex)
+#define PUBNUB_CTASRT2(pre,post,lex) pre ## post ## lex
+#define PUBNUB_CTASRT(pre,post,lex) PUBNUB_CTASRT2(pre,post,lex)
 
-#define PUBNUB_STATIC_ASSERT(cond) \
-    typedef struct { int PUBNUB_CTASTR(static_assertion_failed_,msg) : !!(cond); } \
-        PUBNUB_CTASTR(static_assertion_failed_,__FILE__,__LINE__)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 
+/** Delegate to C11 static assert */
+#define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert(cond, #msg)
+
+#else
+
+/** This variant of a C compile-time assertion macro has the benefits
+    of being very portable, gives decent error message on all known
+    compilers.
+
+    Problems: 
+    
+    - It won't work if you have two of these on the same line 
+
+    - If you use it inside a function, compiler may report "unused
+    typedef" warning
+
+    Unfortunately, we don't know of a way to avoid these in a portable
+    manner.
+
+    @param cond Codition to assert
+    @param msg A message "disguised" as an identifier. So instead of
+    `"unknown value"`, use `unknown_value`
+ */
+#define PUBNUB_STATIC_ASSERT(cond,msg)                                  \
+    typedef struct { int PUBNUB_CTASRT(static_assert, _failed_, msg) : !!(cond); } \
+        PUBNUB_CTASRT(static_assert_failed_, msg, __LINE__)
+
+#endif /* __STDC_VERSION__ */
 
 #endif /* !defined INC_PUBNUB_ASSERT */

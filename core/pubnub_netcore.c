@@ -4,6 +4,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 #include "pubnub_ccore.h"
+#include "pubnub_ccore_pubsub.h"
 #include "pbpal.h"
 
 #include "pubnub_proxy_core.h"
@@ -35,57 +36,59 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 }
 
 
+static enum pubnub_res dont_parse(struct pbcc_context *p)
+{
+    PUBNUB_LOG_ERROR("Parsing not initialized for a type of transaction\n");
+    return PNR_INTERNAL_ERROR;
+}
+
+
+static PFpbcc_parse_response_T m_aParseResponse[] = {
+    dont_parse,
+    pbcc_parse_subscribe_response,
+    pbcc_parse_publish_response,
+#if PUBNUB_ONLY_PUBSUB_API
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse
+#else
+    pbcc_parse_presence_response, /* PBTT_LEAVE */
+    pbcc_parse_time_response,
+    pbcc_parse_history_response,
+    pbcc_parse_presence_response, /* PBTT_HERENOW */
+    pbcc_parse_presence_response, /* PBTT_GLOBAL_HERENOW */
+    pbcc_parse_presence_response, /* PBTT_WHERENOW */
+    pbcc_parse_presence_response, /* PBTT_SET_STATE */
+    pbcc_parse_presence_response, /* PBTT_STATE_GET */
+    pbcc_parse_channel_registry_response, /* PBTT_REMOVE_CHANNEL_GROUP */
+    pbcc_parse_channel_registry_response, /* PBTT_REMOVE_CHANNEL_FROM_GROUP */
+    pbcc_parse_channel_registry_response, /* PBTT_ADD_CHANNEL_TO_GROUP */
+    pbcc_parse_channel_registry_response, /* PBTT_LIST_CHANNEL_GROUP */
+    pbcc_parse_presence_response /* PBTT_HEARTBEAT */
+#endif
+};
+
+
+PUBNUB_STATIC_ASSERT((sizeof m_aParseResponse / sizeof m_aParseResponse[0]) == PBTT_MAX, bad_response_table_length);
+
+
 static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
 {
-    enum pubnub_res pbres = PNR_OK;
-    switch (pb->trans) {
-    case PBTT_SUBSCRIBE:
-        if (pbcc_parse_subscribe_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_subscribe failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
-    case PBTT_PUBLISH:
-        pbres = pbcc_parse_publish_response(&pb->core);
-        if (pbres != PNR_OK) {
-            PUBNUB_LOG_WARNING("parse_publish failed\n");
-        }
-        break;
-    case PBTT_TIME:
-        if (pbcc_parse_time_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_time failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
-    case PBTT_HISTORY:
-        if (pbcc_parse_history_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_history failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
-    case PBTT_LEAVE:
-    case PBTT_HERENOW:
-    case PBTT_GLOBAL_HERENOW:
-    case PBTT_WHERENOW:
-    case PBTT_SET_STATE:
-    case PBTT_STATE_GET:
-    case PBTT_HEARTBEAT:
-        if (pbcc_parse_presence_response(&pb->core) != 0) {
-            PUBNUB_LOG_WARNING("parse_presence failed\n");
-            pbres = PNR_FORMAT_ERROR;
-        }
-        break;
-    case PBTT_REMOVE_CHANNEL_GROUP:
-    case PBTT_REMOVE_CHANNEL_FROM_GROUP:
-    case PBTT_ADD_CHANNEL_TO_GROUP:
-    case PBTT_LIST_CHANNEL_GROUP:
-        pbres = pbcc_parse_channel_registry_response(&pb->core);
-        if (pbres != PNR_OK) {
-            PUBNUB_LOG_WARNING("parse_channel_registry failed\n");
-        }
-        break;
-    default:
-        break;
+    enum pubnub_res pbres;
+
+    pbres = m_aParseResponse[pb->trans](&pb->core);
+    if (pbres != PNR_OK) {
+        PUBNUB_LOG_WARNING("parsing response for transaction type #%d failed\n", pb->trans);
     }
 
     return pbres;

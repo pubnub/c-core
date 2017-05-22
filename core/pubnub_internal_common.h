@@ -3,7 +3,7 @@
 #define      INC_PUBNUB_INTERNAL_COMMON
 
 #include "pubnub_config.h"
-#include "pubnub_ccore.h"
+#include "pubnub_ccore_pubsub.h"
 #include "pubnub_netcore.h"
 #include "pubnub_mutex.h"
 

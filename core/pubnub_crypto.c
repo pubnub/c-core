@@ -3,7 +3,7 @@
 
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
-#include "pubnub_coreapi.h"
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi_ex.h"
 
 #include "pbmd5.h"

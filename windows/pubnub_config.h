@@ -67,7 +67,7 @@
 #define PUBNUB_ORIGIN_SETTABLE 1
 
 /** Duration of the transaction timeout set during context initialization,
-    in milliseconds. Timeout dration in the context can be changed by the 
+    in milliseconds. Timeout duration in the context can be changed by the 
     user after initialization.
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
@@ -101,6 +101,18 @@
 
 /** If true (!=0), enable support for message encryption/decryption */
 #define PUBNUB_CRYPTO_API 0
+
+
+#if !defined(PUBNUB_ONLY_PUBSUB)
+/** If true (!=0), will enable only publish and subscribe. All
+    other transactions will fail.
+
+    For use in embedded systems and, in general, when you know
+    you won't be needing anything but publish and subscribe,
+    to reduce the memory footprint.
+*/
+#define PUBNUB_ONLY_PUBSUB_API 0
+#endif
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */
