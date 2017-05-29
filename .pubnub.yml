@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.0
+version: 2.2.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.1
+    changes:
+      - type: bug
+        text: Fix C++ pubnub::futres destructor hanging up
   - version: v2.2.0
     changes:
       - type: feature

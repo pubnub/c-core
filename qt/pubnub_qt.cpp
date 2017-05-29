@@ -517,7 +517,7 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 
 extern "C" char const *pubnub_sdk_name() { return "Qt5"; }
 
-extern "C" char const *pubnub_uname() { return "Qt5%2F2.1.0"; }
+extern "C" char const *pubnub_uname() { return "Qt5%2F2.2.1"; }
 
-extern "C" char const *pubnub_version() { return "2.2.0"; }
+extern "C" char const *pubnub_version() { return "2.2.1"; }
 
