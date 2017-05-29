@@ -138,8 +138,8 @@ futres::futres(futres const &x) :
 
 futres::~futres()
 {
-    (void)pubnub_register_callback(d_pb, NULL, NULL);
     delete d_pimpl;
+    (void)pubnub_register_callback(d_pb, NULL, NULL);
 }
 
 
