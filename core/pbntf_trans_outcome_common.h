@@ -10,17 +10,18 @@
     by a particular message.
 */
 #define PBNTF_TRANS_OUTCOME_COMMON(pb) do {                             \
-        enum pubnub_res M_pbrslt_ = (pb)->core.last_result;             \
-        PUBNUB_LOG_INFO("Pubnub Transaction outcome: %d\n", M_pbrslt_); \
+        pubnub_t* M_pb_ = (pb);                                         \
+        enum pubnub_res M_pbrslt_ = M_pb_->core.last_result;            \
+        PUBNUB_LOG_INFO("Context %p Transaction outcome: %d\n", M_pb_, M_pbrslt_); \
         switch (M_pbrslt_) {                                            \
         case PNR_FORMAT_ERROR:                                          \
-        case PNR_TIMEOUT:                                               \
         case PNR_IO_ERROR:                                              \
-            (pb)->core.timetoken[0] = '0';                              \
-            (pb)->core.timetoken[1] = '\0';                             \
+            PUBNUB_LOG_WARNING("Context %p Resetting time token\n", M_pb_); \
+            M_pb_->core.timetoken[0] = '0';                             \
+            M_pb_->core.timetoken[1] = '\0';                            \
             break;                                                      \
         default:                                                        \
             break;                                                      \
         }                                                               \
-        (pb)->state = PBS_IDLE;                                         \
+        M_pb_->state = PBS_IDLE;                                        \
     } while(0)
