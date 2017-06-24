@@ -210,27 +210,42 @@ char const *pubnub_last_time_token(pubnub_t *pb)
 }
 
 
-char const *pubnub_last_publish_result(pubnub_t *pb)
+static char const* do_last_publish_result(pubnub_t *pb)
 {
     char *end;
 
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-
-    pubnub_mutex_lock(pb->monitor);
     if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
-        pubnub_mutex_unlock(pb->monitor);
         return "";
     }
     if ((pb->trans != PBTT_PUBLISH) || (pb->core.http_reply[0] == '\0')) {
-        pubnub_mutex_unlock(pb->monitor);
         return "";
     }
-    for (end = pb->core.http_reply + 1; isdigit((unsigned)*end); ++end) {
-        continue;
+
+    switch (pb->core.http_reply[0]) {
+    case '[':
+        for (end = pb->core.http_reply + 1; isdigit((unsigned)*end); ++end) {
+            continue;
+        }
+        return end + 1;
+    case '{':
+        return pb->core.http_reply + 1;
+    default:
+        return "";
     }
+}
+
+
+char const *pubnub_last_publish_result(pubnub_t *pb)
+{
+
+    char const* rslt;
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    rslt = do_last_publish_result(pb);
     pubnub_mutex_unlock(pb->monitor);
 
-    return end + 1;
+    return rslt;
 }
 
 
