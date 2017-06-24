@@ -18,18 +18,26 @@
     received from Pubnub.
  */
 enum pubnub_publish_res {
-  /** Publish succeeded, message sent on the channel */
-  PNPUB_SENT,
-  /** Publish failed, the message had invalid JSON */
-  PNPUB_INVALID_JSON,
-  /** Publish failed, the channel had an invalid character in the name */
-  PNPUB_INVALID_CHAR_IN_CHAN_NAME,
-  /** The publishing quota for this account was exceeded */
-  PNPUB_ACCOUNT_QUOTA_EXCEEDED,
-  /** Message is too large to be published */
-  PNPUB_MESSAGE_TOO_LARGE,
-  /** Publish failed, but we were not able to parse the error description */
-  PNPUB_UNKNOWN_ERROR,
+    /** Publish succeeded, message sent on the channel */
+    PNPUB_SENT,
+    /** Publish failed, the message had invalid JSON */
+    PNPUB_INVALID_JSON,
+    /** Publish failed, the channel had an invalid character in the name */
+    PNPUB_INVALID_CHAR_IN_CHAN_NAME,
+    /** The publishing quota for this account was exceeded */
+    PNPUB_ACCOUNT_QUOTA_EXCEEDED,
+    /** Message is too large to be published */
+    PNPUB_MESSAGE_TOO_LARGE,
+    /** The publish key is invalid */
+    PNPUB_INVALID_PUBLISH_KEY,
+    /** The subscribe key is invalid */
+    PNPUB_INVALID_SUBSCRIBE_KEY,
+    /** Publish failed and the response is a JSON object we weren't
+        able to interpret.
+    */
+    PNPUB_UNKNOWN_JSON_OBJECT,
+    /** Publish failed, but we were not able to parse the error description */
+    PNPUB_UNKNOWN_ERROR,
 };
 
 /** Parses the given publish @p result. You usually obtain this with
