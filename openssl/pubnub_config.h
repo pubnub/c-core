@@ -115,7 +115,7 @@
     you won't be needing anything but publish and subscribe,
     to reduce the memory footprint.
 */
-#define PUBNUB_ONLY_PUBSUB_API 1
+#define PUBNUB_ONLY_PUBSUB_API 0
 #endif
 
 

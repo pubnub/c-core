@@ -176,13 +176,14 @@ struct pubnub_ {
           */
         bool ignoreSSL : 1;
         /** When SSL is enabled, should the client fallback to a
-
          * non-SSL connection if it experiences issues handshaking
          * across local proxies, firewalls, etc?
          */
         bool fallbackSSL : 1;
         /** Use system certificate store (if available) */
         bool use_system_certificate_store : 1;
+        /** Re-use SSL session on a new connection */
+        bool reuse_SSL_session : 1;
 #endif
     } options;
 

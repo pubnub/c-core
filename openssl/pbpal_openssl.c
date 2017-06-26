@@ -95,6 +95,7 @@ void pbpal_init(pubnub_t *pb)
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->options.use_system_certificate_store = false;
+    pb->options.reuse_SSL_session = true;
     pb->ssl_CAfile = pb->ssl_CApath = NULL;
     pb->ssl_userPEMcert = NULL;
     pb->sock_state = STATE_NONE;
