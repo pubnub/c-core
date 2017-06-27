@@ -49,6 +49,7 @@ static void displayMenuOptions(pubnub_t *pn);
 
 #define MENU_EXIT 99
 
+
 static const char pubkey[] = "demo";
 static const char subkey[] = "demo";
 static const char channel[] = "hello_world";
@@ -71,8 +72,8 @@ int main()
         return -1;
     }
     
-    pubnub_init(pn, pubkey, pubkey);
-    pubnub_init(pn_sub, pubkey, pubkey);
+    pubnub_init(pn, pubkey, subkey);
+    pubnub_init(pn_sub, pubkey, subkey);
     pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
     pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
 

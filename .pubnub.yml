@@ -1,7 +1,17 @@
 name: c-core
-version: 2.2.1
+version: 2.2.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.2
+    changes:
+      - type: feature
+        text: Improve parsing of bad publish/subscribe key error
+      - type: feature
+        text: Add option to turn of SSL/TLS session reuse
+      - type: feature
+        text: PNR_TIMEOUT no longer resets the time token
+      - type: bug
+        text: Fixes and improvements of the console sample application
   - version: v2.2.1
     changes:
       - type: bug

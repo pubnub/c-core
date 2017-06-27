@@ -64,3 +64,15 @@ void pubnub_ssl_set_pem_cert(pubnub_t *p, char const *contents)
     pubnub_mutex_unlock(p->monitor);
 #endif
 }
+
+
+void pubnub_set_reuse_ssl_session(pubnub_t *p, bool reuse)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
+
+#if PUBNUB_USE_SSL
+    pubnub_mutex_lock(p->monitor);
+    p->options.reuse_SSL_session = reuse;
+    pubnub_mutex_unlock(p->monitor);
+#endif
+}

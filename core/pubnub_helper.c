@@ -25,6 +25,15 @@ enum pubnub_publish_res pubnub_parse_publish_result(char const *result)
     if (strcmp(result, "\"Message Too Large\"") == 0) {
         return PNPUB_MESSAGE_TOO_LARGE;
     }
+    if (strcmp(result, "\"Invalid Key\"") == 0) {
+        return PNPUB_INVALID_PUBLISH_KEY;
+    }
+    if (strncmp(result, "\"message\":", 10) == 0) {
+        if (strncmp(result + 10, "\"Invalid Subscribe Key\"", 23) == 0) {
+            return PNPUB_INVALID_SUBSCRIBE_KEY;
+        }
+        return PNPUB_UNKNOWN_JSON_OBJECT;
+    }
     return PNPUB_UNKNOWN_ERROR;
 }
 
@@ -52,8 +61,8 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_REPLY_TOO_BIG: return "Reply from Pubnub too big to fit in buffer";
     case PNR_INTERNAL_ERROR: return "Internal error in processing";
     case PNR_CRYPTO_NOT_SUPPORTED: return "Encryption/decryption not supported";
-    default: return "!?!?!";
     }
+    return "!?!?!";
 }
 
 
@@ -64,7 +73,7 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_ADDR_RESOLUTION_FAILED: return pbccTrue;
     case PNR_CONNECT_FAILED: return pbccTrue;
     case PNR_CONNECTION_TIMEOUT: return pbccTrue;
-    case PNR_TIMEOUT: return pbccTrue;
+    case PNR_TIMEOUT: return pbccNotSet;
     case PNR_ABORTED: return pbccNotSet;
     case PNR_IO_ERROR: return pbccNotSet;
     case PNR_HTTP_ERROR: return pbccFalse; /* For all known HTTP erros it doesn't make sense */
@@ -80,6 +89,6 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_REPLY_TOO_BIG: return pbccFalse; /* Rebuild with bigger buffer */
     case PNR_INTERNAL_ERROR: return pbccFalse; /* Sorry, something went wrong... */
     case PNR_CRYPTO_NOT_SUPPORTED: return pbccFalse; /* Use a platform that supports encryption, say OpenSSL */
-    default: return pbccFalse;
     }
+    return pbccFalse;
 }

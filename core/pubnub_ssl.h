@@ -38,6 +38,16 @@
 */
 void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool reduceSecurityOnError, bool ignoreSecureConnectionRequirement);
 
+/** Sets the option to reuse the SSL session on a new connection to
+    @p reuse on the context @p p.
+
+    @note While reusing SSL sessions can provide for great speed-up of
+    TLS/SSL session establishment, it is also prone to errors.
+
+    @param p The context for which to set the option for SSL session reuse
+    @param reuse The value (true/false == on/off) of the option
+ */
+void pubnub_set_reuse_ssl_session(pubnub_t *p, bool reuse);
 
 /** Sets the location(s) of CA certificates for verification
     purposes. This is only available on targets that have a file

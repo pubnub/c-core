@@ -48,7 +48,7 @@ static void sublup_context_callback(pubnub_t *pb, enum pubnub_trans trans, enum 
             pbsld->cb(pb, NULL, result);
         }
         result = pubnub_subscribe_ex(pbsld->pbp, pbsld->channel, pbsld->options);
-        if (result != PNR_OK) {
+        if (result != PNR_STARTED) {
             PUBNUB_LOG_ERROR("Failed to re-subscribe in the subscribe loop, error code = %d\n", result);
         }
     }

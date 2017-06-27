@@ -157,7 +157,7 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
     p->msg_ofs = p->msg_end = 0;
 
     if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
-        if ((reply[0] != '{') || (reply[replylen-1] != '}')) {
+        if (reply[0] != '{') {
             return PNR_FORMAT_ERROR;
         }
         /* If we got a JSON object in response, publish certainly

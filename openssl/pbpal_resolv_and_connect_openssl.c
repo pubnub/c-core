@@ -285,7 +285,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     BIO_get_ssl(pb->pal.socket, &ssl);
     PUBNUB_ASSERT(NULL != ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
-    if (pb->pal.session != NULL) {
+    if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
         SSL_set_session(ssl, pb->pal.session);
     }
 
@@ -312,7 +312,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         /* Expire the IP for the next connect */
         pb->pal.ip_timeout = 0;
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        if (pb->pal.session != NULL) {
+        if ((pb->pal.session != NULL) && pb->options.reuse_SSL_session) {
             SSL_SESSION_free(pb->pal.session);
             pb->pal.session = NULL;
         }
@@ -338,16 +338,18 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_connect_failed;
     }
 
-    PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n", pb, SSL_session_reused(ssl) ? "yes" : "no");
-    if (pb->pal.session != NULL) {
-        SSL_SESSION_free(pb->pal.session);
+    if (pb->options.reuse_SSL_session) {
+        PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n", pb, SSL_session_reused(ssl) ? "yes" : "no");
+        if (pb->pal.session != NULL) {
+            SSL_SESSION_free(pb->pal.session);
+        }
+        pb->pal.session = SSL_get1_session(ssl);
+        if (0 == pb->pal.ip_timeout) {
+            pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) + SSL_SESSION_get_timeout(pb->pal.session);
+            memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
+        }
+        PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %ud.%ud.%ud.%ud\n", pb, pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
     }
-    pb->pal.session = SSL_get1_session(ssl);
-    if (0 == pb->pal.ip_timeout) {
-        pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) + SSL_SESSION_get_timeout(pb->pal.session);
-        memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
-    }
-    PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %d.%d.%d.%d\n", pb, pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
 
     return pbpal_connect_success;
 }

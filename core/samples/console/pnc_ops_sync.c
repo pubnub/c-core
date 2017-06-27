@@ -93,6 +93,10 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
         puts("****************************************");
     }
     else {
+        char const *desc = pubnub_last_publish_result(pn);
         printf("%s failed! error code %d: %s\n", method_name, res, pubnub_res_2_string(res));
+        if (desc[0] != '\0') {
+            printf("Publish failed, with error: '%s' -> %d\n", desc, pubnub_parse_publish_result(desc));
+        }
     }
 }
