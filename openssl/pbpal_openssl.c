@@ -278,7 +278,7 @@ bool pbpal_read_over(pubnub_t *pb)
 
     if (pb->readlen == 0) {
         int recvres;
-        to_read =  pb->len - pbpal_read_len(pb);
+        to_read =  pb->len;
         if (to_read > pb->left) {
             to_read = pb->left;
         }
