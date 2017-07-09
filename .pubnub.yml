@@ -2,6 +2,12 @@ name: c-core
 version: 2.2.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.3
+    changes
+      - type: bug
+        text: Fix handling of segmented messages
+      - type: feature
+        text: Improve exising and add new logging
   - version: v2.2.2
     changes:
       - type: feature
