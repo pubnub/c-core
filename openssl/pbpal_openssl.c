@@ -110,7 +110,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
         return 0;
     }
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_send(): pb->sock_state != STATE_NONE (=%d)\n", pb->sock_state);
+        PUBNUB_LOG_ERROR("pbpal_send(pb=%p): pb->sock_state != STATE_NONE (=%d)\n", pb, pb->sock_state);
         return -1;
     }
     pb->sendptr = (uint8_t*)data;
@@ -142,7 +142,7 @@ int pbpal_send_status(pubnub_t *pb)
         return -1;
     }
     if (r > pb->sendlen) {
-        PUBNUB_LOG_WARNING("That's some over-achieving BIO!\n");
+        PUBNUB_LOG_WARNING("That's some over-achieving BIO! pb=%p, r=%d, pb->sendlen=%d\n", pb, r, pb->sendlen);
         r = pb->sendlen;
     }
     pb->sendptr += r;
@@ -154,7 +154,7 @@ int pbpal_send_status(pubnub_t *pb)
 int pbpal_start_read_line(pubnub_t *pb)
 {
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read_line(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
+        PUBNUB_LOG_ERROR("pbpal_start_read_line(pb=%p): pb->sock_state != STATE_NONE: ", pb); WATCH_ENUM(pb->sock_state);
         return -1;
     }
 
@@ -199,7 +199,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
         else if (0 == recvres) {
             return PNR_TIMEOUT;
         }
-        PUBNUB_LOG_TRACE("have new data of length=%d: %s\n", recvres, pb->ptr);
+        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %s\n", pb, recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
     } 
@@ -246,7 +246,7 @@ int pbpal_read_len(pubnub_t *pb)
 int pbpal_start_read(pubnub_t *pb, size_t n)
 {
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
+        PUBNUB_LOG_ERROR("pbpal_start_read(pb=%p): pb->sock_state != STATE_NONE: ", pb); WATCH_ENUM(pb->sock_state);
         return -1;
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
@@ -350,7 +350,7 @@ int pbpal_close(pubnub_t *pb)
         pb->pal.socket = NULL;
     }
 
-    PUBNUB_LOG_TRACE("pbpal_close() returning 0\n");
+    PUBNUB_LOG_TRACE("pbpal_close(pb=%p) returning 0\n", pb);
 
     return 0;
 }
