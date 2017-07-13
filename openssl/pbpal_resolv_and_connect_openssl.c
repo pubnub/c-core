@@ -30,7 +30,7 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
 
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
-    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL\n");
+    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
     int port = 80;
 
     if (NULL == pb->pal.socket) {
@@ -47,7 +47,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
         case pbproxyHTTP_GET:
             origin = pb->proxy_hostname;
             port = pb->proxy_port;
-            PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
+            PUBNUB_LOG_TRACE("pb=%p Using proxy: %s : %d\n", pb, origin, port);
             break;
         default:
             break;
@@ -68,7 +68,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
             return pbpal_connect_wouldblock;
         }
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        PUBNUB_LOG_ERROR("BIO_do_connect failed\n");
+        PUBNUB_LOG_ERROR("pb=%p BIO_do_connect failed, errno=%d\n", pb, errno);
         return pbpal_connect_failed;
     }
 
@@ -225,7 +225,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     case pbproxyHTTP_GET:
         origin = pb->proxy_hostname;
         port = pb->proxy_port;
-        PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
+        PUBNUB_LOG_TRACE("pb=%p Using proxy: %s : %d\n", pb, origin, port);
         break;
     default:
         break;
@@ -259,7 +259,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
                 BIO* ssl_bio = BIO_new_ssl(pb->pal.ctx, 1);
                 if (NULL == ssl_bio) {
                     ERR_print_errors_cb(print_to_pubnub_log, NULL);
-                    PUBNUB_LOG_ERROR("BIO_new_ssl() failed\n");
+                    PUBNUB_LOG_ERROR("pb=%p BIO_new_ssl() failed\n", pb);
                     return pbpal_resolv_resource_failure;
                 }
                 else {
@@ -296,7 +296,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             pb->pal.ip_timeout = 0;
         }
         else {
-            PUBNUB_LOG_TRACE("SSL re-connect to: %ud.%ud.%ud.%ud\n", pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
+            PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %ud.%ud.%ud.%ud\n", pb,
+                             (uint8_t)pb->pal.ip[0], (uint8_t)pb->pal.ip[1], 
+                             (uint8_t)pb->pal.ip[2], (uint8_t)pb->pal.ip[3]);
             BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
         }
     }
@@ -316,7 +318,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             SSL_SESSION_free(pb->pal.session);
             pb->pal.session = NULL;
         }
-        PUBNUB_LOG_ERROR("pb=%p: BIO_do_connect failed\n", pb);
+        PUBNUB_LOG_ERROR("pb=%p: BIO_do_connect failed, errno=%d\n", pb, errno);
         return pbpal_connect_failed;
     }
 
@@ -348,7 +350,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
             pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) + SSL_SESSION_get_timeout(pb->pal.session);
             memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
         }
-        PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %ud.%ud.%ud.%ud\n", pb, pb->pal.ip[0], pb->pal.ip[1], pb->pal.ip[2], pb->pal.ip[3]);
+        PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %ud.%ud.%ud.%ud\n", pb, 
+                         (uint8_t)pb->pal.ip[0], (uint8_t)pb->pal.ip[1], 
+                         (uint8_t)pb->pal.ip[2], (uint8_t)pb->pal.ip[3]);
     }
 
     return pbpal_connect_success;
@@ -374,7 +378,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
     struct timeval timev = { 0, 300000 };
 
     if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
-        PUBNUB_LOG_ERROR("pbpal_connected(): Uninitialized BIO!\n");
+        PUBNUB_LOG_ERROR("pbpal_check_connect(pb=%p): Uninitialized BIO!\n", pb);
         return pbpal_connect_resource_failure;
     }
     FD_ZERO(&read_set);
@@ -383,13 +387,13 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
     FD_SET(socket, &write_set);
     rslt = select(socket + 1, &read_set, &write_set, NULL, &timev);
     if (SOCKET_ERROR == rslt) {
-        PUBNUB_LOG_ERROR("pbpal_connected(): select() Error!\n");
+        PUBNUB_LOG_ERROR("pbpal_check_connect(pb=%p): select() Error!\n", pb);
         return pbpal_connect_resource_failure;
     }
     else if (rslt > 0) {
-        PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+        PUBNUB_LOG_TRACE("pbpal_check_connect(pb=%p): select() event\n", pb);
         return pbpal_resolv_and_connect(pb);
     }
-    PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
+    PUBNUB_LOG_TRACE("pbpal_check_connect(pb=%p): no select() events\n", pb);
     return pbpal_connect_wouldblock;
 }

@@ -193,8 +193,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     }
     else {
         if (pb->left == 0) {
-            /* Obviously, our buffer is not big enough, maybe some
-               error should be reported */
+            PUBNUB_LOG_ERROR("pbpal_start_read(pb=%p) pb->left=0, dismissing old buffer\n", pb);
             buf_setup(pb);
         }
     }
@@ -214,7 +213,7 @@ bool pbpal_read_over(pubnub_t *pb)
 
     if (pb->readlen == 0) {
         int recvres;
-        to_read =  pb->len - pbpal_read_len(pb);
+        to_read =  pb->len;
         if (to_read > pb->left) {
             to_read = pb->left;
         }

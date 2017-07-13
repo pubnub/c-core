@@ -88,7 +88,7 @@ static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
 
     pbres = m_aParseResponse[pb->trans](&pb->core);
     if (pbres != PNR_OK) {
-        PUBNUB_LOG_WARNING("parsing response for transaction type #%d failed\n", pb->trans);
+        PUBNUB_LOG_WARNING("pb=%p parsing response for transaction type #%d failed\n", pb, pb->trans);
     }
 
     return pbres;
@@ -121,7 +121,7 @@ static void finish(struct pubnub_ *pb)
 #endif
 
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
-    PUBNUB_LOG_TRACE("finish('%s')\n", pb->core.http_reply);
+    PUBNUB_LOG_TRACE("finish(pb=%p, '%s')\n", pb, pb->core.http_reply);
 
     pbres = parse_pubnub_result(pb);
     if ((PNR_OK == pbres) && ((pb->http_code / 100) != 2)) {
@@ -173,7 +173,7 @@ int pbnc_fsm(struct pubnub_ *pb)
     enum pubnub_res pbrslt;
     int i;
 
-    PUBNUB_LOG_TRACE("pbnc_fsm()\t");
+    PUBNUB_LOG_TRACE("pbnc_fsm(pb=%p)\t", pb);
 
 next_state:
     PUBNUB_LOG_TRACE("pb->state = %d (%s)\n", pb->state, pbnc_state2str(pb->state));
@@ -523,7 +523,7 @@ next_state:
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[] = "Content-Length: ";
             int read_len = pbpal_read_len(pb);
-            PUBNUB_LOG_TRACE("header line was read: %.*s\n", read_len, pb->core.http_buf);
+            PUBNUB_LOG_TRACE("pb=%p header line was read: %.*s\n", pb, read_len, pb->core.http_buf);
             WATCH_INT(read_len);
             if (read_len <= 2) {
                 pb->core.http_buf_len = 0;
@@ -605,7 +605,7 @@ next_state:
         goto next_state;
     case PBS_RX_CHUNK_LEN_LINE:
         pbrslt = pbpal_line_read_status(pb);
-        PUBNUB_LOG_TRACE("PBS_RX_CHUNK_LEN_LINE: pbrslt=%d\n", pbrslt);
+        PUBNUB_LOG_TRACE("pb=%p PBS_RX_CHUNK_LEN_LINE: pbrslt=%d\n", pb, pbrslt);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
