@@ -2,7 +2,7 @@
 #include "pubnub_version.h"
 
 #define PUBNUB_SDK_NAME "Windows"
-#define PUBNUB_SDK_VERSION "2.2.3"
+#define PUBNUB_SDK_VERSION "2.2.4"
 
 
 char const *pubnub_sdk_name(void)

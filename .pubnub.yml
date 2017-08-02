@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.2
+version: 2.2.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.4
+    changes:
+	  - type: bug
+	    text: Fix off-by-one error
   - version: v2.2.3
     changes
       - type: bug
