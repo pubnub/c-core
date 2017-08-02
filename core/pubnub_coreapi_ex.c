@@ -35,7 +35,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t *pb, const char *channel, const char 
 
     if (PUBNUB_CRYPTO_API && (NULL != opts.cipher_key)) {
         pubnub_bymebl_t to_encrypt;
-        size_t n = PUBNUB_BUF_MAXLEN - 2;
+        size_t n = PUBNUB_BUF_MAXLEN - sizeof("\"\"");
 
         to_encrypt.ptr = (uint8_t*)message;
         to_encrypt.size = strlen(message);
@@ -43,9 +43,8 @@ enum pubnub_res pubnub_publish_ex(pubnub_t *pb, const char *channel, const char 
         if (0 != pubnub_encrypt(opts.cipher_key, to_encrypt, encrypted_msg + 1, &n)) {
             return PNR_INTERNAL_ERROR;
         }
-        ++n;
-        encrypted_msg[n++] = '"';
-        encrypted_msg[n] = '\0';
+        encrypted_msg[++n] = '"';
+        encrypted_msg[++n] = '\0';
         message = encrypted_msg;
     }
 
