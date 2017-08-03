@@ -495,6 +495,7 @@ next_state:
             break;
         case PNR_OK:
             if (strncmp(pb->core.http_buf, "HTTP/1.", 7) != 0) {
+                PUBNUB_LOG_ERROR("pb=%p bad HTTP response version: %.*s\n", pb, pbpal_read_len(pb), pb->core.http_buf);
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -505,6 +506,7 @@ next_state:
             pb->state = PBS_RX_HEADERS;
             goto next_state;
         default:
+            PUBNUB_LOG_ERROR("pb=%p in PBS_RX_HTTP_VER: failure inducing pbpal_line_read_status %d\n", pb, pbrslt);
             outcome_detected(pb, pbrslt);
             break;
         }
