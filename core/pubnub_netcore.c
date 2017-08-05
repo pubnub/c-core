@@ -490,6 +490,7 @@ next_state:
         break;
     case PBS_RX_HTTP_VER:
         pbrslt = pbpal_line_read_status(pb);
+        WATCH_ENUM(pbrslt);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
