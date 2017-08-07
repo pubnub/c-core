@@ -21,6 +21,16 @@
 static pbpal_mutex_t *m_locks;
 
 
+static int print_to_pubnub_log(const char *s, size_t len, void *p)
+{
+    PUBNUB_UNUSED(len);
+
+    PUBNUB_LOG_ERROR("From OpenSSL: pb=%p '%s'", p, s);
+
+    return 0;
+}
+
+
 static void locking_callback(int mode, int type, const char *file, int line)
 {
     PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n", CRYPTO_thread_id(),
@@ -187,15 +197,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
-			PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d\n", pb, pb->options.use_blocking_io, recvres, errno);
-            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                return PNR_IO_ERROR;
-            }
-            if (BIO_should_retry(pb->pal.socket)) {
-                return PNR_IN_PROGRESS;
-            }
-            ERR_print_errors_fp(stderr);
-            return PNR_IO_ERROR;
+            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d\n", pb, pb->options.use_blocking_io, recvres, errno);
+            ERR_print_errors_cb(print_to_pubnub_log, pb);
+            return BIO_should_retry(pb->pal.socket) ? PNR_IN_PROGRESS : PNR_IO_ERROR;
         }
         else if (0 == recvres) {
             return PNR_TIMEOUT;

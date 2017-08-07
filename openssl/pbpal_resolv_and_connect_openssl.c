@@ -20,9 +20,8 @@
 static int print_to_pubnub_log(const char *s, size_t len, void *p)
 {
     PUBNUB_UNUSED(len);
-    PUBNUB_UNUSED(p);
 
-    PUBNUB_LOG_ERROR("%s", s);
+    PUBNUB_LOG_ERROR("From OpenSSL: pb=%p '%s'", p, s);
 
     return 0;
 }
@@ -67,7 +66,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
         if (BIO_should_retry(pb->pal.socket)) {
             return pbpal_connect_wouldblock;
         }
-        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        ERR_print_errors_cb(print_to_pubnub_log, pb);
         PUBNUB_LOG_ERROR("pb=%p BIO_do_connect failed, errno=%d\n", pb, errno);
         return pbpal_connect_failed;
     }
