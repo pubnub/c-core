@@ -187,6 +187,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
+			PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d\n", pb, pb->options.use_blocking_io, recvres, errno);
             if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
                 return PNR_IO_ERROR;
             }
