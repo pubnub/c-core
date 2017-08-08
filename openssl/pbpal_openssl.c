@@ -197,9 +197,10 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
             /* This is error or connection close, but, since it is an
                unexpected close, we treat it like an error.
              */
-            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d\n", pb, pb->options.use_blocking_io, recvres, errno);
+            int should_retry = BIO_should_retry(pb->pal.socket);
+            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d\n", pb, pb->options.use_blocking_io, recvres, errno, should_retry);
             ERR_print_errors_cb(print_to_pubnub_log, pb);
-            return BIO_should_retry(pb->pal.socket) ? PNR_IN_PROGRESS : PNR_IO_ERROR;
+            return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
         }
         else if (0 == recvres) {
             return PNR_TIMEOUT;
