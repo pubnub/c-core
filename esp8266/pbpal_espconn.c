@@ -8,7 +8,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 
-#include "openssl/ssl.h"
+#include "espconn.h"
 
 
 #include <string.h>
@@ -17,59 +17,6 @@
 #define HTTP_PORT 80
 
 
-/** Locks used by OpenSSL */
-static pbpal_mutex_t *m_locks;
-
-
-static int print_to_pubnub_log(const char *s, size_t len, void *p)
-{
-    PUBNUB_UNUSED(len);
-
-    PUBNUB_LOG_ERROR("From OpenSSL: pb=%p '%s'", p, s);
-
-    return 0;
-}
-
-
-static void locking_callback(int mode, int type, const char *file, int line)
-{
-    PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n", CRYPTO_thread_id(),
-                     (mode & CRYPTO_LOCK) ? "l" : "u",
-                     (type & CRYPTO_READ) ? "r" : "w", file, line);
-    if (mode & CRYPTO_LOCK) {
-        pbpal_mutex_lock(m_locks[type]);
-    }
-    else {
-        pbpal_mutex_unlock(m_locks[type]);
-    }
-}
-
-
-#if !defined(_WIN32)
-static unsigned long thread_id(void)
-{
-    return (unsigned long)pbpal_thread_id();
-}
-#endif
-
-
-static int locks_setup(void)
-{
-    int i;
-    m_locks = (pbpal_mutex_t*)calloc(CRYPTO_num_locks(), sizeof(pbpal_mutex_t));
-    if (NULL == m_locks) {
-        return -1;
-    }
-    for (i = 0; i < CRYPTO_num_locks(); ++i) {
-        pbpal_mutex_init_std(m_locks[i]);
-    }
-#if !defined(_WIN32)
-    // On Windows, OpenSSL has a suitable default
-    CRYPTO_set_id_callback(thread_id);
-#endif
-    CRYPTO_set_locking_callback(locking_callback);
-    return 0;
-}
 
 
 static void buf_setup(pubnub_t *pb)
@@ -83,14 +30,6 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-        ERR_load_BIO_strings();
-        SSL_load_error_strings();
-        SSL_library_init();
-        OpenSSL_add_all_algorithms();
-        if (locks_setup()) {
-            return -1;
-        }
-
         pbntf_init();
         s_init = true;
     }
@@ -113,6 +52,17 @@ void pbpal_init(pubnub_t *pb)
     buf_setup(pb);
 }
 
+
+static void espconn_sent(void *arg)
+{
+	struct espconn* pesp = (struct espconn*)arg;
+	pubnub_t *pb = (pubnub_t*)pesp->reserve;
+	PUBNUB_ASSERT_OPT(pb != NULL);
+	PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
+	pb->sock_state = STATE_DATA_SENT;
+	
+	pbnc_fsm(pb);
+}
 
 int pbpal_send(pubnub_t *pb, void const *data, size_t n)
 {
@@ -139,25 +89,30 @@ int pbpal_send_str(pubnub_t *pb, char const *s)
 
 int pbpal_send_status(pubnub_t *pb)
 {
-    int r;
+    sint8 r;
     if (0 == pb->sendlen) {
         return 0;
     }
-    r = BIO_write(pb->pal.socket, pb->sendptr, pb->sendlen);
-    if (r < 0) {
-        if (BIO_should_retry(pb->pal.socket)) {
-            return +1;
-        }
-        ERR_print_errors_fp(stderr);
+	switch (pb->sock_state) {
+	case STATE_DATA_SENT: 
+		pb->sock_state = STATE_NONE;
+		/*FALLTHRU*/
+	case STATE_NONE: 
+		break;
+	case STATE_SENDING_DATA: 
+		return +1;
+	default: 
+		return -1;
+	}
+    r = espconn_send(pb->pal.socket, pb->sendptr, pb->sendlen);
+    if (r != 0) {
+		PUBNUB_LOG_ERROR("pb=%p espconn_send() returned error: %d\n", r);
         return -1;
     }
-    if (r > pb->sendlen) {
-        PUBNUB_LOG_WARNING("That's some over-achieving BIO! pb=%p, r=%d, pb->sendlen=%d\n", pb, r, pb->sendlen);
-        r = pb->sendlen;
-    }
-    pb->sendptr += r;
-    pb->sendlen -= r;
-    return r >= pb->sendlen;
+    pb->sendptr += pb->sendlen;
+    pb->sendlen -= pb->sendlen;
+	pb->sock_state = STATE_SENDING_DATA;
+    return +1;
 }
 
 
@@ -187,29 +142,30 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
+static void recv_callback(void *arg, char *pdata, unsigned short len)
+{
+	struct espconn* pesp = (struct espconn*)arg;
+	pubnub_t *pb = (pubnub_t*)pesp->reserve;
+	PUBNUB_ASSERT_OPT(pb != NULL);
+	if ((pb->sock_state == STATE_READ_LINE) || (pb->sock_state == STATE_READ)) {
+		PUBNUB_ASSERT_OPT(len > 0);
+		if (len > pb->left) {
+			len = pb->left;
+			PUBNUB_LOG_ERROR("pb=%p received %d bytes, more than it can handle, which was %d.\nHandling one as much as we can, the rest will be lost.\n", pb, len, pb->left);
+		}
+		memcpy(pb->ptr + pb->readlen, pdata, len);
+		pb->readlen += len;
+
+		pbnc_fsm(pb);
+	}
+	else {
+		PUBNUB_LOG_WARNING("pb=%p received unexpected %d bytes, ignoring\n", pb, len);
+	}
+}
+
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
-
-    if (pb->readlen == 0) {
-        int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
-        if (recvres < 0) {
-            /* This is error or connection close, but, since it is an
-               unexpected close, we treat it like an error.
-             */
-            int should_retry = BIO_should_retry(pb->pal.socket);
-            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d\n", 
-                pb, pb->options.use_blocking_io, recvres, errno, should_retry, BIO_retry_type(pb->pal.socket));
-            ERR_print_errors_cb(print_to_pubnub_log, pb);
-            return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
-        }
-        else if (0 == recvres) {
-            return PNR_TIMEOUT;
-        }
-        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %s\n", pb, recvres, pb->ptr);
-        pb->sock_state = STATE_READ_LINE;
-        pb->readlen = recvres;
-    } 
 
     while (pb->left > 0 && pb->readlen > 0) {
         c = *pb->ptr++;
