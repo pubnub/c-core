@@ -198,15 +198,20 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
                unexpected close, we treat it like an error.
              */
             int should_retry = BIO_should_retry(pb->pal.socket);
-            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d\n", 
-                pb, pb->options.use_blocking_io, recvres, errno, should_retry, BIO_retry_type(pb->pal.socket));
+            int reason = 0;
+            BIO *retry_BIO = BIO_get_retry_BIO(pb->pal.socket, &reason);
+            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d retry_BIO=%p reason=%d\n", 
+                pb, pb->options.use_blocking_io, recvres, errno, should_retry, 
+                BIO_retry_type(pb->pal.socket),
+                retry_BIO, reason
+                );
             ERR_print_errors_cb(print_to_pubnub_log, pb);
             return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
         }
         else if (0 == recvres) {
             return PNR_TIMEOUT;
         }
-        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %s\n", pb, recvres, pb->ptr);
+        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres,  pb->ptr);
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
     } 
