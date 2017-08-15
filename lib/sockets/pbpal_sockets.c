@@ -135,7 +135,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
         else if (0 == recvres) {
             return PNR_TIMEOUT;
         }
-        PUBNUB_LOG_TRACE("have new data of length=%d: %s\n", recvres, pb->ptr);
+        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
         pb->readlen = recvres;
     }
