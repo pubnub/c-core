@@ -263,6 +263,8 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
         size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+        WATCH_UINT(distance);
+        WATCH_UINT(pb->left);
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
         pb->left += (uint16_t)distance;
@@ -293,7 +295,9 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
+        WATCH_INT(to_read);
         recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
+        WATCH_INT(recvres);
         if (recvres <= 0) {
             /* This is error or connection close, which may be handled
                in some way...

@@ -319,8 +319,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, 
         if (pmessage[0]) {
             /* %-encode a non-ok character. */
             char enc[4] = {'%'};
-            enc[1] = "0123456789ABCDEF"[(unsigned)pmessage[0] / 16];
-            enc[2] = "0123456789ABCDEF"[(unsigned)pmessage[0] % 16];
+            enc[1] = "0123456789ABCDEF"[(unsigned char)pmessage[0] / 16];
+            enc[2] = "0123456789ABCDEF"[(unsigned char)pmessage[0] % 16];
             if (3 > sizeof pb->http_buf - 1 - pb->http_buf_len) {
                 pb->http_buf_len = 0;
                 return PNR_TX_BUFF_TOO_SMALL;
