@@ -27,6 +27,18 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
 }
 
 
+/** Someone removed `BIO_set_conn_int_port` from OpenSSL 1.1.0, but
+    failed to update the docs... oh, well... we can make our own
+    `BIO_set_conn_int_port`.
+*/
+static long my_BIO_set_conn_int_port(BIO *bio, int port)
+{
+    char s[20];
+    snprintf(s, sizeof s, "%d", port);
+    return BIO_set_conn_port(bio, s);
+}
+
+
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
     PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
@@ -57,7 +69,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *
     if (NULL == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
-    BIO_set_conn_int_port(pb->pal.socket, &port);
+    my_BIO_set_conn_int_port(pb->pal.socket, port);
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
 
@@ -289,7 +301,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     }
 
     BIO_set_conn_hostname(pb->pal.socket, origin);
-    BIO_set_conn_int_port(pb->pal.socket, &port);
+    my_BIO_set_conn_int_port(pb->pal.socket, port);
     if (pb->pal.ip_timeout != 0) {
         if (pb->pal.ip_timeout < time(NULL)) {
             pb->pal.ip_timeout = 0;
