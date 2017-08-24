@@ -10,7 +10,6 @@
 
 #include "openssl/ssl.h"
 
-
 #include <string.h>
 
 
@@ -87,6 +86,8 @@ static int pal_init(void)
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
+        PUBNUB_LOG_TRACE("SSLEAY_VERSION_NUMBER=%lx SSLeay()=%lx SSLeay_version(SSLEAY_VERSION)='%s'\n", 
+                         SSLEAY_VERSION_NUMBER, SSLeay(), SSLeay_version(SSLEAY_VERSION));
         if (locks_setup()) {
             return -1;
         }
