@@ -41,8 +41,9 @@ static long my_BIO_set_conn_int_port(BIO *bio, int port)
 
 static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t *pb)
 {
-    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
     int port = 80;
+
+    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
 
     if (NULL == pb->pal.socket) {
         char const*origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
