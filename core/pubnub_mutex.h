@@ -16,8 +16,8 @@
 #define pubnub_mutex_static_decl_and_init(m) pbpal_mutex_static_decl_and_init(m)
 #define pubnub_mutex_init_static(m) pbpal_mutex_init_static(m)
 
-#if defined(__clang__)
-#define pubnub_guarded_by(x) __attribute__(guarded_by(x))
+#if defined(__clang__) && defined(__cplusplus)
+#define pubnub_guarded_by(x) __attribute__((guarded_by(x)))
 #elif _MSC_VER > 1700
 #define pubnub_guarded_by(x) _Guarded_by_(x)
 #else
