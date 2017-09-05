@@ -71,19 +71,25 @@ enum pubnub_log_level {
 #define WATCH_INT(X) WATCH_VAL(X, int, "%d")
 
 /** Helper macro to "watch" an unsigned integer */
-#define WATCH_UINT(X) WATCH_VAL(X, unsigned int, "%ud")
+#define WATCH_UINT(X) WATCH_VAL(X, unsigned int, "%u")
 
 /** Helper macro to "watch" a long */
-#define WATCH_LONG(X) WATCH_VAL(X, long, "%l")
+#define WATCH_LONG(X) WATCH_VAL(X, long, "%ld")
 
 /** Helper macro to "watch" an unsigned long */
-#define WATCH_ULONG(X) WATCH_VAL(X, unsigned long, "%ul")
+#define WATCH_ULONG(X) WATCH_VAL(X, unsigned long, "%lu")
+
+/** Helper macro to "watch" a size_t. We're not using the `%z`,
+    because it requires a C99 compiler/runtime. OTOH, we're not aware
+    of a platform on which `size_t` is "larger" than `unsigned long`.
+ */
+#define WATCH_SIZE_T(X) do { unsigned long M_watched_val_ = (X); WATCH_ULONG(M_watched_val_); } while (0)
 
 /** Helper macro to "watch" a short */
-#define WATCH_SHORT(X) WATCH_VAL(X, short, "%d")
+#define WATCH_SHORT(X) WATCH_VAL(X, short, "%hd")
 
 /** Helper macro to "watch" an unsigned short */
-#define WATCH_USHORT(X) WATCH_VAL(X, unsigned short, "%ud")
+#define WATCH_USHORT(X) WATCH_VAL(X, unsigned short, "%hu")
 
 /** Helper macro to "watch" a char */
 #define WATCH_CHAR(X) WATCH_VAL(X, char, "%c")

@@ -10,7 +10,6 @@
 
 #include "openssl/ssl.h"
 
-
 #include <string.h>
 
 
@@ -87,6 +86,8 @@ static int pal_init(void)
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
+        PUBNUB_LOG_TRACE("SSLEAY_VERSION_NUMBER=%lx SSLeay()=%lx SSLeay_version(SSLEAY_VERSION)='%s'\n", 
+                         SSLEAY_VERSION_NUMBER, SSLeay(), SSLeay_version(SSLEAY_VERSION));
         if (locks_setup()) {
             return -1;
         }
@@ -205,6 +206,11 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
                 BIO_retry_type(pb->pal.socket),
                 retry_BIO, reason
                 );
+#if defined(_WIN32)
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+                pb, GetLastError(), WSAGetLastError()
+                );
+#endif
             ERR_print_errors_cb(print_to_pubnub_log, pb);
             return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
         }
@@ -263,8 +269,8 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
         size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-        WATCH_UINT(distance);
-        WATCH_UINT(pb->left);
+        WATCH_SIZE_T(distance);
+        WATCH_USHORT(pb->left);
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
         pb->left += (uint16_t)distance;
@@ -295,7 +301,7 @@ bool pbpal_read_over(pubnub_t *pb)
         if (to_read > pb->left) {
             to_read = pb->left;
         }
-        WATCH_INT(to_read);
+        WATCH_UINT(to_read);
         recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
         WATCH_INT(recvres);
         if (recvres <= 0) {

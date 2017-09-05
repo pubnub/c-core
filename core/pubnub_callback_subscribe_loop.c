@@ -32,7 +32,7 @@ struct pubnub_subloop_descriptor {
 
 static void sublup_context_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
 {
-    pubnub_subloop_t* pbsld = user_data;
+    pubnub_subloop_t* pbsld = (pubnub_subloop_t*)user_data;
 
     PUBNUB_ASSERT_OPT(pbsld != NULL);
 
@@ -58,7 +58,7 @@ static void sublup_context_callback(pubnub_t *pb, enum pubnub_trans trans, enum 
 
 pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb)
 {
-    pubnub_subloop_t* rslt = malloc(sizeof(pubnub_subloop_t));
+    pubnub_subloop_t* rslt = (pubnub_subloop_t*)malloc(sizeof(pubnub_subloop_t));
     if (NULL == rslt) {
         return NULL;
     }

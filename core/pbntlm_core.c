@@ -24,6 +24,7 @@ void pbntlm_core_deinit(pubnub_t *pb)
 
 void pbntlm_core_handle(pubnub_t *pb, char const* base64_msg, size_t length)
 {
+    int i;
     uint8_t msg[512];
     pubnub_bymebl_t data = { msg, sizeof msg / sizeof msg[0] };
 
@@ -31,13 +32,13 @@ void pbntlm_core_handle(pubnub_t *pb, char const* base64_msg, size_t length)
         pbntlm_core_init(pb);
         return;
     }
-    
+
     if (pb->ntlm_context.state != pbntlmRcvTypeTwo) {
         PUBNUB_LOG_ERROR("pbntlm_core_handle(): Unexpected state '%d'\n", pb->ntlm_context.state);
         pbntlm_core_deinit(pb);
         return;
     }
-    int i = pbbase64_decode_std(base64_msg, length, &data);
+    i = pbbase64_decode_std(base64_msg, length, &data);
     if (0 != i) {
         PUBNUB_LOG_ERROR("pbntlm_core_handle(): Failed to Base64 decode '%.*s', result: %d\n", (int)length, base64_msg, i);
         pbntlm_core_deinit(pb);
