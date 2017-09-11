@@ -124,6 +124,20 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     if (pb->readlen == 0) {
         int recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres < 0) {
+            char const* err_str;
+#if HAVE_STRERROR_R
+            char errstr_r[1024];
+            strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
+            err_str = errstr_r;
+#else
+            err_str = strerror(errno);
+#endif
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n", pb, errno, err_str, pb->options.use_blocking_io);
+#if defined(_WIN32)
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+                pb, GetLastError(), WSAGetLastError()
+                );
+#endif
             if (socket_timed_out()) {
                 return PNR_TIMEOUT;
             }
