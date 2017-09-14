@@ -184,7 +184,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
 }
 
 
-bool pbpal_read_over(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t *pb)
 {
     unsigned to_read = 0;
     WATCH_ENUM(pb->sock_state);
@@ -200,10 +200,7 @@ bool pbpal_read_over(pubnub_t *pb)
         }
         recvres = socket_recv(pb->pal.socket, pb->ptr, to_read);
         if (0 == recvres) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+            return PNR_IN_PROGRESS;
         }
         pb->sock_state = STATE_READ;
         pb->readlen = recvres;
@@ -221,7 +218,7 @@ bool pbpal_read_over(pubnub_t *pb)
 
     if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
-        return true;
+        return PNR_OK;
     }
 
     if (pb->left == 0) {
@@ -237,10 +234,9 @@ bool pbpal_read_over(pubnub_t *pb)
     }
     else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
-        return false;
     }
 
-    return true;
+    return PNR_IN_PROGRESS;
 }
 
 

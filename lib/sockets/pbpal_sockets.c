@@ -8,6 +8,7 @@
 #include "pubnub_log.h"
 
 #include <sys/types.h>
+#include <fcntl.h>
 
 #include <string.h>
 
@@ -117,23 +118,56 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
+static void report_error_from_environment(pubnub_t* pb)
+{
+    char const* err_str;
+                
+#if HAVE_STRERROR_R
+    char errstr_r[1024];
+    strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
+    err_str = errstr_r;
+#else
+    err_str = strerror(errno);
+#endif
+    PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n", pb, errno, err_str, pb->options.use_blocking_io);
+#if defined(_WIN32)
+    PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+                     pb, GetLastError(), WSAGetLastError()
+        );
+#endif
+}
+
+
+static enum pubnub_res pbrslt_from_socket_error(int socket_result, pubnub_t *pb)
+{
+    PUBNUB_ASSERT_OPT(socket_result <= 0);
+    if (socket_result < 0) {
+        if (socket_would_block()) {
+            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
+                return PNR_TIMEOUT;
+            }
+            return PNR_IN_PROGRESS;
+        }
+        else {
+            report_error_from_environment(pb);
+            return socket_timed_out() ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
+        }
+    }
+    else if (0 == socket_result) {
+        return PNR_TIMEOUT;
+    }
+    return PNR_INTERNAL_ERROR;
+}
+
+
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
         int recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
-        if (recvres < 0) {
-            if (socket_timed_out()) {
-                return PNR_TIMEOUT;
-            }
-            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                return PNR_IO_ERROR;
-            }
-            return socket_would_block() ? PNR_IN_PROGRESS : PNR_IO_ERROR;
-        }
-        else if (0 == recvres) {
-            return PNR_TIMEOUT;
+        if (recvres <= 0) {
+            return pbrslt_from_socket_error(recvres, pb);
         }
         PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
         pb->sock_state = STATE_READ_LINE;
@@ -203,7 +237,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
 }
 
 
-bool pbpal_read_over(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t *pb)
 {
     unsigned to_read = 0;
     WATCH_ENUM(pb->sock_state);
@@ -219,10 +253,7 @@ bool pbpal_read_over(pubnub_t *pb)
         }
         recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, to_read, 0);
         if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+            return pbrslt_from_socket_error(recvres, pb);
         }
         pb->sock_state = STATE_READ;
         pb->readlen = recvres;
@@ -241,7 +272,7 @@ bool pbpal_read_over(pubnub_t *pb)
 
     if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
-        return true;
+        return PNR_OK;
     }
 
     if (pb->left == 0) {
@@ -257,10 +288,9 @@ bool pbpal_read_over(pubnub_t *pb)
     }
     else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
-        return false;
     }
 
-    return true;
+    return PNR_IN_PROGRESS;
 }
 
 

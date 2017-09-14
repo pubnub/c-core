@@ -14,7 +14,10 @@ typedef SOCKET pb_socket_t;
 #define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
-#define socket_would_block() (WSAGetLastError() == WSAEWOULDBLOCK)
+/* Treating `WSAEINPROGRESS` the same as `WSAEWOULDBLOCK` isn't 
+   the greatest solution, but it is good for now.
+*/
+#define socket_would_block() ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
 
 #define socket_timed_out() (WSAGetLastError() == WSAETIMEDOUT)
 
