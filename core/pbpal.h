@@ -105,8 +105,9 @@ int pbpal_start_read_line(pubnub_t *pb);
 
 /** Returns the status of reading a line. Line reading was
     started with pbpal_start_read_line().
-    @return 0: line was read, +1: line reading still in progress
-    -1: line reading failed
+    @retval PNR_IN_PROGRESS reading a line not over/done yet
+    @retval PNR_OK Reading a line done
+    @retval otherwise The error that happened during the reading
 */
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb);
 
@@ -119,7 +120,7 @@ int pbpal_read_len(pubnub_t *pb);
     established TCP connection. Only one reading can take place at any
     given time.
 
-    To check if reading is complete, call pbpal_read_over().
+    To check if reading is complete, call pbpal_read_status().
 
     @param pb The Pubnub context of an established TCP connection
     @param n Number of octets (bytes) to read
@@ -127,10 +128,13 @@ int pbpal_read_len(pubnub_t *pb);
 */
 int pbpal_start_read(pubnub_t *pb, size_t n);
 
-/** Returns if reading is done (has the requested number of octets
-    (bytes) been read).
+/** Returns the status of reading a chunk of data. In general, it's
+    used to receive the body (or chunk of it) of the HTTP response.
+    @retval PNR_IN_PROGRESS reading a chunk not over/done yet
+    @retval PNR_OK Reading a chunk done
+    @retval otherwise The error that happened during the reading
 */
-bool pbpal_read_over(pubnub_t *pb);
+enum pubnub_res pbpal_read_status(pubnub_t *pb);
 
 /** Returns whether for the given Pubnub context the TCP
     connection has closed.

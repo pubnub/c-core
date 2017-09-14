@@ -18,7 +18,7 @@ typedef int pb_socket_t;
 /* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't 
    the greatest solution, but it is good for now.
 */
-#define socket_would_block() ((errno == EWOULDBLOCK) || (errno == EINPROGRESS))
+#define socket_would_block() ((errno == EAGAIN) ||(errno == EWOULDBLOCK) || (errno == EINPROGRESS))
 
 #define socket_timed_out() (errno == ETIMEDOUT)
 

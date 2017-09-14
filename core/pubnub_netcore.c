@@ -490,7 +490,7 @@ next_state:
         break;
     case PBS_RX_HTTP_VER:
         pbrslt = pbpal_line_read_status(pb);
-        WATCH_ENUM(pbrslt);
+        PUBNUB_LOG_TRACE("pb=%p PBS_RX_HTTP_VER: pbrslt=%d\n", pb, pbrslt);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
@@ -518,6 +518,7 @@ next_state:
         goto next_state;
     case PBS_RX_HEADER_LINE:
         pbrslt = pbpal_line_read_status(pb);
+        PUBNUB_LOG_TRACE("pb=%p PBS_RX_HEADER_LINE: pbrslt=%d\n", pb, pbrslt);
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
@@ -588,7 +589,13 @@ next_state:
         }
         break;
     case PBS_RX_BODY_WAIT:
-        if (pbpal_read_over(pb)) {
+        pbrslt = pbpal_read_status(pb);
+        PUBNUB_LOG_TRACE("pb=%p PBS_RX_BODY_WAIT: pbrslt=%d\n", pb, pbrslt);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
+            break;
+        case PNR_OK:
+        {
             unsigned len = pbpal_read_len(pb);
             WATCH_UINT(len);
             WATCH_UINT(pb->core.http_buf_len);
@@ -600,6 +607,10 @@ next_state:
             pb->core.http_buf_len += len;
             pb->state = PBS_RX_BODY;
             goto next_state;
+        }
+        default:
+            outcome_detected(pb, pbrslt);
+            break;
         }
         break;
     case PBS_RX_CHUNK_LEN:
@@ -653,7 +664,13 @@ next_state:
         }
         goto next_state;
     case PBS_RX_BODY_CHUNK_WAIT:
-        if (pbpal_read_over(pb)) {
+        pbrslt = pbpal_read_status(pb);
+        PUBNUB_LOG_TRACE("pb=%p PBS_RX_BODY_CHUNK_WAIT: pbrslt=%d\n", pb, pbrslt);
+        switch (pbrslt) {
+        case PNR_IN_PROGRESS:
+            break;
+        case PNR_OK:
+        {
             unsigned len = pbpal_read_len(pb);
 
             PUBNUB_ASSERT_OPT(pb->core.http_content_len >= len);
@@ -674,6 +691,10 @@ next_state:
             pb->core.http_content_len -= len;
             pb->state = PBS_RX_BODY_CHUNK;
             goto next_state;
+        }
+        default:
+            outcome_detected(pb, pbrslt);
+            break;
         }
         break;
     case PBS_WAIT_CLOSE:

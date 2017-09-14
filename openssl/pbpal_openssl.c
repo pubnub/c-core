@@ -195,9 +195,6 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     if (pb->readlen == 0) {
         int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
         if (recvres < 0) {
-            /* This is error or connection close, but, since it is an
-               unexpected close, we treat it like an error.
-             */
             int should_retry = BIO_should_retry(pb->pal.socket);
             int reason = 0;
             BIO *retry_BIO = BIO_get_retry_BIO(pb->pal.socket, &reason);
@@ -287,7 +284,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
 }
 
 
-bool pbpal_read_over(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t *pb)
 {
     unsigned to_read = 0;
     WATCH_ENUM(pb->sock_state);
@@ -304,11 +301,25 @@ bool pbpal_read_over(pubnub_t *pb)
         WATCH_UINT(to_read);
         recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
         WATCH_INT(recvres);
-        if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+        if (recvres < 0) {
+            int should_retry = BIO_should_retry(pb->pal.socket);
+            int reason = 0;
+            BIO *retry_BIO = BIO_get_retry_BIO(pb->pal.socket, &reason);
+            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d retry_BIO=%p reason=%d\n", 
+                pb, pb->options.use_blocking_io, recvres, errno, should_retry, 
+                BIO_retry_type(pb->pal.socket),
+                retry_BIO, reason
+                );
+#if defined(_WIN32)
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+                pb, GetLastError(), WSAGetLastError()
+                );
+#endif
+            ERR_print_errors_cb(print_to_pubnub_log, pb);
+            return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
+        }
+        else if (0 == recvres) {
+            return PNR_TIMEOUT;
         }
         pb->sock_state = STATE_READ;
         pb->readlen = recvres;

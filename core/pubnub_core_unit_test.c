@@ -233,7 +233,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
 }
 
 
-bool pbpal_read_over(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t *pb)
 {
     unsigned to_read = 0;
 
@@ -244,11 +244,12 @@ bool pbpal_read_over(pubnub_t *pb)
             to_read = pb->left;
         }
         recvres = my_recv(pb->ptr, to_read);
-        if (recvres <= 0) {
-            /* This is error or connection close, which may be handled
-               in some way...
-             */
-            return false;
+        if (recvres < 0) {
+            /* should add support for simulating other results */
+            return PNR_IO_ERROR;
+        }
+        else if (0 == recvres) {
+            return PNR_TIMEOUT;
         }
         pb->sock_state = STATE_READ;
         pb->readlen = recvres;
