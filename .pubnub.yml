@@ -1,11 +1,15 @@
 name: c-core
-version: 2.2.6
+version: 2.2.7
 scm: github.com/pubnub/c-core
 changelog:
-  - version: v2.2.6
+  - version: v2.2.7
     changes:
       - type: bug
-        text: OpenSSL 1.1.0 has removed BIO_set_conn_port_int
+        text: Fix handling of recv() errrno on MacOS
+  - version: v2.2.6
+    changes:
+      - type: feature
+        text: Support OpenSSL 1.1.0+ (removed BIO_set_conn_port_int)
       - type: bug
         text: Some logging code was not using proper types
   - version: v2.2.5
