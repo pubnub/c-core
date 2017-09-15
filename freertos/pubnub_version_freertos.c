@@ -2,7 +2,7 @@
 #include "pubnub_version.h"
 
 #define PUBNUB_SDK_NAME "FreeRTOS"
-#define PUBNUB_SDK_VERSION "2.2.6"
+#define PUBNUB_SDK_VERSION "2.2.8"
 
 
 char const *pubnub_sdk_name(void)

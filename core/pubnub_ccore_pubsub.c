@@ -274,7 +274,7 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
 enum pubnub_res pbcc_append_url_param(struct pbcc_context *pb, char const *param_name, size_t param_name_len, char const *param_val, char separator)
 {
     size_t param_val_len = strlen(param_val);
-    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len > sizeof pb->http_buf) {
+    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len + 1 > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
     }
 
@@ -282,7 +282,7 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context *pb, char const *param
     memcpy(pb->http_buf + pb->http_buf_len, param_name, param_name_len);
     pb->http_buf_len += param_name_len;
     pb->http_buf[pb->http_buf_len++] = '=';
-    memcpy(pb->http_buf + pb->http_buf_len, param_val, param_val_len+1);
+    memcpy(pb->http_buf + pb->http_buf_len, param_val, param_val_len + 1);
     pb->http_buf_len += param_val_len;
 
     return PNR_OK;
