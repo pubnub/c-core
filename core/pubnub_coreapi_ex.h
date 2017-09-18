@@ -21,7 +21,7 @@
     transmitted to Pubnub network.
 
     Each extended function has a structure holding (all) the options
-    and a helper function which provide defaults for the options.  So,
+    and a helper function which provides defaults for the options.  So,
     if you don't care about all the options, you can get the defaults
     and set only the ones you do care about. This is also a good way
     to be "future proof", as new versions of Pubnub SDK may introduce
@@ -40,7 +40,7 @@ struct pubnub_publish_options {
         intensive task. Also, it uses more bandwidth, most of which
         comes from the fact that decrypted data is sent as Base64
         encoded JSON string. This means that the actual amount of data
-        that can be send encrypted in a message is at least 25%
+        that can be sent encrypted in a message is at least 25%
         smaller (than un-encrypted). Another point to be made is that
         it also does some memory management (allocting and
         deallocating).
@@ -63,7 +63,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void);
         pbresult = pubnub_publish_ex(pn, "my_channel", "42", opt);
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to publish to.
+    @param channel The string with the channel name to publish to. Can't be NULL. 
     @param opt Publish V1 options
     @return #PNR_STARTED on success, an error otherwise
 */
@@ -76,7 +76,7 @@ struct pubnub_subscribe_options {
         If NULL, will not be used */
     char const* channel_group;
     /** The channel activity timeout, in seconds. If below the minumum
-        value supported by Pubnub, the minum value will be used
+        value supported by Pubnub, the minimum value will be used
         (instead).
      */
     unsigned heartbeat;
@@ -89,7 +89,7 @@ struct pubnub_subscribe_options {
 struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
 
 /** The extended subscribe. Basically the same as pubnub_subscribe()
-    but with options except @p channel given in @p opts.
+    but with options (except @p channel) given in @p opts.
 
     Basic usage:
 
@@ -128,7 +128,7 @@ struct pubnub_here_now_options pubnub_here_now_defopts(void);
 /** The extended "here now". It is basically the same as the
     pubnub_here_now(), just adding a few options that will be sent.
     Also, "channel_group" parameter is moved to options, it is not a
-    "regular" function parameter, but, it's behavior is otherwise the
+    "regular" function parameter, but, its behavior is otherwise the
     same.
 
     Basic usage:
@@ -170,33 +170,34 @@ struct pubnub_history_options {
     /** Direction of time traversal. Default is false, which means
      * timeline is traversed newest to oldest. */
     bool reverse;
-    /** If provided (not NULL), lets you select a “start date”, in
+    /** If provided (not NULL), lets you select a "start date", in
      * Timetoken format. If not provided, it will default to current
      * time. Page through results by providing a start OR end time
      * token. Retrieve a slice of the time line by providing both a
-     * start AND end time token. start is ‘exclusive’ – that is, the
+     * start AND end time token. Start is "exclusive" – that is, the
      * first item returned will be the one immediately after the start
      * Timetoken value. Default is NULL.
      */
     char const* start;
-    /** If provided (not NULL), lets you select an “end date”, in
+    /** If provided (not NULL), lets you select an "end date", in
      * Timetoken format. If not provided, it will provide up to the
-     * number of messages defined in the “count” parameter. Page
+     * number of messages defined in the "count" parameter. Page
      * through results by providing a start OR end time
      * token. Retrieve a slice of the time line by providing both a
-     * start AND end time token. End is ‘exclusive’ – that is, if a
+     * start AND end time token. End is "inclusive" – that is, if a
      * message is associated exactly with the end Timetoken, it will
      * be included in the result. Default is NULL.
      */
     char const* end;
-    /** Pass true to recieve a timetoken with each history
-     * message. Defaults to false.
+    /** If true to recieve a timetoken with each history
+     * message. If true, not timetokens per message. Defaults to 
+     * false.
      */
     bool include_token;
 };
 
 
-/** This returns the default options for publish V1 transactions.
+/** This returns the default options for history transactions.
     It's best to always call it to initialize the
     #pubnub_history_options, since it has several parameters.
  */
@@ -212,8 +213,8 @@ struct pubnub_history_options pubnub_history_defopts(void);
         pbresult = pubnub_history_ex(pn, "my_channel", opt);
 
     @param pb The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to get history for.
-    @param opt History options for this history
+    @param channel The string with the channel name to get history for. Can't be NULL.
+    @param opt Options for this history transaction
     @return #PNR_STARTED on success, an error otherwise
 */
 enum pubnub_res pubnub_history_ex(pubnub_t* pb, char const* channel, struct pubnub_history_options opt);
