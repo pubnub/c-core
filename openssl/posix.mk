@@ -13,12 +13,8 @@ endif
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
-OBJFILES += monotonic_clock_get_time_darwin.o
 LDLIBS=-lpthread -lssl -lcrypto
 else
-SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
-OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 
