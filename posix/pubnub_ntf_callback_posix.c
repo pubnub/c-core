@@ -12,6 +12,7 @@
 #include <sys/poll.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -154,11 +155,25 @@ int pbntf_watch_out_events(pubnub_t *pbp)
     return -1;
 }
 
+void clock_get_realtime(struct timespec *ts)
+{
+#if defined(__APPLE__)
+	
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	TIMEVAL_TO_TIMESPEC(&tv, ts);
+	
+#else
+	
+	clock_gettime(CLOCK_REALTIME, ts);
+	
+#endif
+}
 
 void* socket_watcher_thread(void *arg)
 {
     struct timespec prev_timspec;
-    clock_gettime(CLOCK_REALTIME, &prev_timspec);
+    clock_get_realtime(&prev_timspec);
 
     for (;;) {
         struct timespec timspec;
@@ -188,7 +203,7 @@ void* socket_watcher_thread(void *arg)
         }
         pthread_mutex_unlock(&m_watcher.queue_lock);
 
-        clock_gettime(CLOCK_REALTIME, &timspec);
+        clock_get_realtime(&timspec);
         timspec.tv_sec += (timspec.tv_nsec + 200*MILLI_IN_NANO) / UNIT_IN_NANO;
         timspec.tv_nsec = (timspec.tv_nsec + 200*MILLI_IN_NANO) % UNIT_IN_NANO;
 
