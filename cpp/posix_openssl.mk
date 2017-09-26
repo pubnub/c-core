@@ -2,10 +2,8 @@ SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
 LDLIBS=-lpthread -lssl -lcrypto
 else
-SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 

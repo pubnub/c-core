@@ -1,8 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_callback.h"
 
-#include "../posix/monotonic_clock_get_time.h"
-
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
@@ -13,10 +11,20 @@
 
 #include <sys/poll.h>
 #include <pthread.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <stdlib.h>
 #include <string.h>
 
+/** How many "millis" in a "nano" of some (any) unit. */
+#define MILLI_IN_NANO (1000 * 1000)
+
+/** How many "nanos" in one (unit) of something. */
+#define UNIT_IN_NANO (1000 * MILLI_IN_NANO)
+
+/** How many "millis" in one (unit) of something. */
+#define UNIT_IN_MILLI (1000)
 
 struct SocketWatcherData {
     struct pollfd *apoll pubnub_guarded_by(mutw);
@@ -147,11 +155,25 @@ int pbntf_watch_out_events(pubnub_t *pbp)
     return -1;
 }
 
+void clock_get_realtime(struct timespec *ts)
+{
+#if defined(__APPLE__)
+	
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	TIMEVAL_TO_TIMESPEC(&tv, ts);
+	
+#else
+	
+	clock_gettime(CLOCK_REALTIME, ts);
+	
+#endif
+}
 
 void* socket_watcher_thread(void *arg)
 {
     struct timespec prev_timspec;
-    monotonic_clock_get_time(&prev_timspec);
+    clock_get_realtime(&prev_timspec);
 
     for (;;) {
         struct timespec timspec;
@@ -181,7 +203,7 @@ void* socket_watcher_thread(void *arg)
         }
         pthread_mutex_unlock(&m_watcher.queue_lock);
 
-        monotonic_clock_get_time(&timspec);
+        clock_get_realtime(&timspec);
         timspec.tv_sec += (timspec.tv_nsec + 200*MILLI_IN_NANO) / UNIT_IN_NANO;
         timspec.tv_nsec = (timspec.tv_nsec + 200*MILLI_IN_NANO) % UNIT_IN_NANO;
 
