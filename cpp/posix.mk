@@ -10,8 +10,10 @@ endif
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
+SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
 LDLIBS=-lpthread
 else
+SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread
 endif
 
