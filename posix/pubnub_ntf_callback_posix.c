@@ -186,7 +186,14 @@ void* socket_watcher_thread(void *arg)
         timspec.tv_nsec = (timspec.tv_nsec + 200*MILLI_IN_NANO) % UNIT_IN_NANO;
 
         pthread_mutex_lock(&m_watcher.mutw);
+
+#if defined(__APPLE__)
+		struct timespec relative_timspec = { .tv_sec=0, .tv_nsec=200*MILLI_IN_NANO };
+		
+		pthread_cond_timedwait_relative_np(&m_watcher.condw, &m_watcher.mutw, &relative_timspec);
+#else
         pthread_cond_timedwait(&m_watcher.condw, &m_watcher.mutw, &timspec);
+#endif
 
         if (m_watcher.apoll_size > 0) {
             int rslt = poll(m_watcher.apoll, m_watcher.apoll_size, 100);
@@ -258,7 +265,14 @@ int pbntf_init(void)
         return -1;
     }
 
+#if defined(__APPLE__)
     rslt = pthread_cond_init(&m_watcher.condw, NULL);
+#else
+	pthread_condattr_t cond_attr;
+	pthread_condattr_init(&cond_attr);
+	pthread_condattr_setclock(&cond_attr, CLOCK_MONOTONIC);
+	rslt = pthread_cond_init(&m_watcher.condw, &cond_attr);
+#endif
     if (rslt != 0) {
         PUBNUB_LOG_ERROR("Failed to initialize conditional variable, error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
