@@ -50,4 +50,4 @@ In this root directory we have some files, too:
   
 ## Contributing
 
-Please read the [Contribution Guidelines](CONTRIBUTING).
+Please read the [Contribution Guidelines](CONTRIBUTING.md).
