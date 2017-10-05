@@ -337,7 +337,7 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
 
     if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
-        return true;
+        return PNR_OK;
     }
 
     if (pb->left == 0) {
@@ -353,10 +353,9 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
     }
     else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
-        return false;
     }
 
-    return true;
+    return PNR_IN_PROGRESS;
 }
 
 
