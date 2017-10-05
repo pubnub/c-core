@@ -1,3 +1,5 @@
+## How to contribute to PubNub C-core
+
 #### Fixing code issues
 
 If you have a fix for an issue, please create a Pull Request "against"
