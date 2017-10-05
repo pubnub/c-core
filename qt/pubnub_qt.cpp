@@ -515,9 +515,12 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 }
 
 
-extern "C" char const *pubnub_sdk_name() { return "Qt5"; }
+#define PUBNUB_SDK_NAME "Qt5"
+#define PUBNUB_SDK_VERSION "2.2.10"
 
-extern "C" char const *pubnub_uname() { return "Qt5%2F2.2.9"; }
+extern "C" char const *pubnub_sdk_name() { return PUBNUB_SDK_NAME; }
 
-extern "C" char const *pubnub_version() { return "2.2.9"; }
+extern "C" char const *pubnub_uname() { return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION; }
+
+extern "C" char const *pubnub_version() { return PUBNUB_SDK_VERSION; }
 

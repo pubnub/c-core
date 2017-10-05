@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.9
+version: 2.2.10
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.10
+    changes:
+      - type: bug
+        text: Fix build issues on Mac
   - version: v2.2.9
     changes:
       - type: bug
