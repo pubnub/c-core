@@ -1,5 +1,3 @@
-# Please direct all Support Questions and Concerns to Support@PubNub.com
-
 ## Pubnub C/C++ client libraries
 
 This repository has the source for the C/C++ client libraries,
@@ -9,6 +7,8 @@ designed mostly for embedded systems, but perfectly suitable for
 ### Official Docs 
 Docs for C/C++ for Posix, Windows, as well as FreeRTOS and other embedded platforms are available at 
 https://www.pubnub.com/docs/posix-c/pubnub-c-sdk
+
+## Please direct all Support Questions and Concerns to Support@PubNub.com
 
 ## Directory Organization
 
@@ -48,4 +48,6 @@ In this root directory we have some files, too:
 - `.pubnub.yml`: Standard Pubnub library description in YAML
 
   
-# Please direct all Support Questions and Concerns to Support@PubNub.com
+## Contributing
+
+Please read the [Contribution Guidelines](CONTRIBUTING.md).
