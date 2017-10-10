@@ -18,13 +18,18 @@ namespace pubnub {
 class futres::impl {
 public:
     impl() : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL))
-		, d_parent(nullptr)
-        , d_thread(0) {
+           , d_parent(nullptr)
+           , d_thread(0) {
         pubnub_mutex_init(d_mutex);
+        if (NULL == d_wevent) {
+            throw std::runtime_error("Failed to create a Windows event handle");
+        }
     }
     ~impl() {
         wait4_then_thread_to_start();
         wait4_then_thread_to_finish();
+        pubnub_mutex_destroy(d_mutex);
+        CloseHandle(d_wevent);
     }
     void start_await() {
         ResetEvent(d_wevent);
@@ -43,7 +48,7 @@ public:
             d_result = rslt;
             d_thread = (HANDLE)_beginthreadex(NULL, 0, do_the_then, this, 0, NULL);
         }
-		SetEvent(d_wevent);
+        SetEvent(d_wevent);
     }
     bool is_ready() const {
         return WAIT_OBJECT_0 == WaitForSingleObject(d_wevent, 0);
@@ -55,11 +60,11 @@ public:
         std::function<void(context&, pubnub_res)> f,
 #endif
         futres *parent) {
-		PUBNUB_ASSERT_OPT(parent != nullptr);
+        PUBNUB_ASSERT_OPT(parent != nullptr);
         lock_guard lck(d_mutex);
-		d_thenf = f;
-		d_parent = parent;
-	}
+        d_thenf = f;
+        d_parent = parent;
+    }
 
 private:
     void wait4_then_thread_to_start() {
@@ -86,7 +91,7 @@ private:
 #else
     std::function<void(context&, pubnub_res)> d_thenf;
 #endif
-	futres *d_parent;
+    futres *d_parent;
     HANDLE d_thread;
     pubnub_res d_result;
 };
@@ -110,7 +115,7 @@ futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
 
 #if _cplusplus < 201103L
 futres::futres(futres const &x) :
-	d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(new impl)
+    d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(new impl)
 {
     if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
         throw std::logic_error("Failed to register callback");

@@ -1,8 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_version.h"
 
+#include "pubnub_version_internal.h"
+
+
 #define PUBNUB_SDK_NAME "OpenSSL"
-#define PUBNUB_SDK_VERSION "2.2.10"
 
 
 char const *pubnub_sdk_name(void)
