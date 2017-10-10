@@ -28,7 +28,7 @@ public:
     ~impl() {
         wait4_then_thread_to_start();
         wait4_then_thread_to_finish();
-        pbpal_mutex_destroy(d_mutex);
+        pubnub_mutex_destroy(d_mutex);
         CloseHandle(d_wevent);
     }
     void start_await() {
