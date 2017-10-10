@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.10
+version: 2.2.11
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.11
+    changes:
+      - type: bug
+        text: Fix resource leaks in C++ pubnub::futres on Windows
   - version: v2.2.10
     changes:
       - type: bug

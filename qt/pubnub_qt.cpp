@@ -515,8 +515,9 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 }
 
 
+#include "pubnub_version_internal.h"
+
 #define PUBNUB_SDK_NAME "Qt5"
-#define PUBNUB_SDK_VERSION "2.2.10"
 
 extern "C" char const *pubnub_sdk_name() { return PUBNUB_SDK_NAME; }
 
