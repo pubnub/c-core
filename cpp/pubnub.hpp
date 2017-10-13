@@ -136,9 +136,9 @@ namespace pubnub {
         }
         tribool operator&&(tribool t) const {
             static const tribool rslt[3][3] = {
-                false, false,   false,
-                false, true,    not_set,
-                false, not_set, not_set
+                {false, false,   false},
+                {false, true,    not_set},
+                {false, not_set, not_set}
             };
             return rslt[d_3log][t.d_3log];
         }
@@ -148,18 +148,18 @@ namespace pubnub {
         }
         tribool operator||(tribool t) const {
             static const tribool rslt[3][3] = {
-                false,   true, not_set,
-                true,    true, true,
-                not_set, true, not_set
+                {false,   true, not_set},
+                {true,    true, true},
+                {not_set, true, not_set}
             };
             return rslt[d_3log][t.d_3log];
         }
         
         tribool operator==(tribool t) const {
             static const tribool rslt[3][3] = {
-                true,    false,   not_set,
-                false,   true,    not_set,
-                not_set, not_set, not_set
+                {true,    false,   not_set},
+                {false,   true,    not_set},
+                {not_set, not_set, not_set}
             };
             return rslt[d_3log][t.d_3log];
         }
@@ -169,9 +169,9 @@ namespace pubnub {
         
         tribool operator!=(tribool t) const {
             static const tribool rslt[3][3] = {
-                false,   true,    not_set,
-                true,    false,   not_set,
-                not_set, not_set, not_set
+                {false,   true,    not_set},
+                {true,    false,   not_set},
+                {not_set, not_set, not_set}
             };
             return rslt[d_3log][t.d_3log];
         }
