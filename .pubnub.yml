@@ -37,7 +37,7 @@ changelog:
       - type: bug
         text: Fix off-by-one error
   - version: v2.2.3
-    changes
+    changes:
       - type: bug
         text: Fix handling of segmented messages
       - type: feature
