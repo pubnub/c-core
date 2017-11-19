@@ -22,7 +22,8 @@ without it on other platforms.
 
 #### General coding guidelines for PRs
 
-For C, use C89 for code, but it's OK to use C11 libraries.
+For C, use C89 for code, but it's OK to use C11 libraries that use only
+C89 language features (say, `snprintf()`).
 
 For C++, use C++98 and offer convenience features for C++11 or higher
 "protected" by proper `#if __cplusplus` blocks.
