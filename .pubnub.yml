@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.11
+version: 2.2.12
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.12
+    changes:
+      - type: bug
+        text: Cleanups, fix build issue and warnings on Windows
   - version: v2.2.11
     changes:
       - type: bug

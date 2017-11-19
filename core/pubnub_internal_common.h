@@ -239,6 +239,9 @@ struct pubnub_ {
      */
     char proxy_saved_path[PUBNUB_BUF_MAXLEN];
 
+    /** The length, in characters, of the saved proxy path */
+    unsigned proxy_saved_path_len;
+
     /** The authentication scheme to use for the proxy - in
         general, it's selected by the proxy.
     */

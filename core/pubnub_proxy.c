@@ -9,6 +9,8 @@
 
 int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url, uint16_t port)
 {
+    size_t ip_or_url_len;
+
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(ip_address_or_url != NULL);
 
@@ -21,12 +23,13 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
         return -1;
     }
 
-    if (strlen(ip_address_or_url) >= sizeof p->proxy_hostname) {
+    ip_or_url_len = strlen(ip_address_or_url);
+    if (ip_or_url_len >= sizeof p->proxy_hostname) {
         return -1;
     }
     p->proxy_type = protocol;
     p->proxy_port = port;
-    strcpy(p->proxy_hostname, ip_address_or_url);
+    memcpy(p->proxy_hostname, ip_address_or_url, ip_or_url_len + 1);
 
     return 0;
 }
