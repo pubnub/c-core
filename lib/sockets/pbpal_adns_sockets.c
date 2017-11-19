@@ -119,13 +119,13 @@ static unsigned char* dns_qname_encode(uint8_t *dns, size_t n, uint8_t const* ho
         }
         else {
             size_t d = dest - lpos;
-	    *dest++ = '\0';
+            *dest++ = '\0';
             if (d > 63) {
                 /* label too long */
                 return NULL;
             }
 
-            *lpos =  d - 1;
+            *lpos =  (uint8_t)(d - 1);
             lpos += d;
 
             if ('\0' == hc) {

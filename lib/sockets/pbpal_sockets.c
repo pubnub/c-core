@@ -101,6 +101,7 @@ int pbpal_start_read_line(pubnub_t *pb)
 
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
         unsigned distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+        PUBNUB_ASSERT_OPT(pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
         pb->left += distance;
@@ -126,6 +127,10 @@ static void report_error_from_environment(pubnub_t* pb)
     char errstr_r[1024];
     strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
     err_str = errstr_r;
+#elif HAVE_STRERROR_S
+    char errstr_s[1024];
+    strerror_s(errstr_s, sizeof errstr_s / sizeof errstr_s[0], errno);
+    err_str = errstr_s;
 #else
     err_str = strerror(errno);
 #endif
@@ -165,7 +170,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     uint8_t c;
 
     if (pb->readlen == 0) {
-        int recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
+        int recvres;
+        PUBNUB_ASSERT_OPT(pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
             return pbrslt_from_socket_error(recvres, pb);
         }
@@ -221,6 +228,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
         unsigned distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+        PUBNUB_ASSERT_OPT(pb->ptr + pb->readlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->readlen);
         pb->ptr -= distance;
         pb->left += distance;

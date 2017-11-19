@@ -83,7 +83,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         hint.ai_canonname = NULL;
         hint.ai_next = NULL;
 
-        sprintf(port_string, "%d", port);
+        snprintf(port_string, sizeof port_string, "%d", port);
         error = getaddrinfo(origin, port_string, &hint, &result);
         if (error != 0) {
             return pbpal_resolv_failed_processing;
