@@ -2,10 +2,10 @@
 #include "pubnub.hpp"
 #include "pubnub_mutex.hpp"
 
-//extern "C" {
+extern "C" {
 #include "pubnub_ntf_callback.h"
 #include "pubnub_assert.h"
-//}
+}
 
 #include <windows.h>
 #include <process.h>
