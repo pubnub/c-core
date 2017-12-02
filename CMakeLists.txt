@@ -3,7 +3,7 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 14)
 project (c-core)
 
-add_definitions(-DPUBNUB_THREADSAFE)
+#add_definitions(-DPUBNUB_THREADSAFE)
 
 set(TARGET_NAME pubnub)
 
@@ -70,20 +70,21 @@ endif()
 add_definitions(-DPUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE)
 #add_definitions(-DPUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG)
 
-#sync api
-list(APPEND SOURCES
-        core/pubnub_ntf_sync.c
-        cpp/pubnub_futres_sync.cpp
-        )
-
-#callback api
-add_definitions(-DPUBNUB_CALLBACK_API)
-list(APPEND SOURCES
-        core/pubnub_timer_list.c
-        ${PUBNUB_IMPLEMENTATION_DIR}/pubnub_ntf_callback_posix.c
-        ${PUBNUB_IMPLEMENTATION_DIR}/pubnub_get_native_socket.c
-        cpp/pubnub_futres_posix.cpp
-        )
+option(USE_SYNC "Build with the sync thread model" ON)
+if (USE_SSL)
+    list(APPEND SOURCES
+            core/pubnub_ntf_sync.c
+            cpp/pubnub_futres_sync.cpp
+            )
+else()
+    add_definitions(-DPUBNUB_CALLBACK_API)
+    list(APPEND SOURCES
+            core/pubnub_timer_list.c
+            ${PUBNUB_IMPLEMENTATION_DIR}/pubnub_ntf_callback_posix.c
+            ${PUBNUB_IMPLEMENTATION_DIR}/pubnub_get_native_socket.c
+            cpp/pubnub_futres_posix.cpp
+            )
+endif()
 
 #proxy
 list(APPEND SOURCES core/pubnub_proxy.c core/pubnub_proxy_core.c core/pbhttp_digest.c core/pbntlm_core.c core/pbntlm_packer_std.c)
