@@ -71,7 +71,7 @@ add_definitions(-DPUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE)
 #add_definitions(-DPUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG)
 
 option(USE_SYNC "Build with the sync thread model" ON)
-if (USE_SSL)
+if (USE_SYNC)
     list(APPEND SOURCES
             core/pubnub_ntf_sync.c
             cpp/pubnub_futres_sync.cpp
