@@ -64,14 +64,13 @@ int pubnub_free(pubnub_t *pb)
 
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
-        if (PUBNUB_CALLBACK_API) {
-            pbntf_requeue_for_processing(pb);
-            pubnub_mutex_unlock(pb->monitor);
-        }
-        else {
-            pubnub_mutex_unlock(pb->monitor);
-            pballoc_free_at_last(pb);
-        }
+#if defined(PUBNUB_CALLBACK_API)
+        pbntf_requeue_for_processing(pb);
+        pubnub_mutex_unlock(pb->monitor);
+#else
+        pubnub_mutex_unlock(pb->monitor);
+        pballoc_free_at_last(pb);
+#endif
         result = 0;
     }
     else {

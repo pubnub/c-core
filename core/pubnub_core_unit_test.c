@@ -2,6 +2,7 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
+#include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
@@ -53,6 +54,31 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
+int pbntf_enqueue_for_processing(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+
+int pbntf_requeue_for_processing(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+
+int pbntf_watch_out_events(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+
+int pbntf_watch_in_events(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+
+
 void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
 {
     mock(pb, socket);
@@ -68,6 +94,17 @@ bool pbpal_connected(pubnub_t *pb)
 {
     return (bool)mock(pb);
 }
+
+void pbpal_free(pubnub_t *pb)
+{
+	mock(pb);
+}
+
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
+{
+	return (enum pbpal_resolv_n_connect_result)mock(pb);
+}
+
 
 #if 0
 #include <execinfo.h>
@@ -486,7 +523,7 @@ void expect_have_dns_for_pubnub_origin()
 }
 
 
-inline void expect_outgoing_with_url(char const *url) {
+static inline void expect_outgoing_with_url(char const *url) {
     expect(pbpal_send, when(data, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(url)), returns(0));
@@ -500,12 +537,12 @@ inline void expect_outgoing_with_url(char const *url) {
 }
 
 
-inline void incoming(char const *str) {
+static inline void incoming(char const *str) {
     m_read = str;
 }
 
 
-inline void incoming_and_close(char const *str) {
+static inline void incoming_and_close(char const *str) {
     incoming(str);
     expect(pbpal_close, when(pb, equals(pbp)), returns(0));
 //    expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
