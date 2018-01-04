@@ -64,6 +64,7 @@ int pubnub_free(pubnub_t *pb)
 
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
+        pb->state = PBS_NULL;
 #if defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pb);
         pubnub_mutex_unlock(pb->monitor);

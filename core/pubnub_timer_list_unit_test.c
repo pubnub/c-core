@@ -28,6 +28,15 @@
 #define returns will_return
 
 
+int pbntf_requeue_for_processing(pubnub_t *pb)
+{
+    return 0;
+}
+
+void pbpal_free(pubnub_t *pb)
+{
+}
+
 void pbcc_deinit(struct pbcc_context *p)
 {
 }

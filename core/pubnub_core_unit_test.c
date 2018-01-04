@@ -8,6 +8,7 @@
 #include "pubnub_alloc.h"
 #include "pubnub_log.h"
 
+#include "pbpal.h"
 #include "pubnub_internal.h"
 
 #include "pubnub_json_parse.h"
@@ -43,7 +44,7 @@ void pbpal_init(pubnub_t *pb)
 {
 }
 
-enum pubnub_res pbpal_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
     return (int)mock(pb);
 }
@@ -84,8 +85,28 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
     mock(pb, socket);
 }
 
+int pbntf_requeue_for_processing(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
 
-enum pubnub_res pbpal_check_resolv_and_connect(pubnub_t *pb)
+int pbntf_enqueue_for_processing(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+int pbntf_watch_out_events(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+int pbntf_watch_in_events(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
+
+enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     return (int)mock(pb);
 }
@@ -97,14 +118,13 @@ bool pbpal_connected(pubnub_t *pb)
 
 void pbpal_free(pubnub_t *pb)
 {
-	mock(pb);
+    mock(pb);
 }
 
 enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 {
 	return (enum pbpal_resolv_n_connect_result)mock(pb);
 }
-
 
 #if 0
 #include <execinfo.h>
@@ -135,12 +155,12 @@ static void my_stack_trace(void)
 #endif
 
 
-int pbpal_send(pubnub_t *pb, void *data, size_t n)
+int pbpal_send(pubnub_t *pb, void const* data, size_t n)
 {
     return (int)mock(pb, data, n);
 }
 
-int pbpal_send_str(pubnub_t *pb, char *s)
+int pbpal_send_str(pubnub_t *pb, char const* s)
 {
     return (int)mock(pb, s);
 }
@@ -304,7 +324,7 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
 
     if (pb->len == 0) {
         pb->sock_state = STATE_NONE;
-        return true;
+        return PNR_OK;
     }
 
     if (pb->left == 0) {
@@ -320,10 +340,9 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
     }
     else {
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
-        return false;
     }
 
-    return true;
+    return PNR_IN_PROGRESS;
 }
 
 bool pbpal_closed(pubnub_t *pb)
@@ -512,13 +531,15 @@ BeforeEach(single_context_pubnub) {
 }
 
 AfterEach(single_context_pubnub) {
+    expect(pbpal_free, when(pb, equals(pbp)));
     attest(pubnub_free(pbp), equals(0));
 }
 
 
 void expect_have_dns_for_pubnub_origin()
 {
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_connect_success));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
 }
 
@@ -532,8 +553,9 @@ static inline void expect_outgoing_with_url(char const *url) {
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(PUBNUB_ORIGIN)), returns(0));
     expect(pbpal_send_status, returns(0));
-    expect(pbpal_send, when(data, streqs("\r\nUser-Agent: PubNub-C-core/2.1\r\nConnection: Keep-Alive\r\n\r\n")), returns(0));
+    expect(pbpal_send, when(data, streqs("\r\nUser-Agent: PubNub-C-core/2.2\r\nConnection: Keep-Alive\r\n\r\n")), returns(0));
     expect(pbpal_send_status, returns(0));
+    expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
 }
 
 
@@ -552,6 +574,7 @@ static inline void incoming_and_close(char const *str) {
 
 static void cancel_and_cleanup(pubnub_t *pbp)
 {
+    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
     pubnub_cancel(pbp);
 
     expect(pbpal_close, when(pb, equals(pbp)), returns(0));
@@ -575,6 +598,7 @@ Ensure(single_context_pubnub, leave_have_dns) {
 }
 
 
+
 /* This tests the DNS resolution code. Since we know for sure it is
    the same for all Pubnub operations/transactions, we shall test it
    only for "leave".
@@ -583,17 +607,19 @@ Ensure(single_context_pubnub, leave_wait_dns) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolution not yet available... */
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_resolv_sent));
+    expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... still not available... */
-    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
+    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_resolv_rcv_wouldblock));
     attest(pbnc_fsm(pbp), equals(0));
 
     /* ... and here it is: */
-    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
-    expect(pbntf_update_socket, when(pb, equals(pbp)));
+    expect(pbntf_watch_out_events, when(pb, equals(pbp)), returns(0));
+    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_connect_success));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -608,12 +634,15 @@ Ensure(single_context_pubnub, leave_wait_dns_cancel) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolution not yet available... */
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_resolv_sent));
+    expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... user is impatient... */
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
     pubnub_cancel(pbp);
     expect(pbpal_close, when(pb, equals(pbp)), returns(0));
     expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
@@ -631,13 +660,13 @@ Ensure(single_context_pubnub, leave_wait_tcp) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolved but TCP connection not yet established... */
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(+1));
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_STARTED));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_connect_wouldblock));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... and here it is: */
-    expect(pbpal_check_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_OK));
-    expect(pbntf_update_socket, when(pb, equals(pbp)));
+    expect(pbpal_check_connect, when(pb, equals(pbp)), returns(pbpal_connect_success));
     expect_outgoing_with_url("/v2/presence/sub-key/subkey/channel/lamanche/leave?pnsdk=unit-test-0.1");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -648,16 +677,14 @@ Ensure(single_context_pubnub, leave_wait_tcp) {
 }
 
 
-
-
-
 Ensure(single_context_pubnub, leave_wait_tcp_cancel) {
     pubnub_init(pbp, "pubkey", "subkey");
 
     /* DNS resolved but TCP connection not yet established... */
-    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(PNR_IN_PROGRESS));
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbpal_resolv_and_connect, when(pb, equals(pbp)), returns(pbpal_connect_wouldblock));
+    expect(pbpal_check_connect, when(pb, equals(pbp)), returns(pbpal_connect_wouldblock));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect(pbpal_connected, when(pb, equals(pbp)), returns(false));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... user is impatient... */
@@ -687,6 +714,7 @@ Ensure(single_context_pubnub, leave_changroup) {
     /* Neither channel nor channel group set */
     attest(pubnub_leave(pbp, NULL, NULL), equals(PNR_INVALID_CHANNEL));
 }
+
 
 
 Ensure(single_context_pubnub, leave_uuid_auth) {
@@ -801,7 +829,9 @@ Ensure(single_context_pubnub, time_in_progress) {
 }
 
 
+
 /* -- PUBLISH operation -- */
+
 
 Ensure(single_context_pubnub, publish) {
     pubnub_init(pbp, "publkey", "subkey");
@@ -915,13 +945,28 @@ Ensure(single_context_pubnub, publish_bad_response) {
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/publish/tkey/subt/0/k6/0/443?pnsdk=unit-test-0.1");
-    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 9\r\n\r\n{\"1\":\"X\"}");
+    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 9\r\n\r\n<\"1\":\"X\">");
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_publish(pbp, "k6", "443"), equals(PNR_FORMAT_ERROR));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), equals(NULL));
 }
+
+
+Ensure(single_context_pubnub, publish_failed_server_side) {
+    pubnub_init(pbp, "tkey", "subt");
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/publish/tkey/subt/0/k6/0/443?pnsdk=unit-test-0.1");
+    incoming_and_close("HTTP/1.1 200\r\nContent-Length: 9\r\n\r\n{\"1\":\"X\"}");
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_publish(pbp, "k6", "443"), equals(PNR_PUBLISH_FAILED));
+    attest(pubnub_last_http_code(pbp), equals(200));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_get_channel(pbp), equals(NULL));
+}
+
 
 
 /* -- HISTORY operation -- */
@@ -998,19 +1043,20 @@ Ensure(single_context_pubnub, history_bad_response) {
 }
 
 
+
 /* Verify ASSERT gets fired */
 
 Ensure(single_context_pubnub, illegal_context_fires_assert) {
-    expect_assert_in(pubnub_init(NULL, "k", "u"), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_publish(NULL, "x", "0"), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_subscribe(NULL, "x", NULL), "pubnub_coreapi.c");
+    expect_assert_in(pubnub_init(NULL, "k", "u"), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_publish(NULL, "x", "0"), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_subscribe(NULL, "x", NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_leave(NULL, "x", NULL), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_cancel(NULL), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_last_http_code(NULL), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_get(NULL), "pubnub_coreapi.c");
-    expect_assert_in(pubnub_get_channel(NULL), "pubnub_coreapi.c");
+    expect_assert_in(pubnub_cancel(NULL), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_last_http_code(NULL), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_get(NULL), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_get_channel(NULL), "pubnub_pubsubapi.c");
 
     expect_assert_in(pubnub_free((pubnub_t*)((char*)pbp + 10000)), "pubnub_alloc_static.c");
 }
