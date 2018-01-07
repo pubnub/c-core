@@ -2,6 +2,10 @@ name: c-core
 version: 2.2.12
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.13
+    changes:
+      - type: bug
+        text: Fix receiving data longer than http_buff at a time
   - version: v2.2.12
     changes:
       - type: bug

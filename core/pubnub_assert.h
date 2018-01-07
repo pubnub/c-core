@@ -58,7 +58,7 @@
 
 /** The common ASSERT implementation */
 #define PUBNUB_ASSERT_IMPL(X) do {                                      \
-        PUBNUB_ANALYSIS_ASSUME(X);										\
+        PUBNUB_ANALYSIS_ASSUME(X);                                      \
         (X) ? (void)0 : pubnub_assert_failed(#X, __FILE__, __LINE__);   \
     } while (false)
 
@@ -99,6 +99,76 @@
 #define PUBNUB_ASSERT_OPT(X) PUBNUB_UNUSED(X)
 #endif
 
+
+/* The common "rich" macro for types that are compareable
+   and printf-able.
+
+   Users should use the "front-ends" for individual types.
+*/
+#define PUBNUB_ASSERT_RICH_IMPL(T, fmt, a, op, b) do {                  \
+    T M_a_ = (a), M_b_ = (b);                                           \
+    int holds = M_a_ op M_b_;                                           \
+    PUBNUB_ANALYSIS_ASSUME(holds);                                      \
+    if (!holds) {                                                       \
+        char s[300];                                                    \
+        snprintf(s, sizeof s, "`" #a " " #op " " #b "`; `" #a "`=" fmt ", `" #b "`=" fmt, M_a_, M_b_);\
+        pubnub_assert_failed(s, __FILE__, __LINE__);                    \
+    }                                                                   \
+    } while (false)
+
+#define PUBNUB_ASSERT_INT_IMPL(a, op, b) PUBNUB_ASSERT_RICH_IMPL(int, "%d", a, op, b)
+#define PUBNUB_ASSERT_UINT_IMPL(a, op, b) PUBNUB_ASSERT_RICH_IMPL(unsigned, "%u", a, op, b)
+
+/* Define the ASSERT_INT macro for the highest (_EX) level.
+ */
+#if defined PUBNUB_ASSERT_LEVEL_EX
+#define PUBNUB_ASSERT_INT_EX(a, op, b) PUBNUB_ASSERT_INT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_INT_EX(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
+
+/* Define the ASSERT_INT macro for the regular level.
+ */
+#if defined(PUBNUB_ASSERT_IS_ACTIVE)
+#define PUBNUB_ASSERT_INT(a, op, b) PUBNUB_ASSERT_INT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_INT(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
+
+
+/* Define the ASSERT_INT macro for the lowest level
+ */
+#if !defined(PUBNUB_ASSERT_LEVEL_NONE)
+#define PUBNUB_ASSERT_INT_OPT(a, op, b) PUBNUB_ASSERT_INT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_INT_OPT(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
+
+
+/* Define the ASSERT_INT macro for the highest (_EX) level.
+ */
+#if defined PUBNUB_ASSERT_LEVEL_EX
+#define PUBNUB_ASSERT_UINT_EX(a, op, b) PUBNUB_ASSERT_UINT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_UINT_EX(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
+
+/* Define the ASSERT_UINT macro for the regular level.
+ */
+#if defined(PUBNUB_ASSERT_IS_ACTIVE)
+#define PUBNUB_ASSERT_UINT(a, op, b) PUBNUB_ASSERT_UINT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_UINT(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
+
+
+/* Define the ASSERT_INT macro for the lowest level
+ */
+#if !defined(PUBNUB_ASSERT_LEVEL_NONE)
+#define PUBNUB_ASSERT_UINT_OPT(a, op, b) PUBNUB_ASSERT_UINT_IMPL(a, op, b)
+#else
+#define PUBNUB_ASSERT_UINT_OPT(a, op, b) PUBNUB_UNUSED(a); PUBNUB_UNUSED(b)
+#endif
 
 
 /** This will invoke the installed assert handler.  The default
