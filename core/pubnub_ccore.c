@@ -211,10 +211,9 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context *pb, const char *channel
 enum pubnub_res pbcc_here_now_prep(struct pbcc_context *pb, const char *channel, const char *channel_group, enum pubnub_tribool disable_uuids, enum pubnub_tribool state)
 {
     if (NULL == channel) {
-        if (NULL == channel_group) {
-            return PNR_INVALID_CHANNEL;
+        if (channel_group != NULL) {
+            channel = ",";
         }
-        channel = ",";
     }
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
