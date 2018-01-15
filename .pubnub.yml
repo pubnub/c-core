@@ -5,6 +5,8 @@ changelog:
   - version: v2.2.13
     changes:
       - type: bug
+        text: Handle chunks larger than http_buff
+      - type: bug
         text: Fix receiving data longer than http_buff at a time
   - version: v2.2.12
     changes:

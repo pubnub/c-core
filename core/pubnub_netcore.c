@@ -12,6 +12,15 @@
 #include <string.h>
 
 
+/** Each HTTP chunk has a trailining CRLF ("\r\n" in C-speak).  That's
+    a little strange, but is in the "spirit" of HTTP.
+
+    We need to read it from the network interface, but, we discard it.
+ */
+#define CHUNK_TRAIL_LENGTH 2
+
+
+
 static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
@@ -647,14 +656,11 @@ next_state:
                 }
 #endif
             }
-            else if (chunk_length > sizeof pb->core.http_buf) {
-                outcome_detected(pb, PNR_IO_ERROR);
-            }
             else if (0 != pbcc_realloc_reply_buffer(&pb->core, pb->core.http_buf_len + chunk_length)) {
                 outcome_detected(pb, PNR_REPLY_TOO_BIG);
             }
             else {
-                pb->core.http_content_len = chunk_length + 2;
+                pb->core.http_content_len = chunk_length + CHUNK_TRAIL_LENGTH;
                 pb->state = PBS_RX_BODY_CHUNK;
                 goto next_state;
             }
@@ -687,8 +693,8 @@ next_state:
             PUBNUB_ASSERT_OPT(pb->core.http_content_len >= len);
             PUBNUB_ASSERT_OPT(len > 0);
 
-            if (pb->core.http_content_len > 2) {
-                unsigned to_copy = pb->core.http_content_len - 2;
+            if (pb->core.http_content_len > CHUNK_TRAIL_LENGTH) {
+                unsigned to_copy = pb->core.http_content_len - CHUNK_TRAIL_LENGTH;
                 if (len < to_copy) {
                     to_copy = len;
                 }
