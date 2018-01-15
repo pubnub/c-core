@@ -13,7 +13,7 @@
 #include <string.h>
 
 
-static void buf_setup(pubnub_t *pb)
+static void buf_setup(pubnub_t* pb)
 {
     pb->ptr = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
@@ -34,8 +34,7 @@ static int pal_init(void)
 }
 
 
-
-void pbpal_init(pubnub_t *pb)
+void pbpal_init(pubnub_t* pb)
 {
     if (PUBNUB_BLOCKING_IO_SETTABLE) {
         pb->options.use_blocking_io = true;
@@ -47,7 +46,7 @@ void pbpal_init(pubnub_t *pb)
 }
 
 
-int pbpal_send(pubnub_t *pb, void const *data, size_t n)
+int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
@@ -60,7 +59,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
 }
 
 
-int pbpal_send_str(pubnub_t *pb, char const *s)
+int pbpal_send_str(pubnub_t* pb, char const* s)
 {
     return pbpal_send(pb, s, strlen(s));
 }
@@ -82,15 +81,15 @@ static void report_error_from_environment(pubnub_t* pb)
     err_str = strerror(errno);
 #endif
     PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n",
-                     pb, errno, err_str, pb->options.use_blocking_io);
+        pb, errno, err_str, pb->options.use_blocking_io);
 #if defined(_WIN32)
     PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu WSAGetLastError()=%d\n",
-                     pb, GetLastError(), WSAGetLastError());
+        pb, GetLastError(), WSAGetLastError());
 #endif
 }
 
 
-static enum pubnub_res handle_socket_error(int socket_result, pubnub_t *pb)
+static enum pubnub_res handle_socket_error(int socket_result, pubnub_t* pb)
 {
     PUBNUB_ASSERT_INT_OPT(socket_result, <=, 0);
     if (socket_result < 0) {
@@ -116,7 +115,7 @@ static enum pubnub_res handle_socket_error(int socket_result, pubnub_t *pb)
 }
 
 
-int pbpal_send_status(pubnub_t *pb)
+int pbpal_send_status(pubnub_t* pb)
 {
     int rslt;
 
@@ -147,14 +146,14 @@ int pbpal_send_status(pubnub_t *pb)
 }
 
 
-int pbpal_start_read_line(pubnub_t *pb)
+int pbpal_start_read_line(pubnub_t* pb)
 {
     unsigned distance;
 
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT(pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
@@ -168,7 +167,7 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
     uint8_t c;
 
@@ -176,7 +175,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 
     if (pb->unreadlen == 0) {
         int recvres;
-        PUBNUB_ASSERT_OPT(pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
             return handle_socket_error(recvres, pb);
@@ -192,7 +191,8 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 
         c = *pb->ptr++;
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ", pb, pbpal_read_len(pb)); WATCH_USHORT(pb->unreadlen);
+            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ", pb, pbpal_read_len(pb));
+            WATCH_USHORT(pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
@@ -208,13 +208,13 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 }
 
 
-int pbpal_read_len(pubnub_t *pb)
+int pbpal_read_len(pubnub_t* pb)
 {
     return (char*)pb->ptr - pb->core.http_buf;
 }
 
 
-int pbpal_start_read(pubnub_t *pb, size_t n)
+int pbpal_start_read(pubnub_t* pb, size_t n)
 {
     unsigned distance;
 
@@ -224,7 +224,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
     WATCH_USHORT(pb->unreadlen);
     WATCH_USHORT(pb->left);
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT(pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
@@ -240,7 +240,7 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
 }
 
 
-enum pubnub_res pbpal_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
     int have_read;
 
@@ -251,7 +251,7 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
         if (to_recv > pb->left) {
             to_recv = pb->left;
         }
-        PUBNUB_ASSERT_OPT(to_recv > 0 );
+        PUBNUB_ASSERT_OPT(to_recv > 0);
         have_read = socket_recv(pb->pal.socket, (char*)pb->ptr, to_recv, 0);
         if (have_read <= 0) {
             return handle_socket_error(have_read, pb);
@@ -276,20 +276,20 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
 }
 
 
-bool pbpal_closed(pubnub_t *pb)
+bool pbpal_closed(pubnub_t* pb)
 {
     return pb->pal.socket == SOCKET_INVALID;
 }
 
 
-void pbpal_forget(pubnub_t *pb)
+void pbpal_forget(pubnub_t* pb)
 {
     /* `socket_close` pretty much means "forget" in BSD-ish sockets */
     PUBNUB_UNUSED(pb);
 }
 
 
-int pbpal_close(pubnub_t *pb)
+int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
     if (pb->pal.socket != SOCKET_INVALID) {
@@ -304,7 +304,7 @@ int pbpal_close(pubnub_t *pb)
     return 0;
 }
 
-void pbpal_free(pubnub_t *pb)
+void pbpal_free(pubnub_t* pb)
 {
     if (pb->pal.socket != SOCKET_INVALID) {
         /* While this should not happen, it doesn't hurt to be paranoid.

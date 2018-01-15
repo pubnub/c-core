@@ -50,7 +50,7 @@ void pbntlm_packer_init(pbntlm_ctx_t *pb)
     PUBNUB_ASSERT_OPT(pb != NULL);
 
     if (sspi_max_token <= PUBNUB_NTLM_MAX_TOKEN) {
-        PUBNUB_LOG_WARNING("PUBNUB_NTLM_MAX_TOKEN(==%d) is smaller than maximum NTLM token for SSPI, which is: %d\n", PUBNUB_NTLM_MAX_TOKEN, sspi_max_token);
+        PUBNUB_LOG_WARNING("PUBNUB_NTLM_MAX_TOKEN(==%d) is smaller than maximum NTLM token for SSPI, which is: %lu\n", PUBNUB_NTLM_MAX_TOKEN, sspi_max_token);
     }
 
     SecInvalidateHandle(&pb->hcontext);
@@ -124,7 +124,7 @@ int pbntlm_pack_type_one(pbntlm_ctx_t *pb, char const* username, char const* pas
     }
     status = acquire_creds(pident, &pb->hcreds);
     if (status != SEC_E_OK) {
-        PUBNUB_LOG_ERROR("Failed to acquire credentials for NTLM, code: %d\n", status);
+        PUBNUB_LOG_ERROR("Failed to acquire credentials for NTLM, code: %ld\n", status);
         return -1;
     }
 
@@ -141,7 +141,7 @@ int pbntlm_pack_type_one(pbntlm_ctx_t *pb, char const* username, char const* pas
         msg->size = sec_buf.cbBuffer;
         return 0;
     default:
-        PUBNUB_LOG_ERROR("Failed to init context for NTLM type 1 message, code: %d\n", status);
+        PUBNUB_LOG_ERROR("Failed to init context for NTLM type 1 message, code: %ld\n", status);
         return -1;
     }
 }
@@ -154,7 +154,7 @@ int pbntlm_unpack_type2(pbntlm_ctx_t *pb, pubnub_bymebl_t msg)
     PUBNUB_ASSERT_OPT(msg.size > 0);
 
     if (msg.size > sizeof pb->in_token) {
-        PUBNUB_LOG_ERROR("NTLM Type2 message too long: %d bytes, max allowed %d\n", msg.size, sizeof pb->in_token);
+        PUBNUB_LOG_ERROR("NTLM Type2 message too long: %zu bytes, max allowed %zu\n", msg.size, sizeof pb->in_token);
         return -1;
     }
     memcpy(pb->in_token, msg.ptr, msg.size);
@@ -189,7 +189,7 @@ int pbntlm_pack_type3(pbntlm_ctx_t *pb, char const* username, char const* passwo
     PUBNUB_ASSERT(SecIsValidHandle(&pb->hcreds));
     status = init_sec_ctx(&pb->hcreds, &pb->hcontext, &type_two_desc, &pb->hcontext, &type_3_desc);
     if (status != SEC_E_OK) {
-        PUBNUB_LOG_ERROR("NTLM handshake failure (type-3 message): Status=%x\n", status);
+        PUBNUB_LOG_ERROR("NTLM handshake failure (type-3 message): Status=%lx\n", status);
         
         return -1;
     }

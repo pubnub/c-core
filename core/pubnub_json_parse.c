@@ -195,7 +195,7 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
 
 bool pbjson_elem_equals_string(struct pbjson_elem const *e, char const *s)
 {
-    char const *p = e->start;
+    char const *p;
     for (p = e->start; p != e->end; ++p, ++s) {
         if (*p != *s) {
             return false;

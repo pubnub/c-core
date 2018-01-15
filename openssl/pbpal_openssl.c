@@ -204,7 +204,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
                 retry_BIO, reason
                 );
 #if defined(_WIN32)
-            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu WSAGetLastError()=%d\n", 
                 pb, GetLastError(), WSAGetLastError()
                 );
 #endif
@@ -311,7 +311,7 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
                 retry_BIO, reason
                 );
 #if defined(_WIN32)
-            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
+            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu WSAGetLastError()=%d\n", 
                 pb, GetLastError(), WSAGetLastError()
                 );
 #endif

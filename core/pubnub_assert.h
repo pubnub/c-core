@@ -171,10 +171,18 @@
 #endif
 
 
+#if defined(__clang__) || defined(__GNUC__)
+#define PUBNUB_NORETURN __attribute__((__noreturn__))
+#elif defined(_MSC_VER_)
+#define PUBNUB_NORETURN __declspec(noreturn)
+#else
+#define PUBNUB_NORETURN
+#endif
+
 /** This will invoke the installed assert handler.  The default
     behavior is pubnub_assert_handler_abort().
  */
-void pubnub_assert_failed(char const *s, char const *file, long line);
+void PUBNUB_NORETURN pubnub_assert_failed(char const *s, char const *file, long line);
 
 /** Prototype of a Pubnub assertion failure handler. There are several
     standard handlers, but you can also provide your own.
@@ -213,9 +221,18 @@ void pubnub_assert_handler_printf(char const *s, char const *file, long line);
 #define PUBNUB_CTASRT2(pre,post,lex) pre ## post ## lex
 #define PUBNUB_CTASRT(pre,post,lex) PUBNUB_CTASRT2(pre,post,lex)
 
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#if !defined __has_feature
+#define __has_feature(x) 0
+#endif
 
-/** Delegate to C11 static assert */
+#if __has_feature(c_static_assert)
+
+/* Delegate to C11 static assert */
+#define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert(cond, #msg)
+
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+
+/* Delegate to C11 static assert */
 #define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert(cond, #msg)
 
 #else
@@ -235,7 +252,7 @@ void pubnub_assert_handler_printf(char const *s, char const *file, long line);
     manner.
 
     @param cond Codition to assert
-    @param msg A message "disguised" as an identifier. So instead of
+    @param msg A message "disguised" as an identifier. So, instead of
     `"unknown value"`, use `unknown_value`
  */
 #define PUBNUB_STATIC_ASSERT(cond,msg)                                  \

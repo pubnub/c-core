@@ -137,7 +137,7 @@ int pbbase64_decode(char const* s, size_t n, pubnub_bymebl_t *data, struct pbbas
     PUBNUB_ASSERT(0 == strncmp(options->alphabet, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 62));
 
     if ((n * 3 + 3) / 4 > data->size) {
-        PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = %zd, data->size = %zd, (n * 3 + 3) / 4 = %zd\n", n, data->size, (n * 3 + 3) / 4);
+        PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = %ud, data->size = %ud, (n * 3 + 3) / 4 = %ud\n", (unsigned)n, (unsigned)data->size, ((unsigned)n * 3 + 3) / 4);
         return -1;
     }
     
