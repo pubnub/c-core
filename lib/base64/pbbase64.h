@@ -170,12 +170,24 @@ struct pbbase64_options {
             }
 
 
-/** Returns the length (in bytes) of Base64 encoded string of @p length */
+/** Returns the length (in bytes) of Base64 encoded string for 
+    a memory block of @p length. */
 size_t pbbase64_encoded_length(size_t length);
 
-/** Base64 encodes the memory block @p data to user allocated string @p s
-    with size @p *n, using options @p options. On output @p *n will
-    hold number of characters written.
+/** Returns the size (in members, which is almost always the same as
+    bytes, for the character array (buffer) that is passed to
+    pbbase64_encode() as the destination, to encode a memory block of
+    @p length. This is greater than pbbase64_encoded_length(), but
+    isn't sure to be `pbbase64_encoded_length() + 1`, as there may be
+    other reasons for pbbase64_encode() to need more memory in the
+    encoded string buffer.
+
+*/
+size_t pbbase64_char_array_size_for_encoding(size_t length);
+
+/** Base64 encodes the memory block @p data to user allocated string
+    @p s with size @p *n, using options @p options. On output, @p *n
+    will hold number of characters written.
 
     @return 0: OK, -1: error
 */
