@@ -134,10 +134,6 @@ size_t pbbase64_decoded_length(size_t n)
 }
 
 
-#define COMMON_BASE64_ALPHABET                                                 \
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-
 int pbbase64_decode(char const*                    s,
                     size_t                         n,
                     pubnub_bymebl_t*               data,
@@ -145,23 +141,22 @@ int pbbase64_decode(char const*                    s,
 {
     size_t   i;
     uint8_t  decode_tab[256];
-    uint8_t* out = data->ptr;
+    uint8_t* out;
 
+    PUBNUB_ASSERT_OPT(data != NULL);
     PUBNUB_ASSERT_OPT(data->ptr != NULL);
     PUBNUB_ASSERT_OPT(s != NULL);
     PUBNUB_ASSERT_OPT(options != NULL);
     PUBNUB_ASSERT_OPT(options->alphabet != NULL);
-    PUBNUB_ASSERT(0
-                  == strncmp(options->alphabet,
-                             COMMON_BASE64_ALPHABET,
-                             sizeof COMMON_BASE64_ALPHABET - 1));
+    PUBNUB_ASSERT(0 == strcmp(options->alphabet, COMMON_BASE64_ABC));
 
+    out = data->ptr;
     if (pbbase64_decoded_length(n) > data->size) {
         PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = "
-                         "%ud, data->size = %ud, (n * 3 + 3) / 4 = %ud\n",
+                         "%ud, data->size = %ud, decoded_length = %ud\n",
                          (unsigned)n,
                          (unsigned)data->size,
-                         ((unsigned)n * 3 + 3) / 4);
+                         (unsigned)pbbase64_decoded_length(n));
         return -1;
     }
 
@@ -176,12 +171,12 @@ int pbbase64_decode(char const*                    s,
             return -12;
         }
         word[1] = decode_tab[(int)*s++];
-        if ((word[0] == 64) && !options->ignore_invalid_char) {
+        if ((word[1] == 64) && !options->ignore_invalid_char) {
             return -13;
         }
+        *out++  = (word[0] << 2) | (word[1] >> 4);
         word[2] = decode_tab[(int)*s++];
         word[3] = decode_tab[(int)*s++];
-        *out++  = (word[0] << 2) | (word[1] >> 4);
         if (word[2] < 64) {
             *out++ = (word[1] << 4) | (word[2] >> 2);
             if (word[3] < 64) {

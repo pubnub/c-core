@@ -190,7 +190,7 @@ void PUBNUB_NORETURN pubnub_assert_failed(char const *s, char const *file, long 
     @param file The name of the source file with the condition
     @param line Number of the line of @c file with the condition
  */
-typedef void (*pubnub_assert_handler_t)(char const *s, char const *file, long line);
+typedef void PUBNUB_NORETURN (*pubnub_assert_handler_t)(char const *s, char const *file, long line);
 
 /** This will install an assert handler. It can be one of the standard
     ones, or your own.
@@ -203,17 +203,24 @@ void pubnub_assert_set_handler(pubnub_assert_handler_t handler);
 /** This handler will print a message formed from the parameters and
     then go to infinite loop. Useful for debugging.
 */
-void pubnub_assert_handler_loop(char const *s, char const *file, long line);
+void PUBNUB_NORETURN pubnub_assert_handler_loop(char const *s, char const *file, long line);
 
 /** This handler will print a message  formed from the parameters and
     then abort (exit, end) the process. Useful for testing.
  */
-void pubnub_assert_handler_abort(char const *s, char const *file, long line);
+void PUBNUB_NORETURN pubnub_assert_handler_abort(char const *s, char const *file, long line);
 
 /** This handler will print a message formed from the parameters and
     that's it. Useful for getting data from a program execution "in
     the field", where we must not stop or crash because of ASSERT
-    failure.
+    failure, or if you want to get a sense of "all the stuff that
+    fail ASSERT".
+
+    It does return, which violates the idea of an ASSERT failure not
+    returning. Thus, if you use it, your program may crash instead of
+    "quiting in an orderly fashion". Also, if your compiler supports
+    "noreturn" attribute (and we know that and use it), you'll get a
+    warning or error and will need to ignore or disable it.
  */
 void pubnub_assert_handler_printf(char const *s, char const *file, long line);
 
