@@ -139,21 +139,24 @@ int pbbase64_decode(char const*                    s,
                     pubnub_bymebl_t*               data,
                     struct pbbase64_options const* options)
 {
-    size_t   i;
-    uint8_t  decode_tab[256];
-    uint8_t* out;
+    size_t      i;
+    char const* alphabet;
+    uint8_t     decode_tab[256];
+    uint8_t*    out;
 
     PUBNUB_ASSERT_OPT(data != NULL);
     PUBNUB_ASSERT_OPT(data->ptr != NULL);
     PUBNUB_ASSERT_OPT(s != NULL);
     PUBNUB_ASSERT_OPT(options != NULL);
-    PUBNUB_ASSERT_OPT(options->alphabet != NULL);
-    PUBNUB_ASSERT(0 == strcmp(options->alphabet, COMMON_BASE64_ABC));
+    alphabet = options->alphabet;
+    PUBNUB_ASSERT_OPT(alphabet != NULL);
+    PUBNUB_ASSERT(
+        0 == strncmp(alphabet, COMMON_BASE64_ABC, sizeof COMMON_BASE64_ABC - 1));
 
     out = data->ptr;
     if (pbbase64_decoded_length(n) > data->size) {
         PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = "
-                         "%ud, data->size = %ud, decoded_length = %ud\n",
+                         "%u, data->size = %u, decoded_length = %u\n",
                          (unsigned)n,
                          (unsigned)data->size,
                          (unsigned)pbbase64_decoded_length(n));
@@ -161,8 +164,8 @@ int pbbase64_decode(char const*                    s,
     }
 
     memcpy(decode_tab, decode_tab_C, sizeof decode_tab);
-    decode_tab[(int)options->alphabet[62]] = 62;
-    decode_tab[(int)options->alphabet[63]] = 63;
+    decode_tab[(int)alphabet[62]] = 62;
+    decode_tab[(int)alphabet[63]] = 63;
 
     for (i = 0; i < n; i += 4) {
         uint8_t word[4];
