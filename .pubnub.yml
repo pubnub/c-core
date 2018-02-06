@@ -10,6 +10,8 @@ changelog:
         text: Handle chunks larger than http_buff
       - type: bug
         text: Fix receiving data longer than http_buff at a time
+      - type: bug
+        text: Fix removing the first context from timer list
   - version: v2.2.12
     changes:
       - type: bug
