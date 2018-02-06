@@ -141,7 +141,6 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
 {
     char const *s = pbjson_skip_whitespace(p->start, p->end);
     unsigned name_len = strlen(name);
-    bool found = false;
     char const *end;
 
     if (0 == name_len) {
@@ -151,6 +150,7 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
         return jonmpNoStartCurly;
     }
     while (s < p->end) {
+        bool found = false;
         s = pbjson_skip_whitespace(s+1, p->end);
         if (s == p->end) {
             return jonmpKeyMissing;

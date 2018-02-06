@@ -647,7 +647,7 @@ next_state:
         {
             unsigned chunk_length = strtoul(pb->core.http_buf, NULL, 16);
 
-            PUBNUB_LOG_TRACE("About to read a chunk w/length: %d\n", chunk_length);
+            PUBNUB_LOG_TRACE("About to read a chunk w/length: %u\n", chunk_length);
             if (chunk_length == 0) {
                 finish(pb);
 #if PUBNUB_PROXY_API

@@ -169,8 +169,6 @@ int pbpal_start_read_line(pubnub_t* pb)
 
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
-    uint8_t c;
-
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
     if (pb->unreadlen == 0) {
@@ -187,6 +185,8 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     }
 
     while (pb->unreadlen > 0) {
+        uint8_t c;
+
         --pb->unreadlen;
 
         c = *pb->ptr++;

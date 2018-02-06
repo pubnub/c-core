@@ -13,11 +13,12 @@ void pubnub_timer_list_init(pubnub_t* pbp)
 
 pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add)
 {
-    int       timeout_to_add_ms = to_add->transaction_timeout_ms;
+    int       timeout_to_add_ms;
     pubnub_t* pbp;
 
     PUBNUB_ASSERT_OPT(to_add != NULL);
 
+    timeout_to_add_ms = to_add->transaction_timeout_ms;
     if (NULL == list) {
         list             = to_add;
         to_add->previous = to_add->next = NULL;

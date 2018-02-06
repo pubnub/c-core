@@ -232,15 +232,17 @@ void pubnub_assert_handler_printf(char const *s, char const *file, long line);
 #define __has_feature(x) 0
 #endif
 
-#if __has_feature(c_static_assert)
+#if __has_feature(c_static_assert) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L))
 
 /* Delegate to C11 static assert */
-#define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert(cond, #msg)
+#define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert((cond), #msg)
 
-#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#elif (defined(_MSC_VER)) && (_MSC_VER >= 1600)
 
-/* Delegate to C11 static assert */
-#define PUBNUB_STATIC_ASSERT(cond,msg) _Static_assert(cond, #msg)
+/* This compiler doesn't implement the standard `_Static_assert`, but
+   does the `static_assert`, "w/out the middleman".
+*/
+#define PUBNUB_STATIC_ASSERT(cond,msg) static_assert((cond), #msg)
 
 #else
 
@@ -248,24 +250,14 @@ void pubnub_assert_handler_printf(char const *s, char const *file, long line);
     of being very portable, gives decent error message on all known
     compilers.
 
-    Problems: 
-    
-    - It won't work if you have two of these on the same line 
-
-    - If you use it inside a function, compiler may report "unused
-    typedef" warning
-
-    Unfortunately, we don't know of a way to avoid these in a portable
-    manner.
-
     @param cond Codition to assert
     @param msg A message "disguised" as an identifier. So, instead of
     `"unknown value"`, use `unknown_value`
  */
 #define PUBNUB_STATIC_ASSERT(cond,msg)                                  \
-    typedef struct { int PUBNUB_CTASRT(static_assert, _failed_, msg) : !!(cond); } \
+    extern struct { int PUBNUB_CTASRT(static_assert, _failed_, msg) : !!(cond); } \
         PUBNUB_CTASRT(static_assert_failed_, msg, __LINE__)
 
-#endif /* __STDC_VERSION__ */
+#endif
 
 #endif /* !defined INC_PUBNUB_ASSERT */

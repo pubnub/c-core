@@ -82,7 +82,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
     g_keysub = keysub;
     g_origin = origin;
 
-    printf("Starting Run of %d tests\n", test_count);
+    printf("Starting Run of %u tests\n", test_count);
     if (GetConsoleScreenBufferInfo(hstdout, &csbiInfo)) {
         wOldColorAttrs = csbiInfo.wAttributes; 
     }
@@ -96,7 +96,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
             in_this_pass = test_count - next_test;
         }
         for (i = next_test; i < next_test+in_this_pass; ++i) {
-            printf("Creating a thread for test %d\n", i);
+            printf("Creating a thread for test %u\n", i);
             aHa[i - next_test] = aTest[i].pth = (HANDLE)_beginthreadex(NULL, 0, aTest[i].pf, &aTest[i].result, 0, NULL);
         }
         /* This is the simplest way to do it - wait for all threads to finish.
@@ -114,7 +114,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
             switch (aTest[i].result) {
 	    case trFail:
                 SetConsoleTextAttribute(hstdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
-		printf("\n!!!!!!! The %d. test ('%s') failed!\n\n", i + 1, aTest[i].name);
+		printf("\n!!!!!!! The %u. test ('%s') failed!\n\n", i + 1, aTest[i].name);
                 ++failed_count;
                 SetConsoleTextAttribute(hstdout, wOldColorAttrs);
 		break;
@@ -124,7 +124,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
             case trIndeterminate:
                 ++indete_count;
                 SetConsoleTextAttribute(hstdout, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-		printf(" Indeterminate %d. test ('%s') of %d\t", i+1, aTest[i].name, test_count);
+		printf(" Indeterminate %u. test ('%s') of %u\t", i+1, aTest[i].name, test_count);
                 SetConsoleTextAttribute(hstdout, wOldColorAttrs);
                 /* Should restart the test... */
 		//printf("\x1b[33m ReStarting %d. test of %ld\x1b[m\t", i + 1, test_count);
@@ -137,17 +137,17 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
     puts("Test run over.");
     if (passed_count == test_count) {
         SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN);
-        printf(" All %d tests passed.\n", test_count);
+        printf(" All %u tests passed.\n", test_count);
         SetConsoleTextAttribute(hstdout, wOldColorAttrs);
         return 0;
     }
     else {
         SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN);
-        printf("%d tests passed, ", passed_count);
+        printf("%u tests passed, ", passed_count);
         SetConsoleTextAttribute(hstdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
-        printf("%d tests failed, ", failed_count);
+        printf("%u tests failed, ", failed_count);
         SetConsoleTextAttribute(hstdout, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-        printf("%d tests indeterminate\n", indete_count);
+        printf("%u tests indeterminate\n", indete_count);
         SetConsoleTextAttribute(hstdout, wOldColorAttrs);
         return failed_count + indete_count;
     }

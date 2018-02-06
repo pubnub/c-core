@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.13
+version: 2.2.14
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.14
+    changes:
+      - type: bug
+        text: Fix removing the first context from the timer list
   - version: v2.2.13
     changes:
       - type: feature
@@ -10,8 +14,6 @@ changelog:
         text: Handle chunks larger than http_buff
       - type: bug
         text: Fix receiving data longer than http_buff at a time
-      - type: bug
-        text: Fix removing the first context from timer list
   - version: v2.2.12
     changes:
       - type: bug

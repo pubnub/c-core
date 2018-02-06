@@ -3,19 +3,16 @@
 #define      INC_PBPAL_ANDS_SOCKETS
 
 
-#ifdef _WIN32
-#else
-#include <arpa/inet.h> //inet_addr , inet_ntoa , ntohs etc
-#endif
-
+struct sockaddr;
+struct sockaddr_in;
 
 /**
  * Perform a DNS query by sending a packet to the DNS server @p dest.
  */
 int send_dns_query(int skt, struct sockaddr const *dest, unsigned char *host);
 
-/** Read a DNS response from @p dns_server. */
-int read_response(int skt, struct sockaddr *dns_server, unsigned char const *host, struct sockaddr_in *dest);
+/** Read a DNS response from DNS server @p dest, putting it into @p resolved addr. */
+int read_dns_response(int skt, struct sockaddr *dest, struct sockaddr_in *resolved_addr);
 
 
 

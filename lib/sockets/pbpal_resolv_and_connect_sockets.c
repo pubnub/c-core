@@ -37,7 +37,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     case pbproxyHTTP_GET:
         origin = pb->proxy_hostname;
         port = pb->proxy_port;
-        PUBNUB_LOG_TRACE("Using proxy: %s : %d\n", origin, port);
+        PUBNUB_LOG_TRACE("Using proxy: %s : %hu\n", origin, port);
         break;
     default:
         break;
@@ -83,7 +83,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         hint.ai_canonname = NULL;
         hint.ai_next = NULL;
 
-        snprintf(port_string, sizeof port_string, "%d", port);
+        snprintf(port_string, sizeof port_string, "%hu", port);
         error = getaddrinfo(origin, port_string, &hint, &result);
         if (error != 0) {
             return pbpal_resolv_failed_processing;
@@ -139,7 +139,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     dns_server.sin_family = AF_INET;
     dns_server.sin_port = htons(DNS_PORT);
     inet_pton(AF_INET, "8.8.8.8", &dns_server.sin_addr.s_addr);
-    switch (read_response(skt, (struct sockaddr*)&dns_server, origin, &dest)) {
+    switch (read_dns_response(skt, (struct sockaddr*)&dns_server, &dest)) {
     case -1: return pbpal_resolv_failed_rcv;
     case +1: return pbpal_resolv_rcv_wouldblock;
     case 0: break;
@@ -147,7 +147,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     socket_close(skt);
     skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_INVALID == skt) {
-        return pbpal_connect_resource_failure;
+        return pbpal_connect_resource_failur;e
     }
     pb->pal.socket = skt;
     dest.sin_port = htons(port);
@@ -158,6 +158,8 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     return pbpal_connect_success;
 
 #else
+
+    PUBNUB_UNUSED(pb);
 
     /* Under regular BSD-ish sockets, this function should not be
        called unless using async DNS, so this is an error */
