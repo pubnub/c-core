@@ -52,7 +52,6 @@ static void displayMenuOptions(pubnub_t *pn);
 
 static const char pubkey[] = "demo";
 static const char subkey[] = "demo";
-static const char channel[] = "hello_world";
 
 
 int main()

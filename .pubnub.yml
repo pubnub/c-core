@@ -1,7 +1,11 @@
 name: c-core
-version: 2.2.13
+version: 2.2.14
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.14
+    changes:
+      - type: bug
+        text: Fix removing the first context from the timer list
   - version: v2.2.13
     changes:
       - type: feature

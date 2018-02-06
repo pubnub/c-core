@@ -4,7 +4,7 @@
 
 #include "pubnub_sync.h"
 
-void pnc_ops_init();
+void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub);
 
 void pnc_ops_subscribe(pubnub_t *pn);
 

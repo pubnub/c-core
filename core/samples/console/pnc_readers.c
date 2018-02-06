@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 
 
 void pnc_read_bool_from_console(char const *message, bool *val)
@@ -53,7 +54,8 @@ void pnc_read_string_from_console(char const *message, char *val, int size)
 void pnc_read_string_from_console_optional(char const *message, char *val, int size, bool optional)
 {
     bool first_try = true;
-    
+
+    assert(val != NULL);
     do {
         if (!first_try) {
             puts("Invalid input. Try again.");
