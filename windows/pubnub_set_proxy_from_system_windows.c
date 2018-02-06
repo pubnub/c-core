@@ -72,7 +72,7 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
         if (port != end) {
             *end = L'\0';
             p->proxy_port = (uint16_t)wcstol(port + 1, NULL, 10);
-            PUBNUB_LOG_TRACE("Set proxy_port = %d\n", p->proxy_port);
+            PUBNUB_LOG_TRACE("Set proxy_port = %hu\n", p->proxy_port);
             if (0 == p->proxy_port) {
                 continue;
             }

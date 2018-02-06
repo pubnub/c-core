@@ -10,7 +10,7 @@
 #include <string.h>
 
 
-void pnc_ops_init()
+void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub)
 {
     // Nothing todo in sync version
 }
