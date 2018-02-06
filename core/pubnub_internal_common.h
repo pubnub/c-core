@@ -45,7 +45,9 @@ enum PBSocketState {
     /** All of the data that was to be sent has been sent. */
     STATE_DATA_SENT = 6,
     /** Reading a line */
-    STATE_READ_LINE = 7
+    STATE_READ_LINE = 7,
+    /** Sending data */
+    STATE_SENDING_DATA = 8
 };
 
 
@@ -105,6 +107,18 @@ typedef struct pbntlm_context pbntlm_ctx_t;
     alignment issues when this is included from both C and C++
     compilers, especially pre-C99 C compilers (like MSVC (at least
     until MSVC 2013)).
+
+    Here's a diagram of the "relationship" between the `ptr`,
+    `left` and `unreadlen` with `core.http_buf`:
+
+            ptr
+             |  unreadlen  |    left         |
+             |<----------->|<--------------->|
+             v             |                 |
+    +----------------------------------------+
+    |          core.http_buf                 |
+    +----------------------------------------+
+
 */
 struct pubnub_ {
     struct pbcc_context core;
@@ -114,16 +128,13 @@ struct pubnub_ {
     /** Type of current transaction */
     enum pubnub_trans trans;
 
-    /** Pointer to the next data to be sent. */
-    uint8_t const *sendptr;   
+    /** The number of bytes we got (in our buffer) from network but
+        have not processed yet. */
+    uint16_t unreadlen;         
 
-    /** The number of bytes left to be sent. */
-    uint16_t sendlen;         
-
-    /** The number of bytes left to be read. */
-    uint16_t readlen;         
-
-    /** Pointer to next free byte in the read buffer*/
+    /** Pointer to next byte to read from our buffer or next byte to
+        send in the user-supplied send buffer.
+     */
     uint8_t *ptr;          
 
     /** Number of bytes left (empty) in the read buffer */
@@ -132,7 +143,7 @@ struct pubnub_ {
     /** The state of the socket. */
     enum PBSocketState sock_state;   
 
-    /** Number of bytes to read - given by the user */
+    /** Number of bytes to send or read - given by the user */
     unsigned len;          
 
     /** Indicates whether we are receiving chunked or regular HTTP

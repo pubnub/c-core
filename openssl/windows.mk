@@ -6,7 +6,14 @@ OBJFILES = pubnub_pubsubapi.obj pubnub_coreapi.obj pubnub_ccore_pubsub.obj pubnu
 OPENSSLPATH=c:\OpenSSL-Win32
 !endif
 
-LIBS=ws2_32.lib rpcrt4.lib $(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
+!IF EXISTS($(OPENSSLPATH)\lib\libssl.lib)
+OPENSSL_LIBS=$(OPENSSLPATH)\lib\libssl.lib $(OPENSSLPATH)\lib\libcrypto.lib
+!ELSEIF EXISTS($(OPENSSLPATH)\lib\ssleay32.lib)
+OPENSSL_LIBS=$(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
+!ELSE
+!ERROR Cannot find OpenSSL libraries
+!ENDIF
+LIBS=ws2_32.lib rpcrt4.lib $(OPENSSL_LIBS)
 
 CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1
 
@@ -50,7 +57,7 @@ pubnub_console_sync.exe: $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_
 
 pubnub_console_callback.exe: $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_callback.c pubnub_callback.lib
 	$(CC) /Fe:$@ $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS -D PUBNUB_CALLBACK_API $(INCLUDES) $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_callback.c pubnub_callback.lib $(LIBS)
-    
+
 clean:
 	del *.exe
 	del *.obj

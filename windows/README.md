@@ -30,7 +30,7 @@ as they are portable across all or most hosted platforms
 So, to build the samples, just run:
 
 	nmake windows.mk
-	
+
 from a Visual Studio Command Prompt. This was tested mainly
 on MSVS 2010 and Windows 7 & 10, but should work with pretty
 much any MSVS since 2008 and Windows since XP.
@@ -42,11 +42,38 @@ having Windows XP or newer.
 If you have Clang for Windows installed, this should work:
 
     nmake -f windows.mk CC=clang-cl
-    
+
+## Makefile for GCC
+
 There is a Makefile for a `gcc` compatible compiler - `windows-gcc.mk`.
 So, if you have MINGW, this should work:
 
     mingw32-make -f windows-gcc.mk
+
+Of course, if `mingw32-make.exe` is not on PATH, you may need to
+provide the full path to it. In some setups, things may work better if
+you:
+
+    sh -c "make -f windows-gcc.mk"
+
+and, again, if you don't have `sh.exe` on PATH and/or `make.exe` on
+Windows or MINGW PATH, you may need to provide full path to them.
+
+This should work with Clang (for Windows) also, like:
+
+    mingw32-make CC=clang -f windows-gcc.mk
+
+It should also work with `scan-build`, though it's usually a little
+tricky to make everything work. On one machine, the command is a
+rather complicated:
+
+    scan-build --use-analyzer="e:/program files/llvm/bin/clang.exe"  e:\msys64\usr\bin\sh.exe -c "e:/msys64/usr/bin/make -f windows-gcc.mk"
+
+Also, keep in mind that `windows-gcc.mk` is less used and, since
+GCC/Clang (MINGW, Cygwin) setups can be very different/strange, it
+doesn't build all. But, you should have enough to start to make your
+own Makefile for you project.
+
 
 ## Makefile remarks
 

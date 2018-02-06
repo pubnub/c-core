@@ -12,6 +12,15 @@
 #include <string.h>
 
 
+/** Each HTTP chunk has a trailining CRLF ("\r\n" in C-speak).  That's
+    a little strange, but is in the "spirit" of HTTP.
+
+    We need to read it from the network interface, but, we discard it.
+ */
+#define CHUNK_TRAIL_LENGTH 2
+
+
+
 static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
@@ -38,6 +47,7 @@ static void outcome_detected(struct pubnub_ *pb, enum pubnub_res rslt)
 
 static enum pubnub_res dont_parse(struct pbcc_context *p)
 {
+    PUBNUB_UNUSED(p);
     PUBNUB_LOG_ERROR("Parsing not initialized for a type of transaction\n");
     return PNR_INTERNAL_ERROR;
 }
@@ -395,17 +405,17 @@ next_state:
         break;
     case PBS_TX_HOST:
         i = pbpal_send_status(pb);
-        if (i <= 0) {
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+        }
+        else if (0 == i) {
             if ((pb->proxy_type == pbproxyHTTP_CONNECT) && !pb->proxy_tunnel_established) {
-                char port_num[20];
-                snprintf(port_num, sizeof port_num, ":%d", 80);
-                pbpal_send_str(pb, port_num);
+                pbpal_send_literal_str(pb, ":80");
                 pb->state = PBS_TX_PORT_NUM;
-                goto next_state;
             }
             else {
                 pb->state = PBS_TX_PATH;
-                if ((i < 0) || (-1 == pbpal_send_str(pb, pb->core.http_buf))) {
+                if (-1 == pbpal_send_str(pb, pb->core.http_buf)) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
                 }
@@ -414,16 +424,6 @@ next_state:
         }
         break;
     case PBS_TX_PORT_NUM:
-        i = pbpal_send_status(pb);
-        if (i <= 0) {
-            pb->state = PBS_TX_PATH;
-            if (i < 0) {
-                outcome_detected(pb, PNR_IO_ERROR);
-                break;
-            }
-            goto next_state;
-        }
-        break;
 #endif /* PUBNUB_PROXY_API */
     case PBS_TX_PATH:
         i = pbpal_send_status(pb);
@@ -459,7 +459,7 @@ next_state:
             if (0 == pbproxy_http_header_to_send(pb, header_to_send+2, sizeof header_to_send-2)) {
                 PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", header_to_send);
                 pb->state = PBS_TX_PROXY_AUTHORIZATION;
-                if ((i < 0) || (-1 == pbpal_send_str(pb, header_to_send))) {
+                if (-1 == pbpal_send_str(pb, header_to_send)) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
                 }
@@ -537,7 +537,7 @@ next_state:
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[] = "Content-Length: ";
             int read_len = pbpal_read_len(pb);
-            PUBNUB_LOG_TRACE("pb=%p header line was read: %.*s\n", pb, read_len, pb->core.http_buf);
+            PUBNUB_LOG_TRACE("pb=%p header line was read: '%.*s'\n", pb, read_len, pb->core.http_buf);
             WATCH_INT(read_len);
             if (read_len <= 2) {
                 pb->core.http_buf_len = 0;
@@ -578,6 +578,15 @@ next_state:
             pb->state = PBS_RX_HEADERS;
             goto next_state;
         }
+        case PNR_TX_BUFF_TOO_SMALL:
+            /** We could try to copy the "line so far" to the reply
+                buffer and then do some processing there, but, it
+                could become very complex, as we could have a few more
+                of these until we finally find a newline. So, for now,
+                just try to recover by skipping this line.
+            */
+            pb->state = PBS_RX_HEADERS;
+            goto next_state;
         default:
             outcome_detected(pb, pbrslt);
             break;
@@ -647,14 +656,11 @@ next_state:
                 }
 #endif
             }
-            else if (chunk_length > sizeof pb->core.http_buf) {
-                outcome_detected(pb, PNR_IO_ERROR);
-            }
             else if (0 != pbcc_realloc_reply_buffer(&pb->core, pb->core.http_buf_len + chunk_length)) {
                 outcome_detected(pb, PNR_REPLY_TOO_BIG);
             }
             else {
-                pb->core.http_content_len = chunk_length + 2;
+                pb->core.http_content_len = chunk_length + CHUNK_TRAIL_LENGTH;
                 pb->state = PBS_RX_BODY_CHUNK;
                 goto next_state;
             }
@@ -687,8 +693,8 @@ next_state:
             PUBNUB_ASSERT_OPT(pb->core.http_content_len >= len);
             PUBNUB_ASSERT_OPT(len > 0);
 
-            if (pb->core.http_content_len > 2) {
-                unsigned to_copy = pb->core.http_content_len - 2;
+            if (pb->core.http_content_len > CHUNK_TRAIL_LENGTH) {
+                unsigned to_copy = pb->core.http_content_len - CHUNK_TRAIL_LENGTH;
                 if (len < to_copy) {
                     to_copy = len;
                 }

@@ -151,13 +151,13 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
             }
             else {
                 PUBNUB_LOG_WARNING("Cannot auto detect proxy, "
-                                   "WinHttpGetProxyForUrl() returns: %d\n",
+                                   "WinHttpGetProxyForUrl() returns: %lu\n",
                                    GetLastError());
             }
             WinHttpCloseHandle(winhttp);
         }
         else {
-            PUBNUB_LOG_WARNING("WinHttpOpen() error: %d\n", GetLastError());
+            PUBNUB_LOG_WARNING("WinHttpOpen() error: %lu\n", GetLastError());
         }
     }
 

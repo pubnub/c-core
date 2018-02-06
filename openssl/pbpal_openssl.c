@@ -17,10 +17,10 @@
 
 
 /** Locks used by OpenSSL */
-static pbpal_mutex_t *m_locks;
+static pbpal_mutex_t* m_locks;
 
 
-static int print_to_pubnub_log(const char *s, size_t len, void *p)
+static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
     PUBNUB_UNUSED(len);
 
@@ -30,11 +30,14 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
 }
 
 
-static void locking_callback(int mode, int type, const char *file, int line)
+static void locking_callback(int mode, int type, const char* file, int line)
 {
-    PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n", CRYPTO_thread_id(),
+    PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n",
+                     CRYPTO_thread_id(),
                      (mode & CRYPTO_LOCK) ? "l" : "u",
-                     (type & CRYPTO_READ) ? "r" : "w", file, line);
+                     (type & CRYPTO_READ) ? "r" : "w",
+                     file,
+                     line);
     if (mode & CRYPTO_LOCK) {
         pbpal_mutex_lock(m_locks[type]);
     }
@@ -71,10 +74,10 @@ static int locks_setup(void)
 }
 
 
-static void buf_setup(pubnub_t *pb)
+static void buf_setup(pubnub_t* pb)
 {
-    pb->ptr = (uint8_t*)pb->core.http_buf;
-    pb->left = sizeof pb->core.http_buf;
+    pb->ptr  = (uint8_t*)pb->core.http_buf;
+    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
 
@@ -86,8 +89,11 @@ static int pal_init(void)
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
-        PUBNUB_LOG_TRACE("SSLEAY_VERSION_NUMBER=%lx SSLeay()=%lx SSLeay_version(SSLEAY_VERSION)='%s'\n", 
-                         SSLEAY_VERSION_NUMBER, SSLeay(), SSLeay_version(SSLEAY_VERSION));
+        PUBNUB_LOG_TRACE("SSLEAY_VERSION_NUMBER=%lx SSLeay()=%lx "
+                         "SSLeay_version(SSLEAY_VERSION)='%s'\n",
+                         SSLEAY_VERSION_NUMBER,
+                         SSLeay(),
+                         SSLeay_version(SSLEAY_VERSION));
         if (locks_setup()) {
             return -1;
         }
@@ -99,286 +105,264 @@ static int pal_init(void)
 }
 
 
-void pbpal_init(pubnub_t *pb)
+void pbpal_init(pubnub_t* pb)
 {
     pal_init();
     memset(&pb->pal, 0, sizeof pb->pal);
     pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->options.use_system_certificate_store = false;
-    pb->options.reuse_SSL_session = true;
+    pb->options.reuse_SSL_session            = true;
     pb->ssl_CAfile = pb->ssl_CApath = NULL;
-    pb->ssl_userPEMcert = NULL;
-    pb->sock_state = STATE_NONE;
-    pb->readlen = 0;
+    pb->ssl_userPEMcert             = NULL;
+    pb->sock_state                  = STATE_NONE;
     buf_setup(pb);
 }
 
 
-int pbpal_send(pubnub_t *pb, void const *data, size_t n)
+int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
-    if (n == 0) {
-        return 0;
-    }
-    if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_send(pb=%p): pb->sock_state != STATE_NONE (=%d)\n", pb, pb->sock_state);
-        return -1;
-    }
-    pb->sendptr = (uint8_t*)data;
-    pb->sendlen = (uint16_t)n;
-    pb->sock_state = STATE_NONE;
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    pb->ptr        = (uint8_t*)data;
+    pb->len        = (uint16_t)n;
+    pb->sock_state = STATE_SENDING_DATA;
+    pb->left       = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 
     return pbpal_send_status(pb);
 }
 
 
-int pbpal_send_str(pubnub_t *pb, char const *s)
+int pbpal_send_str(pubnub_t* pb, char const* s)
 {
     return pbpal_send(pb, s, strlen(s));
 }
 
 
-int pbpal_send_status(pubnub_t *pb)
+static enum pubnub_res handle_socket_error(int result, pubnub_t* pb)
 {
-    int r;
-    if (0 == pb->sendlen) {
-        return 0;
-    }
-    r = BIO_write(pb->pal.socket, pb->sendptr, pb->sendlen);
-    if (r < 0) {
-        if (BIO_should_retry(pb->pal.socket)) {
-            return +1;
-        }
-        ERR_print_errors_fp(stderr);
-        return -1;
-    }
-    if (r > pb->sendlen) {
-        PUBNUB_LOG_WARNING("That's some over-achieving BIO! pb=%p, r=%d, pb->sendlen=%d\n", pb, r, pb->sendlen);
-        r = pb->sendlen;
-    }
-    pb->sendptr += r;
-    pb->sendlen -= r;
-    return r >= pb->sendlen;
+    int  should_retry = BIO_should_retry(pb->pal.socket);
+    int  reason       = 0;
+    BIO* retry_BIO    = BIO_get_retry_BIO(pb->pal.socket, &reason);
+    PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d "
+                     "should_retry=%d retry_type=%d retry_BIO=%p reason=%d\n",
+                     pb,
+                     pb->options.use_blocking_io,
+                     result,
+                     errno,
+                     should_retry,
+                     BIO_retry_type(pb->pal.socket),
+                     retry_BIO,
+                     reason);
+#if defined(_WIN32)
+    PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu "
+                     "WSAGetLastError()=%d\n",
+                     pb,
+                     GetLastError(),
+                     WSAGetLastError());
+#endif
+    ERR_print_errors_cb(print_to_pubnub_log, pb);
+    return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
 }
 
 
-int pbpal_start_read_line(pubnub_t *pb)
+int pbpal_send_status(pubnub_t* pb)
 {
-    if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read_line(pb=%p): pb->sock_state != STATE_NONE: ", pb); WATCH_ENUM(pb->sock_state);
-        return -1;
+    int rslt;
+    if (0 == pb->len) {
+        return 0;
     }
+    PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
 
-    if (pb->ptr > (uint8_t*)pb->core.http_buf) {
-        size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-        memmove(pb->core.http_buf, pb->ptr, pb->readlen);
-        pb->ptr -= distance;
-        pb->left += (uint16_t)distance;
+    rslt = BIO_write(pb->pal.socket, pb->ptr, pb->len);
+    if (rslt <= 0) {
+        rslt = (handle_socket_error(rslt, pb) == PNR_IN_PROGRESS) ? +1 : -1;
     }
     else {
-        if (pb->left == 0) {
-            /* Obviously, our buffer is not big enough, maybe some
-               error should be reported */
-            buf_setup(pb);
-        }
+        PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
+        pb->ptr += rslt;
+        pb->len -= rslt;
+        rslt = (0 == pb->len) ? 0 : +1;
     }
 
+    if (rslt <= 0) {
+        pb->ptr        = (uint8_t*)pb->core.http_buf;
+        pb->unreadlen  = 0;
+        pb->sock_state = STATE_NONE;
+    }
+
+    return rslt;
+}
+
+
+int pbpal_start_read_line(pubnub_t* pb)
+{
+    unsigned distance;
+
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    if (pb->unreadlen > 0) {
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
+    }
+    distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+    PUBNUB_ASSERT_UINT(distance + pb->left + pb->unreadlen,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    pb->ptr -= distance;
+    pb->left += distance;
+
     pb->sock_state = STATE_READ_LINE;
+
     return +1;
 }
 
 
-enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
     uint8_t c;
 
-    if (pb->readlen == 0) {
-        int recvres = BIO_read(pb->pal.socket, pb->ptr, pb->left);
-        if (recvres < 0) {
-            int should_retry = BIO_should_retry(pb->pal.socket);
-            int reason = 0;
-            BIO *retry_BIO = BIO_get_retry_BIO(pb->pal.socket, &reason);
-            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d retry_BIO=%p reason=%d\n", 
-                pb, pb->options.use_blocking_io, recvres, errno, should_retry, 
-                BIO_retry_type(pb->pal.socket),
-                retry_BIO, reason
-                );
-#if defined(_WIN32)
-            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
-                pb, GetLastError(), WSAGetLastError()
-                );
-#endif
-            ERR_print_errors_cb(print_to_pubnub_log, pb);
-            return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
-        }
-        else if (0 == recvres) {
-            return PNR_TIMEOUT;
-        }
-        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres,  pb->ptr);
-        pb->sock_state = STATE_READ_LINE;
-        pb->readlen = recvres;
-    } 
+    PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
-    while (pb->left > 0 && pb->readlen > 0) {
+    if (pb->unreadlen == 0) {
+        int recvres;
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
+                          == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        recvres = BIO_read(pb->pal.socket, (char*)pb->ptr, pb->left);
+        if (recvres <= 0) {
+            return handle_socket_error(recvres, pb);
+        }
+
+        PUBNUB_ASSERT_OPT(recvres <= pb->left);
+        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n",
+                         pb,
+                         recvres,
+                         recvres,
+                         pb->ptr);
+        pb->unreadlen = recvres;
+        pb->left -= recvres;
+    }
+
+    while (pb->unreadlen > 0) {
+        --pb->unreadlen;
+
         c = *pb->ptr++;
-
-        --pb->readlen;
-        --pb->left;
-        
         if (c == '\n') {
-            int pbpal_read_len_ = pbpal_read_len(pb);
-            PUBNUB_LOG_TRACE("\\n found: "); WATCH_INT(pbpal_read_len_); WATCH_USHORT(pb->readlen);
+            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
+                             pb,
+                             pbpal_read_len(pb));
+            WATCH_USHORT(pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
     }
 
     if (pb->left == 0) {
-        /* Buffer has been filled, but new-line char has not been
-         * found.  We have to "reset" this "mini-fsm", as otherwise we
-         * won't read anything any more. This means that we have lost
-         * the current contents of the buffer, which is bad. In some
-         * general code, that should be reported, as the caller could
-         * save the contents of the buffer somewhere else or simply
-         * decide to ignore this line (when it does end eventually).
-         */
+        PUBNUB_LOG_ERROR(
+            "pbpal_line_read_status(pb=%p): buffer full but newline not found",
+            pb);
         pb->sock_state = STATE_NONE;
-    }
-    else {
-        pb->sock_state = STATE_NEWDATA_EXHAUSTED;
+        return PNR_TX_BUFF_TOO_SMALL;
     }
 
     return PNR_IN_PROGRESS;
 }
 
 
-int pbpal_read_len(pubnub_t *pb)
+int pbpal_read_len(pubnub_t* pb)
 {
-    return sizeof pb->core.http_buf - pb->left;
+    return (char*)pb->ptr - pb->core.http_buf;
 }
 
 
-int pbpal_start_read(pubnub_t *pb, size_t n)
+int pbpal_start_read(pubnub_t* pb, size_t n)
 {
-    if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read(pb=%p): pb->sock_state != STATE_NONE: ", pb); WATCH_ENUM(pb->sock_state);
-        return -1;
+    unsigned distance;
+
+    PUBNUB_ASSERT_UINT_OPT(n, >, 0);
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    WATCH_USHORT(pb->unreadlen);
+    WATCH_USHORT(pb->left);
+    if (pb->unreadlen > 0) {
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
-    if (pb->ptr > (uint8_t*)pb->core.http_buf) {
-        size_t distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-        WATCH_SIZE_T(distance);
-        WATCH_USHORT(pb->left);
-        memmove(pb->core.http_buf, pb->ptr, pb->readlen);
-        pb->ptr -= distance;
-        pb->left += (uint16_t)distance;
-    }
-    else {
-        if (pb->left == 0) {
-            PUBNUB_LOG_ERROR("pbpal_start_read(pb=%p) pb->left=0, dismissing old buffer\n", pb);
-            buf_setup(pb);
-        }
-    }
+    distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+    WATCH_UINT(distance);
+    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    pb->ptr -= distance;
+    pb->left += distance;
+
     pb->sock_state = STATE_READ;
-    pb->len = (unsigned)n;
+    pb->len        = n;
+
     return +1;
 }
 
 
-enum pubnub_res pbpal_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
-    unsigned to_read = 0;
-    WATCH_ENUM(pb->sock_state);
-    WATCH_USHORT(pb->readlen);
-    WATCH_USHORT(pb->left);
-    WATCH_UINT(pb->len);
+    int have_read;
 
-    if (pb->readlen == 0) {
-        int recvres;
-        to_read =  pb->len;
-        if (to_read > pb->left) {
-            to_read = pb->left;
+    PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
+
+    if (0 == pb->unreadlen) {
+        unsigned to_recv = pb->len;
+        if (to_recv > pb->left) {
+            to_recv = pb->left;
         }
-        WATCH_UINT(to_read);
-        recvres = BIO_read(pb->pal.socket, pb->ptr, to_read);
-        WATCH_INT(recvres);
-        if (recvres < 0) {
-            int should_retry = BIO_should_retry(pb->pal.socket);
-            int reason = 0;
-            BIO *retry_BIO = BIO_get_retry_BIO(pb->pal.socket, &reason);
-            PUBNUB_LOG_TRACE("pb=%p use_blocking_io=%d recvres=%d errno=%d should_retry=%d retry_type=%d retry_BIO=%p reason=%d\n", 
-                pb, pb->options.use_blocking_io, recvres, errno, should_retry, 
-                BIO_retry_type(pb->pal.socket),
-                retry_BIO, reason
-                );
-#if defined(_WIN32)
-            PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p): GetLastErrror()=%d WSAGetLastError()=%d\n", 
-                pb, GetLastError(), WSAGetLastError()
-                );
-#endif
-            ERR_print_errors_cb(print_to_pubnub_log, pb);
-            return should_retry ? PNR_IN_PROGRESS : PNR_IO_ERROR;
+        PUBNUB_ASSERT_OPT(to_recv > 0);
+        have_read = BIO_read(pb->pal.socket, pb->ptr, to_recv);
+        if (have_read <= 0) {
+            return handle_socket_error(have_read, pb);
         }
-        else if (0 == recvres) {
-            return PNR_TIMEOUT;
-        }
-        pb->sock_state = STATE_READ;
-        pb->readlen = recvres;
-    } 
-
-    to_read = pb->len;
-    if (pb->readlen < to_read) {
-        to_read = pb->readlen;
-    }
-    pb->ptr += to_read;
-    pb->readlen -= to_read;
-    PUBNUB_ASSERT_OPT(pb->left >= to_read);
-    pb->left -= to_read;
-    pb->len -= to_read;
-
-    if (pb->len == 0) {
-        pb->sock_state = STATE_NONE;
-        return PNR_OK;
-    }
-
-    if (pb->left == 0) {
-        /* Buffer has been filled, but the requested block has not been
-         * read.  We have to "reset" this "mini-fsm", as otherwise we
-         * won't read anything any more. This means that we have lost
-         * the current contents of the buffer, which is bad. In some
-         * general code, that should be reported, as the caller could
-         * save the contents of the buffer somewhere else or simply
-         * decide to ignore this block (when it does end eventually).
-         */
-        pb->sock_state = STATE_NONE;
+        PUBNUB_ASSERT_OPT(pb->left >= have_read);
+        pb->left -= have_read;
     }
     else {
-        pb->sock_state = STATE_NEWDATA_EXHAUSTED;
+        have_read = (pb->unreadlen >= pb->len) ? pb->len : pb->unreadlen;
+        pb->unreadlen -= have_read;
+    }
+
+    pb->len -= have_read;
+    pb->ptr += have_read;
+
+    if ((0 == pb->len) || (0 == pb->left)) {
+        pb->sock_state = STATE_NONE;
+        return PNR_OK;
     }
 
     return PNR_IN_PROGRESS;
 }
 
 
-bool pbpal_closed(pubnub_t *pb)
+
+
+bool pbpal_closed(pubnub_t* pb)
 {
     return pb->pal.socket == NULL;
 }
 
 
-void pbpal_forget(pubnub_t *pb)
+void pbpal_forget(pubnub_t* pb)
 {
     /* a no-op under OpenSSL */
 }
 
 
-int pbpal_close(pubnub_t *pb)
+int pbpal_close(pubnub_t* pb)
 {
-    pb->readlen = 0;
-    pb->sock_state = STATE_NONE;
+    pb->unreadlen = 0;
     if (pb->pal.socket != NULL) {
         pbntf_lost_socket(pb, pb->pal.socket);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
+        pb->sock_state = STATE_NONE;
     }
 
     PUBNUB_LOG_TRACE("pbpal_close(pb=%p) returning 0\n", pb);
@@ -387,7 +371,7 @@ int pbpal_close(pubnub_t *pb)
 }
 
 
-void pbpal_free(pubnub_t *pb)
+void pbpal_free(pubnub_t* pb)
 {
     if (pb->pal.socket != NULL) {
         /* While this should not happen, it doesn't hurt to be paranoid.

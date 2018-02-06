@@ -1,7 +1,15 @@
 name: c-core
-version: 2.2.12
+version: 2.2.13
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.2.13
+    changes:
+      - type: feature
+        text: Support OpenSSL 1.1.0+ (BIO_(s|g)et_conn_ip -> BIO_(s|g)et_conn_address)
+      - type: bug
+        text: Handle chunks larger than http_buff
+      - type: bug
+        text: Fix receiving data longer than http_buff at a time
   - version: v2.2.12
     changes:
       - type: bug

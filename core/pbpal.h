@@ -55,7 +55,10 @@ enum pbpal_resolv_n_connect_result {
 */
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb);
 
-
+/** This checks for the status of a TCP (HTTP) connection
+    establishing, which includes the DNS resolution. It's used if this
+    wasn't done synchronously during pbpal_resolve_and_connect().
+*/
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb);
 
 /** Sends data over an established connection (with the Pubnub server).
@@ -74,10 +77,12 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n);
 
 /** Helper macro for optimisation of sending of literal strings.
     We know their length, we don't have to call strlen().
+
+    @note There's no way to detect if @p litstr is really a
+    literal string, so, handle with care.
  */
-#define pbpal_send_literal_str(pb, litstr) {          \
-        uint8_t s_[] = litstr;                        \
-        pbpal_send((pb), s_, sizeof s_ - 1); }
+#define pbpal_send_literal_str(pb, litstr) \
+        pbpal_send((pb), litstr, sizeof litstr - 1)
 
 /** The effect of this is the same as:
 
@@ -96,17 +101,33 @@ int pbpal_send_str(pubnub_t *pb, char const *s);
 int pbpal_send_status(pubnub_t *pb);
 
 /** Starts reading a line from the TCP connection. In other words,
-    reading until it finds a newline character.
+    reading until it finds a newline character. In general, it's used
+    to read HTTP response header lines.
 
-    @param pb The Pubnub context of the connection 
+    @precondition Previous read (or write) on the context was finished
+
+    @param pb The Pubnub context of the connection
+
     @return 0: newline read, else: not yet, try again later
 */
 int pbpal_start_read_line(pubnub_t *pb);
 
 /** Returns the status of reading a line. Line reading was
     started with pbpal_start_read_line().
+
+    @param pb The Pubnub context to get line reading status for
+
     @retval PNR_IN_PROGRESS reading a line not over/done yet
-    @retval PNR_OK Reading a line done
+
+    @retval PNR_TX_BUFFER_TOO_SMALL Well, it's not the _TX_ buffer,
+    but, it's the same buffer and we don't want to add a new `PNR`
+    just for internal purposes. Client may examine the contents of the
+    buffer for some further processing and can continue reading (with
+    the current buffer contents dropped) by calling
+    pbpal_start_read_line().
+
+    @retval PNR_OK Reading a line done (newline char found)
+
     @retval otherwise The error that happened during the reading
 */
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb);
@@ -122,6 +143,8 @@ int pbpal_read_len(pubnub_t *pb);
 
     To check if reading is complete, call pbpal_read_status().
 
+    @precondition Previous read (or write) on the context was finished
+
     @param pb The Pubnub context of an established TCP connection
     @param n Number of octets (bytes) to read
     @return 0: OK (started), -1: error (reading already started)
@@ -130,8 +153,21 @@ int pbpal_start_read(pubnub_t *pb, size_t n);
 
 /** Returns the status of reading a chunk of data. In general, it's
     used to receive the body (or chunk of it) of the HTTP response.
-    @retval PNR_IN_PROGRESS reading a chunk not over/done yet
-    @retval PNR_OK Reading a chunk done
+
+    @param pb The Pubnub context for which to get the current read
+    (chunk) status
+
+    @retval PNR_IN_PROGRESS reading a chunk not over/done yet (AKA
+    "call me later")
+
+    @retval PNR_OK Reading a chunk done - it _doesn't_ mean that
+    all of the `n` octets from the pbpal_start_read() were read.
+    It just means that we have read _some_ data and "client" needs
+    to use it somehow (copy, probably). The amout of octets 
+    actually read client can get by calling pbpal_read_len(). 
+    If not all data was read, client should call pbpal_start_read()
+    with `n = old n - pbpal_read_len()`.
+    
     @retval otherwise The error that happened during the reading
 */
 enum pubnub_res pbpal_read_status(pubnub_t *pb);
