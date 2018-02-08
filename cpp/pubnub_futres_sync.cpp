@@ -1,10 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub.hpp"
 
-//extern "C" {
+extern "C" {
 #include "pubnub_ntf_sync.h"
 #include "pubnub_coreapi.h"
-//}
+}
 
 
 namespace pubnub {

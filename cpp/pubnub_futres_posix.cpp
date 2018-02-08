@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub.hpp"
 
-//extern "C" {
+extern "C" {
 #include "pubnub_ntf_callback.h"
-//}
+}
 
 #include <pthread.h>
 

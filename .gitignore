@@ -32,3 +32,6 @@
 *.dSYM/
 *.pdb
 *.ilk
+
+# IDE settings
+.idea
