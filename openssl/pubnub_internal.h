@@ -4,11 +4,11 @@
 
 #ifdef _WIN32
 /* Seems that since some version of OpenSSL (maybe in collusion
-   w/Windows SDK version), one needs to include windows.h before
-   including OpenSSL headers... This is kinda-ugly, but, until we find
-   a better solution...
+   w/Windows SDK version), one needs to include Winsock header(s)
+   before including OpenSSL headers... This is kinda-ugly, but, until
+   we find a better solution...
 */
-#include <windows.h>
+#include <winsock2.h>
 #endif
 
 #include "openssl/bio.h"

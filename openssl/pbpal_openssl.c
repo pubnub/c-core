@@ -1,14 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
 #include "pbpal.h"
 
 #include "pbpal_mutex.h"
 #include "pubnub_ntf_sync.h"
 #include "pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
-
-#include "openssl/ssl.h"
 
 #include <string.h>
 

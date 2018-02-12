@@ -42,16 +42,16 @@ static void save_ip(pubnub_t* pb)
 {
 #if defined BIO_get_conn_ip
     /** While there existed BIO_get_conn_ip, OpenSSL didn't provide a
-        regular way to see that IP vesion it worked with, so, we had
+        regular way to see that IP version it worked with, so, we had
         to be conservative and read only 4 bytes (IPv4), otherwise we
-        might read out of bounds. Of course, this is a problem if it
-        actually did work w/IPv6, as this would not work.  "Luckily",
-        it almost always worked w/IPv4.
+        might read out of bounds. Of course, this was a problem if it
+        actually did use IPv6, as this would not work.  "Luckily", it
+        almost always used IPv4.
     */
     memcpy(pb->pal.ip, BIO_get_conn_ip(pb->pal.socket), 4);
 #elif defined BIO_get_conn_address
     /* OpenSSL 1.1 provides another macro with some helper APIs that
-       make this deterministic and able to supporte both IPv4 and IPv6
+       make this deterministic and able to support both IPv4 and IPv6
        (it's still ugly, though).
      */
     size_t          l  = 0;
@@ -422,7 +422,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                                  + SSL_SESSION_get_timeout(pb->pal.session);
             save_ip(pb);
         }
-        PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %ud.%ud.%ud.%ud\n",
+        PUBNUB_LOG_TRACE("pb=%p: SSL connected to IP: %u.%u.%u.%u\n",
                          pb,
                          (uint8_t)pb->pal.ip[0],
                          (uint8_t)pb->pal.ip[1],
