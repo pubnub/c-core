@@ -311,6 +311,37 @@ Ensure(pubnub_timer_list, little_time_passed) {
 }
 
 
+Ensure(pubnub_timer_list, little_time_passed_dequeue_first) {
+    pubnub_t *pbp = pubnub_alloc();
+    pubnub_t *pbp_two = pubnub_alloc();
+
+    attest(pbp, differs(NULL));
+    pubnub_timer_list_init(pbp);
+    attest(pubnub_set_transaction_timeout(pbp, 3000), equals(0));
+    m_list = pubnub_timer_list_add(m_list, pbp);
+    attest(m_list, equals(pbp));
+
+    attest(pbp_two, differs(NULL));
+    pubnub_timer_list_init(pbp_two);
+    attest(pubnub_set_transaction_timeout(pbp_two, 3100), equals(0));
+    m_list = pubnub_timer_list_add(m_list, pbp_two);
+    attest(m_list, equals(pbp));
+
+    m_list = pubnub_timer_list_remove(m_list, pbp);
+    attest(m_list, equals(pbp_two));
+    attest(pubnub_timer_list_next(pbp_two), equals(NULL));
+    attest(pubnub_timer_list_previous(pbp_two), equals(NULL));
+    attest(pubnub_timer_list_next(pbp), equals(NULL));
+    attest(pubnub_timer_list_previous(pbp), equals(NULL));
+
+    attest(pubnub_timer_list_as_time_goes_by(&m_list, 2000), equals(NULL));
+    attest(m_list, equals(pbp_two));
+
+    pubnub_free(pbp_two);
+    pubnub_free(pbp);
+}
+
+
 Ensure(pubnub_timer_list, expire_first) {
     pubnub_t *expired;
     pubnub_t *pbp = pubnub_alloc();
