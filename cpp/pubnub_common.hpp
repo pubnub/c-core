@@ -654,6 +654,18 @@ namespace pubnub {
                 );
         }
 
+        /// Reuse SSL sessions, if possible (from now on).
+        /// @see pubnub_set_reuse_ssl_session
+        void reuse_ssl_session() {
+            pubnub_set_reuse_ssl_session(true);
+        }
+
+        /// Don't reuse SSL sessions (from now on).
+        /// @see pubnub_set_reuse_ssl_session
+        void dont_reuse_ssl_session() {
+            pubnub_set_reuse_ssl_session(false);
+        }
+
 #if PUBNUB_PROXY_API        
         /// Manually set a proxy to use
         /// @see pubnub_set_proxy_manual
