@@ -2,7 +2,9 @@
 #if !defined INC_PUBNUB_COMMON_HPP
 #define      INC_PUBNUB_COMMON_HPP
 
-//extern "C" {
+#if PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 #include "pubnub_config.h"
 #include "pubnub_alloc.h"
 #include "pubnub_pubsubapi.h"
@@ -20,7 +22,9 @@
 #if PUBNUB_CRYPTO_API
 #include "pubnub_crypto.h"
 #endif
-//}
+#if PUBNUB_USE_EXTERN_C
+}
+#endif
 
 
 #include <string>

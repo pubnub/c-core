@@ -13,11 +13,15 @@
 #include <functional>
 #include <string>
 
-//extern "C" {
+#if PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 #include "pubnub_api_types.h"
 #include "pubnub_assert.h"
 #include "pubnub_helper.h"
-//}
+#if PUBNUB_USE_EXTERN_C
+}
+#endif
 
 namespace pubnub {
     class context;
