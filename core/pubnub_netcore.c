@@ -92,13 +92,15 @@ static PFpbcc_parse_response_T m_aParseResponse[] = {
 PUBNUB_STATIC_ASSERT((sizeof m_aParseResponse / sizeof m_aParseResponse[0]) == PBTT_MAX, bad_response_table_length);
 
 
-static enum pubnub_res parse_pubnub_result(struct pubnub_ *pb)
+static enum pubnub_res parse_pubnub_result(struct pubnub_* pb)
 {
-    enum pubnub_res pbres;
-
-    pbres = m_aParseResponse[pb->trans](&pb->core);
+    enum pubnub_res pbres = m_aParseResponse[pb->trans](&pb->core);
     if (pbres != PNR_OK) {
-        PUBNUB_LOG_WARNING("pb=%p parsing response for transaction type #%d failed\n", pb, pb->trans);
+        PUBNUB_LOG_WARNING(
+            "pb=%p parsing response for transaction type #%d returned error %d\n",
+            pb,
+            pb->trans,
+            pbres);
     }
 
     return pbres;

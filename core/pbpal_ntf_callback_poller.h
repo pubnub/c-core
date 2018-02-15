@@ -35,6 +35,9 @@ struct pbpal_poll_data;
 typedef struct pubnub_ pubnub_t;
 
 
+/** Allocate and Initialize the poller data */
+struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void);
+
 /** Add the Pubnub context @p pb to the poll-set @p data */
 void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb);
 
@@ -57,6 +60,19 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp);
  */
 int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp);
 
+/** Do the polling and queue any events to process. 
+
+    Maybe it could return (give back) the contexts that need
+    processing instead, but, if there are many, that would slow things
+    down... Another option would be to pass a function pointer here
+    that this function would call for each context that needs
+    processing - but, we basically know what we want to do and it's
+    not configurable.
+ */
+int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms);
+
+/** Deinitialize and deellocate the poller data */
+void pbpal_ntf_callback_poller_deinit(struct pbpal_poll_data** data);
 
 
 #endif  /* !defined INC_PBPAL_NTF_CALLBACK_POLLER */
