@@ -657,13 +657,13 @@ namespace pubnub {
         /// Reuse SSL sessions, if possible (from now on).
         /// @see pubnub_set_reuse_ssl_session
         void reuse_ssl_session() {
-            pubnub_set_reuse_ssl_session(true);
+            pubnub_set_reuse_ssl_session(d_pb, true);
         }
 
         /// Don't reuse SSL sessions (from now on).
         /// @see pubnub_set_reuse_ssl_session
         void dont_reuse_ssl_session() {
-            pubnub_set_reuse_ssl_session(false);
+            pubnub_set_reuse_ssl_session(d_pb, false);
         }
 
 #if PUBNUB_PROXY_API        

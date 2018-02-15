@@ -5,10 +5,10 @@ OBJFILES = pubnub_pubsubapi.obj pubnub_coreapi.obj pubnub_coreapi_ex.obj pubnub_
 LDLIBS=ws2_32.lib rpcrt4.lib
 
 DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S
-CFLAGS =-analyze -Zi -MP -W3 $(DEFINES)
-# /Zi enables debugging, remove to get a smaller .exe and no .pdb
-# /MP use one compiler process for each input, faster on multi-core (ignored by clang-cl)
-# /analyze To run the static analyzer (not compatible w/clang-cl)
+CFLAGS = -Zi -MP -W3 $(DEFINES)
+# -Zi enables debugging, remove to get a smaller .exe and no .pdb
+# -MP use one compiler process for each input, faster on multi-core (ignored by clang-cl)
+# -analyze To run the static analyzer (not compatible w/clang-cl)
 
 INCLUDES=-I ..\core -I . -I ..\lib\sockets -I ..\lib\base64 -I ..\lib\md5 -I fntest -I ../core/fntest -I ..\core\c99 
 

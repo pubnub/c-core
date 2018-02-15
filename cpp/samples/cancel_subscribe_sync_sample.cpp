@@ -23,7 +23,7 @@ int main()
         std::string chan = "hello_world";
         pubnub::context pb("demo", "demo");
 
-        srand(time(NULL));
+        srand((unsigned)time(NULL));
 
         /* This is essential, as otherwise waiting for incoming data will
            block! Since we're doing this, be sure to not enable verbose

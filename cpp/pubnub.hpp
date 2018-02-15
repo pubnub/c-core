@@ -168,7 +168,7 @@ namespace pubnub {
             return rslt[d_3log][t.d_3log];
         }
         tribool operator==(bool t) const {
-            return !is_set() ? not_set : d_3log == t;
+            return !is_set() ? not_set : (static_cast<bool>(d_3log) == t);
         }
         
         tribool operator!=(tribool t) const {
@@ -180,11 +180,11 @@ namespace pubnub {
             return rslt[d_3log][t.d_3log];
         }
         tribool operator!=(bool t) const {
-            return !is_set() ? not_set : d_3log != t;
+            return !is_set() ? not_set : (static_cast<bool>(d_3log) != t);
         }
-        
-        operator bool() const { return true == d_3log; }
-        
+
+        operator bool() const { return true == static_cast<bool>(d_3log); }
+
         std::string to_string() const {
             static char const* rslt[3] = { "false" , "true", "not-set" };
             return rslt[d_3log];

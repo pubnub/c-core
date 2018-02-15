@@ -15,7 +15,7 @@
 
 static void buf_setup(pubnub_t* pb)
 {
-    pb->ptr = (uint8_t*)pb->core.http_buf;
+    pb->ptr  = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
@@ -50,10 +50,10 @@ int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
-    pb->ptr = (uint8_t*)data;
-    pb->len = (uint16_t)n;
+    pb->ptr        = (uint8_t*)data;
+    pb->len        = (uint16_t)n;
     pb->sock_state = STATE_SENDING_DATA;
-    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
+    pb->left       = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 
     return pbpal_send_status(pb);
 }
@@ -80,11 +80,18 @@ static void report_error_from_environment(pubnub_t* pb)
 #else
     err_str = strerror(errno);
 #endif
-    PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n",
-        pb, errno, err_str, pb->options.use_blocking_io);
+    PUBNUB_LOG_DEBUG(
+        "pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n",
+        pb,
+        errno,
+        err_str,
+        (int)pb->options.use_blocking_io);
 #if defined(_WIN32)
-    PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu WSAGetLastError()=%d\n",
-        pb, GetLastError(), WSAGetLastError());
+    PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu "
+                     "WSAGetLastError()=%d\n",
+                     pb,
+                     GetLastError(),
+                     WSAGetLastError());
 #endif
 }
 
@@ -137,8 +144,8 @@ int pbpal_send_status(pubnub_t* pb)
     }
 
     if (rslt <= 0) {
-        pb->ptr = (uint8_t*)pb->core.http_buf;
-        pb->unreadlen = 0;
+        pb->ptr        = (uint8_t*)pb->core.http_buf;
+        pb->unreadlen  = 0;
         pb->sock_state = STATE_NONE;
     }
 
@@ -153,11 +160,14 @@ int pbpal_start_read_line(pubnub_t* pb)
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    PUBNUB_ASSERT_UINT(distance + pb->left + pb->unreadlen, ==, sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_ASSERT_UINT(distance + pb->left + pb->unreadlen,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -173,13 +183,15 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
     if (pb->unreadlen == 0) {
         int recvres;
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
+                          == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
             return handle_socket_error(recvres, pb);
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
-        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
+        PUBNUB_LOG_TRACE(
+            "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
         pb->unreadlen = recvres;
         pb->left -= recvres;
     }
@@ -191,7 +203,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
         c = *pb->ptr++;
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ", pb, pbpal_read_len(pb));
+            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
+                             pb,
+                             pbpal_read_len(pb));
             WATCH_USHORT(pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
@@ -199,7 +213,8 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     }
 
     if (pb->left == 0) {
-        PUBNUB_LOG_ERROR("pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
+        PUBNUB_LOG_ERROR(
+            "pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
         pb->sock_state = STATE_NONE;
         return PNR_TX_BUFF_TOO_SMALL;
     }
@@ -224,17 +239,20 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
     WATCH_USHORT(pb->unreadlen);
     WATCH_USHORT(pb->left);
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
     WATCH_UINT(distance);
-    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left, ==, sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
     pb->sock_state = STATE_READ;
-    pb->len = n;
+    pb->len        = n;
 
     return +1;
 }
