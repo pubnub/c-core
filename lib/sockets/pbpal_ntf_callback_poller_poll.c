@@ -8,6 +8,8 @@
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 
+#include <string.h>
+
 
 #if defined(_WIN32)
 /* Yes, we do know that it's not really that simple, there are subtle,
@@ -15,6 +17,14 @@
    poll(), but, for our purposes, this will do.
 */
 #define poll(fdarray, nfds, timeout) WSAPoll(fdarray, nfds, timeout)
+#endif
+
+#if !defined(INVALID_SOCKET)
+#define INVALID_SOCKET -1
+#endif
+
+#if !defined(SOCKET_ERROR)
+#define SOCKET_ERROR -1
 #endif
 
 
