@@ -32,7 +32,7 @@
 
 
 struct SocketWatcherData {
-    _Guarded_by_(mutw) struct pbpal_poll_data poll;
+    _Guarded_by_(mutw) struct pbpal_poll_data* poll;
     CRITICAL_SECTION mutw;
     HANDLE           thread_handle;
     DWORD            thread_id;
@@ -60,13 +60,13 @@ static int elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
 
 int pbntf_watch_in_events(pubnub_t* pbp)
 {
-    return pbpal_ntf_watch_in_events(&m_watcher.poll, pbp);
+    return pbpal_ntf_watch_in_events(m_watcher.poll, pbp);
 }
 
 
 int pbntf_watch_out_events(pubnub_t* pbp)
 {
-    return pbpal_ntf_watch_out_events(&m_watcher.poll, pbp);
+    return pbpal_ntf_watch_out_events(m_watcher.poll, pbp);
 }
 
 
@@ -84,25 +84,9 @@ void socket_watcher_thread(void* arg)
 
         Sleep(1);
 
+        pbpal_ntf_poll_away(m_watcher.poll, ms);
+        
         EnterCriticalSection(&m_watcher.mutw);
-        if (m_watcher.poll.size > 0) {
-            int rslt = WSAPoll(m_watcher.poll.apoll, m_watcher.poll.size, ms);
-            if (SOCKET_ERROR == rslt) {
-                /* error? what to do about it? */
-                PUBNUB_LOG_WARNING("poll size = %ud, error = %d\n",
-                                   (unsigned)m_watcher.poll.size,
-                                   WSAGetLastError());
-            }
-            else if (rslt > 0) {
-                size_t i;
-                size_t apoll_size = m_watcher.poll.size;
-                for (i = 0; i < apoll_size; ++i) {
-                    if (m_watcher.poll.apoll[i].revents & (POLLIN | POLLOUT)) {
-                        pbntf_requeue_for_processing(m_watcher.poll.apb[i]);
-                    }
-                }
-            }
-        }
         if (PUBNUB_TIMERS_API) {
             FILETIME current_time;
             int      elapsed;
@@ -123,6 +107,10 @@ int pbntf_init(void)
 {
     InitializeCriticalSection(&m_watcher.mutw);
 
+    m_watcher.poll = pbpal_ntf_callback_poller_init();
+    if (NULL == m_watcher.poll) {
+        return -1;
+    }
     pbpal_ntf_callback_queue_init(&m_watcher.queue);
 
     m_watcher.thread_handle = (HANDLE)_beginthread(
@@ -132,6 +120,7 @@ int pbntf_init(void)
                          errno);
         DeleteCriticalSection(&m_watcher.mutw);
         pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
+        pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
         return -1;
     }
     m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
@@ -158,7 +147,7 @@ int pbntf_got_socket(pubnub_t* pb, pb_socket_t sockt)
 
     PUBNUB_UNUSED(sockt);
 
-    pbpal_ntf_callback_save_socket(&m_watcher.poll, pb);
+    pbpal_ntf_callback_save_socket(m_watcher.poll, pb);
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
@@ -177,7 +166,7 @@ void pbntf_lost_socket(pubnub_t* pb, pb_socket_t sockt)
 
     PUBNUB_UNUSED(sockt);
 
-    pbpal_ntf_callback_remove_socket(&m_watcher.poll, pb);
+    pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
     pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
     pbpal_ntf_callback_remove_from_queue(&m_watcher.queue, pb);
 
@@ -191,7 +180,7 @@ void pbntf_update_socket(pubnub_t* pb, pb_socket_t socket)
 
     EnterCriticalSection(&m_watcher.mutw);
 
-    pbpal_ntf_callback_update_socket(&m_watcher.poll, pb);
+    pbpal_ntf_callback_update_socket(m_watcher.poll, pb);
 
     LeaveCriticalSection(&m_watcher.mutw);
 }

@@ -26,7 +26,7 @@ CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE 
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize-address Use AddressSanitizer
 
-INCLUDES=-I ../core -I . -I fntest -I ../core/fntest -I ../lib/base64 -I ../lib/md5
+INCLUDES=-I ../core -I . -I fntest -I ../core/fntest -I ../lib/base64 -I ../lib/md5 -I ../lib/sockets
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback
 
@@ -34,9 +34,12 @@ pubnub_sync.a : $(SOURCEFILES) ../core/pubnub_ntf_sync.c ../core/pubnub_sync_sub
 	$(CC) -c $(CFLAGS) $(INCLUDES) $(SOURCEFILES) ../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c
 	ar rcs pubnub_sync.a $(OBJFILES) pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o
 
-pubnub_callback.a : $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c ../core/pubnub_callback_subscribe_loop.c
-	$(CC) -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(INCLUDES) $(SOURCEFILES)  ../core/pubnub_timer_list.c pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../lib/sockets/pbpal_adns_sockets.c ../core/pubnub_callback_subscribe_loop.c
-	ar rcs pubnub_callback.a $(OBJFILES)  pubnub_timer_list.o pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pbpal_adns_sockets.o pubnub_callback_subscribe_loop.o
+CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_ntf_callback_poller_poll.c  ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
+CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pubnub_timer_list.o pbpal_ntf_callback_poller_poll.o pbpal_ntf_callback_queue.o pbpal_ntf_callback_admin.o pbpal_ntf_callback_handle_timer_list.o pubnub_callback_subscribe_loop.o
+
+pubnub_callback.a : $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES)
+	$(CC) -c $(CFLAGS) -D PUBNUB_CALLBACK_API $(INCLUDES) $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES)
+	ar rcs pubnub_callback.a $(OBJFILES) $(CALLBACK_INTF_OBJFILES)
 
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_sample.c pubnub_sync.a $(LDLIBS)
