@@ -84,21 +84,24 @@ void socket_watcher_thread(void* arg)
 
         Sleep(1);
 
-        pbpal_ntf_poll_away(m_watcher.poll, ms);
-        
         EnterCriticalSection(&m_watcher.mutw);
+        pbpal_ntf_poll_away(m_watcher.poll, ms);
+        LeaveCriticalSection(&m_watcher.mutw);
+        
         if (PUBNUB_TIMERS_API) {
             FILETIME current_time;
             int      elapsed;
             GetSystemTimeAsFileTime(&current_time);
             elapsed = elapsed_ms(prev_time, current_time);
             if (elapsed > 0) {
+                EnterCriticalSection(&m_watcher.mutw);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
+                LeaveCriticalSection(&m_watcher.mutw);
+                
                 prev_time = current_time;
             }
         }
 
-        LeaveCriticalSection(&m_watcher.mutw);
     }
 }
 
