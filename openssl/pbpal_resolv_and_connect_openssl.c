@@ -38,6 +38,7 @@ static long my_BIO_set_conn_int_port(BIO* bio, int port)
     return BIO_set_conn_port(bio, s);
 }
 
+
 static void save_ip(pubnub_t* pb)
 {
 #if defined BIO_get_conn_ip
@@ -54,13 +55,13 @@ static void save_ip(pubnub_t* pb)
        make this deterministic and able to support both IPv4 and IPv6
        (it's still ugly, though).
      */
-    size_t          l  = 0;
     BIO_ADDR const* ap = BIO_get_conn_address(pb->pal.socket);
-    BIO_ADDR_rawaddress(ap, NULL, &l);
     PUBNUB_ASSERT_OPT(ap != NULL);
-    PUBNUB_ASSERT_UINT(l, <=, sizeof pb->pal.ip / sizeof pb->pal.ip[0]);
-    PUBNUB_ASSERT_OPT(l > 0);
-    BIO_ADDR_rawaddress(ap, pb->pal.ip, NULL);
+    BIO_ADDR_rawaddress(ap, NULL, &pb->pal.ip_len);
+    pb->pal.ip_family = BIO_ADDR_family(ap);
+    PUBNUB_ASSERT_UINT(pb->pal.ip_len, <=, sizeof pb->pal.ip / sizeof pb->pal.ip[0]);
+    PUBNUB_ASSERT_OPT(pb->pal.ip_len > 0);
+    BIO_ADDR_rawaddress(ap, pb->pal.ip, &pb->pal.ip_len);
 #else
 #error Don't have BIO_get_conn_ip nor BIO_get_conn_address - can't get the IP address of the connection
 #endif
@@ -72,8 +73,15 @@ static void restore_ip(pubnub_t* pb)
 #if defined BIO_set_conn_ip
     BIO_set_conn_ip(pb->pal.socket, pb->pal.ip);
 #elif defined BIO_set_conn_address
+    BIO_ADDR* ap = BIO_ADDR_new();
+    if (NULL == ap) {
+        PUBNUB_LOG_ERROR("Failed to BIO_ADDR_new()\n");
+        return;
+    }
+    BIO_ADDR_rawmake(ap, pb->pal.ip_family, pb->pal.ip, pb->pal.ip_len, 0);
+    BIO_set_conn_address(pb->pal.socket, ap);
+    BIO_ADDR_free(ap);
 #else
-    BIO_set_conn_address(pb->pal.socket, pb->pal.ip);
 #error Don't have BIO_set_conn_ip nor BIO_set_conn_address - can't set the IP address of the connection
 #endif
 }
@@ -201,8 +209,7 @@ static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
     X509* cert;
     BIO*  mem = BIO_new(BIO_s_mem());
     if (NULL == mem) {
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed BIO_new for PEM certificate\n",
-                         sslCtx);
+        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed BIO_new for PEM certificate\n", sslCtx);
         return -1;
     }
     BIO_puts(mem, pem_cert);
@@ -268,8 +275,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     int         port   = 443;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((pb->state == PBS_READY)
-                      || (pb->state == PBS_WAIT_CONNECT));
+    PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_CONNECT));
 
     if (!pb->options.useSSL) {
         return resolv_and_connect_wout_SSL(pb);
@@ -309,8 +315,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
         pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
         if (PUBNUB_TIMERS_API) {
-            pb->pal.connect_timeout =
-                time(NULL) + pb->transaction_timeout_ms / 1000;
+            pb->pal.connect_timeout = time(NULL) + pb->transaction_timeout_ms / 1000;
         }
     }
     else {
@@ -347,15 +352,11 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     BIO_get_ssl(pb->pal.socket, &ssl);
     PUBNUB_ASSERT(NULL != ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
-    if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
-        SSL_set_session(ssl, pb->pal.session);
-    }
 
-    BIO_set_conn_hostname(pb->pal.socket, origin);
-    my_BIO_set_conn_int_port(pb->pal.socket, port);
     if (pb->pal.ip_timeout != 0) {
         if (pb->pal.ip_timeout < time(NULL)) {
             pb->pal.ip_timeout = 0;
+            BIO_set_conn_hostname(pb->pal.socket, origin);
         }
         else {
             PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %ud.%ud.%ud.%ud\n",
@@ -367,8 +368,16 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             restore_ip(pb);
         }
     }
+    else {
+        BIO_set_conn_hostname(pb->pal.socket, origin);
+    }
+    my_BIO_set_conn_int_port(pb->pal.socket, port);
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
+
+    if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
+        SSL_set_session(ssl, pb->pal.session);
+    }
 
     WATCH_ENUM(pb->options.use_blocking_io);
     if (BIO_do_connect(pb->pal.socket) <= 0) {

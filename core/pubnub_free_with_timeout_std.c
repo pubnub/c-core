@@ -20,7 +20,7 @@ int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec)
     while (pubnub_free(pbp) != 0) {
         const clock_t elapsed = clock() - t0;
         if (elapsed  > clocks_till_timeout) {
-            PUBNUB_LOG_ERROR("Failed to free the context in %d milli seconds\n", millisec);
+            PUBNUB_LOG_ERROR("Failed to free the context in %u milli seconds\n", millisec);
             return -1;
         }
     }

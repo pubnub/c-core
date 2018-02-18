@@ -30,6 +30,8 @@ struct pubnub_pal {
     SSL_CTX*     ctx;
     SSL_SESSION* session;
     char         ip[PUBNUB_MAX_IP_ADDR_OCTET_LENGTH];
+    size_t       ip_len;
+    int          ip_family;
     time_t       ip_timeout;
     time_t       connect_timeout;
 };
