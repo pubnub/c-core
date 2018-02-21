@@ -359,7 +359,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             BIO_set_conn_hostname(pb->pal.socket, origin);
         }
         else {
-            PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %ud.%ud.%ud.%ud\n",
+            PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %u.%u.%u.%u\n",
                              pb,
                              (uint8_t)pb->pal.ip[0],
                              (uint8_t)pb->pal.ip[1],
@@ -420,7 +420,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         return pbpal_connect_failed;
     }
 
-    PUBNUB_LOG_TRACE("sesion reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
     if (pb->options.reuse_SSL_session) {
         PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n",
                         pb,
