@@ -376,7 +376,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
 
     if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
-        SSL_set_session(ssl, pb->pal.session);
+        if (!SSL_set_session(ssl, pb->pal.session)) {
+            ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        }
     }
 
     WATCH_ENUM(pb->options.use_blocking_io);
@@ -418,6 +420,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         return pbpal_connect_failed;
     }
 
+    PUBNUB_LOG_TRACE("sesion reused: %s\n", SSL_session_reused(ssl) ? "yes" : "no");
     if (pb->options.reuse_SSL_session) {
         PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n",
                         pb,
