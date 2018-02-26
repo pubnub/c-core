@@ -35,6 +35,7 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
 
     p->state = PBS_IDLE;
     p->trans = PBTT_NONE;
+    p->options.use_http_keep_alive = 1;
     pbpal_init(p);
     pubnub_mutex_unlock(p->monitor);
 
@@ -60,7 +61,7 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -113,7 +114,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *c
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
     
     pubnub_mutex_lock(p->monitor);
-    if (p->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -280,4 +281,16 @@ int pubnub_origin_set(pubnub_t *pb, char const *origin)
         return 0;
     }
     return -1;
+}
+
+
+void pubnub_use_http_keep_alive(pubnub_t* p)
+{
+    p->options.use_http_keep_alive = 1;
+}
+
+
+void pubnub_dont_use_http_keep_alive(pubnub_t* p)
+{
+    p->options.use_http_keep_alive = 0;
 }

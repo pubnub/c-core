@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_NETCORE
-#define      INC_PUBNUB_NETCORE
+#define INC_PUBNUB_NETCORE
 
 /** @file pubnub_netcore.h
 
@@ -72,8 +72,17 @@ enum pubnub_state {
      * cancel right away, but wait).
      */
     PBS_WAIT_CANCEL,
-    /* Waiting for a cancelled TCP connection to close */
-    PBS_WAIT_CANCEL_CLOSE
+    /** Waiting for a cancelled TCP connection to close */
+    PBS_WAIT_CANCEL_CLOSE,
+    /** HTTP Heep-Alive active, we're in IDLE, waiting for the user to
+        start a new stransaction, while keeping the TCP/IP (and
+        TLS/SSL) connection "open".
+     */
+    PBS_KEEP_ALIVE_IDLE,
+    /** HTTP Heep-Alive active, user has requested a new transaction,
+        we're ready to go.
+     */
+    PBS_KEEP_ALIVE_READY
 };
 
 
@@ -84,7 +93,7 @@ struct pubnub_;
     with the porting being done by implementing some functions it
     needs in the PAL (Platform Abstraction Layer).
  */
-int pbnc_fsm(struct pubnub_ *pb);
+int pbnc_fsm(struct pubnub_* pb);
 
 
 /** Issues a stop command to the FSM of the net-core module. The
@@ -93,7 +102,19 @@ int pbnc_fsm(struct pubnub_ *pb);
 
     @note This function will _not_ call pbnc_fsm().
 */
-void pbnc_stop(struct pubnub_ *pb, enum pubnub_res outcome_to_report);
+void pbnc_stop(struct pubnub_* pb, enum pubnub_res outcome_to_report);
 
 
-#endif  /* !defined INC_PUBNUB_NETCORE */
+/** Returns whether it's OK to start a new transaction. The FSM needs
+    to be in an "idle" state. In general, that means that either there
+    is no current connection to the Pubnub network (server), or there
+    is one, but it's "idle" (previous transaction completed).
+
+    @retval true Can start a new transaction
+    @retval false Cannot start a new transaction (await the finish
+    of current one)
+ */
+bool pbnc_can_start_transaction(struct pubnub_ const* pbp);
+
+
+#endif /* !defined INC_PUBNUB_NETCORE */

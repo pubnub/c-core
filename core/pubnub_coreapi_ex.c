@@ -53,7 +53,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
 #endif
 
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -95,7 +95,7 @@ enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     pubnub_mutex_lock(p->monitor);
-    if (p->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -132,7 +132,7 @@ enum pubnub_res pubnub_here_now_ex(pubnub_t*                      pb,
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -163,7 +163,7 @@ enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      pb,
     PUBNUB_ASSERT_OPT(NULL == opt.channel_group);
 
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -209,7 +209,7 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }

@@ -105,7 +105,7 @@ enum pubnub_res pubnub_subscribe_with_state(pubnub_t *p, const char *channel, co
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
     
     pubnub_mutex_lock(p->monitor);
-    if (p->state != PBS_IDLE) {
+    if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
