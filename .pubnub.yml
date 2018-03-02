@@ -1,4 +1,3 @@
-name: c-core
 version: 2.3.0
 scm: github.com/pubnub/c-core
 changelog:
