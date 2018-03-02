@@ -1,8 +1,8 @@
 name: c-core
-version: 2.2.15
+version: 2.3.0
 scm: github.com/pubnub/c-core
 changelog:
-  - version: v2.2.15
+  - version: v2.3.0
     changes:
       - type: feature
         text: Use HTTP Keep-alive, where possible
