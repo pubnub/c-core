@@ -9,10 +9,12 @@
 
 void pbntf_handle_timer_list(int ms_elapsed, pubnub_t** head)
 {
+    pubnub_t* expired;
+    
     PUBNUB_ASSERT_OPT(head != NULL);
     PUBNUB_ASSERT_OPT(ms_elapsed > 0);
 
-    pubnub_t* expired = pubnub_timer_list_as_time_goes_by(head, ms_elapsed);
+    expired = pubnub_timer_list_as_time_goes_by(head, ms_elapsed);
     while (expired != NULL) {
         pubnub_t* next;
 
