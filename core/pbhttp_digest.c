@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
 #include "pbhttp_digest.h"
 
 #include "pbmd5.h"
