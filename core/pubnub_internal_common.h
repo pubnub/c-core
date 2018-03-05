@@ -176,6 +176,14 @@ struct pubnub_ {
         */
         bool use_blocking_io : 1;
 
+        /** Indicates whether to use HTTP keep-alive. If used,
+            subsequent transactions will be faster, unless the (TCP/IP
+            and TLS/SSL) connection drops. OTOH, the "async"
+            drop/close of the connection may be a problem and cause
+            some transactions to fail.
+        */
+        bool use_http_keep_alive: 1;
+
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to
          * PubNub using SSL? */

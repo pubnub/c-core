@@ -80,7 +80,7 @@ enum pubnub_res pubnub_last_result(pubnub_t *pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    if (pb->state != PBS_IDLE) {
+    while (!pbnc_can_start_transaction(pb)) {
         pbnc_fsm((pubnub_t*)pb);
     }
     result = pb->core.last_result;
@@ -96,7 +96,7 @@ enum pubnub_res pubnub_await(pubnub_t *pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    while (pb->state != PBS_IDLE) {
+    while (!pbnc_can_start_transaction(pb)) {
         pbnc_fsm(pb);
     }
     result = pb->core.last_result;

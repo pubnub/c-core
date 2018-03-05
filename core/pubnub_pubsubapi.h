@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PUBSUBAPI
-#define	INC_PUBNUB_PUBSUBAPI
+#define INC_PUBNUB_PUBSUBAPI
 
 
 #include "pubnub_api_types.h"
@@ -8,17 +8,16 @@
 #include <stdbool.h>
 
 
-/** @file pubnub_pubsubapi.h 
+/** @file pubnub_pubsubapi.h
     This is the "Pub/Sub" API of the Pubnub client library.
 
     It is the minimal, publish & subscribe only API.
 */
 
 
-
 /** Initialize a given pubnub context @p p to the @p publish_key and @p
     subscribe_key. You can customize other parameters of the context by
-    the configuration function calls below.  
+    the configuration function calls below.
 
     @note The @p publish_key and @p subscribe key are expected to be
     valid (ASCIIZ string) pointers throughout the use of context @p p,
@@ -37,7 +36,7 @@
     to messages
     @return Returns the @p p context
 */
-pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key);
+pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
 
 /** Set the UUID identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.
@@ -47,13 +46,13 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the @p uuid string is not copied to the Pubnub context @p p.  */
-void pubnub_set_uuid(pubnub_t *p, const char *uuid);
+void pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the UUID identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_uuid().
     */
-char const *pubnub_uuid_get(pubnub_t *p);
+char const* pubnub_uuid_get(pubnub_t* p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.
@@ -63,26 +62,26 @@ char const *pubnub_uuid_get(pubnub_t *p);
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the auth string is not copied to the Pubnub context @p p.  */
-void pubnub_set_auth(pubnub_t *p, const char *auth);
+void pubnub_set_auth(pubnub_t* p, const char* auth);
 
 /** Returns the current authentication information for the
     context @p p.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_auth().
 */
-char const *pubnub_auth_get(pubnub_t *p);
+char const* pubnub_auth_get(pubnub_t* p);
 
 /** Cancel an ongoing API transaction. The outcome of the transaction
     in progress, if any, will be #PNR_CANCELLED. */
-void pubnub_cancel(pubnub_t *p);
+void pubnub_cancel(pubnub_t* p);
 
 /** Publish the @p message (in JSON format) on @p p channel, using the
     @p p context. This actually means "initiate a publish
-    transaction". 
+    transaction".
 
     You can't publish if a transaction is in progress in @p p context.
 
-    If transaction is not successful (@c PNR_PUBLISH_FAILED), you can 
+    If transaction is not successful (@c PNR_PUBLISH_FAILED), you can
     get the string describing the reason for failure by calling
     pubnub_last_publish_result().
 
@@ -103,7 +102,7 @@ void pubnub_cancel(pubnub_t *p);
 
     @return #PNR_STARTED on success, an error otherwise
  */
-enum pubnub_res pubnub_publish(pubnub_t *p, const char *channel, const char *message);
+enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
 
 /** Returns a pointer to an arrived message or other element of the
     response to an operation/transaction. Message(s) arrive on finish
@@ -125,7 +124,7 @@ enum pubnub_res pubnub_publish(pubnub_t *p, const char *channel, const char *mes
     @return Pointer to the message, NULL on error
     @see pubnub_subscribe
  */
-char const* pubnub_get(pubnub_t *p);
+char const* pubnub_get(pubnub_t* p);
 
 /** Returns a pointer to an fetched subscribe operation/transaction's
     next channel.  Each transaction may hold a list of channels, and
@@ -141,7 +140,7 @@ char const* pubnub_get(pubnub_t *p);
     @see pubnub_subscribe
     @see pubnub_get
  */
-char const *pubnub_get_channel(pubnub_t *pb);
+char const* pubnub_get_channel(pubnub_t* pb);
 
 /** Subscribe to @p channel and/or @p channel_group. This actually
     means "initiate a subscribe operation/transaction". The outcome
@@ -179,23 +178,25 @@ char const *pubnub_get_channel(pubnub_t *pb);
     comma-delimited list of channel group names) to subscribe to.
 
     @return #PNR_STARTED on success, an error otherwise
-    
+
     @see pubnub_get
  */
-enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *channel_group);
+enum pubnub_res pubnub_subscribe(pubnub_t*   p,
+                                 const char* channel,
+                                 const char* channel_group);
 
 /** Returns the result of the last transaction in the @p p context.
     This _may_ block if using blocking I/O. It will _not_ block if using
-    non-blocking I/O.  
+    non-blocking I/O.
 
     @see pubnub_set_blocking_io
     @see pubnub_set_non_blocking_io
 */
-enum pubnub_res pubnub_last_result(pubnub_t *p);
+enum pubnub_res pubnub_last_result(pubnub_t* p);
 
 /** Returns the HTTP reply code of the last transaction in the @p p
  * context. */
-int pubnub_last_http_code(pubnub_t *p);
+int pubnub_last_http_code(pubnub_t* p);
 
 /** Returns the string of the result of the last `publish` transaction,
     as returned from Pubnub. If the last transaction is not a publish,
@@ -203,14 +204,14 @@ int pubnub_last_http_code(pubnub_t *p);
     was successfull, it will return "Sent", otherwise a description
     of the error.
  */
-char const *pubnub_last_publish_result(pubnub_t *p);
+char const* pubnub_last_publish_result(pubnub_t* p);
 
 /** Returns the string of the last received time token on the
     @c p context. After pubnub_init() this should be "0".
     @param p Pubnub context to get the last received time token from
     @return A read only string of the last received time token
  */
-char const *pubnub_last_time_token(pubnub_t *p);
+char const* pubnub_last_time_token(pubnub_t* p);
 
 /** Gets the origin to be used for the context @p p.
     If setting of the origin is not enabled, this will return
@@ -218,7 +219,7 @@ char const *pubnub_last_time_token(pubnub_t *p);
     @param p Pubnub context to get the origin from
     @return A read only string of origin used for context @p p
  */
-char const *pubnub_get_origin(pubnub_t *p);
+char const* pubnub_get_origin(pubnub_t* p);
 
 /** Sets the origin to be used for the context @p p.  If setting of
     the origin is not enabled, this will fail.  It may also fail if it
@@ -230,6 +231,44 @@ char const *pubnub_get_origin(pubnub_t *p);
     the default origin will be set
     @return 0: success, -1: fail
 */
-int pubnub_origin_set(pubnub_t *p, char const *origin);
+int pubnub_origin_set(pubnub_t* p, char const* origin);
+
+/** Enables the use of HTTP Keep-Alive ("persistent connections")
+    on the context @p p.
+
+    This is the default, but, you can turn it off with
+    pubnub_dont_use_http_keep_alive().
+
+    If HTTP Keep-Alive is active, connection to Pubnub will not be
+    closed after the transaction ends. This will avoid connecting
+    again on next transaction on the same context, making the
+    transaction finish (usually much) quicker.
+
+    But, there's a trade-off here, here are the drawbacks:
+
+    * pubnub_free() will not work for contexts that are in 
+      "keep alive" state. You need to pubnub_cancel() before
+      you can pubnub_free().
+    * Socket in the keep-alive state will be closed by the
+      Pubnub network (server) after some period of inactivity.
+      While we should be able to handle that, it's possible
+      that some race condition causes a transaction to fail
+      in this case.
+    * Socket in the keep-alive state is "allocated", consuming
+      some resources. If you have a constrained number of
+      sockets, relative to Pubnub contexts, this may be an
+      issue.
+ */
+void pubnub_use_http_keep_alive(pubnub_t* p);
+
+/** Disables the use of HTTP Keep-Alive ("persistent connections")
+    on the context @p p.
+
+    The default is to _use_ the HTTP Keep-Alive, but, you might
+    want to turn that off - see pubnub_use_http_keep_alive().
+*/
+void pubnub_dont_use_http_keep_alive(pubnub_t* p);
+
+
 
 #endif /* !defined INC_PUBNUB_PUBSUBAPI */

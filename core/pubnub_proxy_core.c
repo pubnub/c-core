@@ -52,7 +52,7 @@ void pbproxy_handle_http_header(pubnub_t *p, char const* header)
         p->proxy_auth_scheme = pbhtauBasic;
         p->proxy_authorization_sent = false;
     }
-    if (0 == strncmp(contents, scheme_digest, sizeof scheme_digest -1)) {
+    else if (0 == strncmp(contents, scheme_digest, sizeof scheme_digest -1)) {
         /* We ignore the "realm" for now */
         PUBNUB_LOG_TRACE("pbproxy_handle_http_header() Digest authentication\n");
         p->proxy_auth_scheme = pbhtauDigest;

@@ -2,7 +2,9 @@
 #if !defined INC_PUBNUB_COMMON_HPP
 #define      INC_PUBNUB_COMMON_HPP
 
-//extern "C" {
+#if PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 #include "pubnub_config.h"
 #include "pubnub_alloc.h"
 #include "pubnub_pubsubapi.h"
@@ -20,7 +22,9 @@
 #if PUBNUB_CRYPTO_API
 #include "pubnub_crypto.h"
 #endif
-//}
+#if PUBNUB_USE_EXTERN_C
+}
+#endif
 
 
 #include <string>
@@ -648,6 +652,18 @@ namespace pubnub {
                 (options & reduceSecurityOnError) != 0,
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
+        }
+
+        /// Reuse SSL sessions, if possible (from now on).
+        /// @see pubnub_set_reuse_ssl_session
+        void reuse_ssl_session() {
+            pubnub_set_reuse_ssl_session(d_pb, true);
+        }
+
+        /// Don't reuse SSL sessions (from now on).
+        /// @see pubnub_set_reuse_ssl_session
+        void dont_reuse_ssl_session() {
+            pubnub_set_reuse_ssl_session(d_pb, false);
         }
 
 #if PUBNUB_PROXY_API        

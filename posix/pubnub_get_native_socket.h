@@ -4,11 +4,11 @@
 
 #include "pubnub_internal.h"
 
+typedef int pbpal_native_socket_t;
 
 /** Returns the native socket under POSIX of the given Pubnub context.
-    On POSIX, native (BSD) socket is an integer handle.
  */
-int pubnub_get_native_socket(pubnub_t *pb);
+pbpal_native_socket_t pubnub_get_native_socket(pubnub_t *pb);
 
 
 #endif /* !defined INC_PUBNUB_GET_NATIVE_SOCKET*/

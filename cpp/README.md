@@ -55,7 +55,7 @@ across all or most hosted platforms (POSIX, Windows...).
 So, to build the samples on POSIX, just run:
 
 	make -f posix.mk
-	
+
 There are no special requirements for C++ wrapper of C-core on POSIX,
 it should just build on any regular POSIX system with a C++ compiler. 
 Since your compiler might not have the needed C++11 support, you can
@@ -73,18 +73,20 @@ To use a compiler of your choice (rather than the default one), say,
 	make -f posix.mk CXX=clang++
 
 On Windows, the Makefile is intended to be used with Microsoft (Visual
-Studio) tool-chain. Visual Studio 2010 or later should work (for C++98
-only examples, even older should work). From
+Studio) tool-chain. Visual Studio 2010 or later should work, except for
+the modules that rely on C++11 support for threading, which need
+VS2012 or later (for C++98 only examples, even older should work). From
 Visual Studio command prompt (or "Developer command prompt"), run:
 
 	nmake -f windows.mak
-	
+
 Other compilers (or frontends) that respect the Microsoft command line
 switches should work, but were not tested.
 
 Keep in mind that MSVS compilers don't support full C++11 as of this
-writing, thus didn't "bump" `__cplusplus` to `201103L`, which means that
-Pubnub C++ wrapper will not use C++11 features itself.
+writing (though they have significantly improved), thus didn't "bump"
+`__cplusplus` to `201103L`, which means that Pubnub C++ wrapper will 
+not use C++11 features itself.
 
 ## OpenSSL
 
@@ -94,7 +96,7 @@ link with OpenSSL modules (instead of "plain" ones).
 
 The `posix_openssl.mk` will build the same executables on a POSIX
 compatible system as `posix.mk`, but linking OpenSSL, thus using
-SSL/TLS to communicate with PubNub. The will be located in the
+SSL/TLS to communicate with PubNub. The results will be located in the 
 `openssl` sub-directory.
 
 For Windows, we have `windows_openssl.mk`, which will build the 

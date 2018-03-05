@@ -1,10 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub.hpp"
 
-//extern "C" {
+#if PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 #include "pubnub_ntf_callback.h"
 #include "pubnub_assert.h"
-//}
+#if PUBNUB_USE_EXTERN_C
+}
+#endif
 
 #include <thread>
 #include <condition_variable>

@@ -4,11 +4,11 @@
 
 #ifdef _WIN32
 /* Seems that since some version of OpenSSL (maybe in collusion
-   w/Windows SDK version), one needs to include windows.h before
-   including OpenSSL headers... This is kinda-ugly, but, until we find
-   a better solution...
+   w/Windows SDK version), one needs to include Winsock header(s)
+   before including OpenSSL headers... This is kinda-ugly, but, until
+   we find a better solution...
 */
-#include <windows.h>
+#include <winsock2.h>
 #endif
 
 #include "openssl/bio.h"
@@ -30,6 +30,8 @@ struct pubnub_pal {
     SSL_CTX*     ctx;
     SSL_SESSION* session;
     char         ip[PUBNUB_MAX_IP_ADDR_OCTET_LENGTH];
+    size_t       ip_len;
+    int          ip_family;
     time_t       ip_timeout;
     time_t       connect_timeout;
 };

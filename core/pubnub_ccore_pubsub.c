@@ -140,7 +140,7 @@ bool pbcc_split_array(char *buf)
         }
     }
 
-    PUBNUB_LOG_TRACE("escaped = %d, in_string = %d, bracket_level = %d\n", escaped, in_string, bracket_level);
+    PUBNUB_LOG_TRACE("escaped = %d, in_string = %d, bracket_level = %d\n", (int)escaped, (int)in_string, bracket_level);
     return !(escaped || in_string || (bracket_level > 0));
 }
 
