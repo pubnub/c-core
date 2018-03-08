@@ -10,7 +10,7 @@
 void pbntf_handle_timer_list(int ms_elapsed, pubnub_t** head)
 {
     pubnub_t* expired;
-    
+
     PUBNUB_ASSERT_OPT(head != NULL);
     PUBNUB_ASSERT_OPT(ms_elapsed > 0);
 
@@ -21,11 +21,11 @@ void pbntf_handle_timer_list(int ms_elapsed, pubnub_t** head)
         pubnub_mutex_lock(expired->monitor);
         next = expired->next;
         pbnc_stop(expired, PNR_TIMEOUT);
-        pubnub_mutex_unlock(expired->monitor);
-
         expired->next     = NULL;
         expired->previous = NULL;
-        expired           = next;
+        pubnub_mutex_unlock(expired->monitor);
+
+        expired = next;
     }
 }
 

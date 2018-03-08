@@ -87,7 +87,7 @@ void socket_watcher_thread(void* arg)
         EnterCriticalSection(&m_watcher.mutw);
         pbpal_ntf_poll_away(m_watcher.poll, ms);
         LeaveCriticalSection(&m_watcher.mutw);
-        
+
         if (PUBNUB_TIMERS_API) {
             FILETIME current_time;
             int      elapsed;
@@ -97,11 +97,10 @@ void socket_watcher_thread(void* arg)
                 EnterCriticalSection(&m_watcher.mutw);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
                 LeaveCriticalSection(&m_watcher.mutw);
-                
+
                 prev_time = current_time;
             }
         }
-
     }
 }
 
