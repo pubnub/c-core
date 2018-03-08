@@ -220,52 +220,52 @@ int pbpal_start_read_line(pubnub_t* pb)
 
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
-    uint8_t c;
-
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
-    if (pb->unreadlen == 0) {
-        int recvres;
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
-                          == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
-        recvres = BIO_read(pb->pal.socket, (char*)pb->ptr, pb->left);
-        if (recvres <= 0) {
-            return handle_socket_error(recvres, pb);
-        }
+    /* OpenSSL reads one TLS record at a time,
+       so, we need to call it in a loop to read äll there is
+    */
+    for (;;) {
+        if (pb->unreadlen == 0) {
+            int recvres;
+            PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
+                              == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+            recvres = BIO_read(pb->pal.socket, (char*)pb->ptr, pb->left);
+            if (recvres <= 0) {
+                return handle_socket_error(recvres, pb);
+            }
 
-        PUBNUB_ASSERT_OPT(recvres <= pb->left);
-        PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n",
-                         pb,
-                         recvres,
-                         recvres,
-                         pb->ptr);
-        pb->unreadlen = recvres;
-        pb->left -= recvres;
-    }
-
-    while (pb->unreadlen > 0) {
-        --pb->unreadlen;
-
-        c = *pb->ptr++;
-        if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
+            PUBNUB_ASSERT_OPT(recvres <= pb->left);
+            PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n",
                              pb,
-                             pbpal_read_len(pb));
-            WATCH_USHORT(pb->unreadlen);
+                             recvres,
+                             recvres,
+                             pb->ptr);
+            pb->unreadlen = recvres;
+            pb->left -= recvres;
+        }
+
+        while (pb->unreadlen > 0) {
+            uint8_t c;
+
+            --pb->unreadlen;
+
+            c = *pb->ptr++;
+            if (c == '\n') {
+                WATCH_USHORT(pb->unreadlen);
+                pb->sock_state = STATE_NONE;
+                return PNR_OK;
+            }
+        }
+
+        if (pb->left == 0) {
+            PUBNUB_LOG_ERROR("pbpal_line_read_status(pb=%p): buffer full but "
+                             "newline not found",
+                             pb);
             pb->sock_state = STATE_NONE;
-            return PNR_OK;
+            return PNR_TX_BUFF_TOO_SMALL;
         }
     }
-
-    if (pb->left == 0) {
-        PUBNUB_LOG_ERROR(
-            "pbpal_line_read_status(pb=%p): buffer full but newline not found",
-            pb);
-        pb->sock_state = STATE_NONE;
-        return PNR_TX_BUFF_TOO_SMALL;
-    }
-
-    return PNR_IN_PROGRESS;
 }
 
 
@@ -306,40 +306,42 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
 
 enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
-    int have_read;
 
     PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
 
-    if (0 == pb->unreadlen) {
-        unsigned to_recv = pb->len;
-        if (to_recv > pb->left) {
-            to_recv = pb->left;
+    /* OpenSSL reads one TLS record at a time,
+       so, we need to call it in a loop to read äll there is
+    */
+    for (;;) {
+        int have_read;
+
+        if (0 == pb->unreadlen) {
+            unsigned to_recv = pb->len;
+            if (to_recv > pb->left) {
+                to_recv = pb->left;
+            }
+            PUBNUB_ASSERT_OPT(to_recv > 0);
+            have_read = BIO_read(pb->pal.socket, pb->ptr, to_recv);
+            if (have_read <= 0) {
+                return handle_socket_error(have_read, pb);
+            }
+            PUBNUB_ASSERT_OPT(pb->left >= have_read);
+            pb->left -= have_read;
         }
-        PUBNUB_ASSERT_OPT(to_recv > 0);
-        have_read = BIO_read(pb->pal.socket, pb->ptr, to_recv);
-        if (have_read <= 0) {
-            return handle_socket_error(have_read, pb);
+        else {
+            have_read = (pb->unreadlen >= pb->len) ? pb->len : pb->unreadlen;
+            pb->unreadlen -= have_read;
         }
-        PUBNUB_ASSERT_OPT(pb->left >= have_read);
-        pb->left -= have_read;
-    }
-    else {
-        have_read = (pb->unreadlen >= pb->len) ? pb->len : pb->unreadlen;
-        pb->unreadlen -= have_read;
-    }
 
-    pb->len -= have_read;
-    pb->ptr += have_read;
+        pb->len -= have_read;
+        pb->ptr += have_read;
 
-    if ((0 == pb->len) || (0 == pb->left)) {
-        pb->sock_state = STATE_NONE;
-        return PNR_OK;
+        if ((0 == pb->len) || (0 == pb->left)) {
+            pb->sock_state = STATE_NONE;
+            return PNR_OK;
+        }
     }
-
-    return PNR_IN_PROGRESS;
 }
-
-
 
 
 bool pbpal_closed(pubnub_t* pb)
