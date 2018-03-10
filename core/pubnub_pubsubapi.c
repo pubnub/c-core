@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 
-pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscribe_key)
+pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
@@ -26,27 +26,34 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
 #endif
     }
 #if defined(PUBNUB_CALLBACK_API)
-	p->cb = NULL;
-	p->user_data = NULL;
+    p->cb        = NULL;
+    p->user_data = NULL;
 #endif
-	if (PUBNUB_ORIGIN_SETTABLE) {
+    if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
     }
+    if (PUBNUB_BLOCKING_IO_SETTABLE) {
+#if defined(PUBNUB_CALLBACK_API)
+        p->options.use_blocking_io = false;
+#else
+        p->options.use_blocking_io = true;
+#endif
+    }
 
-    p->state = PBS_IDLE;
-    p->trans = PBTT_NONE;
+    p->state                       = PBS_IDLE;
+    p->trans                       = PBTT_NONE;
     p->options.use_http_keep_alive = 1;
     pbpal_init(p);
     pubnub_mutex_unlock(p->monitor);
 
 #if PUBNUB_PROXY_API
-    p->proxy_type = pbproxyNONE;
-    p->proxy_hostname[0] = '\0';
+    p->proxy_type               = pbproxyNONE;
+    p->proxy_hostname[0]        = '\0';
     p->proxy_tunnel_established = false;
-    p->proxy_port = 80;
-    p->proxy_auth_scheme = pbhtauNone;
-    p->proxy_auth_username = NULL;
-    p->proxy_auth_password = NULL;
+    p->proxy_port               = 80;
+    p->proxy_auth_scheme        = pbhtauNone;
+    p->proxy_auth_username      = NULL;
+    p->proxy_auth_password      = NULL;
     p->proxy_authorization_sent = false;
 #endif
 
@@ -54,12 +61,12 @@ pubnub_t* pubnub_init(pubnub_t *p, const char *publish_key, const char *subscrib
 }
 
 
-enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *message)
+enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* message)
 {
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
+
     pubnub_mutex_lock(pb->monitor);
     if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
@@ -68,22 +75,20 @@ enum pubnub_res pubnub_publish(pubnub_t *pb, const char *channel, const char *me
 
     rslt = pbcc_publish_prep(&pb->core, channel, message, true, false);
     if (PNR_STARTED == rslt) {
-        pb->trans = PBTT_PUBLISH;
+        pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
     pubnub_mutex_unlock(pb->monitor);
-    
+
     return rslt;
 }
 
 
-
-
-char const *pubnub_get(pubnub_t *pb)
+char const* pubnub_get(pubnub_t* pb)
 {
-    char const *result;
+    char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -94,9 +99,9 @@ char const *pubnub_get(pubnub_t *pb)
 }
 
 
-char const *pubnub_get_channel(pubnub_t *pb)
+char const* pubnub_get_channel(pubnub_t* pb)
 {
-    char const *result;
+    char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -107,33 +112,34 @@ char const *pubnub_get_channel(pubnub_t *pb)
 }
 
 
-enum pubnub_res pubnub_subscribe(pubnub_t *p, const char *channel, const char *channel_group)
+enum pubnub_res pubnub_subscribe(pubnub_t*   p,
+                                 const char* channel,
+                                 const char* channel_group)
 {
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
-    
+
     pubnub_mutex_lock(p->monitor);
     if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-    
+
     rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);
     if (PNR_STARTED == rslt) {
-        p->trans = PBTT_SUBSCRIBE;
+        p->trans            = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;
         pbnc_fsm(p);
         rslt = p->core.last_result;
     }
-    
+
     pubnub_mutex_unlock(p->monitor);
     return rslt;
 }
 
 
-
-void pubnub_cancel(pubnub_t *pb)
+void pubnub_cancel(pubnub_t* pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
@@ -143,7 +149,7 @@ void pubnub_cancel(pubnub_t *pb)
 }
 
 
-void pubnub_set_uuid(pubnub_t *pb, const char *uuid)
+void pubnub_set_uuid(pubnub_t* pb, const char* uuid)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
@@ -152,9 +158,9 @@ void pubnub_set_uuid(pubnub_t *pb, const char *uuid)
 }
 
 
-char const *pubnub_uuid_get(pubnub_t *pb)
+char const* pubnub_uuid_get(pubnub_t* pb)
 {
-    char const *result;
+    char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -165,7 +171,7 @@ char const *pubnub_uuid_get(pubnub_t *pb)
 }
 
 
-void pubnub_set_auth(pubnub_t *pb, const char *auth)
+void pubnub_set_auth(pubnub_t* pb, const char* auth)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
@@ -174,9 +180,9 @@ void pubnub_set_auth(pubnub_t *pb, const char *auth)
 }
 
 
-char const *pubnub_auth_get(pubnub_t *pb)
+char const* pubnub_auth_get(pubnub_t* pb)
 {
-    char const *result;
+    char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -187,7 +193,7 @@ char const *pubnub_auth_get(pubnub_t *pb)
 }
 
 
-int pubnub_last_http_code(pubnub_t *pb)
+int pubnub_last_http_code(pubnub_t* pb)
 {
     int result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -198,9 +204,9 @@ int pubnub_last_http_code(pubnub_t *pb)
 }
 
 
-char const *pubnub_last_time_token(pubnub_t *pb)
+char const* pubnub_last_time_token(pubnub_t* pb)
 {
-    char const *result;
+    char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -211,9 +217,9 @@ char const *pubnub_last_time_token(pubnub_t *pb)
 }
 
 
-static char const* do_last_publish_result(pubnub_t *pb)
+static char const* do_last_publish_result(pubnub_t* pb)
 {
-    char *end;
+    char* end;
 
     if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
         return "";
@@ -236,7 +242,7 @@ static char const* do_last_publish_result(pubnub_t *pb)
 }
 
 
-char const *pubnub_last_publish_result(pubnub_t *pb)
+char const* pubnub_last_publish_result(pubnub_t* pb)
 {
 
     char const* rslt;
@@ -250,11 +256,11 @@ char const *pubnub_last_publish_result(pubnub_t *pb)
 }
 
 
-char const *pubnub_get_origin(pubnub_t *pb)
+char const* pubnub_get_origin(pubnub_t* pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     if (PUBNUB_ORIGIN_SETTABLE) {
-        char const *result;
+        char const* result;
 
         pubnub_mutex_lock(pb->monitor);
         result = pb->origin;
@@ -266,7 +272,7 @@ char const *pubnub_get_origin(pubnub_t *pb)
 }
 
 
-int pubnub_origin_set(pubnub_t *pb, char const *origin)
+int pubnub_origin_set(pubnub_t* pb, char const* origin)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     if (PUBNUB_ORIGIN_SETTABLE) {

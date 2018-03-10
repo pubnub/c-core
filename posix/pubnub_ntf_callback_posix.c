@@ -229,9 +229,6 @@ int pbntf_got_socket(pubnub_t* pb, pb_socket_t socket)
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
-    pb->options.use_blocking_io = false;
-    pbpal_set_blocking_io(pb);
-
     pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
 

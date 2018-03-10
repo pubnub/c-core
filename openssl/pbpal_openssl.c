@@ -108,7 +108,6 @@ void pbpal_init(pubnub_t* pb)
 {
     pal_init();
     memset(&pb->pal, 0, sizeof pb->pal);
-    pb->options.use_blocking_io = true;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->options.use_system_certificate_store = false;
     pb->options.reuse_SSL_session            = true;
