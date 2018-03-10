@@ -1,5 +1,5 @@
 name: c-core
-version: 2.3.1
+version: 2.3.2
 scm: github.com/pubnub/c-core
 changelog:
   - version: v2.3.2
