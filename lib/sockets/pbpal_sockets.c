@@ -36,9 +36,6 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t* pb)
 {
-    if (PUBNUB_BLOCKING_IO_SETTABLE) {
-        pb->options.use_blocking_io = true;
-    }
     pal_init();
     pb->pal.socket = SOCKET_INVALID;
     pb->sock_state = STATE_NONE;

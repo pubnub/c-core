@@ -153,9 +153,6 @@ int pbntf_got_socket(pubnub_t* pb, pb_socket_t sockt)
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
-    pb->options.use_blocking_io = false;
-    pbpal_set_blocking_io(pb);
-
     LeaveCriticalSection(&m_watcher.mutw);
 
     return +1;
