@@ -7,7 +7,9 @@ the `develop` branch.  Explain your fix in the PR comment (what it
 fixes and how).
 
 Please try to follow the existing coding style as much as possible and
-avoid cosmetic (whitespace, code format) changes.
+avoid cosmetic (whitespace, code format) changes. In fact, please use
+`clang-format` with the supplied `.clang-format` configuration to
+format the code before submitting a PR.
 
 #### Adding new features
 
