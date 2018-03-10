@@ -2,12 +2,16 @@ name: c-core
 version: 2.3.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.3.2
+    changes:
+      - type: bug
+        text: Unify default blocking I/O setting to block in sync and non-block in callback interface
   - version: v2.3.1
     changes:
       - type: bug
         text: Read from OpenSSL in a loop, to handle more than one record received at a time
       - type: bug
-        text: Fix race condition in timer expiry
+        text: Fix minor race condition on timer expiry
   - version: v2.3.0
     changes:
       - type: feature
