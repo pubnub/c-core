@@ -2,6 +2,12 @@ name: c-core
 version: 2.3.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.3.3
+    changes:
+      - type: bug
+        text: Fix HTTP CONNECT proxy w/HTTP Keep-Alive
+      - type: feature
+        text: Send up-to-date version info in User-Agent HTTP header
   - version: v2.3.2
     changes:
       - type: bug

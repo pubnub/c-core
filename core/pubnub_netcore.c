@@ -6,6 +6,7 @@
 #include "pubnub_ccore.h"
 #include "pubnub_ccore_pubsub.h"
 #include "pbpal.h"
+#include "pubnub_version_internal.h"
 
 #include "pubnub_proxy_core.h"
 
@@ -280,6 +281,7 @@ next_state:
 #if PUBNUB_PROXY_API
         pb->retry_after_close        = false;
         pb->proxy_tunnel_established = false;
+        pb->proxy_saved_path_len     = 0;
 #endif
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
@@ -434,12 +436,13 @@ next_state:
                            pb->core.http_buf_len + 1);
                     pb->proxy_saved_path_len = pb->core.http_buf_len;
                 }
-                else {
+                else if (pb->proxy_saved_path_len > 0) {
                     PUBNUB_ASSERT_OPT(pb->proxy_saved_path_len < PUBNUB_BUF_MAXLEN);
                     memmove(pb->core.http_buf,
                             pb->proxy_saved_path,
                             pb->proxy_saved_path_len + 1);
-                    pb->core.http_buf_len = pb->proxy_saved_path_len;
+                    pb->core.http_buf_len    = pb->proxy_saved_path_len;
+                    pb->proxy_saved_path_len = 0;
                 }
                 break;
             case pbproxyNONE:
@@ -534,14 +537,11 @@ next_state:
         }
         else if (0 == i) {
 #if PUBNUB_PROXY_API
-            char header_to_send[1024] = "\r\n";
-            if (0
-                == pbproxy_http_header_to_send(
-                       pb, header_to_send + 2, sizeof header_to_send - 2)) {
-                PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n",
-                                 header_to_send);
+            char hdr2send[1024] = "\r\n";
+            if (0 == pbproxy_http_header_to_send(pb, hdr2send + 2, sizeof hdr2send - 2)) {
+                PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hdr2send);
                 pb->state = PBS_TX_PROXY_AUTHORIZATION;
-                if (-1 == pbpal_send_str(pb, header_to_send)) {
+                if (-1 == pbpal_send_str(pb, hdr2send)) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
                 }
@@ -552,7 +552,7 @@ next_state:
                 pb->state = PBS_TX_FIN_HEAD;
             }
 #else
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.2\r\n\r\n");
+            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.3\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
 #endif
             goto next_state;
@@ -564,7 +564,8 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.2\r\n\r\n");
+            pbpal_send_literal_str(
+                pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }
