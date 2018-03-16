@@ -31,6 +31,9 @@ char const* pbjson_find_end_string(char const *start, char const *end)
             if (!in_escape) {
                 return start;
             }
+            else {
+                in_escape = false;
+            }
             break;
         case '\\':
             in_escape = !in_escape;
