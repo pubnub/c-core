@@ -27,19 +27,16 @@ char const* pbjson_find_end_string(char const *start, char const *end)
 
     for (; start < end; ++start) {
         switch (*start) {
-        case '"':
-            if (!in_escape) {
-                return start;
-            }
-            else {
-                in_escape = false;
-            }
-            break;
         case '\\':
             in_escape = !in_escape;
             break;
         case '\0':
             return start;
+        case '"':
+            if (!in_escape) {
+                return start;
+            }
+            /*FALLTHRU*/
         default:
             in_escape = false;
             break;
@@ -108,14 +105,15 @@ char const *pbjson_find_end_complex(char const *start, char const *end)
         }
         else {
             switch (c) {
-            case '"':
-                if (!in_escape) {
-                    in_string = false;
-                }
-                break;
             case '\\':
                 in_escape = !in_escape;
                 break;
+            case '"':
+                if (!in_escape) {
+                    in_string = false;
+                    break;
+                }
+                /*FALLTHRU*/
             default:
                 in_escape = false;
                 break;
