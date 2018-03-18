@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_fntest.h"
+#include "core/fntest/pubnub_fntest.h"
 
-#include "pubnub_fntest_basic.h"
-#include "pubnub_fntest_medium.h"
+#include "core/fntest/pubnub_fntest_basic.h"
+#include "core/fntest/pubnub_fntest_medium.h"
 
 #include <windows.h>
 

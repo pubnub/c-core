@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbaes256.h"
 
-#include "pubnub_log.h"
-#include "pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_assert.h"
 
 #include <openssl/evp.h>
 #include <openssl/err.h>

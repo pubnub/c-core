@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbpal.h"
+#include "core/pbpal.h"
 
-#include "pubnub_ntf_sync.h"
-#include "pubnub_netcore.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_netcore.h"
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <sys/types.h>
 #include <fcntl.h>

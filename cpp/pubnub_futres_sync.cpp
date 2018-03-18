@@ -4,8 +4,8 @@
 #if PUBNUB_USE_EXTERN_C
 extern "C" {
 #endif
-#include "pubnub_ntf_sync.h"
-#include "pubnub_coreapi.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_coreapi.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif

@@ -16,9 +16,9 @@
 #if PUBNUB_USE_EXTERN_C
 extern "C" {
 #endif
-#include "pubnub_api_types.h"
-#include "pubnub_assert.h"
-#include "pubnub_helper.h"
+#include "core/pubnub_api_types.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_helper.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif

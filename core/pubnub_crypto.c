@@ -1,15 +1,15 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_crypto.h"
+#include "core/pubnub_crypto.h"
 
-#include "pubnub_assert.h"
+#include "core/pubnub_assert.h"
 #include "pubnub_internal.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi_ex.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi_ex.h"
 
-#include "pbmd5.h"
+#include "lib/md5/pbmd5.h"
 #include "pbsha256.h"
 #include "pbaes256.h"
-#include "pbbase64.h"
+#include "lib/base64/pbbase64.h"
 
 
 

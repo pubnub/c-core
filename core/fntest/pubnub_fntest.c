@@ -1,10 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_assert.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_assert.h"
 #include "pubnub_internal.h"
 
-#include "pubnub_fntest.h"
+#include "core/fntest/pubnub_fntest.h"
 
 #include <string.h>
 #include <stdarg.h>

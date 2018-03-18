@@ -28,7 +28,7 @@ bool pnfntst_timer_is_running(pnfntst_timer_t *t);
 void pnfntst_free_timer(pnfntst_timer_t *t);
 
 
-#include "pubnub_api_types.h"
+#include "core/pubnub_api_types.h"
 
 /** Returns whether the messages specified as strings in the
     variable-arguments (which must end with NULL), have been received
@@ -52,6 +52,6 @@ bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const
 
 bool pnfntst_subscribe_and_check(pubnub_t *p, char const *chan, char const*chgroup, unsigned ms, ...);
 
-#include "pubnub_fntest_pal.h"
+#include "fntest/pubnub_fntest_pal.h"
 
 #endif /* !defined INC_PUBNUB_FNTEST */

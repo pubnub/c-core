@@ -2,7 +2,7 @@
 #include "pbpal_add_system_certs.h"
 
 #include "pubnub_internal.h"
-#include "pubnub_log.h"
+#include "core/pubnub_log.h"
 
 #include "openssl/x509.h"
 

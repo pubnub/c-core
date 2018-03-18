@@ -13,7 +13,7 @@ OPENSSL_LIBS=$(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 !ENDIF
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSL_LIBS)
 
-INCLUDES=-I ..\core -I . -I ..\lib\sockets -I ..\lib\base64 -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include
+INCLUDES=-I .. -I . -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include
 
 CFLAGS = /EHsc /Zi /MP /TP /W3 $(INCLUDES) /D PUBNUB_THREADSAFE /D PUBNUB_USE_WIN_SSPI=1
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 

@@ -5,8 +5,8 @@
 #if PUBNUB_USE_EXTERN_C
 extern "C" {
 #endif
-#include "pubnub_ntf_callback.h"
-#include "pubnub_assert.h"
+#include "core/pubnub_ntf_callback.h"
+#include "core/pubnub_assert.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif

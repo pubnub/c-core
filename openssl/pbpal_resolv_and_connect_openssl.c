@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbpal.h"
+#include "core/pbpal.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -10,8 +10,8 @@
 
 #include "pbpal_add_system_certs.h"
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <openssl/pem.h>
 #include <openssl/ssl.h>

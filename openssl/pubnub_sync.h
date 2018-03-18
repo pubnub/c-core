@@ -32,13 +32,13 @@
 
 /* -- You should not change anything below this line -- */
 
-#include "pubnub_alloc.h"
-#include "pubnub_assert.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_sync.h"
-#include "pubnub_generate_uuid.h"
-#include "pubnub_blocking_io.h"
+#include "core/pubnub_alloc.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_generate_uuid.h"
+#include "core/pubnub_blocking_io.h"
 
 
 #endif /* !defined INC_OPENSSL_SYNC */

@@ -1,10 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbpal.h"
+#include "core/pbpal.h"
 
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-#include "pbpal_adns_sockets.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "lib/sockets/pbpal_adns_sockets.h"
 
 #include <sys/types.h>
 

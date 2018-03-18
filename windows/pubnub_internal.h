@@ -56,7 +56,7 @@ int snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL */

@@ -1,19 +1,19 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_ntf_callback.h"
+#include "core/pubnub_ntf_callback.h"
 
 #include <winsock2.h>
 #include <windows.h>
 #include <process.h>
 
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-#include "pubnub_timer_list.h"
-#include "pbpal.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_timer_list.h"
+#include "core/pbpal.h"
 
-#include "pbpal_ntf_callback_poller_poll.h"
-#include "pbpal_ntf_callback_queue.h"
-#include "pbpal_ntf_callback_handle_timer_list.h"
+#include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
+#include "core/pbpal_ntf_callback_queue.h"
+#include "core/pbpal_ntf_callback_handle_timer_list.h"
 
 #include <stdlib.h>
 #include <string.h>

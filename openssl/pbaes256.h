@@ -2,7 +2,7 @@
 #if !defined INC_PBAES256
 #define	INC_PBAES256
 
-#include "pubnub_memory_block.h"
+#include "core/pubnub_memory_block.h"
 
 
 /** @file pbaes256.h 

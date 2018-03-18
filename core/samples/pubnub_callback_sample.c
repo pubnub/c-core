@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
-#include "pubnub_helper.h"
-#include "pubnub_timers.h"
-#include "pubnub_generate_uuid.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_timers.h"
+#include "core/pubnub_generate_uuid.h"
 
 #if defined _WIN32
 #include <windows.h>
@@ -560,8 +560,10 @@ int main()
         printf("Removing channel group failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
     }
 
-    /* We're done */
-    if (pubnub_free(pbp) != 0) {
+    /* We're done, but, keep-alive might be on, so we need to cancel,
+     * then free */
+    pubnub_cancel(pbp);
+    if (pubnub_free_with_timeout(pbp, 1000) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
 

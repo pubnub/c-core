@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#include "pubnub_fntest.h"
+#include "core/fntest/pubnub_fntest.h"
 
 #include <time.h>
 #include <stdlib.h>

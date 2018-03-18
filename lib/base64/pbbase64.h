@@ -2,7 +2,7 @@
 #if !defined INC_PBBASE64
 #define INC_PBBASE64
 
-#include "pubnub_memory_block.h"
+#include "core/pubnub_memory_block.h"
 
 #include <stdbool.h>
 

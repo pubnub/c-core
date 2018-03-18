@@ -1,16 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbntlm_core.h"
+#include "core/pbntlm_core.h"
 
-#include "pbntlm_packer.h"
+#include "core/pbntlm_packer.h"
 
-#include "pbbase64.h"
+#include "lib/base64/pbbase64.h"
 
-#include "pubnub_log.h"
+#include "core/pubnub_log.h"
 
 
 void pbntlm_core_init(pubnub_t *pb)
 {
-    pb->ntlm_context.state = pbntlmSendTypeOne;
+    pb->ntlm_context.state = pbntlmSendNegotiate;
     pbntlm_packer_init(&pb->ntlm_context);
 }
 
@@ -33,7 +33,7 @@ void pbntlm_core_handle(pubnub_t *pb, char const* base64_msg, size_t length)
         return;
     }
 
-    if (pb->ntlm_context.state != pbntlmRcvTypeTwo) {
+    if (pb->ntlm_context.state != pbntlmRcvChallenge) {
         PUBNUB_LOG_ERROR("pbntlm_core_handle(): Unexpected state '%d'\n", pb->ntlm_context.state);
         pbntlm_core_deinit(pb);
         return;
@@ -45,7 +45,7 @@ void pbntlm_core_handle(pubnub_t *pb, char const* base64_msg, size_t length)
         return;
     }
     (void)pbntlm_unpack_type2(&pb->ntlm_context, data);
-    pb->ntlm_context.state = pbntlmSendTypeThree;
+    pb->ntlm_context.state = pbntlmSendAuthenticate;
 }
 
 
@@ -55,17 +55,17 @@ int pbntlm_core_prep_msg_to_send(pubnub_t *pb, pubnub_bymebl_t* data)
 
     switch (pb->ntlm_context.state) {
 
-    case pbntlmSendTypeOne:
+    case pbntlmSendNegotiate:
         rslt = pbntlm_pack_type_one(&pb->ntlm_context, pb->proxy_auth_username, pb->proxy_auth_password, data);
         if (0 == rslt) {
-            pb->ntlm_context.state = pbntlmRcvTypeTwo;
+            pb->ntlm_context.state = pbntlmRcvChallenge;
         }
         else {
             pbntlm_core_deinit(pb);
         }
         return rslt;
 
-    case pbntlmSendTypeThree:
+    case pbntlmSendAuthenticate:
         rslt = pbntlm_pack_type3(&pb->ntlm_context, pb->proxy_auth_username, pb->proxy_auth_password, data);
         pb->proxy_authorization_sent = true;
         pbntlm_core_deinit(pb);

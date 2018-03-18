@@ -58,12 +58,12 @@ enum PBSocketState {
 enum NPBNTLM_State {
     /** Idle */
     pbntlmIdle,
-    /** Waiting to send Type1 message (identity) */
-    pbntlmSendTypeOne,
-    /** Waiting to recieve Type2 message (challenge) */
-    pbntlmRcvTypeTwo,
-    /** Waiting to send Type3 message (challenge response) */
-    pbntlmSendTypeThree,
+    /** Waiting to send NEGOTIATE (AKA Type1) message (identity) */
+    pbntlmSendNegotiate,
+    /** Waiting to recieve CHALLENGE (AKA Type2) message (challenge) */
+    pbntlmRcvChallenge,
+    /** Waiting to send AUTHENTICATE (AKA Type3) message (challenge response) */
+    pbntlmSendAuthenticate,
     /** NTLM authentication is done (may have succeded or not,
         does not matter to us).
      */

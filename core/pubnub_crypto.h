@@ -3,8 +3,8 @@
 #define	INC_PUBNUB_CRYPTO
 
 
-#include "pubnub_api_types.h"
-#include "pubnub_memory_block.h"
+#include "core/pubnub_api_types.h"
+#include "core/pubnub_memory_block.h"
 
 
 /** @file pubnub_crypto.h 

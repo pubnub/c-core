@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
+#include "core/pubnub_free_with_timeout.h"
+
 #if defined _WIN32
 #include <windows.h>
 #else
@@ -37,13 +39,13 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
            some other means to inform others about this event (by, say,
            queueing into some message queue).
         */
-        printf("Subscribed, result: %d\n", result);
+        printf("Subscribe callback, result: %d\n", result);
         break;
     case PBTT_PUBLISH:
-        printf("Published, result: %d\n", result);
+        printf("Publish callback, result: %d\n", result);
         break;
     default:
-        printf("Some other transaction: result: %d\n", result);
+        printf("Transaction %d callback: result: %d\n", trans, result);
         break;
     }
 #if defined _WIN32
@@ -226,11 +228,15 @@ int main()
     }
 
 	
-    /* We're done */
-    if (pubnub_free(pbp_2) != 0) {
+    /* We're done, but, if keep-alive is on, we can't free,
+       we need to cancel first...
+     */
+    pubnub_cancel(pbp);
+    pubnub_cancel(pbp_2);
+    if (pubnub_free_with_timeout(pbp_2, 1000) != 0) {
         printf("Failed to free the Pubnub context `pbp_2`\n");
     }
-    if (pubnub_free(pbp) != 0) {
+    if (pubnub_free_with_timeout(pbp, 1000) != 0) {
         printf("Failed to free the Pubnub context `pbp`\n");
     }
 

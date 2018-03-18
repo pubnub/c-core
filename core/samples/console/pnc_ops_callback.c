@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
-#include "pubnub_helper.h"
-#include "pubnub_mutex.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_mutex.h"
 
 #include "pnc_ops_callback.h"
 

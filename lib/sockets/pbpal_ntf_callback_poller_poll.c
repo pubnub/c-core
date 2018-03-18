@@ -1,12 +1,12 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
-#include "pbpal_ntf_callback_poller_poll.h"
+#include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
 
 #include "pubnub_get_native_socket.h"
 
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <string.h>
 

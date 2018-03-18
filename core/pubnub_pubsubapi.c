@@ -1,13 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_pubsubapi.h"
+#include "core/pubnub_pubsubapi.h"
 
-#include "pubnub_ccore.h"
-#include "pubnub_netcore.h"
+#include "core/pubnub_ccore.h"
+#include "core/pubnub_netcore.h"
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_timers.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_timers.h"
 
-#include "pbpal.h"
+#include "core/pbpal.h"
 
 #include <ctype.h>
 
