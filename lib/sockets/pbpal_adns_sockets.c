@@ -6,6 +6,10 @@
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
+
 #include <stdint.h>
 #include <string.h>
 

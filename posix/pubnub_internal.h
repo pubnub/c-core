@@ -53,7 +53,7 @@ struct pubnub_pal {
 #define PUBNUB_TIMERS_API 1
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 

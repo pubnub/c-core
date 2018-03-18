@@ -104,18 +104,18 @@ void pballoc_free_at_last(pubnub_t *pb)
 {
     PUBNUB_ASSERT_OPT(pb != NULL);
 
+    pubnub_mutex_lock(pb->monitor);
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
-    pubnub_mutex_lock(pb->monitor);
 
     PUBNUB_ASSERT_OPT(pb->state == PBS_NULL);
 
     pbcc_deinit(&pb->core);
     pbpal_free(pb);
     remove_allocated(pb);
-    pubnub_mutex_unlock(m_lock);
     pubnub_mutex_unlock(pb->monitor);
     pubnub_mutex_destroy(pb->monitor);
+    pubnub_mutex_unlock(m_lock);
     free(pb);
 }
 
