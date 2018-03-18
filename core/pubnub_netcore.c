@@ -24,6 +24,9 @@
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
     if (pb->options.use_http_keep_alive) {
+        if (pb->keep_alive.should_close) {
+            return true;
+        }
         switch (rslt) {
         case PNR_ADDR_RESOLUTION_FAILED:
         case PNR_CONNECT_FAILED:
@@ -402,6 +405,10 @@ next_state:
         break;
     }
     case PBS_CONNECTED:
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+        pb->keep_alive.t_connect = time(NULL);
+        pb->keep_alive.count     = 0;
+#endif
         send_init_GET_or_CONNECT(pb);
         pb->state = PBS_TX_GET;
         goto next_state;
@@ -601,7 +608,10 @@ next_state:
             WATCH_USHORT(pb->http_code);
             pb->core.http_content_len = 0;
             pb->http_chunked          = false;
-            pb->state                 = PBS_RX_HEADERS;
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+            pb->keep_alive.should_close = !pb->options.use_http_keep_alive;
+#endif
+            pb->state = PBS_RX_HEADERS;
             goto next_state;
         default:
             PUBNUB_LOG_ERROR("pb=%p in PBS_RX_HTTP_VER: failure inducing "
@@ -629,6 +639,7 @@ next_state:
             */
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[]  = "Content-Length: ";
+            char h_close[]   = "Connection: close";
             int  read_len    = pbpal_read_len(pb);
             PUBNUB_LOG_TRACE("pb=%p header line was read: '%.*s'\n",
                              pb,
@@ -669,6 +680,11 @@ next_state:
                 }
                 pb->core.http_content_len = len;
             }
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+            else if (strncmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
+                pb->keep_alive.should_close = true;
+            }
+#endif
             else {
                 pbproxy_handle_http_header(pb, pb->core.http_buf);
             }
@@ -863,7 +879,16 @@ next_state:
         if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
             pbntf_trans_outcome(pb);
+            break;
         }
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+        if ((++pb->keep_alive.count >= pb->keep_alive.max)
+            || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
+            pbntf_lost_socket(pb, pb->pal.socket);
+            pb->state = PBS_READY;
+            goto next_state;
+        }
+#endif
         i = send_init_GET_or_CONNECT(pb);
         if (i < 0) {
             pbntf_lost_socket(pb, pb->pal.socket);

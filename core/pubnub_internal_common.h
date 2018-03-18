@@ -19,6 +19,9 @@
 #endif
 
 #include <stdint.h>
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+#include <time.h>
+#endif
 
 
 #if !defined PUBNUB_USE_ADNS
@@ -186,6 +189,7 @@ struct pubnub_ {
 
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to
+
          * PubNub using SSL? */
         bool useSSL : 1;
         /** When SSL is enabled, should PubNub client ignore all SSL
@@ -205,6 +209,16 @@ struct pubnub_ {
         bool reuse_SSL_session : 1;
 #endif
     } options;
+
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+    struct pubnub_keep_alive_data {
+        time_t timeout;
+        time_t t_connect;
+        unsigned max;
+        unsigned count;
+        bool should_close;
+    } keep_alive;
+#endif
 
 #if PUBNUB_USE_SSL
     /** Certificate store file */

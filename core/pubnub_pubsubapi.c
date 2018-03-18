@@ -43,6 +43,10 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->state                       = PBS_IDLE;
     p->trans                       = PBTT_NONE;
     p->options.use_http_keep_alive = 1;
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+    p->keep_alive.max     = 1000;
+    p->keep_alive.timeout = 50;
+#endif
     pbpal_init(p);
     pubnub_mutex_unlock(p->monitor);
 
