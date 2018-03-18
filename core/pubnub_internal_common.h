@@ -318,11 +318,11 @@ void pbntf_trans_outcome(pubnub_t *pb);
 
 int pbntf_init(void);
 
-int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket);
+int pbntf_got_socket(pubnub_t *pb);
 
-void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket);
+void pbntf_update_socket(pubnub_t *pb);
 
-void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket);
+void pbntf_lost_socket(pubnub_t *pb);
 
 int pbntf_enqueue_for_processing(pubnub_t *pb);
 

@@ -57,7 +57,7 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
            we don't have a way to report to the user that the
            connection was lost.
          */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         pbntf_trans_outcome(pb);
         pb->state = PBS_KEEP_ALIVE_IDLE;
     }
@@ -314,7 +314,7 @@ next_state:
             pbntf_trans_outcome(pb);
             return 0;
         }
-        i = pbntf_got_socket(pb, pb->pal.socket);
+        i = pbntf_got_socket(pb);
         if (0 == i) {
             goto next_state;
         }
@@ -333,12 +333,12 @@ next_state:
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
@@ -362,7 +362,7 @@ next_state:
         case pbpal_resolv_rcv_wouldblock:
             break;
         case pbpal_connect_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             pbntf_watch_out_events(pb);
             break;
@@ -882,7 +882,7 @@ next_state:
         }
         break;
     case PBS_KEEP_ALIVE_READY:
-        i = pbntf_got_socket(pb, pb->pal.socket);
+        i = pbntf_got_socket(pb);
         if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
             pbntf_trans_outcome(pb);
@@ -891,14 +891,14 @@ next_state:
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         if ((++pb->keep_alive.count >= pb->keep_alive.max)
             || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
-            pbntf_lost_socket(pb, pb->pal.socket);
+            pbntf_lost_socket(pb);
             pb->state = PBS_READY;
             goto next_state;
         }
 #endif
         i = send_init_GET_or_CONNECT(pb);
         if (i < 0) {
-            pbntf_lost_socket(pb, pb->pal.socket);
+            pbntf_lost_socket(pb);
             pb->state = PBS_READY;
         }
         else {

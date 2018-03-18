@@ -146,10 +146,8 @@ int pbntf_requeue_for_processing(pubnub_t* pb)
 }
 
 
-int pbntf_got_socket(pubnub_t* pb, pb_socket_t sockt)
+int pbntf_got_socket(pubnub_t* pb)
 {
-    PUBNUB_UNUSED(sockt);
-
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_save_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);
@@ -164,10 +162,8 @@ int pbntf_got_socket(pubnub_t* pb, pb_socket_t sockt)
 }
 
 
-void pbntf_lost_socket(pubnub_t* pb, pb_socket_t sockt)
+void pbntf_lost_socket(pubnub_t* pb)
 {
-    PUBNUB_UNUSED(sockt);
-
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);
@@ -180,10 +176,8 @@ void pbntf_lost_socket(pubnub_t* pb, pb_socket_t sockt)
 }
 
 
-void pbntf_update_socket(pubnub_t* pb, pb_socket_t socket)
+void pbntf_update_socket(pubnub_t* pb)
 {
-    PUBNUB_UNUSED(socket);
-
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_update_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);

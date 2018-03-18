@@ -308,7 +308,7 @@ int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
     if (pb->pal.socket != SOCKET_INVALID) {
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
         pb->sock_state = STATE_NONE;
@@ -324,7 +324,7 @@ void pbpal_free(pubnub_t* pb)
     if (pb->pal.socket != SOCKET_INVALID) {
         /* While this should not happen, it doesn't hurt to be paranoid.
          */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
     }
 }

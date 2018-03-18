@@ -359,7 +359,7 @@ int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
     if (pb->pal.socket != NULL) {
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
         pb->sock_state = STATE_NONE;
@@ -376,7 +376,7 @@ void pbpal_free(pubnub_t* pb)
     if (pb->pal.socket != NULL) {
         /* While this should not happen, it doesn't hurt to be paranoid.
          */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
     }
 
