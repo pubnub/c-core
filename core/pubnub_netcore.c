@@ -60,6 +60,9 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
         pbntf_lost_socket(pb);
         pbntf_trans_outcome(pb);
         pb->state = PBS_KEEP_ALIVE_IDLE;
+#if PUBNUB_PROXY_API
+        pb->retry_after_close = 0;
+#endif
     }
     else if (pbpal_close(pb) <= 0) {
 #if PUBNUB_PROXY_API
@@ -157,7 +160,7 @@ static void finish(struct pubnub_* pb)
         return;
     case pbproxyFinRetry:
         PUBNUB_LOG_TRACE("Proxy: retry in current connection\n");
-        pb->state = PBS_CONNECTED;
+        pb->state             = PBS_CONNECTED;
         pb->retry_after_close = true;
         return;
     default:
@@ -428,7 +431,7 @@ next_state:
                     memmove(pb->core.http_buf,
                             pb->proxy_saved_path,
                             pb->proxy_saved_path_len + 1);
-                    pb->core.http_buf_len    = pb->proxy_saved_path_len;
+                    pb->core.http_buf_len = pb->proxy_saved_path_len;
                 }
                 pbpal_send_literal_str(pb, "http://");
                 break;
@@ -869,6 +872,9 @@ next_state:
         }
         break;
     case PBS_KEEP_ALIVE_IDLE:
+#if PUBNUB_PROXY_API
+        pb->proxy_saved_path_len = 0;
+#endif
         pb->state = PBS_KEEP_ALIVE_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
