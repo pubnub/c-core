@@ -221,11 +221,11 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
 enum pbproxyFinInstruction pbproxy_handle_finish(pubnub_t* pb)
 {
     if (HTTP_CODE_PROXY_AUTH_REQ == pb->http_code) {
-        if (!pb->proxy_authorization_sent) {
-            return pbproxyFinRetry;
+        if (pb->proxy_authorization_sent || (pb->proxy_auth_scheme == pbhtauNone)) {
+            return pbproxyFinError;
         }
         else {
-            return pbproxyFinError;
+            return pbproxyFinRetry;
         }
     }
     if (pb->proxy_type == pbproxyHTTP_CONNECT) {
