@@ -17,7 +17,7 @@ SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -I ../core -I ../posix -I . -I ../lib/base64 -I ../lib/md5 -Wall -D PUBNUB_THREADSAFE
+CFLAGS =-g -I .. -I ../posix -I . -Wall -D PUBNUB_THREADSAFE
 # -g enables debugging, remove to get a smaller executable
 
 
@@ -26,7 +26,6 @@ all: cpp11 cpp98
 cpp98: pubnub_sync_sample pubnub_callback_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync futres_nesting_callback pubnub_sync_subloop_sample pubnub_callback_subloop_sample
 
 cpp11: pubnub_callback_cpp11_sample futres_nesting_callback_cpp11 fntest_runner pubnub_callback_cpp11_subloop_sample
-
 
 pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) samples/pubnub_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
@@ -40,26 +39,38 @@ futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_nt
 pubnub_sync_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) samples/pubnub_subloop_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
-pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) $(LDLIBS)
+##
+# The socket poller module to use. You should use the `poll` poller it
+# doesn't have the weird restrictions of `select` poller. OTOH,
+# select() on Windows is compatible w/BSD sockets poll(), while
+# WSAPoll() has some weird differences to poll().  The names are the
+# same until the last `_`, then it's `poll` vs `select.
+SOCKET_POLLER_C=../lib/sockets/pbpal_ntf_callback_poller_poll.c
+SOCKET_POLLER_OBJ=pbpal_ntf_callback_poller_poll.obj
 
-pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
+CALLBACK_INTF_SOURCEFILES= ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c $(SOCKET_POLLER_C)  ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
+CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_windows.obj pubnub_get_native_socket.obj pubnub_timer_list.obj pbpal_adns_sockets.obj $(SOCKET_POLLER_OBJ) pbpal_ntf_callback_queue.obj pbpal_ntf_callback_admin.obj pbpal_ntf_callback_handle_timer_list.obj pubnub_callback_subscribe_loop.obj
 
-subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) samples/subscribe_publish_callback_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
+pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) $(LDLIBS)
 
-futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
+pubnub_callback_cpp11_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
 
-futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
+subscribe_publish_callback_sample: samples/subscribe_publish_callback_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) samples/subscribe_publish_callback_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
 
-pubnub_callback_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp
-	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/pubnub_subloop_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
+futres_nesting_callback: samples/futres_nesting.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
 
-pubnub_callback_cpp11_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/pubnub_subloop_sample.cpp ../core/pubnub_timer_list.c ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
+futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/futres_nesting.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
+
+pubnub_callback_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp
+	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/pubnub_subloop_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS)
+
+pubnub_callback_cpp11_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS)  samples/pubnub_subloop_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
 
 fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
 	$(CXX) -o $@ -std=c++11 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE $(CFLAGS) fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 

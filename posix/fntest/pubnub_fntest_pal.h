@@ -2,7 +2,7 @@
 #if !defined INC_PUBNUB_FNTEST_PAL
 #define	INC_PUBNUB_FNTEST_PAL
 
-#include "pubnub_helper.h"
+#include "core/pubnub_helper.h"
 
 #include <pthread.h>
 

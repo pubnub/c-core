@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_sync.h"
 
-#include "pubnub_sync_subscribe_loop.h"
-#include "pubnub_helper.h"
+#include "core/pubnub_sync_subscribe_loop.h"
+#include "core/pubnub_helper.h"
 
 #include <stdio.h>
 

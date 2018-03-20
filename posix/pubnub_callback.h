@@ -7,15 +7,8 @@
     This is the "callback" interface of the Pubnub client library for
     POSIX compatible OSes (Linux, BSD...). 
 
-    The "callback" interface has these characteristics:
-    - It is not thread safe. 
-    - User cannot make any assumptions about the thread on which
+    User cannot make any assumptions about the thread on which
     the callback is called. 
-
-    So, she should synchronise access to the Pubnub context from the
-    callback and the rest of the code. This can be done via some sync
-    mechanism (mutex et al) or simply by not touching the context from
-    the "initiator" thread after a transaction is initiated.
 
     A common method to handle the callback is to simply notify the
     thread that initiated the transaction (via some message queue
@@ -27,7 +20,7 @@
     (typically a "publish" or a "subscribe"). You can use more than
     one context in a thread, but, as mentioned above, should not use
     the same context from more than one thread.
-    
+
  */
 
 /** @file pubnub_callback.h */
@@ -40,11 +33,11 @@
 #error You have to define PUBNUB_CALLBACK_API
 #endif
 
-#include "pubnub_alloc.h"
-#include "pubnub_assert.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_callback.h"
+#include "core/pubnub_alloc.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_ntf_callback.h"
 
 
 #endif /* !defined INC_PUBNUB_CALLBACK */
