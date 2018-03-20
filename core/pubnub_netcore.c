@@ -551,25 +551,22 @@ next_state:
         }
         else if (0 == i) {
 #if PUBNUB_PROXY_API
-            char hdr2send[1024] = "\r\n";
-            if (0 == pbproxy_http_header_to_send(pb, hdr2send + 2, sizeof hdr2send - 2)) {
-                PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hdr2send);
-                pb->state = PBS_TX_PROXY_AUTHORIZATION;
-                if (-1 == pbpal_send_str(pb, hdr2send)) {
-                    outcome_detected(pb, PNR_IO_ERROR);
-                    break;
+            if (!pb->proxy_tunnel_established) {
+                char hdr2send[1024] = "\r\n";
+                if ((0 == pbproxy_http_header_to_send(pb, hdr2send + 2, sizeof hdr2send - 2))) {
+                    PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hdr2send);
+                    pb->state = PBS_TX_PROXY_AUTHORIZATION;
+                    if (-1 == pbpal_send_str(pb, hdr2send)) {
+                        outcome_detected(pb, PNR_IO_ERROR);
+                        break;
+                    }
+                    goto next_state;
                 }
             }
-            else {
-                pbpal_send_literal_str(
-                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n");
-                pb->state = PBS_TX_FIN_HEAD;
-            }
-#else
+#endif
             pbpal_send_literal_str(
                 pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n");
             pb->state = PBS_TX_FIN_HEAD;
-#endif
             goto next_state;
         }
         break;
@@ -836,15 +833,11 @@ next_state:
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
                 pb->state = PBS_IDLE;
+                break;
             }
-            else {
-                pbpal_forget(pb);
-                pbntf_trans_outcome(pb);
-            }
-#else
+#endif
             pbpal_forget(pb);
             pbntf_trans_outcome(pb);
-#endif
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -858,17 +851,12 @@ next_state:
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
                 pb->state = PBS_IDLE;
+                break;
             }
-            else {
-                pbpal_forget(pb);
-                pb->core.msg_ofs = pb->core.msg_end = 0;
-                pbntf_trans_outcome(pb);
-            }
-#else
+#endif
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
             pbntf_trans_outcome(pb);
-#endif
         }
         break;
     case PBS_KEEP_ALIVE_IDLE:
