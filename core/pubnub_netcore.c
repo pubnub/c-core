@@ -57,6 +57,7 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
            we don't have a way to report to the user that the
            connection was lost.
          */
+        PUBNUB_LOG_TRACE("outcome_detected(pb=%p): Keepin' it alive\n", pb);
         pbntf_lost_socket(pb);
         pbntf_trans_outcome(pb);
         pb->state = PBS_KEEP_ALIVE_IDLE;
@@ -552,11 +553,11 @@ next_state:
         else if (0 == i) {
 #if PUBNUB_PROXY_API
             if (!pb->proxy_tunnel_established) {
-                char hdr2send[1024] = "\r\n";
-                if ((0 == pbproxy_http_header_to_send(pb, hdr2send + 2, sizeof hdr2send - 2))) {
-                    PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hdr2send);
+                char hedr[1024] = "\r\n";
+                if ((0 == pbproxy_http_header_to_send(pb, hedr + 2, sizeof hedr - 2))) {
+                    PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hedr);
                     pb->state = PBS_TX_PROXY_AUTHORIZATION;
-                    if (-1 == pbpal_send_str(pb, hdr2send)) {
+                    if (-1 == pbpal_send_str(pb, hedr)) {
                         outcome_detected(pb, PNR_IO_ERROR);
                         break;
                     }

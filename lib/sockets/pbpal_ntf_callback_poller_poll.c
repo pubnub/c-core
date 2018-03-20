@@ -55,7 +55,7 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
         PUBNUB_ASSERT_OPT(data->apoll[i].fd != sockt);
     }
     if (data->size == data->cap) {
-        size_t         newcap = data->size + 2;
+        size_t const   newcap = data->size + 2;
         struct pollfd* npalloc =
             (struct pollfd*)realloc(data->apoll, sizeof data->apoll[0] * newcap);
         pubnub_t** npapb =
@@ -108,16 +108,14 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
 
 void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 {
-    size_t i;
-    int    socket = pubnub_get_native_socket(pb);
-    if (INVALID_SOCKET == socket) {
-        return;
-    }
-
-    for (i = 0; i < data->size; ++i) {
-        if (data->apb[i] == pb) {
-            data->apoll[i].fd = socket;
-            return;
+    pbpal_native_socket_t socket = pubnub_get_native_socket(pb);
+    if (socket != INVALID_SOCKET) {
+        size_t i;
+        for (i = 0; i < data->size; ++i) {
+            if (data->apb[i] == pb) {
+                data->apoll[i].fd = socket;
+                return;
+            }
         }
     }
 }
