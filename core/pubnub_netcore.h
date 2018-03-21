@@ -16,6 +16,11 @@ enum pubnub_state {
     PBS_NULL,
     /** No transaction ongoing */
     PBS_IDLE,
+    /** About to retry the transaction.  Currently used in proxy
+        authentication, where we "retry" after receiving HTTP status
+        407, sending (some more) authentication data.
+     */
+    PBS_RETRY,
     /** Ready to start a transaction */
     PBS_READY,
     /** Waiting for sending a DNS request */

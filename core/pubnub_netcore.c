@@ -26,7 +26,7 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
     if (pb->options.use_http_keep_alive) {
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         if (pb->keep_alive.should_close) {
-            return true;
+            return false;
         }
 #endif
         switch (rslt) {
@@ -48,6 +48,26 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 }
 
 
+static void close_connection(struct pubnub_* pb)
+{
+    if (pbpal_close(pb) <= 0) {
+#if PUBNUB_PROXY_API
+        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n",
+                         pb->retry_after_close);
+        if (pb->retry_after_close) {
+            pb->state = PBS_RETRY;
+            return;
+        }
+#endif
+        pbpal_forget(pb);
+        pbntf_trans_outcome(pb);
+    }
+    else {
+        pb->state = PBS_WAIT_CLOSE;
+    }
+}
+
+
 static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
@@ -65,24 +85,8 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
         pb->retry_after_close = 0;
 #endif
     }
-    else if (pbpal_close(pb) <= 0) {
-#if PUBNUB_PROXY_API
-        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n",
-                         pb->retry_after_close);
-        if (pb->retry_after_close) {
-            pb->state = PBS_IDLE;
-        }
-        else {
-            pbpal_forget(pb);
-            pbntf_trans_outcome(pb);
-        }
-#else
-        pbpal_forget(pb);
-        pbntf_trans_outcome(pb);
-#endif
-    }
     else {
-        pb->state = PBS_WAIT_CLOSE;
+        close_connection(pb);
     }
 }
 
@@ -161,7 +165,12 @@ static void finish(struct pubnub_* pb)
         return;
     case pbproxyFinRetry:
         PUBNUB_LOG_TRACE("Proxy: retry in current connection\n");
-        pb->state             = PBS_CONNECTED;
+        if (pb->keep_alive.should_close) {
+            close_connection(pb);
+        }
+        else {
+            pb->state = PBS_CONNECTED;
+        }
         pb->retry_after_close = true;
         return;
     default:
@@ -295,6 +304,12 @@ next_state:
             break;
         }
         break;
+#if PUBNUB_PROXY_API
+    case PBS_RETRY:
+        pb->retry_after_close = false;
+        pb->state             = PBS_READY;
+        goto next_state;
+#endif
     case PBS_READY: {
         enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
@@ -833,8 +848,8 @@ next_state:
         if (pbpal_closed(pb)) {
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
-                pb->state = PBS_IDLE;
-                break;
+                pb->state = PBS_RETRY;
+                goto next_state;
             }
 #endif
             pbpal_forget(pb);
@@ -851,8 +866,8 @@ next_state:
         if (pbpal_closed(pb)) {
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
-                pb->state = PBS_IDLE;
-                break;
+                pb->state = PBS_RETRY;
+                goto next_state;
             }
 #endif
             pbpal_forget(pb);
