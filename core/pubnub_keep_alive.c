@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal."
+
 #include "pubnub_keep_alive.h"
 
 

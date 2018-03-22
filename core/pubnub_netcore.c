@@ -25,7 +25,9 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
     if (pb->options.use_http_keep_alive) {
 #if PUBNUB_ADVANCED_KEEP_ALIVE
-        if (pb->keep_alive.should_close) {
+        if (pb->keep_alive.should_close
+            || (++pb->keep_alive.count >= pb->keep_alive.max)
+            || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
             return false;
         }
 #endif
@@ -195,6 +197,8 @@ static char const* pbnc_state2str(enum pubnub_state e)
     switch (e) {
     case PBS_NULL:
         return "PBS_NULL";
+    case PBS_RETRY:
+        return "PBS_RETRY";
     case PBS_IDLE:
         return "PBS_IDLE";
     case PBS_READY:
@@ -898,14 +902,6 @@ next_state:
             pbntf_trans_outcome(pb);
             break;
         }
-#if PUBNUB_ADVANCED_KEEP_ALIVE
-        if ((++pb->keep_alive.count >= pb->keep_alive.max)
-            || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
-            pbntf_lost_socket(pb);
-            pb->state = PBS_READY;
-            goto next_state;
-        }
-#endif
         i = send_init_GET_or_CONNECT(pb);
         if (i < 0) {
             pbntf_lost_socket(pb);
