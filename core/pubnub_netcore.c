@@ -167,13 +167,14 @@ static void finish(struct pubnub_* pb)
         return;
     case pbproxyFinRetry:
         PUBNUB_LOG_TRACE("Proxy: retry in current connection\n");
+        pb->retry_after_close = true;
+#if PUBNUB_ADVANCED_KEEP_ALIVE
         if (pb->keep_alive.should_close) {
             close_connection(pb);
+            return;
         }
-        else {
-            pb->state = PBS_CONNECTED;
-        }
-        pb->retry_after_close = true;
+#endif
+        pb->state = PBS_CONNECTED;
         return;
     default:
         break;
