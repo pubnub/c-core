@@ -96,7 +96,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
             in_this_pass = test_count - next_test;
         }
         for (i = next_test; i < next_test+in_this_pass; ++i) {
-            printf("Creating a thread for test %u\n", i);
+            printf("Creating a thread for test %u\n", i + 1);
             aHa[i - next_test] = aTest[i].pth = (HANDLE)_beginthreadex(NULL, 0, aTest[i].pf, &aTest[i].result, 0, NULL);
         }
         /* This is the simplest way to do it - wait for all threads to finish.

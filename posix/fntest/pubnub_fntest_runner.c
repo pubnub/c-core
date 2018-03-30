@@ -79,7 +79,7 @@ static int run_tests(struct TestData aTest[], unsigned test_count, unsigned max_
             in_this_pass = test_count - next_test;
         }
         for (i = next_test; i < next_test+in_this_pass; ++i) {
-            printf("Creating a thread for test %d\n", i);
+            printf("Creating a thread for test %d\n", i + 1);
             pthread_create(&aTest[i].pth, NULL, aTest[i].pf, &aTest[i].result);
         }
         /* This is the simplest way to do it - join all threads, one
