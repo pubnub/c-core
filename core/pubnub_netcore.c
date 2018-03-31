@@ -933,9 +933,12 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         break;
     case PBS_IDLE:
     case PBS_NULL:
-    case PBS_KEEP_ALIVE_IDLE:
+        pbp->trans = PBTT_NONE;
         pbntf_trans_outcome(pbp);
         break;
+    case PBS_KEEP_ALIVE_IDLE:
+        pbp->trans = PBTT_NONE;
+        /*FALLTHRU*/
     default:
         pbp->state = PBS_WAIT_CANCEL;
         pbntf_requeue_for_processing(pbp);
