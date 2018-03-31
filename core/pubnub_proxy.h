@@ -212,7 +212,7 @@ int pubnub_proxy_get_config(pubnub_t const*         pb,
                             enum pubnub_proxy_type* protocol,
                             uint16_t*               port,
                             char*                   host,
-                            size_t                  n);
+                            unsigned                n);
 
 
 #endif /* defined INC_PUBNUB_PROXY */

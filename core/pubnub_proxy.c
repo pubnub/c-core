@@ -50,7 +50,7 @@ int pubnub_proxy_get_config(pubnub_t const*         pb,
                             enum pubnub_proxy_type* protocol,
                             uint16_t*               port,
                             char*                   host,
-                            size_t                  n)
+                            unsigned                n)
 {
     PUBNUB_ASSERT_OPT(pb != NULL);
     PUBNUB_ASSERT_OPT(protocol != NULL);
