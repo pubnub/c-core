@@ -7,6 +7,7 @@
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pbpal.h"
 #include "core/pubnub_version_internal.h"
+#include "core/pubnub_helper.h"
 
 #include "core/pubnub_proxy_core.h"
 
@@ -426,7 +427,11 @@ next_state:
         pb->keep_alive.t_connect = time(NULL);
         pb->keep_alive.count     = 0;
 #endif
-        send_init_GET_or_CONNECT(pb);
+        i = send_init_GET_or_CONNECT(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+            break;
+        }
         pb->state = PBS_TX_GET;
         goto next_state;
     case PBS_TX_GET:
@@ -919,6 +924,8 @@ next_state:
 
 void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 {
+    PUBNUB_LOG_TRACE(
+        "pbnc_stop(%p, %s)\n", pbp, pubnub_res_2_string(outcome_to_report));
     pbp->core.last_result = outcome_to_report;
     switch (pbp->state) {
     case PBS_WAIT_CANCEL:
