@@ -11,7 +11,7 @@ typedef SOCKET pb_socket_t;
 
 
 #define socket_close(socket) closesocket(socket)
-#define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
+#define socket_send(socket, buf, len) send((socket), (buf), (len))
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
 /* Treating `WSAEINPROGRESS` the same as `WSAEWOULDBLOCK` isn't 

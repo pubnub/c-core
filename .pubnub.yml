@@ -5,6 +5,8 @@ changelog:
   - version: v2.3.3
     changes:
       - type: feature
+        text: On Linux, use MSG_NOSIGNAL to avoid SIGPIPE on send()
+      - type: feature
         text: Add API to read proxy configuration
       - type: bug
         text: Avoid (currently harmless) inconsistent locking order

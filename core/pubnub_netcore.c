@@ -459,7 +459,9 @@ next_state:
                             pb->proxy_saved_path_len + 1);
                     pb->core.http_buf_len = pb->proxy_saved_path_len;
                 }
-                pbpal_send_literal_str(pb, "http://");
+                if (0 > pbpal_send_literal_str(pb, "http://")) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                }
                 break;
             case pbproxyHTTP_CONNECT:
                 pb->state = PBS_TX_SCHEME;
@@ -532,7 +534,10 @@ next_state:
         else if (0 == i) {
             if ((pb->proxy_type == pbproxyHTTP_CONNECT)
                 && !pb->proxy_tunnel_established) {
-                pbpal_send_literal_str(pb, ":80");
+                if (0 > pbpal_send_literal_str(pb, ":80")) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
                 pb->state = PBS_TX_PORT_NUM;
             }
             else {
@@ -553,7 +558,10 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(pb, " HTTP/1.1\r\nHost: ");
+            if (0 > pbpal_send_literal_str(pb, " HTTP/1.1\r\nHost: ")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
             pb->state = PBS_TX_VER;
             goto next_state;
         }
@@ -590,8 +598,11 @@ next_state:
                 }
             }
 #endif
-            pbpal_send_literal_str(
-                pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n");
+            if (0 > pbpal_send_literal_str(
+                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }
@@ -603,8 +614,11 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(
-                pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n");
+            if (0 > pbpal_send_literal_str(
+                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }

@@ -102,6 +102,8 @@ pubnub_t *pubnub_alloc(void)
 
 void pballoc_free_at_last(pubnub_t *pb)
 {
+    PUBNUB_LOG_TRACE("pballoc_free_at_last(%p)\n", pb);
+
     PUBNUB_ASSERT_OPT(pb != NULL);
 
     pubnub_mutex_lock(pb->monitor);
@@ -128,18 +130,20 @@ int pubnub_free(pubnub_t *pb)
 
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
+        PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
         pb->state = PBS_NULL;
 #if defined(PUBNUB_CALLBACK_API)
-            pbntf_requeue_for_processing(pb);
-            pubnub_mutex_unlock(pb->monitor);
+        pbntf_requeue_for_processing(pb);
+        pubnub_mutex_unlock(pb->monitor);
 #else
-            pubnub_mutex_unlock(pb->monitor);
-            pballoc_free_at_last(pb);
+        pubnub_mutex_unlock(pb->monitor);
+        pballoc_free_at_last(pb);
 #endif
 
         result = 0;
     }
     else {
+        PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
         pubnub_mutex_unlock(pb->monitor);
     }
 

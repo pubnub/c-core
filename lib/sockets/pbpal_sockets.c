@@ -129,7 +129,7 @@ int pbpal_send_status(pubnub_t* pb)
 
     PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
 
-    rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len, 0);
+    rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     if (rslt <= 0) {
         rslt = (handle_socket_error(rslt, pb) == PNR_IN_PROGRESS) ? +1 : -1;
     }
