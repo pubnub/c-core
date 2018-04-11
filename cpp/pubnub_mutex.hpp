@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_mutex.h"
+#include "core/pubnub_mutex.h"
 
 namespace pubnub {
 

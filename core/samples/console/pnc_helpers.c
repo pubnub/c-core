@@ -2,7 +2,7 @@
 
 #include "pnc_helpers.h"
 
-#include "pubnub_assert.h"
+#include "core/pubnub_assert.h"
 
 #include <ctype.h>
 #include <string.h>

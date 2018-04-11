@@ -1,13 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
-#include "pbhttp_digest.h"
+#include "core/pbhttp_digest.h"
 
-#include "pbmd5.h"
-#include "pbmd5_to_str.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-#include "pubnub_generate_uuid.h"
+#include "lib/md5/pbmd5.h"
+#include "core/pbmd5_to_str.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_generate_uuid.h"
 
 #include <string.h>
 

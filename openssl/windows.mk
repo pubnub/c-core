@@ -15,12 +15,12 @@ OPENSSL_LIBS=$(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 !ENDIF
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSL_LIBS)
 
-CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_INFO /W3 /D PUBNUB_USE_WIN_SSPI=1
+CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE /W3 /D PUBNUB_USE_WIN_SSPI=1
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
 
-INCLUDES=-I ..\core -I . -I ..\lib\sockets -I ..\windows\fntest -I ..\core\fntest -I ..\lib\base64 -I ..\core\c99 -I $(OPENSSLPATH)\include
+INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include
 
 all: pubnub_sync_sample.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe
 

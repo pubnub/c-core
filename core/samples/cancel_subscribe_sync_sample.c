@@ -9,11 +9,12 @@
 
 int main()
 {
+    bool done = false;
     /* This is a widely use channel, something should happen there
        from time to time
     */
-    char const *chan = "hello_world";
-    pubnub_t *pbp = pubnub_alloc();
+    char const* chan = "hello_world";
+    pubnub_t*   pbp  = pubnub_alloc();
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
         return -1;
@@ -22,7 +23,7 @@ int main()
     pubnub_init(pbp, "demo", "demo");
     srand((unsigned)time(NULL));
 
-    /* Using non-blocking I/O is essential, otherwise waiting for 
+    /* Using non-blocking I/O is essential, otherwise waiting for
         incoming data will block! We recommend you not enable verbose
         debugging, as it will be filled up with tracing.
     */
@@ -32,19 +33,20 @@ int main()
     puts("Subscribe loop starting...");
     puts("--------------------------");
 
-    for (;;) {
-        time_t t = time(NULL);
-        bool stop = false;
-        enum pubnub_res res = pubnub_subscribe(pbp, chan, NULL);
+    while (!done) {
+        time_t          t    = time(NULL);
+        bool            stop = false;
+        enum pubnub_res res  = pubnub_subscribe(pbp, chan, NULL);
         if (res != PNR_STARTED) {
             printf("pubnub_subscribe() returned unexpected: %d\n", res);
-            break;;
+            break;
+            ;
         }
 
         /* Don't await here, 'cause it will loop until done */
         while (!stop) {
             res = pubnub_last_result(pbp);
-            if (res == PNR_STARTED) {
+            if (PNR_STARTED == res) {
                 /* Here we simulate the "get out of subscribe loop"
                    external signal with a random number. Basically,
                    this has a 4% chance of stopping the wait every
@@ -52,14 +54,14 @@ int main()
                 */
                 if (time(NULL) != t) {
                     stop = (rand() % 25) == 3;
-                    t = time(NULL);
+                    t    = time(NULL);
                 }
             }
             else {
                 if (PNR_OK == res) {
                     puts("Subscribed! Got messages:");
                     for (;;) {
-                        char const *msg = pubnub_get(pbp);
+                        char const* msg = pubnub_get(pbp);
                         if (NULL == msg) {
                             break;
                         }
@@ -68,6 +70,10 @@ int main()
                 }
                 else {
                     printf("Subscribing failed with code: %d\n", res);
+                }
+                if (time(NULL) != t) {
+                    done = (rand() % 25) == 19;
+                    t    = time(NULL);
                 }
                 break;
             }
@@ -82,7 +88,7 @@ int main()
                to do
             */
             pubnub_await(pbp);
-            break;
+            done = true;
         }
     }
 

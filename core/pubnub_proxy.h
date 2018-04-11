@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PROXY
-#define	INC_PUBNUB_PROXY
+#define INC_PUBNUB_PROXY
 
 
 #include "pubnub_api_types.h"
@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 
-/** @file pubnub_proxy.h 
+/** @file pubnub_proxy.h
 
     This is the "Proxy" API of the Pubnub client library.  Functions
     here influence the way that Pubnub client library works with
@@ -104,11 +104,11 @@ enum pubnub_http_authentication_scheme {
 
 
 /** Returns the current proxy type/protocol for the context @p p. */
-enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p);
+enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
 
 /** Sets the configuration for the Internet proxy, by explicitly
     specifying the protocol to use and the proxy server.
-    
+
     If proxy support is available, pubnub_init() will default to "no
     proxy".
 
@@ -120,15 +120,18 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p);
     the proxy server.
     @param port The port number to use on the proxy - there is no standard,
     the HTTP port (80) is seldom used, while 3128 seems to be a popular one
-    
+
     @return 0: OK, otherwise: error, specified protocol not supported
     or @p ip_address_or_url too long
 */
-int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url, uint16_t port);
+int pubnub_set_proxy_manual(pubnub_t*              p,
+                            enum pubnub_proxy_type protocol,
+                            char const*            ip_address_or_url,
+                            uint16_t               port);
 
 /** Sets the configuration for the Internet proxy, by reading from the
     "system" configuration.
-    
+
     On some platforms (like Windows), there is some (de-facto)
     standard way of setting a proxy. On others, there may not be.
     C-core will try to do the best it can on a given platform.
@@ -140,13 +143,13 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
     @pre Call this after pubnub_init() on the context
     @param p The Context to set proxy configuration for
     @param protocol Proxy protocol to use on @p p context
-    
+
     @return 0: OK, otherwise: error, reading system configuration failed
 */
-int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol);
+int pubnub_set_proxy_from_system(pubnub_t* p, enum pubnub_proxy_type protocol);
 
 /** Sets the authentication password and scheme to be used for Proxy
-    authentication. 
+    authentication.
 
     The default username and password are the currently logged on
     username and password, if such info can be acquired at runtime, or
@@ -162,7 +165,9 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol);
 
     @return 0: OK, otherwise: error
  */
-int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *username, char const *password);
+int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
+                                                      char const* username,
+                                                      char const* password);
 
 /** Set the context @p p to not use _any_ authentication scheme.  This
     is the default, so you only need to call this function if you're
@@ -173,13 +178,41 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *u
     @param p The Context to set proxy authentication for
     @return 0: OK, otherwise: error, scheme not supported
  */
-int pubnub_set_proxy_authentication_none(pubnub_t *p);
+int pubnub_set_proxy_authentication_none(pubnub_t* p);
 
 
 /** Returns the currently set HTTP proxy authentication scheme
     for context @p p.
 */
-enum pubnub_http_authentication_scheme pubnub_proxy_authentication_scheme_get(pubnub_t *p);
+enum pubnub_http_authentication_scheme
+pubnub_proxy_authentication_scheme_get(pubnub_t* p);
+
+
+/** Gives the whole proxy configuration, as-is. It doesn't provide any
+    assurance as to whether this configuration is correct.
+
+    One use case is to get a configuration you find is working on one
+    context and then apply it to another.
+
+    @precondition pb != NULL
+    @precondition protocol != NULL
+    @precondition port != NULL
+    @precondition host != NULL
+    @precondition n > 0
+
+    @param[in] pb The Pubnub context to get the configuration from
+    @param[out] protocol Pointer to where the protocol will be written to
+    @param[out] port Pointer to where the port will be written to
+    @param[out] host Pointer to user-allocated string for the host name
+    @param[in] n The number of allocated characters for @p host
+    @retval 0 OK
+    @retval otherwise Some error 
+*/
+int pubnub_proxy_get_config(pubnub_t const*         pb,
+                            enum pubnub_proxy_type* protocol,
+                            uint16_t*               port,
+                            char*                   host,
+                            unsigned                n);
 
 
 #endif /* defined INC_PUBNUB_PROXY */

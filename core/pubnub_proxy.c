@@ -7,7 +7,10 @@
 #include <string.h>
 
 
-int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char const *ip_address_or_url, uint16_t port)
+int pubnub_set_proxy_manual(pubnub_t*              p,
+                            enum pubnub_proxy_type protocol,
+                            char const*            ip_address_or_url,
+                            uint16_t               port)
 {
     size_t ip_or_url_len;
 
@@ -35,7 +38,7 @@ int pubnub_set_proxy_manual(pubnub_t *p, enum pubnub_proxy_type protocol, char c
 }
 
 
-enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p)
+enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
@@ -43,7 +46,30 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t *p)
 }
 
 
-int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *username, char const *password)
+int pubnub_proxy_get_config(pubnub_t const*         pb,
+                            enum pubnub_proxy_type* protocol,
+                            uint16_t*               port,
+                            char*                   host,
+                            unsigned                n)
+{
+    PUBNUB_ASSERT_OPT(pb != NULL);
+    PUBNUB_ASSERT_OPT(protocol != NULL);
+    PUBNUB_ASSERT_OPT(port != NULL);
+    PUBNUB_ASSERT_OPT(host != NULL);
+    PUBNUB_ASSERT_OPT(n > 0);
+
+    *protocol = pb->proxy_type;
+    *port     = pb->proxy_port;
+    strncpy(host, pb->proxy_hostname, n);
+    host[n - 1] = '\0';
+
+    return 0;
+}
+
+
+int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
+                                                      char const* username,
+                                                      char const* password)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
@@ -52,5 +78,3 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t *p, char const *u
 
     return 0;
 }
-
-

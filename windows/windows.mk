@@ -4,13 +4,13 @@ OBJFILES = pubnub_pubsubapi.obj pubnub_coreapi.obj pubnub_coreapi_ex.obj pubnub_
 
 LDLIBS=ws2_32.lib rpcrt4.lib
 
-DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -D HAVE_STRERROR_S
+DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S
 CFLAGS = -Zi -MP -W3 $(DEFINES)
 # -Zi enables debugging, remove to get a smaller .exe and no .pdb
 # -MP use one compiler process for each input, faster on multi-core (ignored by clang-cl)
 # -analyze To run the static analyzer (not compatible w/clang-cl)
 
-INCLUDES=-I ..\core -I . -I ..\lib\sockets -I ..\lib\base64 -I ..\lib\md5 -I fntest -I ../core/fntest -I ..\core\c99 
+INCLUDES=-I .. -I . -I ..\core\c99 
 
 all: pubnub_sync_sample.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_callback_subloop_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe
 
@@ -21,11 +21,11 @@ pubnub_sync.lib : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES)
 	lib $(OBJFILES) pubnub_ntf_sync.obj -OUT:$@
 
 ##
-# The socket poller module to use. You should use the `poll` poller it
-# doesn't have the weird restrictions of `select` poller. OTOH,
-# select() on Windows is compatible w/BSD sockets poll(), while
-# WSAPoll() has some weird differences to poll().  The names are the
-# same until the last `_`, then it's `poll` vs `select.
+# The socket poller module to use. The `poll` poller doesn't have the
+# weird restrictions of `select` poller. OTOH, select() on Windows is
+# compatible w/BSD sockets select(), while WSAPoll() has some weird
+# differences to poll().  The names are the same until the last `_`,
+# then it's `poll` vs `select.
 SOCKET_POLLER_C=..\lib\sockets\pbpal_ntf_callback_poller_poll.c
 SOCKET_POLLER_OBJ=pbpal_ntf_callback_poller_poll.obj
 

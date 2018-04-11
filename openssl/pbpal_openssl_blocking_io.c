@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbpal.h"
+#include "core/pbpal.h"
 
 #include "pubnub_internal.h"
 

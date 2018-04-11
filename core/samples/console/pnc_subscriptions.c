@@ -2,7 +2,7 @@
 #include "pnc_subscriptions.h"
 #include "pnc_config.h"
 
-#include "pubnub_assert.h"
+#include "core/pubnub_assert.h"
 
 #include <stdio.h>
 #include <string.h>

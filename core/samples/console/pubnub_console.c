@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_alloc.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_version.h"
-#include "pubnub_blocking_io.h"
+#include "core/pubnub_alloc.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_version.h"
+#include "core/pubnub_blocking_io.h"
 
 #include "pnc_config.h"
 #include "pnc_helpers.h"

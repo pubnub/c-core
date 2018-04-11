@@ -41,12 +41,10 @@ int pbproxy_http_header_to_send(pubnub_t *p, char* header, size_t n);
 enum pbproxyFinInstruction {
     /** Do not proceed, there is an error */
     pbproxyFinError,
-    /** Retry the Pubnub request (re-)using the same TCP connection */
-    pbproxyFinRetryConnected,
-    /** Retry the Pubnub request after closing current TCP connection
-	(and establishing a new one).
-    */
-    pbproxyFinRetryReconnect,
+    /** Retry the Pubnub request, (re-)using the same TCP connection,
+        if possible.
+     */
+    pbproxyFinRetry,
     /** There is nothing proxy-related in this HTTP response, do
 	as if we had no proxy support.
     */

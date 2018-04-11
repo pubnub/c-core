@@ -1,4 +1,4 @@
-#include "pubnub_generate_uuid.h"
+#include "core/pubnub_generate_uuid.h"
 
 #include <rpc.h>
 

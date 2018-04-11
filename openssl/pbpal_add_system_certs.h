@@ -2,7 +2,7 @@
 #if !defined INC_PBPAL_ADD_SYSTEM_CERTS
 #define      INC_PBPAL_ADD_SYSTEM_CERTS
 
-#include "pubnub_api_types.h"
+#include "core/pubnub_api_types.h"
 
 /** Adds CA certificates from the system store. Available on platforms
     that have a system store (like Windows).

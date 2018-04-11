@@ -15,9 +15,8 @@ int pbntf_init(void)
 }
 
 
-int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
+int pbntf_got_socket(pubnub_t *pb)
 {
-    PUBNUB_UNUSED(socket);
     if (PUBNUB_BLOCKING_IO_SETTABLE) {
         pbpal_set_blocking_io(pb);
     }
@@ -25,16 +24,14 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
 }
 
 
-void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
+void pbntf_update_socket(pubnub_t *pb)
 {
-    PUBNUB_UNUSED(socket);
     PUBNUB_UNUSED(pb);
 }
 
 
-void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
+void pbntf_lost_socket(pubnub_t *pb)
 {
-    PUBNUB_UNUSED(socket);
     PUBNUB_UNUSED(pb);
 }
 
@@ -80,7 +77,7 @@ enum pubnub_res pubnub_last_result(pubnub_t *pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    while (!pbnc_can_start_transaction(pb)) {
+    if (!pbnc_can_start_transaction(pb)) {
         pbnc_fsm((pubnub_t*)pb);
     }
     result = pb->core.last_result;

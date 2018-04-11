@@ -19,6 +19,9 @@
 #endif
 
 #include <stdint.h>
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+#include <time.h>
+#endif
 
 
 #if !defined PUBNUB_USE_ADNS
@@ -55,12 +58,12 @@ enum PBSocketState {
 enum NPBNTLM_State {
     /** Idle */
     pbntlmIdle,
-    /** Waiting to send Type1 message (identity) */
-    pbntlmSendTypeOne,
-    /** Waiting to recieve Type2 message (challenge) */
-    pbntlmRcvTypeTwo,
-    /** Waiting to send Type3 message (challenge response) */
-    pbntlmSendTypeThree,
+    /** Waiting to send NEGOTIATE (AKA Type1) message (identity) */
+    pbntlmSendNegotiate,
+    /** Waiting to recieve CHALLENGE (AKA Type2) message (challenge) */
+    pbntlmRcvChallenge,
+    /** Waiting to send AUTHENTICATE (AKA Type3) message (challenge response) */
+    pbntlmSendAuthenticate,
     /** NTLM authentication is done (may have succeded or not,
         does not matter to us).
      */
@@ -186,6 +189,7 @@ struct pubnub_ {
 
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to
+
          * PubNub using SSL? */
         bool useSSL : 1;
         /** When SSL is enabled, should PubNub client ignore all SSL
@@ -205,6 +209,16 @@ struct pubnub_ {
         bool reuse_SSL_session : 1;
 #endif
     } options;
+
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+    struct pubnub_keep_alive_data {
+        time_t timeout;
+        time_t t_connect;
+        unsigned max;
+        unsigned count;
+        bool should_close;
+    } keep_alive;
+#endif
 
 #if PUBNUB_USE_SSL
     /** Certificate store file */
@@ -304,11 +318,11 @@ void pbntf_trans_outcome(pubnub_t *pb);
 
 int pbntf_init(void);
 
-int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket);
+int pbntf_got_socket(pubnub_t *pb);
 
-void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket);
+void pbntf_update_socket(pubnub_t *pb);
 
-void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket);
+void pbntf_lost_socket(pubnub_t *pb);
 
 int pbntf_enqueue_for_processing(pubnub_t *pb);
 

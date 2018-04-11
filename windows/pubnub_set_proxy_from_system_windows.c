@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_proxy.h"
+#include "core/pubnub_proxy.h"
 
 #include "pubnub_internal.h"
-#include "pubnub_log.h"
-#include "pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_assert.h"
 
 #include <winhttp.h>
 

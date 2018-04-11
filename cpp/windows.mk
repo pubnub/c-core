@@ -2,7 +2,7 @@ SOURCEFILES = ..\core\pubnub_pubsubapi.c ..\core\pubnub_coreapi.c  ..\core\pubnu
 
 LIBS=ws2_32.lib rpcrt4.lib
 
-CFLAGS = /EHsc /Zi /MP /TP /I ..\core /I . /I ..\lib\base64 /I ..\lib\md5 /I ..\lib\sockets /I ..\core\c99 /I ..\windows /W3 /D PUBNUB_THREADSAFE /D HAVE_STRERROR_S
+CFLAGS = /EHsc /Zi /MP /TP /I .. /I . /I ..\core\c99 /I ..\windows /W3 /D PUBNUB_THREADSAFE /D HAVE_STRERROR_S
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /TP means "compile all files as C++"

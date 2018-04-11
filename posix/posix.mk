@@ -26,7 +26,7 @@ CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE 
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize-address Use AddressSanitizer
 
-INCLUDES=-I ../core -I . -I fntest -I ../core/fntest -I ../lib/base64 -I ../lib/md5 -I ../lib/sockets
+INCLUDES=-I .. -I .
 
 all: pubnub_sync_sample cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback
 

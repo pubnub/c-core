@@ -13,7 +13,17 @@
 typedef int pb_socket_t;
 
 #define socket_close(socket) close(socket)
-#define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
+
+#if defined(__linux__)
+/* We assume that one doesn't want to receive and handle SIGPIPE.
+   But we may upgrade this to a compile time option in the future,
+   if people actually want to handle SIGPIPE.
+*/
+#define socket_send(socket, buf, len) send((socket), (buf), (len), MSG_NOSIGNAL)
+#else
+#define socket_send(socket, buf, len) send((socket), (buf), (len), 0)
+#endif
+
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
 /* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't 
@@ -53,7 +63,7 @@ struct pubnub_pal {
 #define PUBNUB_TIMERS_API 1
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 

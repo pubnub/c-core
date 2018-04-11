@@ -72,7 +72,7 @@ int snprintf(char* buffer, size_t n, const char* format, ...);
 #define PUBNUB_TIMERS_API 1
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL */

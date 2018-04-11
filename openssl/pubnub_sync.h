@@ -7,12 +7,8 @@
     This is the "sync" interface of the Pubnub client library for
     OpenSSL (on any platform that OpenSSL supports).
 
-    The "sync" interface has these characteristics:
-    - It is not thread safe. Please, always call all Pubnub functions
-    on a context from the same thread (that is, same that allocated
-    that context).
-    - There is no "callback" on the end of a transaction. Instead,
-    you should check (via pubnub_last_result()) to see if the 
+    There is no "callback" on the end of a transaction. Instead,
+    you should check (via pubnub_last_result()) to see if the
     transaction completed, or if you don't need to do anything
     else on the thread until the transaction is completed (including
     possible thread shutdown), you can call pubnub_await() which
@@ -23,7 +19,7 @@
     (typically a "publish" or a "subscribe"). You can use more than
     one context in a thread, but, as mentioned above, should not use
     the same context from more than one thread.
-    
+
  */
 
 /** @file pubnub_sync.h */
@@ -32,13 +28,13 @@
 
 /* -- You should not change anything below this line -- */
 
-#include "pubnub_alloc.h"
-#include "pubnub_assert.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_sync.h"
-#include "pubnub_generate_uuid.h"
-#include "pubnub_blocking_io.h"
+#include "core/pubnub_alloc.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_generate_uuid.h"
+#include "core/pubnub_blocking_io.h"
 
 
 #endif /* !defined INC_OPENSSL_SYNC */

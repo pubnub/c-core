@@ -2,7 +2,7 @@
 #if !defined(INC_PBPAL_NTF_CALLBACK_POLLER_SELECT)
 #define INC_PBPAL_NTF_CALLBACK_POLLER_SELECT
 
-#include "pbpal_ntf_callback_poller.h"
+#include "core/pbpal_ntf_callback_poller.h"
 
 #include "pubnub_get_native_socket.h"
 

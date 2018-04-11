@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CONFIG
-#define      INC_PUBNUB_CONFIG
+#define INC_PUBNUB_CONFIG
 
 
 /* -- Next few definitions can be tweaked by the user, but with care -- */
@@ -58,7 +58,7 @@
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN  "pubsub.pubnub.com"
+#define PUBNUB_ORIGIN "pubsub.pubnub.com"
 
 /** Set to 0 to disable changing the origin from the default
     #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
@@ -67,19 +67,19 @@
 #define PUBNUB_ORIGIN_SETTABLE 1
 
 /** Duration of the transaction timeout set during context initialization,
-    in milliseconds. Timeout duration in the context can be changed by the 
+    in milliseconds. Timeout duration in the context can be changed by the
     user after initialization.
     */
-#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+#define PUBNUB_DEFAULT_TRANSACTION_TIMER 310000
 
 #define PUBNUB_HAVE_SHA1 0
 
-/** The size of the stack (in kilobytes) for the "polling" thread, when using 
-    the callback interface. We don't need much, so, if you want to conserve 
-    memory, you can try small values. It's hard to say what is the minumum, 
-    as it depends on the OS functions we call, but, you probably 
+/** The size of the stack (in kilobytes) for the "polling" thread, when using
+    the callback interface. We don't need much, so, if you want to conserve
+    memory, you can try small values. It's hard to say what is the minumum,
+    as it depends on the OS functions we call, but, you probably
     shouldn't try less than 64 KB.
-    
+
     Set to `0` to use the default stack size.
     */
 #define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
@@ -112,6 +112,15 @@
     to reduce the memory footprint.
 */
 #define PUBNUB_ONLY_PUBSUB_API 0
+#endif
+
+
+#if !defined(PUBNUB_ADVANCED_KEEP_ALIVE)
+/** If true (!=0) will enable use of advanced keep-alive parameters,
+    see pubnub_set_keep_alive_param() and will observe the
+    `Connection: close` if received from server or proxy.
+*/
+#define PUBNUB_ADVANCED_KEEP_ALIVE 1
 #endif
 
 

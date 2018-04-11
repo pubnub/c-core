@@ -11,7 +11,7 @@ typedef SOCKET pb_socket_t;
 
 
 #define socket_close(socket) closesocket(socket)
-#define socket_send(socket, buf, len, flags) send((socket), (buf), (len), (flags))
+#define socket_send(socket, buf, len) send((socket), (buf), (len))
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
 /* Treating `WSAEINPROGRESS` the same as `WSAEWOULDBLOCK` isn't 
@@ -56,7 +56,7 @@ int snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL */

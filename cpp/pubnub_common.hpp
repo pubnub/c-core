@@ -6,21 +6,21 @@
 extern "C" {
 #endif
 #include "pubnub_config.h"
-#include "pubnub_alloc.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_coreapi_ex.h"
-#include "pubnub_generate_uuid.h"
-#include "pubnub_blocking_io.h"
-#include "pubnub_ssl.h"
-#include "pubnub_timers.h"
-#include "pubnub_helper.h"
-#include "pubnub_free_with_timeout.h"
+#include "core/pubnub_alloc.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi.h"
+#include "core/pubnub_coreapi_ex.h"
+#include "core/pubnub_generate_uuid.h"
+#include "core/pubnub_blocking_io.h"
+#include "core/pubnub_ssl.h"
+#include "core/pubnub_timers.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_free_with_timeout.h"
 #if PUBNUB_PROXY_API
-#include "pubnub_proxy.h"
+#include "core/pubnub_proxy.h"
 #endif
 #if PUBNUB_CRYPTO_API
-#include "pubnub_crypto.h"
+#include "core/pubnub_crypto.h"
 #endif
 #if PUBNUB_USE_EXTERN_C
 }

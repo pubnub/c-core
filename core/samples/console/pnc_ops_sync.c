@@ -3,7 +3,7 @@
 #include "pnc_config.h"
 #include "pnc_subscriptions.h"
 
-#include "pubnub_helper.h"
+#include "core/pubnub_helper.h"
 
 #include <stdio.h>
 #include <stdbool.h>

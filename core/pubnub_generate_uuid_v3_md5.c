@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_generate_uuid.h"
+#include "core/pubnub_generate_uuid.h"
 
-#include "pbmd5.h"
-#include "pubnub_assert.h"
+#include "lib/md5/pbmd5.h"
+#include "core/pubnub_assert.h"
 
 #include <stdlib.h>
 

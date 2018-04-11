@@ -21,6 +21,9 @@
 
 #include "md5.h"
 
+#include <string.h>
+
+
 /** The MD5 "context". It's an "opaque" value type - that is, it's to
     be used as data, not a pointer, but "don't look inside".
 */

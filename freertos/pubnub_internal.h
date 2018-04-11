@@ -12,7 +12,7 @@
 
 
 #define socket_close(socket) FreeRTOS_closesocket(socket)
-#define socket_send(socket, buf, len, flags) FreeRTOS_send((socket), (buf), (len), (flags))
+#define socket_send(socket, buf, len) FreeRTOS_send((socket), (buf), (len), 0)
 #define socket_recv(socket, buf, len, flags) FreeRTOS_recv((socket), (buf), (len), (flags))
 
 /** FreeRTOS+TCP always blocks, so checking "if it would block"

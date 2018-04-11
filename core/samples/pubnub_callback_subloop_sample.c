@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
-#include "pubnub_callback_subscribe_loop.h"
-#include "pubnub_helper.h"
-#include "pubnub_free_with_timeout.h"
+#include "core/pubnub_callback_subscribe_loop.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_free_with_timeout.h"
 
 #include <stdio.h>
 #include <time.h>

@@ -1,13 +1,15 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-#include "pubnub_ccore.h"
-#include "pubnub_ccore_pubsub.h"
-#include "pbpal.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_ccore.h"
+#include "core/pubnub_ccore_pubsub.h"
+#include "core/pbpal.h"
+#include "core/pubnub_version_internal.h"
+#include "core/pubnub_helper.h"
 
-#include "pubnub_proxy_core.h"
+#include "core/pubnub_proxy_core.h"
 
 #include <string.h>
 
@@ -23,6 +25,13 @@
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
     if (pb->options.use_http_keep_alive) {
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+        if (pb->keep_alive.should_close
+            || (++pb->keep_alive.count >= pb->keep_alive.max)
+            || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
+            return false;
+        }
+#endif
         switch (rslt) {
         case PNR_ADDR_RESOLUTION_FAILED:
         case PNR_CONNECT_FAILED:
@@ -42,6 +51,26 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 }
 
 
+static void close_connection(struct pubnub_* pb)
+{
+    if (pbpal_close(pb) <= 0) {
+#if PUBNUB_PROXY_API
+        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n",
+                         pb->retry_after_close);
+        if (pb->retry_after_close) {
+            pb->state = PBS_RETRY;
+            return;
+        }
+#endif
+        pbpal_forget(pb);
+        pbntf_trans_outcome(pb);
+    }
+    else {
+        pb->state = PBS_WAIT_CLOSE;
+    }
+}
+
+
 static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
 {
     pb->core.last_result = rslt;
@@ -51,28 +80,16 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
            we don't have a way to report to the user that the
            connection was lost.
          */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        PUBNUB_LOG_TRACE("outcome_detected(pb=%p): Keepin' it alive\n", pb);
+        pbntf_lost_socket(pb);
         pbntf_trans_outcome(pb);
         pb->state = PBS_KEEP_ALIVE_IDLE;
-    }
-    else if (pbpal_close(pb) <= 0) {
 #if PUBNUB_PROXY_API
-        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n",
-                         pb->retry_after_close);
-        if (pb->retry_after_close) {
-            pb->state = PBS_IDLE;
-        }
-        else {
-            pbpal_forget(pb);
-            pbntf_trans_outcome(pb);
-        }
-#else
-        pbpal_forget(pb);
-        pbntf_trans_outcome(pb);
+        pb->retry_after_close = 0;
 #endif
     }
     else {
-        pb->state = PBS_WAIT_CLOSE;
+        close_connection(pb);
     }
 }
 
@@ -149,20 +166,17 @@ static void finish(struct pubnub_* pb)
         PUBNUB_LOG_TRACE("Proxy: Error, close connection\n");
         outcome_detected(pb, PNR_HTTP_ERROR);
         return;
-    case pbproxyFinRetryConnected:
+    case pbproxyFinRetry:
         PUBNUB_LOG_TRACE("Proxy: retry in current connection\n");
-        pb->state = PBS_CONNECTED;
-        PUBNUB_ASSERT_OPT(pb->proxy_saved_path_len < PUBNUB_BUF_MAXLEN);
-        memmove(pb->core.http_buf, pb->proxy_saved_path, pb->proxy_saved_path_len + 1);
-        pb->core.http_buf_len = pb->proxy_saved_path_len;
-        return;
-    case pbproxyFinRetryReconnect:
-        PUBNUB_LOG_TRACE("Proxy: Will retry after close\n");
-        PUBNUB_ASSERT_OPT(pb->proxy_saved_path_len < PUBNUB_BUF_MAXLEN);
-        memmove(pb->core.http_buf, pb->proxy_saved_path, pb->proxy_saved_path_len + 1);
-        pb->core.http_buf_len = pb->proxy_saved_path_len;
         pb->retry_after_close = true;
-        break;
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+        if (pb->keep_alive.should_close) {
+            close_connection(pb);
+            return;
+        }
+#endif
+        pb->state = PBS_CONNECTED;
+        return;
     default:
         break;
     }
@@ -185,6 +199,8 @@ static char const* pbnc_state2str(enum pubnub_state e)
     switch (e) {
     case PBS_NULL:
         return "PBS_NULL";
+    case PBS_RETRY:
+        return "PBS_RETRY";
     case PBS_IDLE:
         return "PBS_IDLE";
     case PBS_READY:
@@ -280,6 +296,7 @@ next_state:
 #if PUBNUB_PROXY_API
         pb->retry_after_close        = false;
         pb->proxy_tunnel_established = false;
+        pb->proxy_saved_path_len     = 0;
 #endif
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
@@ -293,6 +310,12 @@ next_state:
             break;
         }
         break;
+#if PUBNUB_PROXY_API
+    case PBS_RETRY:
+        pb->retry_after_close = false;
+        pb->state             = PBS_READY;
+        goto next_state;
+#endif
     case PBS_READY: {
         enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
@@ -316,7 +339,7 @@ next_state:
             pbntf_trans_outcome(pb);
             return 0;
         }
-        i = pbntf_got_socket(pb, pb->pal.socket);
+        i = pbntf_got_socket(pb);
         if (0 == i) {
             goto next_state;
         }
@@ -335,12 +358,12 @@ next_state:
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
@@ -364,7 +387,7 @@ next_state:
         case pbpal_resolv_rcv_wouldblock:
             break;
         case pbpal_connect_wouldblock:
-            pbntf_update_socket(pb, pb->pal.socket);
+            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             pbntf_watch_out_events(pb);
             break;
@@ -400,7 +423,15 @@ next_state:
         break;
     }
     case PBS_CONNECTED:
-        send_init_GET_or_CONNECT(pb);
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+        pb->keep_alive.t_connect = time(NULL);
+        pb->keep_alive.count     = 0;
+#endif
+        i = send_init_GET_or_CONNECT(pb);
+        if (i < 0) {
+            outcome_detected(pb, PNR_IO_ERROR);
+            break;
+        }
         pb->state = PBS_TX_GET;
         goto next_state;
     case PBS_TX_GET:
@@ -415,20 +446,7 @@ next_state:
                     break;
                 }
                 PUBNUB_ASSERT_OPT(pb->core.http_buf_len < PUBNUB_BUF_MAXLEN);
-                memcpy(pb->proxy_saved_path,
-                       pb->core.http_buf,
-                       pb->core.http_buf_len + 1);
-                pb->proxy_saved_path_len = pb->core.http_buf_len;
-                pbpal_send_literal_str(pb, "http://");
-                break;
-            case pbproxyHTTP_CONNECT:
-                pb->state = PBS_TX_SCHEME;
-                if (i < 0) {
-                    outcome_detected(pb, PNR_IO_ERROR);
-                    break;
-                }
-                if (!pb->proxy_tunnel_established) {
-                    PUBNUB_ASSERT_OPT(pb->core.http_buf_len < PUBNUB_BUF_MAXLEN);
+                if (0 == pb->proxy_saved_path_len) {
                     memcpy(pb->proxy_saved_path,
                            pb->core.http_buf,
                            pb->core.http_buf_len + 1);
@@ -440,6 +458,33 @@ next_state:
                             pb->proxy_saved_path,
                             pb->proxy_saved_path_len + 1);
                     pb->core.http_buf_len = pb->proxy_saved_path_len;
+                }
+                if (0 > pbpal_send_literal_str(pb, "http://")) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                }
+                break;
+            case pbproxyHTTP_CONNECT:
+                pb->state = PBS_TX_SCHEME;
+                if (i < 0) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
+                if (!pb->proxy_tunnel_established) {
+                    PUBNUB_ASSERT_OPT(pb->core.http_buf_len < PUBNUB_BUF_MAXLEN);
+                    if (0 == pb->proxy_saved_path_len) {
+                        memcpy(pb->proxy_saved_path,
+                               pb->core.http_buf,
+                               pb->core.http_buf_len + 1);
+                        pb->proxy_saved_path_len = pb->core.http_buf_len;
+                    }
+                }
+                else if (pb->proxy_saved_path_len > 0) {
+                    PUBNUB_ASSERT_OPT(pb->proxy_saved_path_len < PUBNUB_BUF_MAXLEN);
+                    memmove(pb->core.http_buf,
+                            pb->proxy_saved_path,
+                            pb->proxy_saved_path_len + 1);
+                    pb->core.http_buf_len    = pb->proxy_saved_path_len;
+                    pb->proxy_saved_path_len = 0;
                 }
                 break;
             case pbproxyNONE:
@@ -489,7 +534,10 @@ next_state:
         else if (0 == i) {
             if ((pb->proxy_type == pbproxyHTTP_CONNECT)
                 && !pb->proxy_tunnel_established) {
-                pbpal_send_literal_str(pb, ":80");
+                if (0 > pbpal_send_literal_str(pb, ":80")) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
                 pb->state = PBS_TX_PORT_NUM;
             }
             else {
@@ -510,7 +558,10 @@ next_state:
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(pb, " HTTP/1.1\r\nHost: ");
+            if (0 > pbpal_send_literal_str(pb, " HTTP/1.1\r\nHost: ")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
             pb->state = PBS_TX_VER;
             goto next_state;
         }
@@ -534,41 +585,45 @@ next_state:
         }
         else if (0 == i) {
 #if PUBNUB_PROXY_API
-            char header_to_send[1024] = "\r\n";
-            if (0
-                == pbproxy_http_header_to_send(
-                       pb, header_to_send + 2, sizeof header_to_send - 2)) {
-                PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n",
-                                 header_to_send);
-                pb->state = PBS_TX_PROXY_AUTHORIZATION;
-                if (-1 == pbpal_send_str(pb, header_to_send)) {
-                    outcome_detected(pb, PNR_IO_ERROR);
-                    break;
+            if (!pb->proxy_tunnel_established) {
+                char hedr[1024] = "\r\n";
+                if ((0 == pbproxy_http_header_to_send(pb, hedr + 2, sizeof hedr - 2))) {
+                    PUBNUB_LOG_TRACE("Sending HTTP proxy header: '%s'\n", hedr);
+                    pb->state = PBS_TX_PROXY_AUTHORIZATION;
+                    if (-1 == pbpal_send_str(pb, hedr)) {
+                        outcome_detected(pb, PNR_IO_ERROR);
+                        break;
+                    }
+                    goto next_state;
                 }
             }
-            else {
-                pbpal_send_literal_str(
-                    pb, "\r\nUser-Agent: PubNub-C-core/2.2\r\n\r\n");
-                pb->state = PBS_TX_FIN_HEAD;
-            }
-#else
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.2\r\n\r\n");
-            pb->state = PBS_TX_FIN_HEAD;
 #endif
+            if (0 > pbpal_send_literal_str(
+                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
+            pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }
         break;
+#if PUBNUB_PROXY_API
     case PBS_TX_PROXY_AUTHORIZATION:
         i = pbpal_send_status(pb);
         if (i < 0) {
             outcome_detected(pb, PNR_IO_ERROR);
         }
         else if (0 == i) {
-            pbpal_send_literal_str(pb, "\r\nUser-Agent: PubNub-C-core/2.2\r\n\r\n");
+            if (0 > pbpal_send_literal_str(
+                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                outcome_detected(pb, PNR_IO_ERROR);
+                break;
+            }
             pb->state = PBS_TX_FIN_HEAD;
             goto next_state;
         }
         break;
+#endif
     case PBS_TX_FIN_HEAD:
         i = pbpal_send_status(pb);
         if (i < 0) {
@@ -600,7 +655,10 @@ next_state:
             WATCH_USHORT(pb->http_code);
             pb->core.http_content_len = 0;
             pb->http_chunked          = false;
-            pb->state                 = PBS_RX_HEADERS;
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+            pb->keep_alive.should_close = !pb->options.use_http_keep_alive;
+#endif
+            pb->state = PBS_RX_HEADERS;
             goto next_state;
         default:
             PUBNUB_LOG_ERROR("pb=%p in PBS_RX_HTTP_VER: failure inducing "
@@ -628,6 +686,7 @@ next_state:
             */
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[]  = "Content-Length: ";
+            char h_close[]   = "Connection: close";
             int  read_len    = pbpal_read_len(pb);
             PUBNUB_LOG_TRACE("pb=%p header line was read: '%.*s'\n",
                              pb,
@@ -668,6 +727,11 @@ next_state:
                 }
                 pb->core.http_content_len = len;
             }
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+            else if (strncmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
+                pb->keep_alive.should_close = true;
+            }
+#endif
             else {
                 pbproxy_handle_http_header(pb, pb->core.http_buf);
             }
@@ -808,16 +872,12 @@ next_state:
         if (pbpal_closed(pb)) {
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
-                pb->state = PBS_IDLE;
+                pb->state = PBS_RETRY;
+                goto next_state;
             }
-            else {
-                pbpal_forget(pb);
-                pbntf_trans_outcome(pb);
-            }
-#else
+#endif
             pbpal_forget(pb);
             pbntf_trans_outcome(pb);
-#endif
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -830,21 +890,19 @@ next_state:
         if (pbpal_closed(pb)) {
 #if PUBNUB_PROXY_API
             if (pb->retry_after_close) {
-                pb->state = PBS_IDLE;
+                pb->state = PBS_RETRY;
+                goto next_state;
             }
-            else {
-                pbpal_forget(pb);
-                pb->core.msg_ofs = pb->core.msg_end = 0;
-                pbntf_trans_outcome(pb);
-            }
-#else
+#endif
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
             pbntf_trans_outcome(pb);
-#endif
         }
         break;
     case PBS_KEEP_ALIVE_IDLE:
+#if PUBNUB_PROXY_API
+        pb->proxy_saved_path_len = 0;
+#endif
         pb->state = PBS_KEEP_ALIVE_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
@@ -858,14 +916,15 @@ next_state:
         }
         break;
     case PBS_KEEP_ALIVE_READY:
-        i = pbntf_got_socket(pb, pb->pal.socket);
+        i = pbntf_got_socket(pb);
         if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
             pbntf_trans_outcome(pb);
+            break;
         }
         i = send_init_GET_or_CONNECT(pb);
         if (i < 0) {
-            pbntf_lost_socket(pb, pb->pal.socket);
+            pbntf_lost_socket(pb);
             pb->state = PBS_READY;
         }
         else {
@@ -879,6 +938,8 @@ next_state:
 
 void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 {
+    PUBNUB_LOG_TRACE(
+        "pbnc_stop(%p, %s)\n", pbp, pubnub_res_2_string(outcome_to_report));
     pbp->core.last_result = outcome_to_report;
     switch (pbp->state) {
     case PBS_WAIT_CANCEL:
@@ -886,9 +947,12 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         break;
     case PBS_IDLE:
     case PBS_NULL:
-    case PBS_KEEP_ALIVE_IDLE:
+        pbp->trans = PBTT_NONE;
         pbntf_trans_outcome(pbp);
         break;
+    case PBS_KEEP_ALIVE_IDLE:
+        pbp->trans = PBTT_NONE;
+        /*FALLTHRU*/
     default:
         pbp->state = PBS_WAIT_CANCEL;
         pbntf_requeue_for_processing(pbp);

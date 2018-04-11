@@ -1,12 +1,12 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_sync.h"
 
-#include "pubnub_helper.h"
-#include "pubnub_timers.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_timers.h"
 
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi_ex.h"
-#include "pubnub_crypto.h"
+#include "core/pubnub_pubsubapi.h"
+#include "core/pubnub_coreapi_ex.h"
+#include "core/pubnub_crypto.h"
 
 #include <stdio.h>
 #include <time.h>

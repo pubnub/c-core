@@ -1,13 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
-#include "pbpal.h"
+#include "core/pbpal.h"
 
 #include "pbpal_mutex.h"
-#include "pubnub_ntf_sync.h"
-#include "pubnub_netcore.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_netcore.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <string.h>
 
@@ -359,7 +359,7 @@ int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
     if (pb->pal.socket != NULL) {
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
         pb->pal.socket = NULL;
         pb->sock_state = STATE_NONE;
@@ -374,9 +374,9 @@ int pbpal_close(pubnub_t* pb)
 void pbpal_free(pubnub_t* pb)
 {
     if (pb->pal.socket != NULL) {
-        /* While this should not happen, it doesn't hurt to be paranoid.
-         */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        PUBNUB_LOG_TRACE("pbpal_free(%p): Unexpected pb->pal.socket == %p\n",
+                         pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
     }
 

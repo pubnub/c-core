@@ -1,4 +1,4 @@
-#include "pubnub_generate_uuid.h"
+#include "core/pubnub_generate_uuid.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -21,7 +21,7 @@ int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid)
   if (n < 0) {
     return -1;
   }
-  
+
   uuid->uuid[6] &= 0x0F;
   uuid->uuid[6] |= 0x40;
   uuid->uuid[8] &= 0x3F;

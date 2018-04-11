@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbpal.h"
+#include "core/pbpal.h"
 
-#include "pubnub_ntf_sync.h"
-#include "pubnub_netcore.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_netcore.h"
 #include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -129,7 +129,7 @@ int pbpal_send_status(pubnub_t* pb)
 
     PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
 
-    rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len, 0);
+    rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     if (rslt <= 0) {
         rslt = (handle_socket_error(rslt, pb) == PNR_IN_PROGRESS) ? +1 : -1;
     }
@@ -308,7 +308,7 @@ int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
     if (pb->pal.socket != SOCKET_INVALID) {
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
         pb->sock_state = STATE_NONE;
@@ -324,7 +324,7 @@ void pbpal_free(pubnub_t* pb)
     if (pb->pal.socket != SOCKET_INVALID) {
         /* While this should not happen, it doesn't hurt to be paranoid.
          */
-        pbntf_lost_socket(pb, pb->pal.socket);
+        pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
     }
 }
