@@ -4,6 +4,7 @@
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_generate_uuid.h"
+#include "core/pubnub_free_with_timeout.h"
 
 #if defined _WIN32
 #include <windows.h>

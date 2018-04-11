@@ -88,9 +88,9 @@ void* socket_watcher_thread(void* arg)
         if (PUBNUB_TIMERS_API) {
             int elapsed = elapsed_ms(prev_timspec, timspec);
             if (elapsed > 0) {
-                pthread_mutex_lock(&m_watcher.mutw);
+                pthread_mutex_lock(&m_watcher.timerlock);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
-                pthread_mutex_unlock(&m_watcher.mutw);
+                pthread_mutex_unlock(&m_watcher.timerlock);
 
                 prev_timspec = timspec;
             }

@@ -374,8 +374,8 @@ int pbpal_close(pubnub_t* pb)
 void pbpal_free(pubnub_t* pb)
 {
     if (pb->pal.socket != NULL) {
-        PUBNUB_LOG_TRACE("pbpal_free(%p): Unexpected pb->pal.socket == NULL\n",
-                         pb->pal.socket);
+        PUBNUB_LOG_TRACE("pbpal_free(%p): Unexpected pb->pal.socket == %p\n",
+                         pb, pb->pal.socket);
         pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
     }

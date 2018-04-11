@@ -9,28 +9,29 @@
 #include <string.h>
 
 
-#if defined PUBNUB_ASSERT_LEVEL_EX
-static pubnub_t **m_allocated;
-static unsigned m_n;
-static unsigned m_cap;
+#if defined       PUBNUB_ASSERT_LEVEL_EX
+static pubnub_t** m_allocated;
+static unsigned   m_n;
+static unsigned   m_cap;
 pubnub_mutex_static_decl_and_init(m_lock);
 #endif
 
 
-static void save_allocated(pubnub_t *pb)
+static void save_allocated(pubnub_t* pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
     if (m_n == m_cap) {
-        pubnub_t **npalloc = (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n+1));
+        pubnub_t** npalloc =
+            (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n + 1));
         if (NULL == npalloc) {
             pubnub_mutex_unlock(m_lock);
             return;
         }
-        m_allocated = npalloc;
+        m_allocated        = npalloc;
         m_allocated[m_n++] = pb;
-        m_cap = m_n;
+        m_cap              = m_n;
     }
     else {
         m_allocated[m_n++] = pb;
@@ -40,14 +41,16 @@ static void save_allocated(pubnub_t *pb)
 }
 
 
-static void remove_allocated(pubnub_t *pb)
+static void remove_allocated(pubnub_t* pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
     size_t i;
     for (i = 0; i < m_n; ++i) {
         if (m_allocated[i] == pb) {
             if (i != m_n - 1) {
-                memmove(m_allocated + i, m_allocated + i + 1, sizeof m_allocated[0] * (m_n - i - 1));
+                memmove(m_allocated + i,
+                        m_allocated + i + 1,
+                        sizeof m_allocated[0] * (m_n - i - 1));
             }
             --m_n;
             break;
@@ -57,7 +60,7 @@ static void remove_allocated(pubnub_t *pb)
 }
 
 
-static bool check_ctx_ptr(pubnub_t const *pb)
+static bool check_ctx_ptr(pubnub_t const* pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
     size_t i;
@@ -68,12 +71,12 @@ static bool check_ctx_ptr(pubnub_t const *pb)
     }
     return false;
 #else
-    return pb != NULL; 
+    return pb != NULL;
 #endif
 }
 
 
-bool pb_valid_ctx_ptr(pubnub_t const *pb)
+bool pb_valid_ctx_ptr(pubnub_t const* pb)
 {
 #if defined PUBNUB_ASSERT_LEVEL_EX
     bool result;
@@ -85,14 +88,14 @@ bool pb_valid_ctx_ptr(pubnub_t const *pb)
 
     return result;
 #else
-    return pb != NULL; 
+    return pb != NULL;
 #endif
 }
 
 
-pubnub_t *pubnub_alloc(void)
+pubnub_t* pubnub_alloc(void)
 {
-    pubnub_t *pb = (pubnub_t*)malloc(sizeof(pubnub_t));
+    pubnub_t* pb = (pubnub_t*)malloc(sizeof(pubnub_t));
     if (pb != NULL) {
         save_allocated(pb);
     }
@@ -100,11 +103,13 @@ pubnub_t *pubnub_alloc(void)
 }
 
 
-void pballoc_free_at_last(pubnub_t *pb)
+void pballoc_free_at_last(pubnub_t* pb)
 {
     PUBNUB_LOG_TRACE("pballoc_free_at_last(%p)\n", pb);
 
     PUBNUB_ASSERT_OPT(pb != NULL);
+
+    PUBNUB_LOG_TRACE("pubnub_free_at_last(%p)\n", pb);
 
     pubnub_mutex_lock(pb->monitor);
     pubnub_mutex_init_static(m_lock);
@@ -122,11 +127,13 @@ void pballoc_free_at_last(pubnub_t *pb)
 }
 
 
-int pubnub_free(pubnub_t *pb)
+int pubnub_free(pubnub_t* pb)
 {
     int result = -1;
 
     PUBNUB_ASSERT(check_ctx_ptr(pb));
+
+    PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
 
     pubnub_mutex_lock(pb->monitor);
     if (PBS_IDLE == pb->state) {
