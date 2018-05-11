@@ -267,16 +267,14 @@ static char const* pbnc_state2str(enum pubnub_state e)
 
 static int send_init_GET_or_CONNECT(struct pubnub_* pb)
 {
+    PUBNUB_LOG_TRACE("send_init_GET_or_CONNECT(pb=%p): pb->trans = %d\n",
+                     pb, pb->trans);
 #if PUBNUB_PROXY_API
     if ((pb->proxy_type == pbproxyHTTP_CONNECT) && (!pb->proxy_tunnel_established)) {
         return pbpal_send_literal_str(pb, "CONNECT ");
     }
-    else {
-        return pbpal_send_literal_str(pb, "GET ");
-    }
-#else
-    return pbpal_send_literal_str(pb, "GET ");
 #endif
+    return pbpal_send_literal_str(pb, "GET ");
 }
 
 

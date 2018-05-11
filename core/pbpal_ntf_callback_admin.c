@@ -11,6 +11,9 @@ void pbntf_trans_outcome(pubnub_t* pb)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb);
     if (pb->cb != NULL) {
+        PUBNUB_LOG_TRACE("pbntf_trans_outcome(pb=%p) calling callback:\n"
+                         "pb->trans = %d, pb->core.last_result=%d, pb->user_data=%p\n",
+                         pb, pb->trans, pb->core.last_result, pb->user_data);
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }
