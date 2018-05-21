@@ -37,6 +37,10 @@
 #define SOCKET_INVALID FREERTOS_INVALID_SOCKET
 
 
+/* FreeRTOS+TCP never raises SIGPIPE, so, we're good. */
+#define socket_disable_SIGPIPE(socket)
+
+
 typedef Socket_t pb_socket_t;
 
 /** The Pubnub FreeRTOS context */

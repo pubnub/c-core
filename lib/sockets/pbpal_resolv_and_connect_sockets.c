@@ -116,6 +116,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         }
 
         socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
+        socket_disable_SIGPIPE(pb->pal.socket);
 
         return error ? pbpal_connect_wouldblock : pbpal_connect_success;
     }

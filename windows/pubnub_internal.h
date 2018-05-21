@@ -37,6 +37,11 @@ int socket_platform_init(void);
     setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
     } while(0)
 
+
+/* Winsock never raises SIGPIPE, so, we're good. */
+#define socket_disable_SIGPIPE(socket)
+
+
 /** The Pubnub Windows context */
 struct pubnub_pal {
     pb_socket_t socket;
