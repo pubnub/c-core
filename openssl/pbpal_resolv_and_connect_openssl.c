@@ -136,6 +136,7 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t* 
     {
         int fd = BIO_get_fd(pb->pal.socket, NULL);
         socket_set_rcv_timeout(fd, pb->transaction_timeout_ms);
+        socket_disable_SIGPIPE(pb->pal.socket);
     }
 
     return pbpal_connect_success;

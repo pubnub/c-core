@@ -64,6 +64,23 @@ int snprintf(char* buffer, size_t n, const char* format, ...);
 
 #endif /* ifdef _WIN32 */
 
+#if __APPLE__
+/* Actually, BSD in general provides SO_NOSIGPIPE, but we don't know
+   what's the status of this support across various BSDs... So, for
+   now, we only do this for MacOS.
+*/
+#define socket_disable_SIGPIPE(socket)                                             \
+    do {                                                                           \
+        int on = 1;                                                                \
+        if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
+            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
+        }                                                                          \
+    } while (0)
+#else
+#define socket_disable_SIGPIPE(socket)
+#endif
+
+
 /** With OpenSSL, one can set I/O to be blocking or non-blocking,
     though it can only be done before establishing the connection.
 */
