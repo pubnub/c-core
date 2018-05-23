@@ -55,7 +55,7 @@ static void close_connection(struct pubnub_* pb)
 {
     if (pbpal_close(pb) <= 0) {
 #if PUBNUB_PROXY_API
-        PUBNUB_LOG_TRACE("outcome_detected(): pb->retry_after_close=%d\n",
+        PUBNUB_LOG_TRACE("close_connection(): pb->retry_after_close=%d\n",
                          pb->retry_after_close);
         if (pb->retry_after_close) {
             pb->state = PBS_RETRY;
@@ -63,10 +63,29 @@ static void close_connection(struct pubnub_* pb)
         }
 #endif
         pbpal_forget(pb);
-        pbntf_trans_outcome(pb);
+        pbntf_trans_outcome(pb, PBS_IDLE);
     }
     else {
         pb->state = PBS_WAIT_CLOSE;
+    }
+}
+
+
+static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
+{
+    if (pbpal_close(pb) <= 0) {
+#if PUBNUB_PROXY_API
+        PUBNUB_LOG_TRACE("close_kept_alive_connection(): pb->retry_after_close=%d\n",
+                         pb->retry_after_close);
+        if (pb->retry_after_close) {
+            return PBS_RETRY;
+        }
+#endif
+        pbpal_forget(pb);
+        return PBS_READY;
+    }
+    else {
+        return PBS_KEEP_ALIVE_WAIT_CLOSE;
     }
 }
 
@@ -82,8 +101,7 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
          */
         PUBNUB_LOG_TRACE("outcome_detected(pb=%p): Keepin' it alive\n", pb);
         pbntf_lost_socket(pb);
-        pbntf_trans_outcome(pb);
-        pb->state = PBS_KEEP_ALIVE_IDLE;
+        pbntf_trans_outcome(pb, PBS_KEEP_ALIVE_IDLE);
 #if PUBNUB_PROXY_API
         pb->retry_after_close = 0;
 #endif
@@ -259,6 +277,8 @@ static char const* pbnc_state2str(enum pubnub_state e)
         return "PBS_KEEP_ALIVE_IDLE";
     case PBS_KEEP_ALIVE_READY:
         return "PBS_KEEP_ALIVE_READY";
+    case PBS_KEEP_ALIVE_WAIT_CLOSE:
+        return "PBS_KEEP_ALIVE_WAIT_CLOSE";
     default:
         return "Unknown enum pubnub_state";
     }
@@ -300,7 +320,7 @@ next_state:
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
             pb->core.last_result = PNR_INTERNAL_ERROR;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
             return 0;
         case 0:
             goto next_state;
@@ -334,7 +354,7 @@ next_state:
             break;
         default:
             pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
             return 0;
         }
         i = pbntf_got_socket(pb);
@@ -343,7 +363,7 @@ next_state:
         }
         else if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
         }
         break;
     }
@@ -407,7 +427,7 @@ next_state:
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
             pb->core.last_result = PNR_INTERNAL_ERROR;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
             break;
         case pbpal_connect_wouldblock:
             break;
@@ -737,11 +757,11 @@ next_state:
             goto next_state;
         }
         case PNR_TX_BUFF_TOO_SMALL:
-            /** We could try to copy the "line so far" to the reply
-                buffer and then do some processing there, but, it
-                could become very complex, as we could have a few more
-                of these until we finally find a newline. So, for now,
-                just try to recover by skipping this line.
+            /** We could copy the "line so far" to the reply buffer
+                and then process the line from the reply buffer when
+                it's finished. This would be much more complex, yet
+                most lines will not be that long and, if the reply
+                buffer is static, it, too, might not be large enough.
             */
             pb->state = PBS_RX_HEADERS;
             goto next_state;
@@ -875,7 +895,7 @@ next_state:
             }
 #endif
             pbpal_forget(pb);
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
         }
         break;
     case PBS_WAIT_CANCEL:
@@ -894,7 +914,7 @@ next_state:
 #endif
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
         }
         break;
     case PBS_KEEP_ALIVE_IDLE:
@@ -905,7 +925,7 @@ next_state:
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
             pb->core.last_result = PNR_INTERNAL_ERROR;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
             return 0;
         case 0:
             goto next_state;
@@ -917,18 +937,30 @@ next_state:
         i = pbntf_got_socket(pb);
         if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
-            pbntf_trans_outcome(pb);
+            pbntf_trans_outcome(pb, PBS_IDLE);
             break;
         }
         i = send_init_GET_or_CONNECT(pb);
         if (i < 0) {
-            pbntf_lost_socket(pb);
-            pb->state = PBS_READY;
+            pb->state = close_kept_alive_connection(pb);
         }
         else {
             pb->state = PBS_TX_GET;
         }
         goto next_state;
+    case PBS_KEEP_ALIVE_WAIT_CLOSE:
+        if (pbpal_closed(pb)) {
+#if PUBNUB_PROXY_API
+            if (pb->retry_after_close) {
+                pb->state = PBS_RETRY;
+                goto next_state;
+            }
+#endif
+            pbpal_forget(pb);
+            pb->state = PBS_READY;
+            goto next_state;
+        }
+        break;
     }
     return 0;
 }
@@ -943,10 +975,12 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
     case PBS_WAIT_CANCEL:
     case PBS_WAIT_CANCEL_CLOSE:
         break;
-    case PBS_IDLE:
     case PBS_NULL:
+        PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) somehow got called in NULL state\n", pbp);
+        break;
+    case PBS_IDLE:
         pbp->trans = PBTT_NONE;
-        pbntf_trans_outcome(pbp);
+        pbntf_trans_outcome(pbp, PBS_IDLE);
         break;
     case PBS_KEEP_ALIVE_IDLE:
         pbp->trans = PBTT_NONE;

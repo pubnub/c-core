@@ -127,9 +127,9 @@ int main()
     InitUserData(&user_data, pbp);
     InitUserData(&user_data_2, pbp_2);
 
-    pubnub_init(pbp, "demo", "demo");
+    pubnub_init(pbp, "demo-36", "demo-36");
     pubnub_register_callback(pbp, sample_callback, &user_data);
-    pubnub_init(pbp_2, "demo", "demo");
+    pubnub_init(pbp_2, "demo-36", "demo-36");
     pubnub_register_callback(pbp_2, sample_callback, &user_data_2);
 
     puts("-----------------------");
@@ -160,6 +160,7 @@ int main()
         printf("Subscribing failed with code: %d\n", res);
     }
 
+    for (;;) {
     /* The "real" subscribe, with the just acquired time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
@@ -225,6 +226,7 @@ int main()
     }
     else {
         printf("Subscribing failed with code: %d\n", res);
+    }
     }
 
 	

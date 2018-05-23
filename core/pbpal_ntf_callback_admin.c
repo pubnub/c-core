@@ -7,9 +7,10 @@
 #include "pubnub_assert.h"
 
 
-void pbntf_trans_outcome(pubnub_t* pb)
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
 {
-    PBNTF_TRANS_OUTCOME_COMMON(pb);
+    PBNTF_TRANS_OUTCOME_COMMON(pb, state);
+    PUBNUB_ASSERT(pbnc_can_start_transaction(pb));
     if (pb->cb != NULL) {
         PUBNUB_LOG_TRACE("pbntf_trans_outcome(pb=%p) calling callback:\n"
                          "pb->trans = %d, pb->core.last_result=%d, pb->user_data=%p\n",

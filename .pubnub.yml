@@ -1,7 +1,14 @@
 name: c-core
-version: 2.3.3
+version: 2.3.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.3.4
+      - type: feature
+        text: On MacOS, use SO_NOSIGPIPE to avoid SIGPIPE on the socket
+      - type: bug
+        text: Bad handling of new transaction started in the callback and HTTP keep-alive was active
+      - type: bug
+        text: Bad handling of error (connection lost) when starting a new transaction on a HTTP kept-alive connection
   - version: v2.3.3
     changes:
       - type: feature
