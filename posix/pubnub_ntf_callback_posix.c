@@ -23,8 +23,7 @@ struct SocketWatcherData {
     struct pbpal_poll_data* poll pubnub_guarded_by(mutw);
     pthread_mutex_t mutw;
     pthread_mutex_t timerlock;
-    pthread_cond_t condw;
-    pthread_t            thread_id;
+    pthread_t       thread_id;
 #if PUBNUB_TIMERS_API
     pubnub_t* timer_head pubnub_guarded_by(timerlock);
 #endif
@@ -66,28 +65,22 @@ void* socket_watcher_thread(void* arg)
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
         monotonic_clock_get_time(&timspec);
-        timspec.tv_sec += (timspec.tv_nsec + 200 * MILLI_IN_NANO) / UNIT_IN_NANO;
-        timspec.tv_nsec = (timspec.tv_nsec + 200 * MILLI_IN_NANO) % UNIT_IN_NANO;
 
         pthread_mutex_lock(&m_watcher.mutw);
-
-#if defined(__APPLE__)
-        struct timespec relative_timspec = { .tv_sec  = 0,
-                                             .tv_nsec = 200 * MILLI_IN_NANO };
-
-        pthread_cond_timedwait_relative_np(
-            &m_watcher.condw, &m_watcher.mutw, &relative_timspec);
-#else
-        pthread_cond_timedwait(&m_watcher.condw, &m_watcher.mutw, &timspec);
-#endif
-
         pbpal_ntf_poll_away(m_watcher.poll, 100);
-
         pthread_mutex_unlock(&m_watcher.mutw);
 
         if (PUBNUB_TIMERS_API) {
             int elapsed = elapsed_ms(prev_timspec, timspec);
             if (elapsed > 0) {
+                if (elapsed > 101) {
+                    PUBNUB_LOG_TRACE("elapsed = %d: prev_timspec={%ld, %ld}, timspec={%ld,%ld}\n",
+                                     elapsed,
+                                     prev_timspec.tv_sec, prev_timspec.tv_nsec,
+                                     timspec.tv_sec, timspec.tv_nsec
+                                     
+                        );
+                }
                 pthread_mutex_lock(&m_watcher.timerlock);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
                 pthread_mutex_unlock(&m_watcher.timerlock);
@@ -130,23 +123,6 @@ int pbntf_init(void)
         PUBNUB_LOG_ERROR("Failed to initialize mutex for timers, error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
-        return -1;
-    }
-
-#if defined(__APPLE__)
-    rslt = pthread_cond_init(&m_watcher.condw, NULL);
-#else
-    pthread_condattr_t cond_attr;
-    pthread_condattr_init(&cond_attr);
-    pthread_condattr_setclock(&cond_attr, CLOCK_MONOTONIC);
-    rslt = pthread_cond_init(&m_watcher.condw, &cond_attr);
-#endif
-    if (rslt != 0) {
-        PUBNUB_LOG_ERROR(
-            "Failed to initialize conditional variable, error code: %d", rslt);
-        pthread_mutexattr_destroy(&attr);
-        pthread_mutex_destroy(&m_watcher.mutw);
-        pthread_mutex_destroy(&m_watcher.timerlock);
         return -1;
     }
 
@@ -242,7 +218,6 @@ int pbntf_got_socket(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_save_socket(m_watcher.poll, pb);
-    pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
 
     if (PUBNUB_TIMERS_API) {
@@ -259,7 +234,6 @@ void pbntf_lost_socket(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
-    pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
 
     pbpal_ntf_callback_remove_from_queue(&m_watcher.queue, pb);
@@ -274,6 +248,5 @@ void pbntf_update_socket(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_update_socket(m_watcher.poll, pb);
-    pthread_cond_signal(&m_watcher.condw);
     pthread_mutex_unlock(&m_watcher.mutw);
 }
