@@ -339,17 +339,21 @@ next_state:
         WATCH_ENUM(rslv);
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
+            i = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_DNS_SEND;
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
+            i = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
+            i = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
+            i = pbntf_got_socket(pb);
             pb->state = PBS_CONNECTED;
             break;
         default:
@@ -357,7 +361,6 @@ next_state:
             pbntf_trans_outcome(pb, PBS_IDLE);
             return 0;
         }
-        i = pbntf_got_socket(pb);
         if (0 == i) {
             goto next_state;
         }
