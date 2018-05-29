@@ -3,6 +3,8 @@ version: 2.3.4
 scm: github.com/pubnub/c-core
 changelog:
   - version: v2.3.4
+      - type: bug
+        text: Small fixes for async DNS
       - type: feature
         text: On MacOS, use SO_NOSIGPIPE to avoid SIGPIPE on the socket
       - type: bug
