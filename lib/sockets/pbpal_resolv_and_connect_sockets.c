@@ -148,9 +148,11 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     socket_close(skt);
     skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_INVALID == skt) {
-        return pbpal_connect_resource_failur;e
+        return pbpal_connect_resource_failure;
     }
     pb->pal.socket = skt;
+    pb->options.use_blocking_io = false;
+    pbpal_set_blocking_io(pb);
     dest.sin_port = htons(port);
     if (SOCKET_ERROR == connect(skt, (struct sockaddr*)&dest, sizeof dest)) {
         return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
