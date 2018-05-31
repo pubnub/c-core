@@ -353,15 +353,13 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   bool                 norep,
                                   char const*          meta)
 {
-    char const* const uname    = pubnub_uname();
-    char const*       pmessage = message;
-    enum pubnub_res rslt;
+    char const* const uname = pubnub_uname();
+    enum pubnub_res   rslt;
 
     PUBNUB_ASSERT_OPT(message != NULL);
 
-    pb->http_content_len       = 0;
-
-    pb->http_buf_len = snprintf(pb->http_buf,
+    pb->http_content_len = 0;
+    pb->http_buf_len     = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
                                 "/publish/%s/%s/0/%s/0/",
                                 pb->publish_key,
@@ -375,24 +373,25 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    if (!store_in_history) {
-        APPEND_URL_PARAM_M(pb, "store", "0", '&');
+    if ((PNR_OK == rslt) && !store_in_history) {
+        rslt = pbcc_append_url_param(pb, "store", sizeof "store" - 1, "0", '&');
     }
-    if (norep) {
-        APPEND_URL_PARAM_M(pb, "norep", "true", '&');
+    if ((PNR_OK == rslt) && norep) {
+        rslt = pbcc_append_url_param(pb, "norep", sizeof "norep" - 1, "true", '&');
     }
-    if (meta != NULL) {
-        pb->http_buf[pb->http_buf_len++] = '&';
-        memcpy(pb->http_buf + pb->http_buf_len, "meta", sizeof "meta" - 1);
-        pb->http_buf_len += sizeof "meta" - 1;
-        pb->http_buf[pb->http_buf_len++] = '=';
-        rslt = url_encode(pb, meta);
-        if (rslt != PNR_OK) {
-            return rslt;
+    if ((PNR_OK == rslt) && (meta != NULL)) {
+        size_t const param_name_len = sizeof "meta" - 1;
+        if (pb->http_buf_len + 1 + param_name_len + 1 + 1 > sizeof pb->http_buf) {
+            return PNR_TX_BUFF_TOO_SMALL;
         }
+        pb->http_buf[pb->http_buf_len++] = '&';
+        memcpy(pb->http_buf + pb->http_buf_len, "meta", param_name_len);
+        pb->http_buf_len += param_name_len;
+        pb->http_buf[pb->http_buf_len++] = '=';
+        rslt                             = url_encode(pb, meta);
     }
 
-    return PNR_STARTED;
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
