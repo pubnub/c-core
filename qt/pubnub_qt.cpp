@@ -10,7 +10,7 @@ extern "C" {
 
 
 
-pubnub_qt::pubnub_qt(QString pubkey, QString keysub) 
+pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     : d_pubkey(pubkey.toLatin1())
     , d_keysub(keysub.toLatin1())
     , d_context(new pbcc_context)
@@ -121,25 +121,12 @@ pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
 {
     return startRequest(
         pbcc_publish_prep(
-            d_context.data(), 
-            channel.toLatin1().data(), 
-            message.toLatin1().data(), 
-            false, 
-            false
-            ), PBTT_PUBLISH
-        );
-}
-
-
-pubnub_res pubnub_qt::publishv2(QString const &channel, QString const &message, pubv2_opts options)
-{
-    return startRequest(
-        pbcc_publish_prep(
-            d_context.data(), 
-            channel.toLatin1().data(), 
-            message.toLatin1().data(), 
-            options & store_in_history, 
-            options & eat_after_reading
+            d_context.data(),
+            channel.toLatin1().data(),
+            message.toLatin1().data(),
+            true,
+            false,
+            NULL
             ), PBTT_PUBLISH
         );
 }
@@ -149,8 +136,8 @@ pubnub_res pubnub_qt::subscribe(QString const &channel, QString const &channel_g
 {
     return startRequest(
         pbcc_subscribe_prep(
-            d_context.data(), 
-            channel.isEmpty() ? 0 : channel.toLatin1().data(), 
+            d_context.data(),
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             0
             ), PBTT_SUBSCRIBE
@@ -162,8 +149,8 @@ pubnub_res pubnub_qt::leave(QString const &channel, QString const &channel_group
 {
     return startRequest(
         pbcc_leave_prep(
-            d_context.data(), 
-            channel.isEmpty() ? 0 : channel.toLatin1().data(), 
+            d_context.data(),
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
             ), PBTT_LEAVE
         );
@@ -203,7 +190,7 @@ pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool inclu
             include_token,
             string_token ? pbccTrue : pbccFalse,
             reverse ? pbccTrue : pbccFalse,
-            start.isEmpty() ? 0 : start.toLatin1().data(), 
+            start.isEmpty() ? 0 : start.toLatin1().data(),
             end.isEmpty() ? 0 : end.toLatin1().data()
             ), PBTT_HISTORY
         );
@@ -214,8 +201,8 @@ pubnub_res pubnub_qt::here_now(QString const &channel, QString const &channel_gr
 {
     return startRequest(
         pbcc_here_now_prep(
-            d_context.data(), 
-            channel.isEmpty() ? 0 : channel.toLatin1().data(), 
+            d_context.data(),
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             pbccNotSet,
             pbccNotSet
@@ -234,7 +221,7 @@ pubnub_res pubnub_qt::where_now(QString const &uuid)
 {
     return startRequest(
         pbcc_where_now_prep(
-            d_context.data(), 
+            d_context.data(),
             uuid.isEmpty() ? d_uuid.data() : uuid.toLatin1().data()
             ), PBTT_WHERENOW
         );
@@ -398,7 +385,7 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
     }
 
     qDebug() << "finish('" << d_context->http_reply << "')";
-    
+
     switch (d_trans) {
     case PBTT_SUBSCRIBE:
         if (pbcc_parse_subscribe_response(d_context.data()) != 0) {
@@ -524,4 +511,3 @@ extern "C" char const *pubnub_sdk_name() { return PUBNUB_SDK_NAME; }
 extern "C" char const *pubnub_uname() { return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION; }
 
 extern "C" char const *pubnub_version() { return PUBNUB_SDK_VERSION; }
-

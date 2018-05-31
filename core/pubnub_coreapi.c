@@ -18,36 +18,6 @@
 #endif
 
 
-enum pubnub_res pubnub_publishv2(pubnub_t*   pb,
-                                 const char* channel,
-                                 const char* message,
-                                 bool        store_in_history,
-                                 bool        eat_after_reading)
-{
-    enum pubnub_res rslt;
-
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-
-    pubnub_mutex_lock(pb->monitor);
-    if (!pbnc_can_start_transaction(pb)) {
-        pubnub_mutex_unlock(pb->monitor);
-        return PNR_IN_PROGRESS;
-    }
-
-    rslt = pbcc_publish_prep(
-        &pb->core, channel, message, store_in_history, eat_after_reading);
-    if (PNR_STARTED == rslt) {
-        pb->trans            = PBTT_PUBLISH;
-        pb->core.last_result = PNR_STARTED;
-        pbnc_fsm(pb);
-        rslt = pb->core.last_result;
-    }
-
-    pubnub_mutex_unlock(pb->monitor);
-    return rslt;
-}
-
-
 enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* channel_group)
 {
     enum pubnub_res rslt;

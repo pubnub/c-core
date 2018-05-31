@@ -58,7 +58,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_publish_prep(&pb->core, channel, message, opts.store, false);
+    rslt = pbcc_publish_prep(&pb->core, channel, message, opts.store, !opts.replicate, opts.meta);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;

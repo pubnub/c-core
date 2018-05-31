@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_COREAPI_EX
-#define	INC_PUBNUB_COREAPI_EX
+#define INC_PUBNUB_COREAPI_EX
 
 
 #include "pubnub_api_types.h"
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 
-/** @file pubnub_coreapi_ex.h 
+/** @file pubnub_coreapi_ex.h
 
     This is the "Extended Core" API of the Pubnub client library.  It
     has the "extended" versions of (most of the)
@@ -46,10 +46,22 @@ struct pubnub_publish_options {
         deallocating).
     */
     char const* cipher_key;
+    /** If `true`, the message is replicated, thus will be received by
+        all subscribers. If `false`, the message is _not_ replicated
+        and will be only delivered to BLOCK event handlers. Setting
+        `false` here and `false` on store is sometimes referred to as
+        a "fire" (instead of a "publish").
+    */
+    bool replicate;
+    /** An optional JSON object, used to send additional ("meta") data
+        about the message, which can be used for stream filtering.
+     */
+    char const* meta;
 };
 
 /** This returns the default options for publish V1 transactions.
-    Will set `store = true` and `cipher_key` to NULL.
+    Will set `store = true`, `cipher_key = NULL`, `replicate = true`
+    and `meta = NULL`
  */
 struct pubnub_publish_options pubnub_publish_defopts(void);
 
@@ -62,12 +74,16 @@ struct pubnub_publish_options pubnub_publish_defopts(void);
         opt.store = false;
         pbresult = pubnub_publish_ex(pn, "my_channel", "42", opt);
 
-    @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to publish to. Can't be NULL. 
+    @param p The Pubnub context. Can't be NULL.
+    @param channel The string with the channel name to publish to. Can't be
+   NULL.
     @param opt Publish V1 options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_publish_ex(pubnub_t *p, const char *channel, const char *message, struct pubnub_publish_options opts);
+enum pubnub_res pubnub_publish_ex(pubnub_t*                     p,
+                                  const char*                   channel,
+                                  const char*                   message,
+                                  struct pubnub_publish_options opts);
 
 
 /** Options for "extended" subscribe. */
@@ -97,13 +113,15 @@ struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
         opt.heartbeat = 412;
         pbresult = pubnub_subscribe_ex(pn, "my_channel", opt);
 
-    @param p The Pubnub context. Can't be NULL. 
+    @param p The Pubnub context. Can't be NULL.
     @param channel The string with the channel name (or
     comma-delimited list of channel names) to subscribe for.
     @param opt Subscribe options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_subscribe_ex(pubnub_t *p, const char *channel, struct pubnub_subscribe_options opts);
+enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
+                                    const char*                     channel,
+                                    struct pubnub_subscribe_options opts);
 
 
 /** Options for "extended" here now, global or not, doesn't matter. */
@@ -137,24 +155,27 @@ struct pubnub_here_now_options pubnub_here_now_defopts(void);
         opt.state = 1;
         pbresult = pubnub_here_now_ex(pn, "my_channel", opt);
 
-    @param p The Pubnub context. Can't be NULL. 
+    @param p The Pubnub context. Can't be NULL.
     @param channel The string with the channel name (or
     comma-delimited list of channel names) to get presence info for.
     @param opt Here-now options for this here-now
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_here_now_ex(pubnub_t *p, const char *channel, struct pubnub_here_now_options opt);
+enum pubnub_res pubnub_here_now_ex(pubnub_t*                      p,
+                                   const char*                    channel,
+                                   struct pubnub_here_now_options opt);
 
 /** This is to pubnub_here_now_ex() as pubnub_global_here_now() is to
     pubnub_here_now().
 
-    @param p The Pubnub context. Can't be NULL.  
+    @param p The Pubnub context. Can't be NULL.
     @param opt Here-now options for this here-now. Keep in mind that
     `opt.channel_group` has to be NULL here.
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_global_here_now_ex(pubnub_t *p, struct pubnub_here_now_options opt);
+enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      p,
+                                          struct pubnub_here_now_options opt);
 
 
 /** Options for "extended" history. */
@@ -190,7 +211,7 @@ struct pubnub_history_options {
      */
     char const* end;
     /** If true to recieve a timetoken with each history
-     * message. If true, not timetokens per message. Defaults to 
+     * message. If true, not timetokens per message. Defaults to
      * false.
      */
     bool include_token;
@@ -212,12 +233,15 @@ struct pubnub_history_options pubnub_history_defopts(void);
         opt.reverse = true;
         pbresult = pubnub_history_ex(pn, "my_channel", opt);
 
-    @param pb The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to get history for. Can't be NULL.
+    @param pb The Pubnub context. Can't be NULL.
+    @param channel The string with the channel name to get history for. Can't be
+   NULL.
     @param opt Options for this history transaction
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_history_ex(pubnub_t* pb, char const* channel, struct pubnub_history_options opt);
+enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
+                                  char const*                   channel,
+                                  struct pubnub_history_options opt);
 
 
 #endif /* defined INC_PUBNUB_COREAPI_EX */

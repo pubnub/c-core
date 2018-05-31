@@ -11,12 +11,12 @@
 #include <stdlib.h>
 
 
-void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subscribe_key)
+void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subscribe_key)
 {
-    p->publish_key = publish_key;
+    p->publish_key   = publish_key;
     p->subscribe_key = subscribe_key;
-    p->timetoken[0] = '0';
-    p->timetoken[1] = '\0';
+    p->timetoken[0]  = '0';
+    p->timetoken[1]  = '\0';
     p->uuid = p->auth = NULL;
     p->msg_ofs = p->msg_end = 0;
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
@@ -29,7 +29,7 @@ void pbcc_init(struct pbcc_context *p, const char *publish_key, const char *subs
 }
 
 
-void pbcc_deinit(struct pbcc_context *p)
+void pbcc_deinit(struct pbcc_context* p)
 {
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
         if (p->http_reply != NULL) {
@@ -40,10 +40,10 @@ void pbcc_deinit(struct pbcc_context *p)
 }
 
 
-int pbcc_realloc_reply_buffer(struct pbcc_context *p, unsigned bytes)
+int pbcc_realloc_reply_buffer(struct pbcc_context* p, unsigned bytes)
 {
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
-    char *newbuf = (char*)realloc(p->http_reply, bytes + 1);
+    char* newbuf = (char*)realloc(p->http_reply, bytes + 1);
     if (NULL == newbuf) {
         return -1;
     }
@@ -58,10 +58,10 @@ int pbcc_realloc_reply_buffer(struct pbcc_context *p, unsigned bytes)
 }
 
 
-char const *pbcc_get_msg(struct pbcc_context *pb)
+char const* pbcc_get_msg(struct pbcc_context* pb)
 {
     if (pb->msg_ofs < pb->msg_end) {
-        char const *rslt = pb->http_reply + pb->msg_ofs;
+        char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
             return rslt;
@@ -72,7 +72,7 @@ char const *pbcc_get_msg(struct pbcc_context *pb)
 }
 
 
-char const *pbcc_get_channel(struct pbcc_context *pb)
+char const* pbcc_get_channel(struct pbcc_context* pb)
 {
     if (pb->chan_ofs < pb->chan_end) {
         char const* rslt = pb->http_reply + pb->chan_ofs;
@@ -86,13 +86,13 @@ char const *pbcc_get_channel(struct pbcc_context *pb)
 }
 
 
-void pbcc_set_uuid(struct pbcc_context *pb, const char *uuid)
+void pbcc_set_uuid(struct pbcc_context* pb, const char* uuid)
 {
     pb->uuid = uuid;
 }
 
 
-void pbcc_set_auth(struct pbcc_context *pb, const char *auth)
+void pbcc_set_auth(struct pbcc_context* pb, const char* auth)
 {
     pb->auth = auth;
 }
@@ -101,23 +101,23 @@ void pbcc_set_auth(struct pbcc_context *pb, const char *auth)
 /* Find the beginning of a JSON string that comes after comma and ends
  * at @c &buf[len].
  * @return position (index) of the found start or -1 on error. */
-static int find_string_start(char const *buf, int len)
+static int find_string_start(char const* buf, int len)
 {
     int i;
-    for (i = len-1; i > 0; --i) {
+    for (i = len - 1; i > 0; --i) {
         if (buf[i] == '"') {
-            return (buf[i-1] == ',') ? i : -1;
+            return (buf[i - 1] == ',') ? i : -1;
         }
     }
     return -1;
 }
 
 
-bool pbcc_split_array(char *buf)
+bool pbcc_split_array(char* buf)
 {
-    bool escaped = false;
-    bool in_string = false;
-    int bracket_level = 0;
+    bool escaped       = false;
+    bool in_string     = false;
+    int  bracket_level = 0;
 
     for (; *buf != '\0'; ++buf) {
         if (escaped) {
@@ -131,11 +131,22 @@ bool pbcc_split_array(char *buf)
         }
         else {
             switch (*buf) {
-            case '[': case '{': bracket_level++; break;
-            case ']': case '}': bracket_level--; break;
+            case '[':
+            case '{':
+                bracket_level++;
+                break;
+            case ']':
+            case '}':
+                bracket_level--;
+                break;
                 /* if at root, split! */
-            case ',': if (bracket_level == 0) { *buf = '\0'; } break;
-            default: break;
+            case ',':
+                if (bracket_level == 0) {
+                    *buf = '\0';
+                }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -144,10 +155,10 @@ bool pbcc_split_array(char *buf)
 }
 
 
-enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 {
-    char *reply = p->http_reply;
-    int replylen = p->http_buf_len;
+    char* reply    = p->http_reply;
+    int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
@@ -155,7 +166,7 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
     p->chan_ofs = p->chan_end = 0;
     p->msg_ofs = p->msg_end = 0;
 
-    if ((reply[0] != '[') || (reply[replylen-1] != ']')) {
+    if ((reply[0] != '[') || (reply[replylen - 1] != ']')) {
         if (reply[0] != '{') {
             return PNR_FORMAT_ERROR;
         }
@@ -164,9 +175,9 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
         return PNR_PUBLISH_FAILED;
     }
 
-    reply[replylen-1] = '\0';
+    reply[replylen - 1] = '\0';
     if (pbcc_split_array(reply + 1)) {
-        if (1 != strtol(reply+1, NULL, 10)) {
+        if (1 != strtol(reply + 1, NULL, 10)) {
             return PNR_PUBLISH_FAILED;
         }
         return PNR_OK;
@@ -177,26 +188,27 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context *p)
 }
 
 
-enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
+enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
 {
-    int i;
-    int previous_i;
+    int      i;
+    int      previous_i;
     unsigned time_token_length;
-    char *reply = p->http_reply;
-    int replylen = p->http_buf_len;
+    char*    reply    = p->http_reply;
+    int      replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
-    if (reply[replylen-1] != ']' && replylen > 2) {
+    if (reply[replylen - 1] != ']' && replylen > 2) {
         replylen -= 2; /* XXX: this seems required by Manxiang */
     }
-    if ((reply[0] != '[') || (reply[replylen-1] != ']') || (reply[replylen-2] != '"')) {
+    if ((reply[0] != '[') || (reply[replylen - 1] != ']')
+        || (reply[replylen - 2] != '"')) {
         return PNR_FORMAT_ERROR;
     }
 
     /* Extract the last argument. */
     previous_i = replylen - 2;
-    i = find_string_start(reply, previous_i);
+    i          = find_string_start(reply, previous_i);
     if (i < 0) {
         return PNR_FORMAT_ERROR;
     }
@@ -204,11 +216,11 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
 
     /* Now, the last argument may either be a timetoken, a channel group list
        or a channel list. */
-    if (reply[i-2] == '"') {
+    if (reply[i - 2] == '"') {
         int k;
         /* It is a channel list, there is another string argument in front
          * of us. Process the channel list ... */
-        for (k = replylen - 2; k > i+1; --k) {
+        for (k = replylen - 2; k > i + 1; --k) {
             if (reply[k] == ',') {
                 reply[k] = '\0';
             }
@@ -216,24 +228,24 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
 
         /* The previous argument is either a timetoken or a channel group
            list. */
-        reply[i-2] = '\0';
-        p->chan_ofs = i+1;
-        p->chan_end = replylen - 1;
-        previous_i = i-2;
-        i = find_string_start(reply, previous_i);
+        reply[i - 2] = '\0';
+        p->chan_ofs  = i + 1;
+        p->chan_end  = replylen - 1;
+        previous_i   = i - 2;
+        i            = find_string_start(reply, previous_i);
         if (i < 0) {
             p->chan_ofs = 0;
             p->chan_end = 0;
             return PNR_FORMAT_ERROR;
         }
-        if (reply[i-2] == '"') {
+        if (reply[i - 2] == '"') {
             /* It is a channel group list. For now, we shall skip
                it. In the future, we may process it like we do the
                channel list.
             */
-            reply[i-2] = '\0';
-            previous_i = i-2;
-            i = find_string_start(reply, previous_i);
+            reply[i - 2] = '\0';
+            previous_i   = i - 2;
+            i            = find_string_start(reply, previous_i);
             if (i < 0) {
                 return PNR_FORMAT_ERROR;
             }
@@ -251,29 +263,34 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context *p)
      *          ^-- here */
 
     /* Setup timetoken. */
-    time_token_length = previous_i - (i+1);
+    time_token_length = previous_i - (i + 1);
     if (time_token_length >= sizeof p->timetoken) {
         p->timetoken[0] = '\0';
         return PNR_FORMAT_ERROR;
     }
-    memcpy(p->timetoken, reply + i+1, time_token_length+1);
-    
+    memcpy(p->timetoken, reply + i + 1, time_token_length + 1);
+
     /* terminate the [] message array (before the `]`!) */
-    reply[i-2] = 0; 
+    reply[i - 2] = 0;
 
     /* Set up the message list - offset, length and NUL-characters
      * splitting the messages. */
     p->msg_ofs = 2;
-    p->msg_end = i-2;
+    p->msg_end = i - 2;
 
     return pbcc_split_array(reply + p->msg_ofs) ? PNR_OK : PNR_FORMAT_ERROR;
 }
 
 
-enum pubnub_res pbcc_append_url_param(struct pbcc_context *pb, char const *param_name, size_t param_name_len, char const *param_val, char separator)
+enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
+                                      char const*          param_name,
+                                      size_t               param_name_len,
+                                      char const*          param_val,
+                                      char                 separator)
 {
     size_t param_val_len = strlen(param_val);
-    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len + 1 > sizeof pb->http_buf) {
+    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len + 1
+        > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
     }
 
@@ -288,62 +305,101 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context *pb, char const *param
 }
 
 
-enum pubnub_res pbcc_publish_prep(struct pbcc_context *pb, const char *channel, const char *message, bool store_in_history, bool eat_after_reading)
+static enum pubnub_res url_encode(struct pbcc_context* pb, char const* what)
 {
-    char const *const uname = pubnub_uname();
-    char const *pmessage = message;
-    pb->http_content_len = 0;
+    PUBNUB_ASSERT_OPT(pb != NULL);
+    PUBNUB_ASSERT_OPT(what != NULL);
 
-    pb->http_buf_len = snprintf(
-        pb->http_buf, sizeof pb->http_buf,
-        "/publish/%s/%s/0/%s/0/",
-        pb->publish_key, pb->subscribe_key, channel
-        );
-
-
-    while (pmessage[0]) {
+    while (what[0]) {
         /* RFC 3986 Unreserved characters plus few
          * safe reserved ones. */
-        size_t okspan = strspn(pmessage, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~" ",=:;@[]");
+        size_t okspan = strspn(
+            what,
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~"
+            ",=:;@[]");
         if (okspan > 0) {
-            if (okspan > sizeof(pb->http_buf)-1 - pb->http_buf_len) {
+            if (okspan > sizeof(pb->http_buf) - 1 - pb->http_buf_len) {
                 pb->http_buf_len = 0;
                 return PNR_TX_BUFF_TOO_SMALL;
             }
-            memcpy(pb->http_buf + pb->http_buf_len, pmessage, okspan);
+            memcpy(pb->http_buf + pb->http_buf_len, what, okspan);
             pb->http_buf_len += okspan;
             pb->http_buf[pb->http_buf_len] = 0;
-            pmessage += okspan;
+            what += okspan;
         }
-        if (pmessage[0]) {
+        if (what[0]) {
             /* %-encode a non-ok character. */
-            char enc[4] = {'%'};
-            enc[1] = "0123456789ABCDEF"[(unsigned char)pmessage[0] / 16];
-            enc[2] = "0123456789ABCDEF"[(unsigned char)pmessage[0] % 16];
+            char enc[4] = { '%' };
+            enc[1]      = "0123456789ABCDEF"[(unsigned char)what[0] / 16];
+            enc[2]      = "0123456789ABCDEF"[(unsigned char)what[0] % 16];
             if (3 > sizeof pb->http_buf - 1 - pb->http_buf_len) {
                 pb->http_buf_len = 0;
                 return PNR_TX_BUFF_TOO_SMALL;
             }
             memcpy(pb->http_buf + pb->http_buf_len, enc, 4);
             pb->http_buf_len += 3;
-            ++pmessage;
+            ++what;
         }
+    }
+
+    return PNR_OK;
+}
+
+
+enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
+                                  const char*          channel,
+                                  const char*          message,
+                                  bool                 store_in_history,
+                                  bool                 norep,
+                                  char const*          meta)
+{
+    char const* const uname    = pubnub_uname();
+    char const*       pmessage = message;
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT_OPT(message != NULL);
+
+    pb->http_content_len       = 0;
+
+    pb->http_buf_len = snprintf(pb->http_buf,
+                                sizeof pb->http_buf,
+                                "/publish/%s/%s/0/%s/0/",
+                                pb->publish_key,
+                                pb->subscribe_key,
+                                channel);
+
+    rslt = url_encode(pb, message);
+    if (rslt != PNR_OK) {
+        return rslt;
     }
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     if (!store_in_history) {
-        APPEND_URL_PARAM_BOOL_M(pb, "store", store_in_history, '?');
+        APPEND_URL_PARAM_M(pb, "store", "0", '&');
     }
-    if (eat_after_reading) {
-        APPEND_URL_PARAM_BOOL_M(pb, "ear", eat_after_reading, '?');
+    if (norep) {
+        APPEND_URL_PARAM_M(pb, "norep", "true", '&');
+    }
+    if (meta != NULL) {
+        pb->http_buf[pb->http_buf_len++] = '&';
+        memcpy(pb->http_buf + pb->http_buf_len, "meta", sizeof "meta" - 1);
+        pb->http_buf_len += sizeof "meta" - 1;
+        pb->http_buf[pb->http_buf_len++] = '=';
+        rslt = url_encode(pb, meta);
+        if (rslt != PNR_OK) {
+            return rslt;
+        }
     }
 
     return PNR_STARTED;
 }
 
 
-enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel, const char *channel_group, unsigned *heartbeat)
+enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
+                                    const char*          channel,
+                                    const char*          channel_group,
+                                    unsigned*            heartbeat)
 {
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -358,12 +414,13 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context *p, const char *channel,
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
 
-    p->http_buf_len = snprintf(
-        p->http_buf, sizeof(p->http_buf),
-        "/subscribe/%s/%s/0/%s?pnsdk=%s",
-        p->subscribe_key, channel, p->timetoken,
-        pubnub_uname()
-        );
+    p->http_buf_len = snprintf(p->http_buf,
+                               sizeof(p->http_buf),
+                               "/subscribe/%s/%s/0/%s?pnsdk=%s",
+                               p->subscribe_key,
+                               channel,
+                               p->timetoken,
+                               pubnub_uname());
     APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');

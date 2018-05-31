@@ -3,6 +3,10 @@ version: 2.3.4
 scm: github.com/pubnub/c-core
 changelog:
   - version: v2.3.4
+      - type: feature
+        text: Enable sending meta data when publishing
+      - type: feature
+        text: Enable setting `norep` (don't replicate) when publishing (with `store=false`, publish becomes "fire")
       - type: bug
         text: Small fixes for async DNS
       - type: feature
