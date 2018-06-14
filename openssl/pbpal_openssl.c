@@ -108,6 +108,7 @@ void pbpal_init(pubnub_t* pb)
 {
     pal_init();
     memset(&pb->pal, 0, sizeof pb->pal);
+    pb->pal.dns_socket = SOCKET_INVALID;
     pb->options.useSSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
     pb->options.use_system_certificate_store = false;
     pb->options.reuse_SSL_session            = true;
@@ -375,7 +376,8 @@ void pbpal_free(pubnub_t* pb)
 {
     if (pb->pal.socket != NULL) {
         PUBNUB_LOG_TRACE("pbpal_free(%p): Unexpected pb->pal.socket == %p\n",
-                         pb, pb->pal.socket);
+                         pb,
+                         pb->pal.socket);
         pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
     }

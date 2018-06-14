@@ -2,12 +2,12 @@
 #if !defined INC_PUBNUB_GET_NATIVE_SOCKET
 #define  INC_PUBNUB_GET_NATIVE_SOCKET
 
-#include "pubnub_internal.h"
-
+#include "core/pubnub_api_types.h"
 
 #if defined(_WIN32)
 /// On Windows, native socket is a `SOCKET`, which is a `HANDLE` (most probably), 
 /// which is an opaque pointer.
+#include <winsock2.h>
 typedef SOCKET pbpal_native_socket_t;
 #else
 /// On POSIX, native(BSD) socket is an integer handle.

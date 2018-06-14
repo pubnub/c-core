@@ -35,6 +35,16 @@ static void generate_uuid(pubnub_t *pbp)
 }
 
 
+static void sample_free(pubnub_t* p)
+{
+    pubnub_cancel(p);
+    pubnub_await(p);
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+}
+
+
 int main()
 {
     clock_t clk;
@@ -67,7 +77,7 @@ int main()
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
     res = pubnub_await(pbp);
@@ -75,7 +85,7 @@ int main()
     printf("Subscribe-connect took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
     if (res == PNR_STARTED) {
         printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
 
@@ -89,9 +99,9 @@ int main()
     puts("Publishing...");
     clk = clock();
     res = pubnub_publish_encrypted(pbp, chan, "\"Hello world from crypto sync!\"", cipher_key);
-    if (res != PNR_STARTED) {
+    if ((res != PNR_OK) && (res != PNR_STARTED)) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
     res = pubnub_await(pbp);
@@ -99,7 +109,7 @@ int main()
     printf("Publish took %d clicks (%f seconds).\n", (int)clk, ((float)clk)/CLOCKS_PER_SEC);
     if (res == PNR_STARTED) {
         printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
     if (PNR_OK == res) {
@@ -115,15 +125,15 @@ int main()
     puts("Second subscribe");
 
     res = pubnub_subscribe(pbp, chan, NULL);
-    if (res != PNR_STARTED) {
+    if ((res != PNR_OK) && (res != PNR_STARTED)){
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
     res = pubnub_await(pbp);
     if (res == PNR_STARTED) {
         printf("pubnub_await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
+        sample_free(pbp);
         return -1;
     }
 
@@ -141,12 +151,11 @@ int main()
     else {
         printf("Subscribing failed with code %d: %s\n", res, pubnub_res_2_string(res));
     }
-    return -1;
 	
-    /* We're done */
-    if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context\n");
-    }
+    /* We're done, but, if keep-alive is on, we can't free,
+       we need to cancel first...
+     */
+    sample_free(pbp);
 
     puts("Pubnub crypto sync demo over.");
 

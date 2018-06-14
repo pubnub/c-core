@@ -9,7 +9,9 @@
 #include <pthread.h>
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 
 /** Data that we pass to the Pubnub context and will get back via
@@ -28,6 +30,29 @@ struct UserData {
 #endif
     pubnub_t *pb;
 };
+
+
+static void wait_seconds(unsigned time_in_seconds)
+{
+    clock_t start = clock();
+    unsigned time_passed_in_seconds;
+    do {
+        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
+    } while (time_passed_in_seconds < time_in_seconds);
+}
+
+
+static void sample_free(pubnub_t* p)
+{
+    pubnub_cancel(p);
+    if (pubnub_free_with_timeout(p, 1000) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+    else {
+        /* Waits for the context to be released from the processing queue */
+        wait_seconds(1);
+    }
+}
 
 
 void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
@@ -85,13 +110,13 @@ static enum pubnub_res end_await(struct UserData *pUserData)
     return pubnub_last_result(pUserData->pb);
 }
 
-
+/*
 static enum pubnub_res await(struct UserData *pUserData)
 {
     start_await(pUserData);
     return end_await(pUserData);
 }
-
+*/
 
 static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
 {
@@ -115,6 +140,8 @@ int main()
     char const *chan = "hello_world";
     pubnub_t *pbp = pubnub_alloc();
     pubnub_t *pbp_2 = pubnub_alloc();
+    time_t start = time(NULL);
+
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
         return -1;
@@ -136,6 +163,8 @@ int main()
     puts("Subscribing...");
     puts("-----------------------");
 	
+    start_await(&user_data);
+
     /* First subscribe, to get the time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
@@ -146,7 +175,7 @@ int main()
     }
 
     puts("Await subscribe");
-    res = await(&user_data);
+    res = end_await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
@@ -160,6 +189,7 @@ int main()
         printf("Subscribing failed with code: %d\n", res);
     }
 
+    start_await(&user_data);
     /* The "real" subscribe, with the just acquired time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
@@ -169,12 +199,12 @@ int main()
         return -1;
     }
 	
-    /* Don't do "full" await here, because we didn't publish anything yet! */
-    start_await(&user_data);
-    
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
+
+    /* Don't do "full" await here, because we didn't publish anything yet! */
+    start_await(&user_data_2);
 
     /* Since the subscribe is ongoing in the `pbp` context, we can't
        publish on it, so we use a different context to publish
@@ -188,7 +218,8 @@ int main()
     }
 
     puts("Await publish");
-    res = await(&user_data_2);
+    res = end_await(&user_data_2);
+
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         pubnub_free(pbp);
@@ -226,19 +257,12 @@ int main()
     else {
         printf("Subscribing failed with code: %d\n", res);
     }
-
 	
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...
      */
-    pubnub_cancel(pbp);
-    pubnub_cancel(pbp_2);
-    if (pubnub_free_with_timeout(pbp_2, 1000) != 0) {
-        printf("Failed to free the Pubnub context `pbp_2`\n");
-    }
-    if (pubnub_free_with_timeout(pbp, 1000) != 0) {
-        printf("Failed to free the Pubnub context `pbp`\n");
-    }
+    sample_free(pbp_2);
+    sample_free(pbp);
 
     puts("Pubnub subscribe-publish callback demo over.");
 

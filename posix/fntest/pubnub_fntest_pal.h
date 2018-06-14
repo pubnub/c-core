@@ -46,7 +46,8 @@
     if (exp) {                                                                 \
     }                                                                          \
     else {                                                                     \
-        printf("expect(%s) failed, file %s function %s line %d\x1b[0m\n",      \
+        printf("\x1b[33m expect(%s) failed, file %s function %s line "         \
+               "%d\x1b[0m\n",                                                  \
                #exp,                                                           \
                __FILE__,                                                       \
                __FUNCTION__,                                                   \
@@ -57,8 +58,8 @@
 
 #define expect_pnr(rslt, exp_rslt)                                             \
     if ((rslt) != (exp_rslt)) {                                                \
-        printf("Expected result %d (%s) but got %d (%s), file %s function %s " \
-               "line %d\x1b[0m\n",                                             \
+        printf("\x1b[33m Expected result %d (%s) but got %d (%s), file %s "    \
+               "function %s line %d\x1b[0m\n",                                 \
                (exp_rslt),                                                     \
                #exp_rslt,                                                      \
                (rslt),                                                         \
@@ -114,20 +115,20 @@
     } while (0)
 
 
-#define await_w_timer_2(tmr, rslt, pbp, rslt2, pbp2)                           \
+#define await_w_timer_2(rslt1, rslt2, tmr, pbp1, exp_rslt1, pbp2, exp_rslt2)   \
     do {                                                                       \
-        enum pubnub_res M_rslt   = PNR_STARTED;                                \
-        enum pubnub_res M_rslt_2 = PNR_STARTED;                                \
+        enum pubnub_res M_rslt_1 = rslt1;                                      \
+        enum pubnub_res M_rslt_2 = rslt2;                                      \
         while (pnfntst_timer_is_running(tmr)) {                                \
-            if (M_rslt == PNR_STARTED) {                                       \
-                M_rslt = pubnub_last_result(pbp);                              \
+            if (M_rslt_1 == PNR_STARTED) {                                     \
+                M_rslt_1 = pubnub_last_result(pbp1);                           \
             }                                                                  \
             if (M_rslt_2 == PNR_STARTED) {                                     \
                 M_rslt_2 = pubnub_last_result(pbp2);                           \
             }                                                                  \
-            if ((PNR_STARTED != M_rslt) && (PNR_STARTED != M_rslt_2)) {        \
-                expect_last_result(M_rslt, (rslt));                            \
-                expect_last_result(M_rslt_2, (rslt2));                         \
+            if ((PNR_STARTED != M_rslt_1) && (PNR_STARTED != M_rslt_2)) {      \
+                expect_last_result(M_rslt_1, (exp_rslt1));                     \
+                expect_last_result(M_rslt_2, (exp_rslt2));                     \
                 break;                                                         \
             }                                                                  \
         }                                                                      \
@@ -135,53 +136,28 @@
     } while (0)
 
 
-#define await_timed_2(ms, rslt, pbp, rslt2, pbp2)                              \
+#define await_timed_2(ms, exp_rslt1, pbp1, exp_rslt2, pbp2)                            \
+    do {                                                                               \
+        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                                 \
+        expect(M_t_ != NULL);                                                          \
+        TEST_DEFER(pnfntst_free_timer, M_t_);                                          \
+        pnfntst_start_timer(M_t_, (ms));                                               \
+        await_w_timer_2(                                                               \
+            PNR_STARTED, PNR_STARTED, M_t_, (pbp1), (exp_rslt1), (pbp2), (exp_rslt2)); \
+        pthread_cleanup_pop(1);                                                        \
+    } while (0)
+
+#define expect_pnr_maybe_started_2(                                            \
+    rslt1, rslt2, time_ms, pbp1, exp_rslt1, pbp2, exp_rslt2)                   \
     do {                                                                       \
         pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
         expect(M_t_ != NULL);                                                  \
         TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
-        pnfntst_start_timer(M_t_, (ms));                                       \
-        await_w_timer_2(M_t_, (rslt), (pbp), (rslt2), (pbp2));                 \
+        pnfntst_start_timer(M_t_, (time_ms));                                  \
+        await_w_timer_2(                                                       \
+            (rslt1), (rslt2), M_t_, (pbp1), (exp_rslt1), (pbp2), (exp_rslt2)); \
         pthread_cleanup_pop(1);                                                \
     } while (0)
-
-
-#define await_w_timer_3(tmr, rslt, pbp, rslt2, pbp2, rslt3, pbp3)              \
-    do {                                                                       \
-        enum pubnub_res M_rslt   = PNR_STARRTED;                               \
-        enum pubnub_res M_rslt_2 = PNR_STARTED;                                \
-        enum pubnub_res M_rslt_3 = PNR_STARTED;                                \
-        while (pnfntst_timer_is_running(tmr)) {                                \
-            if (M_rslt != PNR_STARTED) {                                       \
-                M_rslt = pubnub_last_result(pbp);                              \
-            }                                                                  \
-            if (M_rslt_2 != PNR_STARTED) {                                     \
-                M_rslt_2 = pubnub_last_result(pbp2);                           \
-            }                                                                  \
-            if (M_rslt_3 != PNR_STARTED) {                                     \
-                M_rslt_3 = pubnub_last_result(pbp3);                           \
-            }                                                                  \
-            if ((PNR_STARTED != M_rslt) && (PNR_STARTED != M_rslt_2)           \
-                && (PNR_STARTED != M_rslt_3)) {                                \
-                expect_last_result(M_rslt, (rslt));                            \
-                expect_last_result(M_rslt_2, (rslt2));                         \
-                expect_last_result(M_rslt_3, (rslt3));                         \
-                break;                                                         \
-            }                                                                  \
-        }                                                                      \
-        expect(pnfntst_timer_is_running(tmr));                                 \
-    } while (0)
-
-#define await_timed_3(ms, rslt, pbp, rslt2, pbp2, rslt3, pbp3)                  \
-    do {                                                                        \
-        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                          \
-        expect(M_t_ != NULL);                                                   \
-        TEST_DEFER(pnfntst_free_timer, M_t_);                                   \
-        pnfntst_start_timer(M_t_, (ms));                                        \
-        await_w_timer_3(M_t_, (rslt), (pbp), (rslt2), (pbp2), (rslt3), (pbp3)); \
-        pthread_cleanup_pop(1);                                                 \
-    } while (0)
-
 
 #define await_console()                                                        \
     do {                                                                       \

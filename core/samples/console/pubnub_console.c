@@ -282,11 +282,9 @@ int main()
         displayMenuOptions(pn);
     }
     
-    puts("Exiting");
+    puts("Exiting\n");
     
-    if (pubnub_free(pn) != 0) {
-        puts("Failed to free the Pubnub context");
-    }
+    pnc_free(pn);
     
     return 0;
 }

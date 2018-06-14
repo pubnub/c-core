@@ -3,6 +3,7 @@
 
 #include "core/pubnub_helper.h"
 #include "core/pubnub_mutex.h"
+#include "core/pubnub_free_with_timeout.h"
 
 #include "pnc_ops_callback.h"
 
@@ -13,9 +14,21 @@
 #include <pthread.h>
 #endif
 
+#if defined _WIN32
+#include "windows/console_subscribe_paint.h"
+/* FIXME: It's ugly that we have to declare these here, far, far, away
+   from the macros in the above header that use them...
+ */
+HANDLE m_hstdout_;
+WORD m_wOldColorAttrs_;
+#else
+#include "posix/console_subscribe_paint.h"
+#endif
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 
 struct UserData {
@@ -55,6 +68,28 @@ static void callback_signal(struct UserData *pUserData)
 #endif
 }
 
+static void wait_seconds(unsigned time_in_seconds) {
+    clock_t start = clock();
+    unsigned time_passed_in_seconds;
+    do{
+        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
+    }while(time_passed_in_seconds < time_in_seconds);
+}
+
+void pnc_free(pubnub_t *pb)
+{
+    /* We're done, but, if keep-alive is on, we can't free,
+       we need to cancel first...
+     */
+    pubnub_cancel(pb);
+    if (0 != pubnub_free_with_timeout(pb, 1000)) {
+        puts("Failed to free the context in due time");
+    }
+    else {
+        /* Waits until the context is released from the processing queue */
+        wait_seconds(1);
+    }
+}
 
 static void ops_callback(pubnub_t *pn, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
 {
@@ -171,7 +206,7 @@ pnc_ops_subscribe_thr(void *pn_sub_addr)
             break;
         }
 
-        puts("Subscribe loop...");
+//        puts("Subscribe loop...");
         
         pnc_subscribe_list_channels(channels_string, sizeof channels_string);
         pnc_subscribe_list_channel_groups(channel_groups_string, sizeof channel_groups_string);
@@ -243,6 +278,10 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
 
 void pnc_ops_parse_callback(enum pubnub_trans method_name, enum pubnub_res res, pubnub_t *pn)
 {
+    if(method_name == PBTT_SUBSCRIBE) {
+        paint_text_green();
+        puts("Subscribe loop...");
+    }
     if (res == PNR_HTTP_ERROR) {
         printf("%d HTTP error / code: %d\n",
                method_name, pubnub_last_http_code(pn));
@@ -276,4 +315,5 @@ void pnc_ops_parse_callback(enum pubnub_trans method_name, enum pubnub_res res, 
             printf("Publish failed, with error: '%s' -> %d\n", desc, pubnub_parse_publish_result(desc));
         }
     }
+    reset_text_paint();
 }

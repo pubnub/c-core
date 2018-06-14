@@ -2,6 +2,7 @@
 #include "pnc_subscriptions.h"
 
 void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub);
+void pnc_free(pubnub_t *pb);
 
 void pnc_ops_subscribe(pubnub_t *pn);
 void pnc_ops_presence(pubnub_t *pn, char *channel);

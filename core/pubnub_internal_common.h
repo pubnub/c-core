@@ -24,8 +24,9 @@
 #endif
 
 
-#if !defined(PUBNUB_USE_ADNS)
-#define PUBNUB_USE_ADNS 0
+#include <stdint.h>
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+#include <time.h>
 #endif
 
 

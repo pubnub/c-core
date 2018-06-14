@@ -371,15 +371,13 @@ next_state:
         break;
     }
     case PBS_WAIT_DNS_SEND: {
-        enum pbpal_resolv_n_connect_result rslv =
-            pbpal_check_resolv_and_connect(pb);
+        enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            pbntf_update_socket(pb);
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
@@ -388,9 +386,11 @@ next_state:
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
+            pbntf_update_socket(pb);
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
+            pbntf_update_socket(pb);
             outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
         }
@@ -413,10 +413,12 @@ next_state:
             pbntf_watch_out_events(pb);
             break;
         case pbpal_connect_success:
+            pbntf_update_socket(pb);
             pb->state = PBS_CONNECTED;
             pbntf_watch_out_events(pb);
             goto next_state;
         default:
+            pbntf_update_socket(pb);
             outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
         }
@@ -707,7 +709,9 @@ next_state:
             */
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[]  = "Content-Length: ";
+#if PUBNUB_ADVANCED_KEEP_ALIVE
             char h_close[]   = "Connection: close";
+#endif
             int  read_len    = pbpal_read_len(pb);
             PUBNUB_LOG_TRACE("pb=%p header line was read: '%.*s'\n",
                              pb,

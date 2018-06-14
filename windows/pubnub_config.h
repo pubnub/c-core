@@ -90,6 +90,13 @@
 #define PUBNUB_PROXY_API 1
 #endif
 
+#if !defined(PUBNUB_SET_DNS_SERVERS)
+/** If true (!=0), enable support for setting DNS servers */
+#define PUBNUB_SET_DNS_SERVERS 1
+#endif
+
+#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
 #define PUBNUB_USE_WIN_SSPI 1

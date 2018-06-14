@@ -6,6 +6,17 @@
 #include <openssl/ssl.h>
 
 
+int socket_platform_init(void)
+{
+#if defined(_WIN32)
+    WSADATA wsadata;
+    printf("socket_platform_init()\n");
+    return WSAStartup(MAKEWORD(2,2), &wsadata);
+#endif
+    return 0;
+}
+
+
 int pbpal_set_blocking_io(pubnub_t *pb)
 {
     /* You can't just change blocking/non-blocking I/O w/OpenSSL.  It

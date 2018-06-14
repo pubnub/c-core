@@ -15,6 +15,13 @@ void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub)
     // Nothing todo in sync version
 }
 
+void pnc_free(pubnub_t* p) {
+    pubnub_cancel(p);
+    pubnub_await(p);
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context!\n");
+    }
+}
 
 void pnc_ops_subscribe(pubnub_t *pn_sub)
 {

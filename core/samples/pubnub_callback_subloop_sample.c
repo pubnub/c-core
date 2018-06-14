@@ -21,16 +21,12 @@ static void subloop_callback(pubnub_t *pbp, char const* message, enum pubnub_res
 }
 
 
-static void just_wait_minutes(unsigned min)
-{
-    const unsigned sec = 60 * min;
-    time_t t0 = time(NULL);
-    for (;;) {
-        const double d = difftime(time(NULL), t0);
-        if (d > sec) {
-            break;
-        }
-    }
+static void wait_seconds(unsigned time_in_seconds) {
+    clock_t start = clock();
+    unsigned time_passed_in_seconds;
+    do {
+        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
+    } while (time_passed_in_seconds < time_in_seconds);
 }
 
 
@@ -52,6 +48,8 @@ int main()
     if (NULL == pbsld) {
         printf("Defining a subscribe loop failed\n");
         pubnub_free(pbp);
+        /* Waits until the context is released from the processing queue */
+        wait_seconds(1);
         return -1;
     }
 //! [Define subscribe loop]
@@ -62,7 +60,7 @@ int main()
     pubnub_subloop_start(pbsld);
 //! [Start Subscribe loop]
 
-    just_wait_minutes(minutes_in_loop);
+    wait_seconds(minutes_in_loop*60);
 
 //! [Stop a subscribe loop]
     pubnub_subloop_stop(pbsld);
@@ -72,11 +70,17 @@ int main()
     pubnub_subloop_undef(pbsld);
 //! [Release Subscribe loop]
 
-    /* We're done */
+    /* We're done, but, if keep-alive is on, we can't free,
+       we need to cancel first...
+     */
+    pubnub_cancel(pbp);
     if (0 != pubnub_free_with_timeout(pbp, 1000)) {
         puts("Failed to free the context in due time");
     }
-
+    else {
+        /* Waits until the context is released from the processing queue */
+        wait_seconds(1);
+    }
     puts("Pubnub callback subloop demo over.");
 
     return 0;

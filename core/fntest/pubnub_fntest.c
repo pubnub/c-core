@@ -3,8 +3,10 @@
 #include "core/pubnub_coreapi.h"
 #include "core/pubnub_assert.h"
 #include "pubnub_internal.h"
+#include "core/pubnub_ntf_sync.h"
+#include "core/pubnub_alloc.h"
 
-#include "core/fntest/pubnub_fntest.h"
+#include "pubnub_fntest.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -109,10 +111,7 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
     pnfntst_start_timer(tmr, ms);
     while (pnfntst_timer_is_running(tmr) && missing) {
         enum pubnub_res pbres = pubnub_subscribe(p, channel, chgroup);
-        if (PNR_STARTED != pbres) {
-            puts("subscribe and check: subscribe failed");
-            break;
-        }
+        if (PNR_STARTED == pbres) {
         while (pnfntst_timer_is_running(tmr)) {
             pbres = pubnub_last_result(p);
             if (pbres != PNR_STARTED) {
@@ -123,7 +122,10 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
             printf("subscribe and check: subscribe error %d\n", pbres);
             break;
         }
-	
+        } else if (pbres != PNR_OK) {
+            puts("subscribe and check: subscribe failed");
+            break;
+        }
         for (;;) {
             size_t i;
             char const *msg = pubnub_get(p);
@@ -145,4 +147,13 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
     pnfntst_free_timer(tmr);
     
     return !missing;
+}
+
+void pnfntst_free(pubnub_t *p)
+{
+    pubnub_cancel(p);
+    pubnub_await(p);
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
 }

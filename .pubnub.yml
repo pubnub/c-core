@@ -1,8 +1,10 @@
 name: c-core
-version: 2.3.4
+version: 2.4.0
 scm: github.com/pubnub/c-core
 changelog:
-  - version: v2.3.4
+  - version: v2.4.0
+      - type: feature
+        text: Callback interface uses (our own) async DNS
       - type: feature
         text: Enable sending meta data when publishing
       - type: feature

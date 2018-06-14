@@ -201,6 +201,8 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
     uint8_t*           qname = buf + sizeof *dns;
     struct QUESTION*   qinfo;
+    size_t             sent_to;
+    size_t             to_send;
 
     dns->id        = htons(33); /* in lack of a better ID */
     dns->options   = htons(dnsoptRDmask);
@@ -209,36 +211,34 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
 
     dns_qname_encode(qname, sizeof buf - sizeof *dns, host);
 
-    qinfo =
-        (struct QUESTION*)(buf + sizeof *dns + strlen((const char*)qname) + 1);
+    qinfo = (struct QUESTION*)(buf + sizeof *dns + strlen((const char*)qname) + 1);
     qinfo->qtype  = htons(dnsA);
     qinfo->qclass = htons(dnsqclassInternet);
+    to_send       = sizeof *dns + strlen((char*)qname) + 1 + sizeof *qinfo;
+    sent_to       = sendto(skt, (char*)buf, to_send, 0, dest, sizeof *dest);
 
-    if (sendto(skt,
-               (char*)buf,
-               sizeof *dns + strlen((char*)qname) + 1 + sizeof *qinfo,
-               0,
-               dest,
-               sizeof *dest)
-        < 0) {
+    if (sent_to <= 0) {
         return socket_would_block() ? +1 : -1;
     }
-
+    else if (to_send != sent_to) {
+        PUBNUB_LOG_ERROR("'sendto()' sent:%d out of %u bytes to send!\n",
+                         (int)sent_to,
+                         (unsigned)to_send);
+        return -1;
+    }
     return 0;
 }
 
 
-int read_dns_response(int                 skt,
-                      struct sockaddr*    dest,
-                      struct sockaddr_in* resolved_addr)
+int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolved_addr)
 {
     uint8_t            buf[8192];
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
     uint8_t*           qname = buf + sizeof *dns;
     uint8_t*           reader;
     int                i, msg_size;
+    int                addr_size = sizeof *dest;
 
-    socklen_t addr_size = sizeof *dest;
     msg_size = recvfrom(skt, (char*)buf, sizeof buf, 0, dest, &addr_size);
     if (msg_size <= 0) {
         return socket_would_block() ? +1 : -1;
@@ -265,11 +265,12 @@ int read_dns_response(int                 skt,
         r_data_len = ntohs(prdata->data_len);
         reader += to_skip + sizeof *prdata;
 
-        PUBNUB_LOG_TRACE("DNS answer: %s, to_skip:%zu, type=%hu, data_len=%zu\n",
-                         name,
-                         to_skip,
-                         ntohs(prdata->type),
-                         r_data_len);
+        PUBNUB_LOG_TRACE(
+            "DNS answer: %s, to_skip:%zu, type=%hu, data_len=%zu\n",
+            name,
+            to_skip,
+            ntohs(prdata->type),
+            r_data_len);
 
         if (ntohs(prdata->type) == dnsA) {
             if (r_data_len != 4) {
@@ -285,6 +286,7 @@ int read_dns_response(int                 skt,
             resolved_addr->sin_family = AF_INET;
             memcpy(&resolved_addr->sin_addr, reader, 4);
             reader += r_data_len;
+            return 0;
         }
         else {
             /* Don't care about other resource types, for now */
@@ -294,7 +296,7 @@ int read_dns_response(int                 skt,
 
     /* Don't care about Authoritative Servers or Additional records, for now */
 
-    return 0;
+    return -1;
 }
 
 
