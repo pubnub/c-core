@@ -15,7 +15,7 @@ OPENSSL_LIBS=$(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 !ENDIF
 LIBS=ws2_32.lib rpcrt4.lib $(OPENSSL_LIBS)
 
-CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE /W3 /D PUBNUB_USE_WIN_SSPI=1
+CFLAGS = /Zi /MP /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
