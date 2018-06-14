@@ -11,7 +11,7 @@ typedef SOCKET pb_socket_t;
 
 
 #define socket_close(socket) closesocket(socket)
-#define socket_send(socket, buf, len) send((socket), (buf), (len))
+#define socket_send(socket, buf, len) send((socket), (buf), (len), 0)
 #define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
 
 /* Treating `WSAEINPROGRESS` the same as `WSAEWOULDBLOCK` isn't 
@@ -36,6 +36,11 @@ int socket_platform_init(void);
     DWORD M_tm = (milliseconds);                                                \
     setsockopt((socket), SOL_SOCKET, SO_RCVTIMEO, (char*)&M_tm, sizeof M_tm);   \
     } while(0)
+
+
+/* Winsock never raises SIGPIPE, so, we're good. */
+#define socket_disable_SIGPIPE(socket)
+
 
 /** The Pubnub Windows context */
 struct pubnub_pal {

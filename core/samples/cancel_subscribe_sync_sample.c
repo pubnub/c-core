@@ -40,7 +40,6 @@ int main()
         if (res != PNR_STARTED) {
             printf("pubnub_subscribe() returned unexpected: %d\n", res);
             break;
-            ;
         }
 
         /* Don't await here, 'cause it will loop until done */
@@ -92,10 +91,12 @@ int main()
         }
     }
 
-
-    /* We're done */
+    /* We're done, but, keep-alive might be on, so we need to cancel.
+     * Might have been interrupted during the operation so have to wait-sync, then free */
+    pubnub_cancel(pbp);
+    pubnub_await(pbp);
     if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context `pbp`\n");
+        printf("Failed to free the Pubnub context!\n");
     }
 
     puts("Pubnub cancel subscribe sync demo over.");

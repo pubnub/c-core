@@ -36,9 +36,10 @@ void pbntf_lost_socket(pubnub_t *pb)
 }
 
 
-void pbntf_trans_outcome(pubnub_t *pb)
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
 {
-    PBNTF_TRANS_OUTCOME_COMMON(pb);
+    PBNTF_TRANS_OUTCOME_COMMON(pb, state);
+    PUBNUB_ASSERT(pbnc_can_start_transaction(pb));
 }
 
 

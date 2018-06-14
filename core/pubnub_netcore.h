@@ -87,7 +87,12 @@ enum pubnub_state {
     /** HTTP Heep-Alive active, user has requested a new transaction,
         we're ready to go.
      */
-    PBS_KEEP_ALIVE_READY
+    PBS_KEEP_ALIVE_READY,
+    /** HTTP Heep-Alive was active, we started to close the connection and
+        are awating for it to be actually closed before starting the transaction
+        via a new connection.
+     */
+    PBS_KEEP_ALIVE_WAIT_CLOSE
 };
 
 

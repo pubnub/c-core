@@ -11,7 +11,7 @@
 #include "pubnub_ntf_callback.h"
 #endif
 
-#if !defined PUBNUB_PROXY_API
+#if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
 #include "pubnub_proxy.h"
@@ -24,8 +24,9 @@
 #endif
 
 
-#if !defined PUBNUB_USE_ADNS
-#define PUBNUB_USE_ADNS 0
+#include <stdint.h>
+#if PUBNUB_ADVANCED_KEEP_ALIVE
+#include <time.h>
 #endif
 
 
@@ -310,11 +311,12 @@ struct pubnub_ {
 };
 
 
-
-/** Internal function, to be called when the outcome of a
-    REST call / transaction has been reached.
+/** Internal function, to be called when the outcome of a REST call /
+    transaction has been reached. The context @p pb will go to @p
+    state, which must be such that one can start a new transaction
+    from it. The state will be set before any callback is called.
 */
-void pbntf_trans_outcome(pubnub_t *pb);
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state);
 
 int pbntf_init(void);
 

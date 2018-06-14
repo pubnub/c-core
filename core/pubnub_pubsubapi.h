@@ -246,7 +246,7 @@ int pubnub_origin_set(pubnub_t* p, char const* origin);
 
     But, there's a trade-off here, here are the drawbacks:
 
-    * pubnub_free() will not work for contexts that are in 
+    * pubnub_free() will not work for contexts that are in
       "keep alive" state. You need to pubnub_cancel() before
       you can pubnub_free().
     * Socket in the keep-alive state will be closed by the
@@ -268,7 +268,6 @@ void pubnub_use_http_keep_alive(pubnub_t* p);
     want to turn that off - see pubnub_use_http_keep_alive().
 */
 void pubnub_dont_use_http_keep_alive(pubnub_t* p);
-
 
 
 #endif /* !defined INC_PUBNUB_PUBSUBAPI */

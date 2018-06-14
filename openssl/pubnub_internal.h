@@ -9,24 +9,77 @@
    we find a better solution...
 */
 #include <winsock2.h>
+#else
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <errno.h>
 #endif
+
+#include "pubnub_get_native_socket.h"
 
 #include "openssl/bio.h"
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 
-
 typedef BIO* pb_socket_t;
 
 
-/** If you need space and are _sure_ you'll only work on IPv4, set to
-    4
+#if defined(__linux__)
+/* We assume that one doesn't want to receive and handle SIGPIPE.
+   But we may upgrade this to a compile time option in the future,
+   if people actually want to handle SIGPIPE.
+*/
+#define socket_send(socket, buf, len) send((socket), (buf), (len), MSG_NOSIGNAL)
+#else
+#define socket_send(socket, buf, len) send((socket), (buf), (len), 0)
+#endif
+
+#define socket_recv(socket, buf, len, flags)                                   \
+    recv((socket), (buf), (len), (flags))
+
+/* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't
+   the greatest solution, but it is good for now.
+*/
+#define socket_would_block()                                                   \
+    ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINPROGRESS))
+
+#define socket_timed_out() (errno == ETIMEDOUT)
+
+/** On Windows, one needs to call WSAStartup(), which is not trivial */
+int socket_platform_init(void);
+
+#if !defined(_WIN32)
+
+#define SOCKET_INVALID -1
+#define SOCKET_ERROR -1
+
+#define socket_close(socket) close(socket)
+
+#else
+
+#define SOCKET_INVALID INVALID_SOCKET
+
+#define socket_close(socket) closesocket(socket)
+
+#endif
+
+/* Maybe we could use `getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error,
+   &len)`, but, its utility is questionable, so probably test extensively to see
+   if it really works for us.
+    */
+#define socket_is_connected(socket) true
+
+/** If you need the 12 bytes of memory space and are _sure_ you'll
+    only work on IPv4, set to 4 (because 16 is for IPv6)
 */
 #define PUBNUB_MAX_IP_ADDR_OCTET_LENGTH 16
 
 /** The Pubnub OpenSSL context */
 struct pubnub_pal {
     BIO*         socket;
+    pbpal_native_socket_t  dns_socket;
     SSL_CTX*     ctx;
     SSL_SESSION* session;
     char         ip[PUBNUB_MAX_IP_ADDR_OCTET_LENGTH];
@@ -63,6 +116,23 @@ int snprintf(char* buffer, size_t n, const char* format, ...);
     } while (0)
 
 #endif /* ifdef _WIN32 */
+
+#if __APPLE__
+/* Actually, BSD in general provides SO_NOSIGPIPE, but we don't know
+   what's the status of this support across various BSDs... So, for
+   now, we only do this for MacOS.
+*/
+#define socket_disable_SIGPIPE(socket)                                             \
+    do {                                                                           \
+        int on = 1;                                                                \
+        if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
+            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
+        }                                                                          \
+    } while (0)
+#else
+#define socket_disable_SIGPIPE(socket)
+#endif
+
 
 /** With OpenSSL, one can set I/O to be blocking or non-blocking,
     though it can only be done before establishing the connection.

@@ -53,6 +53,7 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
     }
     for (i = 0; i < data->size; ++i) {
         PUBNUB_ASSERT_OPT(data->apoll[i].fd != sockt);
+        PUBNUB_ASSERT_OPT(data->apb[i] != pb);
     }
     if (data->size == data->cap) {
         size_t const   newcap = data->size + 2;
@@ -100,24 +101,32 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
                 memmove(data->apb + i, data->apb + i + 1, sizeof data->apb[0] * to_move);
             }
             --data->size;
-            break;
+            return;
         }
     }
+    PUBNUB_LOG_DEBUG(
+        "pbpal_ntf_callback_remove_socket(pb=%p) sockt=%d: Not Found!", pb, sockt);
 }
 
 
 void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 {
-    pbpal_native_socket_t socket = pubnub_get_native_socket(pb);
-    if (socket != INVALID_SOCKET) {
+    pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
+    if (sockt != INVALID_SOCKET) {
         size_t i;
         for (i = 0; i < data->size; ++i) {
+            PUBNUB_ASSERT_OPT((data->apb[i] != pb) ? (data->apoll[i].fd != sockt)
+                                                   : true);
+        }
+        for (i = 0; i < data->size; ++i) {
             if (data->apb[i] == pb) {
-                data->apoll[i].fd = socket;
+                data->apoll[i].fd = sockt;
                 return;
             }
         }
     }
+    PUBNUB_LOG_WARNING(
+        "pbpal_ntf_callback_update_socket(pb=%p) sockt=%d: Not Found!", pb, sockt);
 }
 
 
@@ -130,6 +139,7 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
+    PUBNUB_LOG_WARNING("pbpal_ntf_watch_out_events(pbp=%p): Not Found!", pbp);
     return -1;
 }
 
@@ -143,6 +153,7 @@ int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
+    PUBNUB_LOG_WARNING("pbpal_ntf_watch_in_events(pbp=%p): Not Found!", pbp);
     return -1;
 }
 

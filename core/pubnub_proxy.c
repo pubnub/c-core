@@ -52,16 +52,20 @@ int pubnub_proxy_get_config(pubnub_t const*         pb,
                             char*                   host,
                             unsigned                n)
 {
+    size_t hnlen;
+
     PUBNUB_ASSERT_OPT(pb != NULL);
     PUBNUB_ASSERT_OPT(protocol != NULL);
     PUBNUB_ASSERT_OPT(port != NULL);
     PUBNUB_ASSERT_OPT(host != NULL);
-    PUBNUB_ASSERT_OPT(n > 0);
 
     *protocol = pb->proxy_type;
     *port     = pb->proxy_port;
-    strncpy(host, pb->proxy_hostname, n);
-    host[n - 1] = '\0';
+    hnlen     = strlen(pb->proxy_hostname);
+    if (hnlen + 1 < n) {
+        return -1;
+    }
+    memcpy(host, pb->proxy_hostname, hnlen + 1);
 
     return 0;
 }

@@ -198,7 +198,6 @@ pubnub_proxy_authentication_scheme_get(pubnub_t* p);
     @precondition protocol != NULL
     @precondition port != NULL
     @precondition host != NULL
-    @precondition n > 0
 
     @param[in] pb The Pubnub context to get the configuration from
     @param[out] protocol Pointer to where the protocol will be written to

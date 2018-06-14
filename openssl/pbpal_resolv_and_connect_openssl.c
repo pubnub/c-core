@@ -3,6 +3,7 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
+#include <Ws2tcpip.h>
 #else
 #include <sys/select.h>
 #define SOCKET_ERROR -1
@@ -12,10 +13,18 @@
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "lib/sockets/pbpal_adns_sockets.h"
+#include "lib/sockets/pbpal_socket_blocking_io.h"
+#include "core/pubnub_dns_servers.h"
+
+#include <sys/types.h>
 
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 
+#define HTTP_PORT 80
+
+#define DNS_PORT 53
 
 static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
@@ -86,35 +95,81 @@ static void restore_ip(pubnub_t* pb)
 #endif
 }
 
-
-static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t* pb)
+#ifdef PUBNUB_CALLBACK_API
+static void get_dns_ip(struct sockaddr_in* addr)
 {
-    int port = 80;
-
-    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
-
-    if (NULL == pb->pal.socket) {
-        char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-        PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
-#if PUBNUB_PROXY_API
-        switch (pb->proxy_type) {
-        case pbproxyHTTP_CONNECT:
-            if (!pb->proxy_tunnel_established) {
-                origin = pb->proxy_hostname;
-            }
-            port = pb->proxy_port;
-            break;
-        case pbproxyHTTP_GET:
-            origin = pb->proxy_hostname;
-            port   = pb->proxy_port;
-            PUBNUB_LOG_TRACE("pb=%p Using proxy: %s : %d\n", pb, origin, port);
-            break;
-        default:
-            break;
-        }
-#endif
-        pb->pal.socket = BIO_new_connect((char*)origin);
+    void* p = &(addr->sin_addr.s_addr);
+    if ((pubnub_get_dns_primary_server_ipv4((struct pubnub_ipv4_address*)p) == -1)
+        && (pubnub_get_dns_secondary_server_ipv4((struct pubnub_ipv4_address*)p)
+            == -1)) {
+        inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, p);
     }
+}
+
+
+static enum pbpal_resolv_n_connect_result start_dns_resolution(pubnub_t*   pb,
+                                                               char const* origin)
+{
+    int                error;
+    struct sockaddr_in dest;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p)\n", pb);
+
+    /* FIXME! Since PAL uses OpenSSL's BIO, then we don't use Windows
+       sockets directly. So, in order to use them for async DNS, we
+       need to call WSAStartup here, which we don't in a
+       "cross-platform" manner, in case there's another so needy
+       platform... Should find a better place for this.
+    */
+    socket_platform_init();
+
+    if (SOCKET_INVALID == pb->pal.dns_socket) {
+        pb->pal.dns_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    }
+    if (SOCKET_INVALID == pb->pal.dns_socket) {
+        return pbpal_resolv_resource_failure;
+    }
+
+    pbpal_set_socket_blocking_io(pb->pal.dns_socket, 0);
+    dest.sin_family         = AF_INET;
+    dest.sin_port           = htons(DNS_PORT);
+    get_dns_ip(&dest);
+    error = send_dns_query(
+        pb->pal.dns_socket, (struct sockaddr*)&dest, (unsigned char*)origin);
+    if (error < 0) {
+        return pbpal_resolv_failed_send;
+    }
+    else if (error > 0) {
+        return pbpal_resolv_send_wouldblock;
+    }
+    return pbpal_resolv_sent;
+}
+#endif /* PUBNUB_CALLBACK_API */
+
+
+static enum pbpal_resolv_n_connect_result finish_resolv_and_connect_wout_SSL(pubnub_t* pb)
+{
+    int port = HTTP_PORT;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_TRACE("finish_resolv_and_connect_wout_SSL(pb=%p)\n", pb);
+
+#if PUBNUB_PROXY_API
+    switch (pb->proxy_type) {
+    case pbproxyHTTP_CONNECT:
+        port = pb->proxy_port;
+        break;
+    case pbproxyHTTP_GET:
+        port = pb->proxy_port;
+        PUBNUB_LOG_TRACE("pb=%p Using proxy-port: %d\n", pb, port);
+        break;
+    default:
+        break;
+    }
+#endif /* PUBNUB_PROXY_API */
+
     if (NULL == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
@@ -134,11 +189,44 @@ static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t* 
 
     PUBNUB_LOG_TRACE("pb=%p: BIO connected\n", pb);
     {
-        int fd = BIO_get_fd(pb->pal.socket, NULL);
+        pbpal_native_socket_t fd = BIO_get_fd(pb->pal.socket, NULL);
         socket_set_rcv_timeout(fd, pb->transaction_timeout_ms);
+        socket_disable_SIGPIPE(pb->pal.socket);
     }
 
     return pbpal_connect_success;
+}
+
+
+static enum pbpal_resolv_n_connect_result resolv_and_connect_wout_SSL(pubnub_t* pb)
+{
+    PUBNUB_LOG_TRACE("resolv_and_connect_wout_SSL(pb=%p)\n", pb);
+
+    if (NULL == pb->pal.socket) {
+        char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+        PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
+
+#if PUBNUB_PROXY_API
+        switch (pb->proxy_type) {
+        case pbproxyHTTP_CONNECT:
+            if (!pb->proxy_tunnel_established) {
+                origin = pb->proxy_hostname;
+            }
+            break;
+        case pbproxyHTTP_GET:
+            origin = pb->proxy_hostname;
+            PUBNUB_LOG_TRACE("pb=%p Using proxy-origin: %s\n", pb, origin);
+            break;
+        default:
+            break;
+        }
+#endif /* PUBNUB_PROXY_API */
+        pb->pal.socket = BIO_new_connect((char*)origin);
+#ifdef PUBNUB_CALLBACK_API
+        return start_dns_resolution(pb, origin);
+#endif /* PUBNUB_CALLBACK_API */
+    }
+    return finish_resolv_and_connect_wout_SSL(pb);
 }
 
 
@@ -266,111 +354,32 @@ static void add_certs(pubnub_t* pb)
     }
 }
 
-
-enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
+static enum pbpal_resolv_n_connect_result finish_resolv_and_connect(pubnub_t* pb)
 {
-    SSL*        ssl = NULL;
-    int         rslt;
-    char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-    int         port   = 443;
+    int  rslt;
+    int  port = 443;
+    SSL* ssl  = NULL;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_CONNECT));
-
-    if (!pb->options.useSSL) {
-        return resolv_and_connect_wout_SSL(pb);
-    }
-
+    PUBNUB_LOG_TRACE("finish_resolv_and_connect(pb=%p)\n", pb);
+    
 #if PUBNUB_PROXY_API
     switch (pb->proxy_type) {
     case pbproxyHTTP_CONNECT:
-        if (!pb->proxy_tunnel_established) {
-            return resolv_and_connect_wout_SSL(pb);
-        }
         port = pb->proxy_port;
         break;
     case pbproxyHTTP_GET:
-        origin = pb->proxy_hostname;
-        port   = pb->proxy_port;
-        PUBNUB_LOG_TRACE("pb=%p Using proxy: %s : %d\n", pb, origin, port);
+        port = pb->proxy_port;
+        PUBNUB_LOG_TRACE("pb=%p Using proxy-port: %d\n", pb, port);
         break;
     default:
         break;
     }
-#endif
-
-    if (NULL == pb->pal.ctx) {
-        PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
-        pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
-        if (NULL == pb->pal.ctx) {
-            ERR_print_errors_cb(print_to_pubnub_log, NULL);
-            PUBNUB_LOG_ERROR("pb=%p SSL_CTX_new failed\n", pb);
-            return pbpal_resolv_resource_failure;
-        }
-        PUBNUB_LOG_TRACE("pb=%p: Got SSL_CTX\n", pb);
-        add_certs(pb);
-    }
-
-    if (NULL == pb->pal.socket) {
-        PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
-        pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
-        if (PUBNUB_TIMERS_API) {
-            pb->pal.connect_timeout = time(NULL) + pb->transaction_timeout_ms / 1000;
-        }
-    }
-    else {
-        BIO_get_ssl(pb->pal.socket, &ssl);
-        if (NULL == ssl) {
-#if PUBNUB_PROXY_API
-            if (pbproxyHTTP_CONNECT == pb->proxy_type) {
-                BIO* ssl_bio = BIO_new_ssl(pb->pal.ctx, 1);
-                if (NULL == ssl_bio) {
-                    ERR_print_errors_cb(print_to_pubnub_log, NULL);
-                    PUBNUB_LOG_ERROR("pb=%p BIO_new_ssl() failed\n", pb);
-                    return pbpal_resolv_resource_failure;
-                }
-                else {
-                    pb->pal.socket = BIO_push(pb->pal.socket, ssl_bio);
-                }
-            }
-            else {
-                return resolv_and_connect_wout_SSL(pb);
-            }
-#else
-            return resolv_and_connect_wout_SSL(pb);
-#endif
-        }
-        ssl = NULL;
-    }
-    if (NULL == pb->pal.socket) {
-        ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        return pbpal_resolv_resource_failure;
-    }
-
-    PUBNUB_LOG_TRACE("pb=%p: Using BIO == %p\n", pb, pb->pal.socket);
+#endif /* PUBNUB_PROXY_API */
 
     BIO_get_ssl(pb->pal.socket, &ssl);
     PUBNUB_ASSERT(NULL != ssl);
-    SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
 
-    if (pb->pal.ip_timeout != 0) {
-        if (pb->pal.ip_timeout < time(NULL)) {
-            pb->pal.ip_timeout = 0;
-            BIO_set_conn_hostname(pb->pal.socket, origin);
-        }
-        else {
-            PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %u.%u.%u.%u\n",
-                             pb,
-                             (uint8_t)pb->pal.ip[0],
-                             (uint8_t)pb->pal.ip[1],
-                             (uint8_t)pb->pal.ip[2],
-                             (uint8_t)pb->pal.ip[3]);
-            restore_ip(pb);
-        }
-    }
-    else {
-        BIO_set_conn_hostname(pb->pal.socket, origin);
-    }
     my_BIO_set_conn_int_port(pb->pal.socket, port);
 
     BIO_set_nbio(pb->pal.socket, !pb->options.use_blocking_io);
@@ -401,7 +410,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
     PUBNUB_LOG_TRACE("pb=%p: BIO connected\n", pb);
     {
-        int fd = BIO_get_fd(pb->pal.socket, NULL);
+        pbpal_native_socket_t fd = BIO_get_fd(pb->pal.socket, NULL);
         socket_set_rcv_timeout(fd, pb->transaction_timeout_ms);
     }
 
@@ -445,25 +454,174 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 }
 
 
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
+{
+    SSL*        ssl    = NULL;
+    char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_CONNECT));
+
+    if (!pb->options.useSSL) {
+        return resolv_and_connect_wout_SSL(pb);
+    }
+
+#if PUBNUB_PROXY_API
+    switch (pb->proxy_type) {
+    case pbproxyHTTP_CONNECT:
+        if (!pb->proxy_tunnel_established) {
+            return resolv_and_connect_wout_SSL(pb);
+        }
+        break;
+    case pbproxyHTTP_GET:
+        origin = pb->proxy_hostname;
+        PUBNUB_LOG_TRACE("pb=%p Using proxy-origin: %s\n", pb, origin);
+        break;
+    default:
+        break;
+    }
+#endif
+
+    if (NULL == pb->pal.ctx) {
+        PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
+        pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
+        if (NULL == pb->pal.ctx) {
+            ERR_print_errors_cb(print_to_pubnub_log, NULL);
+            PUBNUB_LOG_ERROR("pb=%p SSL_CTX_new failed\n", pb);
+            return pbpal_resolv_resource_failure;
+        }
+        PUBNUB_LOG_TRACE("pb=%p: Got SSL_CTX\n", pb);
+        add_certs(pb);
+    }
+
+    if (NULL == pb->pal.socket) {
+        PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
+        pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
+        if (PUBNUB_TIMERS_API) {
+            pb->pal.connect_timeout = time(NULL) + pb->transaction_timeout_ms / 1000;
+        }
+    }
+    else {
+        BIO_get_ssl(pb->pal.socket, &ssl);
+        if (NULL == ssl) {
+#if PUBNUB_PROXY_API
+            if (pbproxyHTTP_CONNECT == pb->proxy_type) {
+                BIO* ssl_bio = BIO_new_ssl(pb->pal.ctx, 1);
+                if (NULL == ssl_bio) {
+                    ERR_print_errors_cb(print_to_pubnub_log, NULL);
+                    PUBNUB_LOG_ERROR("pb=%p BIO_new_ssl() failed\n", pb);
+                    return pbpal_resolv_resource_failure;
+                }
+                else {
+                    pb->pal.socket = BIO_push(pb->pal.socket, ssl_bio);
+                }
+            }
+            else {
+                BIO_free_all(pb->pal.socket);
+                pb->pal.socket = NULL;
+                return resolv_and_connect_wout_SSL(pb);
+            }
+#else
+            BIO_free_all(pb->pal.socket);
+            pb->pal.socket = NULL;
+            return resolv_and_connect_wout_SSL(pb);
+#endif
+        }
+        ssl = NULL;
+    }
+
+    if (NULL == pb->pal.socket) {
+        ERR_print_errors_cb(print_to_pubnub_log, NULL);
+        return pbpal_resolv_resource_failure;
+    }
+
+    PUBNUB_LOG_TRACE("pb=%p: Using BIO == %p\n", pb, pb->pal.socket);
+
+    BIO_get_ssl(pb->pal.socket, &ssl);
+    PUBNUB_ASSERT(NULL != ssl);
+    SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* maybe not auto_retry? */
+
+    if (pb->pal.ip_timeout != 0) {
+        if (pb->pal.ip_timeout < time(NULL)) {
+            pb->pal.ip_timeout = 0;
+
+#ifdef PUBNUB_CALLBACK_API
+            return start_dns_resolution(pb, origin);
+#else
+            BIO_set_conn_hostname(pb->pal.socket, origin);
+#endif /* PUBNUB_CALLBACK_API */
+        }
+        else {
+            PUBNUB_LOG_TRACE("pb=%p SSL re-connect to: %u.%u.%u.%u\n",
+                             pb,
+                             (uint8_t)pb->pal.ip[0],
+                             (uint8_t)pb->pal.ip[1],
+                             (uint8_t)pb->pal.ip[2],
+                             (uint8_t)pb->pal.ip[3]);
+            restore_ip(pb);
+        }
+    }
+    else {
+#ifdef PUBNUB_CALLBACK_API
+        return start_dns_resolution(pb, origin);
+#else
+        BIO_set_conn_hostname(pb->pal.socket, origin);
+#endif /* PUBNUB_CALLBACK_API */
+    }
+    return finish_resolv_and_connect(pb);
+}
+
+
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 {
-    /* Under OpenSSL, this function should never be called.  Either
-       we're synchrnous and just connected or not, or we're async, in
-       which case, pbpal_check_connect() will be called.
+#ifdef PUBNUB_CALLBACK_API
+    SSL*                  ssl = NULL;
+    struct sockaddr_in    dns_server;
+    struct sockaddr_in    dest;
+    pbpal_native_socket_t skt = pb->pal.dns_socket;
+
+    dns_server.sin_family = AF_INET;
+    dns_server.sin_port   = htons(DNS_PORT);
+    get_dns_ip(&dns_server);
+    switch (read_dns_response(skt, (struct sockaddr*)&dns_server, &dest)) {
+    case -1:
+        return pbpal_resolv_failed_rcv;
+    case +1:
+        return pbpal_resolv_rcv_wouldblock;
+    case 0:
+        break;
+    }
+    socket_close(skt);
+    pb->pal.dns_socket = SOCKET_INVALID;
+
+    memcpy(pb->pal.ip, &dest.sin_addr.s_addr, 4);
+    restore_ip(pb);
+
+    BIO_get_ssl(pb->pal.socket, &ssl);
+    if (NULL == ssl) {
+        return finish_resolv_and_connect_wout_SSL(pb);
+    }
+    return finish_resolv_and_connect(pb);
+#else
+    /* Under OpenSSL, this function should never be called with synchrnous api
+       in which case we're just connected or not, and, pbpal_check_connect()
+       will be called.
      */
     PUBNUB_ASSERT_OPT(pb == NULL);
     return pbpal_connect_failed;
+#endif /* PUBNUB_CALLBACK_API */
 }
 
 
 enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
 {
+    SSL*           ssl = NULL;
     fd_set         read_set, write_set;
     int            socket;
     int            rslt;
     struct timeval timev = { 0, 300000 };
 
-    if (-1 == BIO_get_fd(pb->pal.socket, &socket)) {
+    if (SOCKET_INVALID == BIO_get_fd(pb->pal.socket, &socket)) {
         PUBNUB_LOG_ERROR("pbpal_check_connect(pb=%p): Uninitialized BIO!\n", pb);
         return pbpal_connect_resource_failure;
     }
@@ -478,7 +636,11 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("pbpal_check_connect(pb=%p): select() event\n", pb);
-        return pbpal_resolv_and_connect(pb);
+        BIO_get_ssl(pb->pal.socket, &ssl);
+        if (NULL == ssl) {
+            return finish_resolv_and_connect_wout_SSL(pb);
+        }
+        return finish_resolv_and_connect(pb);
     }
     PUBNUB_LOG_TRACE("pbpal_check_connect(pb=%p): no select() events\n", pb);
     return pbpal_connect_wouldblock;

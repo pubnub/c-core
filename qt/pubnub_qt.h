@@ -65,21 +65,6 @@ public:
 
     ~pubnub_qt();
 
-    /** Options for Publish v2. These are designed to be used as
-     * "bit-masks", for which purpose there are overloaded `&` and `|`
-     * (bit-and and bit-or) operators.
-     */
-    enum pubv2_opt {
-        /// If not set, message will not be stored in history of the
-        /// channel
-        store_in_history = 0x01,
-        /// If set, message will not be stored for delayed or repeated
-        /// retrieval or display
-        eat_after_reading = 0x02
-    };
-
-    Q_DECLARE_FLAGS(pubv2_opts, pubv2_opt)
-
     /** Options for SSL/TLS transport. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
      * (bit-and and bit-or) operators.
@@ -208,27 +193,6 @@ public:
         @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res publish(QString const &channel, QString const &message);
-
-    /** Publish the @p message (in JSON format) on @p p channel, using the
-        @p p context, utilizing the v2 API. This actually means "initiate
-        a publish transaction".
-
-        Basically, this is an extension to the pubnub_publish() (v1),
-        with some additional options.
-
-        You can't publish if a transaction is in progress in @p p context.
-
-        @param channel The string with the channel (or comma-delimited list
-        of channels) to publish to.
-        @param message The message to publish, expected to be in JSON format
-        @param store_in_history If `false`, message will not be stored in
-        history of the channel
-        @param eat_after_reading If `true`, message will not be stored for
-        delayed or repeated retrieval or display
-
-        @return #PNR_STARTED on success, an error otherwise
-        */
-    pubnub_res publishv2(QString const &channel, QString const &message, pubv2_opts options);
 
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
@@ -778,8 +742,6 @@ private:
     QTimer *d_transactionTimer;
 };
 
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(pubnub_qt::pubv2_opts)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(pubnub_qt::ssl_opts)
 

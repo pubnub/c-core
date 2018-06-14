@@ -90,6 +90,13 @@
 #define PUBNUB_PROXY_API 1
 #endif
 
+#if !defined(PUBNUB_SET_DNS_SERVERS)
+/** If true (!=0), enable support for setting DNS servers */
+#define PUBNUB_SET_DNS_SERVERS 1
+#endif
+
+#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */

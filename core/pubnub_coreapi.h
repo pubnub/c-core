@@ -45,28 +45,6 @@
 #define PUBNUB_PRESENCE_SUFFIX "-pnpres"
 
 
-/** Publish the @p message (in JSON format) on @p p channel, using the
-    @p p context, utilizing the v2 API. This actually means "initiate
-    a publish transaction".
-
-    Basically, this is an extension to the pubnub_publish() (v1),
-    with some additional options.
-
-    You can't publish if a transaction is in progress in @p p context.
-
-    @param p The pubnub context. Can't be NULL
-    @param channel The string with the channel (or comma-delimited list
-    of channels) to publish to.
-    @param message The message to publish, expected to be in JSON format
-    @param store_in_history If `false`, message will not be stored in
-    history of the channel
-    @param eat_after_reading If `true`, message will not be stored for
-    delayed or repeated retrieval or display
-
-    @return #PNR_STARTED on success, an error otherwise
- */
-enum pubnub_res pubnub_publishv2(pubnub_t *p, const char *channel, const char *message, bool store_in_history, bool eat_after_reading);
-
 /** Leave the @p channel. This actually means "initiate a leave
     transaction".  You should leave channel(s) when you want to
     subscribe to another in the same context to avoid loosing

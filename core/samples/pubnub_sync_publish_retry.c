@@ -8,6 +8,15 @@
 #include <time.h>
 
 
+static void sample_free(pubnub_t* p)
+{
+    pubnub_cancel(p);
+    pubnub_await(p);
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+}
+
 
 int main()
 {
@@ -31,9 +40,9 @@ int main()
 //! [Publish retry]
     for (i = 0; i < my_retry_limit; ++i) {
         res = pubnub_publish(pbp, chan, msg);
-        if (res != PNR_STARTED) {
+        if ((res != PNR_STARTED) && (res != PNR_OK)) {
             printf("pubnub_publish() returned unexpected: %d\n", res);
-            pubnub_free(pbp);
+            sample_free(pbp);
             return -1;
         }
 
@@ -64,10 +73,10 @@ int main()
     }
 //! [Publish retry]
 
-    /* We're done */
-    if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context\n");
-    }
+    /* We're done, but, if keep-alive is on, we can't free,
+       we need to cancel first...
+     */
+    sample_free(pbp);
 
     puts("Pubnub sync publish retry demo over.");
 
