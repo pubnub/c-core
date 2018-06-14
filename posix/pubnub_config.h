@@ -95,7 +95,7 @@
 #define PUBNUB_SET_DNS_SERVERS 1
 #endif
 
-#define DEFAULT_DNS_SERVER "8.8.8.8"
+#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
 
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.

@@ -56,6 +56,7 @@ int pbntf_watch_out_events(pubnub_t* pbp)
 
 void* socket_watcher_thread(void* arg)
 {
+    const int max_poll_ms = 100;
     struct timespec prev_timspec;
     monotonic_clock_get_time(&prev_timspec);
 
@@ -67,13 +68,13 @@ void* socket_watcher_thread(void* arg)
         monotonic_clock_get_time(&timspec);
 
         pthread_mutex_lock(&m_watcher.mutw);
-        pbpal_ntf_poll_away(m_watcher.poll, 100);
+        pbpal_ntf_poll_away(m_watcher.poll, max_poll_ms);
         pthread_mutex_unlock(&m_watcher.mutw);
 
         if (PUBNUB_TIMERS_API) {
             int elapsed = elapsed_ms(prev_timspec, timspec);
             if (elapsed > 0) {
-                if (elapsed > 101) {
+                if (elapsed > max_poll_ms + 5) {
                     PUBNUB_LOG_TRACE("elapsed = %d: prev_timspec={%ld, %ld}, timspec={%ld,%ld}\n",
                                      elapsed,
                                      prev_timspec.tv_sec, prev_timspec.tv_nsec,

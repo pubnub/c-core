@@ -140,7 +140,6 @@ int main()
     char const *chan = "hello_world";
     pubnub_t *pbp = pubnub_alloc();
     pubnub_t *pbp_2 = pubnub_alloc();
-    time_t start = time(NULL);
 
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");

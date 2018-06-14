@@ -237,7 +237,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
     uint8_t*           qname = buf + sizeof *dns;
     uint8_t*           reader;
     int                i, msg_size;
-    int                addr_size = sizeof *dest;
+    unsigned           addr_size = sizeof *dest;
 
     msg_size = recvfrom(skt, (char*)buf, sizeof buf, 0, dest, &addr_size);
     if (msg_size <= 0) {

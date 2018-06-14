@@ -52,14 +52,14 @@ int socket_platform_init(void);
 
 #if !defined(_WIN32)
 
-#define SOCKET_INVALID INVALID_SOCKET
+#define SOCKET_INVALID -1
 #define SOCKET_ERROR -1
 
-#define socket_close(socket) socket(socket)
+#define socket_close(socket) close(socket)
 
 #else
 
-#define SOCKET_INVALID -1
+#define SOCKET_INVALID INVALID_SOCKET
 
 #define socket_close(socket) closesocket(socket)
 

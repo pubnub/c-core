@@ -113,26 +113,24 @@ static enum pbpal_resolv_n_connect_result start_dns_resolution(pubnub_t*   pb,
     int                error;
     struct sockaddr_in dest;
 
-    /* FIXME! Since PAL uses OpenSSL's BIO, then we don't use Windows sockets
-       directly. So, in order to use them for async DNS, we need to call WSAStartup
-       here, which we don't in a "cross-platform" manner, in case there's another
-       so needy platform... Should find a better place for this.
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p)\n", pb);
+
+    /* FIXME! Since PAL uses OpenSSL's BIO, then we don't use Windows
+       sockets directly. So, in order to use them for async DNS, we
+       need to call WSAStartup here, which we don't in a
+       "cross-platform" manner, in case there's another so needy
+       platform... Should find a better place for this.
     */
     socket_platform_init();
 
-    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p) 1\n", pb);
     if (SOCKET_INVALID == pb->pal.dns_socket) {
-        PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p) 1.1\n", pb);
         pb->pal.dns_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p) 1.2 soket = %d WSAGetLastError() = %d\n", pb, pb->pal.dns_socket,  WSAGetLastError());
     }
-    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p) soket=%d 2\n", pb, pb->pal.dns_socket);
     if (SOCKET_INVALID == pb->pal.dns_socket) {
         return pbpal_resolv_resource_failure;
     }
-    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p) 3\n", pb);
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p)\n", pb);
 
     pbpal_set_socket_blocking_io(pb->pal.dns_socket, 0);
     dest.sin_family         = AF_INET;
@@ -362,6 +360,9 @@ static enum pbpal_resolv_n_connect_result finish_resolv_and_connect(pubnub_t* pb
     int  port = 443;
     SSL* ssl  = NULL;
 
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_TRACE("finish_resolv_and_connect(pb=%p)\n", pb);
+    
 #if PUBNUB_PROXY_API
     switch (pb->proxy_type) {
     case pbproxyHTTP_CONNECT:
@@ -378,9 +379,6 @@ static enum pbpal_resolv_n_connect_result finish_resolv_and_connect(pubnub_t* pb
 
     BIO_get_ssl(pb->pal.socket, &ssl);
     PUBNUB_ASSERT(NULL != ssl);
-
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_LOG_TRACE("finish_resolv_and_connect(pb=%p)\n", pb);
 
     my_BIO_set_conn_int_port(pb->pal.socket, port);
 
@@ -464,13 +462,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_CONNECT));
 
-    printf("pbpal_resolv_and_connect(pb=%p)\n", pb);
-
     if (!pb->options.useSSL) {
         return resolv_and_connect_wout_SSL(pb);
     }
-
-    printf("pbpal_resolv_and_connect(pb=%p) 1\n", pb);
 
 #if PUBNUB_PROXY_API
     switch (pb->proxy_type) {
@@ -488,7 +482,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     }
 #endif
 
-    printf("pbpal_resolv_and_connect(pb=%p) 2\n", pb);
     if (NULL == pb->pal.ctx) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
         pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
@@ -501,7 +494,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         add_certs(pb);
     }
 
-    printf("pbpal_resolv_and_connect(pb=%p) 3\n", pb);
     if (NULL == pb->pal.socket) {
         PUBNUB_LOG_TRACE("pb=%p: Don't have BIO\n", pb);
         pb->pal.socket = BIO_new_ssl_connect(pb->pal.ctx);
@@ -537,7 +529,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         }
         ssl = NULL;
     }
-    printf("pbpal_resolv_and_connect(pb=%p) 4\n", pb);
 
     if (NULL == pb->pal.socket) {
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
@@ -555,10 +546,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             pb->pal.ip_timeout = 0;
 
 #ifdef PUBNUB_CALLBACK_API
-            printf("pbpal_resolv_and_connect(pb=%p) 5\n", pb);
             return start_dns_resolution(pb, origin);
 #else
-            printf("pbpal_resolv_and_connect(pb=%p) 6\n", pb);
             BIO_set_conn_hostname(pb->pal.socket, origin);
 #endif /* PUBNUB_CALLBACK_API */
         }
@@ -574,14 +563,11 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     }
     else {
 #ifdef PUBNUB_CALLBACK_API
-        printf("pbpal_resolv_and_connect(pb=%p) 7\n", pb);
         return start_dns_resolution(pb, origin);
 #else
-        printf("pbpal_resolv_and_connect(pb=%p) 8\n", pb);
         BIO_set_conn_hostname(pb->pal.socket, origin);
 #endif /* PUBNUB_CALLBACK_API */
     }
-    printf("pbpal_resolv_and_connect(pb=%p) 9\n", pb);
     return finish_resolv_and_connect(pb);
 }
 

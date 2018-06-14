@@ -1,7 +1,7 @@
-
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "core/pubnub_dns_servers.h"
 
 #include <stdio.h>
 #include <string.h>
