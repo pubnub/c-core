@@ -9,7 +9,7 @@
 #include <time.h>
 
 
-static void subloop_callback(pubnub_t *pbp, char const* message, enum pubnub_res result)
+static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res result)
 {
     PUBNUB_UNUSED(pbp);
     if (PNR_OK == result) {
@@ -21,20 +21,21 @@ static void subloop_callback(pubnub_t *pbp, char const* message, enum pubnub_res
 }
 
 
-static void wait_seconds(unsigned time_in_seconds) {
-    clock_t start = clock();
+static void wait_seconds(unsigned time_in_seconds)
+{
+    clock_t  start = clock();
     unsigned time_passed_in_seconds;
     do {
-        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
+        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
 
 int main()
 {
-    const unsigned minutes_in_loop = 1;
-    char const* chan = "hello_world";
-    pubnub_t *pbp = pubnub_alloc();
+    const unsigned    minutes_in_loop = 1;
+    char const*       chan            = "hello_world";
+    pubnub_t*         pbp             = pubnub_alloc();
     pubnub_subloop_t* pbsld;
 
     if (NULL == pbp) {
@@ -43,8 +44,9 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
-//! [Define subscribe loop]
-    pbsld = pubnub_subloop_define(pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
+    //! [Define subscribe loop]
+    pbsld = pubnub_subloop_define(
+        pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
     if (NULL == pbsld) {
         printf("Defining a subscribe loop failed\n");
         pubnub_free(pbp);
@@ -52,23 +54,25 @@ int main()
         wait_seconds(1);
         return -1;
     }
-//! [Define subscribe loop]
+    //! [Define subscribe loop]
 
-    printf("Entering subscribe loop for channel '%s' for %d minutes...\n", chan, minutes_in_loop);
+    printf("Entering subscribe loop for channel '%s' for %d minutes...\n",
+           chan,
+           minutes_in_loop);
 
-//! [Start a subscribe loop]
+    //! [Start a subscribe loop]
     pubnub_subloop_start(pbsld);
-//! [Start Subscribe loop]
+    //! [Start Subscribe loop]
 
-    wait_seconds(minutes_in_loop*60);
+    wait_seconds(minutes_in_loop * 60);
 
-//! [Stop a subscribe loop]
+    //! [Stop a subscribe loop]
     pubnub_subloop_stop(pbsld);
-//! [Start Subscribe loop]
+    //! [Start Subscribe loop]
 
-//! [Release a subscribe loop]
+    //! [Release a subscribe loop]
     pubnub_subloop_undef(pbsld);
-//! [Release Subscribe loop]
+    //! [Release Subscribe loop]
 
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...

@@ -22,22 +22,22 @@
 struct UserData {
 #if defined _WIN32
     CRITICAL_SECTION mutw;
-    HANDLE condw;
+    HANDLE           condw;
 #else
     pthread_mutex_t mutw;
-    bool triggered;
-    pthread_cond_t condw;
+    bool            triggered;
+    pthread_cond_t  condw;
 #endif
-    pubnub_t *pb;
+    pubnub_t* pb;
 };
 
 
 static void wait_seconds(unsigned time_in_seconds)
 {
-    clock_t start = clock();
+    clock_t  start = clock();
     unsigned time_passed_in_seconds;
     do {
-        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
+        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
@@ -55,9 +55,12 @@ static void sample_free(pubnub_t* p)
 }
 
 
-void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
+void sample_callback(pubnub_t*         pb,
+                     enum pubnub_trans trans,
+                     enum pubnub_res   result,
+                     void*             user_data)
 {
-    struct UserData *pUserData = (struct UserData*)user_data;
+    struct UserData* pUserData = (struct UserData*)user_data;
     switch (trans) {
     case PBTT_SUBSCRIBE:
         /* One could do all handling here, and not signal the `condw`, or use
@@ -84,9 +87,9 @@ void sample_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res resu
 }
 
 
-static void start_await(struct UserData *pUserData)
+static void start_await(struct UserData* pUserData)
 {
-#if defined _WIN32	
+#if defined _WIN32
     ResetEvent(pUserData->condw);
 #else
     pthread_mutex_lock(&pUserData->mutw);
@@ -96,9 +99,9 @@ static void start_await(struct UserData *pUserData)
 }
 
 
-static enum pubnub_res end_await(struct UserData *pUserData)
+static enum pubnub_res end_await(struct UserData* pUserData)
 {
-#if defined _WIN32	
+#if defined _WIN32
     WaitForSingleObject(pUserData->condw, INFINITE);
 #else
     pthread_mutex_lock(&pUserData->mutw);
@@ -110,15 +113,8 @@ static enum pubnub_res end_await(struct UserData *pUserData)
     return pubnub_last_result(pUserData->pb);
 }
 
-/*
-static enum pubnub_res await(struct UserData *pUserData)
-{
-    start_await(pUserData);
-    return end_await(pUserData);
-}
-*/
 
-static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
+static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
 {
 #if defined _WIN32
     InitializeCriticalSection(&pUserData->mutw);
@@ -133,13 +129,13 @@ static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
 
 int main()
 {
-    char const *msg;
+    char const*     msg;
     enum pubnub_res res;
     struct UserData user_data;
     struct UserData user_data_2;
-    char const *chan = "hello_world";
-    pubnub_t *pbp = pubnub_alloc();
-    pubnub_t *pbp_2 = pubnub_alloc();
+    char const*     chan  = "hello_world";
+    pubnub_t*       pbp   = pubnub_alloc();
+    pubnub_t*       pbp_2 = pubnub_alloc();
 
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
@@ -161,7 +157,7 @@ int main()
     puts("-----------------------");
     puts("Subscribing...");
     puts("-----------------------");
-	
+
     start_await(&user_data);
 
     /* First subscribe, to get the time token */
@@ -197,7 +193,7 @@ int main()
         pubnub_free(pbp_2);
         return -1;
     }
-	
+
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
@@ -208,7 +204,8 @@ int main()
     /* Since the subscribe is ongoing in the `pbp` context, we can't
        publish on it, so we use a different context to publish
     */
-    res = pubnub_publish(pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
+    res = pubnub_publish(
+        pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
     if (res != PNR_STARTED) {
         printf("pubnub_publish() returned unexpected: %d\n", res);
         pubnub_free(pbp);
@@ -226,10 +223,12 @@ int main()
         return -1;
     }
     if (PNR_OK == res) {
-        printf("Published! Response from Pubnub: %s\n", pubnub_last_publish_result(pbp_2));
+        printf("Published! Response from Pubnub: %s\n",
+               pubnub_last_publish_result(pbp_2));
     }
     else if (PNR_PUBLISH_FAILED == res) {
-        printf("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp_2));
+        printf("Published failed on Pubnub, description: %s\n",
+               pubnub_last_publish_result(pbp_2));
     }
     else {
         printf("Publishing failed with code: %d\n", res);
@@ -256,7 +255,7 @@ int main()
     else {
         printf("Subscribing failed with code: %d\n", res);
     }
-	
+
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...
      */
