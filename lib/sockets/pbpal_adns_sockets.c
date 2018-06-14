@@ -201,8 +201,8 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
     uint8_t*           qname = buf + sizeof *dns;
     struct QUESTION*   qinfo;
-    size_t             sent_to;
-    size_t             to_send;
+    int                sent_to;
+    int                to_send;
 
     dns->id        = htons(33); /* in lack of a better ID */
     dns->options   = htons(dnsoptRDmask);
