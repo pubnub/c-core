@@ -1,7 +1,10 @@
 name: c-core
-version: 2.4.0
+version: 2.4.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.4.1
+      - type: bug
+        text: Small fixes in system DNS reading/parsing
   - version: v2.4.0
       - type: feature
         text: Callback interface uses (our own) async DNS

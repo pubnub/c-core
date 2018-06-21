@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
-#include "pubnub_internal.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_free_with_timeout.h"
@@ -10,11 +9,6 @@
 #if defined _WIN32
 #include <windows.h>
 #include "windows/console_subscribe_paint.h"
-/* FIXME: It's ugly that we have to declare these here, far, far, away
-   from the macros in the above header that use them...
- */
-HANDLE m_hstdout_;
-WORD   m_wOldColorAttrs_;
 #else
 #include "posix/console_subscribe_paint.h"
 #include <pthread.h>
@@ -43,8 +37,8 @@ struct UserData {
     pubnub_t* pb;
 };
 
-static short volatile first_subscribe_done = 0;
-static short volatile stop                 = 0;
+static short volatile first_subscribe_done;
+static short volatile stop;
 static char const* m_chan                  = "hello_world";
 
 static void wait_seconds(unsigned time_in_seconds)

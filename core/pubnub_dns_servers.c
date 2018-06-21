@@ -50,11 +50,11 @@ static int parse_ipv4_addr(char const* addr, struct pubnub_ipv4_address* p)
     PUBNUB_ASSERT_OPT(addr != NULL);
     PUBNUB_ASSERT_OPT(p != NULL);
 
-    rslt = sscanf("%d.%d.%d.%d", addr, a, a + 1, a + 2, a + 3);
+    rslt = sscanf(addr, "%d.%d.%d.%d", a, a + 1, a + 2, a + 3);
     if (rslt != 4) {
         return -1;
     }
-    for (; rslt >= 0; --rslt) {
+    for (rslt-- ; rslt >= 0; --rslt) {
         if ((a[rslt] < 0) || (a[rslt] > 255)) {
             return -1;
         }

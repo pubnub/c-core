@@ -6,18 +6,14 @@
 #include "core/pubnub_log.h"
 #include "core/pubnub_free_with_timeout.h"
 #include "core/pubnub_mutex.h"
+#include "core/pubnub_dns_servers.h"
 
 #if defined _WIN32
-#include "windows/console_subscribe_paint.h"
 #include <windows.h>
-/* FIXME: It's ugly that we have to declare these here, far, far, away
-   from the macros in the above header that use them...
- */
-HANDLE m_hstdout_;
-WORD   m_wOldColorAttrs_;
+#include "windows/console_subscribe_paint.h"
 #else
-#include "posix/console_subscribe_paint.h"
 #include <pthread.h>
+#include "posix/console_subscribe_paint.h"
 #endif
 
 #include <stdio.h>
@@ -26,10 +22,10 @@ WORD   m_wOldColorAttrs_;
 
 
 static volatile int stop;
-static char         m_message[50][200] pubnub_guarded_by(m_mutw);
-static short m_head pubnub_guarded_by(m_mutw);
-static short m_tail pubnub_guarded_by(m_mutw);
-pubnub_mutex_static_decl_and_init(m_mutw);
+static char         m_message[50][200] pubnub_guarded_by(m_lock);
+static short m_head pubnub_guarded_by(m_lock);
+static short m_tail pubnub_guarded_by(m_lock);
+pubnub_mutex_static_decl_and_init(m_lock);
 
 
 static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res result)
@@ -79,7 +75,7 @@ void publish_callback(pubnub_t*         pb,
                    pubnub_res_2_string(result));
         }
         if (result != PNR_CANCELLED) {
-            pubnub_mutex_lock(m_mutw);
+            pubnub_mutex_lock(m_lock);
             if (m_tail != m_head) {
                 puts("-----------------------");
                 puts("Publishing...");
@@ -98,7 +94,7 @@ void publish_callback(pubnub_t*         pb,
                     stop = 1;
                 }
             }
-            pubnub_mutex_unlock(m_mutw);
+            pubnub_mutex_unlock(m_lock);
         }
         break;
     default:
@@ -144,6 +140,7 @@ int main()
     pubnub_t*         pbp_2 = pubnub_alloc();
     enum pubnub_res   result;
     pubnub_subloop_t* pbsld;
+    struct pubnub_ipv4_address o_ipv4[3];
     time_t            t;
     time_t            seconds_in_loop = 200;
     time_t            start           = time(NULL);
@@ -157,6 +154,8 @@ int main()
     pubnub_init(pbp_2, "demo", "demo");
     pubnub_register_callback(pbp_2, publish_callback, (void*)chan);
 
+    pubnub_mutex_init_static(m_lock);
+
     //! [Define subscribe loop]
     pbsld = pubnub_subloop_define(
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
@@ -167,6 +166,17 @@ int main()
         /* Waits until the context is released from the processing queue */
         wait_miliseconds(1000);
         return -1;
+    }
+
+    if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
+        if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+            printf("Failed to set DNS server from the sistem register!\n");
+            return -1;
+        }
+    }
+    else {
+        printf("Failed to read system DNS server, will use default %s\n",
+               PUBNUB_DEFAULT_DNS_SERVER);
     }
     //! [Define subscribe loop]
 
@@ -179,9 +189,9 @@ int main()
     while (!stop) {
         char dest[1000];
 
-        pubnub_mutex_lock(m_mutw);
+        pubnub_mutex_lock(m_lock);
         if (m_tail == m_head) {
-            pubnub_mutex_unlock(m_mutw);
+            pubnub_mutex_unlock(m_lock);
             snprintf(dest, sizeof dest, "\"%d\"", ++i);
             result = pubnub_publish(pbp_2, chan, dest);
             if (result == PNR_IN_PROGRESS) {
@@ -197,13 +207,13 @@ int main()
             }
         }
         else {
-            pubnub_mutex_unlock(m_mutw);
+            pubnub_mutex_unlock(m_lock);
         }
         /* Intializes random number generator */
         srand((unsigned)time(&t));
         if (!stop && (rand() % 20 < 10)) {
             ++i;
-            pubnub_mutex_lock(m_mutw);
+            pubnub_mutex_lock(m_lock);
             if (((m_head + 1) % (sizeof m_message / sizeof m_message[0])) != m_tail) {
                 paint_text_yellow();
                 snprintf(
@@ -213,10 +223,10 @@ int main()
                     i);
                 printf("Enqueuing a message: %s\n", m_message[m_head]);
                 m_head = (m_head + 1) % (sizeof m_message / sizeof m_message[0]);
-                pubnub_mutex_unlock(m_mutw);
+                pubnub_mutex_unlock(m_lock);
             }
             else {
-                pubnub_mutex_unlock(m_mutw);
+                pubnub_mutex_unlock(m_lock);
                 paint_text_red();
                 printf("\n---------------->Queue for 'publish' is "
                        "full!------------------------->\n\n");
