@@ -24,11 +24,14 @@ static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res
 {
     PUBNUB_UNUSED(pbp);
     if (PNR_OK == result) {
+        paint_text_white();
         printf("Received message '%s'\n", message);
     }
     else {
+        paint_text_red();
         printf("Subscribe failed with code: %d\n", result);
     }
+    reset_text_paint();
 }
 
 
@@ -140,6 +143,7 @@ int main()
     pubnub_init(pbp_2, "demo", "demo");
     pubnub_register_callback(pbp_2, publish_callback, (void*)chan);
 
+	paint_text_white();
     //! [Define subscribe loop]
     pbsld = pubnub_subloop_define(
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
@@ -154,11 +158,13 @@ int main()
 
     if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
         if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+            paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             return -1;
         }
     }
     else {
+        paint_text_yellow();
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
@@ -194,6 +200,8 @@ int main()
 
     sample_free(pbp_2);
     sample_free(pbp);
+
+    paint_text_white();
     puts("Pubnub callback subloop demo over.");
 
     return 0;

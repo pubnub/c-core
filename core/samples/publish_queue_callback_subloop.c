@@ -2,6 +2,7 @@
 #include "pubnub_callback.h"
 
 #include "core/pubnub_callback_subscribe_loop.h"
+#include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_log.h"
 #include "core/pubnub_free_with_timeout.h"
@@ -55,11 +56,13 @@ void publish_callback(pubnub_t*         pb,
         paint_text_green();
         printf("Publish callback, result: %d\n", result);
         if (result == PNR_STARTED) {
+            paint_text_red();
             printf("await() returned unexpected: PNR_STARTED(%d)\n", result);
             stop = 1;
             return;
         }
         if (PNR_OK == result) {
+            paint_text_green();
             printf("Published! Response from Pubnub: %s\n",
                    pubnub_last_publish_result(pb));
         }
@@ -135,16 +138,16 @@ static void sample_free(pubnub_t* pb)
 
 int main()
 {
-    char const*       chan  = "hello_world";
-    pubnub_t*         pbp   = pubnub_alloc();
-    pubnub_t*         pbp_2 = pubnub_alloc();
-    enum pubnub_res   result;
-    pubnub_subloop_t* pbsld;
+    char const*                chan  = "hello_world";
+    pubnub_t*                  pbp   = pubnub_alloc();
+    pubnub_t*                  pbp_2 = pubnub_alloc();
+    enum pubnub_res            result;
+    pubnub_subloop_t*          pbsld;
     struct pubnub_ipv4_address o_ipv4[3];
-    time_t            t;
-    time_t            seconds_in_loop = 200;
-    time_t            start           = time(NULL);
-    unsigned          i               = 0;
+    time_t                     t;
+    time_t                     seconds_in_loop = 200;
+    time_t                     start           = time(NULL);
+    unsigned                   i               = 0;
 
     if ((NULL == pbp) || (NULL == pbp_2)) {
         printf("Failed to allocate Pubnub context(1 or 2)!\n");
@@ -156,13 +159,16 @@ int main()
 
     pubnub_mutex_init_static(m_lock);
 
+    paint_text_white();
     //! [Define subscribe loop]
     pbsld = pubnub_subloop_define(
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
     if (NULL == pbsld) {
+        paint_text_red();
         printf("Defining a subscribe loop failed\n");
         pubnub_free(pbp);
         pubnub_free(pbp_2);
+        paint_text_white();
         /* Waits until the context is released from the processing queue */
         wait_miliseconds(1000);
         return -1;
@@ -170,14 +176,18 @@ int main()
 
     if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
         if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+            paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             return -1;
         }
     }
     else {
+        paint_text_yellow();
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
+
+    pubnub_set_transaction_timeout(pbp, 10000);
     //! [Define subscribe loop]
 
     printf("Entering subscribe loop for channel '%s'!\n", chan);
@@ -185,6 +195,8 @@ int main()
     //! [Start a subscribe loop]
     pubnub_subloop_start(pbsld);
     //! [Start Subscribe loop]
+    /* Intializes random number generator */
+    srand((unsigned)time(&t));
 
     while (!stop) {
         char dest[1000];
@@ -198,7 +210,7 @@ int main()
                 paint_text_blue();
                 printf("for dest_string = '%s' PUBLISH_IN_PROGRESS\n", dest);
             }
-            if ((result != PNR_STARTED) && (result != PNR_IN_PROGRESS)) {
+            else if (result != PNR_STARTED) {
                 paint_text_red();
                 printf("pubnub_publish() returned unexpected:%d(%s)\n",
                        result,
@@ -209,9 +221,7 @@ int main()
         else {
             pubnub_mutex_unlock(m_lock);
         }
-        /* Intializes random number generator */
-        srand((unsigned)time(&t));
-        if (!stop && (rand() % 20 < 10)) {
+        if (!stop && (rand() % 20 < 7)) {
             ++i;
             pubnub_mutex_lock(m_lock);
             if (((m_head + 1) % (sizeof m_message / sizeof m_message[0])) != m_tail) {
@@ -240,6 +250,7 @@ int main()
 
         wait_miliseconds(300);
     }
+    pubnub_mutex_destroy(m_lock);
 
     //! [Stop a subscribe loop]
     pubnub_subloop_stop(pbsld);
@@ -251,6 +262,8 @@ int main()
 
     sample_free(pbp_2);
     sample_free(pbp);
+
+    paint_text_white();
     puts("Pubnub callback subloop demo over.");
 
     return 0;

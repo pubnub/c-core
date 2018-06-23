@@ -1,16 +1,16 @@
 #if !defined INC_PUBNUB_DNS_SERVERS
 #define INC_PUBNUB_DNS_SERVERS
-
-#if PUBNUB_SET_DNS_SERVERS
 #include <stdint.h>
-#include <stdlib.h>
-
 /** IPv4 Address, in binary format.
  */
 struct pubnub_ipv4_address {
     /** The four octets of the IPv4 address */
     uint8_t ipv4[4];
 };
+
+#include "pubnub_config.h"
+#if PUBNUB_SET_DNS_SERVERS
+#include <stdlib.h>
 
 /** Sets the primary DNS server IPv4 address to use when
     resolving the Pubnub origin, in binary form(network order).
