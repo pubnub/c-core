@@ -43,7 +43,8 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
             return -1;
         }
     }
-    if (dwRetVal = GetNetworkParams(pFixedInfo, &ulOutBufLen) == NO_ERROR) {
+    dwRetVal = GetNetworkParams(pFixedInfo, &ulOutBufLen);
+    if (NO_ERROR == dwRetVal) {
         j       = 0;
         pIPAddr = &pFixedInfo->DnsServerList;
         while ((j < n) && pIPAddr) {
