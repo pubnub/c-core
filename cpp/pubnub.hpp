@@ -168,7 +168,7 @@ namespace pubnub {
             return rslt[d_3log][t.d_3log];
         }
         tribool operator==(bool t) const {
-            return !is_set() ? not_set : (static_cast<bool>(d_3log) == t);
+            return !is_set() ? not_set : static_cast<tribool>(static_cast<bool>(d_3log) == t);
         }
         
         tribool operator!=(tribool t) const {
@@ -180,7 +180,7 @@ namespace pubnub {
             return rslt[d_3log][t.d_3log];
         }
         tribool operator!=(bool t) const {
-            return !is_set() ? not_set : (static_cast<bool>(d_3log) != t);
+            return !is_set() ? not_set : static_cast<tribool>(static_cast<bool>(d_3log) != t);
         }
 
         operator bool() const { return true == static_cast<bool>(d_3log); }
