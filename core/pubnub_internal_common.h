@@ -24,12 +24,6 @@
 #endif
 
 
-#include <stdint.h>
-#if PUBNUB_ADVANCED_KEEP_ALIVE
-#include <time.h>
-#endif
-
-
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
  */

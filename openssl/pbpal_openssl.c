@@ -96,7 +96,11 @@ static int pal_init(void)
         if (locks_setup()) {
             return -1;
         }
-
+#ifdef PUBNUB_CALLBACK_API
+        if (0 != socket_platform_init()) {
+            return -1;
+        }
+#endif
         pbntf_init();
         s_init = true;
     }

@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
-#include "pubnub_internal.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_free_with_timeout.h"
@@ -10,14 +9,9 @@
 #if defined _WIN32
 #include <windows.h>
 #include "windows/console_subscribe_paint.h"
-/* FIXME: It's ugly that we have to declare these here, far, far, away
-   from the macros in the above header that use them...
- */
-HANDLE m_hstdout_;
-WORD   m_wOldColorAttrs_;
 #else
-#include "posix/console_subscribe_paint.h"
 #include <pthread.h>
+#include "posix/console_subscribe_paint.h"
 #endif
 
 #include <stdio.h>
@@ -43,9 +37,9 @@ struct UserData {
     pubnub_t* pb;
 };
 
-static short volatile first_subscribe_done = 0;
-static short volatile stop                 = 0;
-static char const* m_chan                  = "hello_world";
+static short volatile first_subscribe_done;
+static short volatile stop;
+static char const* m_chan = "hello_world";
 
 static void wait_seconds(unsigned time_in_seconds)
 {
@@ -144,12 +138,15 @@ void publish_callback(pubnub_t*         pb,
                       void*             user_data)
 {
     time_t t;
+    /* Intializes random number generator */
+    srand((unsigned)time(&t));
 
     switch (trans) {
     case PBTT_PUBLISH:
         paint_text_green();
         printf("%sPublish callback, result: %d\n", (char*)user_data, result);
         if (result == PNR_STARTED) {
+            paint_text_red();
             printf("%sawait() returned unexpected: PNR_STARTED(%d)\n",
                    (char*)user_data,
                    result);
@@ -157,11 +154,13 @@ void publish_callback(pubnub_t*         pb,
             return;
         }
         if (PNR_OK == result) {
+            paint_text_green();
             printf("%sPublished! Response from Pubnub: %s\n",
                    (char*)user_data,
                    pubnub_last_publish_result(pb));
         }
         else if (PNR_PUBLISH_FAILED == result) {
+            paint_text_red();
             printf("%sPublished failed on Pubnub, description: %s\n",
                    (char*)user_data,
                    pubnub_last_publish_result(pb));
@@ -178,8 +177,6 @@ void publish_callback(pubnub_t*         pb,
             char s[100] = "\"pub";
             char chan[30];
             snprintf(chan, sizeof chan, "%s%s", (char*)user_data, m_chan);
-            /* Intializes random number generator */
-            srand((unsigned)time(&t));
             if (!stop && (rand() % 10 > 5)) {
                 paint_text_green();
                 puts("-----------------------");
@@ -228,10 +225,12 @@ int main()
     pubnub_t*                  pbp_2 = pubnub_alloc();
 
     if (NULL == pbp) {
+        paint_text_red();
         printf("Failed to allocate Pubnub context1!\n");
         return -1;
     }
     if (NULL == pbp_2) {
+        paint_text_red();
         printf("Failed to allocate Pubnub context2!\n");
         return -1;
     }
@@ -243,17 +242,20 @@ int main()
 
     if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
         if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+            paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             return -1;
         }
     }
     else {
+        paint_text_yellow();
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
 
     pubnub_set_transaction_timeout(pbp, 5000);
 
+    paint_text_white();
     puts("-----------------------");
     puts("Subscribing1...");
     puts("-----------------------");
@@ -292,6 +294,8 @@ int main()
      */
     sample_free(pbp_2);
     sample_free(pbp);
+
+    paint_text_white();
     puts("Pubnub subscribe-publish callback demo over.");
 
     return 0;

@@ -117,14 +117,6 @@ static enum pbpal_resolv_n_connect_result start_dns_resolution(pubnub_t*   pb,
 
     PUBNUB_LOG_TRACE("start_dns_resolution(pb=%p)\n", pb);
 
-    /* FIXME! Since PAL uses OpenSSL's BIO, then we don't use Windows
-       sockets directly. So, in order to use them for async DNS, we
-       need to call WSAStartup here, which we don't in a
-       "cross-platform" manner, in case there's another so needy
-       platform... Should find a better place for this.
-    */
-    socket_platform_init();
-
     if (SOCKET_INVALID == pb->pal.dns_socket) {
         pb->pal.dns_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     }

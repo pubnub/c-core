@@ -16,8 +16,8 @@ OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbn
 endif
 
 ifeq ($(USE_DNS_SERVERS), 1)
-SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c
-OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o
+SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c ../lib/pubnub_parse_ipv4_addr.c
+OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
 endif
 
 OS := $(shell uname)

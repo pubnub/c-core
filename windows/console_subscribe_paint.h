@@ -72,4 +72,7 @@
 #define reset_text_paint()                                                     \
     SetConsoleTextAttribute(m_hstdout_, m_wOldColorAttrs_)
 
+static HANDLE m_hstdout_;
+static WORD   m_wOldColorAttrs_;
+
 #endif /* !defined INC_COSOLE_TEXT_PAINT */
