@@ -1,4 +1,4 @@
-SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c  ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c  ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c ../posix/pbpal_posix_blocking_io.c ../core/pubnub_free_with_timeout_std.c pubnub_subloop.cpp
+SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c  ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c  ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c ../posix/pbpal_posix_blocking_io.c ../core/pubnub_free_with_timeout_std.c pubnub_subloop.cpp
 
 ifndef USE_PROXY
 USE_PROXY = 1
@@ -40,16 +40,16 @@ pubnub_sync_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) ../
 	$(CXX) -o $@ $(CFLAGS) samples/pubnub_subloop_sample.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
 ##
-# The socket poller module to use. You should use the `poll` poller it
+# The socket poller module to use. You should use the `poll` poller, it
 # doesn't have the weird restrictions of `select` poller. OTOH,
-# select() on Windows is compatible w/BSD sockets poll(), while
+# select() on Windows is compatible w/BSD sockets select(), while
 # WSAPoll() has some weird differences to poll().  The names are the
-# same until the last `_`, then it's `poll` vs `select.
+# same until the last `_`, then it's `poll` vs `select`.
 SOCKET_POLLER_C=../lib/sockets/pbpal_ntf_callback_poller_poll.c
-SOCKET_POLLER_OBJ=pbpal_ntf_callback_poller_poll.obj
+SOCKET_POLLER_OBJ=pbpal_ntf_callback_poller_poll.o
 
-CALLBACK_INTF_SOURCEFILES= ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c $(SOCKET_POLLER_C)  ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
-CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_windows.obj pubnub_get_native_socket.obj pubnub_timer_list.obj pbpal_adns_sockets.obj $(SOCKET_POLLER_OBJ) pbpal_ntf_callback_queue.obj pbpal_ntf_callback_admin.obj pbpal_ntf_callback_handle_timer_list.obj pubnub_callback_subscribe_loop.obj
+CALLBACK_INTF_SOURCEFILES= ../posix/pubnub_ntf_callback_posix.c ../posix/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c $(SOCKET_POLLER_C)  ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c ../core/pubnub_dns_servers.c ../lib/pubnub_parse_ipv4_addr.c
+CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pubnub_timer_list.o pbpal_adns_sockets.o $(SOCKET_POLLER_OBJ) pbpal_ntf_callback_queue.o pbpal_ntf_callback_admin.o pbpal_ntf_callback_handle_timer_list.o pubnub_callback_subscribe_loop.o pubnub_dns_servers.o pubnub_parse_ipv4_addr.o
 
 pubnub_callback_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp
 	$(CXX) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE samples/pubnub_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_posix.cpp $(SOURCEFILES) $(LDLIBS) $(LDLIBS)
