@@ -135,7 +135,11 @@ namespace pubnub {
             , d_checked(false)
             , d_descr(descr)
             {}
-        ~expect() {
+        ~expect() 
+#if __cplusplus >= 201103L
+            noexcept(false)
+#endif
+        {
             if (!d_checked) {
                 std::cout << __LINE__ << std::endl;
                 throw std::runtime_error(make_description("left unchecked!", d_t));
