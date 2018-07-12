@@ -660,7 +660,20 @@ public:
      * this will be "0".
      */
     QString last_time_token() const;
-    
+
+    /** Use HTTP Keep-Alive on the context for subsequent transactions.
+     */
+    void use_http_keep_alive() {
+        d_use_http_keep_alive = true;
+    }
+
+    /** Don't use HTTP Keep-Alive on the context for subsequent
+     * transactions.
+     */
+    void dont_use_http_keep_alive() {
+        d_use_http_keep_alive = false;
+    }
+
 #ifndef QT_NO_SSL
     /** Set SSL options for this context */
     void set_ssl_options(ssl_opts options);
@@ -740,6 +753,9 @@ private:
 
     /// Transaction timer
     QTimer *d_transactionTimer;
+
+    /// To Keep-Alive or not to Keep-Alive
+    bool d_use_http_keep_alive;
 };
 
 

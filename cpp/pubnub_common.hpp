@@ -819,6 +819,18 @@ public:
     /// @see pubnub_set_reuse_ssl_session
     void dont_reuse_ssl_session() { pubnub_set_reuse_ssl_session(d_pb, false); }
 
+    /// Use HTTP Keep-Alive on the context
+    /// @see pubnub_use_http_keep_alive
+    void use_http_keep_alive() {
+        pubnub_use_http_keep_alive(d_pb);
+    }
+
+    /// Don't Use HTTP Keep-Alive on the context
+    /// @see pubnub_dont_use_http_keep_alive
+    void dont_use_http_keep_alive() {
+        pubnub_dont_use_http_keep_alive(d_pb);
+    }
+
 #if PUBNUB_PROXY_API
     /// Manually set a proxy to use
     /// @see pubnub_set_proxy_manual
