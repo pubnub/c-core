@@ -50,7 +50,11 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
             p->deleteLater();
         }
         d_transaction_timed_out = false;
-        d_reply.reset(d_qnam.get(QNetworkRequest(url)));
+        QNetworkRequest req(url);
+        if (!d_use_http_keep_alive) {
+            req.setRawHeader("Connection", "Close");
+        }
+        d_reply.reset(d_qnam.get(req));
         connect(d_reply.data(), SIGNAL(finished()), this, SLOT(httpFinished()));
         d_transactionTimer->start(d_transaction_timeout_duration_ms);
     }

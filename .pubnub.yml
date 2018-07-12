@@ -1,7 +1,10 @@
 name: c-core
-version: 2.4.1
+version: 2.4.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.4.2
+      - type: feature
+        text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
   - version: v2.4.1
       - type: feature
         text: Enable reading system DNS on Windows
