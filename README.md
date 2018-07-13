@@ -33,8 +33,6 @@ The directories of the library repository are:
 
 - `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
 
-- `contiki` : Modules and Makefile for the Contiki OS (work in progress)
-
   
 ## Files
 
