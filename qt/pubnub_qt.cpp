@@ -25,6 +25,7 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_transaction_timeout_duration_ms(10000)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
+    , d_use_http_keep_alive(true)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
