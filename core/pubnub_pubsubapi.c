@@ -32,13 +32,13 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
     }
-    if (PUBNUB_BLOCKING_IO_SETTABLE) {
+#if PUBNUB_BLOCKING_IO_SETTABLE
 #if defined(PUBNUB_CALLBACK_API)
-        p->options.use_blocking_io = false;
+    p->options.use_blocking_io = false;
 #else
-        p->options.use_blocking_io = true;
+    p->options.use_blocking_io = true;
 #endif
-    }
+#endif /* PUBNUB_BLOCKING_IO_SETTABLE */
 
     p->state                       = PBS_IDLE;
     p->trans                       = PBTT_NONE;
@@ -59,6 +59,10 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->proxy_auth_username      = NULL;
     p->proxy_auth_password      = NULL;
     p->proxy_authorization_sent = false;
+#endif
+
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    p->data_compressed = compressionNONE;
 #endif
 
     return p;

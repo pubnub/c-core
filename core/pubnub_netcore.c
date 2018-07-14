@@ -21,6 +21,12 @@
  */
 #define CHUNK_TRAIL_LENGTH 2
 
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+/* 'Accept-Encoding' header line */
+#define ACCEPT_ENCODING "Accept-Encoding: gzip\r\n"
+#else
+#define ACCEPT_ENCODING ""
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
@@ -75,8 +81,9 @@ static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
 {
     if (pbpal_close(pb) <= 0) {
 #if PUBNUB_PROXY_API
-        PUBNUB_LOG_TRACE("close_kept_alive_connection(): pb->retry_after_close=%d\n",
-                         pb->retry_after_close);
+        PUBNUB_LOG_TRACE(
+            "close_kept_alive_connection(): pb->retry_after_close=%d\n",
+            pb->retry_after_close);
         if (pb->retry_after_close) {
             return PBS_RETRY;
         }
@@ -200,6 +207,16 @@ static void finish(struct pubnub_* pb)
     }
 #endif
 
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    if (pb->data_compressed == compressionGZIP) {
+        pbres               = pbgzip_decompress(pb);
+        pb->data_compressed = compressionNONE;
+        if (PNR_OK != pbres) {
+            outcome_detected(pb, pbres);
+            return;
+        }
+    }
+#endif
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
     PUBNUB_LOG_TRACE("finish(pb=%p, '%s')\n", pb, pb->core.http_reply);
 
@@ -287,8 +304,8 @@ static char const* pbnc_state2str(enum pubnub_state e)
 
 static int send_init_GET_or_CONNECT(struct pubnub_* pb)
 {
-    PUBNUB_LOG_TRACE("send_init_GET_or_CONNECT(pb=%p): pb->trans = %d\n",
-                     pb, pb->trans);
+    PUBNUB_LOG_TRACE(
+        "send_init_GET_or_CONNECT(pb=%p): pb->trans = %d\n", pb, pb->trans);
 #if PUBNUB_PROXY_API
     if ((pb->proxy_type == pbproxyHTTP_CONNECT) && (!pb->proxy_tunnel_established)) {
         return pbpal_send_literal_str(pb, "CONNECT ");
@@ -339,21 +356,21 @@ next_state:
         WATCH_ENUM(rslv);
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
-            i = pbntf_got_socket(pb);
+            i         = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_DNS_SEND;
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            i = pbntf_got_socket(pb);
+            i         = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
-            i = pbntf_got_socket(pb);
+            i         = pbntf_got_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
-            i = pbntf_got_socket(pb);
+            i         = pbntf_got_socket(pb);
             pb->state = PBS_CONNECTED;
             break;
         default:
@@ -622,7 +639,9 @@ next_state:
             }
 #endif
             if (0 > pbpal_send_literal_str(
-                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                        pb,
+                        "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+                        "\r\n" ACCEPT_ENCODING "\r\n")) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -638,7 +657,9 @@ next_state:
         }
         else if (0 == i) {
             if (0 > pbpal_send_literal_str(
-                    pb, "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION "\r\n\r\n")) {
+                        pb,
+                        "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+                        "\r\n" ACCEPT_ENCODING "\r\n")) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
             }
@@ -710,9 +731,12 @@ next_state:
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[]  = "Content-Length: ";
 #if PUBNUB_ADVANCED_KEEP_ALIVE
-            char h_close[]   = "Connection: close";
+            char h_close[] = "Connection: close";
 #endif
-            int  read_len    = pbpal_read_len(pb);
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+            char h_encoding[] = "Content-Encoding: gzip";
+#endif
+            int read_len = pbpal_read_len(pb);
             PUBNUB_LOG_TRACE("pb=%p header line was read: '%.*s'\n",
                              pb,
                              read_len,
@@ -755,6 +779,12 @@ next_state:
 #if PUBNUB_ADVANCED_KEEP_ALIVE
             else if (strncmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
                 pb->keep_alive.should_close = true;
+            }
+#endif
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+            else if (strncmp(pb->core.http_buf, h_encoding, sizeof h_encoding - 1)
+                     == 0) {
+                pb->data_compressed = compressionGZIP;
             }
 #endif
             else {
@@ -983,7 +1013,7 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
     case PBS_WAIT_CANCEL_CLOSE:
         break;
     case PBS_NULL:
-        PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) somehow got called in NULL state\n", pbp);
+        PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) got called in NULL state\n", pbp);
         break;
     case PBS_IDLE:
         pbp->trans = PBTT_NONE;

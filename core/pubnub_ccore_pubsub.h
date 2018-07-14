@@ -44,6 +44,11 @@ struct pbcc_context {
      */
     unsigned http_buf_len;
 
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    /** The length of the decompressed data currently in the decompressing buffer ("scratch").
+     */
+    unsigned decomp_buf_size;
+#endif
     /** The total length of data to be received in a HTTP reply or
         chunk of it.
      */
@@ -51,10 +56,17 @@ struct pbcc_context {
 
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     char* http_reply;
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    char *decomp_http_reply;
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #else
     /** The contents of a HTTP reply/reponse */
     char http_reply[PUBNUB_REPLY_MAXLEN + 1];
-#endif
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    /** Auxiliary buffer for unpacking(decompresing) data from HTTP reply buffer */
+    char decomp_http_reply[PUBNUB_REPLY_MAXLEN+1];
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+#endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 
     /* These in-string offsets are used for yielding messages received
      * by subscribe - the beginning of last yielded message and total

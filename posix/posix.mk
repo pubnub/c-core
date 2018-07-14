@@ -10,6 +10,10 @@ ifndef USE_DNS_SERVERS
 USE_DNS_SERVERS = 1
 endif
 
+ifndef RECEIVE_GZIP_RESPONSE
+RECEIVE_GZIP_RESPONSE = 1
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
@@ -18,6 +22,11 @@ endif
 ifeq ($(USE_DNS_SERVERS), 1)
 SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c ../lib/pubnub_parse_ipv4_addr.c
 OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
+endif
+
+ifeq ($(RECEIVE_GZIP_RESPONSE), 1)
+SOURCEFILES += ../lib/miniz/miniz_tinfl.c ../core/pbgzip_decompress.c
+OBJFILES += miniz_tinfl.o pbgzip_decompress.o
 endif
 
 OS := $(shell uname)

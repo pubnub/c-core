@@ -97,6 +97,11 @@
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
 
+#if !defined(PUBNUB_RECEIVE_GZIP_RESPONSE)
+/** If true (!=0), enables support for compressed content data*/
+#define PUBNUB_RECEIVE_GZIP_RESPONSE 1
+#endif
+
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
 #define PUBNUB_USE_WIN_SSPI 1

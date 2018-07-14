@@ -225,13 +225,13 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel) {
     TEST_DEFER(pnfntst_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
     pubnub_origin_set(pbp_2, g_origin);
+    pubnub_set_non_blocking_io(pbp_2);
 
     rslt = pubnub_subscribe(pbp_2, "ch", NULL);
     expect_pnr(rslt, PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
 
-    pubnub_set_non_blocking_io(pbp_2);
-    pubnub_subscribe(pbp_2, "ch", NULL);
+    rslt = pubnub_subscribe(pbp_2, "ch", NULL);
     expect_pnr(rslt, PNR_STARTED);
     rslt = pubnub_publish(pbp, "ch", "\"Test 2\"");
     expect_pnr(rslt, PNR_STARTED);
@@ -296,6 +296,7 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel_in_group) {
     TEST_DEFER(pnfntst_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
     pubnub_origin_set(pbp_2, g_origin);
+    pubnub_set_non_blocking_io(pbp_2);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -307,7 +308,6 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel_in_group) {
     rslt = pubnub_subscribe(pbp_2, NULL, "gr");
     expect_pnr_maybe_started(rslt, pbp_2, 5*SECONDS, PNR_OK);
 
-    pubnub_set_non_blocking_io(pbp_2);
     expect_pnr(pubnub_subscribe(pbp_2, NULL, "gr"), PNR_STARTED);
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test 2\""), PNR_STARTED);
     await_timed_2(5*SECONDS, PNR_OK, pbp, PNR_OK, pbp_2);
@@ -343,6 +343,7 @@ TEST_DEF(connect_and_receive_over_several_channels_in_group_simultaneously) {
     TEST_DEFER(pnfntst_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
     pubnub_origin_set(pbp_2, g_origin);
+    pubnub_set_non_blocking_io(pbp_2);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -354,7 +355,6 @@ TEST_DEF(connect_and_receive_over_several_channels_in_group_simultaneously) {
     rslt = pubnub_subscribe(pbp_2, NULL, "gr");
     expect_pnr_maybe_started(rslt, pbp_2, 5*SECONDS, PNR_OK);
 
-    pubnub_set_non_blocking_io(pbp_2);
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test M2\""), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
     rslt = pubnub_publish(pbp, "two", "\"Test M2-2\"");
@@ -383,6 +383,7 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_single_channel_simultaneo
     TEST_DEFER(pnfntst_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
     pubnub_origin_set(pbp_2, g_origin);
+    pubnub_set_non_blocking_io(pbp_2);
 
     expect_pnr(pubnub_remove_channel_group(pbp, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
@@ -394,7 +395,6 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_single_channel_simultaneo
     expect_pnr(pubnub_subscribe(pbp_2, "two", "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
 
-    pubnub_set_non_blocking_io(pbp_2);
     rslt = pubnub_publish(pbp, "ch", "\"Test M2\"");
     expect_pnr_maybe_started(rslt, pbp, 5*SECONDS, PNR_OK);
 
@@ -424,6 +424,7 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneou
     TEST_DEFER(pnfntst_free, pbp_2);
     pubnub_init(pbp_2, g_pubkey, g_keysub);
     pubnub_origin_set(pbp_2, g_origin);
+    pubnub_set_non_blocking_io(pbp_2);
 
     expect_pnr(pubnub_remove_channel_group(pbp_2, "gr"), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp_2);
@@ -435,7 +436,6 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneou
     rslt = pubnub_subscribe(pbp_2, "ch,two", "gr");
     expect_pnr_maybe_started(rslt, pbp_2, 5*SECONDS, PNR_OK);
 
-    pubnub_set_non_blocking_io(pbp_2);
     expect_pnr(pubnub_publish(pbp, "ch", "\"Test M2\""), PNR_STARTED);
     await_timed(5*SECONDS, PNR_OK, pbp);
     rslt = pubnub_publish(pbp, "two", "\"Test M2-2\"");

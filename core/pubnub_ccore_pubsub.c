@@ -19,9 +19,13 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->timetoken[1]  = '\0';
     p->uuid = p->auth = NULL;
     p->msg_ofs = p->msg_end = 0;
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        p->http_reply = NULL;
-    }
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    p->http_reply = NULL;
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    p->decomp_buf_size   = (size_t)0;
+    p->decomp_http_reply = NULL;
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+#endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
@@ -31,12 +35,18 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 
 void pbcc_deinit(struct pbcc_context* p)
 {
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        if (p->http_reply != NULL) {
-            free(p->http_reply);
-            p->http_reply = NULL;
-        }
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    if (p->http_reply != NULL) {
+        free(p->http_reply);
+        p->http_reply = NULL;
     }
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    if (p->decomp_http_reply != NULL) {
+        free(p->decomp_http_reply);
+        p->decomp_http_reply = NULL;
+    }
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+#endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 }
 
 
