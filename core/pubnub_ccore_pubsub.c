@@ -406,9 +406,10 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 
 
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
-                                    const char*          channel,
-                                    const char*          channel_group,
-                                    unsigned*            heartbeat)
+                                    char const*          channel,
+                                    char const*          channel_group,
+                                    unsigned*            heartbeat,
+                                    char const*          filter_expr)
 {
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -434,6 +435,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
     APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
+    APPEND_URL_PARAM_M(p, "filter-expr", filter_expr, '&');
 
     return PNR_STARTED;
 }

@@ -205,9 +205,10 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     formatting the URI of the HTTP request.
  */
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
-                                    const char*          channel,
-                                    const char*          channel_group,
-                                    unsigned*            heartbeat);
+                                    char const*          channel,
+                                    char const*          channel_group,
+                                    unsigned*            heartbeat,
+                                    char const*          filter_expr);
 
 
 /** Split @p buf string containing a JSON array (with arbitrary

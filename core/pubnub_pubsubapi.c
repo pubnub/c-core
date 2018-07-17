@@ -134,7 +134,7 @@ enum pubnub_res pubnub_subscribe(pubnub_t*   p,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);
+    rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL, NULL);
     if (PNR_STARTED == rslt) {
         p->trans            = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;
