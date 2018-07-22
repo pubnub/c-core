@@ -43,7 +43,7 @@ int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4_address)
 }
 
 
-int pubnub_dns_set_primary_server_ipv4_str(char* ipv4_str)
+int pubnub_dns_set_primary_server_ipv4_str(char const* ipv4_str)
 {
     int ret;
 
@@ -79,7 +79,7 @@ int pubnub_dns_set_secondary_server_ipv4(struct pubnub_ipv4_address ipv4_address
 }
 
 
-int pubnub_dns_set_secondary_server_ipv4_str(char* ipv4_str)
+int pubnub_dns_set_secondary_server_ipv4_str(char const* ipv4_str)
 {
     int ret;
 
