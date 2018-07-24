@@ -289,8 +289,6 @@ static int my_recv(void *p, size_t n)
 
 enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
 {
-    uint8_t c;
-
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
     if (pb->unreadlen == 0) {
@@ -311,9 +309,9 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
     }
 
     while (pb->unreadlen > 0) {
+        uint8_t c = *pb->ptr++;
         --pb->unreadlen;
 
-        c = *pb->ptr++;
         if (c == '\n') {
             PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ", pb, pbpal_read_len(pb)); WATCH_USHORT(pb->unreadlen);
             pb->sock_state = STATE_NONE;
