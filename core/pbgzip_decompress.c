@@ -88,7 +88,7 @@ static enum pubnub_res inflate_total(pubnub_t *pb,
     enum pubnub_res result;
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     if(pb->core.decomp_buf_size < out_len) {
-        char* newbuf = realloc(pb->core.decomp_http_reply, out_len + 1);
+        char* newbuf = (char*)realloc(pb->core.decomp_http_reply, out_len + 1);
         if (NULL == newbuf) {
             PUBNUB_LOG_ERROR("Failed to reallocate decompression buffer!\n"
                              "Out length:%lu\n", out_len);

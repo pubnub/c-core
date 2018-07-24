@@ -1,7 +1,0 @@
-dist: trusty
-sudo: false
-language: c
-compiler:
-  - clang
-  - gcc
-script: make -f posix.mk

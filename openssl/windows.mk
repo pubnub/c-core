@@ -11,7 +11,7 @@ OPENSSL_LIBS=$(OPENSSLPATH)\lib\libssl.lib $(OPENSSLPATH)\lib\libcrypto.lib
 !ELSEIF EXISTS($(OPENSSLPATH)\lib\ssleay32.lib)
 OPENSSL_LIBS=$(OPENSSLPATH)\lib\ssleay32.lib $(OPENSSLPATH)\lib\libeay32.lib
 !ELSE
-!ERROR Cannot find OpenSSL libraries
+!ERROR Cannot find OpenSSL libraries, OPENSSLPATH=$(OPENSSLPATH)
 !ENDIF
 LIBS=ws2_32.lib IPHlpAPI.lib rpcrt4.lib $(OPENSSL_LIBS)
 

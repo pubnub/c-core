@@ -12,7 +12,7 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
 {
     FILE* fp;
     char  buffer[255];
-    int   i     = 0;
+    unsigned  i = 0;
     bool  found = false;
 
     PUBNUB_ASSERT_OPT(n > 0);
