@@ -85,6 +85,7 @@ struct pubnub_subscribe_options pubnub_subscribe_defopts(void)
     struct pubnub_subscribe_options result;
     result.channel_group = NULL;
     result.heartbeat     = PUBNUB_MINIMAL_HEARTBEAT_INTERVAL;
+    result.filter_expr   = NULL;
     return result;
 }
 
@@ -103,7 +104,8 @@ enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_subscribe_prep(&p->core, channel, opt.channel_group, &opt.heartbeat);
+    rslt = pbcc_subscribe_prep(
+        &p->core, channel, opt.channel_group, &opt.heartbeat, opt.filter_expr);
     if (PNR_STARTED == rslt) {
         p->trans            = PBTT_SUBSCRIBE;
         p->core.last_result = PNR_STARTED;

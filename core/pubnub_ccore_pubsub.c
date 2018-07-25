@@ -19,9 +19,13 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->timetoken[1]  = '\0';
     p->uuid = p->auth = NULL;
     p->msg_ofs = p->msg_end = 0;
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        p->http_reply = NULL;
-    }
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    p->http_reply = NULL;
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    p->decomp_buf_size   = (size_t)0;
+    p->decomp_http_reply = NULL;
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+#endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
@@ -31,12 +35,18 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 
 void pbcc_deinit(struct pbcc_context* p)
 {
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
-        if (p->http_reply != NULL) {
-            free(p->http_reply);
-            p->http_reply = NULL;
-        }
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    if (p->http_reply != NULL) {
+        free(p->http_reply);
+        p->http_reply = NULL;
     }
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    if (p->decomp_http_reply != NULL) {
+        free(p->decomp_http_reply);
+        p->decomp_http_reply = NULL;
+    }
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+#endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 }
 
 
@@ -396,9 +406,10 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 
 
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
-                                    const char*          channel,
-                                    const char*          channel_group,
-                                    unsigned*            heartbeat)
+                                    char const*          channel,
+                                    char const*          channel_group,
+                                    unsigned*            heartbeat,
+                                    char const*          filter_expr)
 {
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -424,6 +435,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
     APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
+    APPEND_URL_PARAM_M(p, "filter-expr", filter_expr, '&');
 
     return PNR_STARTED;
 }

@@ -168,13 +168,13 @@ inline enum pubnub_proxy_type ccore_proxy_type(proxy_type prtp)
 */
 class subscribe_options {
     pubnub_subscribe_options d_;
-    std::string d_chgrp;
+    std::string              d_chgrp;
 
 public:
     subscribe_options() { d_ = pubnub_subscribe_defopts(); }
     subscribe_options& channel_group(std::string const& chgroup)
     {
-        d_chgrp = chgroup;
+        d_chgrp          = chgroup;
         d_.channel_group = d_chgrp.empty() ? 0 : d_chgrp.c_str();
         return *this;
     }
@@ -198,8 +198,8 @@ public:
 */
 class publish_options {
     pubnub_publish_options d_;
-    std::string d_ciphkey;
-    std::string d_mtdt;
+    std::string            d_ciphkey;
+    std::string            d_mtdt;
 
 public:
     publish_options() { d_ = pubnub_publish_defopts(); }
@@ -210,7 +210,7 @@ public:
     }
     publish_options& cipher_key(std::string ciphkey)
     {
-        d_ciphkey = ciphkey;
+        d_ciphkey     = ciphkey;
         d_.cipher_key = d_ciphkey.c_str();
         return *this;
     }
@@ -221,7 +221,7 @@ public:
     }
     publish_options& meta(std::string mtdt)
     {
-        d_mtdt = mtdt;
+        d_mtdt  = mtdt;
         d_.meta = d_mtdt.c_str();
         return *this;
     }
@@ -236,13 +236,13 @@ public:
 */
 class here_now_options {
     pubnub_here_now_options d_;
-    std::string d_chgrp;
+    std::string             d_chgrp;
 
 public:
     here_now_options() { d_ = pubnub_here_now_defopts(); }
     here_now_options& channel_group(std::string const& chgroup)
     {
-        d_chgrp = chgroup;
+        d_chgrp          = chgroup;
         d_.channel_group = d_chgrp.empty() ? 0 : d_chgrp.c_str();
         return *this;
     }
@@ -270,8 +270,8 @@ public:
 */
 class history_options {
     pubnub_history_options d_;
-    std::string d_strt;
-    std::string d_ender;
+    std::string            d_strt;
+    std::string            d_ender;
 
 public:
     history_options() { d_ = pubnub_history_defopts(); }
@@ -292,14 +292,14 @@ public:
     }
     history_options& start(std::string const& st)
     {
-        d_strt = st;
+        d_strt   = st;
         d_.start = d_strt.empty() ? 0 : d_strt.c_str();
         return *this;
     }
     history_options& end(std::string const& e)
     {
         d_ender = e;
-        d_.end = d_ender.empty() ? 0 : d_ender.c_str();
+        d_.end  = d_ender.empty() ? 0 : d_ender.c_str();
         return *this;
     }
     history_options& include_token(bool inc_token)
@@ -821,15 +821,11 @@ public:
 
     /// Use HTTP Keep-Alive on the context
     /// @see pubnub_use_http_keep_alive
-    void use_http_keep_alive() {
-        pubnub_use_http_keep_alive(d_pb);
-    }
+    void use_http_keep_alive() { pubnub_use_http_keep_alive(d_pb); }
 
     /// Don't Use HTTP Keep-Alive on the context
     /// @see pubnub_dont_use_http_keep_alive
-    void dont_use_http_keep_alive() {
-        pubnub_dont_use_http_keep_alive(d_pb);
-    }
+    void dont_use_http_keep_alive() { pubnub_dont_use_http_keep_alive(d_pb); }
 
 #if PUBNUB_PROXY_API
     /// Manually set a proxy to use
@@ -898,7 +894,9 @@ public:
     int free()
     {
         int rslt = pubnub_free(d_pb);
-        d_pb     = 0;
+        if (0 == rslt) {
+            d_pb = 0;
+        }
         return rslt;
     }
 
@@ -909,7 +907,9 @@ public:
     int free_with_timeout(std::chrono::milliseconds duration)
     {
         int rslt = pubnub_free_with_timeout(d_pb, duration.count());
-        d_pb     = 0;
+        if (0 == rslt) {
+            d_pb = 0;
+        }
         return rslt;
     }
 #else
@@ -919,7 +919,9 @@ public:
     int free_with_timeout(int duration_ms)
     {
         int rslt = pubnub_free_with_timeout(d_pb, duration_ms);
-        d_pb     = 0;
+        if (0 == rslt) {
+            d_pb = 0;
+        }
         return rslt;
     }
 #endif

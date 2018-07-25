@@ -29,6 +29,7 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
 }
 
 
+#if OPENSSL_API_COMPAT < 0x10100000L
 static void locking_callback(int mode, int type, const char* file, int line)
 {
     PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n",
@@ -44,9 +45,10 @@ static void locking_callback(int mode, int type, const char* file, int line)
         pbpal_mutex_unlock(m_locks[type]);
     }
 }
+#endif
 
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && (OPENSSL_API_COMPAT < 0x10000000L)
 static unsigned long thread_id(void)
 {
     return (unsigned long)pbpal_thread_id();
@@ -64,11 +66,13 @@ static int locks_setup(void)
     for (i = 0; i < CRYPTO_num_locks(); ++i) {
         pbpal_mutex_init_std(m_locks[i]);
     }
-#if !defined(_WIN32)
+#if !defined(_WIN32) && (OPENSSL_API_COMPAT < 0x10000000L)
     // On Windows, OpenSSL has a suitable default
     CRYPTO_set_id_callback(thread_id);
 #endif
+#if OPENSSL_API_COMPAT < 0x10100000L
     CRYPTO_set_locking_callback(locking_callback);
+#endif
     return 0;
 }
 

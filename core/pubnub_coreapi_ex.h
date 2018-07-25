@@ -96,11 +96,25 @@ struct pubnub_subscribe_options {
         (instead).
      */
     unsigned heartbeat;
+    /** The filter expression to apply. It's a predicate to apply to
+        the metadata of a message. If it returns `true`, message will
+        be received, otherwise, it will be skipped (as if not
+        published). Syntax is not trivial, but can be described as
+        mostly Javascript on the metadata (which is JSON, thus,
+        "integrates well" wtih Javascript). For example, if your
+        metadata is: `{"zec":3}`, then this filter _would_ match it:
+        `zec==3`, while `zec==4` would _not_.
+
+        If message doesn't have metadata, this will be ignored.
+
+        If NULL, will not be used.
+     */
+    char const* filter_expr;
 };
 
 /** This returns the default options for subscribe transactions.  Will
-    set `channel_group = NULL` and `heartbeat` to default heartbeat
-    value.
+    set `channel_group = NULL`, `heartbeat` to default heartbeat
+    value and `filter_expr = NULL`.
  */
 struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
 

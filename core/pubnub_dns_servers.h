@@ -20,7 +20,7 @@ struct pubnub_ipv4_address {
                 0 to not use this DNS server.
     @retval 0 OK
     @retval -1 error: Pubnub DNS module
-            not used and can't set the system primary DNS server
+            not used and can't set the primary DNS server
   */
 int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4);
 
@@ -35,27 +35,27 @@ int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4);
     @param ipv4 The IPv4 address of the server to use. Set all
            0 to not use this DNS server.
     @retval 0 OK
-    @retval -1 error: Pubnub DNS module not used and can't set the system
-   primary DNS server
+    @retval -1 error: Pubnub DNS module not used and can't set the  primary DNS
+    server
   */
 int pubnub_dns_set_secondary_server_ipv4(struct pubnub_ipv4_address ipv4);
 
 /** Sets the primary DNS server IPv4 address from the corresponding
-   'numbers-and-dots' notation string to use when resolving the Pubnub origin,
-   in binary form(network order). Applies to all subsequent DNS queries, if
-   successful.
+    'numbers-and-dots' notation string to use when resolving the Pubnub origin,
+    in binary form(network order). Applies to all subsequent DNS queries, if
+    successful.
 
     @param ipv4 The IPv4 address of the server to use. Set all
                 0 to not use this DNS server.
     @retval 0 OK
     @retval -1 error: Pubnub DNS module
-            not used and can't set the system primary DNS server
+            not used and can't set the primary DNS server
   */
-int pubnub_dns_set_primary_server_ipv4_str(char* ipv4_str);
+int pubnub_dns_set_primary_server_ipv4_str(char const* ipv4_str);
 
 /** Sets the secondary DNS server IPv4 address from the corresponding
-   'numbers-and-dots' notation string to use when resolving the Pubnub origin,
-   in binary form(network order).
+    'numbers-and-dots' notation string to use when resolving the Pubnub origin,
+    in binary form(network order).
 
 
     Applies to all subsequent DNS queries, if successful and if
@@ -65,10 +65,10 @@ int pubnub_dns_set_primary_server_ipv4_str(char* ipv4_str);
     @param ipv4 The IPv4 address of the server to use. Set all
            0 to not use this DNS server.
     @retval 0 OK
-    @retval -1 error: Pubnub DNS module not used and can't set the system
-   primary DNS server
+    @retval -1 error: Pubnub DNS module not used and can't set the
+    primary DNS server
   */
-int pubnub_dns_set_secondary_server_ipv4_str(char* ipv4_str);
+int pubnub_dns_set_secondary_server_ipv4_str(char const* ipv4_str);
 
 /** Reads the currently set primary DNS server's IPv4 address,
     in binary form(network order).
@@ -76,7 +76,7 @@ int pubnub_dns_set_secondary_server_ipv4_str(char* ipv4_str);
     @param[out] o_ipv4 The IPv4 address of the server used.
     @retval 0 OK
     @retval -1 error: Pubnub DNS module not used or can't read
-            the primary system DNS server
+            the primary DNS server
   */
 int pubnub_get_dns_primary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
 
@@ -86,7 +86,7 @@ int pubnub_get_dns_primary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
     @param[out] o_ipv4 The IPv4 address of the server used.
     @retval 0 OK
     @retval -1 error: Pubnub DNS module not used or can't read
-            the primary system DNS server
+            the primary DNS server
   */
 int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
 
@@ -98,16 +98,15 @@ int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
     not available through standard means.
 
     On POSIX systems, this will read from `/etc/resolv.conf`,
-    looking for `nameserver` lines. On Windows, this will read from
-    the registry in
-    `SYSTEM\ControlSet001\Services\Tcpip\Parameters\Interfaces`,
-    looking for `NameServer` and `DhcpNameServer` keys.
+    looking for `nameserver` lines. On Windows, this will use OS
+    functions to get the info.
 
     @param[out] o_ipv4 The array where to put the system DNS servers.
                        allocated by the caller for @p n elements.
-   @param[in] n The number of elements allocated for the @p o_ipv4
-   @retval -1: error, can't read DNS server configuration
-   @retval otherwise: number of DNS servers read
+
+    @param[in] n The number of elements allocated for the @p o_ipv4
+    @retval -1: error, can't read DNS server configuration
+    @retval otherwise: number of DNS servers read
   */
 int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4,
                                         size_t                      n);

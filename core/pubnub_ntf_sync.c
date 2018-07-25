@@ -17,9 +17,9 @@ int pbntf_init(void)
 
 int pbntf_got_socket(pubnub_t *pb)
 {
-    if (PUBNUB_BLOCKING_IO_SETTABLE) {
+#if PUBNUB_BLOCKING_IO_SETTABLE
         pbpal_set_blocking_io(pb);
-    }
+#endif
     return +1;
 }
 

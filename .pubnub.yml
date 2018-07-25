@@ -1,7 +1,15 @@
 name: c-core
-version: 2.4.2
+version: 2.4.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.4.3
+    changes:
+      - type: feature
+        text: Support OpenSSL 1.1.x with callback interface
+      - type: feature
+        text: Add support for filter expressions on subscribe
+      - type: feature
+        text: Enable receiving GZIP-ed reply
   - version: v2.4.2
     changes:
       - type: feature

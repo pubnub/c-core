@@ -1,21 +1,27 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_INTERNAL_COMMON
-#define      INC_PUBNUB_INTERNAL_COMMON
+#define INC_PUBNUB_INTERNAL_COMMON
 
 #include "pubnub_config.h"
-#include "pubnub_ccore_pubsub.h"
-#include "pubnub_netcore.h"
-#include "pubnub_mutex.h"
+#include "core/pubnub_ccore_pubsub.h"
+#include "core/pubnub_netcore.h"
+#include "core/pubnub_mutex.h"
 
 #if defined(PUBNUB_CALLBACK_API)
-#include "pubnub_ntf_callback.h"
+#include "core/pubnub_ntf_callback.h"
 #endif
 
 #if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
-#include "pubnub_proxy.h"
-#include "pbhttp_digest.h"
+#include "core/pubnub_proxy.h"
+#include "core/pbhttp_digest.h"
+#endif
+
+#if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
+#define PUBNUB_RECEIVE_GZIP_RESPONSE 0
+#elif PUBNUB_RECEIVE_GZIP_RESPONSE
+#include "core/pbgzip_decompress.h"
 #endif
 
 #include <stdint.h>
@@ -99,7 +105,7 @@ struct pbntlm_context {
 
 typedef struct pbntlm_context pbntlm_ctx_t;
 
-/** The Pubnub context 
+/** The Pubnub context
 
     @note Don't declare any members as `bool`, as there may be
     alignment issues when this is included from both C and C++
@@ -128,21 +134,21 @@ struct pubnub_ {
 
     /** The number of bytes we got (in our buffer) from network but
         have not processed yet. */
-    uint16_t unreadlen;         
+    uint16_t unreadlen;
 
     /** Pointer to next byte to read from our buffer or next byte to
         send in the user-supplied send buffer.
      */
-    uint8_t *ptr;          
+    uint8_t* ptr;
 
     /** Number of bytes left (empty) in the read buffer */
-    uint16_t left;   
+    uint16_t left;
 
     /** The state of the socket. */
-    enum PBSocketState sock_state;   
+    enum PBSocketState sock_state;
 
     /** Number of bytes to send or read - given by the user */
-    unsigned len;          
+    unsigned len;
 
     /** Indicates whether we are receiving chunked or regular HTTP
      * response
@@ -153,7 +159,7 @@ struct pubnub_ {
     uint16_t http_code;
 
 #if defined PUBNUB_ORIGIN_SETTABLE
-    char const *origin;
+    char const* origin;
 #endif
 
 #if 0
@@ -166,13 +172,13 @@ struct pubnub_ {
     struct pubnub_pal pal;
 
     struct pubnub_options {
-        /** Indicates whether to use blocking I/O. Ignored if 
+#if PUBNUB_BLOCKING_IO_SETTABLE
+        /** Indicates whether to use blocking I/O. Not implemented if
             choosing between blocking and non-blocking is not supported
-            on a platform. Would be ifdef-ed out, but then it would be
-            possible for this struct to have no members which is 
-            prohibited by the ISO C standard.
+            on a platform.
         */
         bool use_blocking_io : 1;
+#endif
 
         /** Indicates whether to use HTTP keep-alive. If used,
             subsequent transactions will be faster, unless the (TCP/IP
@@ -180,7 +186,7 @@ struct pubnub_ {
             drop/close of the connection may be a problem and cause
             some transactions to fail.
         */
-        bool use_http_keep_alive: 1;
+        bool use_http_keep_alive : 1;
 
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to
@@ -191,7 +197,7 @@ struct pubnub_ {
          * certificate-handshake issues and still continue in SSL mode
          * if it experiences issues handshaking across local proxies,
          * firewalls, etc?
-          */
+         */
         bool ignoreSSL : 1;
         /** When SSL is enabled, should the client fallback to a
          * non-SSL connection if it experiences issues handshaking
@@ -207,12 +213,16 @@ struct pubnub_ {
 
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     struct pubnub_keep_alive_data {
-        time_t timeout;
-        time_t t_connect;
+        time_t   timeout;
+        time_t   t_connect;
         unsigned max;
         unsigned count;
-        bool should_close;
+        bool     should_close;
     } keep_alive;
+#endif
+
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    enum pubnub_data_compressionType data_compressed;
 #endif
 
 #if PUBNUB_USE_SSL
@@ -233,16 +243,16 @@ struct pubnub_ {
     int transaction_timeout_ms;
 
 #if defined(PUBNUB_CALLBACK_API)
-    struct pubnub_ *previous;
-    struct pubnub_ *next;
-    int timeout_left_ms;
+    struct pubnub_* previous;
+    struct pubnub_* next;
+    int             timeout_left_ms;
 #endif
 
 #endif
 
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
-    void *user_data;
+    void*             user_data;
 #endif
 
 #if PUBNUB_PROXY_API
@@ -276,10 +286,10 @@ struct pubnub_ {
     enum pubnub_http_authentication_scheme proxy_auth_scheme;
 
     /** The username to use for proxy authentication */
-    char const *proxy_auth_username;
+    char const* proxy_auth_username;
 
     /** The password to use for proxy authentication */
-    char const *proxy_auth_password;
+    char const* proxy_auth_password;
 
     /** Indicates whether the proxy authorization has already been
         sent.  Some proxy servers will, on failed authorization, ask
@@ -314,34 +324,33 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state);
 
 int pbntf_init(void);
 
-int pbntf_got_socket(pubnub_t *pb);
+int pbntf_got_socket(pubnub_t* pb);
 
-void pbntf_update_socket(pubnub_t *pb);
+void pbntf_update_socket(pubnub_t* pb);
 
-void pbntf_lost_socket(pubnub_t *pb);
+void pbntf_lost_socket(pubnub_t* pb);
 
-int pbntf_enqueue_for_processing(pubnub_t *pb);
+int pbntf_enqueue_for_processing(pubnub_t* pb);
 
-int pbntf_requeue_for_processing(pubnub_t *pb);
+int pbntf_requeue_for_processing(pubnub_t* pb);
 
-int pbntf_watch_in_events(pubnub_t *pb);
-int pbntf_watch_out_events(pubnub_t *pb);
+int pbntf_watch_in_events(pubnub_t* pb);
+int pbntf_watch_out_events(pubnub_t* pb);
 
 
 /** Internal function. Checks if the given pubnub context pointer
-    is valid. 
+    is valid.
 */
-bool pb_valid_ctx_ptr(pubnub_t const *pb);
+bool pb_valid_ctx_ptr(pubnub_t const* pb);
 
 /** Internal function, only available in the "static" context
     allocator. Gives a context with the given index.
 */
-pubnub_t *pballoc_get_ctx(unsigned idx);
+pubnub_t* pballoc_get_ctx(unsigned idx);
 
-/** Internal function, the "bottom half" of pubnub_free(), which is 
+/** Internal function, the "bottom half" of pubnub_free(), which is
     done asynchronously in the callback mode. */
-void pballoc_free_at_last(pubnub_t *pb);
-
+void pballoc_free_at_last(pubnub_t* pb);
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */

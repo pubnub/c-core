@@ -57,6 +57,11 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
+/** The maximum length (in characters) of the host name of the proxy
+    that will be saved in the Pubnub context.
+*/
+#define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
+
 #define PUBNUB_HAVE_SHA1 0
 
 #if !defined PUBNUB_USE_MDNS

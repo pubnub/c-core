@@ -8,6 +8,9 @@
 
 #if !defined(_WIN32)
 #include <arpa/inet.h>
+#define CAST
+#else
+#define CAST (int*)
 #endif
 
 #include <stdint.h>
@@ -221,9 +224,7 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
         return socket_would_block() ? +1 : -1;
     }
     else if (to_send != sent_to) {
-        PUBNUB_LOG_ERROR("'sendto()' sent:%d out of %u bytes to send!\n",
-                         (int)sent_to,
-                         (unsigned)to_send);
+        PUBNUB_LOG_ERROR("sendto() sent %d out of %d bytes!\n", sent_to, to_send);
         return -1;
     }
     return 0;
@@ -239,7 +240,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
     int                i, msg_size;
     unsigned           addr_size = sizeof *dest;
 
-    msg_size = recvfrom(skt, (char*)buf, sizeof buf, 0, dest, &addr_size);
+    msg_size = recvfrom(skt, (char*)buf, sizeof buf, 0, dest, CAST & addr_size);
     if (msg_size <= 0) {
         return socket_would_block() ? +1 : -1;
     }
@@ -278,7 +279,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
                                    r_data_len);
                 continue;
             }
-            PUBNUB_LOG_TRACE("Got IPv4: %uc.%uc.%uc.%uc\n",
+            PUBNUB_LOG_TRACE("Got IPv4: %u.%u.%u.%u\n",
                              reader[0],
                              reader[1],
                              reader[2],
