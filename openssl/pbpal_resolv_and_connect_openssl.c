@@ -22,9 +22,13 @@
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 
+#include <string.h>
+
+
 #define HTTP_PORT 80
 
 #define DNS_PORT 53
+
 
 static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
