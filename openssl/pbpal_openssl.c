@@ -389,7 +389,12 @@ void pbpal_free(pubnub_t* pb)
         pbntf_lost_socket(pb);
         BIO_free_all(pb->pal.socket);
     }
-
+#ifdef PUBNUB_CALLBACK_API
+    if (pb->pal.dns_socket != SOCKET_INVALID) {
+        socket_close(pb->pal.dns_socket);
+        pb->pal.dns_socket = SOCKET_INVALID;
+    }
+#endif
     /* The rest, OTOH, is expected */
     if (pb->pal.ctx != NULL) {
         SSL_CTX_free(pb->pal.ctx);
