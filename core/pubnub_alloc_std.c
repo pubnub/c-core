@@ -26,6 +26,7 @@ static void save_allocated(pubnub_t* pb)
         pubnub_t** npalloc =
             (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n + 1));
         if (NULL == npalloc) {
+            PUBNUB_LOG_WARNING("Couldn't allocate memory for pubnub_alloc_std bookkeeping");
             pubnub_mutex_unlock(m_lock);
             return;
         }
@@ -52,7 +53,11 @@ static void remove_allocated(pubnub_t* pb)
                         m_allocated + i + 1,
                         sizeof m_allocated[0] * (m_n - i - 1));
             }
-            --m_n;
+            if (0 == --m_n) {
+                free(m_allocated);
+                m_allocated = NULL;
+                m_cap = 0;
+            }
             break;
         }
     }
