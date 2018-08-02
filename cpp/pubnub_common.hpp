@@ -16,6 +16,7 @@ extern "C" {
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_free_with_timeout.h"
+#include "core/pubnub_dns_servers.h"
 #if PUBNUB_PROXY_API
 #include "core/pubnub_proxy.h"
 #endif
@@ -35,7 +36,7 @@ extern "C" {
 #endif
 
 #include <iostream>
-
+#include <sstream>
 
 namespace pubnub {
 
@@ -408,6 +409,28 @@ public:
         }
         set_uuid(pubnub_uuid_to_string(&uuid).uuid);
         return 0;
+    }
+    // get the system dns information
+    std::string read_system_dns_servers()
+    {
+        struct pubnub_ipv4_address default_dns ;
+        int cnt = pubnub_dns_read_system_servers_ipv4(&default_dns,1);
+        std::stringstream dns_buffer;
+        // If found system DNS server, then update default PUBNUB dns server with system dns value.
+        if (cnt > 0){
+            dns_buffer<<(unsigned int)default_dns.ipv4[0]<<"."
+            <<(unsigned int)default_dns.ipv4[1]<<"."
+            <<(unsigned int)default_dns.ipv4[2]<<"."
+            <<(unsigned int)default_dns.ipv4[3]<<"\0";
+        }
+        else
+            dns_buffer<<PUBNUB_DEFAULT_DNS_SERVER;
+        return dns_buffer.str();
+    }
+    // Set system default dns to pubnub primary dns
+    int set_system_default_dns(char const* dns_val)
+    {
+        return pubnub_dns_set_primary_server_ipv4_str(dns_val);
     }
     /// Returns the current UUID
     std::string const& uuid() const { return d_uuid; }
