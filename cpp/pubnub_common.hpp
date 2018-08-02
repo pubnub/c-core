@@ -410,8 +410,8 @@ public:
         set_uuid(pubnub_uuid_to_string(&uuid).uuid);
         return 0;
     }
-    // get the system default dns
-    std::string get_system_default_dns()
+    // get the system dns information
+    std::string read_system_dns_servers()
     {
         struct pubnub_ipv4_address default_dns ;
         int cnt = pubnub_dns_read_system_servers_ipv4(&default_dns,1);
