@@ -16,6 +16,7 @@
 #elif PUBNUB_PROXY_API
 #include "core/pubnub_proxy.h"
 #include "core/pbhttp_digest.h"
+#include "core/pubnub_dns_servers.h"
 #endif
 
 #if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
@@ -211,13 +212,26 @@ struct pubnub_ {
 #endif
     } options;
 
+    struct pubnub_flags {
+#if PUBNUB_USE_SSL
+        /** Try to establish TLS/SSL over existing TCP/IP connection: yes/no */
+        bool trySSL : 1;
+#endif
+        /** Should close connection */
+        bool should_close : 1;
+        
+        /** Retry the same Pubnub request after closing current TCP
+            connection.
+        */
+        bool retry_after_close : 1;
+    } flags;
+
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     struct pubnub_keep_alive_data {
         time_t   timeout;
         time_t   t_connect;
         unsigned max;
         unsigned count;
-        bool     should_close;
     } keep_alive;
 #endif
 
@@ -263,6 +277,12 @@ struct pubnub_ {
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
+    /** Proxy IP address, if and when available through hostname string in 'numbers
+        and dots' notation. If proxy IP address is not available structure array is
+        filled with zeros.
+     */
+    struct pubnub_ipv4_address proxy_ip_address;
+
     /** The (TCP) port to use on the proxy. */
     uint16_t proxy_port;
 
@@ -298,12 +318,6 @@ struct pubnub_ {
         avoiding a sort of "endless loop".
     */
     int proxy_authorization_sent;
-
-    /** Retry the same Pubnub request after closing current TCP
-        connection. Currently, this is only used for Proxy authentication,
-        but, if need arises, could be made "general".
-    */
-    int retry_after_close;
 
     /** Data about NTLM authentication */
     struct pbntlm_context ntlm_context;

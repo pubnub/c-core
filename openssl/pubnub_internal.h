@@ -9,6 +9,7 @@
    we find a better solution...
 */
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
@@ -22,8 +23,6 @@
 #include "openssl/bio.h"
 #include "openssl/ssl.h"
 #include "openssl/err.h"
-
-typedef BIO* pb_socket_t;
 
 
 #if defined(__linux__)
@@ -39,14 +38,6 @@ typedef BIO* pb_socket_t;
 #define socket_recv(socket, buf, len, flags)                                   \
     recv((socket), (buf), (len), (flags))
 
-/* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't
-   the greatest solution, but it is good for now.
-*/
-#define socket_would_block()                                                   \
-    ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINPROGRESS))
-
-#define socket_timed_out() (errno == ETIMEDOUT)
-
 /** On Windows, one needs to call WSAStartup(), which is not trivial */
 int socket_platform_init(void);
 
@@ -57,11 +48,45 @@ int socket_platform_init(void);
 
 #define socket_close(socket) close(socket)
 
+/* Treating `EINPROGRESS` the same as `EWOULDBLOCK` isn't
+   the greatest solution, but it is good for now.
+*/
+#define socket_would_block()                                                   \
+    ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINPROGRESS))
+
+#define socket_timed_out() (errno == ETIMEDOUT)
+
+#if __APPLE__
+/* Actually, BSD in general provides SO_NOSIGPIPE, but we don't know
+   what's the status of this support across various BSDs... So, for
+   now, we only do this for MacOS.
+*/
+#define socket_disable_SIGPIPE(socket)                                             \
+    do {                                                                           \
+        int on = 1;                                                                \
+        if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
+            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
+        }                                                                          \
+    } while (0)
 #else
+#define socket_disable_SIGPIPE(socket)
+#endif
+
+#else
+typedef SOCKET pb_socket_t;
 
 #define SOCKET_INVALID INVALID_SOCKET
 
 #define socket_close(socket) closesocket(socket)
+
+#define socket_would_block()                                                   \
+    ((WSAGetLastError() == WSAEWOULDBLOCK)                                     \
+     || (WSAGetLastError() == WSAEINPROGRESS))
+
+#define socket_timed_out() (WSAGetLastError() == WSAETIMEDOUT)
+
+/* Winsock never raises SIGPIPE, so, we're good. */
+#define socket_disable_SIGPIPE(socket)
 
 #endif
 
@@ -78,8 +103,8 @@ int socket_platform_init(void);
 
 /** The Pubnub OpenSSL context */
 struct pubnub_pal {
-    BIO*         socket;
-    pbpal_native_socket_t  dns_socket;
+    pbpal_native_socket_t socket;
+    SSL*         ssl;
     SSL_CTX*     ctx;
     SSL_SESSION* session;
     char         ip[PUBNUB_MAX_IP_ADDR_OCTET_LENGTH];
@@ -116,23 +141,6 @@ int snprintf(char* buffer, size_t n, const char* format, ...);
     } while (0)
 
 #endif /* ifdef _WIN32 */
-
-#if __APPLE__
-/* Actually, BSD in general provides SO_NOSIGPIPE, but we don't know
-   what's the status of this support across various BSDs... So, for
-   now, we only do this for MacOS.
-*/
-#define socket_disable_SIGPIPE(socket)                                             \
-    do {                                                                           \
-        int on = 1;                                                                \
-        if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
-            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
-        }                                                                          \
-    } while (0)
-#else
-#define socket_disable_SIGPIPE(socket)
-#endif
-
 
 /** With OpenSSL, one can set I/O to be blocking or non-blocking,
     though it can only be done before establishing the connection.

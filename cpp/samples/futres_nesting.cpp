@@ -26,77 +26,10 @@ static bool m_done;
 
 
 
-static void on_time(pubnub::context &pb, pubnub_res res)
-{
-    if (PNR_OK ==  res) {
-        std::cout << "Gotten time " << pb.get() << "; last time token="<< pb.last_time_token() << std::endl;
-    }
-    else {
-        std::cout << "Getting time failed!" << std::endl;
-    }
-    // We could go on here, but I've had enough of the "callback hell" :)
-    pubnub::lock_guard lck(m_done_m);
-    m_done = true;
-}
-
-
-static void on_subscribe(pubnub::context &pb, pubnub_res res)
-{
-    if (PNR_OK ==  res) {
-        std::cout << "Subscribed! Got messages:" << std::endl;
-        std::vector<std::string> msg = pb.get_all();
-        for (std::vector<std::string>::iterator it = msg.begin(); it != msg.end(); ++it) {
-            std::cout << *it << std::endl;
-        }
-    }
-    else {
-        std::cout << "Subscribe failed!" << std::endl;
-    }
-    pb.time().then(on_time);
-}
-
-
-static void on_first_subscribe(pubnub::context &pb, pubnub_res res)
-{
-    if (PNR_OK ==  res) {
-        std::cout << "Subscribed!" << std::endl;
-    }
-    else {
-        std::cout << "Subscribe failed!" << std::endl;
-    }
-    pb.subscribe(chan).then(on_subscribe);
-}
-
-
-static void on_published(pubnub::context &pb, pubnub_res res)
-{
-    if (PNR_OK == res) {
-        std::cout << "Published! Response from Pubnub: " << pb.last_publish_result() << std::endl;
-    }
-    else if (PNR_PUBLISH_FAILED == res) {
-        std::cout << "Published failed on Pubnub, description: " << pb.last_publish_result() << std::endl;
-    }
-    else {
-        std::cout << "Publishing failed with code: " << res << std::endl;
-    }
-
-    std::cout << "Subscribing" << std::endl;
-    pb.subscribe(chan).then(on_first_subscribe);
-}
-
-
-/// Here's how to use it in C++98 (without lambdas).  We shall
-/// demonstrate only the functions, not the functional objects, the
-/// only difference being that you could always pass the same
-/// functional object and keep some state in it, if you need to.
-static void cpp98(pubnub::context &pb)
-{
-    std::cout << "Publishing" << std::endl;
-    pb.publish(chan, "\"Hello world from C++!\"").then(on_published);
-}
 
 
 #if __cplusplus >= 201103L
+
 /// Here's how to use it in c++11, with lambdas
 static void cpp11(pubnub::context &ipb)
 {
@@ -160,6 +93,77 @@ static void cpp11(pubnub::context &ipb)
             });
         });
 }
+
+#else
+
+static void on_time(pubnub::context &pb, pubnub_res res)
+{
+    if (PNR_OK ==  res) {
+        std::cout << "Gotten time " << pb.get() << "; last time token="<< pb.last_time_token() << std::endl;
+    }
+    else {
+        std::cout << "Getting time failed!" << std::endl;
+    }
+    // We could go on here, but I've had enough of the "callback hell" :)
+    pubnub::lock_guard lck(m_done_m);
+    m_done = true;
+}
+
+
+static void on_subscribe(pubnub::context &pb, pubnub_res res)
+{
+    if (PNR_OK ==  res) {
+        std::cout << "Subscribed! Got messages:" << std::endl;
+        std::vector<std::string> msg = pb.get_all();
+        for (std::vector<std::string>::iterator it = msg.begin(); it != msg.end(); ++it) {
+            std::cout << *it << std::endl;
+        }
+    }
+    else {
+        std::cout << "Subscribe failed!" << std::endl;
+    }
+    pb.time().then(on_time);
+}
+
+
+static void on_first_subscribe(pubnub::context &pb, pubnub_res res)
+{
+    if (PNR_OK ==  res) {
+        std::cout << "Subscribed!" << std::endl;
+    }
+    else {
+        std::cout << "Subscribe failed!" << std::endl;
+    }
+    pb.subscribe(chan).then(on_subscribe);
+}
+
+
+static void on_published(pubnub::context &pb, pubnub_res res)
+{
+    if (PNR_OK == res) {
+        std::cout << "Published! Response from Pubnub: " << pb.last_publish_result() << std::endl;
+    }
+    else if (PNR_PUBLISH_FAILED == res) {
+        std::cout << "Published failed on Pubnub, description: " << pb.last_publish_result() << std::endl;
+    }
+    else {
+        std::cout << "Publishing failed with code: " << res << std::endl;
+    }
+
+    std::cout << "Subscribing" << std::endl;
+    pb.subscribe(chan).then(on_first_subscribe);
+}
+
+/// Here's how to use it in C++98 (without lambdas).  We shall
+/// demonstrate only the functions, not the functional objects, the
+/// only difference being that you could always pass the same
+/// functional object and keep some state in it, if you need to.
+static void cpp98(pubnub::context &pb)
+{
+    std::cout << "Publishing" << std::endl;
+    pb.publish(chan, "\"Hello world from C++!\"").then(on_published);
+}
+
 #endif
 
 int main()

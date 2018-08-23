@@ -72,7 +72,7 @@ bool pnfntst_timer_is_running(pnfntst_timer_t *t)
 }
 
 
-void pnfntst_free_timer(pnfntst_timer_t *t)
+void pnfntst_free_timer(void* t)
 {
     free(t);
 }

@@ -32,7 +32,7 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
                 PUBNUB_LOG_ERROR(
                     "pubnub_dns_read_system_servers_ipv4():"
                     "- ipv4 'numbers-and-dots' notation string(%s)"
-                    "read from file:'/etc/resolv.conf' is not valid!",
+                    "read from file:'/etc/resolv.conf' is not valid!\n",
                     buffer);
             }
             else {

@@ -12,9 +12,9 @@
 #include <sys/types.h>
 
 
+pubnub_mutex_static_decl_and_init(m_lock);
 static struct pubnub_ipv4_address m_primary_dns_server pubnub_guarded_by(m_lock);
 static struct pubnub_ipv4_address m_secondary_dns_server pubnub_guarded_by(m_lock);
-pubnub_mutex_static_decl_and_init(m_lock);
 
 
 void pubnub_dns_servers_deinit(void)

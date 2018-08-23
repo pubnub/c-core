@@ -90,7 +90,7 @@ void subscribe_callback(pubnub_t*         pb,
         }
         if (PNR_OK == result) {
             paint_text_blue();
-            printf("%sSubscribed! Got messages:", (char*)user_data);
+            printf("%sSubscribed! Got messages:\n", (char*)user_data);
             paint_text_blue();
             for (;;) {
                 msg = pubnub_get(pb);
@@ -277,16 +277,19 @@ int main()
     } while (!first_subscribe_done);
 
     if (!stop) {
+        paint_text_white();
         puts("-----------------------");
         puts("Publishing1...");
         puts("-----------------------");
-        res = pubnub_publish(
-            pbp_2, chan1, "\"[1]Hello world from 'subscribe-publish from callback' sample!\"");
+        res = pubnub_publish(pbp_2,
+                             chan1,
+                             "\"[1]Hello world from 'subscribe-publish from callback' sample!\"");
         if (res != PNR_STARTED) {
             printf("pubnub_publish1() returned unexpected: %d\n", res);
             stop = 1;
         }
     }
+
     wait_seconds(200);
 
     /* We're done, but, if keep-alive is on, we can't free,
@@ -296,7 +299,7 @@ int main()
     sample_free(pbp);
 
     paint_text_white();
-    puts("Pubnub subscribe-publish callback demo over.");
+    puts("Pubnub subscribe-publish callback demo over.\n");
 
     return 0;
 }

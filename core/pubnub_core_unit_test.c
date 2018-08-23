@@ -60,7 +60,7 @@ static int m_j;
 uint8_t string_or_uint8block_mask[10];
 
 /* Awaits given amount of time in seconds */
-static void wait(time_t time_in_seconds)
+static void wait_time_in_seconds(time_t time_in_seconds)
 {
     time_t time_start = time(NULL);
     do {
@@ -74,10 +74,6 @@ static void buf_setup(pubnub_t* pb)
 {
     pb->ptr  = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf;
-    //
-    printf("\n PUBNUB_BUF_MAXLEN= %d\n", PUBNUB_BUF_MAXLEN);
-    printf(" sizeof pb->core.http_buf= %d\n\n", pb->left);
-    //
 }
 
 void pbpal_init(pubnub_t* pb)
@@ -291,9 +287,6 @@ static int my_recv(void* p, size_t n)
     }
     memcpy(p, m_read, to_read);
     m_read += to_read;
-    //
-    printf("\n to_read = %d\n", to_read);
-    //
     return to_read;
 }
 
@@ -580,7 +573,7 @@ Ensure(/*pbjson_parse, */ get_object_value_invalid)
 
     elem.end = elem.start + 13;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
-           equals(jonmpMissingValueSeparator));
+           equals(jonmpValueIncomplete));
 
     elem.end = elem.start + 17;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
@@ -669,7 +662,7 @@ Ensure(/*pbjson_parse, */ incomplete_json)
 {
     char const* json = "{\"some\\key\": \"some\\value\",\"service\": \"xxx\", "
                        "\"error\": true, \"payload\":{\"group\":\"gr\", "
-                       "\"some\\key\": value,\"chan\":[1," /*2,3]}, \"message\":0}"*/;
+                       "\"some\\\\key\": value,\"chan\":[1," /*2,3]}, \"message\":0}"*/;
     struct pbjson_elem elem = { json, json + strlen(json) };
     struct pbjson_elem parsed;
 
@@ -682,11 +675,7 @@ Ensure(/*pbjson_parse, */ incomplete_json)
 
     attest(pbjson_get_object_value(&elem, "service", &parsed), equals(jonmpOK));
     attest(pbjson_elem_equals_string(&parsed, "\"xxx\""), is_true);
-    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpOK));
-    attest(pbjson_elem_equals_string(
-               &parsed,
-               "{\"group\":\"gr\", \"some\\key\": value,\"chan\":[1," /*2,3]}"*/),
-           is_true);
+    attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpValueIncomplete));
 
     char const* json_2 =
         "{\"some\\key\": \"some\\value\",\"service\": \"xxx\", \"erro";
@@ -704,11 +693,7 @@ Ensure(/*pbjson_parse, */ incomplete_json)
                          "\"xxx\", \"error\":tru\0 }";
     elem.start = json_3;
     elem.end   = json_3 + strlen(json_3) + 3;
-    attest(pbjson_get_object_value(&elem, "error", &parsed), equals(jonmpOK));
-    //
-    printf("parsed=%s_\n", parsed.start);
-    //
-    attest(pbjson_elem_equals_string(&parsed, "tru"), is_true);
+    attest(pbjson_get_object_value(&elem, "error", &parsed), equals(jonmpValueIncomplete));
 
     char const* json_4 =
         "{\"some\\key\": \"some\\value\",\"ser\0ice\": \"xxx\"";
@@ -731,9 +716,6 @@ Ensure(/*pbjson_parse, */ gibberish_json)
     attest(pbjson_elem_equals_string(&parsed, "\"some\\value\""), is_true);
 
     attest(pbjson_get_object_value(&elem, "payload", &parsed), equals(jonmpOK));
-    //
-    printf("parsed=%s_\n", parsed.start);
-    //
     attest(pbjson_elem_equals_string(
                &parsed, "{\"group\":\"gr\", \"some\\key\": [{\"chan\":[1,2]}}]"),
            is_true);
@@ -768,9 +750,6 @@ void free_m_msgs(char** msg_array)
         assert(m_string_msg_array[i] != NULL);
         free(m_string_msg_array[i]);
         m_string_msg_array[i] = NULL;
-        //
-        printf("\n free(m_string_msg_array[%d])\n", i);
-        //
     }
 }
 
@@ -3256,7 +3235,7 @@ Ensure(single_context_pubnub, keeps_connection_alive_for_certain_number_of_opera
     attest(pubnub_subscribe(pbp, "civilization", NULL), equals(PNR_OK));
     /* Awaits given number of seconds. If changed to greater value test fails.
      */
-    wait(0);
+    wait_time_in_seconds(0);
 
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
@@ -3277,7 +3256,7 @@ Ensure(single_context_pubnub, keeps_connection_alive_for_certain_number_of_opera
 
     /* Same outcome for any delay between last two operations,
        if one before the last was accomplished within given time interval */
-    wait(0);
+    wait_time_in_seconds(0);
 
     attest(pubnub_last_time_token(pbp), streqs("1516014978925123459"));
 
@@ -3395,7 +3374,7 @@ Ensure(single_context_pubnub, keep_alive_connection_closes_time_runs_out)
     /* Not publish operation */
     attest(pubnub_last_publish_result(pbp), streqs(""));
     /* Time runs out. Connection closes after following operation */
-    wait(1);
+    wait_time_in_seconds(1);
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));

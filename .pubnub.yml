@@ -1,7 +1,21 @@
 name: c-core
-version: 2.4.3
+version: 2.5.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.0
+    changes:
+      - type: feature
+        text: Support HTTPS CONNECT proxy
+      - type: feature
+        text: Can set proxy via IP address and `localhost`
+      - type: feature
+        text: Adhere to Connection: close from server
+      - type: bug
+        text: Possible pointer out of bounds fixed in JSON parser
+      - type: feature
+        text: Functional tests improved, can run concurrently
+      - type: bug
+        text: MacOS build fixed
   - version: v2.4.3
     changes:
       - type: feature

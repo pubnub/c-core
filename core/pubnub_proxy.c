@@ -3,6 +3,7 @@
 
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
+#include "lib/pubnub_parse_ipv4_addr.h"
 
 #include <string.h>
 
@@ -17,6 +18,12 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(ip_address_or_url != NULL);
 
+    if (0 == strcmp("localhost", ip_address_or_url)) {
+        ip_address_or_url = "127.0.0.1";
+    }
+    if(0 != pubnub_parse_ipv4_addr(ip_address_or_url, &(p->proxy_ip_address))) {
+        memset(p->proxy_ip_address.ipv4, 0, sizeof p->proxy_ip_address.ipv4);
+    }
     switch (protocol) {
     case pbproxyHTTP_GET:
     case pbproxyHTTP_CONNECT:

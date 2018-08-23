@@ -37,7 +37,6 @@ int pnfntst_start_timer(pnfntst_timer_t *t, unsigned ms)
     if (tmrRunning == t->state) {
         return -1;
     }
-    printf("===========\nStarting timer for %d ms\n\n", ms);
     t->total_ms = ms;
     t->t0 = time(NULL);
     t->state = tmrRunning;
@@ -75,7 +74,7 @@ bool pnfntst_timer_is_running(pnfntst_timer_t *t)
 }
 
 
-void pnfntst_free_timer(pnfntst_timer_t *t)
+void pnfntst_free_timer(void* t)
 {
     free(t);
 }

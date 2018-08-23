@@ -215,7 +215,7 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(cipher_key != NULL);
     PUBNUB_ASSERT_OPT(s != NULL);
-    PUBNUB_ASSERT_OPT(n > 0);
+    PUBNUB_ASSERT_OPT(n != NULL);
 
     msg = (char*)pubnub_get(pb);
     if (NULL == msg) {

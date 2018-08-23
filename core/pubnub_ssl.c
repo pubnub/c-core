@@ -9,7 +9,7 @@ void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool reduceSecurityOnError
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
-    p->options.useSSL = useSSL;
+    p->options.useSSL = p->flags.trySSL = useSSL;
     p->options.ignoreSSL = reduceSecurityOnError;
     p->options.fallbackSSL = ignoreSecureConnectionRequirement;
 #endif
