@@ -107,8 +107,8 @@ static int run_tests(struct TestData aTest[],
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             printf("Creating a thread for test %d\n", i + 1);
             if (0 != pthread_create(&aTest[i].pth, NULL, aTest[i].pf, &aTest[i].result)) {
-                printf("Failed to create a thread for test %d ('%s'), errno=%d\n",
-                       i+1, aTest[i].name, errno);
+                printf("Failed to create a thread for test %u ('%s'), errno=%d\n",
+                       i+1, aTest[i].name, (int)errno);
             }
         }
         /* This is the simplest way to do it - join all threads, one
@@ -119,13 +119,13 @@ static int run_tests(struct TestData aTest[],
          */
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             if (0 != pthread_join(aTest[i].pth, NULL)) {
-                printf("Failed to join thread for test %d ('%s'), errno=%d\n",
+                printf("Failed to join thread for test %u ('%s'), errno=%d\n",
                        i+1, aTest[i].name, errno);
             }
             switch (aTest[i].result) {
             case trFail:
                 printf(
-                    "\n\x1b[41m !!!!!!! The %d. test ('%s') failed!\x1b[m\n\n",
+                    "\n\x1b[41m !!!!!!! The %u. test ('%s') failed!\x1b[m\n\n",
                     i + 1,
                     aTest[i].name);
                 ++failed_count;
@@ -135,7 +135,7 @@ static int run_tests(struct TestData aTest[],
                 break;
             case trIndeterminate:
                 ++indete_count;
-                printf("\x1b[33m Indeterminate %d. test ('%s') of %d\x1b[m\t",
+                printf("\x1b[33m Indeterminate %u. test ('%s') of %d\x1b[m\t",
                        i + 1,
                        aTest[i].name,
                        test_count);
