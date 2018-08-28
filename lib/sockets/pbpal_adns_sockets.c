@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #define CAST
 #else
+#include <ws2tcpip.h>
 #define CAST (int*)
 #endif
 
@@ -198,9 +199,28 @@ static unsigned char* dns_label_decode(uint8_t*       label,
 }
 
 
+#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_TRACE
+#define TRACE_SOCKADDR(str, addr)                                              \
+    do {                                                                       \
+        char M_h_[50];                                                         \
+        char M_s_[20];                                                         \
+        getnameinfo(addr,                                                      \
+                    sizeof *addr,                                              \
+                    M_h_,                                                      \
+                    sizeof M_h_,                                               \
+                    M_s_,                                                      \
+                    sizeof M_s_,                                               \
+                    NI_NUMERICHOST | NI_NUMERICSERV);                          \
+        PUBNUB_LOG_TRACE(str "%s:%s\n", M_h_, M_s_);                           \
+    } while (0)
+#else
+#define TRACE_SOCKADDR(str, addr)
+#endif
+
+
 int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
 {
-    uint8_t            buf[8192];
+    uint8_t            buf[4096];
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
     uint8_t*           qname = buf + sizeof *dns;
     struct QUESTION*   qinfo;
@@ -212,6 +232,7 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
     dns->q_count   = htons(1);
     dns->ans_count = dns->auth_count = dns->add_count = 0;
 
+    TRACE_SOCKADDR("Sending DNS query to: ", dest);
     dns_qname_encode(qname, sizeof buf - sizeof *dns, host);
 
     qinfo = (struct QUESTION*)(buf + sizeof *dns + strlen((const char*)qname) + 1);
@@ -321,7 +342,7 @@ int main()
     fd_set read_set, write_set;
     int rslt;
     struct timeval timev = { 0, 300000 };
-    
+
     FD_ZERO(&read_set);
     FD_SET(skt, &read_set);
     rslt = select(skt + 1, &read_set, NULL, NULL, &timev);

@@ -31,6 +31,20 @@ enum pbpal_resolv_n_connect_result {
     pbpal_connect_success
 };
 
+/** Results that functions for establishing TLS connection
+    can return.
+*/
+enum pbpal_tls_result {
+    pbtlsEstablished,
+    pbtlsStarted,
+    pbtlsInProgress,
+    pbtlsResourceFailure,
+    pbtlsFailed
+};
+
+/* Handles socket condition on given platform */
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb);
+
 /** Handles start of a TCP (HTTP) connection. It first handles DNS
     resolving for the context @p pb.  If DNS is already resolved, it
     proceeds to establishing TCP connection. Otherwise, will issue a
@@ -60,6 +74,20 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb);
     wasn't done synchronously during pbpal_resolve_and_connect().
 */
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb);
+
+/** Checks whether a TCP connection is established. Call after
+    starting a TCP connection (thus, after DNS resolution is over).
+*/
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb);
+
+/** Starts establishing TLS/SSL over existing TCP/IP connection
+*/
+enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb);
+
+/** Called after 'pbpal_start_tls()'. Does necessary arrangements called repeatedly, if necessary,
+    until TLS/SSL platform connection is established, or failed to establish. 
+*/
+enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb);
 
 /** Sends data over an established connection (with the Pubnub server).
     At one time, only one sending of data can take place.
@@ -188,11 +216,6 @@ void pbpal_forget(pubnub_t *pb);
     later to check; -1: error, can't close socket
 */
 int pbpal_close(pubnub_t *pb);
-
-/** Checks whether a TCP connection is established. Call after
-    starting a TCP connection (thus, after DNS resolution is over).
-*/
-enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb);
 
 /** Sets blocking I/O option on the context for the communication */
 int pbpal_set_blocking_io(pubnub_t *pb);

@@ -33,6 +33,7 @@
 #define TEST_DEF(tst)                                                          \
     unsigned __stdcall pnfn_test_##tst(void* pResult)                          \
     {                                                                          \
+        char const* const this_test_name_ = #tst;                              \
         TEST_BEGIN();
 
 #define TEST_END()                                                             \
@@ -187,6 +188,14 @@
             (rslt1), (rslt2), M_t_, (pbp1), (exp_rslt1), (pbp2), (exp_rslt2)); \
         TEST_POP_DEFERRED;                                                     \
     } while (0)
+
+
+#define expect_PNR_OK(pbp, trans, timeout)                                     \
+    do {                                                                       \
+        enum pubnub_res M_rslt_ = trans;                                       \
+        expect_pnr_maybe_started(M_rslt_, pbp, timeout, PNR_OK);               \
+    } while (0)
+
 
 #define await_console()                                                        \
     do {                                                                       \

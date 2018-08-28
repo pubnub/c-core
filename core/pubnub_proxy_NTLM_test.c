@@ -528,7 +528,7 @@ static inline void expect_first_outgoing_GET(const char* url)
 {   
     expect("pbpal_send", pbp, "GET ", 0);
     expect("pbpal_send_status", pbp, "", 0);
-	expect("pbpal_send", pbp, "http://", 0);
+	expect("pbpal_send_str", pbp, "http://", 0);
 	expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
 	expect("pbpal_send_status", pbp, "", 0);
@@ -550,7 +550,7 @@ static inline void expect_first_outgoing_CONNECT(void)
 	expect("pbpal_send_status", pbp, "", 0);
 	expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
 	expect("pbpal_send_status", pbp, "", 0);
-	expect("pbpal_send", pbp, ":80", 0);
+	expect("pbpal_send_str", pbp, ":80", 0);
 	expect("pbpal_send_status", pbp, "", 0);
 	expect("pbpal_send", pbp, " HTTP/1.1\r\nHost: ", 0);
 	expect("pbpal_send_status", pbp, "", 0);
@@ -567,7 +567,7 @@ static inline void expect_outgoing_with_encoded_credentials_GET(char const *url,
 {
     expect("pbpal_send", pbp, "GET ", 0);
     expect("pbpal_send_status", pbp, "", 0);
-	expect("pbpal_send", pbp, "http://", 0);
+	expect("pbpal_send_str", pbp, "http://", 0);
 	expect("pbpal_send_status", pbp, "", 0);
 	expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
 	expect("pbpal_send_status", pbp, "", 0);
@@ -592,7 +592,7 @@ static inline void expect_outgoing_with_encoded_credentials_CONNECT(char const *
 	expect("pbpal_send_status", pbp, "", 0);
 	expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
 	expect("pbpal_send_status", pbp, "", 0);
-	expect("pbpal_send", pbp, ":80", 0);
+	expect("pbpal_send_str", pbp, ":80", 0);
 	expect("pbpal_send_status", pbp, "", 0);
 	expect("pbpal_send", pbp, " HTTP/1.1\r\nHost: ", 0);
 	expect("pbpal_send_status", pbp, "", 0);

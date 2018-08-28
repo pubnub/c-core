@@ -50,7 +50,17 @@ bool pnfntst_got_messages(pubnub_t *p, ...)
             }
         }
     }
+
+    if (missing) {
+        printf("got messages: missing bitmap: %X\n", missing);
+    }
     return !missing;
+}
+
+
+static bool eqstr(char const* s, char const* s2)
+{
+    return ((NULL == s) && (NULL == s2)) || (strcmp(s, s2) == 0);
 }
 
 
@@ -71,7 +81,11 @@ bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const
 }
 
 
-bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*chgroup, unsigned ms, ...)
+bool pnfntst_subscribe_and_check(pubnub_t*   p,
+                                 char const* channel,
+                                 char const* chgroup,
+                                 unsigned    ms,
+                                 ...)
 {
     char const *aMsgs[16];
     char const *aChan[16];
@@ -89,16 +103,13 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
             break;
         }
         aMsgs[count] = msg;
-        msg = va_arg(vl, char*);
-        if (NULL == msg) {
-            return false;
-        }
-        aChan[count] = msg;
+        aChan[count] = va_arg(vl, char*);
         ++count;
     }
     va_end(vl);
 
     if ((0 == count) || (count > 16)) {
+        printf("subscribe and check: number of messages out of range: %d\n", (int)count);
         return false;
     }
     
@@ -122,7 +133,8 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
             printf("subscribe and check: subscribe error %d\n", pbres);
             break;
         }
-        } else if (pbres != PNR_OK) {
+        }
+        else if (pbres != PNR_OK) {
             puts("subscribe and check: subscribe failed");
             break;
         }
@@ -130,13 +142,12 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
             size_t i;
             char const *msg = pubnub_get(p);
             char const *chan = pubnub_get_channel(p);
-            if ((NULL == msg) || (NULL == chan)) {
+            if (NULL == msg) {
                 break;
             }
             for (i = 0; i < count; ++i) {
                 if ((missing & (0x01 << i)) && (strcmp(msg, aMsgs[i]) == 0)
-                    && (strcmp(chan, aChan[i]) == 0)
-                    ) {
+                    && eqstr(chan, aChan[i])) {
                     missing &= ~(0x01 << i);
                     break;
                 }
@@ -146,14 +157,52 @@ bool pnfntst_subscribe_and_check(pubnub_t *p, char const *channel, char const*ch
     
     pnfntst_free_timer(tmr);
     
+    if (missing) {
+        printf("subscribe and check: missing bitmap: %X\n", missing);
+    }
+
     return !missing;
 }
 
-void pnfntst_free(pubnub_t *p)
+
+void pnfntst_free(void* p)
 {
-    pubnub_cancel(p);
-    pubnub_await(p);
-    if (pubnub_free(p) != 0) {
+    pubnub_t* pbp = p;
+    if (pbp != NULL) {
+        pubnub_cancel(pbp);
+        pubnub_await(pbp);
+        if (pubnub_free(pbp) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
+    }
+}
+
+
+pubnub_t* pnfntst_create_ctx(void)
+{
+    pubnub_t* pbp = pubnub_alloc();
+    if (pbp != NULL) {
+        pubnub_init(pbp, g_pubkey, g_keysub);
+        pubnub_origin_set(pbp, g_origin);
+    }
+
+    return pbp;
+}
+
+/** See
+    https://support.pubnub.com/support/solutions/articles/14000043769-what-are-valid-channel-names-
+*/
+#define MAX_PUBNUB_CHAN_NAME 92
+
+
+char* pnfntst_make_name(char const* s)
+{
+    unsigned grn  = rand();
+    char*    rslt = malloc(MAX_PUBNUB_CHAN_NAME);
+    if (NULL == rslt) {
+        return rslt;
+    }
+    snprintf(rslt, MAX_PUBNUB_CHAN_NAME, "%s_%X", s, grn);
+
+    return rslt;
 }

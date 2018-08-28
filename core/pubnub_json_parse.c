@@ -4,7 +4,7 @@
 #include <string.h>
 
 
-char const* pbjson_skip_whitespace(char const *start, char const *end)
+char const* pbjson_skip_whitespace(char const* start, char const* end)
 {
     for (; start < end; ++start) {
         switch (*start) {
@@ -21,7 +21,7 @@ char const* pbjson_skip_whitespace(char const *start, char const *end)
 }
 
 
-char const* pbjson_find_end_string(char const *start, char const *end)
+char const* pbjson_find_end_string(char const* start, char const* end)
 {
     bool in_escape = false;
 
@@ -47,7 +47,7 @@ char const* pbjson_find_end_string(char const *start, char const *end)
 }
 
 
-char const *pbjson_find_end_primitive(char const *start, char const *end)
+char const* pbjson_find_end_primitive(char const* start, char const* end)
 {
     for (; start < end; ++start) {
         switch (*start) {
@@ -58,7 +58,7 @@ char const *pbjson_find_end_primitive(char const *start, char const *end)
         case ',':
         case '}':
         case ']':
-            return start-1;
+            return start - 1;
         case '\0':
             return start;
         default:
@@ -69,12 +69,12 @@ char const *pbjson_find_end_primitive(char const *start, char const *end)
 }
 
 
-char const *pbjson_find_end_complex(char const *start, char const *end)
+char const* pbjson_find_end_complex(char const* start, char const* end)
 {
-    bool in_string = false, in_escape = false;
-    int bracket_level = 0, brace_level = 0;
-    char c;
-    char const *s;
+    bool        in_string = false, in_escape = false;
+    int         bracket_level = 0, brace_level = 0;
+    char        c;
+    char const* s;
 
     for (s = start, c = *s; (c != '\0') && (s < end); ++s, c = *s) {
         if (!in_string) {
@@ -124,25 +124,28 @@ char const *pbjson_find_end_complex(char const *start, char const *end)
 }
 
 
-char const *pbjson_find_end_element(char const *start, char const *end)
+char const* pbjson_find_end_element(char const* start, char const* end)
 {
     switch (*start) {
     case '"':
-        return pbjson_find_end_string(start+1, end);
+        return pbjson_find_end_string(start + 1, end);
     case '{':
     case '[':
         return pbjson_find_end_complex(start, end);
     default:
-        return pbjson_find_end_primitive(start+1, end);
+        return pbjson_find_end_primitive(start + 1, end);
     }
 }
 
 
-enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem const *p, char const *name, struct pbjson_elem *parsed)
+enum pbjson_object_name_parse_result
+pbjson_get_object_value(struct pbjson_elem const* p,
+                        char const*               name,
+                        struct pbjson_elem*       parsed)
 {
-    char const *s = pbjson_skip_whitespace(p->start, p->end);
-    unsigned name_len = strlen(name);
-    char const *end;
+    char const* s        = pbjson_skip_whitespace(p->start, p->end);
+    unsigned    name_len = strlen(name);
+    char const* end;
 
     if (0 == name_len) {
         return jonmpInvalidKeyName;
@@ -152,36 +155,42 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
     }
     while (s < p->end) {
         bool found = false;
-        s = pbjson_skip_whitespace(s+1, p->end);
+        s          = pbjson_skip_whitespace(s + 1, p->end);
         if (s == p->end) {
             return jonmpKeyMissing;
         }
         if (*s != '"') {
             return jonmpKeyNotString;
         }
-        end = pbjson_find_end_string(s+1, p->end);
+        end = pbjson_find_end_string(s + 1, p->end);
         if (end == p->end) {
             return jonmpStringNotTerminated;
         }
         if (*end != '"') {
             return jonmpStringNotTerminated;
         }
-        found = (end-s-1 == name_len) && (0 == memcmp(s+1, name, name_len));
-        s = pbjson_skip_whitespace(end+1, p->end);
+        found = (end - s - 1 == name_len) && (0 == memcmp(s + 1, name, name_len));
+        s     = pbjson_skip_whitespace(end + 1, p->end);
         if (s == p->end) {
             return jonmpMissingColon;
         }
         if (*s != ':') {
             return jonmpMissingColon;
         }
-        s = pbjson_skip_whitespace(s+1, p->end);
+        s   = pbjson_skip_whitespace(s + 1, p->end);
         end = pbjson_find_end_element(s, p->end);
+        if (end == p->end) {
+            return jonmpValueIncomplete;
+        }
+        if ('\0' == *end) {
+            return jonmpValueIncomplete;
+        }
         if (found) {
             parsed->start = s;
-            parsed->end = end+1;
+            parsed->end   = end + 1;
             return jonmpOK;
         }
-        s = pbjson_skip_whitespace(end+1, p->end);
+        s = pbjson_skip_whitespace(end + 1, p->end);
         if (*s != ',') {
             if (*s == '}') {
                 break;
@@ -194,9 +203,9 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem 
 }
 
 
-bool pbjson_elem_equals_string(struct pbjson_elem const *e, char const *s)
+bool pbjson_elem_equals_string(struct pbjson_elem const* e, char const* s)
 {
-    char const *p;
+    char const* p;
     for (p = e->start; p != e->end; ++p, ++s) {
         if (*p != *s) {
             return false;
@@ -206,19 +215,30 @@ bool pbjson_elem_equals_string(struct pbjson_elem const *e, char const *s)
 }
 
 
-char const *pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e)
+char const* pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e)
 {
     switch (e) {
-    case jonmpNoStartCurly: return "No Start Curly";
-    case jonmpKeyMissing: return "Key Missing";
-    case jonmpKeyNotString: return "Key Not String";
-    case jonmpStringNotTerminated: return "String Not Terminated";
-    case jonmpMissingColon: return "Missing Colon";
-    case jonmpObjectIncomplete: return "Object Incomplete";
-    case jonmpMissingValueSeparator: return "Missing Value Separator";
-    case jonmpKeyNotFound: return "Key Not Found";
-    case jonmpInvalidKeyName: return "Invalid Key Name";
-    case jonmpOK: return "OK";
-    default: return "?!?";
+    case jonmpNoStartCurly:
+        return "No Start Curly";
+    case jonmpKeyMissing:
+        return "Key Missing";
+    case jonmpKeyNotString:
+        return "Key Not String";
+    case jonmpStringNotTerminated:
+        return "String Not Terminated";
+    case jonmpMissingColon:
+        return "Missing Colon";
+    case jonmpObjectIncomplete:
+        return "Object Incomplete";
+    case jonmpMissingValueSeparator:
+        return "Missing Value Separator";
+    case jonmpKeyNotFound:
+        return "Key Not Found";
+    case jonmpInvalidKeyName:
+        return "Invalid Key Name";
+    case jonmpOK:
+        return "OK";
+    default:
+        return "?!?";
     }
 }

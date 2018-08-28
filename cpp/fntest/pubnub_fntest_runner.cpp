@@ -82,7 +82,7 @@ static unsigned m_running_tests;
 /// The "real main" function to run all the tests.  Each test will run
 /// in its own thread, so that they can run in parallel, if we want
 /// them to.
-static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, char const *pubkey, char const *keysub, char const *origin)
+static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, std::string& pubkey, std::string& keysub, std::string& origin)
 {
     unsigned next_test = 0;
     std::vector<unsigned> failed;
@@ -103,7 +103,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
             runners[i-next_test] = std::thread([i, pubkey, keysub, origin, aTest] {
                     try {
                         std::this_thread::sleep_for(std::chrono::seconds(1));
-                        aTest[i].pf(pubkey, keysub, origin);
+                        aTest[i].pf(pubkey.c_str(), keysub.c_str(), origin.c_str());
                         {
                             std::lock_guard<std::mutex>  lk(m_mtx);
                             --m_running_tests;
@@ -165,14 +165,19 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
 }
 
 
+std::string getenv_ex(char const *env, char const *dflt)
+{
+    char const* s = getenv(env);
+    return (NULL == s) ? dflt : s;
+}
+
+
 int main(int argc, char *argv[])
 {
-    char const *pubkey = (argc > 1) ? argv[1] : "demo";
-    char const *keysub = (argc > 2) ? argv[2] : "demo";
-    char const *origin = (argc > 3) ? argv[3] : "pubsub.pubnub.com";
+    std::string pubkey = getenv_ex("PUBNUB_PUBKEY", (argc > 1) ? argv[1] : "demo");
+    std::string keysub = getenv_ex("PUBNUB_KEYSUB", (argc > 2) ? argv[2] : "demo");
+    std::string origin = getenv_ex("PUBNUB_ORIGIN", (argc > 3) ? argv[3] : "pubsub.pubnub.com");
     unsigned max_conc_thread = (argc > 4) ? std::atoi(argv[4]) : 1;
-
-    std::cout << "Using: pubkey == " << pubkey << ", keysub == " << keysub << ", orign: " << origin << std::endl;
 
     return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
 }

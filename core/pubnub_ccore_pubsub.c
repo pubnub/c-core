@@ -68,6 +68,21 @@ int pbcc_realloc_reply_buffer(struct pbcc_context* p, unsigned bytes)
 }
 
 
+bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
+{
+#if PUBNUB_DYNAMIC_REPLY_BUFFER
+    if (NULL == p->http_reply) {
+        /* Need just one byte for string end */ 
+        p->http_reply = (char*)malloc(1);
+        if (NULL == p->http_reply) {
+           return false;
+        }
+    }
+#endif
+    return true;
+}
+
+
 char const* pbcc_get_msg(struct pbcc_context* pb)
 {
     if (pb->msg_ofs < pb->msg_end) {

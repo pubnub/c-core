@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_JSON_PARSE
-#define      INC_PUBNUB_JSON_PARSE
+#define INC_PUBNUB_JSON_PARSE
 
 #include <stdbool.h>
 
 
-/** @file pubnub_json_parse.h 
+/** @file pubnub_json_parse.h
 
     A bunch of functions for parsing JSON. These are designed for
     internal use by the Pubnub client, but, since they are rather
@@ -18,10 +18,10 @@
 struct pbjson_elem {
     /** The start of the element - pointer to the first
         character. */
-    char const *start;
+    char const* start;
     /** The end of the element - pointer to the character
         _after_ the last character */
-    char const *end;
+    char const* end;
 };
 
 
@@ -46,6 +46,13 @@ enum pbjson_object_name_parse_result {
     jonmpKeyNotFound,
     /** The name of the key is empty or otherwise not valid */
     jonmpInvalidKeyName,
+    /** Value in an object is incomplete. Something like:
+
+        {"zec": [1,
+
+        There's no ending of the array in the value for the key "zec".
+    */
+    jonmpValueIncomplete,
     /** Parsed OK, JSON (object) is valid */
     jonmpOK
 };
@@ -58,7 +65,7 @@ enum pbjson_object_name_parse_result {
     @return Pointer to the first character that is not whitespace.
     It is == @p end if the whole input is skipped.
  */
-char const* pbjson_skip_whitespace(char const *start, char const *end);
+char const* pbjson_skip_whitespace(char const* start, char const* end);
 
 
 /** Finds the end of the string starting from @p start, until @p end.
@@ -73,8 +80,8 @@ char const* pbjson_skip_whitespace(char const *start, char const *end);
     of string from input.  It is == @p end if the end of the string
     was not found in input.
 */
-    
-char const* pbjson_find_end_string(char const *start, char const *end);
+
+char const* pbjson_find_end_string(char const* start, char const* end);
 
 
 /** Finds the end of the "primitive" value starting from @p start,
@@ -90,7 +97,7 @@ char const* pbjson_find_end_string(char const *start, char const *end);
     It is == @p end if the end of the primitive was not found in
     input.
  */
-char const *pbjson_find_end_primitive(char const *start, char const *end);
+char const* pbjson_find_end_primitive(char const* start, char const* end);
 
 
 /** Finds the end of the "complex" value starting from @p start, until
@@ -104,7 +111,7 @@ char const *pbjson_find_end_primitive(char const *start, char const *end);
     It is == @p end if the end of the complex was not found in
     input.
  */
-char const *pbjson_find_end_complex(char const *start, char const *end);
+char const* pbjson_find_end_complex(char const* start, char const* end);
 
 
 /** Finds the end of the JSON element starting from @p start, until
@@ -118,7 +125,7 @@ char const *pbjson_find_end_complex(char const *start, char const *end);
     It is == @p end if the end of the element was not found in
     input.
  */
-char const *pbjson_find_end_element(char const *start, char const *end);
+char const* pbjson_find_end_element(char const* start, char const* end);
 
 
 /** Gets the value from a JSON object from @p p, with the key @p name
@@ -126,18 +133,22 @@ char const *pbjson_find_end_element(char const *start, char const *end);
     returns the error code and the effects on @p parsed are not
     defined.
 */
-enum pbjson_object_name_parse_result pbjson_get_object_value(struct pbjson_elem const *p, char const *name, struct pbjson_elem *parsed);
+enum pbjson_object_name_parse_result
+pbjson_get_object_value(struct pbjson_elem const* p,
+                        char const*               name,
+                        struct pbjson_elem*       parsed);
 
 
 /** Helper function, returns whether string @p s is equal to the
     contents of the JSON element @p e.
 */
-bool pbjson_elem_equals_string(struct pbjson_elem const *e, char const *s);
+bool pbjson_elem_equals_string(struct pbjson_elem const* e, char const* s);
 
 /** Helper function, returns a string describing an enum for
     the JSON (object) parse result.
  */
-char const *pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e);
+char const*
+pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e);
 
 
 #endif /* !defined INC_PUBNUB_JSON_PARSE */

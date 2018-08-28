@@ -149,6 +149,13 @@ void pbcc_deinit(struct pbcc_context* p);
 */
 int pbcc_realloc_reply_buffer(struct pbcc_context* p, unsigned bytes);
 
+/** Ensures existence of reply buffer in the C core context @p p
+    in special cases when no: 'Content-Length:', nor 'Transfer-Encoding: chunked'
+    header line has been received.       
+    @return true: OK(at least one byte allocated), false: otherwise
+*/
+bool pbcc_ensure_reply_buffer(struct pbcc_context* p);
+
 /** Returns the next message from the Pubnub C Core context. NULL if
     there are no (more) messages
 */

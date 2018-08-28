@@ -28,11 +28,11 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
         /* Reads new line */
         fgets(buffer, sizeof buffer, fp);
         if (strncmp(buffer, "nameserver", 10) == 0) {
-            if (pubnub_parse_ipv4_addr(buffer + 10, &o_ipv4[i]) == 0) {
+            if (pubnub_parse_ipv4_addr(buffer + 10, &o_ipv4[i]) != 0) {
                 PUBNUB_LOG_ERROR(
                     "pubnub_dns_read_system_servers_ipv4():"
                     "- ipv4 'numbers-and-dots' notation string(%s)"
-                    "read from file:'/etc/resolv.conf' is not valid!",
+                    "read from file:'/etc/resolv.conf' is not valid!\n",
                     buffer);
             }
             else {

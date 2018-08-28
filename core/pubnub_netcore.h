@@ -29,8 +29,12 @@ enum pubnub_state {
     PBS_WAIT_DNS_RCV,
     /** Waiting for TCP connection establishment */
     PBS_WAIT_CONNECT,
-    /** TCP connected, can start */
+    /** TCP connected */
     PBS_CONNECTED,
+#if PUBNUB_USE_SSL
+    /** Waiting for TLS connection establishment */
+    PBS_WAIT_TLS_CONNECT,
+#endif
     /** Sending HTTP "GET" */
     PBS_TX_GET,
     /** Sending the path (part of the URL) */

@@ -241,7 +241,7 @@ int main()
     pubnub_init(pbp, "demo", "demo");
     pubnub_register_callback(pbp, sample_callback, &user_data);
 
-    pubnub_set_transaction_timeout(pbp, 3 * PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
+    pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
     generate_uuid(pbp);
 

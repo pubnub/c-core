@@ -10,7 +10,7 @@
 #include "core/pbpal.h"
 
 #include <ctype.h>
-
+#include <string.h>
 
 pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key)
 {
@@ -53,6 +53,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_PROXY_API
     p->proxy_type               = pbproxyNONE;
     p->proxy_hostname[0]        = '\0';
+    memset(&(p->proxy_ip_address), 0, sizeof p->proxy_ip_address);
     p->proxy_tunnel_established = false;
     p->proxy_port               = 80;
     p->proxy_auth_scheme        = pbhtauNone;
