@@ -118,7 +118,7 @@ void pbpal_init(pubnub_t* pb)
     pal_init();
     memset(&pb->pal, 0, sizeof pb->pal);
     pb->pal.socket = SOCKET_INVALID;
-    pb->options.useSSL = pb->flags.trySSL = pb->options.fallbackSSL = pb->options.ignoreSSL = true;
+    pb->options.useSSL = pb->flags.trySSL = pb->options.fallbackSSL = true;
     pb->options.use_system_certificate_store = false;
     pb->options.reuse_SSL_session            = false;
     pb->ssl_CAfile = pb->ssl_CApath = NULL;

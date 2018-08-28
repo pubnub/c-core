@@ -73,15 +73,10 @@ public:
         /// Should the PubNub client establish the connection to
         /// PubNub using SSL? (default: YES)
         useSSL = 0x01,
-        /// When SSL is enabled, should PubNub client ignore all SSL
-        /// certificate-handshake issues and still continue in SSL
-        /// mode if it experiences issues handshaking across local
-        /// proxies, firewalls, etc? (default: YES)
-        reduceSecurityOnError = 0x02,
         /// When SSL is enabled, should the client fallback to a
         /// non-SSL connection if it experiences issues handshaking
         /// across local proxies, firewalls, etc? (default: YES)
-        ignoreSecureConnectionRequirement = 0x04
+        ignoreSecureConnectionRequirement = 0x02
     };
 
     Q_DECLARE_FLAGS(ssl_opts, ssl_opt)
