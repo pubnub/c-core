@@ -263,9 +263,6 @@ int pbpal_send_status(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
 
     if (NULL == ssl) {
-//
-        printf("%*s", pb->len, (char*)pb->ptr);
-//
         rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     }
     else { 
