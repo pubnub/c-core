@@ -13,7 +13,7 @@ changelog:
       - type: feature
         text: Can set proxy via IP address and `localhost`
       - type: feature
-        text: Adhere to Connection: close from server
+        text: Adhere to Connection&#58; close from server
       - type: bug
         text: Possible pointer out of bounds fixed in JSON parser
       - type: feature
