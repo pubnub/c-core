@@ -1,7 +1,11 @@
 name: c-core
-version: 2.5.0
+version: 2.5.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.1
+    changes:
+      - type: feature
+        text: Removed (unused) option to ignore TLS/SSL errors
   - version: v2.5.0
     changes:
       - type: feature

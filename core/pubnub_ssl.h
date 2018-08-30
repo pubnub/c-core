@@ -26,17 +26,12 @@
     @param useSSL Should the PubNub client establish the connection to
     PubNub using SSL? (default: YES)
 
-    @param reduceSecurityOnError When SSL is enabled, should PubNub
-    client ignore all SSL certificate-handshake issues and still
-    continue in SSL mode if it experiences issues handshaking across
-    local proxies, firewalls, etc? (default: YES)
-
     @param ignoreSecureConnectionRequirement When SSL is enabled,
     should the client fallback to a non-SSL connection if it
     experiences issues handshaking across local proxies, firewalls,
     etc? (default: YES)
 */
-void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool reduceSecurityOnError, bool ignoreSecureConnectionRequirement);
+void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool ignoreSecureConnectionRequirement);
 
 /** Sets the option to reuse the SSL session on a new connection to
     @p reuse on the context @p p.

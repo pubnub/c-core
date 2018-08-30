@@ -194,12 +194,6 @@ struct pubnub_ {
 
          * PubNub using SSL? */
         bool useSSL : 1;
-        /** When SSL is enabled, should PubNub client ignore all SSL
-         * certificate-handshake issues and still continue in SSL mode
-         * if it experiences issues handshaking across local proxies,
-         * firewalls, etc?
-         */
-        bool ignoreSSL : 1;
         /** When SSL is enabled, should the client fallback to a
          * non-SSL connection if it experiences issues handshaking
          * across local proxies, firewalls, etc?
