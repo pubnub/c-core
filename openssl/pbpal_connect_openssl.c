@@ -138,7 +138,7 @@ static int add_pubnub_cert(SSL_CTX* sslCtx)
 
 static void add_certs(pubnub_t* pb)
 {
-    PUNBUB_LOG_TRACE(
+    PUBNUB_LOG_TRACE(
         "add_certs(pb=%p): pb->options.use_system_certificate_store=%d, "
         "pb->ssl_userPEMcert=%p, pb->ssl_CAfile='%s', pb->ssl_CApath='%s'.\n",
         pb,
