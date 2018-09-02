@@ -138,6 +138,15 @@ static int add_pubnub_cert(SSL_CTX* sslCtx)
 
 static void add_certs(pubnub_t* pb)
 {
+    PUBNUB_LOG_TRACE(
+        "add_certs(pb=%p): pb->options.use_system_certificate_store=%d, "
+        "pb->ssl_userPEMcert=%p, pb->ssl_CAfile='%s', pb->ssl_CApath='%s'.\n",
+        pb,
+        pb->options.use_system_certificate_store,
+        pb->ssl_userPEMcert,
+        pb->ssl_CAfile,
+        pb->ssl_CApath);
+
     if (pb->options.use_system_certificate_store
         && (0 == pbpal_add_system_certs(pb))) {
         return;
@@ -201,45 +210,49 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         }
     }
 
-	return pbpal_check_tls(pb);
+    return pbpal_check_tls(pb);
 }
 
-/** Called after 'pbpal_start_tls()'. Does necessary arrangements called repeatedly, if necessary,
-    until TLS/SSL platform connection is established, or failed to establish. 
+/** Called after 'pbpal_start_tls()'. Does necessary arrangements called
+   repeatedly, if necessary, until TLS/SSL platform connection is established,
+   or failed to establish.
 */
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 {
     SSL* ssl;
-    int rslt;
+    int  rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((PBS_CONNECTED == pb->state) || (PBS_WAIT_TLS_CONNECT == pb->state));
+    PUBNUB_ASSERT_OPT((PBS_CONNECTED == pb->state)
+                      || (PBS_WAIT_TLS_CONNECT == pb->state));
     PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     ssl = pb->pal.ssl;
     PUBNUB_ASSERT(NULL != ssl);
 
     rslt = SSL_connect(ssl);
     rslt = pbpal_handle_socket_condition(rslt, pb);
-    if(PNR_OK != rslt) {
+    if (PNR_OK != rslt) {
         return (rslt == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
     }
     PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
-    if(SSL_get_peer_certificate(ssl) != NULL) {
+    if (SSL_get_peer_certificate(ssl) != NULL) {
         rslt = SSL_get_verify_result(ssl);
         if (rslt != X509_V_OK) {
-            PUBNUB_LOG_WARNING("pb=%p: SSL_get_verify_result() failed == %d(%s)\n",
-                               pb,
-                               rslt,
-                               X509_verify_cert_error_string(rslt));
+            PUBNUB_LOG_WARNING(
+                "pb=%p: SSL_get_verify_result() failed == %d(%s)\n",
+                pb,
+                rslt,
+                X509_verify_cert_error_string(rslt));
             ERR_print_errors_cb(print_to_pubnub_log, NULL);
 
             return pbtlsFailed;
         }
     }
     else {
-        PUBNUB_LOG_WARNING("pb=%p: SSL -the peer certificate was not presented.\n-", pb);
+        PUBNUB_LOG_WARNING(
+            "pb=%p: SSL -the peer certificate was not presented.\n-", pb);
     }
 
     if (pb->options.reuse_SSL_session) {
