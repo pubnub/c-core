@@ -141,6 +141,7 @@ int pubnub_free(pubnub_t* pb)
     PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
 
     pubnub_mutex_lock(pb->monitor);
+    pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
         PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
         pb->state = PBS_NULL;

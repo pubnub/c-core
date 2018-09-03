@@ -1,7 +1,13 @@
 name: c-core
-version: 2.5.1
+version: 2.5.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.2
+    changes:
+      - type: feature
+        text: pubnub_free() now implies pubnub_cancel()
+      - type: feature
+        text: pubnub_cancel() will now call pbnc_fsm() in the sync interface. Combined with previous, this makes it possible to call pubnub_free() in sync interface and have it succeed even if transaction is ongoing.
   - version: v2.5.1
     changes:
       - type: feature

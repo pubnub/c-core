@@ -24,15 +24,15 @@
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
 /* 'Accept-Encoding' header line */
 #define ACCEPT_ENCODING "Accept-Encoding: gzip\r\n"
-#define possible_gzip_response(pb)                    \
-    if ((pb)->data_compressed == compressionGZIP) {   \
-        pbres                 = pbgzip_decompress(pb);\
-        (pb)->data_compressed = compressionNONE;      \
-        if (PNR_OK != pbres) {                        \
-            outcome_detected((pb), pbres);            \
-            return pbres;                             \
-        }                                             \
-    }                                                 
+#define possible_gzip_response(pb)                                             \
+    if ((pb)->data_compressed == compressionGZIP) {                            \
+        pbres                 = pbgzip_decompress(pb);                         \
+        (pb)->data_compressed = compressionNONE;                               \
+        if (PNR_OK != pbres) {                                                 \
+            outcome_detected((pb), pbres);                                     \
+            return pbres;                                                      \
+        }                                                                      \
+    }
 #else
 #define ACCEPT_ENCODING ""
 #define possible_gzip_response(pb)
@@ -211,7 +211,7 @@ static enum pubnub_res finish(struct pubnub_* pb)
 #endif
     /* Ensures existence of the reply buffer in case no:
        'Content-Length:', nor 'Transfer-Encoding: chunked'
-       header line has been received       
+       header line has been received
     */
     if (!pbcc_ensure_reply_buffer(&pb->core)) {
         outcome_detected(pb, PNR_REPLY_TOO_BIG);
@@ -321,7 +321,7 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
-        pb->flags.retry_after_close  = false;
+        pb->flags.retry_after_close = false;
 #if PUBNUB_PROXY_API
         pb->proxy_tunnel_established = false;
         pb->proxy_saved_path_len     = 0;
@@ -340,7 +340,7 @@ next_state:
         break;
     case PBS_RETRY:
         pb->flags.retry_after_close = false;
-        pb->state             = PBS_READY;
+        pb->state                   = PBS_READY;
         goto next_state;
     case PBS_READY: {
         enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
@@ -460,9 +460,10 @@ next_state:
         pb->keep_alive.count     = 0;
 #endif
 #if PUBNUB_PROXY_API
-        if ((pbproxyHTTP_CONNECT == pb->proxy_type) && (!pb->proxy_tunnel_established)) {
+        if ((pbproxyHTTP_CONNECT == pb->proxy_type)
+            && (!pb->proxy_tunnel_established)) {
             pb->state = PBS_TX_GET;
-            i = pbpal_send_literal_str(pb, "CONNECT ");
+            i         = pbpal_send_literal_str(pb, "CONNECT ");
             if (i < 0) {
                 outcome_detected(pb, PNR_IO_ERROR);
                 break;
@@ -472,23 +473,23 @@ next_state:
         }
 #endif
 #if PUBNUB_USE_SSL
-        if((NULL == pb->pal.ssl) && pb->flags.trySSL
+        if ((NULL == pb->pal.ssl) && pb->flags.trySSL
 #if PUBNUB_PROXY_API
-           && (pbproxyHTTP_GET != pb->proxy_type)
+            && (pbproxyHTTP_GET != pb->proxy_type)
 #endif
-            ) {
+        ) {
             enum pbpal_tls_result res;
             PUBNUB_ASSERT(pb->options.useSSL);
             res = pbpal_start_tls(pb);
-            switch(res) {
+            switch (res) {
             case pbtlsEstablished:
                 break;
             case pbtlsStarted:
                 pb->state = PBS_WAIT_TLS_CONNECT;
                 return 0;
             case pbtlsFailed:
-                if(pb->options.fallbackSSL){
-                    pb->flags.trySSL = false;
+                if (pb->options.fallbackSSL) {
+                    pb->flags.trySSL            = false;
                     pb->flags.retry_after_close = true;
                 }
                 outcome_detected(pb, PNR_CONNECT_FAILED);
@@ -510,7 +511,7 @@ next_state:
 #if PUBNUB_USE_SSL
     case PBS_WAIT_TLS_CONNECT: {
         enum pbpal_tls_result res = pbpal_check_tls(pb);
-        switch(res) {
+        switch (res) {
         case pbtlsEstablished:
             i = pbpal_send_literal_str(pb, "GET ");
             if (i < 0) {
@@ -522,8 +523,8 @@ next_state:
         case pbtlsStarted:
             break;
         case pbtlsFailed:
-            if(pb->options.fallbackSSL){
-                pb->flags.trySSL = false;
+            if (pb->options.fallbackSSL) {
+                pb->flags.trySSL            = false;
                 pb->flags.retry_after_close = true;
             }
             outcome_detected(pb, PNR_CONNECT_FAILED);
@@ -543,7 +544,7 @@ next_state:
             switch (pb->proxy_type) {
             case pbproxyHTTP_GET: {
                 char const* http = "http://";
-                pb->state = PBS_TX_SCHEME;
+                pb->state        = PBS_TX_SCHEME;
                 if (i < 0) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
@@ -563,10 +564,10 @@ next_state:
                     pb->core.http_buf_len = pb->proxy_saved_path_len;
                 }
 #if PUBNUB_USE_SSL
-                if(pb->flags.trySSL) {
+                if (pb->flags.trySSL) {
                     PUBNUB_ASSERT(pb->options.useSSL);
                     http = "https://";
-                }    
+                }
 #endif
                 if (0 > pbpal_send_str(pb, http)) {
                     outcome_detected(pb, PNR_IO_ERROR);
@@ -646,10 +647,10 @@ next_state:
                 && !pb->proxy_tunnel_established) {
                 char const* port_toward_origin = ":80";
 #if PUBNUB_USE_SSL
-                if(pb->flags.trySSL) {
+                if (pb->flags.trySSL) {
                     PUBNUB_ASSERT(pb->options.useSSL);
                     port_toward_origin = ":443";
-                }    
+                }
 #endif
                 if (0 > pbpal_send_str(pb, port_toward_origin)) {
                     outcome_detected(pb, PNR_IO_ERROR);
@@ -776,7 +777,7 @@ next_state:
             WATCH_USHORT(pb->http_code);
             pb->core.http_content_len = 0;
             pb->http_chunked          = false;
-            pb->state = PBS_RX_HEADERS;
+            pb->state                 = PBS_RX_HEADERS;
             goto next_state;
         default:
             PUBNUB_LOG_ERROR("pb=%p in PBS_RX_HTTP_VER: failure inducing "
@@ -823,7 +824,7 @@ next_state:
                         WATCH_INT(pb->proxy_tunnel_established);
                         if ((pb->proxy_type == pbproxyHTTP_CONNECT)
                             && !pb->proxy_tunnel_established) {
-                            if(PNR_OK != finish(pb)) {
+                            if (PNR_OK != finish(pb)) {
                                 break;
                             }
                             goto next_state;
@@ -1046,7 +1047,7 @@ next_state:
             break;
         }
         pb->state = PBS_TX_GET;
-        i = pbpal_send_literal_str(pb, "GET ");
+        i         = pbpal_send_literal_str(pb, "GET ");
         if (i < 0) {
             pb->state = close_kept_alive_connection(pb);
         }
@@ -1088,7 +1089,11 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         /*FALLTHRU*/
     default:
         pbp->state = PBS_WAIT_CANCEL;
+#if defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pbp);
+#else
+        pbnc_fsm(pbp);
+#endif
         break;
     }
 }
