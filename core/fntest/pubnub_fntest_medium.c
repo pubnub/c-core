@@ -46,7 +46,7 @@ TEST_DEF(complex_send_and_receive_over_several_channels_simultaneously)
 TEST_ENDDEF
 
 
-TEST_DEF(complex_send_and_receive_over_channel_plus_group_simultaneously)
+TEST_DEF_NEED_CHGROUP(complex_send_and_receive_over_channel_plus_group_simultaneously)
 {
     static pubnub_t* pbp;
     static pubnub_t* pbp_2;
@@ -127,7 +127,7 @@ TEST_DEF(connect_disconnect_and_connect_again)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_disconnect_and_connect_again_group)
+TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_group)
 {
 
     static pubnub_t* pbp;
@@ -177,7 +177,7 @@ TEST_DEF(connect_disconnect_and_connect_again_group)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_disconnect_and_connect_again_combo)
+TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
 {
 
     static pubnub_t* pbp;

@@ -1,8 +1,8 @@
-PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c ..\core\pubnub_helper.c
+PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c ..\core\pubnub_helper.c ..\core\c99\snprintf.c
 
 all: pubnub_proxy_NTLM_test.exe
 
-CFLAGS =-D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D HAVE_STRERROR_S -I. -I..\ -I test -I..\lib\base64 -I..\lib\md5
+CFLAGS =-D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D HAVE_STRERROR_S -I. -I..\ -I ..\core\c99 -I test -I..\lib\base64 -I..\lib\md5
 
 LDLIBS=ws2_32.lib rpcrt4.lib secur32.lib
 

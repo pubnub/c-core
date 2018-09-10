@@ -4,6 +4,8 @@ scm: github.com/pubnub/c-core
 changelog:
   - version: v2.5.2
     changes:
+      - type: bug
+        text: Improved handling of lost connection while in HTTP Keep-Alive
       - type: feature
         text: pubnub_free() now implies pubnub_cancel()
       - type: feature

@@ -86,6 +86,7 @@ static void close_connection(struct pubnub_* pb)
 
 static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
 {
+    pb->flags.started_while_kept_alive = false;
     if (pbpal_close(pb) <= 0) {
         PUBNUB_LOG_TRACE(
             "close_kept_alive_connection(): pb->flags.retry_after_close=%d\n",
@@ -94,7 +95,7 @@ static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
             return PBS_RETRY;
         }
         pbpal_forget(pb);
-        return PBS_READY;
+        return PBS_IDLE;
     }
     else {
         return PBS_KEEP_ALIVE_WAIT_CLOSE;
@@ -117,6 +118,7 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
         pb->flags.retry_after_close = false;
     }
     else {
+        pb->flags.started_while_kept_alive = false;
         close_connection(pb);
     }
 }
@@ -779,6 +781,14 @@ next_state:
             pb->http_chunked          = false;
             pb->state                 = PBS_RX_HEADERS;
             goto next_state;
+        case PNR_CONNECTION_TIMEOUT:
+        case PNR_TIMEOUT:
+        case PNR_IO_ERROR:
+            if (pb->flags.started_while_kept_alive) {
+                pb->state = close_kept_alive_connection(pb);
+                goto next_state;
+            }
+            /*FALLTHRU*/
         default:
             PUBNUB_LOG_ERROR("pb=%p in PBS_RX_HTTP_VER: failure inducing "
                              "pbpal_line_read_status %d\n",
@@ -1028,6 +1038,7 @@ next_state:
         pb->proxy_saved_path_len = 0;
 #endif
         pb->state = PBS_KEEP_ALIVE_READY;
+        pb->flags.started_while_kept_alive = true;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
             pb->core.last_result = PNR_INTERNAL_ERROR;
@@ -1059,14 +1070,13 @@ next_state:
                 goto next_state;
             }
             pbpal_forget(pb);
-            pb->state = PBS_READY;
+            pb->state = PBS_IDLE;
             goto next_state;
         }
         break;
     }
     return 0;
 }
-
 
 void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 {
@@ -1086,6 +1096,18 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         break;
     case PBS_KEEP_ALIVE_IDLE:
         pbp->trans = PBTT_NONE;
+        /*FALLTHRU*/
+    case PBS_RX_HTTP_VER:
+        /* Transaction generating PNR_TIMEOUT outcome at any point can not end up in
+           PBS_KEEP_ALIVE_IDLE so previous *FALLTHROUHGH* is safe */
+        if ((PNR_TIMEOUT == outcome_to_report) && (pbp->flags.started_while_kept_alive)) {
+            /* Closing connection that was kept alive is always done with intention
+               to reestablish it anew and don't lose current transaction. 
+            */
+            pbp->state = close_kept_alive_connection(pbp);
+            pbntf_requeue_for_processing(pbp);
+            break;
+        }
         /*FALLTHRU*/
     default:
         pbp->state = PBS_WAIT_CANCEL;

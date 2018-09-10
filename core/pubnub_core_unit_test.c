@@ -233,7 +233,7 @@ static int my_recv(void* p, size_t n)
                      * 'APIs' should interpret as:
                      * ('recv_from_platform_result' < 0) which gives
                      * the oportunity to simulate and test
-                     * 'callback' interface in some degree.
+                     * 'callback' environment in some degree.
                      */
                     ++m_i;
                     m_new = 1;
@@ -419,6 +419,7 @@ void pbpal_forget(pubnub_t* pb)
 
 int pbpal_close(pubnub_t* pb)
 {
+    pb->sock_state = STATE_NONE;
     return mock(pb);
 }
 
@@ -3043,10 +3044,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
     expect(pbpal_forget, when(pb, equals(pbp)));
     /* Renewing DNS resolution and reestablishing connection */
-    expect(pbpal_resolv_and_connect,
-           when(pb, equals(pbp)),
-           returns(pbpal_connect_success));
-    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
+    expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-"
                              "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
@@ -3192,12 +3190,30 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     expect_outgoing_with_url("/subscribe/sub-Key/ch17/0/"
                              "352624978925123458?pnsdk=unit-test-0.1&uuid="
                              "admin&auth=msgs");
+    /* simulates 'callback' condition of PNR_IN_PROGRESS.
+     * (expl: recv_msg would return 0 otherwise as if the connection
+     * closes from servers side.)
+     */
+    incoming("", NULL);
+    expect(pbpal_close, when(pb, equals(pbp)), returns(0));
+    expect(pbpal_forget, when(pb, equals(pbp)));
+    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/subscribe/sub-Key/ch17/0/"
+                             "352624978925123458?pnsdk=unit-test-0.1&uuid="
+                             "admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "47\r\n\r\n[[message],\"352624979925123457\",\"chgr4\",\"ch17\"]",
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_subscribe(pbp, "ch17", NULL), equals(PNR_OK));
+    /* Transaction timer expires while expecting the answer because the connection
+       was broken at some place, at some point, from some reason and, in meantime,
+       reestablished again on that stretch, while our connection with origin server
+       no longer exists... */
+    attest(pubnub_subscribe(pbp, "ch17", NULL), equals(PNR_STARTED));
+    pbnc_stop(pbp, PNR_TIMEOUT);
+    pbnc_fsm(pbp);
     attest(pubnub_subscribe(pbp, NULL, "chgr2"), equals(PNR_RX_BUFF_NOT_EMPTY));
 
     attest(pubnub_get(pbp), streqs("message"));
@@ -3206,10 +3222,6 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_free(pbp), equals(-1));
-
-    /* Connection timer expires */
-    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
-    pbnc_stop(pbp, PNR_TIMEOUT);
 }
 
 /* KEEP_ALIVE_ADVANCED */

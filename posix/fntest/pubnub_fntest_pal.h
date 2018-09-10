@@ -43,6 +43,12 @@
             continue;                                                          \
     } while (0)
 
+#define TEST_INDETERMINATE                                                     \
+    do {                                                                       \
+        *(enum PNFNTestResult*)pResult = trIndeterminate;                      \
+        pthread_exit(NULL);                                                    \
+    } while (0)
+
 #define expect(exp)                                                            \
     if (exp) {                                                                 \
     }                                                                          \
@@ -80,17 +86,22 @@
         expect_pnr((rslt), (exp_rslt));                                        \
     }
 
-#define expect_last_result(rslt, exp_rslt)                                     \
-    {                                                                          \
-        if ((rslt) == (exp_rslt)) {                                            \
-        }                                                                      \
-        else if ((rslt) == PNR_ABORTED) {                                      \
-            *(enum PNFNTestResult*)pResult = trIndeterminate;                  \
-            pthread_exit(NULL);                                                \
-        }                                                                      \
-        else {                                                                 \
-            expect_pnr((rslt), exp_rslt);                                      \
-        }                                                                      \
+
+#define pbpub_outof_quota(pbp, rslt)                                           \
+    (((rslt) == PNR_PUBLISH_FAILED)                                            \
+     && (PNPUB_ACCOUNT_QUOTA_EXCEEDED                                          \
+         == pubnub_parse_publish_result(pubnub_last_publish_result(pbp))))
+
+
+#define expect_last_result(pbp, rslt, exp_rslt)                                \
+    if ((rslt) == (exp_rslt)) {                                                \
+    }                                                                          \
+    else if (((rslt) == PNR_ABORTED) || pbpub_outof_quota(pbp, rslt)) {        \
+        *(enum PNFNTestResult*)pResult = trIndeterminate;                      \
+        pthread_exit(NULL);                                                    \
+    }                                                                          \
+    else {                                                                     \
+        expect_pnr((rslt), exp_rslt);                                          \
     }
 
 
@@ -98,7 +109,7 @@
     while (pnfntst_timer_is_running(tmr)) {                                    \
         enum pubnub_res M_pbres_ = pubnub_last_result(pbp);                    \
         if (M_pbres_ != PNR_STARTED) {                                         \
-            expect_last_result(M_pbres_, (rslt));                              \
+            expect_last_result(pbp, M_pbres_, (rslt));                         \
             break;                                                             \
         }                                                                      \
     }                                                                          \
@@ -128,8 +139,8 @@
                 M_rslt_2 = pubnub_last_result(pbp2);                           \
             }                                                                  \
             if ((PNR_STARTED != M_rslt_1) && (PNR_STARTED != M_rslt_2)) {      \
-                expect_last_result(M_rslt_1, (exp_rslt1));                     \
-                expect_last_result(M_rslt_2, (exp_rslt2));                     \
+                expect_last_result(pbp1, M_rslt_1, (exp_rslt1));               \
+                expect_last_result(pbp2, M_rslt_2, (exp_rslt2));               \
                 break;                                                         \
             }                                                                  \
         }                                                                      \

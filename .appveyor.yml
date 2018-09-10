@@ -10,9 +10,13 @@ environment:
 build_script:
   - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat"
   - nmake /f windows.mk
+  - cd core
+  - nmake /f W_makefile.mk
+  - cd ..
 
 test_script:
   - windows\pubnub_fntest
   - openssl\pubnub_fntest
+  - core\pubnub_proxy_NTLM_test
 
 deploy: off

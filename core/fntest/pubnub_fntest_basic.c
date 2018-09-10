@@ -54,7 +54,7 @@ TEST_DEF(connect_and_send_over_several_channels_simultaneously)
 TEST_ENDDEF
 
 
-TEST_DEF(simple_connect_and_send_over_single_channel_in_group)
+TEST_DEF_NEED_CHGROUP(simple_connect_and_send_over_single_channel_in_group)
 {
     static pubnub_t* pbp;
     char* const      chgrp = pnfntst_make_name(this_test_name_);
@@ -85,7 +85,7 @@ TEST_DEF(simple_connect_and_send_over_single_channel_in_group)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_send_over_several_channels_in_group_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_send_over_several_channels_in_group_simultaneously)
 {
     static pubnub_t* pbp;
     char* const      chgrp = pnfntst_make_name(this_test_name_);
@@ -115,7 +115,7 @@ TEST_DEF(connect_and_send_over_several_channels_in_group_simultaneously)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_send_over_channel_in_group_and_single_channel_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_send_over_channel_in_group_and_single_channel_simultaneously)
 {
     static pubnub_t* pbp;
     char* const      chgrp = pnfntst_make_name(this_test_name_);
@@ -143,7 +143,7 @@ TEST_DEF(connect_and_send_over_channel_in_group_and_single_channel_simultaneousl
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously)
 {
     static pubnub_t* pbp;
     char* const      chgrp = pnfntst_make_name(this_test_name_);
@@ -236,7 +236,7 @@ TEST_DEF(connect_and_receive_over_several_channels_simultaneously)
 TEST_ENDDEF
 
 
-TEST_DEF(simple_connect_and_receiver_over_single_channel_in_group)
+TEST_DEF_NEED_CHGROUP(simple_connect_and_receiver_over_single_channel_in_group)
 {
     static pubnub_t* pbp;
     static pubnub_t* pbp_2;
@@ -275,7 +275,7 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel_in_group)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_receive_over_several_channels_in_group_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_receive_over_several_channels_in_group_simultaneously)
 {
 
     static pubnub_t* pbp;
@@ -311,7 +311,7 @@ TEST_DEF(connect_and_receive_over_several_channels_in_group_simultaneously)
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously)
 {
     static pubnub_t* pbp;
     static pubnub_t* pbp_2;
@@ -344,7 +344,7 @@ TEST_DEF(connect_and_receive_over_channel_in_group_and_single_channel_simultaneo
 TEST_ENDDEF
 
 
-TEST_DEF(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously)
+TEST_DEF_NEED_CHGROUP(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously)
 {
     static pubnub_t* pbp;
     static pubnub_t* pbp_2;
@@ -472,7 +472,7 @@ TEST_DEF(broken_connection_test_multi)
 TEST_ENDDEF
 
 
-TEST_DEF(broken_connection_test_group)
+TEST_DEF_NEED_CHGROUP(broken_connection_test_group)
 {
     static pubnub_t* pbp;
     enum pubnub_res  rslt;
@@ -532,7 +532,7 @@ TEST_DEF(broken_connection_test_group)
 TEST_ENDDEF
 
 
-TEST_DEF(broken_connection_test_multi_in_group)
+TEST_DEF_NEED_CHGROUP(broken_connection_test_multi_in_group)
 {
     static pubnub_t* pbp;
     enum pubnub_res  rslt;
@@ -595,7 +595,7 @@ TEST_DEF(broken_connection_test_multi_in_group)
 TEST_ENDDEF
 
 
-TEST_DEF(broken_connection_test_group_in_group_out)
+TEST_DEF_NEED_CHGROUP(broken_connection_test_group_in_group_out)
 {
     static pubnub_t* pbp;
     enum pubnub_res  rslt;
@@ -659,7 +659,7 @@ TEST_DEF(broken_connection_test_group_in_group_out)
 TEST_ENDDEF
 
 
-TEST_DEF(broken_connection_test_group_multichannel_out)
+TEST_DEF_NEED_CHGROUP(broken_connection_test_group_multichannel_out)
 {
     static pubnub_t* pbp;
     enum pubnub_res  rslt;

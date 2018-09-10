@@ -63,20 +63,21 @@ static struct TestData m_aTest[] = {
 #define TEST_COUNT (sizeof m_aTest / sizeof m_aTest[0])
 
 
-char const* g_pubkey;
-char const* g_keysub;
-char const* g_origin;
-
-
-
-static void srand_from_pubnub(void)
+static void srand_from_pubnub(char const* pubkey, char const* keysub)
 {
     pubnub_t* pbp = pubnub_alloc();
     if (pbp != NULL) {
-        pubnub_init(pbp, g_pubkey, g_keysub);
+        pubnub_init(pbp, pubkey, keysub);
         srand_from_pubnub_time(pbp);
         pubnub_free(pbp);
     }
+}
+
+
+static bool is_travis_pull_request_build(void)
+{
+    char const* tprb = getenv("TRAVIS_PULL_REQUEST");
+    return (tprb != NULL) || (0 == strcmp(tprb, "false"));
 }
 
 
@@ -91,13 +92,13 @@ static int run_tests(struct TestData aTest[],
     unsigned failed_count = 0;
     unsigned passed_count = 0;
     unsigned indete_count = 0;
+    struct PNTestParameters tstpar = { pubkey, keysub, origin };
 
-    g_pubkey = pubkey;
-    g_keysub = keysub;
-    g_origin = origin;
+    tstpar.candochangroup = !is_travis_pull_request_build();
+    pnfntst_set_params(&tstpar);
 
     printf("Starting Run of %d tests\n", test_count);
-    srand_from_pubnub();
+    srand_from_pubnub(pubkey, keysub);
     while (next_test < test_count) {
         unsigned i;
         unsigned in_this_pass = max_conc_thread;
@@ -107,8 +108,11 @@ static int run_tests(struct TestData aTest[],
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             printf("Creating a thread for test %d\n", i + 1);
             if (0 != pthread_create(&aTest[i].pth, NULL, aTest[i].pf, &aTest[i].result)) {
-                printf("Failed to create a thread for test %u ('%s'), errno=%d\n",
-                       i+1, aTest[i].name, (int)errno);
+                printf(
+                    "Failed to create a thread for test %d ('%s'), errno=%d\n",
+                    i + 1,
+                    aTest[i].name,
+                    errno);
             }
         }
         /* This is the simplest way to do it - join all threads, one
@@ -120,7 +124,9 @@ static int run_tests(struct TestData aTest[],
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             if (0 != pthread_join(aTest[i].pth, NULL)) {
                 printf("Failed to join thread for test %u ('%s'), errno=%d\n",
-                       i+1, aTest[i].name, errno);
+                       i + 1,
+                       aTest[i].name,
+                       errno);
             }
             switch (aTest[i].result) {
             case trFail:
@@ -162,8 +168,7 @@ static int run_tests(struct TestData aTest[],
         for (next_test = 0; next_test < test_count; ++next_test) {
             switch (aTest[next_test].result) {
             case trFail:
-                printf("Test \x1b[41m '%s' \x1b[m failed!\n",
-                       aTest[next_test].name);
+                printf("Test \x1b[41m '%s' \x1b[m failed!\n", aTest[next_test].name);
                 break;
             case trIndeterminate:
                 printf("Test \x1b[33m '%s' \x1b[m indeterminate\n",
