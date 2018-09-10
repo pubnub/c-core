@@ -106,10 +106,10 @@ static int run_tests(struct TestData aTest[],
             in_this_pass = test_count - next_test;
         }
         for (i = next_test; i < next_test + in_this_pass; ++i) {
-            printf("Creating a thread for test %d\n", i + 1);
+            printf("Creating a thread for test %u\n", i + 1);
             if (0 != pthread_create(&aTest[i].pth, NULL, aTest[i].pf, &aTest[i].result)) {
                 printf(
-                    "Failed to create a thread for test %d ('%s'), errno=%d\n",
+                    "Failed to create a thread for test %u ('%s'), errno=%d\n",
                     i + 1,
                     aTest[i].name,
                     errno);
