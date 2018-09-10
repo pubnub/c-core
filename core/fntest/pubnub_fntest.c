@@ -13,6 +13,9 @@
 #include <stdint.h>
 
 
+static struct PNTestParameters m_test_param;
+
+
 bool pnfntst_got_messages(pubnub_t *p, ...)
 {
     char const *aMsgs[16];
@@ -182,8 +185,8 @@ pubnub_t* pnfntst_create_ctx(void)
 {
     pubnub_t* pbp = pubnub_alloc();
     if (pbp != NULL) {
-        pubnub_init(pbp, g_pubkey, g_keysub);
-        pubnub_origin_set(pbp, g_origin);
+        pubnub_init(pbp, m_test_param.pubkey, m_test_param.keysub);
+        pubnub_origin_set(pbp, m_test_param.origin);
     }
 
     return pbp;
@@ -205,4 +208,17 @@ char* pnfntst_make_name(char const* s)
     snprintf(rslt, MAX_PUBNUB_CHAN_NAME, "%s_%X", s, grn);
 
     return rslt;
+}
+
+
+struct PNTestParameters const* pnfntst_params(void)
+{
+    return &m_test_param;
+}
+
+
+int pnfntst_set_params(struct PNTestParameters const* p)
+{
+    m_test_param = *p;
+    return 0;
 }

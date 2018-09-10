@@ -47,6 +47,17 @@
 
 #define TEST_SLEEP_FOR(ms) vTaskDelay(pdMS_TO_TICKS(ms))
 
+#define TEST_EXIT                                                              \
+    while (iDeffered > 0) {                                                    \
+        TEST_POP_DEFERRED;                                                     \
+    }
+
+#define TEST_INDETERMINATE                                                     \
+    do {                                                                       \
+        TEST_EXIT;                                                             \
+        return trIndeterminate;                                                \
+    } while (0)
+
 #define expect(exp)                                                            \
     if (exp) {                                                                 \
     }                                                                          \
@@ -56,6 +67,7 @@
                          __FILE__,                                             \
                          __FUNCTION__,                                         \
                          __LINE__));                                           \
+        TEST_EXIT;                                                             \
         return trFail;                                                         \
     }
 
@@ -70,19 +82,25 @@
                          __FILE__,                                             \
                          __FUNCTION__,                                         \
                          __LINE__));                                           \
+        TEST_EXIT;                                                             \
         return trFail;                                                         \
     }
 
-#define expect_last_result(rslt, exp_rslt)                                     \
-    {                                                                          \
-        if ((rslt) == (exp_rslt)) {                                            \
-        }                                                                      \
-        else if ((rslt) == PNR_ABORTED) {                                      \
-            return trIndeterminate;                                            \
-        }                                                                      \
-        else {                                                                 \
-            expect_pnr((rslt), exp_rslt);                                      \
-        }                                                                      \
+
+#define pbpub_outof_quota(pbp, rslt)                                           \
+    (((rslt) == PNR_PUBLISH_FAILED)                                            \
+     && (PNPUB_ACCOUNT_QUOTA_EXCEEDED                                          \
+         == pubnub_parse_publish_result(pubnub_last_publish_result(pbp))))
+
+
+#define expect_last_result(pbp, rslt, exp_rslt)                                \
+    if ((rslt) == (exp_rslt)) {                                                \
+    }                                                                          \
+    else if (((rslt) == PNR_ABORTED) || pbpub_outof_quota(pbp, rslt)) {        \
+        return trIndeterminate;                                                \
+    }                                                                          \
+    else {                                                                     \
+        expect_pnr((rslt), exp_rslt);                                          \
     }
 
 
@@ -90,7 +108,7 @@
     while (pnfntst_timer_is_running(tmr)) {                                    \
         enum pubnub_res M_pbres_ = pubnub_last_result(pbp);                    \
         if (M_pbres_ != PNR_STARTED) {                                         \
-            expect_last_result(M_pbres_, (rslt));                              \
+            expect_last_result(pbp, M_pbres_, (rslt));                         \
             break;                                                             \
         }                                                                      \
     }                                                                          \
@@ -120,8 +138,8 @@
                 M_rslt_2 = pubnub_last_result(pbp2);                           \
             }                                                                  \
             if ((PNR_STARTED != M_rslt) && (PNR_STARTED != M_rslt_2)) {        \
-                expect_last_result(M_rslt, (rslt));                            \
-                expect_last_result(M_rslt_2, (rslt2));                         \
+                expect_last_result(pbp, M_rslt, (rslt));                       \
+                expect_last_result(pbp2, M_rslt_2, (rslt2));                   \
                 break;                                                         \
             }                                                                  \
         }                                                                      \

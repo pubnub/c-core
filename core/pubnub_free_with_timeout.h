@@ -7,14 +7,12 @@
     - it succeeds
     - time specified in @p millisec elapses
 
-    Essentially, it waits for the context to finish its current
-    transaction and then frees it.
+    Essentially, it waits for the context to finish the cancellation
+    (which is implied with pubnub_free()) and then frees it.
 
-    This function is much more useful in the callback interface,
-    especially after a pubnub_cancel().
-
-    This function is _not_ useful at all in the sync interface if
-    you're using only one thread with the @p pbp context.
+    This function is more useful in the callback interface. In the
+    sync interface, there's a reasonable chance that a pubnub_free()
+    would finish even if a transaction is ongoing.
 
     Also, if you want to do some other processing while waiting for
     the transaction to finish, don't use this function.

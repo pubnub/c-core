@@ -5,15 +5,14 @@
 #include <stdbool.h>
 
 
-enum PNFNTestResult {
-    trFail = -1,
-    trIndeterminate,
-    trPass
-};
+enum PNFNTestResult { trFail = -1, trIndeterminate, trPass };
 
-extern char const*  g_pubkey;
-extern char const*  g_keysub;
-extern char const*  g_origin;
+struct PNTestParameters {
+    char const* pubkey;
+    char const* keysub;
+    char const* origin;
+    bool        candochangroup;
+};
 
 
 struct pnfntst_timer;
@@ -22,11 +21,16 @@ typedef struct pnfntst_timer pnfntst_timer_t;
 pnfntst_timer_t *pnfntst_alloc_timer(void);
 int pnfntst_start_timer(pnfntst_timer_t *t, unsigned ms);
 void pnfntst_stop_timer(pnfntst_timer_t *t);
-#define pnfntst_restart_timer(t, ms) pnfntst_stop_timer(t), pnfntst_start_timer(t, ms)
+#define pnfntst_restart_timer(t, ms)                                           \
+    pnfntst_stop_timer(t), pnfntst_start_timer(t, ms)
 int pnfntst_reset_timer(pnfntst_timer_t *t);
 bool pnfntst_timer_is_running(pnfntst_timer_t *t);
 void pnfntst_free_timer(void* t);
 
+
+struct PNTestParameters const* pnfntst_params(void);
+
+int pnfntst_set_params(struct PNTestParameters const* p);
 
 #include "core/pubnub_api_types.h"
 
@@ -46,10 +50,16 @@ bool pnfntst_got_messages(pubnub_t *p, ...);
     buffer, and it will fail, even if the messages was really received
     from the channel at hand.
  */
-bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const *channel);
+bool pnfntst_got_message_on_channel(pubnub_t*   p,
+                                    char const* message,
+                                    char const* channel);
 
 
-bool pnfntst_subscribe_and_check(pubnub_t *p, char const *chan, char const*chgroup, unsigned ms, ...);
+bool pnfntst_subscribe_and_check(pubnub_t*   p,
+                                 char const* chan,
+                                 char const* chgroup,
+                                 unsigned    ms,
+                                 ...);
 
 void pnfntst_free(void* p);
 
@@ -79,6 +89,19 @@ char* pnfntst_make_name(char const* s);
 
 
 #include "fntest/pubnub_fntest_pal.h"
+
+/** Declare a test that needs support for channel groups API (add,
+    remove, list: channel groups). IOW, can only be run on an account
+    that has this API enabled.
+*/
+#define TEST_DEF_NEED_CHGROUP(tst)                                             \
+    TEST_DEF(tst)                                                              \
+    {                                                                          \
+        struct PNTestParameters const* ptstp_ = pnfntst_params();              \
+        if (!ptstp_->candochangroup) {                                         \
+            TEST_INDETERMINATE;                                                \
+        }                                                                      \
+    }
 
 
 #endif /* !defined INC_PUBNUB_FNTEST */

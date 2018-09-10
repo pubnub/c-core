@@ -218,6 +218,13 @@ struct pubnub_ {
             connection.
         */
         bool retry_after_close : 1;
+
+        /** Indicates whether current transaction started while connection
+            was kept alive(by client)(true:yes, false:no).
+            Used when deciding whether closed connection detected should be
+            renewed without losing transaction at hand.
+        */
+        bool started_while_kept_alive : 1;
     } flags;
 
 #if PUBNUB_ADVANCED_KEEP_ALIVE

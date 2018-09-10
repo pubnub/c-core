@@ -72,7 +72,12 @@ void pubnub_set_auth(pubnub_t* p, const char* auth);
 char const* pubnub_auth_get(pubnub_t* p);
 
 /** Cancel an ongoing API transaction. The outcome of the transaction
-    in progress, if any, will be #PNR_CANCELLED. */
+    in progress, if any, will be #PNR_CANCELLED.
+
+    In the sync interface, it's possible that this cancellation will
+    finish during the execution of a call to this function. But,
+    there's no guarantee, so you're best to await the outcome.
+*/
 void pubnub_cancel(pubnub_t* p);
 
 /** Publish the @p message (in JSON format) on @p p channel, using the
