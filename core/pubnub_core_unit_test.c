@@ -826,14 +826,11 @@ static inline void incoming_and_close(char const* str, struct uint8_block* p_dat
 
 static void cancel_and_cleanup(pubnub_t* pbp)
 {
-    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
-    pubnub_cancel(pbp);
-
     expect(pbpal_close, when(pb, equals(pbp)), returns(0));
     expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
     expect(pbpal_forget, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pbnc_fsm(pbp), equals(0));
+    pubnub_cancel(pbp);
     attest(pbp->core.last_result, equals(PNR_CANCELLED));
 }
 
@@ -910,14 +907,7 @@ Ensure(single_context_pubnub, leave_wait_dns_cancel)
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_STARTED));
 
     /* ... user is impatient... */
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    expect(pbntf_requeue_for_processing, when(pb, equals(pbp)), returns(0));
-    pubnub_cancel(pbp);
-    expect(pbpal_close, when(pb, equals(pbp)), returns(0));
-    expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
-    expect(pbpal_forget, when(pb, equals(pbp)));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_CANCELLED));
+    cancel_and_cleanup(pbp);
 }
 
 /* This tests the TCP establishment code. Since we know for sure it is

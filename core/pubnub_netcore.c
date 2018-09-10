@@ -457,6 +457,7 @@ next_state:
     }
     case PBS_CONNECTED:
         pb->flags.should_close = !pb->options.use_http_keep_alive;
+        pb->flags.retry_after_close = false;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         pb->keep_alive.t_connect = time(NULL);
         pb->keep_alive.count     = 0;

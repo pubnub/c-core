@@ -15,8 +15,8 @@ build_script:
   - cd ..
 
 test_script:
+  - core\pubnub_proxy_NTLM_test
   - windows\pubnub_fntest
   - openssl\pubnub_fntest
-  - core\pubnub_proxy_NTLM_test
 
 deploy: off

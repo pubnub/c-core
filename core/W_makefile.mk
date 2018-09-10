@@ -2,7 +2,7 @@ PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c 
 
 all: pubnub_proxy_NTLM_test.exe
 
-CFLAGS =-D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D HAVE_STRERROR_S -I. -I..\ -I ..\core\c99 -I test -I..\lib\base64 -I..\lib\md5
+CFLAGS =-D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D HAVE_STRERROR_S -I. -I..\ -I ..\core\c99 -I test -I..\lib\base64 -I..\lib\md5
 
 LDLIBS=ws2_32.lib rpcrt4.lib secur32.lib
 
