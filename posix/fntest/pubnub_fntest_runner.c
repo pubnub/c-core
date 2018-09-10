@@ -77,7 +77,7 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
 static bool is_travis_pull_request_build(void)
 {
     char const* tprb = getenv("TRAVIS_PULL_REQUEST");
-    return (tprb != NULL) || (0 == strcmp(tprb, "false"));
+    return (tprb != NULL) && (0 != strcmp(tprb, "false"));
 }
 
 
