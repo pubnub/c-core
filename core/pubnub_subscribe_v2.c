@@ -116,7 +116,7 @@ enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
 
 enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
 {
-    enum pbjson_object_name_parse_result result;
+    enum pbjson_object_name_parse_result jpresult;
     struct pbjson_elem                   el;
     struct pbjson_elem                   found;
     char*                                reply    = p->http_reply;
@@ -131,8 +131,8 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
 
     el.start = p->http_reply;
     el.end   = p->http_reply + p->http_buf_len;
-    result   = pbjson_get_object_value(&el, "t", &found);
-    if (jonmpOK == result) {
+    jpresult = pbjson_get_object_value(&el, "t", &found);
+    if (jonmpOK == jpresult) {
         struct pbjson_elem titel;
         if (jonmpOK == pbjson_get_object_value(&found, "t", &titel)) {
             unsigned len = titel.end - titel.start - 2;
@@ -169,7 +169,7 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     }
     else {
         PUBNUB_LOG_ERROR(
-            "No timetoken in subscribe V2 response found, error=%d\n", result);
+            "No timetoken in subscribe V2 response found, error=%d\n", jpresult);
         return PNR_FORMAT_ERROR;
     }
 
@@ -177,8 +177,8 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
 
     /* We should optimize this to not look from the start again.
      */
-    result = pbjson_get_object_value(&el, "m", &found);
-    if (jonmpOK == result) {
+    jpresult = pbjson_get_object_value(&el, "m", &found);
+    if (jonmpOK == jpresult) {
         p->msg_ofs = found.start - reply + 1;
         p->msg_end = found.end - reply - 1;
     }
@@ -194,7 +194,7 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
 
 struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
 {
-    enum pbjson_object_name_parse_result result;
+    enum pbjson_object_name_parse_result jpresult;
     struct pbjson_elem                   el;
     struct pbjson_elem                   found;
     struct pubnub_v2_message             rslt;
@@ -230,8 +230,8 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
        instead of looking from the start, again and again.
     */
 
-    result = pbjson_get_object_value(&el, "d", &found);
-    if (jonmpOK == result) {
+    jpresult = pbjson_get_object_value(&el, "d", &found);
+    if (jonmpOK == jpresult) {
         rslt.payload.ptr  = (char*)found.start;
         rslt.payload.size = found.end - found.start;
     }
@@ -239,12 +239,12 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
         PUBNUB_LOG_ERROR("pbp=%p: No message payload in subscribe V2 response "
                          "found, error=%d\n",
                          pbp,
-                         result);
+                         jpresult);
         return rslt;
     }
 
-    result = pbjson_get_object_value(&el, "c", &found);
-    if (jonmpOK == result) {
+    jpresult = pbjson_get_object_value(&el, "c", &found);
+    if (jonmpOK == jpresult) {
         rslt.channel.ptr  = (char*)found.start + 1;
         rslt.channel.size = found.end - found.start - 2;
     }
@@ -252,12 +252,12 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
         PUBNUB_LOG_ERROR("pbp=%p: No message channel in subscribe V2 response "
                          "found, error=%d\n",
                          pbp,
-                         result);
+                         jpresult);
         return rslt;
     }
 
-    result = pbjson_get_object_value(&el, "p", &found);
-    if (jonmpOK == result) {
+    jpresult = pbjson_get_object_value(&el, "p", &found);
+    if (jonmpOK == jpresult) {
         struct pbjson_elem titel;
         if (jonmpOK == pbjson_get_object_value(&found, "t", &titel)) {
             if ((*titel.start != '"') || (titel.end[-1] != '"')) {
@@ -276,18 +276,16 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
     else {
         PUBNUB_LOG_ERROR("No message publish timetoken in subscribe V2 "
                          "response found, error=%d\n",
-                         result);
+                         jpresult);
         return rslt;
     }
 
-    result = pbjson_get_object_value(&el, "b", &found);
-    if (jonmpOK == result) {
+    if (jonmpOK == pbjson_get_object_value(&el, "b", &found)) {
         rslt.match_or_group.ptr  = (char*)found.start;
         rslt.match_or_group.size = found.end - found.start;
     }
 
-    result = pbjson_get_object_value(&el, "u", &found);
-    if (jonmpOK == result) {
+    if (jonmpOK == pbjson_get_object_value(&el, "u", &found)) {
         rslt.metadata.ptr  = (char*)found.start;
         rslt.metadata.size = found.end - found.start;
     }
