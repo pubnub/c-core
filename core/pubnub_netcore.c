@@ -1100,9 +1100,15 @@ next_state:
             goto next_state;
         }
         break;
+    default:
+        PUBNUB_LOG_ERROR("pbnc_fsm(pb=%p): unhandled state: %s\n",
+                         pb,
+                         pbnc_state2str(pb->state));
+        break;
     }
     return 0;
 }
+
 
 void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 {

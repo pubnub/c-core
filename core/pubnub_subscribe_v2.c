@@ -135,14 +135,14 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     if (jonmpOK == result) {
         struct pbjson_elem titel;
         if (jonmpOK == pbjson_get_object_value(&found, "t", &titel)) {
-            size_t len = titel.end - titel.start - 2;
+            unsigned len = titel.end - titel.start - 2;
             if ((*titel.start != '"') || (titel.end[-1] != '"')) {
                 PUBNUB_LOG_ERROR("Time token in response is not a string\n");
                 return PNR_FORMAT_ERROR;
             }
             if (len >= sizeof p->timetoken) {
                 PUBNUB_LOG_ERROR("Time token in response has length %u, longer "
-                                 "than our max %u\n",
+                                 "than our max %ul\n",
                                  len,
                                  sizeof p->timetoken - 1);
                 return PNR_FORMAT_ERROR;
