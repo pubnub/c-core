@@ -12,13 +12,13 @@
 
 static enum pubnub_res publish(pubnub_t* pbp, char const* chan, char const* meta)
 {
-    enum pubnub_res res;
+    enum pubnub_res               res;
     struct pubnub_publish_options pubopts;
 
     puts("------------------");
     puts("Publish w/metadata");
     puts("------------------");
-    pubopts = pubnub_publish_defopts();
+    pubopts      = pubnub_publish_defopts();
     pubopts.meta = meta;
     res = pubnub_publish_ex(pbp, chan, "\"Hello world from sync w/meta\"", pubopts);
     if (PNR_STARTED == res) {
@@ -27,19 +27,6 @@ static enum pubnub_res publish(pubnub_t* pbp, char const* chan, char const* meta
     return res;
 }
 
-
-static int printout_subscribe_outcome(pubnub_t* pbp, enum pubnub_res res)
-{
-    char const* msg;
-    if (PNR_OK != res) {
-        printf("Subscribe failed, result=%d\n", res);
-        return -1;
-    }
-    for (msg = pubnub_get(pbp); msg != NULL; msg = pubnub_get(pbp)) {
-        printf("Received message: '%s'\n", msg);
-    }
-    return 0;
-}
 
 static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
 {
@@ -50,10 +37,10 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
     }
     for (msg = pubnub_get_v2(pbp); msg.payload.size > 0; msg = pubnub_get_v2(pbp)) {
         puts("Received message:");
-        printf("  Channel    = '%.*s'\n", msg.channel.size, msg.channel.ptr);
-        printf("  Timetoken  = '%.*s'\n", msg.tt.size, msg.tt.ptr);
-        printf("  Metadata   = '%.*s'\n", msg.metadata.size, msg.metadata.ptr);
-        printf("  Payload    = '%.*s'\n", msg.payload.size, msg.payload.ptr);
+        printf("  Channel    = '%.*s'\n", (int)msg.channel.size, msg.channel.ptr);
+        printf("  Timetoken  = '%.*s'\n", (int)msg.tt.size, msg.tt.ptr);
+        printf("  Metadata   = '%.*s'\n", (int)msg.metadata.size, msg.metadata.ptr);
+        printf("  Payload    = '%.*s'\n", (int)msg.payload.size, msg.payload.ptr);
     }
     return 0;
 }
@@ -61,11 +48,13 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
 
 static int doit(pubnub_t* pbp)
 {
-    enum pubnub_res res;
-    char const* chan = "hello_meta";
+    enum pubnub_res                    res;
+    char const*                        chan = "hello_meta";
     struct pubnub_subscribe_v2_options subopts;
-    
-    pubnub_init(pbp, "pub-c-9f4a1162-d5b5-4de4-95b3-6d7bb8c61ce4", "sub-c-0667a370-ab02-11e8-87b0-ca0e85b4e44e");
+
+    pubnub_init(pbp,
+                "pub-c-9f4a1162-d5b5-4de4-95b3-6d7bb8c61ce4",
+                "sub-c-0667a370-ab02-11e8-87b0-ca0e85b4e44e");
     srand((unsigned)time(NULL));
 
     puts("----------------------------");
@@ -89,9 +78,9 @@ static int doit(pubnub_t* pbp)
     puts("------------------------------------");
     puts("Subscribe w/filter that's satisfied.");
     puts("------------------------------------");
-    subopts = pubnub_subscribe_v2_defopts();
+    subopts             = pubnub_subscribe_v2_defopts();
     subopts.filter_expr = "pub == 'nub'";
-    res = pubnub_subscribe_v2(pbp, chan, subopts);
+    res                 = pubnub_subscribe_v2(pbp, chan, subopts);
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -108,9 +97,9 @@ static int doit(pubnub_t* pbp)
     puts("----------------------------------------");
     puts("Subscribe w/filter that's NOT satisfied.");
     puts("----------------------------------------");
-    subopts = pubnub_subscribe_v2_defopts();
+    subopts             = pubnub_subscribe_v2_defopts();
     subopts.filter_expr = "pub == 3";
-    res = pubnub_subscribe_v2(pbp, chan, subopts);
+    res                 = pubnub_subscribe_v2(pbp, chan, subopts);
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -124,8 +113,8 @@ static int doit(pubnub_t* pbp)
 
 int main()
 {
-    int rslt;
-    pubnub_t*   pbp  = pubnub_alloc();
+    int       rslt;
+    pubnub_t* pbp = pubnub_alloc();
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
         return -1;
