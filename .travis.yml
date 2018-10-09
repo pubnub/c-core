@@ -27,5 +27,7 @@ script:
   - make -f posix.mk
   - posix/pubnub_fntest
   - openssl/pubnub_fntest
+  - cpp/fntest_runner
+  - cpp/openssl/fntest_runner
 after_success:
 #  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then java -jar ~/codacy-coverage-reporter-assembly-latest.jar report -l c --force-language -r core/coverage.xml ; fi

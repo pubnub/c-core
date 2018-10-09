@@ -80,9 +80,7 @@ TEST_DEF_NEED_CHGROUP(complex_send_and_receive_over_channel_plus_group_simultane
         pbp, "\"Test M4 - two\"", "\"Test M4 - three\"", NULL));
     expect(pnfntst_got_messages(pbp_2, "\"Test M4\"", NULL));
 
-    expect_PNR_OK(pbp,
-                  pubnub_remove_channel_from_group(pbp, "two,three", chgrp),
-                  10 * SECONDS);
+    expect_PNR_OK(pbp, pubnub_remove_channel_group(pbp, chgrp), 10 * SECONDS);
 
     TEST_POP_DEFERRED;
     TEST_POP_DEFERRED;

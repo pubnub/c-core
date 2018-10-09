@@ -1,6 +1,6 @@
-SOURCEFILES = ..\core\pubnub_pubsubapi.c ..\core\pubnub_coreapi.c ..\core\pubnub_coreapi_ex.c ..\core\pubnub_ccore_pubsub.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  ..\lib\sockets\pbpal_sockets.c ..\lib\sockets\pbpal_resolv_and_connect_sockets.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_blocking_io.c ..\windows\windows_socket_blocking_io.c ..\core\pubnub_free_with_timeout_std.c ..\lib\base64\pbbase64.c ..\core\pubnub_timers.c ..\core\pubnub_json_parse.c ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\core\pbhttp_digest.c ..\lib\md5\md5.c ..\core\pbntlm_core.c ..\core\pbntlm_packer_sspi.c pubnub_set_proxy_from_system_windows.c ..\core\pubnub_helper.c pubnub_version_windows.c  pubnub_generate_uuid_windows.c pbpal_windows_blocking_io.c ..\core\c99\snprintf.c ..\core\pubnub_dns_servers.c ..\windows\pubnub_dns_system_servers.c ..\lib\pubnub_parse_ipv4_addr.c ..\lib\miniz\miniz_tinfl.c ..\core\pbgzip_decompress.c
+SOURCEFILES = ..\core\pubnub_pubsubapi.c ..\core\pubnub_coreapi.c ..\core\pubnub_coreapi_ex.c ..\core\pubnub_ccore_pubsub.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c  ..\lib\sockets\pbpal_sockets.c ..\lib\sockets\pbpal_resolv_and_connect_sockets.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_blocking_io.c ..\windows\windows_socket_blocking_io.c ..\core\pubnub_free_with_timeout_std.c ..\lib\base64\pbbase64.c ..\core\pubnub_timers.c ..\core\pubnub_json_parse.c ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\core\pbhttp_digest.c ..\lib\md5\md5.c ..\core\pbntlm_core.c ..\core\pbntlm_packer_sspi.c pubnub_set_proxy_from_system_windows.c ..\core\pubnub_helper.c pubnub_version_windows.c  pubnub_generate_uuid_windows.c pbpal_windows_blocking_io.c ..\core\c99\snprintf.c ..\core\pubnub_dns_servers.c ..\windows\pubnub_dns_system_servers.c ..\lib\pubnub_parse_ipv4_addr.c ..\lib\miniz\miniz_tinfl.c ..\core\pbgzip_decompress.c ..\core\pubnub_subscribe_v2.c
 
-OBJFILES = pubnub_pubsubapi.obj pubnub_coreapi.obj pubnub_coreapi_ex.obj pubnub_ccore_pubsub.obj pubnub_ccore.obj pubnub_netcore.obj pbpal_sockets.obj pbpal_resolv_and_connect_sockets.obj pubnub_alloc_std.obj pubnub_assert_std.obj pubnub_generate_uuid.obj pubnub_blocking_io.obj windows_socket_blocking_io.obj pubnub_free_with_timeout_std.obj pbbase64.obj pubnub_timers.obj pubnub_json_parse.obj pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj md5.obj pbntlm_core.obj pbntlm_packer_sspi.obj pubnub_set_proxy_from_system_windows.obj pubnub_helper.obj pubnub_version_windows.obj pubnub_generate_uuid_windows.obj pbpal_windows_blocking_io.obj snprintf.obj pubnub_dns_servers.obj pubnub_dns_system_servers.obj pubnub_parse_ipv4_addr.obj miniz_tinfl.obj pbgzip_decompress.obj
+OBJFILES = pubnub_pubsubapi.obj pubnub_coreapi.obj pubnub_coreapi_ex.obj pubnub_ccore_pubsub.obj pubnub_ccore.obj pubnub_netcore.obj pbpal_sockets.obj pbpal_resolv_and_connect_sockets.obj pubnub_alloc_std.obj pubnub_assert_std.obj pubnub_generate_uuid.obj pubnub_blocking_io.obj windows_socket_blocking_io.obj pubnub_free_with_timeout_std.obj pbbase64.obj pubnub_timers.obj pubnub_json_parse.obj pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj md5.obj pbntlm_core.obj pbntlm_packer_sspi.obj pubnub_set_proxy_from_system_windows.obj pubnub_helper.obj pubnub_version_windows.obj pubnub_generate_uuid_windows.obj pbpal_windows_blocking_io.obj snprintf.obj pubnub_dns_servers.obj pubnub_dns_system_servers.obj pubnub_parse_ipv4_addr.obj miniz_tinfl.obj pbgzip_decompress.obj pubnub_subscribe_v2.obj
 
 LDLIBS=ws2_32.lib IPHlpAPI.lib rpcrt4.lib
 
@@ -12,7 +12,7 @@ CFLAGS = -Zi -MP -W3 $(DEFINES)
 
 INCLUDES=-I .. -I . -I ..\core\c99 
 
-all: pubnub_sync_sample.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_callback_subloop_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe
+all: pubnub_sync_sample.exe metadata.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_callback_subloop_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe
 
 SYNC_INTF_SOURCEFILES= ..\core\pubnub_ntf_sync.c ..\core\pubnub_sync_subscribe_loop.c ..\core\srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.obj pubnub_sync_subscribe_loop.obj srand_from_pubnub_time.obj
@@ -41,6 +41,11 @@ SYNC_SAMPLE_SOURCEFILES= ..\core\samples\pubnub_sync_sample.c
 
 pubnub_sync_sample.exe: $(SYNC_SAMPLE_SOURCEFILES)  pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) $(SYNC_SAMPLE_SOURCEFILES) pubnub_sync.lib $(LDLIBS)
+
+METADATA_SOURCEFILES= ..\core\samples\metadata.c
+
+metadata.exe: $(METADATA_SOURCEFILES)  pubnub_sync.lib
+	$(CC) $(CFLAGS) $(INCLUDES) $(METADATA_SOURCEFILES) pubnub_sync.lib $(LDLIBS)
 
 cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib  $(LDLIBS)

@@ -48,7 +48,13 @@ namespace pubnub {
     
     /// Returns whether the given messages have been received on the context
     inline bool got_messages(context const&pb, std::vector<std::string> const &msg) {
-        return pb.get_all() == msg;
+        auto msg_sorted(msg);
+        auto all_sorted(pb.get_all());
+        if(1 < all_sorted.size()) {
+            std::sort(msg_sorted.begin(),msg_sorted.end());
+            std::sort(all_sorted.begin(),all_sorted.end());
+        }
+        return all_sorted == msg_sorted;
     }
     
 
@@ -91,7 +97,11 @@ namespace pubnub {
     ///
     /// @return true: transaction completed in time with same result,
     /// false: timeout or different results
-    bool wait_for(futres &futr, futres &futr_2, std::chrono::milliseconds &rel_time, pubnub_res &pbresult);
+    bool wait_for(futres &futr_1,
+                  futres &futr_2,
+                  std::chrono::milliseconds &rel_time,
+                  pubnub_res &pbresult_1,
+                  pubnub_res &pbresult_2);
 
     /// Do a subscribe operation on context @p pb and channel @p channel
     /// and channel group @p chgroup, wait for @p rel_time, and
@@ -189,6 +199,74 @@ namespace pubnub {
         }
     };
 
+#define TEST_DECL(tst)                                                  \
+    void pnfn_test_##tst(std::string const &pubkey,                     \
+                         std::string const &keysub,                     \
+                         std::string const &origin,                     \
+                         bool const &cannot_do)                        
+
+#define TEST_DEF(tst)                                                   \
+    TEST_DECL(tst)                                                      \
+    {                                                                   \
+        char const* const this_test_name_ = #tst;                       
+
+#define TEST_ENDDEF }
+
+    /** Simple class that gives description for indeterminate test */
+    class except_test {
+        std::string d_str;
+        char const *d_file;
+        long d_line;
+        char const *d_expr;
+    public:
+        except_test(std::string &str, char const *f, long l, char const *e)
+            : d_str(str)
+            , d_file(f)
+            , d_line(l)
+            , d_expr(e)
+            {}      
+        std::string what() const {
+            std::stringstream stream;
+            stream << "In file:" << d_file << ", line:" << d_line << " " <<
+                ((0 != *d_expr)?"For expression:'":"") << d_expr << "' - got:'" << d_str << "'";
+            return stream.str();
+        }
+    };
+
+    inline except_test make_test_exception(std::string describe,
+                                           char const *f,
+                                           long l,
+                                           char const *expr)
+    { 
+        return except_test(describe, f, l, expr);
+    }
+
+#define test_exception(str, fname, line, expr) make_test_exception((str), (fname), (line), (expr))
+
+/** Declare a test that needs support for channel groups API (add,
+    remove, list: channel groups). IOW, can only be run on an account
+    that has this API enabled.
+*/
+#define TEST_DEF_NEED_CHGROUP(tst)                                                 \
+    TEST_DEF(tst)                                                                  \
+    {                                                                              \
+        if (cannot_do) {                                                           \
+            throw test_exception("Test needs channel groups.", __FILE__, __LINE__, "");\
+        }                                                                          \
+    }
+
+#define pbpub_outof_quota(ft, rslt)                                                \
+    (((rslt) == PNR_PUBLISH_FAILED)                                                \
+     && (PNPUB_ACCOUNT_QUOTA_EXCEEDED == (ft).parse_last_publish_result()))
+
+#define check_result_for_exceptions(ft, rslt, fname, line, expr)                   \
+    if ((rslt) == PNR_ABORTED) {                                                   \
+        throw test_exception("Transaction aborted.", (fname), (line), (expr));     \
+    }                                                                              \
+    else if (pbpub_outof_quota((ft), (rslt))) {                                    \
+        throw test_exception("Out of quota.", (fname), (line), (expr));            \
+    }                                                                       
+
     /** Helper class to set up a check for a Pubnub transaction.
         Usually to be used with the #SENSE macro.
      */
@@ -208,7 +286,11 @@ namespace pubnub {
             {}
         
         sense &in(std::chrono::milliseconds deadline) {
-            expect<bool>(wait_for(d_ft, deadline, d_result), d_expr, d_fname, d_line, "transaction timed out") == true;
+            bool trans_finished(wait_for(d_ft, deadline, d_result));
+            if(trans_finished) {                
+                check_result_for_exceptions(d_ft, d_result, d_fname, d_line, d_expr);
+            }
+            expect<bool>(trans_finished, d_expr, d_fname, d_line, "transaction timed out") == true;
             return *this;
         }
         sense &before(std::chrono::milliseconds deadline) { return in(deadline); }
@@ -231,42 +313,72 @@ namespace pubnub {
     class sense_double {
         futres &d_left;
         futres &d_right;
-        pubnub_res d_result;
-        char const *d_expr;
+        pubnub_res d_result_left;
+        pubnub_res d_result_right;
+        char const *d_expr_left;
+        char const *d_expr_right;
         char const *d_fname;
         long d_line;
     public:
         sense_double(sense&left, sense&right) 
             : d_left(left.get_futres())
             , d_right(right.get_futres()) 
-            , d_expr(left.expr())
+            , d_expr_left(left.expr())
+            , d_expr_right(right.expr())
             , d_fname(left.fname())
             , d_line(left.line())
             {}
         sense_double &in(std::chrono::milliseconds deadline) {
-            expect<bool>(wait_for(d_left, d_right, deadline, d_result), d_expr, d_fname, d_line, "waiting for two contexts failed / timed out") == true;
+            std::string expr_left(d_expr_left);
+            std::string expr_right(d_expr_right);
+            bool trans_finished(wait_for(d_left, d_right, deadline, d_result_left, d_result_right));
+            if(trans_finished) {                
+                check_result_for_exceptions(d_left, d_result_left, d_fname, d_line, d_expr_left);
+                check_result_for_exceptions(d_right, d_result_right, d_fname, d_line, d_expr_right);
+            }
+            expect<bool>(trans_finished,
+                         (expr_left + " && " + expr_right).c_str(),
+                         d_fname,
+                         d_line,
+                         "waiting for two contexts timed out") == true;
             return *this;
         }
         sense_double &before(std::chrono::milliseconds deadline) { return in(deadline); }
         sense_double &operator<<(std::chrono::milliseconds deadline) { return in(deadline); }
         
         void operator==(pubnub_res expected) {
-            expect<pubnub_res>(d_result, d_expr, d_fname, d_line) == expected;
+            std::string expr_left(d_expr_left);
+            std::string expr_right(d_expr_right);
+            if(d_result_left == d_result_right) {
+                expect<pubnub_res>(d_result_right,
+                                   (expr_left + " && " + expr_right).c_str(),
+                                   d_fname,
+                                   d_line) == expected;
+            }
+            else {
+                expect<bool>(false,
+                             (expr_left + " && " + expr_right).c_str(),
+                             d_fname,
+                             d_line,
+                             "waiting for two contexts failed") == true;
+            }
         }
     };
     
-    
+
     /// Returns a combined checker for two transactions at the same time
     inline sense_double operator&&(sense &left, sense &right) {
         return sense_double(left, right);
     }
-    /// Returns a combined checker for two transactions at the same time
+
+#if !defined _WIN32
+    /// Returns a combined checker for two transactions at the same time - non reference operands
     inline sense_double operator&&(sense left, sense right) {
         return sense_double(left, right);
     }
-
-/** Helper macro to capture source code info at the place of
-    check in the test.
+#endif
+ /** Helper macro to capture source code info at the place of
+     check in the test.
  */    
 #define SENSE(expr) sense(expr, #expr, __FILE__, __LINE__)
 
@@ -277,9 +389,28 @@ namespace pubnub {
  */    
 #define EXPECT(expr) make_expect(expr, #expr, __FILE__, __LINE__)
 
+#define EXPECT_RESULT(ft, rslt)                                      \
+    check_result_for_exceptions(ft, rslt, __FILE__, __LINE__, #rslt);\
+    EXPECT(rslt)
+
 /** Someone might find this easier to read, especially on longer checks.
  */    
 #define EXPECT_TRUE(expr) EXPECT(expr) == true
+
+/** See
+    https://support.pubnub.com/support/solutions/articles/14000043769-what-are-valid-channel-names-
+*/
+#define MAX_PUBNUB_CHAN_NAME 92
+
+    inline std::string pnfntst_make_name(char const* s) {
+        std::string grn(std::to_string(rand()));
+        std::string str(s);
+        str += "_" + grn;
+        if(MAX_PUBNUB_CHAN_NAME < str.size()) {
+            str.resize(MAX_PUBNUB_CHAN_NAME);
+        }
+        return str;
+    }
 
     inline void await_console() {
         char s[1024];

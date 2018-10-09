@@ -19,6 +19,12 @@
 #include "core/pubnub_dns_servers.h"
 #endif
 
+#if !defined PUBNUB_USE_SSL
+#define PUBNUB_USE_SSL 0
+#endif
+
+#define PUBNUB_NEED_RETRY_AFTER_CLOSE (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
+
 #if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
 #define PUBNUB_RECEIVE_GZIP_RESPONSE 0
 #elif PUBNUB_RECEIVE_GZIP_RESPONSE
@@ -163,13 +169,6 @@ struct pubnub_ {
     char const* origin;
 #endif
 
-#if 0
-    /** Process that started last transaction */
-    struct process *initiator;
-
-    uint8_t *readptr;         /* Pointer to the next data to be read. */
-#endif
-
     struct pubnub_pal pal;
 
     struct pubnub_options {
@@ -213,12 +212,13 @@ struct pubnub_ {
 #endif
         /** Should close connection */
         bool should_close : 1;
-        
+
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         /** Retry the same Pubnub request after closing current TCP
             connection.
         */
         bool retry_after_close : 1;
-
+#endif
         /** Indicates whether current transaction started while connection
             was kept alive(by client)(true:yes, false:no).
             Used when deciding whether closed connection detected should be
@@ -278,9 +278,9 @@ struct pubnub_ {
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
-    /** Proxy IP address, if and when available through hostname string in 'numbers
-        and dots' notation. If proxy IP address is not available structure array is
-        filled with zeros.
+    /** Proxy IP address, if and when available through hostname string in
+       'numbers and dots' notation. If proxy IP address is not available
+       structure array is filled with zeros.
      */
     struct pubnub_ipv4_address proxy_ip_address;
 
@@ -366,6 +366,14 @@ pubnub_t* pballoc_get_ctx(unsigned idx);
 /** Internal function, the "bottom half" of pubnub_free(), which is
     done asynchronously in the callback mode. */
 void pballoc_free_at_last(pubnub_t* pb);
+
+
+/**  Parses subscribe V2 response from Pubnub.
+
+     @todo Should probably find a better place for this
+     declaration...
+*/
+enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p);
 
 
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */

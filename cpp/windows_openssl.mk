@@ -21,7 +21,7 @@ CFLAGS = /EHsc /Zi /MP /TP /W3 $(INCLUDES) /D PUBNUB_THREADSAFE /D PUBNUB_USE_WI
 # /TP means "compile all files as C++"
 # /EHsc enables (standard) exception support
 
-all: openssl\pubnub_sync_sample.exe openssl\pubnub_callback_sample.exe openssl\pubnub_callback_cpp11_sample.exe openssl\cancel_subscribe_sync_sample.exe openssl\subscribe_publish_callback_sample.exe openssl\futres_nesting_sync.exe openssl\futres_nesting_callback.exe openssl\futres_nesting_callback_cpp11.exe
+all: openssl\fntest_runner.exe openssl\pubnub_sync_sample.exe openssl\pubnub_callback_sample.exe openssl\pubnub_callback_cpp11_sample.exe openssl\cancel_subscribe_sync_sample.exe openssl\subscribe_publish_callback_sample.exe openssl\futres_nesting_sync.exe openssl\futres_nesting_callback.exe openssl\futres_nesting_callback_cpp11.exe
 
 
 openssl\pubnub_sync_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp
@@ -32,6 +32,9 @@ openssl\cancel_subscribe_sync_sample.exe: samples\cancel_subscribe_sync_sample.c
 
 openssl\futres_nesting_sync.exe: samples\futres_nesting.cpp $(SOURCEFILES) ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp
 	$(CXX) /Fe$@ $(CFLAGS) samples\futres_nesting.cpp ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) /link $(LIBS)
+
+openssl\fntest_runner.exe: fntest\pubnub_fntest_runner.cpp $(SOURCEFILES)  ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest\pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp
+	$(CXX) /Fe$@ $(CFLAGS) fntest\pubnub_fntest_runner.cpp ..\core\pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp $(SOURCEFILES) /link $(LIBS) 
 
 CALLBACK_INTF_SOURCEFILES=..\openssl\pubnub_ntf_callback_windows.c ..\openssl\pubnub_get_native_socket.c ..\core\pubnub_timer_list.c ..\lib\sockets\pbpal_adns_sockets.c ..\lib\sockets\pbpal_ntf_callback_poller_poll.c  ..\core\pbpal_ntf_callback_queue.c ..\core\pbpal_ntf_callback_admin.c ..\core\pbpal_ntf_callback_handle_timer_list.c  ..\core\pubnub_callback_subscribe_loop.c
 

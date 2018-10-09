@@ -12,7 +12,7 @@ ULONG static get_max_token(void)
 {
     ULONG result;
     PSecPkgInfo pkg;
-    SECURITY_STATUS status = QuerySecurityPackageInfoA("NTLM", &pkg);
+    SECURITY_STATUS status = QuerySecurityPackageInfoA((char*)"NTLM", &pkg);
     if (status != SEC_E_OK) {
         return 0;
     }
@@ -75,7 +75,7 @@ static SECURITY_STATUS acquire_creds(PSEC_WINNT_AUTH_IDENTITY pident, CredHandle
     TimeStamp expiry;
     PUBNUB_ASSERT(!SecIsValidHandle(phcreds));
     return AcquireCredentialsHandleA(NULL,
-                                     "NTLM",
+                                     (char*)"NTLM",
                                      SECPKG_CRED_OUTBOUND, 
                                      NULL,
                                      pident, 
@@ -94,7 +94,7 @@ static SECURITY_STATUS init_sec_ctx(CredHandle *phcreds, CtxtHandle *phctx, SecB
     PUBNUB_ASSERT_OPT(NULL != phctx_new);
     return InitializeSecurityContextA(phcreds, 
                                       phctx,
-                                      "",
+                                      (char*)"",
                                       0, 
                                       0, 
                                       SECURITY_NETWORK_DREP,

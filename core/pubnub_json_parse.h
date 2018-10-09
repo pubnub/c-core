@@ -3,6 +3,7 @@
 #define INC_PUBNUB_JSON_PARSE
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 
 /** @file pubnub_json_parse.h
@@ -149,6 +150,18 @@ bool pbjson_elem_equals_string(struct pbjson_elem const* e, char const* s);
  */
 char const*
 pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e);
+
+
+/** Copies the element @p p to the given string @p s, allocated by the
+    caller as an array of @p n elements, which thus includes the
+    terminating NUL character.
+
+    If @p p can't fit in the given string, at most @p n - 1 elements
+    will be copied to it. This is not considered an error.
+
+    @return number of characters put into @p s, including the terminating NUL
+*/
+size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n);
 
 
 #endif /* !defined INC_PUBNUB_JSON_PARSE */

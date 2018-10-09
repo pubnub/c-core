@@ -37,25 +37,27 @@ bool wait_for(futres &futr, std::chrono::milliseconds &rel_time, pubnub_res &pbr
 }
 
 
-bool wait_for(futres &futr, futres &futr_2, std::chrono::milliseconds &rel_time, pubnub_res &pbresult)
+bool wait_for(futres &futr_1,
+              futres &futr_2,
+              std::chrono::milliseconds &rel_time,
+              pubnub_res &pbresult_1,
+              pubnub_res &pbresult_2)
 {
     auto const t0 = std::chrono::system_clock::now();
     auto t_current = std::chrono::system_clock::now();
-    pubnub_res res = PNR_STARTED;
+    pubnub_res res_1 = PNR_STARTED;
     pubnub_res res_2 = PNR_STARTED;
     while ((t_current - t0) < rel_time) {
-        if (res == PNR_STARTED) {
-            res = futr.last_result();
+        if (res_1 == PNR_STARTED) {
+            res_1 = futr_1.last_result();
         }
         if (res_2 == PNR_STARTED) {
             res_2 = futr_2.last_result();
         }
-        if ((res != PNR_STARTED) && (res_2 != PNR_STARTED)) {
+        if ((res_1 != PNR_STARTED) && (res_2 != PNR_STARTED)) {
             rel_time -= std::chrono::duration_cast<std::chrono::milliseconds>(t_current - t0);
-            if (res != res_2) {
-                return false;
-            }
-            pbresult = res;
+            pbresult_1 = res_1;
+            pbresult_2 = res_2;
             return true;
         }
         t_current = std::chrono::system_clock::now();

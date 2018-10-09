@@ -193,7 +193,7 @@ static int run_tests(struct TestData aTest[],
             hstdout, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         printf("%u tests indeterminate\n", indete_count);
         SetConsoleTextAttribute(hstdout, wOldColorAttrs);
-        return failed_count + indete_count;
+        return failed_count;
     }
 }
 

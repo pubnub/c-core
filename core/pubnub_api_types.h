@@ -94,6 +94,13 @@ enum pubnub_res {
     PNR_BAD_COMPRESSION_FORMAT
 };
 
+/** 'pubnub_cancel()' return value */
+enum pubnub_cancel_res {
+    /** 'cancel' finished */
+    PN_CANCEL_FINISHED,
+    /** 'cancel' started */
+    PN_CANCEL_STARTED,
+};
 
 /** Type of Pubnub operation/transaction */
 enum pubnub_trans {
@@ -137,9 +144,11 @@ enum pubnub_trans {
     /** Get a list of all channels in a channel group (from the
      * channel-registry) operation/transaction */
     PBTT_LIST_CHANNEL_GROUP,
-    /** Inform Pubnub that we're still working on @p channel and/or @p
+    /** Inform Pubnub that we're still working on channel and/or
         channel_group operation/transaction */
     PBTT_HEARTBEAT,
+    /** Subscribe V2 operation/transaction */
+    PBTT_SUBSCRIBE_V2,
     /** Count the number of transaction types */
     PBTT_MAX
 };
