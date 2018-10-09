@@ -184,7 +184,7 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     }
     else {
         PUBNUB_LOG_ERROR(
-            "No message array subscribe V2 response found, error=%d\n", result);
+            "No message array subscribe V2 response found, error=%d\n", jpresult);
         return PNR_FORMAT_ERROR;
     }
 
