@@ -477,7 +477,6 @@ next_state:
 #if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = false;
 #endif
-        pb->flags.retry_after_close = false;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         pb->keep_alive.t_connect = time(NULL);
         pb->keep_alive.count     = 0;
