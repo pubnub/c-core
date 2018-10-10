@@ -38,6 +38,9 @@
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi.h"
 #include "core/pubnub_ntf_callback.h"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "core/pubnub_subscribe_v2.h"
+#endif
 
 
 #endif /* !defined INC_PUBNUB_CALLBACK */
