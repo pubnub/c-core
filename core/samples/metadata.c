@@ -52,9 +52,7 @@ static int doit(pubnub_t* pbp)
     char const*                        chan = "hello_meta";
     struct pubnub_subscribe_v2_options subopts;
 
-    pubnub_init(pbp,
-                "pub-c-9f4a1162-d5b5-4de4-95b3-6d7bb8c61ce4",
-                "sub-c-0667a370-ab02-11e8-87b0-ca0e85b4e44e");
+    pubnub_init(pbp, "demo", "demo");
     srand((unsigned)time(NULL));
 
     puts("----------------------------");

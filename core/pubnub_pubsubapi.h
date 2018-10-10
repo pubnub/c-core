@@ -260,9 +260,8 @@ int pubnub_origin_set(pubnub_t* p, char const* origin);
 
     But, there's a trade-off here, here are the drawbacks:
 
-    * pubnub_free() will not work for contexts that are in
-      "keep alive" state. You need to pubnub_cancel() before
-      you can pubnub_free().
+    * pubnub_free() is more likely to not complete for contexts that
+      are in "keep alive" state.
     * Socket in the keep-alive state will be closed by the
       Pubnub network (server) after some period of inactivity.
       While we should be able to handle that, it's possible
