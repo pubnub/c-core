@@ -2,8 +2,8 @@
 #include "pubnub_qt.h"
 
 extern "C" {
-#include "pubnub_ccore_pubsub.h"
-#include "pubnub_ccore.h"
+#include "core/pubnub_ccore_pubsub.h"
+#include "core/pubnub_ccore.h"
 }
 
 #include <QtNetwork>
@@ -105,7 +105,7 @@ QStringList pubnub_qt::get_all_channels() const
 {
     QStringList all;
     while (char const *msg = pbcc_get_channel(d_context.data())) {
-        if (0 == msg) {
+        if (nullptr == msg) {
             break;
         }
         all.push_back(msg);
@@ -319,7 +319,7 @@ int pubnub_qt::last_http_code() const
 
 QString pubnub_qt::last_publish_result() const
 {
-    if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == d_context->http_reply)) {
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER && (nullptr == d_context->http_reply)) {
         return "";
     }
     if ((d_trans != PBTT_PUBLISH) || (d_context->http_reply[0] == '\0')) {
@@ -507,7 +507,7 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 }
 
 
-#include "pubnub_version_internal.h"
+#include "core/pubnub_version_internal.h"
 
 #define PUBNUB_SDK_NAME "Qt5"
 
