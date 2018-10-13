@@ -2,7 +2,7 @@
 #include "pubnub_qt_gui_sample.h"
 
 extern "C" {
-#include "pubnub_helper.h"
+#include "core/pubnub_helper.h"
 }
 
 #include <QApplication>
