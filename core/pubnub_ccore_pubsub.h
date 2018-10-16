@@ -30,8 +30,13 @@ struct pbcc_context {
      * any */
     char const* auth;
 
-    /** The last used time token. */
+    /** The last recived subscribe time token. */
     char timetoken[20];
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+    /** The last received subscribe V2 region */
+    int region;
+#endif
 
     /** The result of the last Pubnub transaction */
     enum pubnub_res last_result;
@@ -45,7 +50,8 @@ struct pbcc_context {
     unsigned http_buf_len;
 
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
-    /** The length of the decompressed data currently in the decompressing buffer ("scratch").
+    /** The length of the decompressed data currently in the decompressing
+     * buffer ("scratch").
      */
     unsigned decomp_buf_size;
 #endif
@@ -57,14 +63,15 @@ struct pbcc_context {
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     char* http_reply;
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
-    char *decomp_http_reply;
+    char* decomp_http_reply;
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #else
     /** The contents of a HTTP reply/reponse */
     char http_reply[PUBNUB_REPLY_MAXLEN + 1];
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
-    /** Auxiliary buffer for unpacking(decompresing) data from HTTP reply buffer */
-    char decomp_http_reply[PUBNUB_REPLY_MAXLEN+1];
+    /** Auxiliary buffer for unpacking(decompresing) data from HTTP reply buffer
+     */
+    char decomp_http_reply[PUBNUB_REPLY_MAXLEN + 1];
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
 
@@ -97,6 +104,15 @@ struct pbcc_context {
         }                                                                      \
     }
 
+#define APPEND_URL_PARAM_ENCODED_M(pbc, name, var, separator)                  \
+    if ((var) != NULL) {                                                       \
+        const char      param_[] = name;                                       \
+        enum pubnub_res rslt_    = pbcc_append_url_param_encoded(              \
+            (pbc), param_, sizeof param_ - 1, (var), (separator));          \
+        if (rslt_ != PNR_OK) {                                                 \
+            return rslt_;                                                      \
+        }                                                                      \
+    }
 
 #define APPEND_URL_PARAM_INT_M(pbc, name, var, separator)                      \
     do {                                                                       \
@@ -150,8 +166,8 @@ void pbcc_deinit(struct pbcc_context* p);
 int pbcc_realloc_reply_buffer(struct pbcc_context* p, unsigned bytes);
 
 /** Ensures existence of reply buffer in the C core context @p p
-    in special cases when no: 'Content-Length:', nor 'Transfer-Encoding: chunked'
-    header line has been received.       
+    in special cases when no: 'Content-Length:', nor 'Transfer-Encoding:
+   chunked' header line has been received.
     @return true: OK(at least one byte allocated), false: otherwise
 */
 bool pbcc_ensure_reply_buffer(struct pbcc_context* p);
@@ -214,8 +230,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     char const*          channel,
                                     char const*          channel_group,
-                                    unsigned*            heartbeat,
-                                    char const*          filter_expr);
+                                    unsigned*            heartbeat);
 
 
 /** Split @p buf string containing a JSON array (with arbitrary
@@ -229,6 +244,12 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
                                       size_t               param_name_len,
                                       char const*          param_val,
                                       char                 separator);
+
+enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
+                                              char const*          param_name,
+                                              size_t      param_name_len,
+                                              char const* param_val,
+                                              char        separator);
 
 
 #endif /* !defined INC_PUBNUB_CCORE_PUBSUB */

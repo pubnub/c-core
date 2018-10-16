@@ -122,5 +122,11 @@
 #define PUBNUB_ONLY_PUBSUB_API 0
 #endif
 
+#if !defined(PUBNUB_USE_SUBSCRIBE_V2)
+/** If true (!=0) will enable using the subscribe v2 API, which
+    provides filter expressions and more data about messages. */
+#define PUBNUB_USE_SUBSCRIBE_V2 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

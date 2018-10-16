@@ -71,14 +71,23 @@ void pubnub_set_auth(pubnub_t* p, const char* auth);
 */
 char const* pubnub_auth_get(pubnub_t* p);
 
-/** Cancel an ongoing API transaction. The outcome of the transaction
-    in progress, if any, will be #PNR_CANCELLED.
+/** Cancels an ongoing API transaction. This will, once it is done,
+    close the (TCP/IP) connection to Pubnub (if it was open).  The
+    outcome of the transaction in progress, if any, will be
+    #PNR_CANCELLED.
 
     In the sync interface, it's possible that this cancellation will
     finish during the execution of a call to this function. But,
-    there's no guarantee, so you're best to await the outcome.
+    there's no guarantee, so check the result.
+
+    In the callback interface, it's not likely cancellation will be
+    done, but, still, it's possible. So, if this matters to you, it's
+    always best to check the result.
+
+    @retval #PN_CANCEL_STARTED cancel started, await the outcome
+    @retval #PN_CANCEL_FINISHED cancelled, no need to await
 */
-void pubnub_cancel(pubnub_t* p);
+enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
 
 /** Publish the @p message (in JSON format) on @p p channel, using the
     @p p context. This actually means "initiate a publish
@@ -251,9 +260,8 @@ int pubnub_origin_set(pubnub_t* p, char const* origin);
 
     But, there's a trade-off here, here are the drawbacks:
 
-    * pubnub_free() will not work for contexts that are in
-      "keep alive" state. You need to pubnub_cancel() before
-      you can pubnub_free().
+    * pubnub_free() is more likely to not complete for contexts that
+      are in "keep alive" state.
     * Socket in the keep-alive state will be closed by the
       Pubnub network (server) after some period of inactivity.
       While we should be able to handle that, it's possible

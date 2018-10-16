@@ -18,5 +18,7 @@ test_script:
   - core\pubnub_proxy_NTLM_test
   - windows\pubnub_fntest
   - openssl\pubnub_fntest
+  - cpp\fntest_runner
+  - cpp\openssl\fntest_runner
 
 deploy: off

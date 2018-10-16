@@ -42,7 +42,6 @@ pubnub_res futres::last_result()
     }
 }
 
-
 void futres::start_await()
 {
     // nothing to do to "start" a sync await...
@@ -64,6 +63,11 @@ bool futres::valid() const
 bool futres::is_ready() const
 {
   return d_result != PNR_STARTED;
+}
+
+pubnub_publish_res futres::parse_last_publish_result()
+{
+    return d_ctx.parse_last_publish_result();
 }
  
 #if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)

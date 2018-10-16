@@ -69,12 +69,14 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 static void close_connection(struct pubnub_* pb)
 {
     if (pbpal_close(pb) <= 0) {
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         PUBNUB_LOG_TRACE("close_connection(): pb->flags.retry_after_close=%d\n",
                          pb->flags.retry_after_close);
         if (pb->flags.retry_after_close) {
             pb->state = PBS_RETRY;
             return;
         }
+#endif
         pbpal_forget(pb);
         pbntf_trans_outcome(pb, PBS_IDLE);
     }
@@ -88,12 +90,14 @@ static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
 {
     pb->flags.started_while_kept_alive = false;
     if (pbpal_close(pb) <= 0) {
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         PUBNUB_LOG_TRACE(
             "close_kept_alive_connection(): pb->flags.retry_after_close=%d\n",
             pb->flags.retry_after_close);
         if (pb->flags.retry_after_close) {
             return PBS_RETRY;
         }
+#endif
         pbpal_forget(pb);
         return PBS_IDLE;
     }
@@ -115,7 +119,9 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
         PUBNUB_LOG_TRACE("outcome_detected(pb=%p): Keepin' it alive\n", pb);
         pbntf_lost_socket(pb);
         pbntf_trans_outcome(pb, PBS_KEEP_ALIVE_IDLE);
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = false;
+#endif
     }
     else {
         pb->flags.started_while_kept_alive = false;
@@ -148,6 +154,7 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
                                                       dont_parse,
                                                       dont_parse,
                                                       dont_parse,
+                                                      dont_parse,
                                                       dont_parse
 #else
     pbcc_parse_presence_response, /* PBTT_LEAVE */
@@ -163,7 +170,12 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
     pbcc_parse_channel_registry_response, /* PBTT_ADD_CHANNEL_TO_GROUP */
     pbcc_parse_channel_registry_response, /* PBTT_LIST_CHANNEL_GROUP */
     pbcc_parse_presence_response /* PBTT_HEARTBEAT */
+#if PUBNUB_USE_SUBSCRIBE_V2
+    , pbcc_parse_subscribe_v2_response /* PBTT_SUBSCRIBE_V2 */
+#else
+    , dont_parse /* PBTT_SUBSCRIBE_V2 */
 #endif
+#endif /* PUBNUB_ONLY_PUBSUB_API */
 };
 
 
@@ -222,7 +234,6 @@ static enum pubnub_res finish(struct pubnub_* pb)
     possible_gzip_response(pb);
     pb->core.http_reply[pb->core.http_buf_len] = '\0';
     PUBNUB_LOG_TRACE("finish(pb=%p, '%s')\n", pb, pb->core.http_reply);
-
     pbres = parse_pubnub_result(pb);
     if ((PNR_OK == pbres) && ((pb->http_code / 100) != 2)) {
         pbres = PNR_HTTP_ERROR;
@@ -238,8 +249,10 @@ static char const* pbnc_state2str(enum pubnub_state e)
     switch (e) {
     case PBS_NULL:
         return "PBS_NULL";
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
     case PBS_RETRY:
         return "PBS_RETRY";
+#endif
     case PBS_IDLE:
         return "PBS_IDLE";
     case PBS_READY:
@@ -323,7 +336,9 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = false;
+#endif
 #if PUBNUB_PROXY_API
         pb->proxy_tunnel_established = false;
         pb->proxy_saved_path_len     = 0;
@@ -340,10 +355,12 @@ next_state:
             break;
         }
         break;
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
     case PBS_RETRY:
         pb->flags.retry_after_close = false;
         pb->state                   = PBS_READY;
         goto next_state;
+#endif
     case PBS_READY: {
         enum pbpal_resolv_n_connect_result rslv = pbpal_resolv_and_connect(pb);
         WATCH_ENUM(rslv);
@@ -457,7 +474,9 @@ next_state:
     }
     case PBS_CONNECTED:
         pb->flags.should_close = !pb->options.use_http_keep_alive;
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = false;
+#endif
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         pb->keep_alive.t_connect = time(NULL);
         pb->keep_alive.count     = 0;
@@ -1009,10 +1028,12 @@ next_state:
         break;
     case PBS_WAIT_CLOSE:
         if (pbpal_closed(pb)) {
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
             if (pb->flags.retry_after_close) {
                 pb->state = PBS_RETRY;
                 goto next_state;
             }
+#endif
             pbpal_forget(pb);
             pbntf_trans_outcome(pb, PBS_IDLE);
         }
@@ -1025,10 +1046,12 @@ next_state:
         break;
     case PBS_WAIT_CANCEL_CLOSE:
         if (pbpal_closed(pb)) {
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
             if (pb->flags.retry_after_close) {
                 pb->state = PBS_RETRY;
                 goto next_state;
             }
+#endif
             pbpal_forget(pb);
             pb->core.msg_ofs = pb->core.msg_end = 0;
             pbntf_trans_outcome(pb, PBS_IDLE);
@@ -1038,7 +1061,7 @@ next_state:
 #if PUBNUB_PROXY_API
         pb->proxy_saved_path_len = 0;
 #endif
-        pb->state = PBS_KEEP_ALIVE_READY;
+        pb->state                          = PBS_KEEP_ALIVE_READY;
         pb->flags.started_while_kept_alive = true;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
@@ -1066,18 +1089,26 @@ next_state:
         goto next_state;
     case PBS_KEEP_ALIVE_WAIT_CLOSE:
         if (pbpal_closed(pb)) {
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
             if (pb->flags.retry_after_close) {
                 pb->state = PBS_RETRY;
                 goto next_state;
             }
+#endif
             pbpal_forget(pb);
             pb->state = PBS_IDLE;
             goto next_state;
         }
         break;
+    default:
+        PUBNUB_LOG_ERROR("pbnc_fsm(pb=%p): unhandled state: %s\n",
+                         pb,
+                         pbnc_state2str(pb->state));
+        break;
     }
     return 0;
 }
+
 
 void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 {
@@ -1099,11 +1130,13 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         pbp->trans = PBTT_NONE;
         /*FALLTHRU*/
     case PBS_RX_HTTP_VER:
-        /* Transaction generating PNR_TIMEOUT outcome at any point can not end up in
-           PBS_KEEP_ALIVE_IDLE so previous *FALLTHROUHGH* is safe */
-        if ((PNR_TIMEOUT == outcome_to_report) && (pbp->flags.started_while_kept_alive)) {
-            /* Closing connection that was kept alive is always done with intention
-               to reestablish it anew and don't lose current transaction. 
+        /* Transaction generating PNR_TIMEOUT outcome at any point can not end
+           up in PBS_KEEP_ALIVE_IDLE so previous *FALLTHROUHGH* is safe */
+        if ((PNR_TIMEOUT == outcome_to_report)
+            && (pbp->flags.started_while_kept_alive)) {
+            /* Closing connection that was kept alive is always done with
+               intention to reestablish it anew and don't lose current
+               transaction.
             */
             pbp->state = close_kept_alive_connection(pbp);
             pbntf_requeue_for_processing(pbp);

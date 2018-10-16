@@ -35,6 +35,9 @@
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_generate_uuid.h"
 #include "core/pubnub_blocking_io.h"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "core/pubnub_subscribe_v2.h"
+#endif
 
 
 #endif /* !defined INC_OPENSSL_SYNC */

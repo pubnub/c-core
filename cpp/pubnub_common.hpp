@@ -486,10 +486,10 @@ public:
         return all;
     }
 
-    /// Cancels the transaction, if any is ongoing. If none is
-    /// ongoing, it is ignored.
+    /// Cancels the transaction, if any is ongoing, or connection is 'kept alive'. 
+    /// If none is ongoing, it is ignored.
     /// @see pubnub_cancel
-    void cancel() { pubnub_cancel(d_pb); }
+    enum pubnub_cancel_res cancel() { return pubnub_cancel(d_pb); }
 
     /// Publishes a @p message on the @p channel. The @p channel
     /// can have many channels separated by a comma

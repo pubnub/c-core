@@ -10,8 +10,8 @@
 #include <QDebug>
 
 extern "C" {
-#include "pubnub_api_types.h"
-#include "pubnub_helper.h"
+#include "core/pubnub_api_types.h"
+#include "core/pubnub_helper.h"
 }
 
 QT_BEGIN_NAMESPACE

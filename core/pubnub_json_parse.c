@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_json_parse.h"
 
+#include "pubnub_assert.h"
+
 #include <string.h>
 
 
@@ -241,4 +243,25 @@ char const* pbjson_object_name_parse_result_2_string(enum pbjson_object_name_par
     default:
         return "?!?";
     }
+}
+
+
+size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n)
+{
+    size_t len;
+
+    PUBNUB_ASSERT_OPT(p != NULL);
+    PUBNUB_ASSERT_OPT(s != NULL);
+    PUBNUB_ASSERT_OPT(n > 0);
+
+    len = p->end - p->start;
+    if (len >= n) {
+        len = n - 1;
+    }
+    if (len > 0) {
+        memcpy(s, p->start, len);
+    }
+    s[len] = '\0';
+
+    return len + 1;
 }

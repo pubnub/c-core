@@ -1,7 +1,17 @@
 name: c-core
-version: 2.5.2
+version: 2.5.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.3
+    changes:
+      - type: feature
+        text: Add support for pubnub_subscribe_v2() w/filter expressions
+      - type: feature
+        text: pubnub_cancel() returns is it done, or it just started the cancellation
+      - type: feature
+        text: Code that is only for TLS/SSL ifdef-ed out when not building w/TLS/SSL
+      - type: feature
+        text: Functional tests for C++ updated and now run on each commit
   - version: v2.5.2
     changes:
       - type: bug

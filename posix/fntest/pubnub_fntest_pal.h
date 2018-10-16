@@ -83,7 +83,7 @@
         await_timed((time_ms), (exp_rslt), (pbp));                             \
     }                                                                          \
     else {                                                                     \
-        expect_pnr((rslt), (exp_rslt));                                        \
+        expect_last_result((pbp), (rslt), (exp_rslt));                         \
     }
 
 

@@ -4,4 +4,4 @@
 #define paint_text_red() printf("\x1B[31m")
 #define paint_text_blue() printf("\x1B[34m")
 #define reset_text_paint() printf("\x1b[0m")
-
+#define paint_text_white_with_background_red() printf("\x1b[41m")

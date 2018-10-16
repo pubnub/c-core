@@ -322,6 +322,9 @@ public:
     /// Returns true if the transaction is over, else otherwise
     bool is_ready() const;
 
+    /// Parses the last (or latest) result of the transaction 'publish'.
+    pubnub_publish_res parse_last_publish_result();
+
     // We can construct from a temporary
 #if __cplusplus >= 201103L
     futres(futres&& x)
