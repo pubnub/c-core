@@ -66,35 +66,50 @@ enum DNSoptionsMask {
 
 /** Constant sized fields of query structure */
 struct QUESTION {
+    /* Question type */
     uint16_t qtype;
+    /* Question class */
     uint16_t qclass;
 };
 
-/** Constant sized fields of the resource record structure */
+/** Constant sized fields of the resource record (RR) structure */
 #pragma pack(push, 1)
 struct R_DATA {
+    /** Type of resource record */
     uint16_t type;
-    uint16_t _class;
+    /** Class code */
+    uint16_t class_;
+    /** Time-To-Live - count of seconds RR stays valid */
     uint32_t ttl;
+    /** Length of RDATA (in octets) */
     uint16_t data_len;
 };
 #pragma pack(pop)
 
+/** Question/query types */
 enum DNSqueryType {
+    /** Address - IPv4 */
     dnsA     = 1,
+    /** Name server */
     dnsNS    = 2,
+    /** Canonical name */
     dnsCNAME = 5,
+    /** Start of authority */
     dnsSOA   = 6,
-    dnsWKS   = 11,
+    /** Pointer (to another location in the name space ) */
     dnsPTR   = 12,
+    /** Mail exchange (responsible for handling e-mail sent to the
+     * domain */
     dnsMX    = 15,
+    /** IPv6 address - 128 bit */
+    dnsAAAA  = 28,
+    /** Service locator */
     dnsSRV   = 33,
-    dnsA6    = 38,
+    /** All cached records */
     dnsANY   = 255
 };
 
-enum DNSopcode { dnsocQUERY, dnsocIQUERY, dnsocSTATUS };
-
+/** Question/query class */
 enum DNSqclass { dnsqclassInternet = 1 };
 
 
@@ -145,57 +160,71 @@ static unsigned char* dns_qname_encode(uint8_t* dns, size_t n, uint8_t const* ho
    "(de)compression" scheme in which a label can be shared with
    another in the same buffer.
 */
-static unsigned char* dns_label_decode(uint8_t*       label,
-                                       size_t         n,
-                                       uint8_t const* src,
-                                       uint8_t const* buffer,
-                                       size_t         buffer_size,
-                                       size_t*        o_bytes_to_skip)
+static int dns_label_decode(uint8_t*       decoded,
+                            size_t         n,
+                            uint8_t const* src,
+                            uint8_t const* buffer,
+                            size_t         buffer_size,
+                            size_t*        o_bytes_to_skip)
 {
-    uint8_t*             dest = label;
-    uint8_t const* const end  = label + n;
+    uint8_t*             dest   = decoded;
+    uint8_t const* const end    = decoded + n;
+    uint8_t const*       reader = src;
 
     PUBNUB_ASSERT_OPT(n > 0);
     PUBNUB_ASSERT_OPT(src != NULL);
     PUBNUB_ASSERT_OPT(buffer != NULL);
-    PUBNUB_ASSERT_OPT(label != NULL);
+    PUBNUB_ASSERT_OPT(decoded != NULL);
     PUBNUB_ASSERT_OPT(o_bytes_to_skip != NULL);
 
     *o_bytes_to_skip = 0;
     while (dest < end) {
-        uint8_t b = *src;
+        uint8_t b = *reader;
         if (b & 0xC0) {
-            uint16_t offset = (b & 0x3F) * 256 + src[1];
+            uint16_t offset = (b & 0x3F) * 256 + reader[1];
             if (0 == *o_bytes_to_skip) {
-                *o_bytes_to_skip = dest - label + 2;
+                *o_bytes_to_skip = reader - src + 2;
             }
             if (offset >= buffer_size) {
+                PUBNUB_LOG_ERROR("Error in DNS label/name decoding - offset=%d "
+                                 ">= buffer_size=%d\n",
+                                 offset,
+                                 buffer_size);
                 *dest = '\0';
-                break;
+                return -1;
             }
-            src = buffer + offset;
+            reader = buffer + offset;
         }
         else if (0 == b) {
-            break;
+            if (0 == *o_bytes_to_skip) {
+                *o_bytes_to_skip = reader - src + 1;
+            }
+            return 0;
         }
         else {
-            if (dest != label) {
+            if (dest != decoded) {
                 *dest++ = '.';
             }
             if (dest + b >= end) {
+                PUBNUB_LOG_ERROR("Error in DNS label/name decoding - dest=%p + "
+                                 "b=%d >= end=%p\n",
+                                 dest,
+                                 b,
+                                 end);
                 *dest = '\0';
-                break;
+                return -1;
             }
-            memcpy(dest, src + 1, b);
+            memcpy(dest, reader + 1, b);
             dest[b] = '\0';
             dest += b;
-            src += b + 1;
+            reader += b + 1;
         }
     }
-    if (*o_bytes_to_skip == 0) {
-        *o_bytes_to_skip = dest - label;
-    }
-    return label;
+
+    PUBNUB_LOG_ERROR(
+        "Destination for decoding DNS label/name too small, n=%d\n", n);
+
+    return -1;
 }
 
 
@@ -265,9 +294,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
     if (msg_size <= 0) {
         return socket_would_block() ? +1 : -1;
     }
-
-    reader = buf + sizeof *dns + strlen((const char*)qname) + 1
-             + sizeof(struct QUESTION);
+    reader = buf + sizeof *dns;
 
     PUBNUB_LOG_TRACE("DNS response has: %hu Questions, %hu Answers, %hu "
                      "Auth. Servers, %hu Additional records.\n",
@@ -275,14 +302,34 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
                      ntohs(dns->ans_count),
                      ntohs(dns->auth_count),
                      ntohs(dns->add_count));
+    if (ntohs(dns->q_count) != 1) {
+        PUBNUB_LOG_INFO("Strange DNS response, we sent one question, but DNS "
+                        "response doesn't have one question.\n");
+    }
+    for (i = 0; i < ntohs(dns->q_count); ++i) {
+        uint8_t name[256];
+        size_t  to_skip;
 
+        if (0 != dns_label_decode(name, sizeof name, reader, buf, msg_size, &to_skip)) {
+            return -1;
+        }
+        PUBNUB_LOG_TRACE(
+            "DNS response, question name: %s, to_skip=%d\n", name, to_skip);
+
+        /* Could check for QUESTION data format (QType and QClass), but
+           even if it's wrong, we don't know what to do with it, so,
+           there's no use */
+        reader += to_skip + sizeof(struct QUESTION);
+    }
     for (i = 0; i < ntohs(dns->ans_count); ++i) {
         uint8_t        name[256];
         size_t         to_skip;
         struct R_DATA* prdata;
         size_t         r_data_len;
 
-        dns_label_decode(name, sizeof name, reader, buf, msg_size, &to_skip);
+        if (0 != dns_label_decode(name, sizeof name, reader, buf, msg_size, &to_skip)) {
+            return -1;
+        }
         prdata     = (struct R_DATA*)(reader + to_skip);
         r_data_len = ntohs(prdata->data_len);
         reader += to_skip + sizeof *prdata;
