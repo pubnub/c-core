@@ -1,7 +1,11 @@
 name: c-core
-version: 2.5.3
+version: 2.5.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.4
+    changes:
+      - type: bug
+        text: Fix DNS decoding
   - version: v2.5.3
     changes:
       - type: feature
