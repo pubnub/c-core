@@ -285,7 +285,6 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
 {
     uint8_t            buf[8192];
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
-    uint8_t*           qname = buf + sizeof *dns;
     uint8_t*           reader;
     int                i, msg_size;
     unsigned           addr_size = sizeof *dest;
