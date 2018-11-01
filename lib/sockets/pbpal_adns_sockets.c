@@ -222,7 +222,7 @@ static int dns_label_decode(uint8_t*       decoded,
     }
 
     PUBNUB_LOG_ERROR(
-        "Destination for decoding DNS label/name too small, n=%d\n", n);
+        "Destination for decoding DNS label/name too small, n=%lu\n", n);
 
     return -1;
 }
@@ -313,7 +313,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
             return -1;
         }
         PUBNUB_LOG_TRACE(
-            "DNS response, question name: %s, to_skip=%d\n", name, to_skip);
+            "DNS response, question name: %s, to_skip=%lu\n", name, to_skip);
 
         /* Could check for QUESTION data format (QType and QClass), but
            even if it's wrong, we don't know what to do with it, so,
