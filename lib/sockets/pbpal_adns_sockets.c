@@ -187,7 +187,7 @@ static int dns_label_decode(uint8_t*       decoded,
             }
             if (offset >= buffer_size) {
                 PUBNUB_LOG_ERROR("Error in DNS label/name decoding - offset=%d "
-                                 ">= buffer_size=%d\n",
+                                 ">= buffer_size=%lu\n",
                                  offset,
                                  buffer_size);
                 *dest = '\0';
