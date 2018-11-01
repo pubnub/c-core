@@ -213,8 +213,9 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb)
         case SSL_ERROR_WANT_WRITE:
         case SSL_ERROR_WANT_CONNECT:
         case SSL_ERROR_WANT_X509_LOOKUP:
-            if (PUBNUB_TIMERS_API && (pb->pal.connect_timeout > 0)
-                && (time(NULL) < pb->pal.connect_timeout)) {
+            if (PUBNUB_TIMERS_API
+                && ((0 == pb->pal.connect_timeout)
+                    || (time(NULL) < pb->pal.connect_timeout))) {
                 PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation should retry\n", pb);
 
                 return PNR_IN_PROGRESS;
