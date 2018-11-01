@@ -269,5 +269,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
         }
     }
 
+    pb->pal.connect_timeout = 0;
+
     return pbtlsEstablished;
 }

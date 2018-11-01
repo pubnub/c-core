@@ -117,10 +117,10 @@ void pbpal_init(pubnub_t* pb)
 {
     pal_init();
     memset(&pb->pal, 0, sizeof pb->pal);
-    pb->pal.socket = SOCKET_INVALID;
+    pb->pal.socket     = SOCKET_INVALID;
     pb->options.useSSL = pb->flags.trySSL = pb->options.fallbackSSL = true;
-    pb->options.use_system_certificate_store = false;
-    pb->options.reuse_SSL_session            = false;
+    pb->options.use_system_certificate_store                        = false;
+    pb->options.reuse_SSL_session                                   = false;
     pb->ssl_CAfile = pb->ssl_CApath = NULL;
     pb->ssl_userPEMcert             = NULL;
     pb->sock_state                  = STATE_NONE;
@@ -161,18 +161,19 @@ static void report_error_from_environment(pubnub_t* pb)
 #else
     err_str = strerror(errno);
 #endif
-    PUBNUB_LOG_DEBUG(
-        "report_error_from_environment(pb=%p): errno=%d('%s') use_blocking_io=%d\n",
-        pb,
-        errno,
-        err_str,
-        (int)pb->options.use_blocking_io);
-#if defined(_WIN32)
-    PUBNUB_LOG_DEBUG("report_error_from_environment(pb=%p): GetLastErrror()=%lu "
-                     "WSAGetLastError()=%d\n",
+    PUBNUB_LOG_DEBUG("report_error_from_environment(pb=%p): errno=%d('%s') "
+                     "use_blocking_io=%d\n",
                      pb,
-                     GetLastError(),
-                     WSAGetLastError());
+                     errno,
+                     err_str,
+                     (int)pb->options.use_blocking_io);
+#if defined(_WIN32)
+    PUBNUB_LOG_DEBUG(
+        "report_error_from_environment(pb=%p): GetLastErrror()=%lu "
+        "WSAGetLastError()=%d\n",
+        pb,
+        GetLastError(),
+        WSAGetLastError());
 #endif
 }
 
@@ -205,14 +206,16 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb)
     }
     else {
         PUBNUB_ASSERT(pb->options.useSSL);
-        switch(SSL_get_error(ssl, result)) {
+        switch (SSL_get_error(ssl, result)) {
         case SSL_ERROR_NONE:
             break;
         case SSL_ERROR_WANT_READ:
         case SSL_ERROR_WANT_WRITE:
         case SSL_ERROR_WANT_CONNECT:
         case SSL_ERROR_WANT_X509_LOOKUP:
-            if (PUBNUB_TIMERS_API && (pb->pal.connect_timeout > time(NULL))) {
+            if (PUBNUB_TIMERS_API
+                && ((0 == pb->pal.connect_timeout)
+                    || (time(NULL) < pb->pal.connect_timeout))) {
                 PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation should retry\n", pb);
 
                 return PNR_IN_PROGRESS;
@@ -221,10 +224,11 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb)
                 /* Expire the IP for the next connect */
                 pb->pal.ip_timeout = 0;
                 if ((pb->pal.session != NULL) && pb->options.reuse_SSL_session) {
-                   SSL_SESSION_free(pb->pal.session);
-                   pb->pal.session = NULL;
+                    SSL_SESSION_free(pb->pal.session);
+                    pb->pal.session = NULL;
                 }
-                PUBNUB_LOG_ERROR("pb=%p: TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
+                PUBNUB_LOG_ERROR(
+                    "pb=%p: TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
                 pb->sock_state = STATE_NONE;
 
                 return PNR_TIMEOUT;
@@ -240,21 +244,22 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb)
                 SSL_SESSION_free(pb->pal.session);
                 pb->pal.session = NULL;
             }
-            PUBNUB_LOG_ERROR("pb=%p: TLS/SSL_I/O operation failed, errno=%d\n", pb, errno);
+            PUBNUB_LOG_ERROR(
+                "pb=%p: TLS/SSL_I/O operation failed, errno=%d\n", pb, errno);
             pb->sock_state = STATE_NONE;
 
             return PNR_IO_ERROR;
         }
         PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation succeeds.\n", pb);
 
-        return  PNR_OK;
+        return PNR_OK;
     }
 }
 
 
 int pbpal_send_status(pubnub_t* pb)
 {
-    int rslt;
+    int  rslt;
     SSL* ssl = pb->pal.ssl;
 
     if (0 == pb->len) {
@@ -265,11 +270,12 @@ int pbpal_send_status(pubnub_t* pb)
     if (NULL == ssl) {
         rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     }
-    else { 
+    else {
         rslt = SSL_write(ssl, pb->ptr, pb->len);
     }
     if (rslt <= 0) {
-        rslt = (pbpal_handle_socket_condition(rslt, pb) == PNR_IN_PROGRESS) ? +1 : -1;
+        rslt = (pbpal_handle_socket_condition(rslt, pb) == PNR_IN_PROGRESS) ? +1
+                                                                            : -1;
     }
     else {
         PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
@@ -412,7 +418,7 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
 
 enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
-    int have_read;
+    int  have_read;
     SSL* ssl = pb->pal.ssl;
 
     PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
@@ -420,7 +426,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
     /* OpenSSL reads one TLS record at a time,
        so, we need to call it in a loop to read äll there is
     */
-    for(;;) {
+    for (;;) {
         if (0 == pb->unreadlen) {
             unsigned to_recv = pb->len;
             if (to_recv > pb->left) {
@@ -480,7 +486,7 @@ int pbpal_close(pubnub_t* pb)
         SSL_free(pb->pal.ssl);
         pb->pal.ssl = NULL;
     }
-    if(pb->pal.socket != SOCKET_INVALID) {
+    if (pb->pal.socket != SOCKET_INVALID) {
         pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
@@ -494,12 +500,12 @@ int pbpal_close(pubnub_t* pb)
 
 void pbpal_free(pubnub_t* pb)
 {
-    /* While this should not happen, it doesn't hurt to 'catch' it, if it happens..
+    /* While this should not happen, it doesn't hurt to 'catch' it, if it
+     * happens..
      */
     if (pb->pal.ssl != NULL) {
-        PUBNUB_LOG_TRACE("pbpal_free(%p): Unexpected pb->pal.ssl == %p\n",
-                         pb,
-                         pb->pal.ssl);
+        PUBNUB_LOG_TRACE(
+            "pbpal_free(%p): Unexpected pb->pal.ssl == %p\n", pb, pb->pal.ssl);
         SSL_shutdown(pb->pal.ssl);
         SSL_free(pb->pal.ssl);
         pb->pal.ssl = NULL;
