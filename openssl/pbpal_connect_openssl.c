@@ -29,6 +29,9 @@
 #define TLS_PORT 443
 
 
+PUBNUB_STATIC_ASSERT(PUBNUB_TIMERS_API, need_TIMERS_API);
+
+
 static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
     PUBNUB_UNUSED(len);
@@ -201,9 +204,7 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     PUBNUB_LOG_TRACE("pb=%p: Got SSL\n", pb);
     SSL_set_fd(ssl, pb->pal.socket);
     WATCH_ENUM(pb->options.use_blocking_io);
-    if (PUBNUB_TIMERS_API) {
-        pb->pal.connect_timeout = time(NULL) + pb->transaction_timeout_ms / 1000;
-    }
+    pb->pal.tryconn = pbms_start();
     if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
         if (!SSL_set_session(ssl, pb->pal.session)) {
             ERR_print_errors_cb(print_to_pubnub_log, NULL);
@@ -252,7 +253,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     }
     else {
         PUBNUB_LOG_WARNING(
-            "pb=%p: SSL -the peer certificate was not presented.\n-", pb);
+            "pb=%p: SSL -the peer certificate was not presented.\n", pb);
     }
 
     if (pb->options.reuse_SSL_session) {
@@ -269,7 +270,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
         }
     }
 
-    pb->pal.connect_timeout = 0;
+    pbms_stop(&pb->pal.tryconn);
 
     return pbtlsEstablished;
 }
