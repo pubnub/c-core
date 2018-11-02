@@ -2,6 +2,8 @@
 #if !defined INC_PUBNUB_INTERNAL
 #define INC_PUBNUB_INTERNAL
 
+#include "lib/msstopwatch/msstopwatch.h"
+
 #ifdef _WIN32
 /* Seems that since some version of OpenSSL (maybe in collusion
    w/Windows SDK version), one needs to include Winsock header(s)
@@ -111,7 +113,7 @@ struct pubnub_pal {
     size_t       ip_len;
     int          ip_family;
     time_t       ip_timeout;
-    time_t       connect_timeout;
+    pbmsref_t    tryconn;
 };
 
 #ifdef _WIN32
