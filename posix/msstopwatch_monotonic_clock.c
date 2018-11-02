@@ -2,6 +2,8 @@
 
 #include "lib/msstopwatch/msstopwatch.h"
 
+#include "core/pubnub_assert.h"
+
 #include "posix/monotonic_clock_get_time.h"
 
 
