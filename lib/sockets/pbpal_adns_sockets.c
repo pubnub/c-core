@@ -18,56 +18,66 @@
 #include <string.h>
 
 
-/** DNS message header */
-struct DNS_HEADER {
-    /** identification number */
-    uint16_t id;
+/** Size of DNS header, in octets */
+#define HEADER_SIZE 12
 
-    /** Options. This is a bitfield, IETF bit-numerated:
+/** Offset of the ID field in the DNS header */
+#define HEADER_ID_OFFSET 0
 
-       |0 |1 2 3 4| 5| 6| 7| 8| 9|10|11|12 13 14 15|
-       |QR|OPCODE |AA|TC|RD|RA| /|AD|CD|   RCODE   |
+/** Offset of the options field in the DNS header */
+#define HEADER_OPTIONS_OFFSET 2
 
-       - QR query-response bit (0->query, 1->response)
-       - OPCODE 0->query, 1->inverse query, 2->status
-       - AA authorative answer
-       - TC truncation (1 message was truncated, 0 otherwise)
-       - RD recursion desired
-       - RA recursion available
-       - AD authenticated data
-       - CD checking disabled
-       - RCODE response type 0->no error, 1->format error, 2-> server fail,
-       3->name eror, 4->not implemented, 5->refused
-     */
-    uint16_t options;
+/** Offset of the query count field in the DNS header */
+#define HEADER_QUERY_COUNT_OFFSET 4
 
-    /** number of question entries */
-    uint16_t q_count;
-    /** number of answer entries */
-    uint16_t ans_count;
-    /** number of authority entries */
-    uint16_t auth_count;
-    /** number of resource entries */
-    uint16_t add_count;
-};
+/** Offset of the answer count field in the DNS header */
+#define HEADER_ANSWER_COUNT_OFFSET 6
 
+/** Offset of the authoritive servers count field in the DNS header */
+#define HEADER_AUTHOR_COUNT_OFFSET 8
+
+/** Offset of the additional records count field in the DNS header */
+#define HEADER_ADDITI_COUNT_OFFSET 10
+
+/** Bits for the options field of the DNS header - two octets
+    in total.
+ */
 enum DNSoptionsMask {
-    dnsoptRCODEmask  = 0x000F,
-    dnsoptCDmask     = 0x0010,
-    dnsoptADmask     = 0x0020,
-    dnsoptRAmask     = 0x0080,
-    dnsoptRDmask     = 0x0100,
-    dnsoptTCmask     = 0x0200,
-    dnsoptAAmask     = 0x0400,
+    /* Response type;  0: no error, 1: format error, 2: server fail,
+       3: name eror, 4: not implemented, 5: refused
+    */
+    dnsoptRCODEmask = 0x000F,
+    /** Checking disabled */
+    dnsoptCDmask = 0x0010,
+    /** Authentication data */
+    dnsoptADmask = 0x0020,
+    /** Recursion available */
+    dnsoptRAmask = 0x0080,
+    /** Recursion desired */
+    dnsoptRDmask = 0x0100,
+    /** Truncation (1 - message was truncated, 0 - was not) */
+    dnsoptTCmask = 0x0200,
+    /** Authorative answer */
+    dnsoptAAmask = 0x0400,
+    /** 0: query, 1: inverse query, 2: status */
     dnsoptOPCODEmask = 0x7800,
-    dnsoptQRmask     = 0x8000,
+    /** 0: query, 1: response */
+    dnsoptQRmask = 0x8000,
 };
 
 
+/** Size of non-name data in the QUESTION field of a DNS mesage,
+    in octets */
 #define QUESTION_DATA_SIZE 4
 
+/** Size of non-name data in the RESOURCE DATA field of a DNS mesage,
+    in octets */
 #define RESOURCE_DATA_SIZE 10
+
+/** Offset of the type sub-field of the RESOURCE DATA */
 #define RESOURCE_DATA_TYPE_OFFSET 0
+
+/** Offset of the data length sub-field of the RESOURCE DATA */
 #define RESOURCE_DATA_DATA_LEN_OFFSET 8
 
 /** Question/query types */
@@ -233,23 +243,26 @@ static int dns_label_decode(uint8_t*       decoded,
 
 int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
 {
-    uint8_t            buf[4096];
-    struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
-    uint8_t*           qname = buf + sizeof *dns;
-    int                sent_to;
-    int                to_send;
+    uint8_t buf[4096];
+    int     sent_to;
+    int     to_send;
 
-    dns->id        = htons(33); /* in lack of a better ID */
-    dns->options   = htons(dnsoptRDmask);
-    dns->q_count   = htons(1);
-    dns->ans_count = dns->auth_count = dns->add_count = 0;
+    buf[HEADER_ID_OFFSET]              = 0;
+    buf[HEADER_ID_OFFSET + 1]          = 33; /* in lack of a better ID */
+    buf[HEADER_OPTIONS_OFFSET]         = dnsoptRDmask >> 8;
+    buf[HEADER_OPTIONS_OFFSET + 1]     = 0;
+    buf[HEADER_QUERY_COUNT_OFFSET]     = 0;
+    buf[HEADER_QUERY_COUNT_OFFSET + 1] = 1;
+    memset(buf + HEADER_ANSWER_COUNT_OFFSET,
+           0,
+           HEADER_SIZE - HEADER_ANSWER_COUNT_OFFSET);
 
     TRACE_SOCKADDR("Sending DNS query to: ", dest);
-    to_send = dns_qname_encode(qname, sizeof buf - sizeof *dns, host);
+    to_send = dns_qname_encode(buf + HEADER_SIZE, sizeof buf - HEADER_SIZE, host);
     if (to_send <= 0) {
         return -1;
     }
-    to_send += sizeof *dns;
+    to_send += HEADER_SIZE;
     buf[to_send]     = 0;
     buf[to_send + 1] = dnsA;
     buf[to_send + 2] = 0;
@@ -270,29 +283,31 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
 
 int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolved_addr)
 {
-    uint8_t            buf[8192];
-    struct DNS_HEADER* dns = (struct DNS_HEADER*)buf;
-    uint8_t*           reader;
-    int                i, msg_size;
-    unsigned           addr_size = sizeof *dest;
+    uint8_t  buf[8192];
+    uint8_t* reader;
+    int      msg_size;
+    unsigned addr_size = sizeof *dest;
+    size_t   q_count;
+    size_t   ans_count;
+    size_t   i;
 
     msg_size = recvfrom(skt, (char*)buf, sizeof buf, 0, dest, CAST & addr_size);
     if (msg_size <= 0) {
         return socket_would_block() ? +1 : -1;
     }
-    reader = buf + sizeof *dns;
+    reader = buf + HEADER_SIZE;
 
-    PUBNUB_LOG_TRACE("DNS response has: %hu Questions, %hu Answers, %hu "
-                     "Auth. Servers, %hu Additional records.\n",
-                     ntohs(dns->q_count),
-                     ntohs(dns->ans_count),
-                     ntohs(dns->auth_count),
-                     ntohs(dns->add_count));
-    if (ntohs(dns->q_count) != 1) {
+    q_count = buf[HEADER_QUERY_COUNT_OFFSET] * 256
+              + buf[HEADER_QUERY_COUNT_OFFSET + 1];
+    ans_count = buf[HEADER_ANSWER_COUNT_OFFSET] * 256
+                + buf[HEADER_ANSWER_COUNT_OFFSET + 1];
+    PUBNUB_LOG_TRACE(
+        "DNS response has: %hu Questions, %hu Answers.\n", q_count, ans_count);
+    if (q_count != 1) {
         PUBNUB_LOG_INFO("Strange DNS response, we sent one question, but DNS "
                         "response doesn't have one question.\n");
     }
-    for (i = 0; i < ntohs(dns->q_count); ++i) {
+    for (i = 0; i < q_count; ++i) {
         uint8_t name[256];
         size_t  to_skip;
 
@@ -307,17 +322,19 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
            there's no use */
         reader += to_skip + QUESTION_DATA_SIZE;
     }
-    for (i = 0; i < ntohs(dns->ans_count); ++i) {
-        uint8_t        name[256];
-        size_t         to_skip;
-        size_t         r_data_len;
+    for (i = 0; i < ans_count; ++i) {
+        uint8_t  name[256];
+        size_t   to_skip;
+        size_t   r_data_len;
         unsigned r_data_type;
 
         if (0 != dns_label_decode(name, sizeof name, reader, buf, msg_size, &to_skip)) {
             return -1;
         }
-        r_data_len = reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET] * 256 + reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET+1];
-        r_data_type = reader[to_skip + RESOURCE_DATA_TYPE_OFFSET] * 256 + reader[to_skip + RESOURCE_DATA_TYPE_OFFSET+1];
+        r_data_len = reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET] * 256
+                     + reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET + 1];
+        r_data_type = reader[to_skip + RESOURCE_DATA_TYPE_OFFSET] * 256
+                      + reader[to_skip + RESOURCE_DATA_TYPE_OFFSET + 1];
         reader += to_skip + RESOURCE_DATA_SIZE;
 
         PUBNUB_LOG_TRACE(
