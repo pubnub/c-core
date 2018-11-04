@@ -66,19 +66,9 @@ enum DNSoptionsMask {
 
 #define QUESTION_DATA_SIZE 4
 
-/** Constant sized fields of the resource record (RR) structure */
-#pragma pack(push, 1)
-struct R_DATA {
-    /** Type of resource record */
-    uint16_t type;
-    /** Class code */
-    uint16_t class_;
-    /** Time-To-Live - count of seconds RR stays valid */
-    uint32_t ttl;
-    /** Length of RDATA (in octets) */
-    uint16_t data_len;
-};
-#pragma pack(pop)
+#define RESOURCE_DATA_SIZE 10
+#define RESOURCE_DATA_TYPE_OFFSET 0
+#define RESOURCE_DATA_DATA_LEN_OFFSET 8
 
 /** Question/query types */
 enum DNSqueryType {
@@ -320,24 +310,24 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
     for (i = 0; i < ntohs(dns->ans_count); ++i) {
         uint8_t        name[256];
         size_t         to_skip;
-        struct R_DATA* prdata;
         size_t         r_data_len;
+        unsigned r_data_type;
 
         if (0 != dns_label_decode(name, sizeof name, reader, buf, msg_size, &to_skip)) {
             return -1;
         }
-        prdata     = (struct R_DATA*)(reader + to_skip);
-        r_data_len = ntohs(prdata->data_len);
-        reader += to_skip + sizeof *prdata;
+        r_data_len = reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET] * 256 + reader[to_skip + RESOURCE_DATA_DATA_LEN_OFFSET+1];
+        r_data_type = reader[to_skip + RESOURCE_DATA_TYPE_OFFSET] * 256 + reader[to_skip + RESOURCE_DATA_TYPE_OFFSET+1];
+        reader += to_skip + RESOURCE_DATA_SIZE;
 
         PUBNUB_LOG_TRACE(
             "DNS answer: %s, to_skip:%zu, type=%hu, data_len=%zu\n",
             name,
             to_skip,
-            ntohs(prdata->type),
+            r_data_type,
             r_data_len);
 
-        if (ntohs(prdata->type) == dnsA) {
+        if (r_data_type == dnsA) {
             if (r_data_len != 4) {
                 PUBNUB_LOG_WARNING("unexpected answer R_DATA length %zu\n",
                                    r_data_len);
