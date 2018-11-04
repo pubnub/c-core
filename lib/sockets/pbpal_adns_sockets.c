@@ -64,13 +64,7 @@ enum DNSoptionsMask {
 };
 
 
-/** Constant sized fields of query structure */
-struct QUESTION {
-    /* Question type */
-    uint16_t qtype;
-    /* Question class */
-    uint16_t qclass;
-};
+#define QUESTION_DATA_SIZE 4
 
 /** Constant sized fields of the resource record (RR) structure */
 #pragma pack(push, 1)
@@ -89,24 +83,24 @@ struct R_DATA {
 /** Question/query types */
 enum DNSqueryType {
     /** Address - IPv4 */
-    dnsA     = 1,
+    dnsA = 1,
     /** Name server */
-    dnsNS    = 2,
+    dnsNS = 2,
     /** Canonical name */
     dnsCNAME = 5,
     /** Start of authority */
-    dnsSOA   = 6,
+    dnsSOA = 6,
     /** Pointer (to another location in the name space ) */
-    dnsPTR   = 12,
+    dnsPTR = 12,
     /** Mail exchange (responsible for handling e-mail sent to the
      * domain */
-    dnsMX    = 15,
+    dnsMX = 15,
     /** IPv6 address - 128 bit */
-    dnsAAAA  = 28,
+    dnsAAAA = 28,
     /** Service locator */
-    dnsSRV   = 33,
+    dnsSRV = 33,
     /** All cached records */
-    dnsANY   = 255
+    dnsANY = 255
 };
 
 /** Question/query class */
@@ -117,7 +111,7 @@ enum DNSqclass { dnsqclassInternet = 1 };
     length encoding" will convert `"www.google.com"` to
     `"\3www\6google\3com"`.
  */
-static unsigned char* dns_qname_encode(uint8_t* dns, size_t n, uint8_t const* host)
+static int dns_qname_encode(uint8_t* dns, size_t n, uint8_t const* host)
 {
     uint8_t*             dest = dns + 1;
     uint8_t*             lpos;
@@ -139,7 +133,7 @@ static unsigned char* dns_qname_encode(uint8_t* dns, size_t n, uint8_t const* ho
             *dest++  = '\0';
             if (d > 63) {
                 /* label too long */
-                return NULL;
+                return -1;
             }
 
             *lpos = (uint8_t)(d - 1);
@@ -151,7 +145,7 @@ static unsigned char* dns_qname_encode(uint8_t* dns, size_t n, uint8_t const* ho
         }
     }
 
-    return dns;
+    return dest - dns;
 }
 
 
@@ -252,7 +246,6 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
     uint8_t            buf[4096];
     struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
     uint8_t*           qname = buf + sizeof *dns;
-    struct QUESTION*   qinfo;
     int                sent_to;
     int                to_send;
 
@@ -262,14 +255,18 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
     dns->ans_count = dns->auth_count = dns->add_count = 0;
 
     TRACE_SOCKADDR("Sending DNS query to: ", dest);
-    dns_qname_encode(qname, sizeof buf - sizeof *dns, host);
+    to_send = dns_qname_encode(qname, sizeof buf - sizeof *dns, host);
+    if (to_send <= 0) {
+        return -1;
+    }
+    to_send += sizeof *dns;
+    buf[to_send]     = 0;
+    buf[to_send + 1] = dnsA;
+    buf[to_send + 2] = 0;
+    buf[to_send + 3] = dnsqclassInternet;
+    to_send += QUESTION_DATA_SIZE;
 
-    qinfo = (struct QUESTION*)(buf + sizeof *dns + strlen((const char*)qname) + 1);
-    qinfo->qtype  = htons(dnsA);
-    qinfo->qclass = htons(dnsqclassInternet);
-    to_send       = sizeof *dns + strlen((char*)qname) + 1 + sizeof *qinfo;
-    sent_to       = sendto(skt, (char*)buf, to_send, 0, dest, sizeof *dest);
-
+    sent_to = sendto(skt, (char*)buf, to_send, 0, dest, sizeof *dest);
     if (sent_to <= 0) {
         return socket_would_block() ? +1 : -1;
     }
@@ -284,7 +281,7 @@ int send_dns_query(int skt, struct sockaddr const* dest, unsigned char* host)
 int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolved_addr)
 {
     uint8_t            buf[8192];
-    struct DNS_HEADER* dns   = (struct DNS_HEADER*)buf;
+    struct DNS_HEADER* dns = (struct DNS_HEADER*)buf;
     uint8_t*           reader;
     int                i, msg_size;
     unsigned           addr_size = sizeof *dest;
@@ -318,7 +315,7 @@ int read_dns_response(int skt, struct sockaddr* dest, struct sockaddr_in* resolv
         /* Could check for QUESTION data format (QType and QClass), but
            even if it's wrong, we don't know what to do with it, so,
            there's no use */
-        reader += to_skip + sizeof(struct QUESTION);
+        reader += to_skip + QUESTION_DATA_SIZE;
     }
     for (i = 0; i < ntohs(dns->ans_count); ++i) {
         uint8_t        name[256];
