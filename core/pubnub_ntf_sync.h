@@ -22,17 +22,21 @@
     Sync interfaces is the simplest. You just check for the (last)
     result of a context (by using pubnub_last_result()) and when it
     becomes something other than #PNR_STARTED, you have your
-    outcome. 
+    outcome. Of course this is not very convenient, so here we have a
+    helper function.
 
     Since pubnub_last_result() is part of the "Core API", this
-    interface only provides one additional, helper function, which
-    will wait in a loop for the transaction to finish.  While
-    pubnub_last_result() is available in all Pubnub client libraries,
-    pubnub_await() is not.
+    interface only provides one additional function, which will wait
+    in a loop for the transaction to finish.
 */
 
 
-/** Waits, in a loop, for the current transaction to finish. */
+/** Waits, in a loop, for the current transaction to finish on context
+    @p p.  If Timers API is available, will observe the transaction
+    timeout.
+
+    @return The outcome of the transaction
+*/
 enum pubnub_res pubnub_await(pubnub_t *p);
 
 

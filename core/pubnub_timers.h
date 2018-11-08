@@ -7,10 +7,14 @@
 
 
 /** @file pubnub_timers.h 
-    This is the "Timer" API of the Pubnub client library.
-    Functions here influence the way that Pubnub client library
-    works with lower levels (the TCP/IP stack) with respect to
-    how much will an operation be waited upon to complete.
+    This is the "Timer" API of the Pubnub client library, pertaining
+    to transaction timeout(s), that is the time limit on how much
+    we allow a transaction to last before it finishes.
+
+    Functions here influence the way that Pubnub client library works
+    with lower levels (the TCP/IP stack) with respect to how much will
+    an operation be waited upon to complete. Obviously, this is
+    relevant only for the sync interface and blocking I/O.
 
     It is available in most platforms, but the exact way it behaves
     may have noticable differences. In general, the actual timeout
@@ -19,10 +23,10 @@
 */
 
 
-/** The Pubnub default timeout on subscribe transaction, in milliseconds */
+/** The Pubnub default timeout for subscribe transaction, in milliseconds */
 #define PUBNUB_DEFAULT_SUBSCRIBE_TIMEOUT 310000
 
-/** The Pubnub default timeout on non-subscribe transactions, in milliseconds */
+/** The Pubnub default timeout for non-subscribe transactions, in milliseconds */
 #define PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT 10000
 
 
@@ -56,5 +60,6 @@ int pubnub_set_transaction_timeout(pubnub_t *p, int duration_ms);
     always be > 0)
 */
 int pubnub_transaction_timeout_get(pubnub_t *p);
+
 
 #endif /* defined INC_PUBNUB_TIMERS_IO */

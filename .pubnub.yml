@@ -1,7 +1,11 @@
 name: c-core
-version: 2.5.7
+version: 2.5.8
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.5.8
+    changes:
+      - type: enhancement
+        text: pubnub_await() in the sync interface now reports PNR_TIMEOUT on, well, (transaction) timeout
   - version: v2.5.7
     changes:
       - type: bug
