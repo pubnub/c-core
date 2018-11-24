@@ -29,6 +29,8 @@ struct pbcc_context {
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
     char const* auth;
+    /** Pointer to the message to publish via POST */
+    char const* message_to_publish;
 
     /** The last recived subscribe time token. */
     char timetoken[20];
@@ -213,6 +215,12 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p);
 */
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p);
 
+/** Prepares HTTP header lines specific for publish 'via POST' 
+    @param p The Pubnub C core context with all necessary information
+    @param header pointer to char array provided for placing these headers
+    @param max_length maximum size of array provided
+ */
+void pbcc_headers_for_publish_via_post(struct pbcc_context* p, char* header, size_t max_length);
 
 /** Prepares the Publish operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -222,7 +230,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   const char*          message,
                                   bool                 store_in_history,
                                   bool                 norep,
-                                  char const*          meta);
+                                  char const*                meta,
+                                  enum pubnub_publish_method method);
 
 /** Prepares the Subscribe operation (transaction), mostly by
     formatting the URI of the HTTP request.

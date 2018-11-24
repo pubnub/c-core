@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QStringList>
 #include <QDebug>
+#include <QJsonDocument>
 
 extern "C" {
 #include "core/pubnub_api_types.h"
@@ -188,6 +189,27 @@ public:
         @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res publish(QString const &channel, QString const &message);
+
+    /** Function that initiates 'publish' transaction via POST method 
+        @param channel The string with the channel
+        @param message The message to publish, expected to be in JSON format
+
+        @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res publish_via_post(QString const &channel, QByteArray const &message);
+
+    /** Initiates 'publish' transaction via POST method. Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that receives
+        byte array and doesn't check whether those bytes represent sound Json.
+        @param channel The string with the channel
+        @param message The message to publish
+
+        @return #PNR_STARTED on success, an error otherwise
+     */
+    inline pubnub_res publish_via_post(QString const &channel, QJsonDocument const &message) {
+        return publish_via_post(channel, message.toJson());
+    }
 
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
@@ -751,6 +773,12 @@ private:
 
     /// To Keep-Alive or not to Keep-Alive
     bool d_use_http_keep_alive;
+
+    /// Is publish transaction done via POST method
+    bool d_is_publish_via_post;
+
+    /// Message to publish via POST method
+    QByteArray d_message_to_publish;
 };
 
 

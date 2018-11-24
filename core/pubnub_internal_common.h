@@ -225,6 +225,11 @@ struct pubnub_ {
             renewed without losing transaction at hand.
         */
         bool started_while_kept_alive : 1;
+
+        /** Indicates whether to send the message in http message body, or if not,
+            encoded 'via GET'(, or maybe some third method).
+        */
+        bool is_publish_via_post : 1;
     } flags;
 
 #if PUBNUB_ADVANCED_KEEP_ALIVE

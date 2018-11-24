@@ -23,5 +23,6 @@
         default:                                                                   \
             break;                                                                 \
         }                                                                          \
+        M_pb_->flags.is_publish_via_post = false;                                  \
         M_pb_->state = state;                                                      \
     } while (0)

@@ -774,7 +774,7 @@ void expect_have_dns_for_pubnub_origin()
 
 static inline void expect_outgoing_with_url(char const* url)
 {
-    expect(pbpal_send, when(data, streqs("GET ")), returns(0));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(url)), returns(0));
     expect(pbpal_send_status, returns(0));
@@ -1172,7 +1172,7 @@ Ensure(single_context_pubnub, publish_change_origin)
     attest(pubnub_origin_set(pbp, "new_origin_server"), equals(0));
     expect_have_dns_for_pubnub_origin();
 
-    expect(pbpal_send, when(data, streqs("GET ")), returns(0));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str,
            when(s, streqs("/publish/publkey/subkey/0/jarak/0/%22zec%22?pnsdk=unit-test-0.1")),
@@ -3028,7 +3028,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     /* Sending GET request returns failure which means broken connection */
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect(pbpal_send, when(data, streqs("GET ")), returns(-1));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(-1));
     /* Connection is not closed instantaneously */
     expect(pbpal_close, when(pb, equals(pbp)), returns(+1));
     expect(pbpal_closed, when(pb, equals(pbp)), returns(true));

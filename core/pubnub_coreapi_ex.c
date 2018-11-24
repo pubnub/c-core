@@ -22,9 +22,9 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.cipher_key = NULL;
     result.replicate  = true;
     result.meta       = NULL;
+    result.method     = pubnubPublishViaGET;
     return result;
 }
-
 
 enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
                                   const char*                   channel,
@@ -61,10 +61,11 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     }
 
     rslt = pbcc_publish_prep(
-        &pb->core, channel, message, opts.store, !opts.replicate, opts.meta);
+        &pb->core, channel, message, opts.store, !opts.replicate, opts.meta, opts.method);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
+        pb->flags.is_publish_via_post = (pubnubPublishViaPOST == opts.method); 
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }

@@ -1,7 +1,13 @@
 name: c-core
-version: 2.5.8
+version: 2.6.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.6.0
+    changes:
+      - type: enhancement
+        text: Publish can now be done via POST
+      - type: bug
+        text: Several smaller DNS en/de/coding issues fixed
   - version: v2.5.8
     changes:
       - type: enhancement

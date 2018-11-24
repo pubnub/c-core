@@ -436,7 +436,7 @@ void expect_have_dns_for_proxy_server_without_enqueue_for_processing(void)
 
 static inline void expect_first_outgoing_GET(const char* url)
 {
-    expect(pbpal_send, when(data, streqs("GET ")), returns(0));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
 	expect(pbpal_send_str, when(s, streqs("http://")), returns(0));
     expect(pbpal_send_status, returns(0));
@@ -482,7 +482,7 @@ static inline void expect_first_outgoing_CONNECT(void)
 static inline void expect_outgoing_with_encoded_credentials_GET(char const *url,
                                                                 char const *HTTP_proxy_header)
 {
-    expect(pbpal_send, when(data, streqs("GET ")), returns(0));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
 	expect(pbpal_send_str, when(s, streqs("http://")), returns(0));
     expect(pbpal_send_status, returns(0));
@@ -531,7 +531,7 @@ static inline void expect_outgoing_with_encoded_credentials_CONNECT(char const *
 }
 
 static inline void expect_outgoing_with_url(char const *url) {
-    expect(pbpal_send, when(data, streqs("GET ")), returns(0));
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_status, returns(0));

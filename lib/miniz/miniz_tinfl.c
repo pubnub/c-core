@@ -27,7 +27,6 @@
 #include "lib/miniz/miniz_tinfl.h"
 #include "core/pubnub_log.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -1,5 +1,6 @@
 TEMPLATE = app
 QT = core network
+CONFIG += C++11
 mac:CONFIG -= app_bundle
 win32:CONFIG += console
 HEADERS += pubnub_qt.h pubnub_qt_sample.h

@@ -9,7 +9,6 @@ extern "C" {
 #include <QtNetwork>
 
 
-
 pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     : d_pubkey(pubkey.toLatin1())
     , d_keysub(keysub.toLatin1())
@@ -26,6 +25,7 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
     , d_use_http_keep_alive(true)
+    , d_is_publish_via_post(false)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
@@ -55,7 +55,15 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         if (!d_use_http_keep_alive) {
             req.setRawHeader("Connection", "Close");
         }
-        d_reply.reset(d_qnam.get(req));
+        if (d_is_publish_via_post) {
+            d_is_publish_via_post = false;
+            req.setRawHeader("Content-Type", "application/json");
+            req.setRawHeader("Content-Length", QByteArray::number(d_message_to_publish.size()));
+            d_reply.reset(d_qnam.post(req, d_message_to_publish));
+        }
+        else {
+            d_reply.reset(d_qnam.get(req));
+        }
         connect(d_reply.data(), SIGNAL(finished()), this, SLOT(httpFinished()));
         d_transactionTimer->start(d_transaction_timeout_duration_ms);
     }
@@ -86,7 +94,7 @@ QStringList pubnub_qt::get_all() const
 {
     QStringList all;
     while (char const *msg = pbcc_get_msg(d_context.data())) {
-        if (0 == msg) {
+        if (nullptr == msg) {
             break;
         }
         all.push_back(msg);
@@ -131,7 +139,26 @@ pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
             message.toLatin1().data(),
             true,
             false,
-            NULL
+            NULL,
+            pubnubPublishViaGET
+            ), PBTT_PUBLISH
+        );
+}
+
+
+pubnub_res pubnub_qt::publish_via_post(QString const &channel, QByteArray const &message)
+{
+    d_is_publish_via_post = true;
+    d_message_to_publish = message;
+    return startRequest(
+        pbcc_publish_prep(
+            d_context.data(),
+            channel.toLatin1().data(),
+            message.data(),
+            true,
+            false,
+            NULL,
+            pubnubPublishViaPOST
             ), PBTT_PUBLISH
         );
 }
