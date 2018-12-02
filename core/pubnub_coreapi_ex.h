@@ -62,8 +62,8 @@ struct pubnub_publish_options {
 };
 
 /** This returns the default options for publish V1 transactions.
-    Will set `store = true`, `cipher_key = NULL`, `replicate = true`
-    and `meta = NULL`
+    Will set `store = true`, `cipher_key = NULL`, `replicate = true`,
+    `meta = NULL` and `method = pubnubPublishViaGet`
  */
 struct pubnub_publish_options pubnub_publish_defopts(void);
 
