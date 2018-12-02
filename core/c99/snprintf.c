@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#if _MSC_VER < 1900
+#if (_MSC_VER < 1900) && !defined(__GNUC__)
 
 int snprintf(char *buffer, size_t n, const char *format, ...)
 {

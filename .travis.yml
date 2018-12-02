@@ -23,6 +23,8 @@ script:
   - make -j2
   - cd ../../core
   - make generate_report
+  - cd ../lib
+  - make generate_report
   - cd ..
   - make -f posix.mk
   - posix/pubnub_fntest

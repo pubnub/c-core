@@ -122,7 +122,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     dest.sin_family = AF_INET;
     dest.sin_port = htons(DNS_PORT);
     get_dns_ip(&dest);
-    error = send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, (unsigned char*)origin);
+    error = send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, origin);
     if (error < 0) {
         return pbpal_resolv_failed_send;
     }
