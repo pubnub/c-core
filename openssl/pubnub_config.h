@@ -111,6 +111,16 @@
 #define PUBNUB_RECEIVE_GZIP_RESPONSE 1
 #endif
 
+#if !defined(PUBNUB_USE_GZIP_COMPRESSION)
+/** If true (!=0), enables support for compressed content data*/
+#define PUBNUB_USE_GZIP_COMPRESSION 1
+#endif
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+/* Maximum compressed message length allowed. Could be shortened by the user */
+#define PUBNUB_COMPRESSED_MAXLEN 32000
+#endif
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */

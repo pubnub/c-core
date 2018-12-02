@@ -1,12 +1,12 @@
-
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
 #include "core/pubnub_assert.h"
 #include "lib/miniz/miniz_tinfl.h"
 #include "core/pubnub_log.h"
 
-#define FIRST_TEN_RESERVED_BYTES 10
-#define LAST_EIGHT_RESERVED_BYTES 8
+#define GZIP_HEADER_LENGTH_BYTES 10
+#define GZIP_FOOTER_LENGTH_BYTES 8
 
 static enum pubnub_res inflate_total_to_context_buffer(pubnub_t*      pb,
                                                        uint8_t const* p_in_buf_next,
@@ -126,7 +126,7 @@ enum pubnub_res pbgzip_decompress(pubnub_t* pb)
     size_t         size = (size_t)pb->core.http_buf_len;
     uint32_t       unpacked_size;
 
-    if ((size < (FIRST_TEN_RESERVED_BYTES + LAST_EIGHT_RESERVED_BYTES))
+    if ((size < (GZIP_HEADER_LENGTH_BYTES + GZIP_FOOTER_LENGTH_BYTES))
         || (data[0] != 0x1f) || (data[1] != 0x8b)) {
         PUBNUB_LOG_ERROR("Compressed data format is not gzip!\n");
         return PNR_BAD_COMPRESSION_FORMAT;
@@ -156,8 +156,8 @@ enum pubnub_res pbgzip_decompress(pubnub_t* pb)
                      pb,
                      (long unsigned)size,
                      (long unsigned)unpacked_size);
-    size -= (FIRST_TEN_RESERVED_BYTES + LAST_EIGHT_RESERVED_BYTES);
-    
+    size -= (GZIP_HEADER_LENGTH_BYTES + GZIP_FOOTER_LENGTH_BYTES);
+
     return inflate_total(
-        pb, data + FIRST_TEN_RESERVED_BYTES, size, (size_t)unpacked_size);
+        pb, data + GZIP_HEADER_LENGTH_BYTES, size, (size_t)unpacked_size);
 }

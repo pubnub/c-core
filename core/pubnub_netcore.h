@@ -50,12 +50,15 @@ enum pubnub_state {
     PBS_TX_PORT_NUM,
     /** Sending the HTTP version */
     PBS_TX_VER,
-    /** Sending Proxy-Authorization HTTP header */
-    PBS_TX_PROXY_AUTHORIZATION,
+    /** Sending specific additional HTTP header lines (on proxy authorization,
+     or 'publish via POST') */
+    PBS_TX_EXTRA_HEADERS,
     /** Sending the DNS name (part of the URL) */
     PBS_TX_ORIGIN,
     /** Sending the rest of the HTTP headers */
     PBS_TX_FIN_HEAD,
+    /** Sending the HTTP message body if there is one(exmpl: 'publish' via POST has it.) */
+    PBS_TX_BODY,
     /** Waiting for HTTP version in response */
     PBS_RX_HTTP_VER,
     /** Reading the HTTP response headers */

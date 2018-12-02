@@ -26,6 +26,7 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->decomp_http_reply = NULL;
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
+    p->message_to_publish = NULL;
 
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
@@ -370,6 +371,31 @@ static enum pubnub_res url_encode(struct pbcc_context* pb, char const* what)
     return PNR_OK;
 }
 
+void pbcc_headers_for_publish_via_post(struct pbcc_context *pb, char *header, size_t max_length)
+{
+    char lines[] = "Content-Type: application/json\r\nContent-Length: ";
+    unsigned length;
+
+    PUBNUB_ASSERT_OPT(pb != NULL);
+    PUBNUB_ASSERT_OPT(pb->message_to_publish != NULL);
+    PUBNUB_ASSERT_OPT(header != NULL);
+    PUBNUB_ASSERT_OPT(max_length > sizeof lines);
+    memcpy(header, lines, sizeof lines - 1);
+    header += sizeof lines - 1;
+    max_length -= sizeof lines - 1;
+#if PUBNUB_USE_GZIP_COMPRESSION
+    if (pb->gzip_msg_len != 0) {
+        char h_encoding[] = "Content-Encoding: gzip";
+        length = snprintf(header, max_length, "%u\r\n", pb->gzip_msg_len);
+        PUBNUB_ASSERT_OPT(max_length > length + sizeof h_encoding - 1);
+        memcpy(header + length, h_encoding, sizeof h_encoding - 1);
+        return;
+    }
+#endif
+    length = snprintf(header, max_length, "%zu", strlen(pb->message_to_publish));
+    PUBNUB_ASSERT_OPT(max_length > length);
+    return;
+}
 
 enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
                                       char const*          param_name,
@@ -389,29 +415,36 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
 }
 
 
-enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
-                                  const char*          channel,
-                                  const char*          message,
-                                  bool                 store_in_history,
-                                  bool                 norep,
-                                  char const*          meta)
+enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
+                                  const char*                 channel,
+                                  const char*                 message,
+                                  bool                        store_in_history,
+                                  bool                        norep,
+                                  char const*                 meta,
+                                  enum pubnub_publish_method  method)
 {
     char const* const uname = pubnub_uname();
-    enum pubnub_res   rslt;
+    enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
     pb->http_buf_len     = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/publish/%s/%s/0/%s/0/",
+                                "/publish/%s/%s/0/%s/0",
                                 pb->publish_key,
                                 pb->subscribe_key,
                                 channel);
 
-    rslt = url_encode(pb, message);
-    if (rslt != PNR_OK) {
-        return rslt;
+    if (pubnubPublishViaGET == method) {
+        pb->http_buf[pb->http_buf_len++] = '/';
+        rslt = url_encode(pb, message);
+        if (rslt != PNR_OK) {
+            return rslt;
+        }
+    }
+    else {
+        pb->message_to_publish = message;
     }
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');

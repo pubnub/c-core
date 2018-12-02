@@ -57,6 +57,8 @@ struct pubnub_publish_options {
         about the message, which can be used for stream filtering.
      */
     char const* meta;
+    /** Defines the method by which publish transaction will be performed */
+    enum pubnub_publish_method method; 
 };
 
 /** This returns the default options for publish V1 transactions.

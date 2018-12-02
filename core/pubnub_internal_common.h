@@ -25,6 +25,12 @@
 
 #define PUBNUB_NEED_RETRY_AFTER_CLOSE (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
 
+#if !defined PUBNUB_USE_GZIP_COMPRESSION
+#define PUBNUB_USE_GZIP_COMPRESSION 0
+#elif PUBNUB_USE_GZIP_COMPRESSION
+#include "core/pbgzip_compress.h"
+#endif
+
 #if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
 #define PUBNUB_RECEIVE_GZIP_RESPONSE 0
 #elif PUBNUB_RECEIVE_GZIP_RESPONSE
@@ -225,6 +231,11 @@ struct pubnub_ {
             renewed without losing transaction at hand.
         */
         bool started_while_kept_alive : 1;
+
+        /** Indicates whether to send the message in http message body, or if not,
+            encoded 'via GET'(, or maybe some third method).
+        */
+        bool is_publish_via_post : 1;
     } flags;
 
 #if PUBNUB_ADVANCED_KEEP_ALIVE

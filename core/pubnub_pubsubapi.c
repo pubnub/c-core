@@ -44,6 +44,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
     p->flags.started_while_kept_alive = false;
+    p->flags.is_publish_via_post   = false;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     p->keep_alive.max     = 1000;
     p->keep_alive.timeout = 50;
@@ -83,7 +84,7 @@ enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* me
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL);
+    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL, pubnubPublishViaGET);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;

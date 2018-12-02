@@ -19,7 +19,7 @@ struct pubnub_pal {
 #define PUBNUB_BLOCKING_IO_SETTABLE 0
 
 
-#include "pubnub_internal_common.h"
+#include "core/pubnub_internal_common.h"
 
 
 
