@@ -383,7 +383,16 @@ void pbcc_headers_for_publish_via_post(struct pbcc_context *pb, char *header, si
     memcpy(header, lines, sizeof lines - 1);
     header += sizeof lines - 1;
     max_length -= sizeof lines - 1;
-    length = snprintf(header, max_length, "%u", (unsigned)strlen(pb->message_to_publish));
+#if PUBNUB_USE_GZIP_COMPRESSION
+    if (pb->gzip_msg_len != 0) {
+        char h_encoding[] = "Content-Encoding: gzip";
+        length = snprintf(header, max_length, "%u\r\n", pb->gzip_msg_len);
+        PUBNUB_ASSERT_OPT(max_length > length + sizeof h_encoding - 1);
+        memcpy(header + length, h_encoding, sizeof h_encoding - 1);
+        return;
+    }
+#endif
+    length = snprintf(header, max_length, "%zu", strlen(pb->message_to_publish));
     PUBNUB_ASSERT_OPT(max_length > length);
     return;
 }
@@ -406,11 +415,11 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
 }
 
 
-enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
-                                  const char*          channel,
-                                  const char*          message,
-                                  bool                 store_in_history,
-                                  bool                 norep,
+enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
+                                  const char*                 channel,
+                                  const char*                 message,
+                                  bool                        store_in_history,
+                                  bool                        norep,
                                   char const*                 meta,
                                   enum pubnub_publish_method  method)
 {
@@ -427,11 +436,11 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                 pb->subscribe_key,
                                 channel);
 
-    if (pubnubPublishViaPOST != method) {
+    if (pubnubPublishViaGET == method) {
         pb->http_buf[pb->http_buf_len++] = '/';
-    rslt = url_encode(pb, message);
-    if (rslt != PNR_OK) {
-        return rslt;
+        rslt = url_encode(pb, message);
+        if (rslt != PNR_OK) {
+            return rslt;
         }
     }
     else {

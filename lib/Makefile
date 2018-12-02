@@ -17,7 +17,7 @@ generate_report: all
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 	$(GCOVR) -r . --xml -o coverage.xml
 
-CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_TRACE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -I. -I../ -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
+CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -I. -I../ -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
 
 LDFLAGS=-L../cgreen/build/src
 
@@ -29,7 +29,7 @@ pubnub_dns_codec_unit_test: pubnub_dns_codec.c pubnub_dns_codec_unit_test.c
 	gcc -o pubnub_dns_codec_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -Wall $(COVERAGE_FLAGS) -fPIC $(DNS_CODEC_SOURCE_FILES) pubnub_dns_codec.c pubnub_dns_codec_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_dns_codec_unit_testo $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(DNS_CODEC_SOURCE_FILES) ../lib/pubnub_dns_codec.c pubnub_dns_codec_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_dns_codec_unit_test.so
-	#$(GCOVR) -r . --html --html-details -o coverage.html
+	$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
 	rm pubnub_dns_codec_unit_test.so *.gcda *.gcno *.html

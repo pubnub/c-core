@@ -752,15 +752,19 @@ next_state:
                 }
             }
 #endif
-            if (pb->flags.is_publish_via_post) {
-                char hedr[70] = "\r\n";
+            if (pb->flags.is_publish_via_post
+#if PUBNUB_PROXY_API
+                && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
+#endif
+                ) {
+                char hedr[128] = "\r\n";
                 pbcc_headers_for_publish_via_post(&(pb->core), hedr + 2, sizeof hedr - 2);
                 PUBNUB_LOG_TRACE("Sending HTTP 'publish via POST' headers: '%s'\n", hedr);
                 pb->state = PBS_TX_EXTRA_HEADERS;
                 if (-1 == pbpal_send_str(pb, hedr)) {
-                outcome_detected(pb, PNR_IO_ERROR);
-                break;
-            }
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
                 goto next_state;
             }
             SEND_FIN_HEAD(pb);
@@ -790,11 +794,17 @@ next_state:
                 && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
 #endif
                 ) {
+                const char* message = pb->core.message_to_publish;
+#if PUBNUB_USE_GZIP_COMPRESSION
+                size_t len = (pb->core.gzip_msg_len != 0) ? pb->core.gzip_msg_len : strlen(message);
+#else
+                size_t len = strlen(message);
+#endif
                 pb->state = PBS_TX_BODY;
-                if (-1 == pbpal_send_str(pb, pb->core.message_to_publish)) {
-                outcome_detected(pb, PNR_IO_ERROR);
-                break;
-            }
+                if (-1 == pbpal_send(pb, message, len)) {
+                    outcome_detected(pb, PNR_IO_ERROR);
+                    break;
+                }
             }
             else {
                 pbpal_start_read_line(pb);

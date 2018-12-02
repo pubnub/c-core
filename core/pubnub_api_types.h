@@ -169,6 +169,7 @@ enum pubnub_tribool {
 
 enum pubnub_publish_method {
     pubnubPublishViaPOST,
+    pubnubPublishViaPOSTwithGZIP,
     pubnubPublishViaGET
 };
 

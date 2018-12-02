@@ -4,10 +4,14 @@
 extern "C" {
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
+#include "lib/pbcrc32.c"
 }
 
 #include <QtNetwork>
 
+/* Minimal acceptable message length difference, between unpacked and packed message, in percents */
+#define PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO 10
+#define GZIP_HEADER_AND_FOOTER_LENGTH 18
 
 pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     : d_pubkey(pubkey.toLatin1())
@@ -25,7 +29,6 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
     , d_use_http_keep_alive(true)
-    , d_is_publish_via_post(false)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
@@ -55,11 +58,22 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         if (!d_use_http_keep_alive) {
             req.setRawHeader("Connection", "Close");
         }
-        if (d_is_publish_via_post) {
-            d_is_publish_via_post = false;
-            req.setRawHeader("Content-Type", "application/json");
-            req.setRawHeader("Content-Length", QByteArray::number(d_message_to_publish.size()));
-            d_reply.reset(d_qnam.post(req, d_message_to_publish));
+        if (PBTT_PUBLISH == transaction) {
+            switch (d_publish_method) {
+            case pubnubPublishViaPOSTwithGZIP:
+                req.setRawHeader("Content-Encoding", "gzip");
+                /* FALLTHRU */
+            case pubnubPublishViaPOST:
+                req.setRawHeader("Content-Type", "application/json");
+                req.setRawHeader("Content-Length", QByteArray::number(d_message_to_publish.size()));
+                d_reply.reset(d_qnam.post(req, d_message_to_publish));
+                break;
+            case pubnubPublishViaGET:
+                d_reply.reset(d_qnam.get(req));
+                break;
+            default:
+                break;
+            }
         }
         else {
             d_reply.reset(d_qnam.get(req));
@@ -132,6 +146,7 @@ void pubnub_qt::cancel()
 
 pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
 {
+    d_publish_method = pubnubPublishViaGET;
     return startRequest(
         pbcc_publish_prep(
             d_context.data(),
@@ -140,7 +155,7 @@ pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
             true,
             false,
             NULL,
-            pubnubPublishViaGET
+            d_publish_method
             ), PBTT_PUBLISH
         );
 }
@@ -148,21 +163,73 @@ pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
 
 pubnub_res pubnub_qt::publish_via_post(QString const &channel, QByteArray const &message)
 {
-    d_is_publish_via_post = true;
+    d_publish_method = pubnubPublishViaPOST;
     d_message_to_publish = message;
     return startRequest(
         pbcc_publish_prep(
             d_context.data(),
             channel.toLatin1().data(),
-            message.data(),
+            d_message_to_publish.data(),
             true,
             false,
             NULL,
-            pubnubPublishViaPOST
+            d_publish_method
             ), PBTT_PUBLISH
         );
 }
 
+static QByteArray pack_message_to_gzip(QByteArray const &message)
+{
+    auto compressedData = qCompress(message);
+    QByteArray header;
+    QDataStream ds1(&header, QIODevice::WriteOnly);
+    QByteArray footer;
+    QDataStream ds2(&footer, QIODevice::WriteOnly);
+   /*  Striping the first six bytes (a 4-byte length put on by qCompress and a 2-byte zlib header)
+       and the last four bytes (a zlib integrity check).
+    */
+    compressedData.remove(0, 6);
+    compressedData.chop(4);
+    if ((long)((message.size() - compressedData.size() - GZIP_HEADER_AND_FOOTER_LENGTH)*100)/message.size()
+        < PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO) {
+        /* With insufficient compression we choose not to pack */
+        qDebug() << "pack_message_to_gzip(" << message <<
+                    "):message wasn't compressed due to low compression ratio.";
+        return message;
+    }
+    /* Prepending a generic 10-byte gzip header (RFC 1952) */
+    ds1.setByteOrder(QDataStream::BigEndian);
+    ds1 << quint16(0x1f8b)
+        << quint16(0x0800)
+        << quint16(0x0000)
+        << quint16(0x0000)
+        << quint16(0x000b);
+    /* Appending a four-byte CRC-32 of the uncompressed data
+       Appending 4 bytes uncompressed input size modulo 2^32
+     */
+    ds2.setByteOrder(QDataStream::LittleEndian);
+    ds2 << quint32(pbcrc32(message.data(), message.size())) << quint32(message.size());
+    return header + compressedData + footer;
+}
+
+pubnub_res pubnub_qt::publish_via_post_with_gzip(QString const &channel, QByteArray const &message)
+{
+    d_message_to_publish = pack_message_to_gzip(message);
+    d_publish_method = (d_message_to_publish.size() != message.size()) ?
+                       pubnubPublishViaPOSTwithGZIP :
+                       pubnubPublishViaPOST;
+    return startRequest(
+        pbcc_publish_prep(
+            d_context.data(),
+            channel.toLatin1().data(),
+            d_message_to_publish.data(),
+            true,
+            false,
+            NULL,
+            d_publish_method
+            ), PBTT_PUBLISH
+        );
+}
 
 pubnub_res pubnub_qt::subscribe(QString const &channel, QString const &channel_group)
 {

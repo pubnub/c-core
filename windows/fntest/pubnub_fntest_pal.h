@@ -108,67 +108,36 @@
 
 #define expect_pnr_maybe_started(rslt, pbp, time_ms, exp_rslt)                 \
     if ((rslt) == (PNR_STARTED)) {                                             \
-        await_timed((time_ms), (exp_rslt), (pbp));                             \
+        await_timed(time_ms, exp_rslt, pbp);                                   \
     }                                                                          \
     else {                                                                     \
-        expect_last_result((pbp), (rslt), (exp_rslt));                         \
+        expect_last_result(pbp, rslt, exp_rslt);                               \
     }
 
 
 #define pbpub_outof_quota(pbp, rslt)                                           \
-    (((rslt) == PNR_PUBLISH_FAILED)                                            \
+    ((rslt == PNR_PUBLISH_FAILED)                                              \
      && (PNPUB_ACCOUNT_QUOTA_EXCEEDED                                          \
          == pubnub_parse_publish_result(pubnub_last_publish_result(pbp))))
 
 
 #define expect_last_result(pbp, rslt, exp_rslt)                                \
-    if ((rslt) == (exp_rslt)) {                                                \
+    if ((rslt == exp_rslt) && !pbpub_outof_quota(pbp, rslt)) {                 \
     }                                                                          \
-    else if (((rslt) == PNR_ABORTED) || pbpub_outof_quota(pbp, rslt)) {        \
+    else if ((rslt == PNR_ABORTED) || pbpub_outof_quota(pbp, rslt)) {          \
         *(enum PNFNTestResult*)pResult = trIndeterminate;                      \
         TEST_EXIT;                                                             \
     }                                                                          \
     else {                                                                     \
-        expect_pnr((rslt), exp_rslt);                                          \
+        expect_pnr(rslt, exp_rslt);                                            \
     }
 
 
 #define await_w_timer(tmr, rslt, pbp)                                          \
-    while (pnfntst_timer_is_running(tmr)) {                                    \
-        enum pubnub_res M_pbres_ = pubnub_last_result(pbp);                    \
-        if (M_pbres_ != PNR_STARTED) {                                         \
-            expect_last_result(pbp, M_pbres_, (rslt));                   \
-            break;                                                             \
-        }                                                                      \
-    }                                                                          \
-    expect(pnfntst_timer_is_running(tmr));
-
-
-#define await_timed(ms, rslt, pbp)                                             \
     do {                                                                       \
-        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
-        expect(M_t_ != NULL);                                                  \
-        TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
-        pnfntst_start_timer(M_t_, (ms));                                       \
-        await_w_timer(M_t_, (rslt), (pbp));                                    \
-        TEST_POP_DEFERRED;                                                     \
-    } while (0)
-
-
-#define await_w_timer_2(rslt, rslt_2, tmr, pbp, exp_rslt, pbp_2, exp_rslt_2)   \
-    do {                                                                       \
-        enum pubnub_res M_rslt   = rslt;                                       \
-        enum pubnub_res M_rslt_2 = rslt_2;                                     \
         while (pnfntst_timer_is_running(tmr)) {                                \
-            if (M_rslt == PNR_STARTED) {                                       \
-                M_rslt = pubnub_last_result(pbp);                              \
-            }                                                                  \
-            if (M_rslt_2 == PNR_STARTED) {                                     \
-                M_rslt_2 = pubnub_last_result(pbp_2);                          \
-            }                                                                  \
-            if ((PNR_STARTED != M_rslt) && (PNR_STARTED != M_rslt_2)) {        \
-                expect_last_result(pbp, M_rslt, (exp_rslt));             \
-                expect_last_result(pbp_2, M_rslt_2, (exp_rslt_2));       \
+            rslt = pubnub_last_result(pbp);                                    \
+            if (rslt != PNR_STARTED) {                                         \
                 break;                                                         \
             }                                                                  \
         }                                                                      \
@@ -176,27 +145,74 @@
     } while (0)
 
 
-#define await_timed_2(ms, exp_rslt1, pbp1, exp_rslt2, pbp2)                            \
-    do {                                                                               \
-        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                                 \
-        expect(M_t_ != NULL);                                                          \
-        TEST_DEFER(pnfntst_free_timer, M_t_);                                          \
-        pnfntst_start_timer(M_t_, (ms));                                               \
-        await_w_timer_2(                                                               \
-            PNR_STARTED, PNR_STARTED, M_t_, (pbp1), (exp_rslt1), (pbp2), (exp_rslt2)); \
-        TEST_POP_DEFERRED;                                                             \
+#define await_timed(ms, exp_rslt, pbp)                                         \
+    do {                                                                       \
+        enum pubnub_res M_rslt;                                                \
+        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
+        expect(M_t_ != NULL);                                                  \
+        TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
+        pnfntst_start_timer(M_t_, (ms));                                       \
+        await_w_timer(M_t_, M_rslt, pbp);                                      \
+        expect_last_result(pbp, M_rslt, exp_rslt);                             \
+        TEST_POP_DEFERRED;                                                     \
+    } while (0)
+
+
+#define await_w_timer_2(rslt, rslt_2, tmr, pbp, pbp_2)                         \
+    do {                                                                       \
+        while (pnfntst_timer_is_running(tmr)) {                                \
+            if (rslt == PNR_STARTED) {                                         \
+                rslt = pubnub_last_result(pbp);                                \
+            }                                                                  \
+            if (rslt_2 == PNR_STARTED) {                                       \
+                rslt_2 = pubnub_last_result(pbp_2);                            \
+            }                                                                  \
+            if ((PNR_STARTED != rslt) && (PNR_STARTED != rslt_2)               \
+                || pbpub_outof_quota(pbp, rslt)                              \
+                || pbpub_outof_quota(pbp_2, rslt_2)) {                          \
+                break;                                                         \
+            }                                                                  \
+        }                                                                      \
+        expect(pnfntst_timer_is_running(tmr));                                 \
+    } while (0)
+
+
+#define expect_last_result_2(pbp, rslt, exp_rslt, pbp_2, rslt_2, exp_rslt_2)   \
+    do {                                                                       \
+        if (rslt != PNR_STARTED) {                                             \
+            expect_last_result(pbp, rslt, exp_rslt);                           \
+        }                                                                      \
+        if (rslt_2 != PNR_STARTED) {                                           \
+            expect_last_result(pbp_2, rslt_2, exp_rslt_2);                     \
+        }                                                                      \
+    } while (0)
+
+
+#define await_timed_2(ms, exp_rslt, pbp, exp_rslt_2, pbp_2)                    \
+    do {                                                                       \
+        enum pubnub_res M_rslt   = PNR_STARTED;                                \
+        enum pubnub_res M_rslt_2 = PNR_STARTED;                                \
+        pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
+        expect(M_t_ != NULL);                                                  \
+        TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
+        pnfntst_start_timer(M_t_, (ms));                                       \
+        await_w_timer_2(M_rslt, M_rslt_2, M_t_, pbp, pbp_2);                   \
+        expect_last_result_2(pbp, M_rslt, exp_rslt, pbp_2, M_rslt_2, exp_rslt_2);\
+        TEST_POP_DEFERRED;                                                     \
     } while (0)
 
 
 #define expect_pnr_maybe_started_2(                                            \
-    rslt1, rslt2, time_ms, pbp1, exp_rslt1, pbp2, exp_rslt2)                   \
+    rslt, rslt_2, time_ms, pbp, exp_rslt, pbp_2, exp_rslt_2)                   \
     do {                                                                       \
+        enum pubnub_res M_rslt   = rslt;                                       \
+        enum pubnub_res M_rslt_2 = rslt_2;                                     \
         pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
         expect(M_t_ != NULL);                                                  \
         TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
         pnfntst_start_timer(M_t_, (time_ms));                                  \
-        await_w_timer_2(                                                       \
-            (rslt1), (rslt2), M_t_, (pbp1), (exp_rslt1), (pbp2), (exp_rslt2)); \
+        await_w_timer_2(M_rslt, M_rslt_2, M_t_, pbp, pbp_2);                   \
+        expect_last_result_2(pbp, M_rslt, exp_rslt, pbp_2, M_rslt_2, exp_rslt_2);\
         TEST_POP_DEFERRED;                                                     \
     } while (0)
 

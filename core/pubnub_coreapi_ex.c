@@ -36,11 +36,16 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(message != NULL);
 
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
 #if PUBNUB_CRYPTO_API
     if (NULL != opts.cipher_key) {
-        char            encrypted_msg[PUBNUB_BUF_MAXLEN];
         pubnub_bymebl_t to_encrypt;
-        size_t          n = PUBNUB_BUF_MAXLEN - sizeof("\"\"");
+        char* encrypted_msg = pb->core.encrypted_msg_buf;
+        size_t          n  = sizeof pb->core.encrypted_msg_buf - sizeof("\"\"");
 
         to_encrypt.ptr   = (uint8_t*)message;
         to_encrypt.size  = strlen(message);
@@ -53,19 +58,20 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
         message            = encrypted_msg;
     }
 #endif
-
-    pubnub_mutex_lock(pb->monitor);
-    if (!pbnc_can_start_transaction(pb)) {
-        pubnub_mutex_unlock(pb->monitor);
-        return PNR_IN_PROGRESS;
+#if PUBNUB_USE_GZIP_COMPRESSION
+    pb->core.gzip_msg_len = 0;
+    if (pubnubPublishViaPOSTwithGZIP == opts.method) {
+        if (pbgzip_compress(pb, message) == PNR_OK) {
+            message = pb->core.gzip_msg_buf;
+        }
     }
-
+#endif
     rslt = pbcc_publish_prep(
         &pb->core, channel, message, opts.store, !opts.replicate, opts.meta, opts.method);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
-        pb->flags.is_publish_via_post = (pubnubPublishViaPOST == opts.method); 
+        pb->flags.is_publish_via_post = (opts.method != pubnubPublishViaGET);
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
