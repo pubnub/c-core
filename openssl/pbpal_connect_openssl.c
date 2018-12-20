@@ -239,7 +239,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
-    cert = SSL_get_peer_certificate(ssl)
+    cert = SSL_get_peer_certificate(ssl);
     if (cert != NULL) {
         rslt = SSL_get_verify_result(ssl);
         X509_free(cert);
