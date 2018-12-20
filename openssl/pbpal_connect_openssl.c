@@ -222,6 +222,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 {
     SSL* ssl;
     int  rslt;
+    X509* cert;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((PBS_CONNECTED == pb->state)
@@ -238,8 +239,10 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
-    if (SSL_get_peer_certificate(ssl) != NULL) {
+    cert = SSL_get_peer_certificate(ssl);
+    if (cert != NULL) {
         rslt = SSL_get_verify_result(ssl);
+        X509_free(cert);
         if (rslt != X509_V_OK) {
             PUBNUB_LOG_WARNING(
                 "pb=%p: SSL_get_verify_result() failed == %d(%s)\n",
