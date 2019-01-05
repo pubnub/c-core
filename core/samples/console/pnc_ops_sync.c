@@ -16,10 +16,16 @@ void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub)
 }
 
 void pnc_free(pubnub_t* p) {
-    pubnub_cancel(p);
-    pubnub_await(p);
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
     if (pubnub_free(p) != 0) {
-        printf("Failed to free the Pubnub context!\n");
+        printf("Failed to free the Pubnub context\n");
     }
 }
 
@@ -69,7 +75,7 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
     const char *msg;
     
     if (res != PNR_STARTED) {
-        printf("%s returned error %d: %s\n", method_name, res, pubnub_res_2_string(res));
+        printf("%s returned error %d('%s')\n", method_name, res, pubnub_res_2_string(res));
         return;
     }
     
@@ -101,7 +107,7 @@ void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub
     }
     else {
         char const *desc = pubnub_last_publish_result(pn);
-        printf("%s failed! error code %d: %s\n", method_name, res, pubnub_res_2_string(res));
+        printf("%s failed! error code %d('%s')\n", method_name, res, pubnub_res_2_string(res));
         if (desc[0] != '\0') {
             printf("Publish failed, with error: '%s' -> %d\n", desc, pubnub_parse_publish_result(desc));
         }

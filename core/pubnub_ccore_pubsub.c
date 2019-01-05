@@ -17,7 +17,8 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->subscribe_key = subscribe_key;
     p->timetoken[0]  = '0';
     p->timetoken[1]  = '\0';
-    p->uuid = p->auth = NULL;
+    p->uuid[0] = '\0';
+    p->auth = NULL;
     p->msg_ofs = p->msg_end = 0;
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     p->http_reply = NULL;
@@ -114,7 +115,20 @@ char const* pbcc_get_channel(struct pbcc_context* pb)
 
 void pbcc_set_uuid(struct pbcc_context* pb, const char* uuid)
 {
-    pb->uuid = uuid;
+    if (uuid != NULL) {
+        PUBNUB_ASSERT_OPT(strlen(uuid) < sizeof pb->uuid);
+        strncpy(pb->uuid, uuid, sizeof pb->uuid);
+        pb->uuid[(sizeof pb->uuid) - 1] = '\0';
+    }
+    else {
+        pb->uuid[0] = '\0';
+    }
+}
+
+
+char const* pbcc_uuid_get(struct pbcc_context* pb)
+{
+    return ('\0' == pb->uuid[0]) ? NULL : pb->uuid;
 }
 
 
@@ -424,6 +438,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
                                   enum pubnub_publish_method  method)
 {
     char const* const uname = pubnub_uname();
+    char const*       uuid = pbcc_uuid_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(message != NULL);
@@ -447,7 +462,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
         pb->message_to_publish = message;
     }
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     if ((PNR_OK == rslt) && !store_in_history) {
         rslt = pbcc_append_url_param(pb, "store", sizeof "store" - 1, "0", '&');
@@ -476,6 +491,8 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     char const*          channel_group,
                                     unsigned*            heartbeat)
 {
+    char const* uuid = pbcc_uuid_get(p);
+
     if (NULL == channel) {
         if (NULL == channel_group) {
             return PNR_INVALID_CHANNEL;
@@ -497,7 +514,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                p->timetoken,
                                pubnub_uname());
     APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
+    APPEND_URL_PARAM_M(p, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
     APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
 

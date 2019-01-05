@@ -12,33 +12,45 @@ extern "C" {
 /* Minimal acceptable message length difference, between unpacked and packed message, in percents */
 #define PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO 10
 #define GZIP_HEADER_AND_FOOTER_LENGTH 18
+#if PUBNUB_THREADSAFE
+#define KEEP_THREAD_SAFE() QMutexLocker lk(&d_mutex)
+#else
+#define KEEP_THREAD_SAFE()
+#endif
 
 pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     : d_pubkey(pubkey.toLatin1())
     , d_keysub(keysub.toLatin1())
     , d_context(new pbcc_context)
     , d_http_code(0)
+    ,
 #ifdef QT_NO_SSL
-    , d_origin("http://pubsub.pubnub.com")
+    d_origin("http://pubsub.pubnub.com")
     , d_ssl_opts(0)
+    ,
 #else
-    , d_origin("https://pubsub.pubnub.com")
+    d_origin("https://pubsub.pubnub.com")
     , d_ssl_opts(useSSL)
+    ,
 #endif
-    , d_transaction_timeout_duration_ms(10000)
+    d_transaction_timeout_duration_ms(10000)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
     , d_use_http_keep_alive(true)
+    , d_mutex(QMutex::Recursive)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
-    connect(&d_qnam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
-            this, SLOT(sslErrors(QNetworkReply*,QList<QSslError>)));
+    connect(&d_qnam,
+            SIGNAL(sslErrors(QNetworkReply*, QList<QSslError>)),
+            this,
+            SLOT(sslErrors(QNetworkReply*, QList<QSslError>)));
     connect(d_transactionTimer, SIGNAL(timeout()), this, SLOT(transactionTimeout()));
 }
 
 
 pubnub_qt::~pubnub_qt()
 {
+    KEEP_THREAD_SAFE();
     pbcc_deinit(d_context.data());
 }
 
@@ -46,10 +58,11 @@ pubnub_qt::~pubnub_qt()
 pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
 {
     if (PNR_STARTED == result) {
-        QUrl url(d_origin + QString::fromLatin1(d_context->http_buf, d_context->http_buf_len));
+        QUrl url(d_origin
+                 + QString::fromLatin1(d_context->http_buf, d_context->http_buf_len));
         d_trans = transaction;
 
-        QNetworkReply *p = d_reply.take();
+        QNetworkReply* p = d_reply.take();
         if (p) {
             p->deleteLater();
         }
@@ -65,7 +78,8 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
                 /* FALLTHRU */
             case pubnubPublishViaPOST:
                 req.setRawHeader("Content-Type", "application/json");
-                req.setRawHeader("Content-Length", QByteArray::number(d_message_to_publish.size()));
+                req.setRawHeader("Content-Length",
+                                 QByteArray::number(d_message_to_publish.size()));
                 d_reply.reset(d_qnam.post(req, d_message_to_publish));
                 break;
             case pubnubPublishViaGET:
@@ -84,22 +98,29 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
     return result;
 }
 
-
-void pubnub_qt::set_uuid(QString const &uuid)
+void pubnub_qt::set_uuid(QString const& uuid)
 {
-    d_uuid = uuid.toLatin1();
-    pbcc_set_uuid(d_context.data(), d_uuid.data());
+    KEEP_THREAD_SAFE();
+    pbcc_set_uuid(d_context.data(), uuid.isEmpty() ? NULL : uuid.toLatin1().data());
 }
 
-
-void pubnub_qt::set_auth(QString const &auth)
+QString pubnub_qt::uuid() const
 {
+    QMutexLocker lk(&d_mutex);
+    char const*  uuid = pbcc_uuid_get(d_context.data());
+    return QString((NULL == uuid) ? "" : uuid);
+}
+
+void pubnub_qt::set_auth(QString const& auth)
+{
+    QMutexLocker lk(&d_mutex);
     d_auth = auth.toLatin1();
     pbcc_set_auth(d_context.data(), d_auth.data());
 }
 
 QString pubnub_qt::get() const
 {
+    KEEP_THREAD_SAFE();
     return pbcc_get_msg(d_context.data());
 }
 
@@ -107,7 +128,8 @@ QString pubnub_qt::get() const
 QStringList pubnub_qt::get_all() const
 {
     QStringList all;
-    while (char const *msg = pbcc_get_msg(d_context.data())) {
+    KEEP_THREAD_SAFE();
+    while (char const* msg = pbcc_get_msg(d_context.data())) {
         if (nullptr == msg) {
             break;
         }
@@ -119,6 +141,7 @@ QStringList pubnub_qt::get_all() const
 
 QString pubnub_qt::get_channel() const
 {
+    KEEP_THREAD_SAFE();
     return pbcc_get_channel(d_context.data());
 }
 
@@ -126,7 +149,8 @@ QString pubnub_qt::get_channel() const
 QStringList pubnub_qt::get_all_channels() const
 {
     QStringList all;
-    while (char const *msg = pbcc_get_channel(d_context.data())) {
+    KEEP_THREAD_SAFE();
+    while (char const* msg = pbcc_get_channel(d_context.data())) {
         if (nullptr == msg) {
             break;
         }
@@ -138,270 +162,282 @@ QStringList pubnub_qt::get_all_channels() const
 
 void pubnub_qt::cancel()
 {
+    KEEP_THREAD_SAFE();
     if (d_reply) {
         d_reply->abort();
     }
 }
 
 
-pubnub_res pubnub_qt::publish(QString const &channel, QString const &message)
+pubnub_res pubnub_qt::publish(QString const& channel, QString const& message)
 {
+    QMutexLocker lk(&d_mutex);
     d_publish_method = pubnubPublishViaGET;
-    return startRequest(
-        pbcc_publish_prep(
-            d_context.data(),
-            channel.toLatin1().data(),
-            message.toLatin1().data(),
-            true,
-            false,
-            NULL,
-            d_publish_method
-            ), PBTT_PUBLISH
-        );
+    return startRequest(pbcc_publish_prep(d_context.data(),
+                                          channel.toLatin1().data(),
+                                          message.toLatin1().data(),
+                                          true,
+                                          false,
+                                          NULL,
+                                          d_publish_method),
+                        PBTT_PUBLISH);
 }
 
 
-pubnub_res pubnub_qt::publish_via_post(QString const &channel, QByteArray const &message)
+pubnub_res pubnub_qt::publish_via_post(QString const&    channel,
+                                       QByteArray const& message)
 {
-    d_publish_method = pubnubPublishViaPOST;
+    QMutexLocker lk(&d_mutex);
+    d_publish_method     = pubnubPublishViaPOST;
     d_message_to_publish = message;
-    return startRequest(
-        pbcc_publish_prep(
-            d_context.data(),
-            channel.toLatin1().data(),
-            d_message_to_publish.data(),
-            true,
-            false,
-            NULL,
-            d_publish_method
-            ), PBTT_PUBLISH
-        );
+    return startRequest(pbcc_publish_prep(d_context.data(),
+                                          channel.toLatin1().data(),
+                                          d_message_to_publish.data(),
+                                          true,
+                                          false,
+                                          NULL,
+                                          d_publish_method),
+                        PBTT_PUBLISH);
 }
 
-static QByteArray pack_message_to_gzip(QByteArray const &message)
+static QByteArray pack_message_to_gzip(QByteArray const& message)
 {
-    auto compressedData = qCompress(message);
-    QByteArray header;
+    auto        compressedData = qCompress(message);
+    QByteArray  header;
     QDataStream ds1(&header, QIODevice::WriteOnly);
-    QByteArray footer;
+    QByteArray  footer;
     QDataStream ds2(&footer, QIODevice::WriteOnly);
-   /*  Striping the first six bytes (a 4-byte length put on by qCompress and a 2-byte zlib header)
-       and the last four bytes (a zlib integrity check).
-    */
+    /*  Striping the first six bytes (a 4-byte length put on by qCompress and a
+       2-byte zlib header) and the last four bytes (a zlib integrity check).
+     */
     compressedData.remove(0, 6);
     compressedData.chop(4);
-    if ((long)((message.size() - compressedData.size() - GZIP_HEADER_AND_FOOTER_LENGTH)*100)/message.size()
+    if ((long)((message.size() - compressedData.size() - GZIP_HEADER_AND_FOOTER_LENGTH)
+               * 100)
+            / message.size()
         < PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO) {
         /* With insufficient compression we choose not to pack */
-        qDebug() << "pack_message_to_gzip(" << message <<
-                    "):message wasn't compressed due to low compression ratio.";
+        qDebug() << "pack_message_to_gzip(" << message
+                 << "):message wasn't compressed due to low compression ratio.";
         return message;
     }
     /* Prepending a generic 10-byte gzip header (RFC 1952) */
     ds1.setByteOrder(QDataStream::BigEndian);
-    ds1 << quint16(0x1f8b)
-        << quint16(0x0800)
-        << quint16(0x0000)
-        << quint16(0x0000)
-        << quint16(0x000b);
+    ds1 << quint16(0x1f8b) << quint16(0x0800) << quint16(0x0000)
+        << quint16(0x0000) << quint16(0x000b);
     /* Appending a four-byte CRC-32 of the uncompressed data
        Appending 4 bytes uncompressed input size modulo 2^32
      */
     ds2.setByteOrder(QDataStream::LittleEndian);
-    ds2 << quint32(pbcrc32(message.data(), message.size())) << quint32(message.size());
+    ds2 << quint32(pbcrc32(message.data(), message.size()))
+        << quint32(message.size());
     return header + compressedData + footer;
 }
 
-pubnub_res pubnub_qt::publish_via_post_with_gzip(QString const &channel, QByteArray const &message)
+pubnub_res pubnub_qt::publish_via_post_with_gzip(QString const&    channel,
+                                                 QByteArray const& message)
 {
+    QMutexLocker lk(&d_mutex);
     d_message_to_publish = pack_message_to_gzip(message);
-    d_publish_method = (d_message_to_publish.size() != message.size()) ?
-                       pubnubPublishViaPOSTwithGZIP :
-                       pubnubPublishViaPOST;
-    return startRequest(
-        pbcc_publish_prep(
-            d_context.data(),
-            channel.toLatin1().data(),
-            d_message_to_publish.data(),
-            true,
-            false,
-            NULL,
-            d_publish_method
-            ), PBTT_PUBLISH
-        );
+    d_publish_method     = (d_message_to_publish.size() != message.size())
+                           ? pubnubPublishViaPOSTwithGZIP
+                           : pubnubPublishViaPOST;
+    return startRequest(pbcc_publish_prep(d_context.data(),
+                                          channel.toLatin1().data(),
+                                          d_message_to_publish.data(),
+                                          true,
+                                          false,
+                                          NULL,
+                                          d_publish_method),
+                        PBTT_PUBLISH);
 }
 
-pubnub_res pubnub_qt::subscribe(QString const &channel, QString const &channel_group)
+pubnub_res pubnub_qt::subscribe(QString const& channel, QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_subscribe_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            0
-            ), PBTT_SUBSCRIBE
-        );
+            0),
+        PBTT_SUBSCRIBE);
 }
 
 
-pubnub_res pubnub_qt::leave(QString const &channel, QString const &channel_group)
+pubnub_res pubnub_qt::leave(QString const& channel, QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_leave_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
-            ), PBTT_LEAVE
-        );
+            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()),
+        PBTT_LEAVE);
 }
 
 
 pubnub_res pubnub_qt::time()
 {
+    KEEP_THREAD_SAFE();
     return startRequest(pbcc_time_prep(d_context.data()), PBTT_TIME);
 }
 
 
-pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool include_token)
+pubnub_res pubnub_qt::history(QString const& channel, unsigned count, bool include_token)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
-        pbcc_history_prep(
-            d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            count,
-            include_token,
-            pbccNotSet,
-            pbccNotSet,
-            0,
-            0
-            ), PBTT_HISTORY
-        );
+        pbcc_history_prep(d_context.data(),
+                          channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                          count,
+                          include_token,
+                          pbccNotSet,
+                          pbccNotSet,
+                          0,
+                          0),
+        PBTT_HISTORY);
 }
 
 
-pubnub_res pubnub_qt::history(QString const &channel, unsigned count, bool include_token, QString const& start, bool reverse, QString const& end, bool string_token)
+pubnub_res pubnub_qt::history(QString const& channel,
+                              unsigned       count,
+                              bool           include_token,
+                              QString const& start,
+                              bool           reverse,
+                              QString const& end,
+                              bool           string_token)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
-        pbcc_history_prep(
-            d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            count,
-            include_token,
-            string_token ? pbccTrue : pbccFalse,
-            reverse ? pbccTrue : pbccFalse,
-            start.isEmpty() ? 0 : start.toLatin1().data(),
-            end.isEmpty() ? 0 : end.toLatin1().data()
-            ), PBTT_HISTORY
-        );
+        pbcc_history_prep(d_context.data(),
+                          channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                          count,
+                          include_token,
+                          string_token ? pbccTrue : pbccFalse,
+                          reverse ? pbccTrue : pbccFalse,
+                          start.isEmpty() ? 0 : start.toLatin1().data(),
+                          end.isEmpty() ? 0 : end.toLatin1().data()),
+        PBTT_HISTORY);
 }
 
 
-pubnub_res pubnub_qt::here_now(QString const &channel, QString const &channel_group)
+pubnub_res pubnub_qt::here_now(QString const& channel, QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_here_now_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             pbccNotSet,
-            pbccNotSet
-            ), PBTT_HERENOW
-        );
+            pbccNotSet),
+        PBTT_HERENOW);
 }
 
 
 pubnub_res pubnub_qt::global_here_now()
 {
-    return startRequest(pbcc_here_now_prep(d_context.data(), 0, 0, pbccNotSet, pbccNotSet), PBTT_GLOBAL_HERENOW);
-}
-
-
-pubnub_res pubnub_qt::where_now(QString const &uuid)
-{
+    KEEP_THREAD_SAFE();
     return startRequest(
-        pbcc_where_now_prep(
-            d_context.data(),
-            uuid.isEmpty() ? d_uuid.data() : uuid.toLatin1().data()
-            ), PBTT_WHERENOW
-        );
+        pbcc_here_now_prep(d_context.data(), 0, 0, pbccNotSet, pbccNotSet),
+        PBTT_GLOBAL_HERENOW);
 }
 
 
-pubnub_res pubnub_qt::set_state(QString const &channel, QString const& channel_group, QString const &uuid, QString const &state)
+pubnub_res pubnub_qt::where_now(QString const& uuid)
 {
+    KEEP_THREAD_SAFE();
+    return startRequest(pbcc_where_now_prep(d_context.data(),
+                                            uuid.isEmpty()
+                                                ? pbcc_uuid_get(d_context.data())
+                                                : uuid.toLatin1().data()),
+                        PBTT_WHERENOW);
+}
+
+
+pubnub_res pubnub_qt::set_state(QString const& channel,
+                                QString const& channel_group,
+                                QString const& uuid,
+                                QString const& state)
+{
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_set_state_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? d_uuid.data() : uuid.toLatin1().data(),
-            state.toLatin1().data()
-            ), PBTT_SET_STATE
-        );
+            uuid.isEmpty() ? pbcc_uuid_get(d_context.data()) : uuid.toLatin1().data(),
+            state.toLatin1().data()),
+        PBTT_SET_STATE);
 }
 
 
-pubnub_res pubnub_qt::state_get(QString const &channel, QString const& channel_group, QString const &uuid)
+pubnub_res pubnub_qt::state_get(QString const& channel,
+                                QString const& channel_group,
+                                QString const& uuid)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_state_get_prep(
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? d_uuid.data() : uuid.toLatin1().data()
-            ), PBTT_STATE_GET
-        );
+            uuid.isEmpty() ? pbcc_uuid_get(d_context.data())
+                           : uuid.toLatin1().data()),
+        PBTT_STATE_GET);
 }
 
 
 pubnub_res pubnub_qt::remove_channel_group(QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_remove_channel_group_prep(
             d_context.data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()
-            ), PBTT_REMOVE_CHANNEL_GROUP
-        );
+            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()),
+        PBTT_REMOVE_CHANNEL_GROUP);
 }
 
 
-pubnub_res pubnub_qt::remove_channel_from_group(QString const &channel, QString const& channel_group)
+pubnub_res pubnub_qt::remove_channel_from_group(QString const& channel,
+                                                QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_channel_registry_prep(
             d_context.data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             "remove",
-            channel.isEmpty() ? 0 : channel.toLatin1().data()
-            ), PBTT_REMOVE_CHANNEL_FROM_GROUP
-        );
+            channel.isEmpty() ? 0 : channel.toLatin1().data()),
+        PBTT_REMOVE_CHANNEL_FROM_GROUP);
 }
 
 
-pubnub_res pubnub_qt::add_channel_to_group(QString const &channel, QString const& channel_group)
+pubnub_res pubnub_qt::add_channel_to_group(QString const& channel,
+                                           QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_channel_registry_prep(
             d_context.data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             "add",
-            channel.isEmpty() ? 0 : channel.toLatin1().data()
-            ), PBTT_ADD_CHANNEL_TO_GROUP
-        );
+            channel.isEmpty() ? 0 : channel.toLatin1().data()),
+        PBTT_ADD_CHANNEL_TO_GROUP);
 }
-
 
 
 pubnub_res pubnub_qt::list_channel_group(QString const& channel_group)
 {
+    KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_channel_registry_prep(
             d_context.data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             0,
-            0
-            ), PBTT_LIST_CHANNEL_GROUP
-        );
+            0),
+        PBTT_LIST_CHANNEL_GROUP);
 }
 
 
@@ -413,6 +449,7 @@ int pubnub_qt::last_http_code() const
 
 QString pubnub_qt::last_publish_result() const
 {
+    KEEP_THREAD_SAFE();
     if (PUBNUB_DYNAMIC_REPLY_BUFFER && (nullptr == d_context->http_reply)) {
         return "";
     }
@@ -420,7 +457,7 @@ QString pubnub_qt::last_publish_result() const
         return "";
     }
 
-    char *end;
+    char* end;
     strtol(d_context->http_reply + 1, &end, 10);
     return end + 1;
 }
@@ -435,12 +472,14 @@ pubnub_publish_res pubnub_qt::parse_last_publish_result()
 
 QString pubnub_qt::last_time_token() const
 {
+    KEEP_THREAD_SAFE();
     return d_context->timetoken;
 }
 
 
 void pubnub_qt::set_ssl_options(ssl_opts options)
 {
+    QMutexLocker lk(&d_mutex);
     if (options & useSSL) {
         if (d_origin.startsWith("http:")) {
             d_origin.replace(0, 5, "https:");
@@ -457,6 +496,7 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 
 void pubnub_qt::set_origin(QString const& origin)
 {
+    QMutexLocker lk(&d_mutex);
     d_origin = origin;
     if (!origin.startsWith("http:") && !origin.startsWith("https:")) {
         d_origin.prepend("http://");
@@ -465,13 +505,14 @@ void pubnub_qt::set_origin(QString const& origin)
 }
 
 
-pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
+pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
 {
     pubnub_res pbres = PNR_OK;
+    KEEP_THREAD_SAFE();
     if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
         pbcc_realloc_reply_buffer(d_context.data(), data.size());
         memcpy(d_context->http_reply, data.data(), data.size());
-        d_context->http_buf_len = data.size();
+        d_context->http_buf_len            = data.size();
         d_context->http_reply[data.size()] = '\0';
     }
     else {
@@ -524,7 +565,8 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
         break;
     }
 
-    QVariant statusCode = d_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    QVariant statusCode =
+        d_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
     d_http_code = statusCode.isValid() ? statusCode.toInt() : 0;
 
     if ((PNR_OK == pbres) && (http_code != 0) && (http_code / 100 != 2)) {
@@ -537,6 +579,7 @@ pubnub_res pubnub_qt::finish(QByteArray const &data, int http_code)
 
 void pubnub_qt::transactionTimeout()
 {
+    QMutexLocker lk(&d_mutex);
     if (d_reply) {
         d_transaction_timed_out = true;
         d_reply->abort();
@@ -546,11 +589,13 @@ void pubnub_qt::transactionTimeout()
 
 void pubnub_qt::httpFinished()
 {
+    KEEP_THREAD_SAFE();
     d_transactionTimer->stop();
 
     QNetworkReply::NetworkError error = d_reply->error();
     if (error) {
-        qDebug() << "error: " << d_reply->error() << ", string: " << d_reply->errorString();
+        qDebug() << "error: " << d_reply->error()
+                 << ", string: " << d_reply->errorString();
         d_context->http_buf_len = 0;
         if (PUBNUB_DYNAMIC_REPLY_BUFFER) {
             d_context->http_reply = NULL;
@@ -584,10 +629,10 @@ void pubnub_qt::httpFinished()
 }
 
 
-void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
+void pubnub_qt::sslErrors(QNetworkReply* reply, const QList<QSslError>& errors)
 {
     QString errorString;
-    foreach (const QSslError &error, errors) {
+    foreach (const QSslError& error, errors) {
         if (!errorString.isEmpty())
             errorString += ", ";
         errorString += error.errorString();
@@ -595,6 +640,7 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 
     qDebug() << "SSL error: " << errorString;
 
+    QMutexLocker lk(&d_mutex);
     if (d_ssl_opts & ignoreSecureConnectionRequirement) {
         reply->ignoreSslErrors();
     }
@@ -605,8 +651,17 @@ void pubnub_qt::sslErrors(QNetworkReply* reply,const QList<QSslError> &errors)
 
 #define PUBNUB_SDK_NAME "Qt5"
 
-extern "C" char const *pubnub_sdk_name() { return PUBNUB_SDK_NAME; }
+extern "C" char const* pubnub_sdk_name()
+{
+    return PUBNUB_SDK_NAME;
+}
 
-extern "C" char const *pubnub_uname() { return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION; }
+extern "C" char const* pubnub_uname()
+{
+    return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION;
+}
 
-extern "C" char const *pubnub_version() { return PUBNUB_SDK_VERSION; }
+extern "C" char const* pubnub_version()
+{
+    return PUBNUB_SDK_VERSION;
+}

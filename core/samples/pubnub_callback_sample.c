@@ -161,19 +161,18 @@ static void generate_uuid(pubnub_t* pbp)
 }
 
 
-static void wait_seconds(unsigned time_in_seconds)
+static void wait_seconds(double time_in_seconds)
 {
-    clock_t  start = clock();
-    unsigned time_passed_in_seconds;
+    time_t  start = time(NULL);
+    double time_passed_in_seconds;
     do {
-        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+        time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
 
-static void sample_free(pubnub_t* p)
+static void callback_sample_free(pubnub_t* p)
 {
-    pubnub_cancel(p);
     if (pubnub_free_with_timeout(p, 1000) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -192,16 +191,14 @@ static int do_time(pubnub_t* pbp, struct UserData* pUserData)
     puts("-----------------------");
     res = pubnub_time(pbp);
     if (res != PNR_STARTED) {
-        printf("pubnub_time() returned unexpected %d: %s\n",
+        printf("pubnub_time() returned unexpected %d('%s')\n",
                res,
                pubnub_res_2_string(res));
-        sample_free(pbp);
         return -1;
     }
     res = await(pUserData);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
         return -1;
     }
 
@@ -214,7 +211,7 @@ static int do_time(pubnub_t* pbp, struct UserData* pUserData)
                pubnub_last_time_token(pbp));
     }
     else {
-        printf("Getting time failed with code %d: %s\n",
+        printf("Getting time failed with code %d('%s')\n",
                res,
                pubnub_res_2_string(res));
     }
@@ -225,7 +222,7 @@ static int do_time(pubnub_t* pbp, struct UserData* pUserData)
 
 int main()
 {
-    clock_t         clk;
+    time_t          t0;
     char const*     msg;
     enum pubnub_res res;
     struct UserData user_data;
@@ -248,22 +245,19 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
-    clk = clock();
+    time(&t0);
     res = pubnub_publish(pbp, chan, "\"Hello world from callback!\"");
     if (res != PNR_STARTED) {
-        printf("pubnub_publish() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_publish() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
-    clk = clock() - clk;
-    printf("Publish took %d clicks (%f seconds).\n",
-           (int)clk,
-           ((float)clk) / CLOCKS_PER_SEC);
+    printf("Publish lasted %lf seconds.\n", difftime(time(NULL), t0));
 
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
     if (PNR_OK == res) {
@@ -283,21 +277,18 @@ int main()
     puts("-----------------------");
     puts("Subscribing...");
     puts("-----------------------");
-    clk = clock();
+    time(&t0);
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
-        printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_subscribe() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
-    clk = clock() - clk;
-    printf("Subscribe-connect took %d clicks (%f seconds).\n",
-           (int)clk,
-           ((float)clk) / CLOCKS_PER_SEC);
+    printf("Subscribe/connect lasted %lf seconds.\n", difftime(time(NULL), t0));
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -312,14 +303,14 @@ int main()
 
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
-        printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_subscribe() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -339,22 +330,25 @@ int main()
                pubnub_res_2_string(res));
     }
 
-
-    do_time(pbp, &user_data);
+    /* Getting time */
+    if (do_time(pbp, &user_data) == -1) {
+        callback_sample_free(pbp);
+        return -1;
+    }
 
     puts("-----------------------");
     puts("Getting history v2 with include_token...");
     puts("-----------------------");
     res = pubnub_history(pbp, chan, 10, true);
     if (res != PNR_STARTED) {
-        printf("pubnub_history() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_history() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -385,14 +379,16 @@ int main()
         puts("-----------------------");
         res = pubnub_global_here_now(pbp);
         if (res != PNR_STARTED) {
-            printf("pubnub_global_here_now() returned unexpected: %d\n", res);
-            sample_free(pbp);
+            printf("pubnub_global_here_now() returned unexpected: %d('%s')\n",
+                   res,
+                   pubnub_res_2_string(res));
+            callback_sample_free(pbp);
             return -1;
         }
         res = await(&user_data);
         if (res == PNR_STARTED) {
             printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-            sample_free(pbp);
+            callback_sample_free(pbp);
             return -1;
         }
 
@@ -419,14 +415,14 @@ int main()
     puts("-----------------------");
     res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
     if (res != PNR_STARTED) {
-        printf("pubnub_where_now() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_where_now() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -452,14 +448,14 @@ int main()
     puts("-----------------------");
     res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
     if (res != PNR_STARTED) {
-        printf("pubnub_set_state() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_set_state() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -485,14 +481,14 @@ int main()
     puts("-----------------------");
     res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
     if (res != PNR_STARTED) {
-        printf("pubnub_state_get() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_state_get() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -517,14 +513,14 @@ int main()
     puts("-----------------------");
     res = pubnub_list_channel_group(pbp, "channel-group");
     if (res != PNR_STARTED) {
-        printf("pubnub_state_get() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_state_get() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -539,7 +535,7 @@ int main()
         }
     }
     else {
-        printf("Getting channel group list failed with code: %d ('%s')\n",
+        printf("Getting channel group list failed with code: %d('%s')\n",
                res,
                pubnub_res_2_string(res));
     }
@@ -549,14 +545,16 @@ int main()
     puts("-----------------------");
     res = pubnub_add_channel_to_group(pbp, chan, "channel-group");
     if (res != PNR_STARTED) {
-        printf("pubnub_add_channel_to_group() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_add_channel_to_group() returned unexpected: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -581,14 +579,16 @@ int main()
     puts("-----------------------");
     res = pubnub_remove_channel_from_group(pbp, chan, "channel-group");
     if (res != PNR_STARTED) {
-        printf("pubnub_remove_channel_from_group() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_remove_channel_from_group() returned unexpected: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -613,14 +613,16 @@ int main()
     puts("-----------------------");
     res = pubnub_remove_channel_group(pbp, "channel-group");
     if (res != PNR_STARTED) {
-        printf("pubnub_remove_channel_group() returned unexpected: %d\n", res);
-        sample_free(pbp);
+        printf("pubnub_remove_channel_group() returned unexpected: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+        callback_sample_free(pbp);
         return -1;
     }
     res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        sample_free(pbp);
+        callback_sample_free(pbp);
         return -1;
     }
 
@@ -640,9 +642,7 @@ int main()
                pubnub_res_2_string(res));
     }
 
-    /* We're done, but, keep-alive might be on, so we need to cancel,
-     * then free */
-    sample_free(pbp);
+    callback_sample_free(pbp);
 
     puts("Pubnub callback demo over.");
 

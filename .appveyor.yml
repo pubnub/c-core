@@ -5,13 +5,25 @@ platform:
 environment:
   matrix:
     - BUILD_TYPE: nmake
+      QT5: C:\Qt\5.11\mingw53_32
+      MINGW: C:\Qt\Tools\mingw530_32
 
+before_build:
+  - set PATH=%MINGW%\bin;%QT5%\bin;%PATH%
 
 build_script:
   - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat"
   - nmake /f windows.mk
   - cd core
   - nmake /f W_makefile.mk
+  - cd ..
+  - cd qt
+  - qmake fn_test.pro CONFIG+=release DESTDIR=. &&
+    mingw32-make &&
+    qmake pubnub.pro CONFIG+=release DESTDIR=. &&
+    mingw32-make &&
+    qmake pubnub_gui.pro CONFIG+=release DESTDIR=. &&
+    mingw32-make
   - cd ..
 
 test_script:
@@ -20,5 +32,6 @@ test_script:
   - openssl\pubnub_fntest
   - cpp\fntest_runner
   - cpp\openssl\fntest_runner
+  - qt\release\fn_test
 
 deploy: off

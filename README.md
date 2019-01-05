@@ -45,6 +45,8 @@ In this root directory we have some files, too:
 - `.pubnub.yml`: Standard Pubnub library description in YAML
 - `.travis.yml`: Configuration for Travis CI (POSIX: Linux and MacOS)
 - `.appveyor.yml`: Configuration for Appveyor CI (Windows)
+- `.clang-format`: Configuration for Clang-format tool that we use to format
+  C/C++ source code
 
   
 ## Contributing

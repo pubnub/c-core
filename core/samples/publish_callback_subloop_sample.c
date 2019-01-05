@@ -17,7 +17,7 @@
 #include <time.h>
 
 
-static volatile int stop;
+static volatile int m_stop;
 
 
 static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res result)
@@ -29,7 +29,7 @@ static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res
     }
     else {
         paint_text_red();
-        printf("Subscribe failed with code: %d\n", result);
+        printf("Subscribe failed with code: %d('%s')\n", result, pubnub_res_2_string(result));
     }
     reset_text_paint();
 }
@@ -45,10 +45,10 @@ void publish_callback(pubnub_t*         pb,
     switch (trans) {
     case PBTT_PUBLISH:
         paint_text_green();
-        printf("Publish callback, result: %d\n", result);
+        printf("Publish callback, result: %d('%s')\n", result, pubnub_res_2_string(result));
         if (result == PNR_STARTED) {
             printf("await() returned unexpected: PNR_STARTED(%d)\n", result);
-            stop = 1;
+            m_stop = 1;
             return;
         }
         if (PNR_OK == result) {
@@ -62,12 +62,12 @@ void publish_callback(pubnub_t*         pb,
         }
         else {
             paint_text_red();
-            printf("Publishing failed with code: %d\n", result);
+            printf("Publishing failed with code: %d('%s')\n", result, pubnub_res_2_string(result));
         }
         if (result != PNR_CANCELLED) {
             /* Intializes random number generator */
             srand((unsigned)time(&t));
-            if (!stop && (rand() % 10 > 5)) {
+            if (!m_stop && (rand() % 10 > 5)) {
                 paint_text_green();
                 puts("-----------------------");
                 puts("Publishing...");
@@ -83,15 +83,20 @@ void publish_callback(pubnub_t*         pb,
             }
             if (result != PNR_STARTED) {
                 paint_text_red();
-                printf("pubnub_publish() returned unexpected: %d\n", result);
-                stop = 1;
+                printf("pubnub_publish() returned unexpected: %d('%s')\n",
+                       result,
+                       pubnub_res_2_string(result));
+                m_stop = 1;
             }
         }
         break;
     default:
         paint_text_red();
-        stop = 1;
-        printf("Transaction %d callback: result: %d\n", trans, result);
+        m_stop = 1;
+        printf("Transaction %d callback: result: %d('%s')\n",
+               trans,
+               result,
+               pubnub_res_2_string(result));
         break;
     }
     reset_text_paint();
@@ -99,22 +104,18 @@ void publish_callback(pubnub_t*         pb,
 }
 
 
-static void wait_seconds(unsigned time_in_seconds)
+static void wait_seconds(double time_in_seconds)
 {
-    clock_t  start = clock();
-    unsigned time_passed_in_seconds;
+    time_t start = time(NULL);
+    double time_passed_in_seconds;
     do {
-        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+        time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
 
-static void sample_free(pubnub_t* pb)
+static void callback_sample_free(pubnub_t* pb)
 {
-    /* We're done, but, if keep-alive is on, we can't free,
-       we need to cancel first...
-     */
-    pubnub_cancel(pb);
     if (0 != pubnub_free_with_timeout(pb, 1000)) {
         puts("Failed to free the context in due time");
     }
@@ -149,10 +150,8 @@ int main()
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
     if (NULL == pbsld) {
         printf("Defining a subscribe loop failed\n");
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
-        /* Waits until the context is released from the processing queue */
-        wait_seconds(1);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
 
@@ -181,12 +180,14 @@ int main()
         pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
     if (result != PNR_STARTED) {
         paint_text_yellow();
-        printf("pubnub_publish() returned unexpected: %d\n", result);
-        stop = 1;
+        printf("pubnub_publish() returned unexpected: %d('%s')\n",
+               result,
+               pubnub_res_2_string(result));
+        m_stop = 1;
     }
 
     //    do{
-    //    }while(!stop);
+    //    }while(!m_stop);
     wait_seconds(200);
     //    just_wait_minutes(minutes_in_loop);
 
@@ -198,8 +199,8 @@ int main()
     pubnub_subloop_undef(pbsld);
     //! [Release Subscribe loop]
 
-    sample_free(pbp_2);
-    sample_free(pbp);
+    callback_sample_free(pbp_2);
+    callback_sample_free(pbp);
 
     paint_text_white();
     puts("Pubnub callback subloop demo over.");

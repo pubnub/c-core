@@ -327,13 +327,10 @@ public:
 
     // We can construct from a temporary
 #if __cplusplus >= 201103L
-    futres(futres&& x)
-        : d_pb(x.d_pb)
-        , d_ctx(x.d_ctx)
-        , d_result(x.d_result)
-        , d_pimpl(x.d_pimpl)
+    futres(futres&& x) :
+        d_ctx(x.d_ctx),
+        d_pimpl(x.d_pimpl)
     {
-        x.d_pb    = nullptr;
         x.d_pimpl = nullptr;
     }
 #else
@@ -342,20 +339,14 @@ public:
 
     /// Indicates whether we should retry the last transaction
     /// @see pubnub_should_retry()
-    tribool should_retry() const { return pubnub_should_retry(d_result); }
+    tribool should_retry() const;
 
 private:
     // Pubnub future result is non-copyable
     futres(futres& x);
 
-    /// The C Pubnub context that we are "wrapping"
-    pubnub_t* d_pb;
-
     /// The C++ Pubnub context of this future result
     context& d_ctx;
-
-    /// The current result
-    pubnub_res d_result;
 
     /// The implementation of the synchronization
     /// between the Pubnub callback and this "future result"

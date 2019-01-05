@@ -71,7 +71,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
     If transaction is successful, the gotten time will be the only
     message you can get with pubnub_get(). It will be a (large) JSON
     integer.
-    
+
     You can't get time if a transaction is in progress on the context.
 
     @param p The Pubnub context. Can't be NULL.  
@@ -94,11 +94,11 @@ enum pubnub_res pubnub_time(pubnub_t *p);
     rather an array of JSON objects, having keys `message` with
     value the actual message, and `timetoken` with the time token
     of that particular message.
-    
+
     You can't get history if a transaction is in progress on the context.
 
-    @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name to get message 
+    @param p The Pubnub context. Can't be NULL.
+    @param channel The string with the channel name to get message
     history for. This _can't_ be a comma separated list of channels.
     @param count Maximum number of messages to get. If there are less
     than this available on the @c channel, you'll get less, but you
@@ -126,7 +126,7 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
     you will subscribe only to the channel group(s). It goes both ways:
     if @p channel_group is NULL, then @p channel cannot be NULL and
     you will subscribe only to the channel(s).
-    
+
     You can't get list of currently present users if a transaction is
     in progress on the context.
 
@@ -171,7 +171,7 @@ enum pubnub_res pubnub_heartbeat(pubnub_t *p, const char* channel, const char* c
     you will subscribe only to the channel group(s). It goes both ways:
     if @p channel_group is NULL, then @p channel cannot be NULL and
     you will subscribe only to the channel(s).
-    
+
     You can't get list of currently present users if a transaction is
     in progress on the context.
 
@@ -193,7 +193,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *p, const char *channel, const char *ch
     If transaction is successful, the response will be the same
     as for "multi-channel" response for pubnub_here_now(), if
     we queried against all currently available channels.
-    
+
     You can't get list of currently present users if a transaction is
     in progress on the context.
 
@@ -277,9 +277,9 @@ enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *c
     - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
     - "message": the string/message describing the status ("OK"...)
     - "service": should be "Presence"
-    - "payload": if querying against one channel the gotten state 
+    - "payload": if querying against one channel - the state we got
     (a JSON object), otherwise a JSON object with the key "channels"
-    whose value is a JSON object with keys the name of the channels
+    whose value is a JSON object having keys the name of each channels
     and their respective values JSON objects of the gotten state
 
     If @p channel is NULL, then @p channel_group cannot be NULL and
@@ -401,6 +401,13 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, ch
 */
 enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group);
 
+/** Checks if a transaction can be started on @p pb context. In other
+    words, checks if previous transaction is finished.
+
+    @retval true can start new transaction
+    @retval false otherwise (cannot start a new transaction)
+ */
+bool pubnub_can_start_transaction(pubnub_t* pb);
 
 
 #endif /* defined INC_PUBNUB_COREAPI */
