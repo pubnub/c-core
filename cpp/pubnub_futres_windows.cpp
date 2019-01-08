@@ -19,34 +19,73 @@ extern "C" {
 
 namespace pubnub {
 
+static void futres_callback(pubnub_t*         pb,
+                            enum pubnub_trans trans,
+                            enum pubnub_res   result,
+                            void*             user_data);
+
 class futres::impl {
+    friend class futres;
 public:
-    impl() : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL))
-           , d_parent(nullptr)
-           , d_thread(0) {
+    impl(pubnub_t *pb, pubnub_res initial) :
+        d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL)),
+        d_pb(pb),
+        d_parent(nullptr),
+        d_thread(0),
+        d_result(initial)
+    {
         pubnub_mutex_init(d_mutex);
         if (NULL == d_wevent) {
             throw std::runtime_error("Failed to create a Windows event handle");
         }
+        if (initial != PNR_IN_PROGRESS) {
+            lock_guard lck(d_mutex);
+            if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, this)) {
+                throw std::logic_error("Failed to register callback");
+            }
+        }
     }
-    ~impl() {
+    ~impl()
+    {
         wait4_then_thread_to_start();
         wait4_then_thread_to_finish();
+        (void)pubnub_register_callback(d_pb, NULL, NULL);
         pubnub_mutex_destroy(d_mutex);
         CloseHandle(d_wevent);
     }
-    void start_await() {
-        ResetEvent(d_wevent);
+    void start_await() { ResetEvent(d_wevent); }
+    pubnub_res end_await() {
+        pubnub_res res;
+        {
+            lock_guard lck(d_mutex);
+            res = d_result;
+        }
+        if (PNR_STARTED == res) {
+            WaitForSingleObject(d_wevent, INFINITE);
+            lock_guard lck(d_mutex);
+            return d_result = pubnub_last_result(d_pb);
+        }
+        else {
+            return res;
+        }
     }
-    void end_await() {
-        WaitForSingleObject(d_wevent, INFINITE);
+    pubnub_res last_result() {
+        lock_guard lck(d_mutex);
+        if (PNR_STARTED == d_result) {
+            return d_result = pubnub_last_result(d_pb);
+        }
+        else {
+            return d_result;
+        }
     }
-    static unsigned __stdcall do_the_then(void *parg) {
-        futres::impl *that = static_cast<futres::impl*>(parg);
+    static unsigned __stdcall do_the_then(void* parg)
+    {
+        futres::impl* that = static_cast<futres::impl*>(parg);
         that->d_thenf(that->d_parent->d_ctx, that->d_result);
         return 0;
     }
-    void signal(pubnub_res rslt) {
+    void signal(pubnub_res rslt)
+    {
         lock_guard lck(d_mutex);
         if (!!d_thenf && d_parent) {
             d_result = rslt;
@@ -54,7 +93,8 @@ public:
         }
         SetEvent(d_wevent);
     }
-    bool is_ready() const {
+    bool is_ready() const
+    {
         return WAIT_OBJECT_0 == WaitForSingleObject(d_wevent, 0);
     }
     void then(
@@ -63,15 +103,17 @@ public:
 #else
         std::function<void(context&, pubnub_res)> f,
 #endif
-        futres *parent) {
+        futres* parent)
+    {
         PUBNUB_ASSERT_OPT(parent != nullptr);
         lock_guard lck(d_mutex);
-        d_thenf = f;
+        d_thenf  = f;
         d_parent = parent;
     }
 
 private:
-    void wait4_then_thread_to_start() {
+    void wait4_then_thread_to_start()
+    {
         bool should_await;
         {
             lock_guard lck(d_mutex);
@@ -81,49 +123,51 @@ private:
             end_await();
         }
     }
-    void wait4_then_thread_to_finish() {
+    void wait4_then_thread_to_finish()
+    {
         if (d_thread) {
             WaitForSingleObject(d_thread, INFINITE);
         }
     }
 
-    HANDLE d_wevent;
+    HANDLE         d_wevent;
     pubnub_mutex_t d_mutex;
+    /// The C Pubnub context that we are "wrapping"
+    pubnub_t* d_pb;
 
 #if (__cplusplus < 201103L) && (_MSC_VER < 1600)
     pubnub::caller_keeper d_thenf;
 #else
     std::function<void(context&, pubnub_res)> d_thenf;
 #endif
-    futres *d_parent;
-    HANDLE d_thread;
+    futres*    d_parent;
+    HANDLE     d_thread;
     pubnub_res d_result;
 };
 
 
-static void futres_callback(pubnub_t *pb, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
+static void futres_callback(pubnub_t*         pb,
+                            enum pubnub_trans trans,
+                            enum pubnub_res   result,
+                            void*             user_data)
 {
-    futres::impl *p = static_cast<futres::impl*>(user_data);
+    futres::impl* p = static_cast<futres::impl*>(user_data);
     p->signal(result);
 }
 
 
-futres::futres(pubnub_t *pb, context &ctx, pubnub_res initial) :
-    d_pb(pb), d_ctx(ctx), d_result(initial), d_pimpl(new impl)
+futres::futres(pubnub_t* pb, context& ctx, pubnub_res initial)
+    : d_ctx(ctx)
+    , d_pimpl(new impl(pb, initial))
 {
-    if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
-        throw std::logic_error("Failed to register callback");
-    }
 }
 
 
-#if _cplusplus < 201103L
-futres::futres(futres const &x) :
-    d_pb(x.d_pb), d_ctx(x.d_ctx), d_result(x.d_result), d_pimpl(new impl)
+#if __cplusplus < 201103L
+futres::futres(futres const& x)
+    : d_ctx(x.d_ctx)
+    , d_pimpl(new impl(x.d_pimpl->d_pb, x.d_pimpl->d_result))
 {
-    if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, d_pimpl)) {
-        throw std::logic_error("Failed to register callback");
-    }
 }
 #endif
 
@@ -131,16 +175,15 @@ futres::futres(futres const &x) :
 futres::~futres()
 {
     delete d_pimpl;
-    (void)pubnub_register_callback(d_pb, NULL, NULL);
 }
 
 
 pubnub_res futres::last_result()
 {
-    return pubnub_last_result(d_pb);
+    return d_pimpl->last_result();
 }
 
- 
+
 void futres::start_await()
 {
     d_pimpl->start_await();
@@ -148,14 +191,13 @@ void futres::start_await()
 
 pubnub_res futres::end_await()
 {
-    d_pimpl->end_await();
-    return pubnub_last_result(d_pb);
+   return d_pimpl->end_await();
 }
 
 
 bool futres::valid() const
 {
-    return (d_pb != NULL) && (d_pimpl != NULL);
+    return (d_pimpl != NULL) && (d_pimpl->d_pb != NULL);
 }
 
 
@@ -164,9 +206,15 @@ bool futres::is_ready() const
     return d_pimpl->is_ready();
 }
 
+
+tribool futres::should_retry() const
+{
+    return pubnub_should_retry(d_pimpl->last_result());
+}
+
 #if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
 
-void futres::then(std::function<void(pubnub::context &, pubnub_res)> f)
+void futres::then(std::function<void(pubnub::context&, pubnub_res)> f)
 {
     d_pimpl->then(f, this);
 }
@@ -180,5 +228,4 @@ void futres::thenx(caller_keeper kiper)
 
 #endif
 
-}
-
+} // namespace pubnub

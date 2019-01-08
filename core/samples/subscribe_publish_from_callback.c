@@ -5,6 +5,7 @@
 #include "core/pubnub_timers.h"
 #include "core/pubnub_free_with_timeout.h"
 #include "core/pubnub_dns_servers.h"
+#include "core/pubnub_mutex.h"
 
 #if defined _WIN32
 #include <windows.h>
@@ -19,40 +20,31 @@
 #include <stdlib.h>
 #include <time.h>
 
-
-/** Data that we pass to the Pubnub context and will get back via
-    callback. To signal reception of response from Pubnub, that we get
-    via callback, we use a condition variable w/pthreads and an Event
-    on Windows.
-*/
-struct UserData {
-#if defined _WIN32
-    CRITICAL_SECTION mutw;
-    HANDLE           condw;
-#else
-    pthread_mutex_t mutw;
-    bool            triggered;
-    pthread_cond_t  condw;
-#endif
-    pubnub_t* pb;
-};
-
-static short volatile first_subscribe_done;
-static short volatile stop;
+pubnub_mutex_static_decl_and_init(m_lock);
+static bool m_first_subscribe_done pubnub_guarded_by(m_lock);
+static short volatile m_stop;
 static char const* m_chan = "hello_world";
 
-static void wait_seconds(unsigned time_in_seconds)
+static void wait_seconds(double time_in_seconds)
 {
-    clock_t  start = clock();
-    unsigned time_passed_in_seconds;
+    time_t  start = time(NULL);
+    double time_passed_in_seconds;
     do {
-        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+        time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
-static void sample_free(pubnub_t* p)
+static void wait_useconds(unsigned long time_in_microseconds)
 {
-    pubnub_cancel(p);
+    clock_t  start = clock();
+    unsigned long time_passed_in_microseconds;
+    do {
+        time_passed_in_microseconds = clock() - start;
+    } while (time_passed_in_microseconds < time_in_microseconds);
+}
+
+static void callback_sample_free(pubnub_t* p)
+{
     if (pubnub_free_with_timeout(p, 1500) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -61,6 +53,7 @@ static void sample_free(pubnub_t* p)
         wait_seconds(1);
     }
 }
+
 void subscribe_callback(pubnub_t*         pb,
                         enum pubnub_trans trans,
                         enum pubnub_res   result,
@@ -70,13 +63,8 @@ void subscribe_callback(pubnub_t*         pb,
 
     switch (trans) {
     case PBTT_SUBSCRIBE:
-        /* One could do all handling here, and not signal the `condw`, or use
-           some other means to inform others about this event (by, say,
-           queueing into some message queue).
-        */
-        first_subscribe_done = 1;
         paint_text_yellow();
-        printf("%sSubscribe callback, result: %d(%s)\n",
+        printf("%sSubscribe callback, result: %d('%s')\n",
                (char*)user_data,
                result,
                pubnub_res_2_string(result));
@@ -85,7 +73,7 @@ void subscribe_callback(pubnub_t*         pb,
             printf("%sSubscribe callback, unexpected: PNR_STARTED(%d)\n",
                    (char*)user_data,
                    result);
-            stop = 1;
+            m_stop = 1;
             return;
         }
         if (PNR_OK == result) {
@@ -99,33 +87,41 @@ void subscribe_callback(pubnub_t*         pb,
                 }
                 puts(msg);
             }
+            pubnub_mutex_lock(m_lock);
+            m_first_subscribe_done = true;
+            pubnub_mutex_unlock(m_lock);
         }
         else {
             paint_text_red();
-            printf("%sSubscribing failed with code: %d\n", (char*)user_data, result);
+            printf("%sSubscribing failed with code: %d('%s')\n",
+                   (char*)user_data,
+                   result,
+                   pubnub_res_2_string(result));
         }
-        if (!stop && (result != PNR_CANCELLED)) {
+        if (!m_stop && (result != PNR_CANCELLED)) {
             char chan[30];
             snprintf(chan, sizeof chan, "%s%s", (char*)user_data, m_chan);
             /* The "real" subscribe, with the just acquired time token */
             result = pubnub_subscribe(pb, chan, NULL);
             if (result != PNR_STARTED) {
                 paint_text_red();
-                printf("%spubnub_subscribe() returned unexpected: %d\n",
+                printf("%spubnub_subscribe() returned unexpected: %d('%s')\n",
                        (char*)user_data,
-                       result);
-                stop = 1;
+                       result,
+                       pubnub_res_2_string(result));
+                m_stop = 1;
                 return;
             }
         }
         break;
     default:
         paint_text_red();
-        stop = 1;
-        printf("%sTransaction %d callback(subscribe) result: %d\n",
+        m_stop = 1;
+        printf("%sUnexpected transaction tipe:%d - callback(subscribe) result: %d('%s')\n",
                (char*)user_data,
                trans,
-               result);
+               result,
+               pubnub_res_2_string(result));
         break;
     }
     reset_text_paint();
@@ -144,13 +140,16 @@ void publish_callback(pubnub_t*         pb,
     switch (trans) {
     case PBTT_PUBLISH:
         paint_text_green();
-        printf("%sPublish callback, result: %d\n", (char*)user_data, result);
+        printf("%sPublish callback, result: %d('%s')\n",
+               (char*)user_data,
+               result,
+               pubnub_res_2_string(result));
         if (result == PNR_STARTED) {
             paint_text_red();
             printf("%sawait() returned unexpected: PNR_STARTED(%d)\n",
                    (char*)user_data,
                    result);
-            stop = 1;
+            m_stop = 1;
             return;
         }
         if (PNR_OK == result) {
@@ -167,7 +166,7 @@ void publish_callback(pubnub_t*         pb,
         }
         else {
             paint_text_red();
-            printf("%sPublishing failed with code:%d(%s)\n",
+            printf("%sPublishing failed with code:%d('%s')\n",
                    (char*)user_data,
                    result,
                    pubnub_res_2_string(result));
@@ -177,7 +176,7 @@ void publish_callback(pubnub_t*         pb,
             char s[100] = "\"pub";
             char chan[30];
             snprintf(chan, sizeof chan, "%s%s", (char*)user_data, m_chan);
-            if (!stop && (rand() % 10 > 5)) {
+            if (!m_stop && (rand() % 10 > 5)) {
                 paint_text_green();
                 puts("-----------------------");
                 puts("Publishing...");
@@ -196,20 +195,22 @@ void publish_callback(pubnub_t*         pb,
             }
             if (result != PNR_STARTED) {
                 paint_text_red();
-                printf("%spubnub_publish() returned unexpected: %d\n",
+                printf("%spubnub_publish() returned unexpected: %d('%s')\n",
                        (char*)user_data,
-                       result);
-                stop = 1;
+                       result,
+                       pubnub_res_2_string(result));
+                m_stop = 1;
             }
         }
         break;
     default:
         paint_text_red();
-        stop = 1;
-        printf("%sTransaction %d callback(publish): result: %d\n",
+        m_stop = 1;
+        printf("%sUnexpected transaction type:%d callback(publish): result: %d('%s')\n",
                (char*)user_data,
                trans,
-               result);
+               result,
+               pubnub_res_2_string(result));
         break;
     }
     reset_text_paint();
@@ -244,6 +245,8 @@ int main()
         if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
             paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
+            callback_sample_free(pbp_2);
+            callback_sample_free(pbp);
             return -1;
         }
     }
@@ -252,7 +255,7 @@ int main()
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
-
+    pubnub_mutex_init_static(m_lock);
     pubnub_set_transaction_timeout(pbp, 5000);
 
     paint_text_white();
@@ -265,18 +268,22 @@ int main()
     res = pubnub_subscribe(pbp, chan1, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe1() returned unexpected: %d\n", res);
-        sample_free(pbp);
-        sample_free(pbp_2);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
-
-    /* FIXME: To be 100% correct, `first_subscribe_done` should be an
-       atomic variable, not just volatile...
-    */
+    /* Awaiting subscribe/connect */
     do {
-    } while (!first_subscribe_done);
+        pubnub_mutex_lock(m_lock);
+        if(m_first_subscribe_done) {
+            pubnub_mutex_unlock(m_lock);
+            break;
+        }
+        pubnub_mutex_unlock(m_lock);
+        wait_useconds(3);
+    } while (1);
 
-    if (!stop) {
+    if (!m_stop) {
         paint_text_white();
         puts("-----------------------");
         puts("Publishing1...");
@@ -285,18 +292,22 @@ int main()
                              chan1,
                              "\"[1]Hello world from 'subscribe-publish from callback' sample!\"");
         if (res != PNR_STARTED) {
-            printf("pubnub_publish1() returned unexpected: %d\n", res);
-            stop = 1;
+            printf("pubnub_publish1() returned unexpected: %d('%s')\n",
+                   res,
+                   pubnub_res_2_string(res));
+            m_stop = 1;
         }
     }
 
+    /* Time to play. Turning internet connection 'off' and then back 'on'.
+       Starting everything disconnected and then connecting to internet at some point,
+       and so on...
+     */
     wait_seconds(200);
 
-    /* We're done, but, if keep-alive is on, we can't free,
-       we need to cancel first...
-     */
-    sample_free(pbp_2);
-    sample_free(pbp);
+    callback_sample_free(pbp_2);
+    callback_sample_free(pbp);
+    pubnub_mutex_destroy(m_lock);
 
     paint_text_white();
     puts("Pubnub subscribe-publish callback demo over.\n");

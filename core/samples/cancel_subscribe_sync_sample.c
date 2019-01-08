@@ -1,10 +1,27 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_sync.h"
 
+#include "core/pubnub_helper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+
+static void sync_sample_free(pubnub_t* p)
+{
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+}
 
 
 int main()
@@ -37,10 +54,6 @@ int main()
         time_t          t    = time(NULL);
         bool            stop = false;
         enum pubnub_res res  = pubnub_subscribe(pbp, chan, NULL);
-        if (res != PNR_STARTED) {
-            printf("pubnub_subscribe() returned unexpected: %d\n", res);
-            break;
-        }
 
         /* Don't await here, 'cause it will loop until done */
         while (!stop) {
@@ -68,7 +81,7 @@ int main()
                     }
                 }
                 else {
-                    printf("Subscribing failed with code: %d\n", res);
+                    printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
                 }
                 if (time(NULL) != t) {
                     done = (rand() % 25) == 19;
@@ -91,13 +104,7 @@ int main()
         }
     }
 
-    /* We're done, but, keep-alive might be on, so we need to cancel.
-     * Might have been interrupted during the operation so have to wait-sync, then free */
-    pubnub_cancel(pbp);
-    pubnub_await(pbp);
-    if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context!\n");
-    }
+    sync_sample_free(pbp);
 
     puts("Pubnub cancel subscribe sync demo over.");
 

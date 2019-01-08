@@ -100,6 +100,8 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
                                 const char*          channel,
                                 const char*          channel_group)
 {
+    char const* uuid = pbcc_uuid_get(pb);
+
     if (NULL == channel) {
         if (NULL == channel_group) {
             return PNR_INVALID_CHANNEL;
@@ -120,7 +122,7 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
                  channel,
                  pubnub_uname());
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
 
     return PNR_STARTED;
@@ -129,6 +131,8 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
 
 enum pubnub_res pbcc_time_prep(struct pbcc_context* pb)
 {
+    char const* uuid = pbcc_uuid_get(pb);
+
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
@@ -138,7 +142,7 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context* pb)
 
     pb->http_buf_len = snprintf(
         pb->http_buf, sizeof pb->http_buf, "/time/0?pnsdk=%s", pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
 
     return PNR_STARTED;
@@ -183,6 +187,8 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
                                     const char*          channel,
                                     const char*          channel_group)
 {
+    char const* uuid = pbcc_uuid_get(pb);
+
     if (NULL == channel) {
         if (NULL == channel_group) {
             return PNR_INVALID_CHANNEL;
@@ -205,7 +211,7 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
                  pubnub_uname());
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
 
     return PNR_STARTED;
 }
@@ -217,6 +223,8 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
                                    enum pubnub_tribool  disable_uuids,
                                    enum pubnub_tribool  state)
 {
+    char const* uuid = pbcc_uuid_get(pb);
+
     if (NULL == channel) {
         if (channel_group != NULL) {
             channel = ",";
@@ -238,7 +246,7 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
                                 pubnub_uname());
     APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", pb->uuid, '&');
+    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_TRIBOOL_M(pb, "disable_uuids", disable_uuids, '&');
     APPEND_URL_PARAM_TRIBOOL_M(pb, "state", state, '&');
 

@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_sync.h"
 
+#include "core/pubnub_helper.h"
 #include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_subscribe_v2.h"
 #include "core/pubnub_json_parse.h"
@@ -32,7 +33,7 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
 {
     struct pubnub_v2_message msg;
     if (PNR_OK != res) {
-        printf("Subscribe failed, result=%d\n", res);
+        printf("Subscribe failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
         return -1;
     }
     for (msg = pubnub_get_v2(pbp); msg.payload.size > 0; msg = pubnub_get_v2(pbp)) {
@@ -43,6 +44,22 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
         printf("  Payload    = '%.*s'\n", (int)msg.payload.size, msg.payload.ptr);
     }
     return 0;
+}
+
+
+static void sync_sample_free(pubnub_t* p)
+{
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
 }
 
 
@@ -63,13 +80,13 @@ static int doit(pubnub_t* pbp)
         res = pubnub_await(pbp);
     }
     if (PNR_OK != res) {
-        printf("First subscribe failed, result=%d\n", res);
+        printf("First subscribe failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
         return -1;
     }
 
     res = publish(pbp, chan, "{\"pub\": \"nub\"}");
     if (PNR_OK != res) {
-        printf("publish failed, result=%d\n", res);
+        printf("publish failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
         return -1;
     }
 
@@ -88,7 +105,7 @@ static int doit(pubnub_t* pbp)
 
     res = publish(pbp, chan, "{\"pub\": \"sub\"}");
     if (PNR_OK != res) {
-        printf("publish failed, result=%d\n", res);
+        printf("publish failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
         return -1;
     }
 
@@ -120,9 +137,7 @@ int main()
 
     rslt = doit(pbp);
 
-    if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context!\n");
-    }
+    sync_sample_free(pbp);
 
     puts("Pubnub metadata sync demo over.");
 

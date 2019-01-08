@@ -181,7 +181,7 @@ char const* pubnub_uuid_get(pubnub_t* pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
-    result = pb->core.uuid;
+    result = pbcc_uuid_get(&pb->core);
     pubnub_mutex_unlock(pb->monitor);
 
     return result;

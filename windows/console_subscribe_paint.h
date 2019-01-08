@@ -2,6 +2,8 @@
 #if !defined INC_COSOLE_TEXT_PAINT
 #define INC_COSOLE_TEXT_PAINT
 
+#include "core/pubnub_assert.h"
+
 #include <windows.h>
 
 #define FOREGROUND_YELLOW 0x6

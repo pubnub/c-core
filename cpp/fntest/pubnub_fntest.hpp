@@ -208,7 +208,10 @@ namespace pubnub {
 #define TEST_DEF(tst)                                                   \
     TEST_DECL(tst)                                                      \
     {                                                                   \
-        char const* const this_test_name_ = #tst;                       
+        char const* const this_test_name_ = #tst;                       \
+        /* Eliminating unused variable warning */                       \
+        do {                                                            \
+        } while (sizeof cannot_do == 0);
 
 #define TEST_ENDDEF }
 
@@ -284,7 +287,7 @@ namespace pubnub {
             , d_fname(fname)
             , d_line(line)
             {}
-        
+
         sense &in(std::chrono::milliseconds deadline) {
             bool trans_finished(wait_for(d_ft, deadline, d_result));
             if(trans_finished) {                
@@ -320,15 +323,17 @@ namespace pubnub {
         char const *d_fname;
         long d_line;
     public:
-        sense_double(sense&left, sense&right) 
+        sense_double(sense& left, sense& right)
             : d_left(left.get_futres())
             , d_right(right.get_futres()) 
             , d_expr_left(left.expr())
             , d_expr_right(right.expr())
             , d_fname(left.fname())
             , d_line(left.line())
-            {}
-        sense_double &in(std::chrono::milliseconds deadline) {
+        {
+        }
+        sense_double& in(std::chrono::milliseconds deadline)
+        {
             std::string expr_left(d_expr_left);
             std::string expr_right(d_expr_right);
             bool trans_finished(wait_for(d_left, d_right, deadline, d_result_left, d_result_right));
@@ -371,7 +376,7 @@ namespace pubnub {
         return sense_double(left, right);
     }
 
-#if !defined _WIN32
+#if defined(__GNUC__)
     /// Returns a combined checker for two transactions at the same time - non reference operands
     inline sense_double operator&&(sense left, sense right) {
         return sense_double(left, right);

@@ -10,8 +10,14 @@
 
 static void sync_sample_free(pubnub_t* p)
 {
-    pubnub_cancel(p);
-    pubnub_await(p);
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
     if (pubnub_free(p) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -48,7 +54,9 @@ int main()
         char const* msg;
         enum pubnub_res pbres = pubnub_subloop_fetch(&pbsld, &msg);
         if (PNR_OK != pbres) {
-            printf("Exiting subscribe loop because of error: %d\n", pbres);
+            printf("Exiting subscribe loop because of error: %d('%s')\n",
+                   pbres,
+                   pubnub_res_2_string(pbres));
             break;
         }
         if (NULL == msg) {
@@ -57,7 +65,7 @@ int main()
         else {
             printf("Got message '%s'\n", msg);
         }
-        if((time(NULL) - start) > seconds_in_loop) {
+        if(difftime(time(NULL), start) > seconds_in_loop) {
             break;
         }
     }

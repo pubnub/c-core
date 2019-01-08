@@ -22,7 +22,7 @@ CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNI
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include
 
-all: pubnub_sync_sample.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe
+all: pubnub_sync_sample.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe
 
 SYNC_INTF_SOURCEFILES= ..\core\pubnub_ntf_sync.c ..\core\pubnub_sync_subscribe_loop.c ..\core\srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES= pubnub_ntf_sync.obj pubnub_sync_subscribe_loop.obj srand_from_pubnub_time.obj
@@ -46,6 +46,9 @@ pubnub_crypto_sync_sample.exe: ..\core\samples\pubnub_crypto_sync_sample.c pubnu
 
 cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib $(LIBS)
+
+pubnub_publish_via_post_sample.exe: ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib
+	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\pubnub_callback_sample.c  pubnub_callback.lib $(LIBS)

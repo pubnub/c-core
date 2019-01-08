@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_COMMON_HPP
 #define INC_PUBNUB_COMMON_HPP
 
+
 #if PUBNUB_USE_EXTERN_C
 extern "C" {
 #endif
@@ -26,9 +27,12 @@ extern "C" {
 }
 #endif
 
+#include "pubnub_mutex.hpp"
 
 #include <string>
+#include <cstring>
 #include <vector>
+#include <stdexcept>
 
 #if __cplusplus >= 201103L
 #include <chrono>
@@ -345,6 +349,7 @@ public:
         : d_pubk(pubkey)
         , d_ksub(subkey)
     {
+        pubnub_mutex_init(d_mutex);
         d_pb = pubnub_alloc();
         if (0 == d_pb) {
             throw std::bad_alloc();
@@ -356,6 +361,7 @@ public:
         : d_pubk(pubkey)
         , d_ksub(subkey)
     {
+        pubnub_mutex_init(d_mutex);
         d_pb = pubnub_alloc();
         if (0 == d_pb) {
             throw std::bad_alloc();
@@ -370,6 +376,7 @@ public:
      */
     int set_origin(std::string const& origin)
     {
+        lock_guard lck(d_mutex);
         d_origin = origin;
         return pubnub_origin_set(d_pb, origin.empty() ? NULL : d_origin.c_str());
     }
@@ -384,11 +391,19 @@ public:
      */
     void set_auth(std::string const& auth)
     {
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            throw std::logic_error("setting 'auth' key while transaction in progress");
+        }
         d_auth = auth;
         pubnub_set_auth(d_pb, auth.empty() ? NULL : d_auth.c_str());
     }
     /// Returns the current `auth` key for this context
-    std::string const& auth() const { return d_auth; }
+    std::string const& auth() const
+    {
+        lock_guard lck(d_mutex);
+        return d_auth;
+    }
 
     /** Sets the UUID to @p uuid. If @p uuid is an empty string,
         UUID will not be used.
@@ -396,8 +411,7 @@ public:
      */
     void set_uuid(std::string const& uuid)
     {
-        d_uuid = uuid;
-        pubnub_set_uuid(d_pb, uuid.empty() ? NULL : d_uuid.c_str());
+        pubnub_set_uuid(d_pb, uuid.empty() ? NULL : uuid.c_str());
     }
     /// Set the UUID to a random-generated one
     /// @see pubnub_generate_uuid_v4_random
@@ -411,7 +425,11 @@ public:
         return 0;
     }
     /// Returns the current UUID
-    std::string const& uuid() const { return d_uuid; }
+    std::string const uuid() const
+    {
+        char const* uuid = pubnub_uuid_get(d_pb);
+        return std::string((NULL == uuid) ? "" : uuid);
+    }
 
     /// Returns the next message from the context. If there are
     /// none, returns an empty string.
@@ -495,7 +513,10 @@ public:
     /// Cancels the transaction, if any is ongoing, or connection is 'kept alive'. 
     /// If none is ongoing, it is ignored.
     /// @see pubnub_cancel
-    enum pubnub_cancel_res cancel() { return pubnub_cancel(d_pb); }
+    enum pubnub_cancel_res cancel()
+    {
+        return pubnub_cancel(d_pb);
+    }
 
     /// Publishes a @p message on the @p channel. The @p channel
     /// can have many channels separated by a comma
@@ -512,8 +533,15 @@ public:
                    std::string const& message,
                    publish_options    opt)
     {
-        return doit(pubnub_publish_ex(
-            d_pb, channel.c_str(), message.c_str(), opt.data()));
+        if (message.size() + 1 > sizeof d_message_to_publish) {
+            throw std::range_error("string for publish too long");
+        }
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            return futres(d_pb, *this, PNR_IN_PROGRESS);
+        }
+        strcpy(d_message_to_publish, message.c_str());
+        return doit(pubnub_publish_ex(d_pb, channel.c_str(), d_message_to_publish, opt.data()));
     }
 
 #if PUBNUB_CRYPTO_API
@@ -583,7 +611,10 @@ public:
 
     /// Starts a "get time" transaction
     /// @see pubnub_time
-    futres time() { return doit(pubnub_time(d_pb)); }
+    futres time()
+    {
+        return doit(pubnub_time(d_pb));
+    }
 
     /// Starts a transaction to get message history for @p channel
     /// with the limit of max @p count
@@ -663,7 +694,10 @@ public:
     /// Starts a transaction to get a list of currently present
     /// UUIDs on all channels
     /// @see pubnub_global_here_now
-    futres global_here_now() { return doit(pubnub_global_here_now(d_pb)); }
+    futres global_here_now()
+    {
+        return doit(pubnub_global_here_now(d_pb));
+    }
 
     /// Starts a transaction to get a list of channels the @p uuid
     /// is currently present on. If @p uuid is not given (or is an
@@ -769,7 +803,10 @@ public:
 
     /// Return the HTTP code (result) of the last transaction.
     /// @see pubnub_last_http_code
-    int last_http_code() const { return pubnub_last_http_code(d_pb); }
+    int last_http_code() const
+    {
+        return pubnub_last_http_code(d_pb);
+    }
 
     /// Return the string of the last publish transaction.
     /// @see pubnub_last_publish_result
@@ -783,12 +820,15 @@ public:
     /// @see pubnub_parse_publish_result
     pubnub_publish_res parse_last_publish_result()
     {
-        return pubnub_parse_publish_result(pubnub_last_publish_result(d_pb));
+        return pubnub_parse_publish_result(last_publish_result().c_str());
     }
 
     /// Return the string of the last time token.
     /// @see pubnub_last_time_token
-    std::string last_time_token() const { return pubnub_last_time_token(d_pb); }
+    std::string last_time_token() const
+    {
+        return pubnub_last_time_token(d_pb);
+    }
 
     /// Sets whether to use (non-)blocking I/O according to option @p e.
     /// @see pubnub_set_blocking_io, pubnub_set_non_blocking_io
@@ -813,19 +853,31 @@ public:
 
     /// Reuse SSL sessions, if possible (from now on).
     /// @see pubnub_set_reuse_ssl_session
-    void reuse_ssl_session() { pubnub_set_reuse_ssl_session(d_pb, true); }
+    void reuse_ssl_session()
+    {
+        pubnub_set_reuse_ssl_session(d_pb, true);
+    }
 
     /// Don't reuse SSL sessions (from now on).
     /// @see pubnub_set_reuse_ssl_session
-    void dont_reuse_ssl_session() { pubnub_set_reuse_ssl_session(d_pb, false); }
+    void dont_reuse_ssl_session()
+    {
+        pubnub_set_reuse_ssl_session(d_pb, false);
+    }
 
     /// Use HTTP Keep-Alive on the context
     /// @see pubnub_use_http_keep_alive
-    void use_http_keep_alive() { pubnub_use_http_keep_alive(d_pb); }
+    void use_http_keep_alive()
+    {
+        pubnub_use_http_keep_alive(d_pb);
+    }
 
     /// Don't Use HTTP Keep-Alive on the context
     /// @see pubnub_dont_use_http_keep_alive
-    void dont_use_http_keep_alive() { pubnub_dont_use_http_keep_alive(d_pb); }
+    void dont_use_http_keep_alive()
+    {
+        pubnub_dont_use_http_keep_alive(d_pb);
+    }
 
 #if PUBNUB_PROXY_API
     /// Manually set a proxy to use
@@ -931,6 +983,7 @@ public:
         if (d_pb) {
             pubnub_free_with_timeout(d_pb, 1000);
         }
+        pubnub_mutex_destroy(d_mutex);
     }
 
 private:
@@ -939,7 +992,8 @@ private:
 
     // internal helper function
     futres doit(pubnub_res e) { return futres(d_pb, *this, e); }
-
+    /// The mutex protecting d_auth field
+    mutable pubnub_mutex_t d_mutex;
     /// The publish key
     std::string d_pubk;
     /// The subscribe key
@@ -951,6 +1005,8 @@ private:
     /// The origin set last time (doen't have to be the one used,
     /// the default can be used instead)
     std::string d_origin;
+    /// Buffer for message to be published
+    char d_message_to_publish[PUBNUB_BUF_MAXLEN];
     /// The (C) Pubnub context
     pubnub_t* d_pb;
 };

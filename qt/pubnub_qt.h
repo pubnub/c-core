@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QDebug>
 #include <QJsonDocument>
+#include <QMutexLocker>
 
 extern "C" {
 #include "core/pubnub_api_types.h"
@@ -89,7 +90,11 @@ public:
     void set_auth(QString const &auth);
 
     /** Returns the current auth key */
-    QString auth() const { return d_auth; }
+    QString auth() const
+    {
+        QMutexLocker lk(&d_mutex);
+        return d_auth;
+    }
 
     /** Set the UUID to be used in this context.
      * After construction it is empty (null), thus not used.
@@ -106,7 +111,7 @@ public:
     }
 
     /** Returns the current UUID value (string) */
-    QString uuid() const { return d_uuid; }
+    QString uuid() const;
 
     /** Sets the Pubnub origin to use, that is, the
      * protocol (http or https) and host part of the URL.
@@ -118,6 +123,7 @@ public:
 
     /** Returns the current origin */
     QString const& origin() const {
+        QMutexLocker lk(&d_mutex);
         return d_origin;
     }
 
@@ -757,9 +763,6 @@ private:
     /// The subscribe key
     QByteArray d_keysub;
 
-    /// UUID to use (can be empty - none)
-    QByteArray d_uuid;
-
     /// Auth key to use (can be empty - none)
     QByteArray d_auth;
 
@@ -803,6 +806,8 @@ private:
 
     /// Message to publish via POST method
     QByteArray d_message_to_publish;
+
+    mutable QMutex d_mutex;
 };
 
 
