@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_callback.h"
 
+#include "core/pubnub_helper.h"
 #include "core/pubnub_free_with_timeout.h"
 
 #if defined _WIN32
@@ -32,19 +33,18 @@ struct UserData {
 };
 
 
-static void wait_seconds(unsigned time_in_seconds)
+static void wait_seconds(double time_in_seconds)
 {
-    clock_t  start = clock();
-    unsigned time_passed_in_seconds;
+    time_t  start = time(NULL);
+    double time_passed_in_seconds;
     do {
-        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+        time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
 
-static void sample_free(pubnub_t* p)
+static void callback_sample_free(pubnub_t* p)
 {
-    pubnub_cancel(p);
     if (pubnub_free_with_timeout(p, 1000) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -67,13 +67,16 @@ void sample_callback(pubnub_t*         pb,
            some other means to inform others about this event (by, say,
            queueing into some message queue).
         */
-        printf("Subscribe callback, result: %d\n", result);
+        printf("Subscribe callback, result: %d('%s')\n", result, pubnub_res_2_string(result));
         break;
     case PBTT_PUBLISH:
-        printf("Publish callback, result: %d\n", result);
+        printf("Publish callback, result: %d('%s')\n", result, pubnub_res_2_string(result));
         break;
     default:
-        printf("Transaction %d callback: result: %d\n", trans, result);
+        printf("Transaction %d callback: result: %d('%s')\n",
+               trans,
+               result,
+               pubnub_res_2_string(result));
         break;
     }
 #if defined _WIN32
@@ -164,8 +167,8 @@ int main()
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
         printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
 
@@ -173,24 +176,24 @@ int main()
     res = end_await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
     if (PNR_OK == res) {
         puts("Subscribed!");
     }
     else {
-        printf("Subscribing failed with code: %d\n", res);
+        printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
     }
 
     start_await(&user_data);
     /* The "real" subscribe, with the just acquired time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
-        printf("pubnub_subscribe() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
+        printf("pubnub_subscribe() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
 
@@ -207,9 +210,9 @@ int main()
     res = pubnub_publish(
         pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
     if (res != PNR_STARTED) {
-        printf("pubnub_publish() returned unexpected: %d\n", res);
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
+        printf("pubnub_publish() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
 
@@ -218,8 +221,8 @@ int main()
 
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
-        pubnub_free(pbp_2);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
     if (PNR_OK == res) {
@@ -231,7 +234,7 @@ int main()
                pubnub_last_publish_result(pbp_2));
     }
     else {
-        printf("Publishing failed with code: %d\n", res);
+        printf("Publishing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
     }
 
     /* Now we await the subscribe on `pbp` */
@@ -239,7 +242,8 @@ int main()
     res = end_await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
-        pubnub_free(pbp);
+        callback_sample_free(pbp);
+        callback_sample_free(pbp_2);
         return -1;
     }
     if (PNR_OK == res) {
@@ -253,14 +257,11 @@ int main()
         }
     }
     else {
-        printf("Subscribing failed with code: %d\n", res);
+        printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
     }
 
-    /* We're done, but, if keep-alive is on, we can't free,
-       we need to cancel first...
-     */
-    sample_free(pbp_2);
-    sample_free(pbp);
+    callback_sample_free(pbp_2);
+    callback_sample_free(pbp);
 
     puts("Pubnub subscribe-publish callback demo over.");
 

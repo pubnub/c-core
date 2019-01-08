@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 
+#define UUID_STRING_LENGTH 36
+#define UUID_SIZE (UUID_STRING_LENGTH + 1)
 
 /** @name pubnub_generate_uuid.h
 
@@ -50,7 +52,7 @@ struct Pubnub_UUID {
 
 struct Pubnub_UUID_String {
     /* XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX */
-    char uuid[36+1];
+    char uuid[UUID_SIZE];
 };
 
 /** This generates an UUID using the v1 algorithm (time-based). This

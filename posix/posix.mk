@@ -56,7 +56,7 @@ CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNI
 
 INCLUDES=-I .. -I .
 
-all: pubnub_sync_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
+all: pubnub_sync_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
@@ -83,6 +83,9 @@ pubnub_sync_subloop_sample: ../core/samples/pubnub_sync_subloop_sample.c pubnub_
 
 pubnub_sync_publish_retry: ../core/samples/pubnub_sync_publish_retry.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_publish_retry.c pubnub_sync.a $(LDLIBS)
+
+pubnub_publish_via_post_sample: ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a $(LDLIBS)
 
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a $(LDLIBS)
@@ -118,4 +121,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 
 
 clean:
-	rm pubnub_sync_sample pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_sync_publish_retry pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
+	rm pubnub_sync_sample pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM

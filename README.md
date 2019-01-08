@@ -42,8 +42,11 @@ In this root directory we have some files, too:
   Makefiles there are (doesn't build Qt - you might not have Qt)
 - `windows.mk`: a "master" Makefile for Windows - will build all the 
   Windows Makefiles there are (doesn't build Qt, you might not have Qt)
-- `VERSION`: Identifies the latest stable / recommended release
 - `.pubnub.yml`: Standard Pubnub library description in YAML
+- `.travis.yml`: Configuration for Travis CI (POSIX: Linux and MacOS)
+- `.appveyor.yml`: Configuration for Appveyor CI (Windows)
+- `.clang-format`: Configuration for Clang-format tool that we use to format
+  C/C++ source code
 
   
 ## Contributing

@@ -1,7 +1,19 @@
 name: c-core
-version: 2.6.2
+version: 2.6.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.6.3
+    changes:
+      - type: enhancement
+        text: Update samples to changes in pubnub_cancel() and other interface changes
+      - type: enhancement
+        text: Update samples to use time() instead of clock() as clock() can measure CPU-only time instead of real time
+      - type: enhancement
+        text: Update Qt functional tests and make them reliable
+      - type: enhancement
+        text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet doesn't incur much memory increase
+      - type: bug
+        text: C++ wrapper and Qt did not have proper multithreading support as they didn't protect _their_ data. Now that's fixed.
   - version: v2.6.2
     changes:
       - type: bug

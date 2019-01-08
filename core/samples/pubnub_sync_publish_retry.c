@@ -8,10 +8,16 @@
 #include <time.h>
 
 
-static void sample_free(pubnub_t* p)
+static void sync_sample_free(pubnub_t* p)
 {
-    pubnub_cancel(p);
-    pubnub_await(p);
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
     if (pubnub_free(p) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -41,8 +47,8 @@ int main()
     for (i = 0; i < my_retry_limit; ++i) {
         res = pubnub_publish(pbp, chan, msg);
         if ((res != PNR_STARTED) && (res != PNR_OK)) {
-            printf("pubnub_publish() returned unexpected: %d\n", res);
-            sample_free(pbp);
+            printf("pubnub_publish() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+            sync_sample_free(pbp);
             return -1;
         }
 
@@ -51,7 +57,9 @@ int main()
         case pbccFalse:
             break;
         case pbccTrue:
-            printf("Publishing failed with code: %d ('%s')\nRetrying...\n", res, pubnub_res_2_string(res));
+            printf("Publishing failed with code: %d('%s')\nRetrying...\n",
+                   res,
+                   pubnub_res_2_string(res));
             continue;
         case pbccNotSet:
             // it's up to you... to be on the safe side:
@@ -66,7 +74,7 @@ int main()
             printf("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp));
         }
         else {
-            printf("Publishing failed with code: %d ('%s')\n", res, pubnub_res_2_string(res));
+            printf("Publishing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
         }
 
         break;
@@ -76,7 +84,7 @@ int main()
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...
      */
-    sample_free(pbp);
+    sync_sample_free(pbp);
 
     puts("Pubnub sync publish retry demo over.");
 

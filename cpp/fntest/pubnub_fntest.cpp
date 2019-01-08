@@ -54,7 +54,9 @@ bool wait_for(futres &futr_1,
         if (res_2 == PNR_STARTED) {
             res_2 = futr_2.last_result();
         }
-        if ((res_1 != PNR_STARTED) && (res_2 != PNR_STARTED)) {
+        if (((res_1 != PNR_STARTED) && (res_2 != PNR_STARTED))
+            || pbpub_outof_quota(futr_1, res_1)
+            || pbpub_outof_quota(futr_2, res_2)) {
             rel_time -= std::chrono::duration_cast<std::chrono::milliseconds>(t_current - t0);
             pbresult_1 = res_1;
             pbresult_2 = res_2;

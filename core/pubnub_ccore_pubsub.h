@@ -4,6 +4,7 @@
 
 #include "pubnub_config.h"
 #include "pubnub_api_types.h"
+#include "pubnub_generate_uuid.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -24,8 +25,8 @@ struct pbcc_context {
     char const* publish_key;
     /** The subscribe key (to use when subscribing) */
     char const* subscribe_key;
-    /** The UUID to be sent to server. If NULL, don't send any */
-    char const* uuid;
+    /** The UUID to be sent to server. If empty string, don't send any */
+    char uuid[UUID_SIZE];
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
     char const* auth;
@@ -113,7 +114,7 @@ struct pbcc_context {
     if ((var) != NULL) {                                                       \
         const char      param_[] = name;                                       \
         enum pubnub_res rslt_    = pbcc_append_url_param(                      \
-            (pbc), param_, sizeof param_ - 1, (var), (separator));          \
+            (pbc), param_, sizeof param_ - 1, (var), (separator));             \
         if (rslt_ != PNR_OK) {                                                 \
             return rslt_;                                                      \
         }                                                                      \
@@ -123,7 +124,7 @@ struct pbcc_context {
     if ((var) != NULL) {                                                       \
         const char      param_[] = name;                                       \
         enum pubnub_res rslt_    = pbcc_append_url_param_encoded(              \
-            (pbc), param_, sizeof param_ - 1, (var), (separator));          \
+            (pbc), param_, sizeof param_ - 1, (var), (separator));             \
         if (rslt_ != PNR_OK) {                                                 \
             return rslt_;                                                      \
         }                                                                      \
@@ -199,6 +200,9 @@ char const* pbcc_get_channel(struct pbcc_context* pb);
 
 /** Sets the UUID for the context */
 void pbcc_set_uuid(struct pbcc_context* pb, const char* uuid);
+
+/** Returns the UUID for the context */
+char const* pbcc_uuid_get(struct pbcc_context* pb);
 
 /** Sets the `auth` for the context */
 void pbcc_set_auth(struct pbcc_context* pb, const char* auth);

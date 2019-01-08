@@ -16,18 +16,30 @@ static void subloop_callback(pubnub_t* pbp, char const* message, enum pubnub_res
         printf("Received message '%s'\n", message);
     }
     else {
-        printf("Subscribe failed with code: %d\n", result);
+        printf("Subscribe failed with code: %d('%s')\n", result, pubnub_res_2_string(result));
     }
 }
 
 
-static void wait_seconds(unsigned time_in_seconds)
+static void wait_seconds(double time_in_seconds)
 {
-    clock_t  start = clock();
-    unsigned time_passed_in_seconds;
+    time_t  start = time(NULL);
+    double time_passed_in_seconds;
     do {
-        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+        time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
+}
+
+
+static void callback_sample_free(pubnub_t* p)
+{
+    if (pubnub_free_with_timeout(p, 1000) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+    else {
+        /* Waits for the context to be released from the processing queue */
+        wait_seconds(1);
+    }
 }
 
 
@@ -49,9 +61,7 @@ int main()
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
     if (NULL == pbsld) {
         printf("Defining a subscribe loop failed\n");
-        pubnub_free(pbp);
-        /* Waits until the context is released from the processing queue */
-        wait_seconds(1);
+        callback_sample_free(pbp);
         return -1;
     }
     //! [Define subscribe loop]
@@ -74,17 +84,7 @@ int main()
     pubnub_subloop_undef(pbsld);
     //! [Release Subscribe loop]
 
-    /* We're done, but, if keep-alive is on, we can't free,
-       we need to cancel first...
-     */
-    pubnub_cancel(pbp);
-    if (0 != pubnub_free_with_timeout(pbp, 1000)) {
-        puts("Failed to free the context in due time");
-    }
-    else {
-        /* Waits until the context is released from the processing queue */
-        wait_seconds(1);
-    }
+    callback_sample_free(pbp);
     puts("Pubnub callback subloop demo over.");
 
     return 0;

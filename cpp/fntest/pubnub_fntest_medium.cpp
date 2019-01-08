@@ -90,8 +90,20 @@ TEST_DEF(connect_disconnect_and_connect_again)
 
     SENSE(pbp.publish(ch, "\"Test M4-2\"")).in(Td) == PNR_OK;
     SENSE(pbp.subscribe(ch)).in(Td) == PNR_OK;
-    EXPECT_TRUE(got_messages(pbp, {"\"Test M4\"", "\"Test M4-2\""}));
-
+/* On 'Qt' message published on a simple channel reaches its destination
+ * even though the transaction is canceled.
+ * Somehow it's quite probable that 'that' won't happen on posix.
+ */
+#if (!defined(INC_PUBNUB_QT) || !defined(_WIN32))
+    if (PNR_CANCELLED == result) {
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M4-2\""}));
+    }
+    else {
+#endif
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M4\"", "\"Test M4-2\""}));
+#if (!defined(INC_PUBNUB_QT) || !defined(_WIN32))
+    }
+#endif
     pbp.set_blocking_io(non_blocking);
     auto futr_2 = pbp.subscribe(ch);
     pbp.cancel();
@@ -133,7 +145,13 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_group)
 
     SENSE(pbp.publish(ch, "\"Test M4-2\"")).in(Td) == PNR_OK;
     SENSE(pbp.subscribe("", gr)).in(Td) == PNR_OK;
-    EXPECT_TRUE(got_messages(pbp, {"\"Test M44\"", "\"Test M4-2\""}));
+
+    if (PNR_CANCELLED == result) {
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M4-2\""}));
+    }
+    else {
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M44\"", "\"Test M4-2\""}));
+    }
 
     pbp.set_blocking_io(non_blocking);
     auto futr_2 = pbp.subscribe("", gr);
@@ -159,7 +177,8 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
     std::string const         two(pnfntst_make_name(this_test_name_));
     std::string const         gr(pnfntst_make_name(this_test_name_));
     std::chrono::milliseconds rel_time = Td;
-    pubnub_res                result = PNR_STARTED;
+    pubnub_res                result_1 = PNR_STARTED;
+    pubnub_res                result_2 = PNR_STARTED;
 
     SENSE(pbp.remove_channel_group(gr)).in(Td) == PNR_OK;
     SENSE(pbp.add_channel_to_group(ch, gr)).in(Td) == PNR_OK;
@@ -171,8 +190,8 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
     auto futr = pbp.publish(ch, "\"Test M4\"");
     if(!futr.is_ready()) {
         pbp.cancel();
-        EXPECT_TRUE(pubnub::wait_for(futr, rel_time, result));
-        EXPECT_RESULT(futr, result) == PNR_CANCELLED;
+        EXPECT_TRUE(pubnub::wait_for(futr, rel_time, result_1));
+        EXPECT_RESULT(futr, result_1) == PNR_CANCELLED;
     }
     else {
         EXPECT_RESULT(futr, futr.last_result()) == PNR_OK;
@@ -181,8 +200,8 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
     auto futr_2 = pbp_2.publish(two, "\"Test M5\"");
     if(!futr_2.is_ready()) {
         pbp_2.cancel();
-        EXPECT_TRUE(pubnub::wait_for(futr_2, rel_time, result));
-        EXPECT_RESULT(futr_2, result) == PNR_CANCELLED;
+        EXPECT_TRUE(pubnub::wait_for(futr_2, rel_time, result_2));
+        EXPECT_RESULT(futr_2, result_2) == PNR_CANCELLED;
     }
     else {
         EXPECT_RESULT(futr_2, futr_2.last_result()) == PNR_OK;
@@ -192,16 +211,20 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
      SENSE(pbp_2.publish(two, "\"Test M5-2\""))
         ).in(Td) == PNR_OK;
     SENSE(pbp.subscribe(two, gr)).in(Td) == PNR_OK;
-    EXPECT_TRUE(
-        got_messages(pbp, {"\"Test M4\"", "\"Test M4-2\"", "\"Test M5-2\""}));
+    if (PNR_CANCELLED == result_1) {
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M4-2\"", "\"Test M5-2\""}));
+    }
+    else {
+        EXPECT_TRUE(got_messages(pbp, {"\"Test M4\"", "\"Test M4-2\"", "\"Test M5-2\""}));
+    }
 
     pbp.set_blocking_io(non_blocking);
 
     auto futr_3 = pbp.publish(two, "msg_dz");
     if(!futr_3.is_ready()) {
         pbp.cancel();
-        EXPECT_TRUE(pubnub::wait_for(futr_3, rel_time, result));
-        EXPECT_RESULT(futr_3, result) == PNR_CANCELLED;
+        EXPECT_TRUE(pubnub::wait_for(futr_3, rel_time, result_1));
+        EXPECT_RESULT(futr_3, result_1) == PNR_CANCELLED;
     }
     else {
         EXPECT_RESULT(futr_3, futr_3.last_result()) == PNR_OK;
