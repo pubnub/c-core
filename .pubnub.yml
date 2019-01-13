@@ -1,7 +1,11 @@
 name: c-core
-version: 2.6.3
+version: 2.6.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.6.4
+    changes:
+      - type: bug
+        text: URL encode channel name(s)
   - version: v2.6.3
     changes:
       - type: enhancement

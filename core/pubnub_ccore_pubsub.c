@@ -5,8 +5,8 @@
 #include "pubnub_internal.h"
 #include "pubnub_json_parse.h"
 #include "pubnub_log.h"
+#include "pubnub_url_encode.h"
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -345,46 +345,6 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
 }
 
 
-static enum pubnub_res url_encode(struct pbcc_context* pb, char const* what)
-{
-    PUBNUB_ASSERT_OPT(pb != NULL);
-    PUBNUB_ASSERT_OPT(what != NULL);
-
-    while (what[0]) {
-        /* RFC 3986 Unreserved characters plus few
-         * safe reserved ones. */
-        size_t okspan = strspn(
-            what,
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~"
-            ",=:;@[]");
-        if (okspan > 0) {
-            if (okspan > sizeof(pb->http_buf) - 1 - pb->http_buf_len) {
-                pb->http_buf_len = 0;
-                return PNR_TX_BUFF_TOO_SMALL;
-            }
-            memcpy(pb->http_buf + pb->http_buf_len, what, okspan);
-            pb->http_buf_len += okspan;
-            pb->http_buf[pb->http_buf_len] = 0;
-            what += okspan;
-        }
-        if (what[0]) {
-            /* %-encode a non-ok character. */
-            char enc[4] = { '%' };
-            enc[1]      = "0123456789ABCDEF"[(unsigned char)what[0] / 16];
-            enc[2]      = "0123456789ABCDEF"[(unsigned char)what[0] % 16];
-            if (3 > sizeof pb->http_buf - 1 - pb->http_buf_len) {
-                pb->http_buf_len = 0;
-                return PNR_TX_BUFF_TOO_SMALL;
-            }
-            memcpy(pb->http_buf + pb->http_buf_len, enc, 4);
-            pb->http_buf_len += 3;
-            ++what;
-        }
-    }
-
-    return PNR_OK;
-}
-
 void pbcc_headers_for_publish_via_post(struct pbcc_context *pb, char *header, size_t max_length)
 {
     char lines[] = "Content-Type: application/json\r\nContent-Length: ";
@@ -411,11 +371,27 @@ void pbcc_headers_for_publish_via_post(struct pbcc_context *pb, char *header, si
     return;
 }
 
+enum pubnub_res pbcc_url_encode(struct pbcc_context* pb, char const* what)
+{
+    int url_encoded_length;
+
+    url_encoded_length = pubnub_url_encode(pb->http_buf + pb->http_buf_len,
+                                           what,
+                                           sizeof pb->http_buf - pb->http_buf_len);
+    if (url_encoded_length < 0) {
+        pb->http_buf_len = 0;
+        return PNR_TX_BUFF_TOO_SMALL;
+    }
+    pb->http_buf_len += url_encoded_length;
+
+    return PNR_OK;
+}
+
 enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
-                                      char const*          param_name,
-                                      size_t               param_name_len,
-                                      char const*          param_val,
-                                      char                 separator)
+                                              char const*          param_name,
+                                              size_t               param_name_len,
+                                              char const*          param_val,
+                                              char                 separator)
 {
     if (pb->http_buf_len + 1 + param_name_len + 1 > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
@@ -425,7 +401,7 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
     memcpy(pb->http_buf + pb->http_buf_len, param_name, param_name_len);
     pb->http_buf_len += param_name_len;
     pb->http_buf[pb->http_buf_len++] = '=';
-    return url_encode(pb, param_val);
+    return pbcc_url_encode(pb, param_val);
 }
 
 
@@ -444,19 +420,16 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
-    pb->http_buf_len     = snprintf(pb->http_buf,
+    pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/publish/%s/%s/0/%s/0",
+                                "/publish/%s/%s/0/",
                                 pb->publish_key,
-                                pb->subscribe_key,
-                                channel);
-
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel);
+    APPEND_URL_LITERAL_M(pb, "/0");
     if (pubnubPublishViaGET == method) {
         pb->http_buf[pb->http_buf_len++] = '/';
-        rslt = url_encode(pb, message);
-        if (rslt != PNR_OK) {
-            return rslt;
-        }
+        APPEND_URL_ENCODED_M(pb, message);
     }
     else {
         pb->message_to_publish = message;
@@ -479,7 +452,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context*        pb,
         memcpy(pb->http_buf + pb->http_buf_len, "meta", param_name_len);
         pb->http_buf_len += param_name_len;
         pb->http_buf[pb->http_buf_len++] = '=';
-        rslt                             = url_encode(pb, meta);
+        rslt                             = pbcc_url_encode(pb, meta);
     }
 
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
@@ -507,12 +480,15 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     p->msg_ofs = p->msg_end = 0;
 
     p->http_buf_len = snprintf(p->http_buf,
-                               sizeof(p->http_buf),
-                               "/subscribe/%s/%s/0/%s?pnsdk=%s",
-                               p->subscribe_key,
-                               channel,
-                               p->timetoken,
-                               pubnub_uname());
+                               sizeof p->http_buf,
+                               "/subscribe/%s/",
+                               p->subscribe_key);
+    APPEND_URL_ENCODED_M(p, channel);
+    p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
+                                sizeof p->http_buf - p->http_buf_len,
+                                "/0/%s?pnsdk=%s",
+                                p->timetoken,
+                                pubnub_uname());
     APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
     APPEND_URL_PARAM_M(p, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
