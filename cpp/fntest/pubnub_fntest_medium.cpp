@@ -145,13 +145,20 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_group)
 
     SENSE(pbp.publish(ch, "\"Test M4-2\"")).in(Td) == PNR_OK;
     SENSE(pbp.subscribe("", gr)).in(Td) == PNR_OK;
-
+/* On 'Qt' message published on a simple channel reaches its destination
+ * even though the transaction is canceled.
+ * Somehow it's quite probable that 'that' won't happen on posix.
+ */
+#if (!defined(INC_PUBNUB_QT) || !defined(_WIN32))
     if (PNR_CANCELLED == result) {
         EXPECT_TRUE(got_messages(pbp, {"\"Test M4-2\""}));
     }
     else {
+#endif
         EXPECT_TRUE(got_messages(pbp, {"\"Test M44\"", "\"Test M4-2\""}));
+#if (!defined(INC_PUBNUB_QT) || !defined(_WIN32))
     }
+#endif
 
     pbp.set_blocking_io(non_blocking);
     auto futr_2 = pbp.subscribe("", gr);

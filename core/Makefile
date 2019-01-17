@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c
+PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c
 
 all: pubnub_proxy_unittest pubnub_timer_list_unittest unittest
 
