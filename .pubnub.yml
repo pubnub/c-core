@@ -1,7 +1,11 @@
 name: c-core
-version: 2.6.4
+version: 2.7.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.7.0
+    changes:
+      - type: enhancement
+        text: Support IPv6 for DNS resolution (mostly for callback interface)
   - version: v2.6.4
     changes:
       - type: bug
