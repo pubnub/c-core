@@ -69,28 +69,6 @@ enum DNSoptionsMask {
 /** Offset of the data length sub-field of the RESOURCE DATA */
 #define RESOURCE_DATA_DATA_LEN_OFFSET -2
 
-/** Question/query types */
-enum DNSqueryType {
-    /** Address - IPv4 */
-    dnsA = 1,
-    /** Name server */
-    dnsNS = 2,
-    /** Canonical name */
-    dnsCNAME = 5,
-    /** Start of authority */
-    dnsSOA = 6,
-    /** Pointer (to another location in the name space ) */
-    dnsPTR = 12,
-    /** Mail exchange (responsible for handling e-mail sent to the
-     * domain */
-    dnsMX = 15,
-    /** IPv6 address - 128 bit */
-    dnsAAAA = 28,
-    /** Service locator */
-    dnsSRV = 33,
-    /** All cached records */
-    dnsANY = 255
-};
 
 /** Question/query class */
 enum DNSqclass { dnsqclassInternet = 1 };
@@ -164,7 +142,11 @@ static int dns_qname_encode(uint8_t* dns, size_t n, char const* host)
 }
 
 
-int pubnub_prepare_dns_request(uint8_t* buf, size_t buf_size, char const* host, int *to_send)
+int pbdns_prepare_dns_request(uint8_t* buf,
+                               size_t buf_size,
+                               char const* host,
+                               int *to_send,
+                               enum DNSqueryType query_type)
 {
     int qname_encoded_length;
     int len = 0;
@@ -203,7 +185,7 @@ int pubnub_prepare_dns_request(uint8_t* buf, size_t buf_size, char const* host, 
     len += qname_encoded_length;
 
     buf[len]     = 0;
-    buf[len + 1] = dnsA;
+    buf[len + 1] = query_type;
     buf[len + 2] = 0;
     buf[len + 3] = dnsqclassInternet;
     *to_send = len + QUESTION_DATA_SIZE;
@@ -500,18 +482,20 @@ static int skip_questions(uint8_t const** o_reader,
     return 0;
 }
 
-static int check_answer(const uint8_t**             o_reader,
-                        unsigned                    r_data_type,
-                        size_t                      r_data_len,
-                        struct pubnub_ipv4_address* resolved_addr)
+static int check_answer(const uint8_t**            o_reader,
+                        unsigned                   r_data_type,
+                        size_t                     r_data_len,
+                        struct pubnub_ipv4_address* resolved_addr_ipv4
+                        IPV6_ADDR_ARGUMENT_DECLARATION)
 {
     PUBNUB_ASSERT_OPT(o_reader != NULL);
 
-    if (r_data_type == dnsA) {
+    if ((dnsA == r_data_type) && (resolved_addr_ipv4 != NULL)) {
         const uint8_t* reader = *o_reader;
         *o_reader += r_data_len;
         if (r_data_len != 4) {
-            PUBNUB_LOG_ERROR("Error: Unexpected answer R_DATA length %zu\n",
+            PUBNUB_LOG_ERROR("Error: Unexpected answer R_DATA length:%zu "
+                             "for DNS resolved Ipv4 address.\n",
                              r_data_len);
             return -1;
         }
@@ -520,9 +504,33 @@ static int check_answer(const uint8_t**             o_reader,
                          reader[1],
                          reader[2],
                          reader[3]);
-        memcpy(resolved_addr->ipv4, reader, 4);
+        memcpy(resolved_addr_ipv4->ipv4, reader, 4);
         return 0;
     }
+#if PUBNUB_USE_IPV6
+    else if ((dnsAAAA == r_data_type) && (resolved_addr_ipv6 != NULL)) {
+        const uint8_t* reader = *o_reader;
+        *o_reader += r_data_len;
+        if (r_data_len != 16) {
+            PUBNUB_LOG_ERROR("Error: Unexpected answer R_DATA length:%zu "
+                             "for DNS resolved Ipv6 address.\n",
+                             r_data_len);
+            return -1;
+        }
+        /* Address representation is big endian(network byte order) */
+        PUBNUB_LOG_TRACE("Got IPv6: %X:%X:%X:%X:%X:%X:%X:%X\n",
+                         reader[0]*256 + reader[1],
+                         reader[2]*256 + reader[3],
+                         reader[4]*256 + reader[5],
+                         reader[6]*256 + reader[7],
+                         reader[8]*256 + reader[9],
+                         reader[10]*256 + reader[11],
+                         reader[12]*256 + reader[13],
+                         reader[14]*256 + reader[15]);
+        memcpy(resolved_addr_ipv6->ipv6, reader, 16);
+        return 0;
+    }
+#endif /* PUBNUB_USE_IPV6 */
     *o_reader += r_data_len;
     /* Don't care about other resource types, for now */
     return -1;
@@ -532,7 +540,8 @@ static int find_the_answer(uint8_t const* reader,
                            uint8_t const* buf,
                            uint8_t const* end,
                            size_t         ans_count,
-                           struct pubnub_ipv4_address* resolved_addr)
+                           struct pubnub_ipv4_address* resolved_addr_ipv4
+                           IPV6_ADDR_ARGUMENT_DECLARATION)
 {
     size_t i;
     
@@ -565,7 +574,9 @@ static int find_the_answer(uint8_t const* reader,
                              RESOURCE_DATA_SIZE);
             return -1;
         }
-        /* Resource record data offsets are negative */
+        /* Resource record data offsets are negative.
+           Network byte order - big endian.
+         */
         r_data_len = reader[RESOURCE_DATA_DATA_LEN_OFFSET] * 256
                      + reader[RESOURCE_DATA_DATA_LEN_OFFSET + 1];
         if ((reader + r_data_len) > end) {
@@ -585,7 +596,11 @@ static int find_the_answer(uint8_t const* reader,
                          to_skip,
                          r_data_type,
                          r_data_len);
-        if(check_answer(&reader, r_data_type, r_data_len, resolved_addr) == 0) {
+        if(check_answer(&reader,
+                        r_data_type,
+                        r_data_len,
+                        resolved_addr_ipv4
+                        IPV6_ADDR_ARGUMENT) == 0) {
             return 0;
         }
     }
@@ -593,9 +608,10 @@ static int find_the_answer(uint8_t const* reader,
     return -1;
 }
 
-int pubnub_pick_resolved_address(uint8_t const* buf,
-                                 size_t msg_size,
-                                 struct pubnub_ipv4_address* resolved_addr)
+int pbdns_pick_resolved_address(uint8_t const* buf,
+                                size_t msg_size,
+                                struct pubnub_ipv4_address* resolved_addr_ipv4
+                                IPV6_ADDR_ARGUMENT_DECLARATION)
 {
     size_t         q_count;
     size_t         ans_count;
@@ -603,7 +619,11 @@ int pubnub_pick_resolved_address(uint8_t const* buf,
     uint8_t const* end;
 
     PUBNUB_ASSERT_OPT(buf != NULL);
-    PUBNUB_ASSERT_OPT(resolved_addr != NULL);
+#if PUBNUB_USE_IPV6
+    PUBNUB_ASSERT_OPT((resolved_addr_ipv4 != NULL) || (resolved_addr_ipv6 != NULL));
+#else
+    PUBNUB_ASSERT_OPT(resolved_addr_ipv4 != NULL);
+#endif
 
     if (read_header(buf, msg_size, &q_count, &ans_count) != 0) {
         return -1;
@@ -626,5 +646,5 @@ int pubnub_pick_resolved_address(uint8_t const* buf,
         return -1;
     }
 
-    return find_the_answer(reader, buf, end, ans_count, resolved_addr);
+    return find_the_answer(reader, buf, end, ans_count, resolved_addr_ipv4 IPV6_ADDR_ARGUMENT);
 }

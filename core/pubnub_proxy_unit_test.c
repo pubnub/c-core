@@ -592,7 +592,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Basic)
 
     pubnub_init(pbp, "publ-key", "sub-key");
     /* Some proxy_type(enum) not yet supported */
-    attest(pubnub_set_proxy_manual(pbp, 5, "proxy_server_url", proxy_port), equals(-1));
+    attest(pubnub_set_proxy_manual(pbp, 5, "localhost", proxy_port), equals(-1));
     /* proxy hostname/url too long */
     attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, proxy_hostname_to_long, proxy_port), equals(-1));
     /* parameters acceptable */
@@ -657,7 +657,11 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Basic)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_GET)); 
+    attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_GET));
+    
+    /* Suddenly, we decided not to use proxy any more just for kicks :) */
+    pubnub_set_proxy_none(pbp);
+    attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyNONE)); 
     attest(pubnub_free(pbp), equals(-1));
 }
 
@@ -666,7 +670,7 @@ Ensure(single_context_pubnub, proxy_GET_Basic_client_sets_timeout_and_max_operat
     uint16_t proxy_port = 500;
     time_t await_time;
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "proxy_server_url", proxy_port), equals(0));
+    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "46.235.225.189", proxy_port), equals(0));
     attest(pubnub_set_proxy_authentication_username_password(pbp, "some_user", "some_password"), equals(0));
     /* Transactions' limits: up to whole second, 4 operations until client's connection closure */
     pubnub_set_keep_alive_param(pbp, 0, 4);
@@ -793,7 +797,11 @@ Ensure(single_context_pubnub, GET_Basic_proxy_closes_connection_after_first_407a
 {
     uint16_t proxy_port = 500;
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "proxy_server_url", proxy_port), equals(0));
+    attest(pubnub_set_proxy_manual(pbp,
+                                   pbproxyHTTP_GET,
+                                   "2a00:1098::82:1000:3b:1:1",
+                                   proxy_port),
+           equals(0));
     attest(pubnub_set_proxy_authentication_username_password(pbp, "some_user", "some_password"), equals(0));
     expect_have_dns_for_proxy_server();
     expect_first_outgoing_GET("/subscribe/sub-key/colors/0/0?pnsdk=unit-test-0.1");
@@ -937,7 +945,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
                                      "response=\"d0966999c0711a461db101b2d3648bf8\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "proxy_server_url", port), equals(0));
+    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "proxy.mythic-beasts.com", port), equals(0));
     attest(pubnub_set_proxy_authentication_username_password(pbp, "average_user", "password"), equals(0));
     expect_have_dns_for_proxy_server();
     expect_first_outgoing_GET("/subscribe/sub-key/music/0/0?pnsdk=unit-test-0.1");

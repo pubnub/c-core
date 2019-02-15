@@ -73,6 +73,11 @@
 #define PUBNUB_USE_MDNS 1
 #endif
 
+#if !defined(PUBNUB_USE_IPV6)
+/** If true (!=0), enable support for Ipv6 network addresses */
+#define PUBNUB_USE_IPV6 1
+#endif
+
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
 
