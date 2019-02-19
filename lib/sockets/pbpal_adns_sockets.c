@@ -4,6 +4,7 @@
 #include "pubnub_internal.h"
 
 #include "core/pubnub_log.h"
+#include "lib/pubnub_dns_codec.h"
 
 #if !defined(_WIN32)
 #include <arpa/inet.h>
