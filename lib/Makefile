@@ -1,5 +1,8 @@
+ifndef USE_IPV6
+USE_IPV6 = 1
+endif
 
-all: pubnub_dns_codec_unit_test
+all: pubnub_parse_ipv6_addr_unit_test pubnub_dns_codec_unit_test
 
 OS := $(shell uname)
 # Coverage doesn't seem to work on MacOS for some reason, but, since
@@ -17,11 +20,19 @@ generate_report: all
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 	$(GCOVR) -r . --xml -o coverage.xml
 
-CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -I. -I../ -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
+CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_IPV6=$(USE_IPV6) -I. -I../ -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
 
 LDFLAGS=-L../cgreen/build/src
 
 CGREEN_RUNNER=../cgreen/build/tools/cgreen-runner
+
+PARSE_IPV6_ADDR_SOURCE_FILES = ../core/pubnub_assert_std.c
+
+pubnub_parse_ipv6_addr_unit_test: pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_addr_unit_test.c
+	gcc -o pubnub_parse_ipv6_addr_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -Wall $(COVERAGE_FLAGS) -fPIC $(PARSE_IPV6_ADDR_SOURCE_FILES) pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_addr_unit_test.c -lcgreen -lm
+#	gcc -o pubnub_parse_ipv6_addr_unit_testo $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PARSE_IPV6_ADDR_SOURCE_FILES) ../lib/pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_addr_unit_test.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pubnub_parse_ipv6_addr_unit_test.so
+	$(GCOVR) -r . --html --html-details -o coverage.html
 
 DNS_CODEC_SOURCE_FILES = ../core/pubnub_assert_std.c 
 
@@ -32,4 +43,4 @@ pubnub_dns_codec_unit_test: pubnub_dns_codec.c pubnub_dns_codec_unit_test.c
 	$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
-	rm pubnub_dns_codec_unit_test.so *.gcda *.gcno *.html
+	rm pubnub_parse_ipv6_addr_unit_test.so pubnub_dns_codec_unit_test.so *.gcda *.gcno *.html

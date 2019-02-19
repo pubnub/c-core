@@ -1,5 +1,9 @@
 SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../openssl/pbpal_openssl.c ../openssl/pbpal_connect_openssl.c  ../openssl/pbpal_add_system_certs_posix.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_free_with_timeout_std.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c  ../openssl/pubnub_version_openssl.c ../posix/pubnub_generate_uuid_posix.c ../openssl/pbpal_openssl_blocking_io.c ../core/pubnub_crypto.c ../core/pubnub_coreapi_ex.c ../openssl/pbaes256.c  ../core/pubnub_subscribe_v2.c ../posix/msstopwatch_monotonic_clock.c ../core/pubnub_url_encode.c
 
+ifndef USE_IPV6
+USE_IPV6 = 1
+endif
+
 ifndef USE_PROXY
 USE_PROXY = 1
 endif
@@ -25,6 +29,11 @@ SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c
 OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
 endif
 
+ifeq ($(USE_IPV6), 1)
+SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
+OBJFILES += pubnub_parse_ipv6_addr.o
+endif
+
 ifeq ($(USE_GZIP_COMPRESSION), 1)
 SOURCEFILES += ../lib/miniz/miniz_tdef.c ../lib/miniz/miniz.c ../lib/pbcrc32.c ../core/pbgzip_compress.c
 OBJFILES += miniz_tdef.o miniz.o pbcrc32.o pbgzip_compress.o
@@ -35,7 +44,7 @@ SOURCEFILES += ../lib/miniz/miniz_tinfl.c ../core/pbgzip_decompress.c
 OBJFILES += miniz_tinfl.o pbgzip_decompress.o
 endif
 
-CFLAGS =-g -I .. -I . -I ../openssl -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING
+CFLAGS =-g -I .. -I . -I ../openssl -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_USE_IPV6=$(USE_IPV6)
 # -g enables debugging, remove to get a smaller executable
 
 OS := $(shell uname)

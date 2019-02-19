@@ -19,6 +19,10 @@
 #include "core/pubnub_dns_servers.h"
 #endif
 
+#if !defined(PUBNUB_USE_IPV6)
+#define PUBNUB_USE_IPV6 0
+#endif
+
 #if !defined PUBNUB_USE_SSL
 #define PUBNUB_USE_SSL 0
 #endif
@@ -194,9 +198,12 @@ struct pubnub_ {
         */
         bool use_http_keep_alive : 1;
 
+#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
+        /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
+        bool ipv6_connectivity : 1;
+#endif
 #if PUBNUB_USE_SSL
         /** Should the PubNub client establish the connection to
-
          * PubNub using SSL? */
         bool useSSL : 1;
         /** When SSL is enabled, should the client fallback to a
@@ -274,7 +281,7 @@ struct pubnub_ {
     int             timeout_left_ms;
 #endif
 
-#endif
+#endif /* PUBNUB_TIMERS_API */
 
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
@@ -289,12 +296,20 @@ struct pubnub_ {
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
-    /** Proxy IP address, if and when available through hostname string in
-       'numbers and dots' notation. If proxy IP address is not available
+    /** Proxy Ipv4 address, if and when available through hostname string in
+       'numbers and dots' notation. If proxy Ipv4 address is not available
        structure array is filled with zeros.
      */
-    struct pubnub_ipv4_address proxy_ip_address;
+    struct pubnub_ipv4_address proxy_ipv4_address;
 
+#if PUBNUB_USE_IPV6
+    /** Proxy Iv6 address, if and when available through hostname string in
+       'numbers and colons' notation. If proxy Ipv6 address is not available
+       structure array is filled with zeros.
+     */
+    struct pubnub_ipv6_address proxy_ipv6_address;
+#endif
+    
     /** The (TCP) port to use on the proxy. */
     uint16_t proxy_port;
 
@@ -337,7 +352,7 @@ struct pubnub_ {
     /** Data about (HTTP) Digest authentication */
     struct pbhttp_digest_context digest_context;
 
-#endif
+#endif /* PUBNUB_PROXY_API */
 };
 
 

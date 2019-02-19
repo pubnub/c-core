@@ -2,17 +2,20 @@
 #if !defined INC_PBPAL_ANDS_SOCKETS
 #define      INC_PBPAL_ANDS_SOCKETS
 
+#include "lib/pubnub_dns_codec.h"
 
 struct sockaddr;
-struct sockaddr_in;
 
 /**
  * Perform a DNS query by sending a packet to the DNS server @p dest.
  */
-int send_dns_query(int skt, struct sockaddr const *dest, char const*host);
+int send_dns_query(int skt,
+                   struct sockaddr const *dest,
+                   char const*host,
+                   enum DNSqueryType query_type);
 
-/** Read a DNS response from DNS server @p dest, putting it into @p resolved addr. */
-int read_dns_response(int skt, struct sockaddr *dest, struct sockaddr_in *resolved_addr);
+/** Reads response from DNS server @p dest, putting it into @p resolved addr. */
+int read_dns_response(int skt, struct sockaddr *dest, struct sockaddr *resolved_addr);
 
 
 

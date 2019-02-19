@@ -43,6 +43,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
+#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
+    /* Connectivity type(true-Ipv6/false-Ipv4) chosen on given contex.
+       Ipv4 by default.
+     */
+    p->options.ipv6_connectivity = false;
+#endif
     p->flags.started_while_kept_alive = false;
     p->flags.is_publish_via_post   = false;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
@@ -55,7 +61,10 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
-    memset(&(p->proxy_ip_address), 0, sizeof p->proxy_ip_address);
+    memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
+#if PUBNUB_USE_IPV6
+    memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
+#endif
     p->proxy_tunnel_established = false;
     p->proxy_port               = 80;
     p->proxy_auth_scheme        = pbhtauNone;

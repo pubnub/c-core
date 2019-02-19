@@ -2,6 +2,10 @@ SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub
 
 OBJFILES = pubnub_pubsubapi.o pubnub_coreapi.o pubnub_coreapi_ex.o pubnub_ccore_pubsub.o pubnub_ccore.o pubnub_netcore.o  pbpal_sockets.o pbpal_resolv_and_connect_sockets.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o posix_socket_blocking_io.o pubnub_timers.o pubnub_json_parse.o  md5.o pbbase64.o pubnub_helper.o  pubnub_version_posix.o  pubnub_generate_uuid_posix.o pbpal_posix_blocking_io.o pubnub_generate_uuid_v3_md5.o  pubnub_free_with_timeout_std.o pubnub_subscribe_v2.o msstopwatch_monotonic_clock.o pubnub_url_encode.o
 
+ifndef USE_IPV6
+USE_IPV6 = 1
+endif
+
 ifndef USE_PROXY
 USE_PROXY = 1
 endif
@@ -29,6 +33,11 @@ SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c
 OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
 endif
 
+ifeq ($(USE_IPV6), 1)
+SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
+OBJFILES += pubnub_parse_ipv6_addr.o
+endif
+
 ifeq ($(USE_GZIP_COMPRESSION), 1)
 SOURCEFILES += ../lib/miniz/miniz_tdef.c ../lib/miniz/miniz.c ../lib/pbcrc32.c ../core/pbgzip_compress.c
 OBJFILES += miniz_tdef.o miniz.o pbcrc32.o pbgzip_compress.o
@@ -50,7 +59,7 @@ OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_PROXY_API=$(USE_PROXY)
+CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_IPV6=$(USE_IPV6)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize-address Use AddressSanitizer
 
