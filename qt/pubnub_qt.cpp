@@ -1,11 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_qt.h"
 
 extern "C" {
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
+#include "core/pubnub_assert.h"
 #include "lib/pbcrc32.c"
+#include "core/pubnub_memory_block.h"
+#include "core/pubnub_advanced_history.h"
+#define MAX_ERROR_MESSAGE_LENGTH 100
 }
+
+#include "pubnub_qt.h"
 
 #include <QtNetwork>
 
@@ -321,6 +326,97 @@ pubnub_res pubnub_qt::history(QString const& channel,
         PBTT_HISTORY);
 }
 
+#if PUBNUB_USE_ADVANCED_HISTORY
+QString pubnub_qt::get_error_message()
+{
+    pubnub_chamebl_t msg;
+    if (pbcc_get_error_message(d_context.data(), &msg) != 0) {
+        return QString("");
+    }
+    return QString(QByteArray(msg.ptr, msg.size));    
+}
+
+
+pubnub_res pubnub_qt::message_counts(QString const& channel, QString const& timetoken)
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(
+        pbcc_message_counts_prep(d_context.data(),
+                                 channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                                 timetoken.isEmpty() ? 0 : timetoken.toLatin1().data(),
+                                 0),
+        PBTT_MESSAGE_COUNTS);
+}
+
+
+pubnub_res pubnub_qt::message_counts(QStringList const& channel, QString const& timetoken)
+{
+    return message_counts(channel.join(","), timetoken);
+}
+
+
+pubnub_res pubnub_qt::message_counts(QString const& channel,
+                                     QStringList const& channel_timetoken)
+{
+    QString tt_list = channel_timetoken.join(",");
+    KEEP_THREAD_SAFE();
+    return startRequest(
+        pbcc_message_counts_prep(d_context.data(),
+                                 channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                                 0,
+                                 tt_list.isEmpty() ? 0 : tt_list.toLatin1().data()),
+        PBTT_MESSAGE_COUNTS);
+}
+
+
+pubnub_res pubnub_qt::message_counts(QStringList const& channel,
+                                     QStringList const& channel_timetoken)
+{
+    return message_counts(channel.join(","), channel_timetoken);
+}
+
+
+pubnub_res pubnub_qt::message_counts(QVector<QPair<QString, QString>> const& channel_timetokens)
+{
+    QString  ch_list("");
+    QString  tt_list("");
+    unsigned n = channel_timetokens.isEmpty() ? 0 : channel_timetokens.size(); 
+    unsigned i;
+    KEEP_THREAD_SAFE();
+    for (i = 0; i < n; i++) {
+        QString separator(((i+1) < n) ? "," : "");
+        ch_list += channel_timetokens[i].first + separator;
+        tt_list += channel_timetokens[i].second + separator;
+    }
+    return startRequest(
+        pbcc_message_counts_prep(d_context.data(),
+                                 ch_list.isEmpty() ? 0 : ch_list.toLatin1().data(),
+                                 0,
+                                 tt_list.isEmpty() ? 0 : tt_list.toLatin1().data()),
+        PBTT_MESSAGE_COUNTS);
+}
+
+
+QMap<QString, size_t> pubnub_qt::get_channel_message_counts()
+{
+    QMap<QString, size_t> map;
+    QVector<pubnub_chan_msg_count> chan_msg_counters;
+    int count = pbcc_get_chan_msg_counts_size(d_context.data());
+    if (count <= 0) {
+        return map;
+    }
+    chan_msg_counters = QVector<pubnub_chan_msg_count>(count);
+    if (pbcc_get_chan_msg_counts(d_context.data(), (size_t*)&count, &chan_msg_counters[0]) != 0) {
+        return map;
+    }
+    for (int i = 0; i < count; i++) {
+        map.insert(QString(QByteArray(chan_msg_counters[i].channel.ptr,
+                                      chan_msg_counters[i].channel.size)),
+                   chan_msg_counters[i].message_count);
+    }
+    return map;
+}
+#endif /* PUBNUB_USE_ADVANCED_HISTORY */
 
 pubnub_res pubnub_qt::here_now(QString const& channel, QString const& channel_group)
 {
@@ -561,6 +657,11 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
     case PBTT_LIST_CHANNEL_GROUP:
         pbres = pbcc_parse_channel_registry_response(d_context.data());
         break;
+#if PUBNUB_USE_ADVANCED_HISTORY
+    case PBTT_MESSAGE_COUNTS:
+        pbres = pbcc_parse_message_counts_response(d_context.data());
+        break;
+#endif
     default:
         break;
     }

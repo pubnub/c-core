@@ -22,6 +22,10 @@ ifndef RECEIVE_GZIP_RESPONSE
 RECEIVE_GZIP_RESPONSE = 1
 endif
 
+ifndef USE_ADVANCED_HISTORY
+USE_ADVANCED_HISTORY = 1
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
@@ -45,6 +49,11 @@ endif
 ifeq ($(RECEIVE_GZIP_RESPONSE), 1)
 SOURCEFILES += ../lib/miniz/miniz_tinfl.c ../core/pbgzip_decompress.c
 OBJFILES += miniz_tinfl.o pbgzip_decompress.o
+endif
+
+ifeq ($(USE_ADVANCED_HISTORY), 1)
+SOURCEFILES += ../core/pbcc_advanced_history.c ../core/pubnub_advanced_history.c
+OBJFILES += pbcc_advanced_history.o pubnub_advanced_history.o
 endif
 
 CFLAGS = -g -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING  -Wall -D PUBNUB_THREADSAFE -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_IPV6=$(USE_IPV6)

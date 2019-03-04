@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_url_encode.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c ..\core\pubnub_helper.c ..\core\c99\snprintf.c
+PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_url_encode.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c ..\core\pubnub_helper.c ..\core\c99\snprintf.c ..\core\pbcc_advanced_history.c ..\core\pubnub_advanced_history.c
 
 all: pubnub_proxy_NTLM_test.exe
 

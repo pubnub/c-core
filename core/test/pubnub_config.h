@@ -57,6 +57,9 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
+/** The maximum channel name length */
+#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
@@ -79,6 +82,12 @@
 #endif
 
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+
+#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about (unread) messages. */
+#define PUBNUB_USE_ADVANCED_HISTORY 1
+#endif
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */

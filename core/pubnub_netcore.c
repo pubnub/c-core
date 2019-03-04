@@ -8,7 +8,9 @@
 #include "core/pbpal.h"
 #include "core/pubnub_version_internal.h"
 #include "core/pubnub_helper.h"
-
+#if PUBNUB_USE_ADVANCED_HISTORY
+#include "core/pbcc_advanced_history.h"
+#endif
 #include "core/pubnub_proxy_core.h"
 
 #include <string.h>
@@ -186,6 +188,11 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
     , pbcc_parse_subscribe_v2_response /* PBTT_SUBSCRIBE_V2 */
 #else
     , dont_parse /* PBTT_SUBSCRIBE_V2 */
+#endif
+#if PUBNUB_USE_ADVANCED_HISTORY
+    , pbcc_parse_message_counts_response /* PBTT_MESSAGE_COUNTS */
+#else
+    , dont_parse /* PBTT_MESSAGE_COUNTS */
 #endif
 #endif /* PUBNUB_ONLY_PUBSUB_API */
 };

@@ -62,5 +62,14 @@
 
 #define PUBNUB_HAVE_SHA1 0
 
+/** The maximum channel name length */
+#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
+
+#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about (unread) messages. */
+#define PUBNUB_USE_ADVANCED_HISTORY 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

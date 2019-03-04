@@ -22,8 +22,16 @@ ifndef RECEIVE_GZIP_RESPONSE
 RECEIVE_GZIP_RESPONSE = 1
 endif
 
+ifndef USE_ADVANCED_HISTORY
+USE_ADVANCED_HISTORY = 1
+endif
+
 ifeq ($(RECEIVE_GZIP_RESPONSE), 1)
 PROJECT_SOURCEFILES += ../lib/miniz/miniz_tinfl.c pbgzip_decompress.c
+endif
+
+ifeq ($(USE_ADVANCED_HISTORY), 1)
+PROJECT_SOURCEFILES += pbcc_advanced_history.c pubnub_advanced_history.c
 endif
 
 ifndef USE_IPV6
