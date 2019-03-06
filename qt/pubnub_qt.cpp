@@ -590,6 +590,25 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 }
 
 
+int pubnub_qt::set_transaction_timeout(int duration_ms)
+{
+    if (duration_ms > 0) {
+        QMutexLocker lk(&d_mutex);
+        d_transaction_timeout_duration_ms = duration_ms;
+        return 0;
+    }
+
+    return -1;
+}
+
+
+int pubnub_qt::transaction_timeout_get()
+{
+    QMutexLocker lk(&d_mutex);
+    return d_transaction_timeout_duration_ms;
+}
+
+
 void pubnub_qt::set_origin(QString const& origin)
 {
     QMutexLocker lk(&d_mutex);
