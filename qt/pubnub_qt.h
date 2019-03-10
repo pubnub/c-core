@@ -808,6 +808,15 @@ public:
     /** Returns the current transaction duration, in milliseconds. */
     int transaction_timeout_get();
 
+    /** Sets QNetworkManager to use HTTP pipelining to reuse TCP socket.
+     * @param use The usage of the http pipelining.
+     * @note HTTP Pipelining is disabled by default.
+     */
+    void set_use_http_pipelining(bool use);
+
+    /** Returns true if HTTP pipelining is set, false otherwise. */
+    bool use_http_pipelining_get();
+
 private slots:
     void httpFinished();
     void transactionTimeout();
@@ -873,6 +882,9 @@ private:
 
     /// To Keep-Alive or not to Keep-Alive
     bool d_use_http_keep_alive;
+
+    /// Allow HTTP Pipelining (TCP connection reuse)
+    bool d_use_http_pipelining;
 
     ///  publish transaction method
     enum pubnub_publish_method d_publish_method;

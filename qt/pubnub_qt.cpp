@@ -42,6 +42,7 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
     , d_use_http_keep_alive(true)
+    , d_use_http_pipelining(false)
     , d_mutex(QMutex::Recursive)
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
@@ -75,6 +76,9 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         QNetworkRequest req(url);
         if (!d_use_http_keep_alive) {
             req.setRawHeader("Connection", "Close");
+        }
+        if (d_use_http_pipelining) {
+            req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
         }
         if (PBTT_PUBLISH == transaction) {
             switch (d_publish_method) {
@@ -606,6 +610,20 @@ int pubnub_qt::transaction_timeout_get()
 {
     QMutexLocker lk(&d_mutex);
     return d_transaction_timeout_duration_ms;
+}
+
+
+void pubnub_qt::set_use_http_pipelining(bool use)
+{
+    QMutexLocker lk(&d_mutex);
+    d_use_http_pipelining = use;
+}
+
+
+bool pubnub_qt::use_http_pipelining_get()
+{
+    QMutexLocker lk(&d_mutex);
+    return d_use_http_pipelining;
 }
 
 
