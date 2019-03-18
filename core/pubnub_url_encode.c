@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
+#include "pubnub_url_encode.h"
 
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
@@ -17,10 +18,7 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size)
     while (what[0]) {
         /* RFC 3986 Unreserved characters plus few
          * safe reserved ones. */
-        size_t okspan = strspn(
-            what,
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~"
-            ",=:;@[]");
+        size_t okspan = strspn(what, OK_SPAN_CHARACTERS);
         if (okspan > 0) {
             if (okspan >= (unsigned)(buffer_size - i - 1)) {
                 PUBNUB_LOG_ERROR("Error:|Url-encoded string is longer than permited.\n"

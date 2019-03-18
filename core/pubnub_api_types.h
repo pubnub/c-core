@@ -91,7 +91,11 @@ enum pubnub_res {
     /** Encryption (and decryption) not supported */
     PNR_CRYPTO_NOT_SUPPORTED,
     /** Bad compression format or compressed data corrupted */
-    PNR_BAD_COMPRESSION_FORMAT
+    PNR_BAD_COMPRESSION_FORMAT,
+    /** Invalid input parameters passed to a given function */
+    PNR_INVALID_PARAMETERS,
+    /** Server reports an error in the response */
+    PNR_ERROR_ON_SERVER
 };
 
 /** 'pubnub_cancel()' return value */
@@ -149,6 +153,13 @@ enum pubnub_trans {
     PBTT_HEARTBEAT,
     /** Subscribe V2 operation/transaction */
     PBTT_SUBSCRIBE_V2,
+    /** Message counts(get counters of unread messages for a user, identified by UUID,
+        for the list of channels specified) starting from given timetoken, or(exclusive or)
+        list of timetokens per channel.
+        If neither timetoken, nor channel_timetokens are specified, gets entire message
+        history counts for channels listed.
+     */
+    PBTT_MESSAGE_COUNTS,
     /** Count the number of transaction types */
     PBTT_MAX
 };
@@ -171,6 +182,20 @@ enum pubnub_publish_method {
     pubnubPublishViaPOST,
     pubnubPublishViaPOSTwithGZIP,
     pubnubPublishViaGET
+};
+
+/** Enum that describes an error when checking parameters passed to a function */
+enum pubnub_parameter_error {
+    /** All parameters checked are valid */
+    pnarg_PARAMS_OK,
+    /** Invalid channel name */
+    pnarg_INVALID_CHANNEL,
+    /** Invalid timetoken parameter */
+    pnarg_INVALID_TIMETOKEN,
+    /** Number of channels and number of timetokens from corresponding lists are
+        not equal(when they should be).
+      */
+    pnarg_CHANNEL_TIMETOKEN_COUNT_MISMATCH
 };
 
 #endif /* !defined INC_PUBNUB_API_TYPES */

@@ -62,6 +62,8 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_INTERNAL_ERROR: return "Internal error in processing";
     case PNR_CRYPTO_NOT_SUPPORTED: return "Encryption/decryption not supported";
     case PNR_BAD_COMPRESSION_FORMAT: return "Bad data compression format";
+    case PNR_INVALID_PARAMETERS: return "Invalid function parameters";
+    case PNR_ERROR_ON_SERVER: return "Server reported an error";
     }
     return "!?!?!";
 }
@@ -91,6 +93,8 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_INTERNAL_ERROR: return pbccFalse; /* Sorry, something went wrong... */
     case PNR_CRYPTO_NOT_SUPPORTED: return pbccFalse; /* Use a platform that supports encryption, say OpenSSL */
     case PNR_BAD_COMPRESSION_FORMAT: return pbccNotSet; /* If bad compressing was transient, a retry might help */
+    case PNR_INVALID_PARAMETERS: return pbccFalse; /* Check and fix invalid parameters */
+    case PNR_ERROR_ON_SERVER: return pbccFalse; /* Fix the error reported */
     }
     return pbccFalse;
 }

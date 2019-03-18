@@ -126,6 +126,9 @@
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
 
+/** The maximum channel name length */
+#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
@@ -150,6 +153,12 @@
 /** If true (!=0) will enable using the subscribe v2 API, which
     provides filter expressions and more data about messages. */
 #define PUBNUB_USE_SUBSCRIBE_V2 1
+#endif
+
+#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about (unread) messages. */
+#define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
 
