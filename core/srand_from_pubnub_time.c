@@ -45,7 +45,7 @@ int srand_from_pubnub_time(pubnub_t* pbp)
         size_t      length_of_time = strlen(pbtime);
         char const* s              = pbtime + length_of_time - 1;
         unsigned    val_for_srand  = 0;
-        int         i;
+        unsigned    i;
         if (0 == length_of_time) {
             return -1;
         }

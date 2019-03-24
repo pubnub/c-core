@@ -79,8 +79,8 @@ openssl/cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $
 openssl/futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/futres_nesting.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
-openssl/fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
-	$(CXX) -o $@ --std=c++11 $(CFLAGS) -x c++ fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
+openssl/fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c ../core/srand_from_pubnub_time.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
+	$(CXX) -o $@ --std=c++11 $(CFLAGS) -x c++ fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c ../core/srand_from_pubnub_time.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
 
 ##
 # The socket poller module to use. You should use the `poll` poller it

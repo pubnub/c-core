@@ -7,6 +7,7 @@
 #include "core/pubnub_alloc.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/srand_from_pubnub_time.h"
+#include "core/pubnub_log.h"
 
 #include <pthread.h>
 
@@ -68,9 +69,19 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
     pubnub_t* pbp = pubnub_alloc();
     if (pbp != NULL) {
         pubnub_init(pbp, pubkey, keysub);
-        srand_from_pubnub_time(pbp);
+        if (srand_from_pubnub_time(pbp) != 0) {
+            PUBNUB_LOG_ERROR("Error :could not 'srand()' from PubNub time.\n");
+        }
         pubnub_free(pbp);
     }
+}
+
+
+static int elapsed_ms(struct timespec prev_timspec, struct timespec timspec)
+{
+    int s_diff   = timspec.tv_sec - prev_timspec.tv_sec;
+    int m_s_diff = (timspec.tv_nsec - prev_timspec.tv_nsec) / MILLI_IN_NANO;
+    return (s_diff * UNIT_IN_MILLI) + m_s_diff;
 }
 
 
@@ -92,6 +103,7 @@ static int run_tests(struct TestData aTest[],
     unsigned failed_count = 0;
     unsigned passed_count = 0;
     unsigned indete_count = 0;
+    struct timespec prev_timspec[TEST_COUNT];
     struct PNTestParameters tstpar = { pubkey, keysub, origin };
 
     tstpar.candochangroup = !is_travis_pull_request_build();
@@ -107,6 +119,7 @@ static int run_tests(struct TestData aTest[],
         }
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             printf("Creating a thread for test %u\n", i + 1);
+            monotonic_clock_get_time(&prev_timspec[i]);
             if (0 != pthread_create(&aTest[i].pth, NULL, aTest[i].pf, &aTest[i].result)) {
                 printf(
                     "Failed to create a thread for test %u ('%s'), errno=%d\n",
@@ -122,12 +135,17 @@ static int run_tests(struct TestData aTest[],
            pthread_join_any()...
          */
         for (i = next_test; i < next_test + in_this_pass; ++i) {
+            struct timespec timspec;
             if (0 != pthread_join(aTest[i].pth, NULL)) {
                 printf("Failed to join thread for test %u ('%s'), errno=%d\n",
                        i + 1,
                        aTest[i].name,
                        errno);
             }
+            monotonic_clock_get_time(&timspec);
+            PUBNUB_LOG_TRACE("%d.test lasted %d milliseconds.\n",
+                             i+1,
+                             elapsed_ms(prev_timspec[i], timspec));
             switch (aTest[i].result) {
             case trFail:
                 printf(

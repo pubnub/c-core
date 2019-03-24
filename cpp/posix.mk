@@ -117,8 +117,8 @@ pubnub_callback_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES)
 pubnub_callback_cpp11_subloop_sample: samples/pubnub_subloop_sample.cpp $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp
 	$(CXX) -o $@ -std=c++11 -D PUBNUB_CALLBACK_API $(CFLAGS) -x c++  samples/pubnub_subloop_sample.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp $(SOURCEFILES) $(LDLIBS)
 
-fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
-	$(CXX) -o $@ -std=c++11 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING $(CFLAGS) -x c++ fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
+fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES)  ../core/pubnub_ntf_sync.c ../core/srand_from_pubnub_time.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
+	$(CXX) -o $@ -std=c++11 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING $(CFLAGS) -x c++ fntest/pubnub_fntest_runner.cpp ../core/pubnub_ntf_sync.c ../core/srand_from_pubnub_time.c pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
 
 
 clean:
