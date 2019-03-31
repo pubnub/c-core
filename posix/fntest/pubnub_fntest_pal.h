@@ -3,6 +3,7 @@
 #define INC_PUBNUB_FNTEST_PAL
 
 #include "core/pubnub_helper.h"
+#include "posix/monotonic_clock_get_time.h"
 
 #include <pthread.h>
 
@@ -64,19 +65,22 @@
     }
 
 #define expect_pnr(rslt, exp_rslt)                                             \
-    if ((rslt) != (exp_rslt)) {                                                \
-        printf("\x1b[33m Expected result %d (%s) but got %d (%s), file %s "    \
-               "function %s line %d\x1b[0m\n",                                 \
-               (exp_rslt),                                                     \
-               #exp_rslt,                                                      \
-               (rslt),                                                         \
-               pubnub_res_2_string(rslt),                                      \
-               __FILE__,                                                       \
-               __FUNCTION__,                                                   \
-               __LINE__);                                                      \
-        *(enum PNFNTestResult*)pResult = trFail;                               \
-        pthread_exit(NULL);                                                    \
-    }
+    do {                                                                       \
+        enum pubnub_res M_res_ = rslt;                                         \
+        if (M_res_ != (exp_rslt)) {                                            \
+            printf("\x1b[33m Expected result %d (%s) but got %d (%s), file %s "\
+                   "function %s line %d\x1b[0m\n",                             \
+                   (exp_rslt),                                                 \
+                   #exp_rslt,                                                  \
+                   M_res_,                                                     \
+                   pubnub_res_2_string(M_res_),                                \
+                   __FILE__,                                                   \
+                   __FUNCTION__,                                               \
+                   __LINE__);                                                  \
+            *(enum PNFNTestResult*)pResult = trFail;                           \
+            pthread_exit(NULL);                                                \
+        }                                                                      \
+    } while (0)
 
 #define expect_pnr_maybe_started(rslt, pbp, time_ms, exp_rslt)                 \
     if ((rslt) == (PNR_STARTED)) {                                             \
@@ -116,15 +120,30 @@
         expect(pnfntst_timer_is_running(tmr));                                 \
     } while (0)
 
+#define ELAPSED_MS(prev_timspec)                                               \
+    do {                                                                       \
+        int M_s_diff;                                                          \
+        int M_ms_diff;                                                         \
+        struct timespec M_timspec;                                             \
+        monotonic_clock_get_time(&M_timspec);                                  \
+        M_s_diff   = M_timspec.tv_sec - (prev_timspec).tv_sec;                 \
+        M_ms_diff = (M_timspec.tv_nsec - (prev_timspec).tv_nsec) / MILLI_IN_NANO;\
+        PUBNUB_LOG_TRACE("-------->Extra waiting for transaction to finish took %d milliseconds.\n",\
+                         (M_s_diff * UNIT_IN_MILLI) + M_ms_diff);              \
+    } while (0)
 
 #define await_timed(ms, exp_rslt, pbp)                                         \
     do {                                                                       \
         enum pubnub_res M_rslt;                                                \
         pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
+        struct timespec M_prev_timspec;                                        \
         expect(M_t_ != NULL);                                                  \
         TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
+        monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (ms));                                       \
         await_w_timer(M_t_, M_rslt, pbp);                                      \
+        PUBNUB_LOG_TRACE("pbp=%p", pbp);                                       \
+        ELAPSED_MS(M_prev_timspec);                                            \
         expect_last_result(pbp, M_rslt, exp_rslt);                             \
         TEST_POP_DEFERRED;                                                     \
     } while (0)
@@ -165,10 +184,14 @@
         enum pubnub_res M_rslt_1 = PNR_STARTED;                                \
         enum pubnub_res M_rslt_2 = PNR_STARTED;                                \
         pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
+        struct timespec M_prev_timspec;                                        \
         expect(M_t_ != NULL);                                                  \
         TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
+        monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (ms));                                       \
         await_w_timer_2(M_rslt_1, M_rslt_2, M_t_, pbp1, pbp2);                 \
+        PUBNUB_LOG_TRACE("pbp1=%p, pbp2=%p", pbp1, pbp2);                      \
+        ELAPSED_MS(M_prev_timspec);                                            \
         expect_last_result_2(pbp1, M_rslt_1, exp_rslt1, pbp2, M_rslt_2, exp_rslt2);\
         TEST_POP_DEFERRED;                                                     \
     } while (0)
@@ -180,10 +203,14 @@
         enum pubnub_res M_rslt_1 = rslt1;                                      \
         enum pubnub_res M_rslt_2 = rslt2;                                      \
         pnfntst_timer_t* M_t_ = pnfntst_alloc_timer();                         \
+        struct timespec M_prev_timspec;                                        \
         expect(M_t_ != NULL);                                                  \
         TEST_DEFER(pnfntst_free_timer, M_t_);                                  \
+        monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (time_ms));                                  \
         await_w_timer_2(M_rslt_1, M_rslt_2, M_t_, pbp1, pbp2);                 \
+        PUBNUB_LOG_TRACE("pbp1=%p, pbp2=%p", pbp1, pbp2);                      \
+        ELAPSED_MS(M_prev_timspec);                                            \
         expect_last_result_2(pbp1, M_rslt_1, exp_rslt1, pbp2, M_rslt_2, exp_rslt2);\
         TEST_POP_DEFERRED;                                                     \
     } while (0)

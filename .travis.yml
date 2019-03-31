@@ -3,7 +3,6 @@ os:
   - linux
   - osx
 dist: trusty
-sudo: false
 compiler:
   - clang
   - gcc

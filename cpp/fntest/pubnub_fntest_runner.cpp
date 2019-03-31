@@ -2,6 +2,14 @@
 #include "pubnub_fntest_basic.hpp"
 #include "pubnub_fntest_medium.hpp"
 
+#include "core/srand_from_pubnub_time.h"
+#include "core/pubnub_log.h"
+#if defined _WIN32
+#include "windows/console_subscribe_paint.h"
+#else
+#include "posix/console_subscribe_paint.h"
+#endif
+
 #include <iostream>
 #include <functional>
 #include <condition_variable>
@@ -9,12 +17,6 @@
 
 #include <cstdlib>
 #include <cstring>
-
-#if defined _WIN32
-#include "windows/console_subscribe_paint.h"
-#else
-#include "posix/console_subscribe_paint.h"
-#endif
 
 
 enum class TestResult {
@@ -89,6 +91,18 @@ static bool is_pull_request_build(void)
 #endif
 }
 
+static void srand_from_pubnub(char const* pubkey, char const* keysub)
+{
+    pubnub_t* pbp = pubnub_alloc();
+    if (pbp != NULL) {
+        pubnub_init(pbp, pubkey, keysub);
+        if (srand_from_pubnub_time(pbp) != 0) {
+            PUBNUB_LOG_ERROR("Error :could not srand from PubNub time.\n");
+        }
+        pubnub_free(pbp);
+    }
+}
+
 static void notify(TestData &test,TestResult result)
 {
     {
@@ -112,7 +126,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
  
     cannot_do_chan_group = is_pull_request_build();
 
-    std::cout << "Starting Run of " << test_count << " tests" << std::endl;;
+    std::cout << "Starting Run of " << test_count << " tests" << std::endl;
     while (next_test < test_count) {
         unsigned i;
         unsigned in_this_pass = max_conc_thread;
@@ -125,10 +139,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
             runners[i-next_test] =
                 std::thread([i, pubkey, keysub, origin, aTest, cannot_do_chan_group] {
                     try {
-                        using namespace std::chrono;
-                        system_clock::time_point tp  = system_clock::now();
-                        system_clock::duration   dtn = tp.time_since_epoch();
-                        srand(dtn.count());
+                        srand_from_pubnub(pubkey.c_str(), keysub.c_str());
                         aTest[i].pf(pubkey.c_str(),
                                     keysub.c_str(),
                                     origin.c_str(),
@@ -154,7 +165,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
                         notify(aTest[i], TestResult::indeterminate);
                     }
                 });
-            std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         /// Await for them all to finish
         {

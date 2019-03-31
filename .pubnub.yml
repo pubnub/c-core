@@ -1,7 +1,11 @@
 name: c-core
-version: 2.8.0
+version: 2.8.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.8.1
+    changes:
+      - type: enhancement
+        text: Update pubnub_allooc_std.c to pubnub_cancel() changes
   - version: v2.8.0
     changes:
       - type: enhancement

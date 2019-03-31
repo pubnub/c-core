@@ -414,9 +414,15 @@ void free_m_msgs(char ** msg_array) {
 }
 
 AfterEach(single_context_pubnub) {
+    if (pbp->state != PBS_IDLE) {
+        expect(pbpal_close, when(pb, equals(pbp)), returns(0));
+        expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
+        expect(pbpal_forget, when(pb, equals(pbp)));
+    }
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    expect(pbpal_free, when(pb, equals(pbp)));
+    attest(pubnub_free(pbp), equals(0));
     free_m_msgs(m_msg_array);
-//    expect(pbpal_free, when(pb, equals(pbp)));
-//    attest(pubnub_free(pbp), equals(0));
 }
 
 
@@ -662,7 +668,6 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Basic)
     /* Suddenly, we decided not to use proxy any more just for kicks :) */
     pubnub_set_proxy_none(pbp);
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyNONE)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, proxy_GET_Basic_client_sets_timeout_and_max_operation_count_for_keep_alive)
@@ -790,7 +795,6 @@ Ensure(single_context_pubnub, proxy_GET_Basic_client_sets_timeout_and_max_operat
     attest(pubnub_last_http_code(pbp), equals(200));
 
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_GET)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, GET_Basic_proxy_closes_connection_after_first_407answer_client_keeps_folloving_protocol_until_established)
@@ -865,7 +869,6 @@ Ensure(single_context_pubnub, GET_Basic_proxy_closes_connection_after_first_407a
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_continues_negotiating_after_stale_nounce)
@@ -1010,7 +1013,6 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -1061,7 +1063,6 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_GET)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_stale_nounce_but_keeps_negotiating)
@@ -1210,7 +1211,6 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -1264,7 +1264,6 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_GET)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, try_to_establish_proxy_connection_GET_No_response)
@@ -1380,7 +1379,6 @@ Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Basic)
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_CONNECT)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Digest)
@@ -1476,7 +1474,6 @@ Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Digest)
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_proxy_protocol_get(pbp), equals(pbproxyHTTP_CONNECT)); 
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* Verify ASSERT gets fired */

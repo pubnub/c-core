@@ -16,18 +16,18 @@
 static struct PNTestParameters m_test_param;
 
 
-bool pnfntst_got_messages(pubnub_t *p, ...)
+bool pnfntst_got_messages(pubnub_t* p, ...)
 {
-    char const *aMsgs[16];
-    uint16_t missing;
-    size_t count = 0;
-    va_list vl;
+    char const* aMsgs[16];
+    uint16_t    missing;
+    size_t      count = 0;
+    va_list     vl;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     va_start(vl, p);
     while (count < 16) {
-        char const *msg = va_arg(vl, char*);
+        char const* msg = va_arg(vl, char*);
         if (NULL == msg) {
             break;
         }
@@ -41,8 +41,8 @@ bool pnfntst_got_messages(pubnub_t *p, ...)
 
     missing = (0x01 << count) - 1;
     for (;;) {
-        size_t i;
-        char const *msg = pubnub_get(p);
+        size_t      i;
+        char const* msg = pubnub_get(p);
         if (NULL == msg) {
             break;
         }
@@ -67,15 +67,15 @@ static bool eqstr(char const* s, char const* s2)
 }
 
 
-bool pnfntst_got_message_on_channel(pubnub_t *p, char const *message, char const *channel)
+bool pnfntst_got_message_on_channel(pubnub_t* p, char const* message, char const* channel)
 {
-    char const *msg;
-    char const *chan;
+    char const* msg;
+    char const* chan;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
     PUBNUB_ASSERT_OPT(NULL != message);
     PUBNUB_ASSERT_OPT(NULL != channel);
-    
-    msg = pubnub_get(p);
+
+    msg  = pubnub_get(p);
     chan = pubnub_get_channel(p);
     if ((NULL == msg) || (NULL == chan)) {
         return false;
@@ -90,18 +90,18 @@ bool pnfntst_subscribe_and_check(pubnub_t*   p,
                                  unsigned    ms,
                                  ...)
 {
-    char const *aMsgs[16];
-    char const *aChan[16];
-    uint16_t missing;
-    size_t count = 0;
-    pnfntst_timer_t *tmr;
-    va_list vl;
-    
+    char const*      aMsgs[16];
+    char const*      aChan[16];
+    uint16_t         missing;
+    size_t           count = 0;
+    pnfntst_timer_t* tmr;
+    va_list          vl;
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     va_start(vl, ms);
     while (count < 16) {
-        char const *msg = va_arg(vl, char*);
+        char const* msg = va_arg(vl, char*);
         if (NULL == msg) {
             break;
         }
@@ -115,9 +115,9 @@ bool pnfntst_subscribe_and_check(pubnub_t*   p,
         printf("subscribe and check: number of messages out of range: %d\n", (int)count);
         return false;
     }
-    
+
     missing = (0x01 << count) - 1;
-    tmr = pnfntst_alloc_timer();
+    tmr     = pnfntst_alloc_timer();
     if (NULL == tmr) {
         puts("subscribe and check: timer alloc failed");
         return false;
@@ -126,25 +126,25 @@ bool pnfntst_subscribe_and_check(pubnub_t*   p,
     while (pnfntst_timer_is_running(tmr) && missing) {
         enum pubnub_res pbres = pubnub_subscribe(p, channel, chgroup);
         if (PNR_STARTED == pbres) {
-        while (pnfntst_timer_is_running(tmr)) {
-            pbres = pubnub_last_result(p);
-            if (pbres != PNR_STARTED) {
+            while (pnfntst_timer_is_running(tmr)) {
+                pbres = pubnub_last_result(p);
+                if (pbres != PNR_STARTED) {
+                    break;
+                }
+            }
+            if (pbres != PNR_OK) {
+                printf("subscribe and check: subscribe error %d\n", pbres);
                 break;
             }
-        }
-        if (pbres != PNR_OK) {
-            printf("subscribe and check: subscribe error %d\n", pbres);
-            break;
-        }
         }
         else if (pbres != PNR_OK) {
             puts("subscribe and check: subscribe failed");
             break;
         }
         for (;;) {
-            size_t i;
-            char const *msg = pubnub_get(p);
-            char const *chan = pubnub_get_channel(p);
+            size_t      i;
+            char const* msg  = pubnub_get(p);
+            char const* chan = pubnub_get_channel(p);
             if (NULL == msg) {
                 break;
             }
@@ -157,9 +157,9 @@ bool pnfntst_subscribe_and_check(pubnub_t*   p,
             }
         }
     }
-    
+
     pnfntst_free_timer(tmr);
-    
+
     if (missing) {
         printf("subscribe and check: missing bitmap: %X\n", missing);
     }
@@ -172,11 +172,9 @@ void pnfntst_free(void* p)
 {
     pubnub_t* pbp = p;
     if (pbp != NULL) {
-        pubnub_cancel(pbp);
-        pubnub_await(pbp);
         if (pubnub_free(pbp) != 0) {
-        printf("Failed to free the Pubnub context\n");
-    }
+            printf("Failed to free the Pubnub context\n");
+        }
     }
 }
 
