@@ -9,7 +9,6 @@
 #include <QStringList>
 #include <QDebug>
 #include <QJsonDocument>
-#include <QMutexLocker>
 #include <QMap>
 #include <QPair>
 

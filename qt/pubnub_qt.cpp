@@ -12,6 +12,7 @@ extern "C" {
 
 #include "pubnub_qt.h"
 
+#include <QMutexLocker>
 #include <QtNetwork>
 
 /* Minimal acceptable message length difference, between unpacked and packed message, in percents */
