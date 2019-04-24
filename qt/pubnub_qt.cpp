@@ -42,7 +42,9 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
     , d_use_http_keep_alive(true)
+#ifdef PUBNUB_THREADSAFE
     , d_mutex(QMutex::Recursive)
+#endif
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam,
@@ -111,17 +113,25 @@ void pubnub_qt::set_uuid(QString const& uuid)
 
 QString pubnub_qt::uuid() const
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     char const*  uuid = pbcc_uuid_get(d_context.data());
     return QString((NULL == uuid) ? "" : uuid);
 }
 
 void pubnub_qt::set_auth(QString const& auth)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     d_auth = auth.toLatin1();
     pbcc_set_auth(d_context.data(), d_auth.data());
 }
+
+
+QString pubnub_qt::auth() const
+{
+    KEEP_THREAD_SAFE();
+    return d_auth;
+}
+
 
 QString pubnub_qt::get() const
 {
@@ -176,7 +186,7 @@ void pubnub_qt::cancel()
 
 pubnub_res pubnub_qt::publish(QString const& channel, QString const& message)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     d_publish_method = pubnubPublishViaGET;
     return startRequest(pbcc_publish_prep(d_context.data(),
                                           channel.toLatin1().data(),
@@ -192,7 +202,7 @@ pubnub_res pubnub_qt::publish(QString const& channel, QString const& message)
 pubnub_res pubnub_qt::publish_via_post(QString const&    channel,
                                        QByteArray const& message)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     d_publish_method     = pubnubPublishViaPOST;
     d_message_to_publish = message;
     return startRequest(pbcc_publish_prep(d_context.data(),
@@ -242,7 +252,7 @@ static QByteArray pack_message_to_gzip(QByteArray const& message)
 pubnub_res pubnub_qt::publish_via_post_with_gzip(QString const&    channel,
                                                  QByteArray const& message)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     d_message_to_publish = pack_message_to_gzip(message);
     d_publish_method     = (d_message_to_publish.size() != message.size())
                            ? pubnubPublishViaPOSTwithGZIP
@@ -333,7 +343,7 @@ QString pubnub_qt::get_error_message()
     if (pbcc_get_error_message(d_context.data(), &msg) != 0) {
         return QString("");
     }
-    return QString(QByteArray(msg.ptr, msg.size));    
+    return QString(QByteArray(msg.ptr, msg.size));
 }
 
 
@@ -380,7 +390,7 @@ pubnub_res pubnub_qt::message_counts(QVector<QPair<QString, QString>> const& cha
 {
     QString  ch_list("");
     QString  tt_list("");
-    unsigned n = channel_timetokens.isEmpty() ? 0 : channel_timetokens.size(); 
+    unsigned n = channel_timetokens.isEmpty() ? 0 : channel_timetokens.size();
     unsigned i;
     KEEP_THREAD_SAFE();
     for (i = 0; i < n; i++) {
@@ -575,7 +585,7 @@ QString pubnub_qt::last_time_token() const
 
 void pubnub_qt::set_ssl_options(ssl_opts options)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     if (options & useSSL) {
         if (d_origin.startsWith("http:")) {
             d_origin.replace(0, 5, "https:");
@@ -593,7 +603,7 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 int pubnub_qt::set_transaction_timeout(int duration_ms)
 {
     if (duration_ms > 0) {
-        QMutexLocker lk(&d_mutex);
+        KEEP_THREAD_SAFE();
         d_transaction_timeout_duration_ms = duration_ms;
         return 0;
     }
@@ -604,19 +614,26 @@ int pubnub_qt::set_transaction_timeout(int duration_ms)
 
 int pubnub_qt::transaction_timeout_get()
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     return d_transaction_timeout_duration_ms;
 }
 
 
 void pubnub_qt::set_origin(QString const& origin)
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     d_origin = origin;
     if (!origin.startsWith("http:") && !origin.startsWith("https:")) {
         d_origin.prepend("http://");
         set_ssl_options(d_ssl_opts);
     }
+}
+
+
+QString const& pubnub_qt::origin() const
+{
+    KEEP_THREAD_SAFE();
+    return d_origin;
 }
 
 
@@ -699,7 +716,7 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
 
 void pubnub_qt::transactionTimeout()
 {
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     if (d_reply) {
         d_transaction_timed_out = true;
         d_reply->abort();
@@ -760,7 +777,7 @@ void pubnub_qt::sslErrors(QNetworkReply* reply, const QList<QSslError>& errors)
 
     qDebug() << "SSL error: " << errorString;
 
-    QMutexLocker lk(&d_mutex);
+    KEEP_THREAD_SAFE();
     if (d_ssl_opts & ignoreSecureConnectionRequirement) {
         reply->ignoreSslErrors();
     }
