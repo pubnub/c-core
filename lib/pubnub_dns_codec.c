@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "lib/pubnub_dns_codec.h"
+#include "pubnub_internal.h"
 
+#include "lib/pubnub_dns_codec.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
@@ -143,10 +144,10 @@ static int dns_qname_encode(uint8_t* dns, size_t n, char const* host)
 
 
 int pbdns_prepare_dns_request(uint8_t* buf,
-                               size_t buf_size,
-                               char const* host,
-                               int *to_send,
-                               enum DNSqueryType query_type)
+                              size_t buf_size,
+                              char const* host,
+                              int *to_send,
+                              enum DNSqueryType query_type)
 {
     int qname_encoded_length;
     int len = 0;
@@ -482,11 +483,13 @@ static int skip_questions(uint8_t const** o_reader,
     return 0;
 }
 
-static int check_answer(const uint8_t**            o_reader,
-                        unsigned                   r_data_type,
-                        size_t                     r_data_len,
+static int check_answer(const uint8_t** o_reader,
+                        unsigned        r_data_type,
+                        size_t          r_data_len,
+                        bool*           p_address_found,                
                         struct pubnub_ipv4_address* resolved_addr_ipv4
-                        IPV6_ADDR_ARGUMENT_DECLARATION)
+                        IPV6_ADDR_ARGUMENT_DECLARATION
+                        PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
 {
     PUBNUB_ASSERT_OPT(o_reader != NULL);
 
@@ -504,7 +507,22 @@ static int check_answer(const uint8_t**            o_reader,
                          reader[1],
                          reader[2],
                          reader[3]);
-        memcpy(resolved_addr_ipv4->ipv4, reader, 4);
+        if (false == *p_address_found) {
+            memcpy(resolved_addr_ipv4->ipv4, reader, 4);
+            *p_address_found = true;
+#if PUBNUB_USE_MULTIPLE_ADDRESSES && PUBNUB_USE_SSL
+            if (options->fallbackSSL) {
+                memcpy(spare_addresses->ipv4_addresses[spare_addresses->n_ipv4++].ipv4,
+                       resolved_addr_ipv4->ipv4,
+                       4);
+            }
+#endif /* PUBNUB_USE_SSL */
+        }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        else if (spare_addresses->n_ipv4 < PUBNUB_MAX_IPV4_ADDRESSES) {
+            memcpy(spare_addresses->ipv4_addresses[spare_addresses->n_ipv4++].ipv4, reader, 4);
+        }
+#endif
         return 0;
     }
 #if PUBNUB_USE_IPV6
@@ -527,7 +545,22 @@ static int check_answer(const uint8_t**            o_reader,
                          reader[10]*256 + reader[11],
                          reader[12]*256 + reader[13],
                          reader[14]*256 + reader[15]);
-        memcpy(resolved_addr_ipv6->ipv6, reader, 16);
+        if (false == *p_address_found) {
+            memcpy(resolved_addr_ipv6->ipv6, reader, 16);
+            *p_address_found = true;
+#if PUBNUB_USE_MULTIPLE_ADDRESSES && PUBNUB_USE_SSL
+            if (options->fallbackSSL) {
+                memcpy(spare_addresses->ipv6_addresses[spare_addresses->n_ipv6++].ipv6,
+                       resolved_addr_ipv6->ipv6,
+                       16);
+            }
+#endif /* PUBNUB_USE_SSL */
+        }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        else if (spare_addresses->n_ipv6 < PUBNUB_MAX_IPV6_ADDRESSES) {
+            memcpy(spare_addresses->ipv6_addresses[spare_addresses->n_ipv6++].ipv6, reader, 16);
+        }
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
         return 0;
     }
 #endif /* PUBNUB_USE_IPV6 */
@@ -541,9 +574,11 @@ static int find_the_answer(uint8_t const* reader,
                            uint8_t const* end,
                            size_t         ans_count,
                            struct pubnub_ipv4_address* resolved_addr_ipv4
-                           IPV6_ADDR_ARGUMENT_DECLARATION)
+                           IPV6_ADDR_ARGUMENT_DECLARATION
+                           PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
 {
     size_t i;
+    bool address_found = false;
     
     PUBNUB_ASSERT_OPT(buf != NULL);
     PUBNUB_ASSERT_OPT(reader != NULL);
@@ -556,7 +591,7 @@ static int find_the_answer(uint8_t const* reader,
         size_t   to_skip;
         size_t   r_data_len;
         unsigned r_data_type;
-        
+
         if (dns_label_decode(name, sizeof name, reader, buf, (end - buf + 1), &to_skip) != 0) {
             if (0 == to_skip) {
                 return -1;
@@ -599,19 +634,24 @@ static int find_the_answer(uint8_t const* reader,
         if(check_answer(&reader,
                         r_data_type,
                         r_data_len,
+                        &address_found,
                         resolved_addr_ipv4
-                        IPV6_ADDR_ARGUMENT) == 0) {
+                        IPV6_ADDR_ARGUMENT
+                        PBDNS_OPTIONAL_PARAMS) == 0) {
+#if !PUBNUB_USE_MULTIPLE_ADDRESSES
             return 0;
+#endif
         }
     }
-    /* Don't care about Authoritative Servers or Additional records, for now */
-    return -1;
+    /* Don't care about Authoritative Servers for now */
+    return address_found ? 0 : -1;
 }
 
-int pbdns_pick_resolved_address(uint8_t const* buf,
-                                size_t msg_size,
-                                struct pubnub_ipv4_address* resolved_addr_ipv4
-                                IPV6_ADDR_ARGUMENT_DECLARATION)
+int pbdns_pick_resolved_addresses(uint8_t const* buf,
+                                  size_t msg_size,
+                                  struct pubnub_ipv4_address* resolved_addr_ipv4
+                                  IPV6_ADDR_ARGUMENT_DECLARATION
+                                  PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
 {
     size_t         q_count;
     size_t         ans_count;
@@ -646,5 +686,11 @@ int pbdns_pick_resolved_address(uint8_t const* buf,
         return -1;
     }
 
-    return find_the_answer(reader, buf, end, ans_count, resolved_addr_ipv4 IPV6_ADDR_ARGUMENT);
+    return find_the_answer(reader,
+                           buf,
+                           end,
+                           ans_count,
+                           resolved_addr_ipv4
+                           IPV6_ADDR_ARGUMENT
+                           PBDNS_OPTIONAL_PARAMS);
 }

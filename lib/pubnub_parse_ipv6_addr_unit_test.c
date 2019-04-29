@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
 #include "lib/pubnub_parse_ipv6_addr.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"

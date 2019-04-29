@@ -1,24 +1,36 @@
 name: c-core
-version: 2.8.1
+version: 2.8.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.8.2
+    date: Apr 29, 2019
+    changes:
+      - type: enhancement
+        text: Will try other address from (async) DNS reponse if first one fails
+      - type: enhancement
+        text: Will try secondary (async) DNS server if primary doesn't work
   - version: v2.8.1
+    date: Apr 29, 2019
     changes:
       - type: enhancement
         text: Update pubnub_allooc_std.c to pubnub_cancel() changes
   - version: v2.8.0
+    date: Mar 18, 2019
     changes:
       - type: enhancement
         text: Support Message Counts API
   - version: v2.7.0
+    date: Feb 19, 2019
     changes:
       - type: enhancement
         text: Support IPv6 for DNS resolution (mostly for callback interface)
   - version: v2.6.4
+    date: Jan 17, 2019
     changes:
       - type: bug
         text: URL encode channel name(s)
   - version: v2.6.3
+    date: Jan 8, 2019
     changes:
       - type: enhancement
         text: Update samples to changes in pubnub_cancel() and other interface changes
@@ -31,42 +43,51 @@ changelog:
       - type: bug
         text: C++ wrapper and Qt did not have proper multithreading support as they didn't protect _their_ data. Now that's fixed.
   - version: v2.6.2
+    date: Dec 20, 2018
     changes:
       - type: bug
         text: Fix memory leak regarding OpenSSL
   - version: v2.6.1
+    date: Dec 2, 2018
     changes:
       - type: enhancement
         text: Publish can now be GZIPed (if done via POST)
       - type: bug
         text: Publish via POST encrypted could publish garbage and fail
   - version: v2.6.0
+    date: Nov 20, 2018
     changes:
       - type: enhancement
         text: Publish can now be done via POST
       - type: bug
         text: Several smaller DNS en/de/coding issues fixed
   - version: v2.5.8
+    date: Nov 8, 2018
     changes:
       - type: enhancement
         text: pubnub_await() in the sync interface now reports PNR_TIMEOUT on, well, (transaction) timeout
   - version: v2.5.7
+    date: Nov 4, 2018
     changes:
       - type: bug
         text: DNS en/de/coding could fail on some toolchains because of alignment issues.
   - version: v2.5.6
+    date: Nov 2, 2018
     changes:
       - type: bug
         text: TLS connection timeout was prone to errors due to time syncronisation and such.
   - version: v2.5.5
+    date: Nov 1, 2018
     changes:
       - type: bug
         text: Fix wrong detection of PNR_TIMEOUT, by reset of TLS connect timer when connection is established.
   - version: v2.5.4
+    date: Oct 18, 2018
     changes:
       - type: bug
         text: Fix DNS decoding
   - version: v2.5.3
+    date: Oct 16, 2018
     changes:
       - type: feature
         text: Add support for pubnub_subscribe_v2() w/filter expressions
@@ -77,6 +98,7 @@ changelog:
       - type: feature
         text: Functional tests for C++ updated and now run on each commit
   - version: v2.5.2
+    date: Sep 10, 2018
     changes:
       - type: bug
         text: Improved handling of lost connection while in HTTP Keep-Alive
@@ -85,10 +107,12 @@ changelog:
       - type: feature
         text: pubnub_cancel() will now call pbnc_fsm() in the sync interface. Combined with previous, this makes it possible to call pubnub_free() in sync interface and have it succeed even if transaction is ongoing.
   - version: v2.5.1
+    date: Aug 30, 2018
     changes:
       - type: feature
         text: Removed (unused) option to ignore TLS/SSL errors
   - version: v2.5.0
+    date: Aug 28, 2018
     changes:
       - type: feature
         text: Support HTTPS CONNECT proxy
@@ -103,6 +127,7 @@ changelog:
       - type: bug
         text: MacOS build fixed
   - version: v2.4.3
+    date: Jul 25, 2018
     changes:
       - type: feature
         text: Support OpenSSL 1.1.x with callback interface
@@ -111,16 +136,19 @@ changelog:
       - type: feature
         text: Enable receiving GZIP-ed reply
   - version: v2.4.2
+    date: Jul 12, 2018
     changes:
       - type: feature
         text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
   - version: v2.4.1
     changes:
+    date: Jul 6, 2018
       - type: feature
         text: Enable reading system DNS on Windows
       - type: bug
         text: Small fixes in system DNS reading/parsing
   - version: v2.4.0
+    date: Jun 14, 2018
     changes:
       - type: feature
         text: Callback interface uses (our own) async DNS
@@ -137,6 +165,7 @@ changelog:
       - type: bug
         text: Bad handling of error (connection lost) when starting a new transaction on a HTTP kept-alive connection
   - version: v2.3.3
+    date: Apr 11, 2018
     changes:
       - type: feature
         text: On Linux, use MSG_NOSIGNAL to avoid SIGPIPE on send()
@@ -149,24 +178,29 @@ changelog:
       - type: feature
         text: Send up-to-date version info in User-Agent HTTP header
   - version: v2.3.2
+    date: Mar 10, 2018
     changes:
       - type: bug
         text: Unify default blocking I/O setting to block in sync and non-block in callback interface
   - version: v2.3.1
+    date: Mar 8, 2018
     changes:
       - type: bug
         text: Read from OpenSSL in a loop, to handle more than one record received at a time
       - type: bug
         text: Fix minor race condition on timer expiry
   - version: v2.3.0
+    date: Mar 5, 2018
     changes:
       - type: feature
         text: Use HTTP Keep-alive, where possible
   - version: v2.2.14
+    date: Feb 6, 2018
     changes:
       - type: bug
         text: Fix removing the first context from the timer list
   - version: v2.2.13
+    date: Feb 6, 2018
     changes:
       - type: feature
         text: Support OpenSSL 1.1.0+ (BIO_(s|g)et_conn_ip -> BIO_(s|g)et_conn_address)
@@ -175,50 +209,61 @@ changelog:
       - type: bug
         text: Fix receiving data longer than http_buff at a time
   - version: v2.2.12
+    date: Dec 30, 2017
     changes:
       - type: bug
         text: Cleanups, fix build issue and warnings on Windows
   - version: v2.2.11
+    date: Oct 30, 2017
     changes:
       - type: bug
         text: Fix resource leaks in C++ pubnub::futres on Windows
   - version: v2.2.10
+    date: Oct 5, 2017
     changes:
       - type: bug
         text: Fix build issues on Mac
   - version: v2.2.9
+    date: Oct 1, 2017
     changes:
       - type: bug
         text: Fix high CPU utilization when network out on Mac
   - version: v2.2.8
+    date: Sep 25, 2017
     changes:
       - type: bug
         text: Fix off-by-one error
   - version: v2.2.7
+    date: Sep 14, 2017
     changes:
       - type: bug
         text: Fix handling of recv() errrno on MacOS
   - version: v2.2.6
+    date: Sep 10, 2017
     changes:
       - type: feature
         text: Support OpenSSL 1.1.0+ (removed BIO_set_conn_port_int)
       - type: bug
         text: Some logging code was not using proper types
   - version: v2.2.5
+    date: Sep 1, 2017
     changes:
       - type: bug
         text: Fix potential issue in interpreting UTF-8 char values
   - version: v2.2.4
+    date: Aug 30, 2017
     changes:
       - type: bug
         text: Fix off-by-one error
   - version: v2.2.3
+    date: Mar 9, 2017
     changes:
       - type: bug
         text: Fix handling of segmented messages
       - type: feature
         text: Improve exising and add new logging
   - version: v2.2.2
+    date: Oct 12, 2016
     changes:
       - type: feature
         text: Improve parsing of bad publish/subscribe key error
@@ -229,10 +274,12 @@ changelog:
       - type: bug
         text: Fixes and improvements of the console sample application
   - version: v2.2.1
+    date: Apr 2, 2016
     changes:
       - type: bug
         text: Fix C++ pubnub::futres destructor hanging up
   - version: v2.2.0
+    date: Feb 22, 2016
     changes:
       - type: feature
         text: First "core feature complete" release

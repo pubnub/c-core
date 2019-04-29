@@ -169,6 +169,7 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
                                                       dont_parse,
                                                       dont_parse,
                                                       dont_parse,
+                                                      dont_parse,
                                                       dont_parse
 #else
     pbcc_parse_presence_response, /* PBTT_LEAVE */
@@ -343,6 +344,17 @@ static char const* pbnc_state2str(enum pubnub_state e)
     }
 }
 
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+static void multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses)
+{
+    spare_addresses->n_ipv4 = 0;
+    spare_addresses->ipv4_index = 0;
+#if PUBNUB_USE_IPV6
+    spare_addresses->n_ipv6 = 0;
+    spare_addresses->ipv6_index = 0;
+#endif
+}
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 
 int pbnc_fsm(struct pubnub_* pb)
 {
@@ -357,6 +369,12 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
+#if PUBNUB_CHANGE_DNS_SERVERS
+        pb->dns_check.dns_server_check = 0;
+#endif
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
 #if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = false;
 #endif
@@ -406,6 +424,12 @@ next_state:
             break;
         default:
             pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
+#if PUBNUB_ADNS_RETRY_AFTER_CLOSE
+            if (pb->flags.retry_after_close) {
+                close_connection(pb);
+                goto next_state;
+            }
+#endif
             pbntf_trans_outcome(pb, PBS_IDLE);
             return 0;
         }
@@ -414,6 +438,12 @@ next_state:
         }
         else if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
+#if PUBNUB_ADNS_RETRY_AFTER_CLOSE
+            if (pb->flags.retry_after_close) {
+                close_connection(pb);
+                goto next_state;
+            }
+#endif
             pbntf_trans_outcome(pb, PBS_IDLE);
         }
         break;
@@ -579,8 +609,14 @@ next_state:
         }
         break;
     }
-#endif
+#endif /* PUBNUB_USE_SSL */
     case PBS_TX_GET:
+#if PUBNUB_CHANGE_DNS_SERVERS
+        pb->dns_check.dns_server_check = 0;
+#endif
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
         i = pbpal_send_status(pb);
         if (i <= 0) {
 #if PUBNUB_PROXY_API
@@ -1159,6 +1195,11 @@ next_state:
                          pbnc_state2str(pb->state));
         break;
     }
+#if PUBNUB_ADNS_RETRY_AFTER_CLOSE
+    if (PBS_RETRY == pb->state) {
+        goto next_state;
+    }
+#endif
     return 0;
 }
 
@@ -1176,8 +1217,8 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) got called in NULL state\n", pbp);
         break;
     case PBS_IDLE:
-        pbp->trans = PBTT_NONE;
         pbntf_trans_outcome(pbp, PBS_IDLE);
+        pbp->trans = PBTT_NONE;
         break;
     case PBS_KEEP_ALIVE_IDLE:
         pbp->trans = PBTT_NONE;

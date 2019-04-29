@@ -45,6 +45,8 @@ int socket_platform_init(void);
 
 #if !defined(_WIN32)
 
+typedef int pb_socket_t;
+
 #define SOCKET_INVALID -1
 #define SOCKET_ERROR -1
 

@@ -1,13 +1,15 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_proxy.h"
-
-#include "pubnub_assert.h"
-#include "core/pubnub_log.h"
 #include "pubnub_internal.h"
+
+#include "pubnub_proxy.h"
+#include "pubnub_assert.h"
+#include "pubnub_log.h"
+#if defined(PUBNUB_CALLBACK_API)
 #include "lib/pubnub_parse_ipv4_addr.h"
 #if PUBNUB_USE_IPV6
 #include "lib/pubnub_parse_ipv6_addr.h"
 #endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
 
 #include <string.h>
 
@@ -40,6 +42,7 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
     }
     p->proxy_type = protocol;
     p->proxy_port = port;
+#if defined(PUBNUB_CALLBACK_API)
     /* If we haven't got numerical address for proxy we'll have to do DNS resolution(from proxy
        host name) later on, but in order to do that we have to have all proxy addresses(on the
        given context) set to zeros.
@@ -52,6 +55,7 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
         }
 #endif
     }
+#endif /* defined(PUBNUB_CALLBACK_API) */
     memcpy(p->proxy_hostname, ip_address_or_url, ip_or_url_len + 1);
 
     return 0;
@@ -62,10 +66,12 @@ void pubnub_set_proxy_none(pubnub_t* p)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
+#if defined(PUBNUB_CALLBACK_API)
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_type = pbproxyNONE;
     p->proxy_port = 0;
     p->proxy_hostname[0] = '\0';

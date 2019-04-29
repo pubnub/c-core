@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_pubsubapi.h"
+#include "pubnub_internal.h"
 
+#include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
 
@@ -61,10 +61,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
+#if defined(PUBNUB_CALLBACK_API)
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_tunnel_established = false;
     p->proxy_port               = 80;
     p->proxy_auth_scheme        = pbhtauNone;

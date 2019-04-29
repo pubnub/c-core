@@ -74,6 +74,12 @@
 
 #define PUBNUB_HAVE_SHA1 0
 
+#if !defined(PUBNUB_PROXY_API)
+/** If true (!=0), enable support for (HTTP/S) proxy */
+#define PUBNUB_PROXY_API 1
+#endif
+
+#if defined(PUBNUB_CALLBACK_API)
 /** The size of the stack (in kilobytes) for the "polling" thread, when using
     the callback interface. We don't need much, so, if you want to conserve
     memory, you can try small values. It's hard to say what is the minumum,
@@ -84,33 +90,39 @@
     */
 #define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
 
-
 #if !defined(PUBNUB_USE_IPV6)
 /** If true (!=0), enable support for Ipv6 network addresses */
 #define PUBNUB_USE_IPV6 1
 #endif
 
-#if !defined(PUBNUB_PROXY_API)
-/** If true (!=0), enable support for (HTTP/S) proxy */
-#define PUBNUB_PROXY_API 1
-#endif
+/** If true (!=0), enable support for trying different addresses
+    from dns response when connecting to the server.
+ */
+#define PUBNUB_USE_MULTIPLE_ADDRESSES 1
 
-#if !defined(PUBNUB_SET_DNS_SERVERS)
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+#define PUBNUB_MAX_IPV4_ADDRESSES 1
+#if PUBNUB_USE_IPV6
+#define PUBNUB_MAX_IPV6_ADDRESSES 1
+#endif
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+
 /** If true (!=0), enable support for setting DNS servers */
 #define PUBNUB_SET_DNS_SERVERS 1
+
+#if PUBNUB_SET_DNS_SERVERS
+/** If true (!=0), enable support for switching between DNS servers */
+#define PUBNUB_CHANGE_DNS_SERVERS 1
 #endif
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+#endif /* defined(PUBNUB_CALLBACK_API) */
 
-#if !defined(PUBNUB_RECEIVE_GZIP_RESPONSE)
 /** If true (!=0), enables support for compressed content data*/
 #define PUBNUB_RECEIVE_GZIP_RESPONSE 1
-#endif
 
-#if !defined(PUBNUB_USE_GZIP_COMPRESSION)
 /** If true (!=0), enables support for compressed content data*/
 #define PUBNUB_USE_GZIP_COMPRESSION 1
-#endif
 
 #if PUBNUB_USE_GZIP_COMPRESSION
 /* Maximum compressed message length allowed. Could be shortened by the user */
@@ -133,7 +145,7 @@
 #define PUBNUB_CRYPTO_API 0
 
 
-#if !defined(PUBNUB_ONLY_PUBSUB)
+#if !defined(PUBNUB_ONLY_PUBSUB_API)
 /** If true (!=0), will enable only publish and subscribe. All
     other transactions will fail.
 
@@ -154,17 +166,13 @@
 #endif
 
 
-#if !defined(PUBNUB_USE_SUBSCRIBE_V2)
 /** If true (!=0) will enable using the subscribe v2 API, which
     provides filter expressions and more data about messages. */
 #define PUBNUB_USE_SUBSCRIBE_V2 1
-#endif
 
-#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
 /** If true (!=0) will enable using the advanced history API, which
     provides more data about (unread) messages. */
 #define PUBNUB_USE_ADVANCED_HISTORY 1
-#endif
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */
