@@ -23,6 +23,8 @@ extern "C" {
 #if PUBNUB_CRYPTO_API
 #include "core/pubnub_crypto.h"
 #endif
+#include "core/pubnub_advanced_history.h"
+#define MAX_ERROR_MESSAGE_LENGTH 100
 #if PUBNUB_USE_EXTERN_C
 }
 #endif
@@ -32,6 +34,7 @@ extern "C" {
 #include <string>
 #include <cstring>
 #include <vector>
+#include <map>
 #include <stdexcept>
 
 #if __cplusplus >= 201103L
@@ -625,8 +628,10 @@ public:
                    unsigned           count         = 100,
                    bool               include_token = false)
     {
-        char const* ch = channel.empty() ? 0 : channel.c_str();
-        return doit(pubnub_history(d_pb, ch, count, include_token));
+        return doit(pubnub_history(d_pb,
+                                   channel.empty() ? 0 : channel.c_str(),
+                                   count,
+                                   include_token));
     }
 
     /// Starts a "history" with extended (full) options
@@ -637,6 +642,96 @@ public:
         return doit(pubnub_history_ex(d_pb, ch, opt.data()));
     }
 
+    /// In case the server reported en error in the response,
+    /// we'll read the error message using this function
+    /// @retval error_message on successfully read error message,
+    /// @retval empty_string otherwise
+    std::string get_error_message()
+    {
+        pubnub_chamebl_t msg;
+        if (pubnub_get_error_message(d_pb, &msg) != 0) {
+            return std::string("");
+        }
+        return std::string(msg.ptr, msg.size);
+    }
+
+    /// Starts 'advanced history' pubnub_message_counts operation
+    /// for unread messages on @p channel(channel list) starting from
+    /// the given @p timetoken
+    futres message_counts(std::string const& channel, std::string const& timetoken)
+    {
+        return doit(pubnub_message_counts(d_pb,
+                                          channel.empty() ? 0 : channel.c_str(),
+                                          timetoken.empty() ? 0 : timetoken.c_str()));
+    }
+    
+    /// Starts 'advanced history' pubnub_message_counts operation
+    /// for unread messages on @p channel(channel list) starting from
+    /// the given @p timetoken
+    futres message_counts(std::vector<std::string> const& channel,
+                          std::string const& timetoken)
+    {
+        return message_counts(join(channel), timetoken);
+    }
+    
+    /// Starts 'advanced history' pubnub_message_counts operation
+    /// for unread messages on @p channel(channel list) starting from
+    /// the given @p channel_timetokens(per channel)
+    futres message_counts(std::string const& channel,
+                          std::vector<std::string> const& channel_timetokens)
+    {
+        return message_counts(channel, join(channel_timetokens));
+    }
+    
+    /// Starts 'advanced history' pubnub_message_counts operation
+    /// for unread messages on @p channel(channel list) starting from
+    /// the given @p channel_timetokens(per channel)
+    futres message_counts(std::vector<std::string> const& channel,
+                          std::vector<std::string> const& channel_timetokens)
+    {
+        return message_counts(join(channel), channel_timetokens);
+    }
+    
+    /// Starts 'advanced history' pubnub_message_counts operation
+    /// for unread messages on @p channel_timetokens(channel, ch_timetoken pairs)
+    futres message_counts(
+        std::vector<std::pair<std::string, std::string> > const& channel_timetokens)
+    {
+        std::string ch_list("");
+        std::string tt_list("");
+        unsigned    n = channel_timetokens.empty() ? 0 : channel_timetokens.size(); 
+        unsigned    i;
+        for (i = 0; i < n; i++) {
+            std::string separator = ((i+1) < n) ? "," : "";
+            ch_list += channel_timetokens[i].first + separator;
+            tt_list += channel_timetokens[i].second + separator;
+        }
+        return message_counts(ch_list, tt_list);
+    }
+
+    /// Extracts channel-message_count paired map from the response on
+    /// 'advanced history' pubnub_message_counts operation
+    std::map<std::string, size_t> get_channel_message_counts()
+    {
+        std::map<std::string, size_t> map;
+        std::vector<pubnub_chan_msg_count> chan_msg_counters;
+        int i;
+        int count = pubnub_get_chan_msg_counts_size(d_pb);
+        if (count <= 0) {
+            return map;
+        }
+        chan_msg_counters = std::vector<pubnub_chan_msg_count>(count);
+        if (pubnub_get_chan_msg_counts(d_pb, (size_t*)&count, &chan_msg_counters[0]) != 0) {
+            return map;
+        }
+        for (i = 0; i < count; i++) {
+            map.insert(std::make_pair(std::string(chan_msg_counters[i].channel.ptr,
+                                                  chan_msg_counters[i].channel.size),
+                                      chan_msg_counters[i].message_count));
+        }
+        return map;
+    }
+    
     /// Starts a transaction to inform Pubnub we're working
     /// on a @p channel and/or @p channel_group
     /// @see pubnub_heartbeat

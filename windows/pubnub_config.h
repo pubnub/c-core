@@ -85,6 +85,11 @@
 #define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
 
 
+#if !defined(PUBNUB_USE_IPV6)
+/** If true (!=0), enable support for Ipv6 network addresses */
+#define PUBNUB_USE_IPV6 1
+#endif
+
 #if !defined(PUBNUB_PROXY_API)
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
@@ -111,6 +116,9 @@
 /* Maximum compressed message length allowed. Could be shortened by the user */
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
+
+/** The maximum channel name length */
+#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
 
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
@@ -151,5 +159,12 @@
     provides filter expressions and more data about messages. */
 #define PUBNUB_USE_SUBSCRIBE_V2 1
 #endif
+
+#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about (unread) messages. */
+#define PUBNUB_USE_ADVANCED_HISTORY 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

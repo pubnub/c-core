@@ -314,7 +314,7 @@ int pbpal_close(pubnub_t* pb)
         pb->sock_state = STATE_NONE;
     }
 
-    PUBNUB_LOG_TRACE("pbpal_close() returning 0\n");
+    PUBNUB_LOG_TRACE("pbpal_close(pb=%p) returning 0\n", pb);
 
     return 0;
 }

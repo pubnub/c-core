@@ -1,6 +1,10 @@
-SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c pubnub_version_posix.c pubnub_generate_uuid_posix.c pbpal_posix_blocking_io.c ../core/pubnub_generate_uuid_v3_md5.c  ../core/pubnub_free_with_timeout_std.c  ../core/pubnub_subscribe_v2.c msstopwatch_monotonic_clock.c
+SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../lib/md5/md5.c ../lib/base64/pbbase64.c ../core/pubnub_helper.c pubnub_version_posix.c pubnub_generate_uuid_posix.c pbpal_posix_blocking_io.c ../core/pubnub_generate_uuid_v3_md5.c  ../core/pubnub_free_with_timeout_std.c  ../core/pubnub_subscribe_v2.c msstopwatch_monotonic_clock.c ../core/pubnub_url_encode.c
 
-OBJFILES = pubnub_pubsubapi.o pubnub_coreapi.o pubnub_coreapi_ex.o pubnub_ccore_pubsub.o pubnub_ccore.o pubnub_netcore.o  pbpal_sockets.o pbpal_resolv_and_connect_sockets.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o posix_socket_blocking_io.o pubnub_timers.o pubnub_json_parse.o  md5.o pbbase64.o pubnub_helper.o  pubnub_version_posix.o  pubnub_generate_uuid_posix.o pbpal_posix_blocking_io.o pubnub_generate_uuid_v3_md5.o  pubnub_free_with_timeout_std.o pubnub_subscribe_v2.o msstopwatch_monotonic_clock.o
+OBJFILES = pubnub_pubsubapi.o pubnub_coreapi.o pubnub_coreapi_ex.o pubnub_ccore_pubsub.o pubnub_ccore.o pubnub_netcore.o  pbpal_sockets.o pbpal_resolv_and_connect_sockets.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o posix_socket_blocking_io.o pubnub_timers.o pubnub_json_parse.o  md5.o pbbase64.o pubnub_helper.o  pubnub_version_posix.o  pubnub_generate_uuid_posix.o pbpal_posix_blocking_io.o pubnub_generate_uuid_v3_md5.o  pubnub_free_with_timeout_std.o pubnub_subscribe_v2.o msstopwatch_monotonic_clock.o pubnub_url_encode.o
+
+ifndef USE_IPV6
+USE_IPV6 = 1
+endif
 
 ifndef USE_PROXY
 USE_PROXY = 1
@@ -18,6 +22,10 @@ ifndef RECEIVE_GZIP_RESPONSE
 RECEIVE_GZIP_RESPONSE = 1
 endif
 
+ifndef USE_ADVANCED_HISTORY
+USE_ADVANCED_HISTORY = 1
+endif
+
 
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
@@ -29,6 +37,11 @@ SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c
 OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
 endif
 
+ifeq ($(USE_IPV6), 1)
+SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
+OBJFILES += pubnub_parse_ipv6_addr.o
+endif
+
 ifeq ($(USE_GZIP_COMPRESSION), 1)
 SOURCEFILES += ../lib/miniz/miniz_tdef.c ../lib/miniz/miniz.c ../lib/pbcrc32.c ../core/pbgzip_compress.c
 OBJFILES += miniz_tdef.o miniz.o pbcrc32.o pbgzip_compress.o
@@ -37,6 +50,11 @@ endif
 ifeq ($(RECEIVE_GZIP_RESPONSE), 1)
 SOURCEFILES += ../lib/miniz/miniz_tinfl.c ../core/pbgzip_decompress.c
 OBJFILES += miniz_tinfl.o pbgzip_decompress.o
+endif
+
+ifeq ($(USE_ADVANCED_HISTORY), 1)
+SOURCEFILES += ../core/pbcc_advanced_history.c ../core/pubnub_advanced_history.c
+OBJFILES += pbcc_advanced_history.o pubnub_advanced_history.o
 endif
 
 OS := $(shell uname)
@@ -50,13 +68,13 @@ OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_PROXY_API=$(USE_PROXY)
+CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_IPV6=$(USE_IPV6)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize-address Use AddressSanitizer
 
 INCLUDES=-I .. -I .
 
-all: pubnub_sync_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
+all: pubnub_sync_sample metadata cancel_subscribe_sync_sample pubnub_advanced_history_sample pubnub_sync_subloop_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
@@ -86,6 +104,9 @@ pubnub_sync_publish_retry: ../core/samples/pubnub_sync_publish_retry.c pubnub_sy
 
 pubnub_publish_via_post_sample: ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a $(LDLIBS)
+
+pubnub_advanced_history_sample: ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a $(LDLIBS)
 
 cancel_subscribe_sync_sample: ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/cancel_subscribe_sync_sample.c pubnub_sync.a $(LDLIBS)
@@ -121,4 +142,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 
 
 clean:
-	rm pubnub_sync_sample pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
+	rm pubnub_advanced_history_sample pubnub_sync_sample pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM

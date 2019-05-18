@@ -33,6 +33,12 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
     return 0;
 }
 
+
+void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
+{
+}
+
+
 void pbpal_free(pubnub_t *pb)
 {
 }

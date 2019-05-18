@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 
+typedef struct pubnub_char_mem_block pubnub_chamebl_t;
 
 /** @file pubnub_coreapi.h 
 
@@ -409,5 +410,13 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group
  */
 bool pubnub_can_start_transaction(pubnub_t* pb);
 
+/** Extracts 'error_message' attribute value from the transaction response on the
+    context @p pb into @p o_msg.
+    Can be called for any response, if it is regular json object, in case
+    server reported an error 
+    @retval 0 error message successfully picked up
+    @retval -1 on error(not found, or transaction still in progress on the context)
+ */
+int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
 #endif /* defined INC_PUBNUB_COREAPI */

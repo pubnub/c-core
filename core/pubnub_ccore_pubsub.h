@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 /** @file pubnub_ccore_pubsub.h
@@ -115,6 +116,24 @@ struct pbcc_context {
         const char      param_[] = name;                                       \
         enum pubnub_res rslt_    = pbcc_append_url_param(                      \
             (pbc), param_, sizeof param_ - 1, (var), (separator));             \
+        if (rslt_ != PNR_OK) {                                                 \
+            return rslt_;                                                      \
+        }                                                                      \
+    }
+
+#define APPEND_URL_LITERAL_M(pbc, string_literal)                              \
+    {                                                                          \
+        PUBNUB_ASSERT_OPT((string_literal) != NULL);                           \
+        if ((pbc)->http_buf_len + sizeof(string_literal) > sizeof (pbc)->http_buf) {\
+            return PNR_TX_BUFF_TOO_SMALL;                                      \
+        }                                                                      \
+        strcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal));       \
+        (pbc)->http_buf_len += sizeof(string_literal) - 1;                     \
+    }
+       
+#define APPEND_URL_ENCODED_M(pbc, what)                                        \
+    if ((what) != NULL) {                                                      \
+        enum pubnub_res rslt_ = pbcc_url_encode((pbc), (what));                \
         if (rslt_ != PNR_OK) {                                                 \
             return rslt_;                                                      \
         }                                                                      \
@@ -270,6 +289,8 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
                                       size_t               param_name_len,
                                       char const*          param_val,
                                       char                 separator);
+
+enum pubnub_res pbcc_url_encode(struct pbcc_context* pb, char const* what);
 
 enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
                                               char const*          param_name,

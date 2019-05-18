@@ -10,6 +10,8 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QMutexLocker>
+#include <QMap>
+#include <QPair>
 
 extern "C" {
 #include "core/pubnub_api_types.h"
@@ -396,7 +398,78 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res history(QString const &channel, unsigned count, bool include_token, QString const& start, bool reverse, QString const& end, bool string_token);
+    pubnub_res history(QString const &channel,
+                       unsigned count,
+                       bool include_token,
+                       QString const& start,
+                       bool reverse,
+                       QString const& end,
+                       bool string_token);
+    
+    /* In case the server reported en error in the response,
+       we'll read the error message using this function
+       @retval error_message on successfully read error message,
+       @retval empty_string otherwise
+     */
+    QString get_error_message();
+
+    /* Get counts of received(unread) messages for each channel from
+       @p channel list starting(in time) with @p timetoken(Meanning
+       'initiates 'advanced history' message_counts operation/transaction')
+       
+       If successful message will be available through get_channel_message_counts()
+       in the map of channel_name-message_counts
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res message_counts(QString const& channel, QString const& timetoken);
+
+    /* Get counts of received(unread) messages for each channel from
+       @p channel list starting(in time) with @p timetoken(Meanning
+       'initiates 'advanced history' message_counts operation/transaction')
+       
+       If successful message will be available through get_channel_message_counts()
+       in the map of channel_name-message_counts
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res message_counts(QStringList const& channel, QString const& timetoken);
+
+    /* Get counts of received(unread) messages for each channel from
+       @p channel list starting(in time) with @p channel_timetoken(per channel) list.
+       (Meanning 'initiates 'advanced history' message_counts operation/transaction')
+       
+       If successful message will be available through get_channel_message_counts()
+       in the map of channel_name-message_counts
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res message_counts(QString const& channel,
+                              QStringList const& channel_timetoken);
+
+    /* Get counts of received(unread) messages for each channel from
+       @p channel list starting(in time) with @p channel_timetoken(per channel) list.
+       (Meanning 'initiates 'advanced history' message_counts operation/transaction')
+       
+       If successful message will be available through get_channel_message_counts()
+       in the map of channel_name-message_counts
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res message_counts(QStringList const& channel,
+                              QStringList const& channel_timetoken);
+
+    /* Starts 'advanced history' pubnub_message_counts transaction
+       for unread messages on @p channel_timetokens(channel, ch_timetoken pairs)
+       
+       If successful message will be available through get_channel_message_counts()
+       in the map of channel_name-message_counts
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res message_counts(QVector<QPair<QString, QString>> const& channel_timetokens);
+    
+    /* Extracts channel-message_count paired map from the response on
+       'advanced history' pubnub_message_counts transaction.
+       If there is no key "channels" in the response, or the corresponding
+       json value is empty returns an empty map.
+     */
+    QMap<QString, size_t> get_channel_message_counts();
 
     /** Get the currently present users on a @p channel and/or @p
         channel_group. This actually means "initiate a here_now

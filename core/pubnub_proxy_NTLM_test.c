@@ -718,6 +718,14 @@ static void BeforeEach(void)
 
 static void AfterEach(void)
 {
+    if (pbp->state != PBS_IDLE) {
+        expect("pbpal_close", pbp, "", 0);
+        expect("pbpal_closed", pbp, "", (int)true);
+        expect("pbpal_forget", pbp, "", 0);
+    }
+    expect("pbntf_trans_outcome", pbp, "", 0);
+    expect("pbpal_free", pbp, "", 0);
+    attest(pubnub_free(pbp) == 0);
     check_residual_mocks();
     free_m_msgs(m_msg_array);
 }
@@ -895,7 +903,6 @@ static void proxy_establishes_GET_NTLM_connection(void)
     attest(pubnub_get(pbp) == NULL);
     attest(pubnub_get_channel(pbp) == NULL);
     attest(pubnub_last_http_code(pbp) == 200);
-    attest(pubnub_free(pbp) == -1);
 
     AfterEach();
 }
@@ -1015,7 +1022,6 @@ static void proxy_establishes_CONNECT_NTLM_connection(void)
     attest(pubnub_get(pbp) == NULL);
     attest(pubnub_get_channel(pbp) == NULL);
     attest(pubnub_last_http_code(pbp) == 200);
-    attest(pubnub_free(pbp) == -1);
 
     AfterEach();
 }
@@ -1136,7 +1142,6 @@ static void CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues(void)
     attest(pubnub_get(pbp) == NULL);
     attest(pubnub_get_channel(pbp) == NULL);
     attest(pubnub_last_http_code(pbp) == 200);
-    attest(pubnub_free(pbp) == -1);
 
     AfterEach();
 }
@@ -1263,7 +1268,6 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
     attest(pubnub_get(pbp) == NULL);
     attest(pubnub_get_channel(pbp) == NULL);
     attest(pubnub_last_http_code(pbp) == 200);
-    attest(pubnub_free(pbp) == -1);
 
     expect("pbntf_enqueue_for_processing", pbp, "", 0);
     expect("pbntf_got_socket", pbp, "", 0);
@@ -1367,7 +1371,6 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
     attest(pubnub_get(pbp) == NULL);
     attest(pubnub_get_channel(pbp) == NULL);
     attest(pubnub_last_http_code(pbp) == 200);
-    attest(pubnub_free(pbp) == -1);
 
     AfterEach();
 }

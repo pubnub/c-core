@@ -121,8 +121,8 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
     @param port The port number to use on the proxy - there is no standard,
     the HTTP port (80) is seldom used, while 3128 seems to be a popular one
 
-    @return 0: OK, otherwise: error, specified protocol not supported
-    or @p ip_address_or_url too long
+    @return 0: OK, otherwise: error, specified protocol not supported,
+    or @p ip_address_or_url too long(or invalid)
 */
 int pubnub_set_proxy_manual(pubnub_t*              p,
                             enum pubnub_proxy_type protocol,
@@ -147,6 +147,11 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
     @return 0: OK, otherwise: error, reading system configuration failed
 */
 int pubnub_set_proxy_from_system(pubnub_t* p, enum pubnub_proxy_type protocol);
+
+/** Sets all proxy parameters to 'zero' and proxy protocol to 'pbproxyNONE'
+    @param p The Context to 'clean' off proxy configuration for(Set to "no proxy").
+ */
+void pubnub_set_proxy_none(pubnub_t* p);
 
 /** Sets the authentication password and scheme to be used for Proxy
     authentication.

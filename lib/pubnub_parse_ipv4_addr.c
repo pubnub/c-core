@@ -1,3 +1,4 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "core/pubnub_assert.h"
 #include "core/pubnub_dns_servers.h"
 

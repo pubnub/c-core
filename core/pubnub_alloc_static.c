@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 
 #include "pbpal.h"
 
@@ -62,8 +63,12 @@ int pubnub_free(pubnub_t *pb)
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
+    PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
+
     pubnub_mutex_lock(pb->monitor);
+    pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
+        PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
         pb->state = PBS_NULL;
 #if defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pb);
@@ -75,6 +80,7 @@ int pubnub_free(pubnub_t *pb)
         result = 0;
     }
     else {
+        PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
         pubnub_mutex_unlock(pb->monitor);
     }
 

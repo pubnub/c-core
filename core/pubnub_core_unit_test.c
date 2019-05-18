@@ -2,14 +2,18 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
+#include "pubnub_internal.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
+#if PUBNUB_USE_ADVANCED_HISTORY
+#include "pubnub_memory_block.h"
+#include "pubnub_advanced_history.h"
+#endif
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_internal.h"
 #include "pubnub_version_internal.h"
 #include "pubnub_keep_alive.h"
 #include "test/pubnub_test_helper.h"
@@ -458,6 +462,11 @@ static char const* m_expect_assert_file;
 
 void assert_handler(char const* s, const char* file, long i)
 {
+    printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
+}
+
+void test_assert_handler(char const* s, const char* file, long i)
+{
     //    mock(s, i);
     printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
 
@@ -756,9 +765,15 @@ void free_m_msgs(char** msg_array)
 
 AfterEach(single_context_pubnub)
 {
+    if (pbp->state != PBS_IDLE) {
+        expect(pbpal_close, when(pb, equals(pbp)), returns(0));
+        expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
+        expect(pbpal_forget, when(pb, equals(pbp)));
+    }
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    expect(pbpal_free, when(pb, equals(pbp)));
+    attest(pubnub_free(pbp), equals(0));
     free_m_msgs(m_string_msg_array);
-    //    expect(pbpal_free, when(pb, equals(pbp)));
-    //    attest(pubnub_free(pbp), equals(0));
 }
 
 
@@ -848,7 +863,6 @@ Ensure(single_context_pubnub, leave_have_dns)
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_OK));
     attest(pubnub_last_publish_result(pbp), streqs(""));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* This tests the DNS resolution code. Since we know for sure it is
@@ -889,7 +903,6 @@ Ensure(single_context_pubnub, leave_wait_dns)
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -937,7 +950,6 @@ Ensure(single_context_pubnub, leave_wait_tcp)
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -974,7 +986,6 @@ Ensure(single_context_pubnub, leave_changroup)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, "k1", "tnt"), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     /* Only channel group set */
     /* We dont have to do DNS resolution again on the same context already in
@@ -989,7 +1000,6 @@ Ensure(single_context_pubnub, leave_changroup)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, NULL, "mala"), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     /* Neither channel nor channel group set */
     attest(pubnub_leave(pbp, NULL, NULL), equals(PNR_INVALID_CHANNEL));
@@ -1048,7 +1058,6 @@ Ensure(single_context_pubnub, leave_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, "k4", NULL), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1063,7 +1072,6 @@ Ensure(single_context_pubnub, leave_bad_response)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, "lamanche", NULL), equals(PNR_FORMAT_ERROR));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1104,7 +1112,6 @@ Ensure(single_context_pubnub, time)
     attest(pubnub_get(pbp), streqs("1643092"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), equals(NULL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1122,7 +1129,6 @@ Ensure(single_context_pubnub, time_bad_response)
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), equals(NULL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1162,7 +1168,6 @@ Ensure(single_context_pubnub, publish)
     attest(pubnub_publish(pbp, "jarak", "\"zec\""), equals(PNR_OK));
     attest(pubnub_last_publish_result(pbp), streqs("\"Sent\""));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, publish_change_origin)
@@ -1199,7 +1204,6 @@ Ensure(single_context_pubnub, publish_change_origin)
     attest(pubnub_last_publish_result(pbp), streqs("\"Sent\""));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_get_origin(pbp), streqs("new_origin_server"));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, publish_http_chunked)
@@ -1220,7 +1224,6 @@ Ensure(single_context_pubnub, publish_http_chunked)
     attest(pubnub_publish(pbp, "jarak", "\"zec\""), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_last_publish_result(pbp), streqs("\"Sent\""));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, http_headers_no_content_length_or_chunked)
@@ -1239,8 +1242,6 @@ Ensure(single_context_pubnub, http_headers_no_content_length_or_chunked)
     attest(pubnub_last_publish_result(pbp), streqs(""));
     attest(pubnub_publish(pbp, ",", "\"zec\""), equals(PNR_IO_ERROR));
     attest(pubnub_last_publish_result(pbp), streqs(""));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub, publish_failed_invalid_channel)
@@ -1259,7 +1260,6 @@ Ensure(single_context_pubnub, publish_failed_invalid_channel)
     attest(pubnub_last_publish_result(pbp), streqs(""));
     attest(pubnub_publish(pbp, ",", "\"zec\""), equals(PNR_PUBLISH_FAILED));
     attest(pubnub_last_publish_result(pbp), streqs("\"Invalid\""));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1277,8 +1277,6 @@ Ensure(single_context_pubnub, publish_msg_too_long)
     msg[sizeof msg - 1] = '\0';
     attest(pubnub_publish(pbp, "w", msg), equals(PNR_TX_BUFF_TOO_SMALL));
     attest(pubnub_last_publish_result(pbp), streqs(""));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 
@@ -1350,7 +1348,6 @@ Ensure(single_context_pubnub, publish_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_publish(pbp, "k4", "443"), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, publish_bad_response)
@@ -1368,7 +1365,6 @@ Ensure(single_context_pubnub, publish_bad_response)
     attest(pubnub_last_publish_result(pbp), streqs(""));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), equals(NULL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1387,7 +1383,6 @@ Ensure(single_context_pubnub, publish_failed_server_side)
     attest(pubnub_last_publish_result(pbp), streqs("\"1\":\"X\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), equals(NULL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* -- HISTORY operation -- */
@@ -1415,7 +1410,6 @@ Ensure(single_context_pubnub, history_without_timetoken)
     attest(pubnub_get(pbp), streqs("14370864554607266"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, history_with_timetoken)
@@ -1445,7 +1439,6 @@ Ensure(single_context_pubnub, history_with_timetoken)
     attest(pubnub_get(pbp), streqs("14370863958459501"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1482,7 +1475,6 @@ Ensure(single_context_pubnub, history_auth)
     attest(pubnub_history(pbp, "hhh", 40, false), equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1498,9 +1490,404 @@ Ensure(single_context_pubnub, history_bad_response)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_history(pbp, "ttt", 10, false), equals(PNR_FORMAT_ERROR));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
+/* -- ADVANCED HISTORY message_counts -- */
+
+#if PUBNUB_USE_ADVANCED_HISTORY
+Ensure(single_context_pubnub, gets_advanced_history_message_counts_for_two_channels_since_timetoken)
+{
+    size_t io_count = 2;
+    struct pubnub_chan_msg_count chan_msg_counters[2];
+    pubnub_chamebl_t channel_1 = {"some", sizeof "some" - 1};
+    pubnub_chamebl_t channel_2 = {"other", sizeof "other" - 1};
+    
+    pubnub_init(pbp, "pub-nina", "sub-pinta");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-pinta/message-counts/"
+                             "some,other?pnsdk=unit-test-0.1&timetoken=14378854953886727");
+    incoming("HTTP/1.1 200\r\nContent-Length: 85\r\n\r\n"
+             "{\"status\":200, \"error\": false, \"error_message\": \"\", \"channels\": {\"some\":1,\"other\":5}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp, "some,other", "14378854953886727"), equals(PNR_OK));
+
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(2));
+    attest(pubnub_get_chan_msg_counts(pbp, &io_count, chan_msg_counters), equals(0));
+    attest(io_count, equals(2));
+    attest(strncmp(chan_msg_counters[0].channel.ptr, channel_1.ptr, channel_1.size), equals(0));
+    attest(chan_msg_counters[0].channel.size, equals(channel_1.size));
+    attest(chan_msg_counters[0].message_count, equals(1));
+    attest(strncmp(chan_msg_counters[1].channel.ptr, channel_2.ptr, channel_2.size), equals(0));
+    attest(chan_msg_counters[1].channel.size, equals(channel_2.size));
+    attest(chan_msg_counters[1].message_count, equals(5));
+    
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, gets_message_counts_for_two_channels_since_channel_timetokens)
+{
+    size_t io_count = 2;
+    struct pubnub_chan_msg_count chan_msg_counters[2];
+    pubnub_chamebl_t channel_1 = {"ocean", sizeof "ocean" - 1};
+    pubnub_chamebl_t channel_2 = {"wind", sizeof "wind" - 1};
+    
+    pubnub_init(pbp, "pub-mission", "sub-santa-maria");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-santa-maria/message-counts/"
+                             "ocean,wind?pnsdk=unit-test-0.1&channelsTimetoken="
+                             "14378854953886727,14378856783886727");
+    incoming("HTTP/1.1 200\r\nContent-Length: 87\r\n\r\n"
+             "{\"status\":200, \"error\": false, \"error_message\": \"\", \"channels\": {\"wind\":18,\"ocean\":76}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "ocean,wind",
+                                 "14378854953886727,14378856783886727"),
+           equals(PNR_OK));
+
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(2));
+    attest(pubnub_get_chan_msg_counts(pbp, &io_count, chan_msg_counters), equals(0));
+    attest(io_count, equals(2));
+    attest(strncmp(chan_msg_counters[0].channel.ptr, channel_2.ptr, channel_2.size), equals(0));
+    attest(chan_msg_counters[0].channel.size, equals(channel_2.size));
+    attest(chan_msg_counters[0].message_count, equals(18));
+    attest(strncmp(chan_msg_counters[1].channel.ptr, channel_1.ptr, channel_1.size), equals(0));
+    attest(chan_msg_counters[1].channel.size, equals(channel_1.size));
+    attest(chan_msg_counters[1].message_count, equals(76));
+    /* Message is read */
+    attest(pubnub_get_chan_msg_counts(pbp, &io_count, chan_msg_counters), equals(0));
+    attest(io_count, equals(0));
+    
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub,
+       get_message_counts_gets_message_counts_for_three_channels_since_channel_timetokens)
+{
+    int o_count[3];
+    
+    pubnub_init(pbp, "pub-delta", "sub-echo");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-echo/message-counts/"
+                             "bravo,alfa,charlie?pnsdk=unit-test-0.1&channelsTimetoken="
+                             "15378854953886727,15378856783886727,15378856783886727");
+    incoming("HTTP/1.1 200\r\nContent-Length: 106\r\n\r\n"
+             "{\"status\":200, \"error\": false, \"error_message\": \"\", \"channels\": {\"charlie\":25,\"alfa\":196 ,  \"bravo\":3 }  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "bravo,alfa,charlie",
+                                 "15378854953886727,15378856783886727,15378856783886727"),
+           equals(PNR_OK));
+
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(sizeof o_count/sizeof o_count[0]));
+    attest(pubnub_get_message_counts(pbp, "alfa,charlie,bravo", o_count), equals(0));
+    attest(o_count[0], equals(196));
+    attest(o_count[1], equals(25));
+    attest(o_count[2], equals(3));
+    /* Message is already read in full */
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(0));
+    
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub,
+       handles_an_error_reported_from_server_on_message_counts_request)
+{
+    int o_count[3];
+    char msg[sizeof "there must be some kind of mistake"];
+    pubnub_chamebl_t o_msg = {msg,}; 
+    
+    pubnub_init(pbp, "pub-foxtrot", "sub-golf");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-golf/message-counts/"
+                             "hotel?pnsdk=unit-test-0.1&timetoken="
+                             "15578854953886727");
+    incoming("HTTP/1.1 404\r\nContent-Length: 105\r\n\r\n"
+             "{\"status\":404 , \"error\": true, \"error_message\"  : \"there must be some kind of mistake\", \"channels\": {}  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "hotel",
+                                 "15578854953886727"),
+           equals(PNR_ERROR_ON_SERVER));
+
+    attest(pubnub_get_error_message(pbp, &o_msg), equals(0));
+    attest(o_msg.size, equals(sizeof "there must be some kind of mistake" - 1));
+    attest(strncmp(o_msg.ptr, "there must be some kind of mistake", o_msg.size), equals(0));
+    /* Using the same test, but assuming that it was successful response on corresponding
+       pubnub_message_counts() request that got object 'channels', but without any values in it.
+       pubnub_get_message_counts() will set corresponding array members(message counters) to
+       negative values.
+     */
+    attest(pubnub_get_message_counts(pbp, "kilo,lima,mike", o_count), equals(0));
+    attest(o_count[0], is_less_than(0));
+    attest(o_count[1], is_less_than(0));
+    attest(o_count[2], is_less_than(0));
+    
+    attest(pubnub_last_http_code(pbp), equals(404));
+}
+
+Ensure(single_context_pubnub,
+       handles_wrong_format_in_the_response_on_message_counts_request)
+{
+    char msg[sizeof "some kind of mistake"];
+    pubnub_chamebl_t o_msg = {msg,}; 
+
+    pubnub_init(pbp, "pub-november", "sub-oscar");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-oscar/message-counts/"
+                             "papa,quebec?pnsdk=unit-test-0.1&channelsTimetoken="
+                             "15578854953886727,15516381360410684");
+    /* Starting 'curly' is missing */
+    incoming("HTTP/1.1 404\r\nContent-Length: 104\r\n\r\n"
+             "\"status\":404 , \"error\": true, \"error_message\"  : \"there must be some kind of mistake\", \"channels\": {}  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "papa,quebec",
+                                 "15578854953886727,15516381360410684"),
+           equals(PNR_FORMAT_ERROR));
+
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
+    expect_outgoing_with_url("/v3/history/sub-key/sub-oscar/message-counts/"
+                             "papa?pnsdk=unit-test-0.1&timetoken="
+                             "15578854953886727");
+    /* 'error_message' is missing */
+    incoming("HTTP/1.1 404\r\nContent-Length: 47\r\n\r\n"
+             "{\"status\":404 , \"error\": true, \"channels\": {} }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "papa",
+                                 "15578854953886727"),
+           equals(PNR_ERROR_ON_SERVER));
+    attest(pubnub_get_error_message(pbp, &o_msg), equals(-1));
+    
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
+    expect_outgoing_with_url("/v3/history/sub-key/sub-oscar/message-counts/"
+                             "papa?pnsdk=unit-test-0.1&timetoken="
+                             "15378854953886727");
+    /* 'error' is missing */
+    incoming("HTTP/1.1 404\r\nContent-Length: 90\r\n\r\n"
+             "{\"status\":404 , \"error_message\"  : \"there must be some kind of mistake\", \"channels\": {}  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "papa",
+                                 "15378854953886727"),
+           equals(PNR_FORMAT_ERROR));
+
+    attest(pubnub_last_http_code(pbp), equals(404));
+    
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
+    expect_outgoing_with_url("/v3/history/sub-key/sub-oscar/message-counts/"
+                             "papa?pnsdk=unit-test-0.1&timetoken="
+                             "15378854953886727");
+    /* 'channels' are missing */
+    incoming("HTTP/1.1 200\r\nContent-Length: 76\r\n\r\n"
+             "{\"status\":200 , \"error\": false, \"error_message\"  : \"some kind of mistake\"  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "papa",
+                                 "15378854953886727"),
+           equals(PNR_FORMAT_ERROR));
+    
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub,
+       handles_irregular_use_of_advanced_history_message_counts_functions)
+{
+    size_t io_count;
+    struct pubnub_chan_msg_count chan_msg_counters[1];
+    int o_count[3];
+    char msg[10];
+    pubnub_chamebl_t o_msg = {msg,}; 
+    
+    pubnub_init(pbp, "pub-india", "sub-juliett");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-juliett/message-counts/"
+                             "kilo,lima,mike?pnsdk=unit-test-0.1&channelsTimetoken="
+                             "15378856783886727,15378856783886727,15378854953886727");
+    incoming("HTTP/1.1 200\r\nContent-Length: 130\r\n\r\n"
+             "{\"status\":200, \"error\": false, \"error_message\"",
+             NULL);
+    /* incoming empty string simulates conditions for PNR_IN_PROGRESS */
+    incoming("", NULL);
+    attest(pubnub_message_counts(pbp,
+                                 "kilo,lima,mike",
+                                 "15378856783886727,15378856783886727,15378854953886727"),
+           equals(PNR_STARTED));
+    /* None of these functions should do anything since transaction is in progress */
+    attest(pubnub_get_error_message(pbp, &o_msg), equals(-1));
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(-1));
+    attest(pubnub_get_chan_msg_counts(pbp, &io_count, chan_msg_counters), equals(-1));
+    attest(pubnub_get_message_counts(pbp, "kilo,lima,mike", o_count), equals(-1));
+    attest(pubnub_message_counts(pbp,
+                                 "bravo,alfa,charlie",
+                                 "15378856783886727,15378856783886727,15378854953886727"),
+           equals(PNR_IN_PROGRESS));
+    
+    incoming("  : \"there is no mistake\", \"channels\": { \"mike\" :  52 , \"kilo\":75 ,  \"lima\" : 0 }  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    /* Transaction just finished. Have to read the response first before we start a new one */
+    attest(pubnub_message_counts(pbp,
+                                 "bravo,alfa,charlie",
+                                 "15578856783886727,15578856783886727,15578854953886727"),
+           equals(PNR_RX_BUFF_NOT_EMPTY));
+    
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(sizeof o_count/sizeof o_count[0]));
+    attest(pubnub_get_message_counts(pbp, "kilo,lima,mike ", o_count), equals(0));
+    attest(o_count[0], equals(75));
+    attest(o_count[1], equals(0));
+    attest(o_count[2], equals(52));
+    
+    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub,
+       get_chan_msg_counts_gets_message_counts_for_two_channels_but_the_answer_has_three)
+{
+    struct pubnub_chan_msg_count chan_msg_counters[2];
+    size_t io_count = sizeof chan_msg_counters/sizeof chan_msg_counters[0];
+    pubnub_chamebl_t channel_1 = {"tango", sizeof "tango" - 1};
+    pubnub_chamebl_t channel_2 = {"sierra", sizeof "sierra" - 1};
+    
+    pubnub_init(pbp, "pub-quebeq", "sub-romeo");
+
+    expect_have_dns_for_pubnub_origin();
+
+    expect_outgoing_with_url("/v3/history/sub-key/sub-romeo/message-counts/"
+                             "sierra,tango?pnsdk=unit-test-0.1&channelsTimetoken="
+                             "15378854953886727,15378856783886727");
+    incoming("HTTP/1.1 200\r\nContent-Length: 112\r\n\r\n"
+             "{\"status\":200, \"error\": false, \"error_message\": \"\", \"channels\": { \"tango\":38 ,  \"sierra\":17 , \"uniform\": 51 }  }",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_message_counts(pbp,
+                                 "sierra,tango",
+                                 "15378854953886727,15378856783886727"),
+           equals(PNR_OK));
+
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(3));
+    attest(pubnub_get_chan_msg_counts(pbp, &io_count, chan_msg_counters), equals(0));
+    attest(io_count, equals(sizeof chan_msg_counters/sizeof chan_msg_counters[0]));
+    attest(strncmp(chan_msg_counters[0].channel.ptr, channel_1.ptr, channel_1.size), equals(0));
+    attest(chan_msg_counters[0].channel.size, equals(channel_1.size));
+    attest(chan_msg_counters[0].message_count, equals(38));
+    attest(strncmp(chan_msg_counters[1].channel.ptr, channel_2.ptr, channel_2.size), equals(0));
+    attest(chan_msg_counters[1].channel.size, equals(channel_2.size));
+    attest(chan_msg_counters[1].message_count, equals(17));
+
+    /* Message is read */
+    attest(pubnub_get_chan_msg_counts_size(pbp), equals(0));
+    
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub,
+       advanced_history_message_counts_handles_invalid_timetokens)
+{
+    pubnub_init(pbp, "pub-delta", "sub-echo");
+
+    attest(pubnub_message_counts(pbp, "victor", "153"), equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "victor",
+                                 " 15378854953886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "victor,whiskey",
+                                 "15378854953886727 ,15378856783886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "victor,whiskey",
+                                 "15378854953886727,727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "victor,whiskey",
+                                 "727,15378854953886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "victor",
+                                 "15378854953886727,15378856783886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 "x-ray, yankee, zulu",
+                                 "15378854953886727,15378856783886727"),
+           equals(PNR_INVALID_PARAMETERS));
+}
+
+Ensure(single_context_pubnub,
+       advanced_history_message_counts_handles_invalid_channels)
+{
+    char channel_name_too_long[PUBNUB_MAX_CHANNEL_NAME_LENGTH + 4];
+    
+    pubnub_init(pbp, "pub-delta", "sub-echo");
+
+    memset(channel_name_too_long, 'a', sizeof channel_name_too_long - 1);
+    channel_name_too_long[sizeof channel_name_too_long - 1] = '\0';
+    attest(pubnub_message_counts(pbp,
+                                 channel_name_too_long,
+                                 "15378854953886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    /* comma just after the beginning of the channel list(one character in between) */
+    channel_name_too_long[1] = ',';
+    attest(pubnub_message_counts(pbp,
+                                 channel_name_too_long,
+                                 "15378854953886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 channel_name_too_long,
+                                 "15378854953886727,15378856783886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    /* comma just before the end of channel list string(one character in between) */
+    channel_name_too_long[1] = 'b';
+    channel_name_too_long[sizeof channel_name_too_long - 3] = ',';
+    attest(pubnub_message_counts(pbp,
+                                 channel_name_too_long,
+                                 "15378854953886727"),
+           equals(PNR_INVALID_PARAMETERS));
+    attest(pubnub_message_counts(pbp,
+                                 channel_name_too_long,
+                                 "15378854953886727,15378856783886727"),
+           equals(PNR_INVALID_PARAMETERS));
+}
+
+#endif /* -- ADVANCED HISTORY message_counts -- */
 
 /* -- SET_STATE operation -- */
 
@@ -1594,7 +1981,6 @@ Ensure(single_context_pubnub, set_state)
     pubnub_set_auth(pbp, NULL); // with or without this line
     attest(pubnub_set_state(pbp, NULL, NULL, "linda-darnell", "{I}"),
            equals(PNR_INVALID_CHANNEL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, set_state_in_progress)
@@ -1650,7 +2036,6 @@ Ensure(single_context_pubnub, set_state_in_progress_interrupted_and_accomplished
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1677,7 +2062,6 @@ Ensure(single_context_pubnub, set_state_set_auth_and_uuid)
            equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, set_state_bad_response)
@@ -1696,7 +2080,6 @@ Ensure(single_context_pubnub, set_state_bad_response)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_set_state(pbp, "ch", NULL, NULL, "{\"chili\":\"red\"}"),
            equals(PNR_FORMAT_ERROR));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1741,7 +2124,6 @@ Ensure(single_context_pubnub, state_get_1channel)
     attest(pubnub_get(pbp), streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\",\"payload\":{key:value}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, state_get_channelgroup)
@@ -1801,7 +2183,6 @@ Ensure(single_context_pubnub, state_get_channelgroup)
      */
     pubnub_set_auth(pbp, NULL); // with or without this line
     attest(pubnub_state_get(pbp, NULL, NULL, "leslie"), equals(PNR_INVALID_CHANNEL));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, state_get_in_progress_interrupted_and_accomplished)
@@ -1839,7 +2220,6 @@ Ensure(single_context_pubnub, state_get_in_progress_interrupted_and_accomplished
 
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, state_get_bad_response)
@@ -1854,7 +2234,6 @@ Ensure(single_context_pubnub, state_get_bad_response)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_state_get(pbp, "ch", NULL, NULL), equals(PNR_FORMAT_ERROR));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1878,7 +2257,6 @@ Ensure(single_context_pubnub, here_now_channel)
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[jack,johnnie,chivas],\"occupancy\":3}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, here_now_channel_with_auth)
@@ -1903,7 +2281,6 @@ Ensure(single_context_pubnub, here_now_channel_with_auth)
                   "\"uuids\":[daniel's,walker,regal,beam],\"occupancy\":4}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, here_now_channelgroups)
@@ -1937,7 +2314,6 @@ Ensure(single_context_pubnub, here_now_channelgroups)
                   "\"total_occupancy\":something}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -1975,7 +2351,6 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
                   "\"total_channels\":5,\"total_occupancy\":8}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /*
@@ -2023,7 +2398,6 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
                   "\"total_channels\":5,\"total_occupancy\":8}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -2067,7 +2441,6 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
                   "\"total_channels\":5,\"total_occupancy\":8}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* GLOBAL_HERE_NOW operation */
@@ -2107,7 +2480,6 @@ Ensure(single_context_pubnub, global_here_now)
                   "12}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, global_here_now_chunked)
@@ -2150,7 +2522,6 @@ Ensure(single_context_pubnub, global_here_now_chunked)
                   "12}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, global_here_now_in_progress_interrupted_and_acomplished)
@@ -2192,7 +2563,6 @@ Ensure(single_context_pubnub, global_here_now_in_progress_interrupted_and_acompl
                   "12}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* WHERE_NOW operation */
@@ -2215,7 +2585,6 @@ Ensure(single_context_pubnub, where_now)
     attest(pubnub_get(pbp), streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\",\"Payload\":{\"channels\":[tcm,retro,mgm]}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, where_now_set_uuid)
@@ -2241,7 +2610,6 @@ Ensure(single_context_pubnub, where_now_set_uuid)
                   "\"Payload\":{\"channels\":[discovery,nat_geo,nature]}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, where_now_set_auth)
@@ -2269,7 +2637,6 @@ Ensure(single_context_pubnub, where_now_set_auth)
                   "}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, where_now_in_progress_interrupted_and_accomplished)
@@ -2307,7 +2674,6 @@ Ensure(single_context_pubnub, where_now_in_progress_interrupted_and_accomplished
                   "fifth_channel,small_town,boot_hill]}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -2333,7 +2699,6 @@ Ensure(single_context_pubnub, heartbeat_channel)
         streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, heartbeat_channelgroups)
@@ -2357,7 +2722,6 @@ Ensure(single_context_pubnub, heartbeat_channelgroups)
         streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, heartbeat_channel_and_channelgroups)
@@ -2385,7 +2749,6 @@ Ensure(single_context_pubnub, heartbeat_channel_and_channelgroups)
         streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -2393,8 +2756,6 @@ Ensure(single_context_pubnub, heartbeat_no_channel_and_no_channelgroups)
 {
     pubnub_init(pbp, "publ-", "sub-");
     attest(pubnub_heartbeat(pbp, NULL, NULL), equals(PNR_INVALID_CHANNEL));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub,
@@ -2428,7 +2789,6 @@ Ensure(single_context_pubnub,
         streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -2453,7 +2813,6 @@ Ensure(single_context_pubnub, add_channel_to_group)
     attest(pubnub_get_channel(pbp), streqs("{\"service\":\"channel-registry\",\"status\":200,\"error\":false,\"message\":\"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, add_channel_to_group_interrupted_and_accomplished)
@@ -2487,7 +2846,6 @@ Ensure(single_context_pubnub, add_channel_to_group_interrupted_and_accomplished)
     attest(pubnub_get_channel(pbp), streqs("{\"service\":\"channel-registry\",\"status\":200,\"error\":false,\"message\":\"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* REMOVE_CHANNEL_FROM_GROUP operation */
@@ -2512,7 +2870,6 @@ Ensure(single_context_pubnub, remove_channel_from_group)
     attest(pubnub_get_channel(pbp), streqs("{\"service\":\"channel-registry\",\"status\":200,\"error\":false,\"message\":\"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, remove_channel_from_group_interrupted_and_accomplished)
@@ -2547,7 +2904,6 @@ Ensure(single_context_pubnub, remove_channel_from_group_interrupted_and_accompli
     attest(pubnub_get_channel(pbp), streqs("{\"service\":\"channel-registry\",\"status\":200,\"error\":false,\"message\":\"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* REMOVE_CHANNEL_GROUP operation */
@@ -2571,7 +2927,6 @@ Ensure(single_context_pubnub, remove_channel_group)
     attest(pubnub_get_channel(pbp), streqs("{\"service\": \"channel-registry\" , \"status\"  : 200 ,\"error\" :false,\"message\":  \"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, remove_channel_group_interrupted_and_accomplished)
@@ -2604,7 +2959,6 @@ Ensure(single_context_pubnub, remove_channel_group_interrupted_and_accomplished)
     attest(pubnub_get_channel(pbp), streqs("{ \"service\":\"channel-registry\" ,\"status\" : 200,\"error\" : false ,\"message\":\"OK\"}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* LIST_CHANNEL_GROUP operation */
@@ -2635,7 +2989,6 @@ Ensure(single_context_pubnub, list_channel_group)
                   "\"polution\",\"resources\",\"consumtion\",...}}}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, list_channel_group_interrupted_and_accomplished)
@@ -2671,7 +3024,6 @@ Ensure(single_context_pubnub, list_channel_group_interrupted_and_accomplished)
                   "\"xg37\",...}}}"));
     attest(pubnub_get_channel(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* SUBSCRIBE operation */
@@ -2717,7 +3069,6 @@ Ensure(single_context_pubnub, subscribe)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, subscribe_channel_groups)
@@ -2782,7 +3133,6 @@ Ensure(single_context_pubnub, subscribe_channel_groups)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
@@ -2857,7 +3207,6 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
     attest(pubnub_get_channel(pbp), streqs("ch17"));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
     attest(pubnub_uuid_get(pbp), streqs("admin"));
     attest(pubnub_auth_get(pbp), streqs("msgs"));
 }
@@ -2974,15 +3323,12 @@ Ensure(single_context_pubnub,
     attest(pubnub_get(pbp), streqs("{\"Sri Jayawardenepura Kotte, Sri Lanka\":{\"dir\":ne,\"speed\":\"7mph\",\"blows\":\"7mph\"}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, subscribe_no_channel_and_no_channelgroups)
 {
     pubnub_init(pbp, "publ-something", "sub-something");
     attest(pubnub_subscribe(pbp, NULL, NULL), equals(PNR_INVALID_CHANNEL));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub, subscribe_parse_response_format_error)
@@ -3000,7 +3346,6 @@ Ensure(single_context_pubnub, subscribe_parse_response_format_error)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_subscribe(pbp, "[ch2]", "[chgr2,chgr4]"),
            equals(PNR_FORMAT_ERROR));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conection)
@@ -3084,7 +3429,6 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     attest(pubnub_get_channel(pbp), streqs("ch17"));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
@@ -3112,8 +3456,6 @@ Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_connection)
@@ -3211,7 +3553,6 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     attest(pubnub_get_channel(pbp), streqs("ch17"));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 /* KEEP_ALIVE_ADVANCED */
@@ -3267,7 +3608,6 @@ Ensure(single_context_pubnub, keeps_connection_alive_for_certain_number_of_opera
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -3298,7 +3638,6 @@ Ensure(single_context_pubnub, keeps_connection_alive_for_certain_number_of_opera
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub,
@@ -3344,9 +3683,6 @@ Ensure(single_context_pubnub,
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub, keep_alive_connection_closes_time_runs_out)
@@ -3372,7 +3708,6 @@ Ensure(single_context_pubnub, keep_alive_connection_closes_time_runs_out)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
     attest(pubnub_last_time_token(pbp), streqs("1516014978925123458"));
-    attest(pubnub_free(pbp), equals(-1));
     /* Not publish operation */
     attest(pubnub_last_publish_result(pbp), streqs(""));
     /* Time runs out. Connection closes after following operation */
@@ -3393,9 +3728,6 @@ Ensure(single_context_pubnub, keep_alive_connection_closes_time_runs_out)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 Ensure(single_context_pubnub,
@@ -3444,7 +3776,6 @@ Ensure(single_context_pubnub,
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -3460,8 +3791,6 @@ Ensure(single_context_pubnub,
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    expect(pbpal_free, when(pb, equals(pbp)));
-    attest(pubnub_free(pbp), equals(0));
 }
 
 
@@ -3599,7 +3928,6 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
                   "\"Payload\":{\"channels\":[discovery,nat_geo,nature]}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -3632,7 +3960,6 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     attest(pubnub_get(pbp), streqs("{\"Sri Jayawardenepura Kotte, Sri Lanka\":{\"dir\":ne,\"speed\":\"7mph\",\"blows\":\"7mph\"}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 Ensure(single_context_pubnub, global_here_now_gzip_response)
@@ -4081,7 +4408,6 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
                   "12}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
@@ -4344,7 +4670,6 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
             "53, \"total_occupancy\": 282}, \"service\": \"Presence\"}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 }
 
 
@@ -4560,7 +4885,6 @@ Ensure(single_context_pubnub, gzip_bad_compression_format)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_free(pbp), equals(-1));
 
     /* Receiving gzip garbage block */
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
@@ -4583,6 +4907,14 @@ Ensure(single_context_pubnub, gzip_bad_compression_format)
 
 Ensure(single_context_pubnub, illegal_context_fires_assert)
 {
+#if PUBNUB_USE_ADVANCED_HISTORY
+    pubnub_chamebl_t o_msg[1];
+    size_t io_count;
+    struct pubnub_chan_msg_count chan_msg_counters[1];
+    int    count;
+#endif
+    pubnub_assert_set_handler((pubnub_assert_handler_t)test_assert_handler);
+
     expect_assert_in(pubnub_init(NULL, "k", "u"), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_publish(NULL, "x", "0"), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_last_publish_result(NULL), "pubnub_pubsubapi.c");
@@ -4627,6 +4959,28 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_get_origin(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_free((pubnub_t*)((char*)pbp + 10000)),
                      "pubnub_alloc_static.c");
+#if PUBNUB_USE_ADVANCED_HISTORY
+    expect_assert_in(pubnub_get_error_message(NULL, o_msg), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_chan_msg_counts_size(NULL), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_message_counts(NULL, "ch", "12345"), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_message_counts(pbp, NULL, "12345"), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_message_counts(pbp, "ch", NULL), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_chan_msg_counts(NULL,
+                                                &io_count,
+                                                chan_msg_counters),
+                     "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_chan_msg_counts(pbp,
+                                                NULL,
+                                                chan_msg_counters),
+                     "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_chan_msg_counts(pbp,
+                                                &io_count,
+                                                NULL),
+                     "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_message_counts(NULL, "ch", &count), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_message_counts(pbp, NULL, &count), "pubnub_advanced_history.c");
+    expect_assert_in(pubnub_get_message_counts(pbp, "ch", NULL), "pubnub_advanced_history.c");
+#endif /* -- ADVANCED HISTORY message_counts -- */
 }
 
 #if 0
