@@ -121,7 +121,7 @@ static void callback_sample_free(pubnub_t* pb)
     }
     else {
         /* Waits until the context is released from the processing queue */
-        wait_seconds(1);
+        wait_seconds(2);
     }
 }
 

@@ -123,6 +123,16 @@ static void wait_miliseconds(unsigned time_in_miliseconds)
 }
 
 
+static void wait_seconds(double time_in_seconds)
+{
+    time_t start = time(NULL);
+    double time_passed_in_seconds;
+    do {
+        time_passed_in_seconds = difftime(time(NULL), start);
+    } while (time_passed_in_seconds < time_in_seconds);
+}
+
+
 static void callback_sample_free(pubnub_t* pb)
 {
     if (0 != pubnub_free_with_timeout(pb, 1500)) {
@@ -130,7 +140,7 @@ static void callback_sample_free(pubnub_t* pb)
     }
     else {
         /* Waits until the context is released from the processing queue */
-        wait_miliseconds(500);
+        wait_seconds(2);
     }
 }
 

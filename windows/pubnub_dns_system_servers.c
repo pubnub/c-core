@@ -1,7 +1,10 @@
-#include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
 #include "core/pubnub_dns_servers.h"
 #include "lib/pubnub_parse_ipv4_addr.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
 
 #include <winsock2.h>
 #include <iphlpapi.h>
@@ -14,7 +17,6 @@
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
-
 
 int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size_t n)
 {
