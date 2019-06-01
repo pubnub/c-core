@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
 extern "C" {
+#include "core/pubnub_version_internal.h"
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_assert.h"
@@ -60,6 +61,36 @@ pubnub_qt::~pubnub_qt()
 }
 
 
+static QString GetOsName()
+ {
+ #if defined(Q_OS_ANDROID)
+     return QLatin1String("android");
+ #elif defined(Q_OS_BLACKBERRY)
+     return QLatin1String("blackberry");
+ #elif defined(Q_OS_IOS)
+     return QLatin1String("iOS");
+ #elif defined(Q_OS_MACOS)
+     return QLatin1String("MacOS");
+ #elif defined(Q_OS_TVOS)
+     return QLatin1String("Tvos");
+ #elif defined(Q_OS_WATCHOS)
+     return QLatin1String("Watchos");
+ #elif defined(Q_OS_WINCE)
+     return QLatin1String("Wince");
+ #elif defined(Q_OS_WIN)
+     return QLatin1String("Windows");
+ #elif defined(Q_OS_CYGWIN)
+     return QLatin1String("Cygwin");
+ #elif defined(Q_OS_LINUX)
+     return QLatin1String("Linux");
+ #elif defined(Q_OS_UNIX)
+     return QLatin1String("Unix");
+ #else
+     return QLatin1String("Unknown OS");
+ #endif
+ }
+
+
 pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
 {
     if (PNR_STARTED == result) {
@@ -73,6 +104,12 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         }
         d_transaction_timed_out = false;
         QNetworkRequest req(url);
+        QString user_agent(GetOsName() +
+                           "-Qt" +
+                           QT_VERSION_STR +
+                           "-PubNub-core/" +
+                           PUBNUB_SDK_VERSION);
+        req.setRawHeader("User-Agent", user_agent.toLatin1());
         if (!d_use_http_keep_alive) {
             req.setRawHeader("Connection", "Close");
         }

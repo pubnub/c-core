@@ -1,7 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pbpal.h"
-
 #include "pubnub_internal.h"
+
+#include "core/pbpal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 #include "lib/sockets/pbpal_adns_sockets.h"
@@ -170,7 +170,7 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(pb_socket_t* skt,
                          dest->sa_family);
         return pbpal_connect_failed;
     }
-    *skt  = socket(dest->sa_family, SOCK_STREAM, IPPROTO_TCP);
+    *skt = socket(dest->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_INVALID == *skt) {
         return pbpal_connect_resource_failure;
     }
@@ -182,6 +182,16 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(pb_socket_t* skt,
     }
     return pbpal_connect_success;
 }
+
+#if PUBNUB_ADNS_RETRY_AFTER_CLOSE
+static void if_no_retry_close_socket(pb_socket_t* skt, struct pubnub_flags* flags)
+{
+    if (!flags->retry_after_close && (*skt != SOCKET_INVALID)) {
+        socket_close(*skt);
+        *skt = SOCKET_INVALID;
+    }
+}
+#endif /* PUBNUB_ADNS_RETRY_AFTER_CLOSE */
 
 #if PUBNUB_CHANGE_DNS_SERVERS
 static void check_dns_server_error(struct pbdns_servers_check* dns_check,
@@ -195,6 +205,16 @@ static void check_dns_server_error(struct pbdns_servers_check* dns_check,
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
+void pbpal_multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses)
+{
+    spare_addresses->n_ipv4 = 0;
+    spare_addresses->ipv4_index = 0;
+#if PUBNUB_USE_IPV6
+    spare_addresses->n_ipv6 = 0;
+    spare_addresses->ipv6_index = 0;
+#endif
+}
+
 static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
     pb_socket_t* skt,
     struct pubnub_multi_addresses* spare_addresses,
@@ -202,46 +222,59 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
     struct pubnub_flags* flags,
     const uint16_t port)
 {
+    enum pbpal_resolv_n_connect_result rslt = pbpal_resolv_resource_failure;
+    
     if (spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
-        struct sockaddr_in dest = {0}; 
-        memcpy(&(dest.sin_addr.s_addr),
-               spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4,
-               sizeof dest.sin_addr.s_addr);
-#if PUBNUB_USE_SSL
-        if (!options->fallbackSSL  || !flags->trySSL)
-#endif
-        {
-            spare_addresses->ipv4_index++;
+        /* Need at least a second to live */
+        if (spare_addresses->ttl_ipv4[spare_addresses->ipv4_index] - 2 >
+            time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            struct sockaddr_in dest = {0}; 
+            memcpy(&(dest.sin_addr.s_addr),
+                   spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4,
+                   sizeof dest.sin_addr.s_addr);
+            dest.sin_family = AF_INET;
+            rslt = connect_TCP_socket(skt, options, (struct sockaddr*)&dest, port);
         }
-        flags->retry_after_close = true;
-        dest.sin_family = AF_INET;
-        return connect_TCP_socket(skt, options, (struct sockaddr*)&dest, port);
+        else {
+            rslt = pbpal_connect_failed;
+        }
+        if (pbpal_connect_failed == rslt) {
+            flags->retry_after_close = (++spare_addresses->ipv4_index < spare_addresses->n_ipv4);
+            if_no_retry_close_socket(skt, flags);
+#if PUBNUB_USE_SSL
+            flags->trySSL = options->useSSL;
+#endif
+        }
     }
 #if PUBNUB_USE_IPV6
     else if (spare_addresses->ipv6_index < spare_addresses->n_ipv6) {
-        struct sockaddr_in6 dest = {0}; 
-        memcpy(dest.sin6_addr.s6_addr,
-               spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6,
-               sizeof dest.sin6_addr.s6_addr);
-#if PUBNUB_USE_SSL
-        if (!options->fallbackSSL  || !flags->trySSL)
-#endif
-        {
-            spare_addresses->ipv6_index++;
+        /* Need at least a second to live */
+        if (spare_addresses->ttl_ipv6[spare_addresses->ipv6_index] - 2 >
+            time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            struct sockaddr_in6 dest = {0}; 
+            memcpy(dest.sin6_addr.s6_addr,
+                   spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6,
+                   sizeof dest.sin6_addr.s6_addr);
+            dest.sin6_family = AF_INET6;
+            rslt = connect_TCP_socket(skt, options, (struct sockaddr*)&dest, port);
         }
-        flags->retry_after_close = true;
-        dest.sin6_family = AF_INET6;
-        return connect_TCP_socket(skt, options, (struct sockaddr*)&dest, port);
-    }
-    else if (spare_addresses->n_ipv6 > 0) {
-        return pbpal_connect_failed;
+        else {
+            rslt = pbpal_connect_failed;
+        }
+        if (pbpal_connect_failed == rslt) {
+            flags->retry_after_close = (++spare_addresses->ipv6_index < spare_addresses->n_ipv6);
+            if_no_retry_close_socket(skt, flags);
+#if PUBNUB_USE_SSL
+            flags->trySSL = options->useSSL;
+#endif
+        }
     }
 #endif /* PUBNUB_USE_IPV6 */
-    else if (spare_addresses->n_ipv4 > 0) {
-        return pbpal_connect_failed;
+    else {
+        pbpal_multiple_addresses_reset_counters(spare_addresses);
     }
-
-    return pbpal_resolv_resource_failure;
+    
+    return rslt;
 }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #endif /* PUBNUB_CALLBACK_API */
@@ -292,8 +325,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     get_dns_ip((struct sockaddr*)&dest);
 #endif
     if (SOCKET_INVALID == pb->pal.socket) {
-        pb->pal.socket  = socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
-    }
+        pb->pal.socket = socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
+    }    
     if (SOCKET_INVALID == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
@@ -303,6 +336,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (error < 0) {
 #if PUBNUB_CHANGE_DNS_SERVERS
         check_dns_server_error(&pb->dns_check, &pb->flags);
+        if_no_retry_close_socket(&pb->pal.socket, &pb->flags);
 #endif
         return pbpal_resolv_failed_send;
     }
@@ -378,6 +412,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     sockaddr_inX_t dns_server = {0};
     sockaddr_inX_t dest = {0};
     uint16_t port = HTTP_PORT;
+    enum pbpal_resolv_n_connect_result rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(pb->state == PBS_WAIT_DNS_RCV);
@@ -413,8 +448,26 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     }
     socket_close(pb->pal.socket);
 
-    return connect_TCP_socket(&pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
-#else
+    rslt = connect_TCP_socket(&pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    if (pbpal_connect_failed == rslt) {
+        if (AF_INET == ((struct sockaddr*)&dest)->sa_family) {
+            pb->flags.retry_after_close =
+                (++pb->spare_addresses.ipv4_index < pb->spare_addresses.n_ipv4);
+        }
+#if PUBNUB_USE_IPV6
+        else if (AF_INET6 == ((struct sockaddr*)&dest)->sa_family) {
+            pb->flags.retry_after_close =
+                (++pb->spare_addresses.ipv6_index < pb->spare_addresses.n_ipv6);
+        }
+#endif
+#if PUBNUB_USE_SSL
+        pb->flags.trySSL = pb->options.useSSL;
+#endif
+    }
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+    return rslt;
+#else /* PUBNUB_CALLBACK_API */
 
     PUBNUB_UNUSED(pb);
 

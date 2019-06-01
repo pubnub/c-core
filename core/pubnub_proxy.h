@@ -84,6 +84,8 @@ enum pubnub_proxy_type {
 /** Known HTTP authentication schemes to be used with the HTTP proxy.
  */
 enum pubnub_http_authentication_scheme {
+    /** No authentication scheme. This is the default */
+    pbhtauNone,
     /** The basic authentication scheme. It is not secure and thus
         should only be used w/HTTPS or private networks.
     */
@@ -97,9 +99,7 @@ enum pubnub_http_authentication_scheme {
         even more complex than DIGEST. Support for it may be not as
         advanced (full-featured) on non-Windows platforms.
      */
-    pbhtauNTLM,
-    /** No authentication scheme. This is the default */
-    pbhtauNone
+    pbhtauNTLM
 };
 
 

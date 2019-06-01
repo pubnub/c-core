@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#include "core/pubnub_proxy_core.h"
 #include "core/pbhttp_digest.h"
 
 #include "lib/md5/pbmd5.h"
@@ -16,7 +17,7 @@ void pbhttp_digest_init(struct pbhttp_digest_context *ctx)
 {
     PUBNUB_ASSERT_OPT(ctx != NULL);
 
-    ctx->realm[0] = ctx->nonce[0] = ctx->opaque[0] = '\0';
+    ctx->nonce[0] = ctx->opaque[0] = '\0';
 
     ctx->algorithm = pbhtdigalUnknown;
 
@@ -24,42 +25,6 @@ void pbhttp_digest_init(struct pbhttp_digest_context *ctx)
 
     ctx->client_nonce[0] = '\0';
     ctx->nc = 1;
-}
-
-
-static char const* get_next_key_value(char const* s, pubnub_chamebl_t *key, pubnub_chamebl_t *val)
-{
-    s += strspn(s, " \t");
-    key->ptr = (char*)s;
-    key->size = strcspn(s, "= \t");
-    s += key->size;
-    s += strspn(s, " \t");
-    if (*s != '=') {
-        return NULL;
-    }
-    s += 1 + strspn(s + 1, " \t");
-    val->ptr = (char*)s;
-    if (*s == '"') {
-        char const* esc;
-        char const* end = s + 1;
-        for (esc = strstr(end, "\\\""); esc != NULL; esc = strstr(end, "\\\"")) {
-            end = esc + 2;
-        }
-        val->size = end - s + strcspn(end, "\"") + 1;
-        if (*s != '"') {
-            return NULL;
-        }
-        s += val->size;
-    }
-    else {
-        val->size = strcspn(s, " \t");
-        s += val->size;
-    }
-    s += strspn(s, " \t");
-    if (*s == ',') {
-        ++s;
-    }
-    return ('\0' == *s) ? NULL : s;
 }
 
 
@@ -80,50 +45,48 @@ char const* pubnub_find_str_in_chamebl(pubnub_chamebl_t chamebl, char const* s)
 }
 
 
-#define LIT_STR_EQ(lit, str) (0 == memcmp(lit, str, sizeof lit - 1))
-
-
-void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* header)
+enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx,
+                                                                char const* header,
+                                                                char* realm)
 {
     char empty_str[] = { '\0' };
     char const *s = header;
+    bool realm_found = false;
+    bool equal_consecutive_realms;
 
     do {
         pubnub_chamebl_t key = { empty_str, 0 };
         pubnub_chamebl_t value = { empty_str, 0 };
 
-        s = get_next_key_value(s, &key, &value);
+        s = pbproxy_get_next_key_value(s, &key, &value);
         if (LIT_STR_EQ("realm", key.ptr)) {
-            const size_t maxrealm = sizeof ctx->realm / sizeof ctx->realm[0] - 1;
-            if (value.size > maxrealm) {
-                PUBNUB_LOG_ERROR("Received `realm` too long: %zu, maximum possible %zu\n", value.size, maxrealm);
-                return;
+            if (pbproxy_check_realm(&value) != 0) {
+                return pbhtdig_ParameterError;
             }
-            if ('"' != *value.ptr) {
-                PUBNUB_LOG_ERROR("Received 'realm' is not quoted\n");
-                return;
+            realm_found = true;
+            equal_consecutive_realms = (strncmp(realm, value.ptr + 1, value.size - 2) == 0) &&
+                                       (strlen(realm) == (value.size - 2));
+            if (!equal_consecutive_realms) {
+                memcpy(realm, value.ptr + 1, value.size - 2);
+                realm[value.size - 2] = '\0';
             }
-            if (value.size <= 2) {
-                PUBNUB_LOG_ERROR("Received 'realm' is too short (length = %zu)\n", value.size);
-                return;
-            }
-            memcpy(ctx->realm, value.ptr + 1, value.size - 2);
-            ctx->realm[value.size - 2] = '\0';
         }
         else if (LIT_STR_EQ("nonce", key.ptr)) {
             const size_t maxnonce = sizeof ctx->nonce / sizeof ctx->nonce[0] - 1;
             size_t actual_size = value.size - 2;
             if ('"' != *value.ptr) {
                 PUBNUB_LOG_ERROR("Received 'nonce' is not quoted\n");
-                return;
+                return pbhtdig_ParameterError;
             }
             if (value.size <= 2) {
                 PUBNUB_LOG_ERROR("Received 'nonce' is too short (length = %zu)\n", value.size);
-                return;
+                return pbhtdig_ParameterError;
             }
             if (actual_size > maxnonce) {
-                PUBNUB_LOG_ERROR("Received `nonce` too long: %zu, maximum possible %zu\n", value.size, maxnonce);
-                return;
+                PUBNUB_LOG_ERROR("Received `nonce` too long: %zu, maximum possible %zu\n",
+                                 value.size,
+                                 maxnonce);
+                return pbhtdig_ParameterError;
             }
             memcpy(ctx->nonce, value.ptr + 1, actual_size);
             ctx->nonce[actual_size] = '\0';
@@ -132,8 +95,10 @@ void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* h
         else if (LIT_STR_EQ("opaque", key.ptr)) {
             const size_t maxopaque = sizeof ctx->opaque / sizeof ctx->opaque[0] - 1;
             if (value.size > maxopaque) {
-                PUBNUB_LOG_ERROR("Received `opaque` too long: %zu, maximum possible %zu\n", value.size, maxopaque);
-                return;
+                PUBNUB_LOG_ERROR("Received `opaque` too long: %zu, maximum possible %zu\n",
+                                 value.size,
+                                 maxopaque);
+                return pbhtdig_ParameterError;
             }
             memcpy(ctx->opaque, value.ptr, value.size);
             ctx->opaque[value.size] = '\0';
@@ -146,7 +111,9 @@ void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* h
                 ctx->algorithm = pbhtdigalMD5;
             }
             else {
-                PUBNUB_LOG_WARNING("Unknown or unsupported HTTP digest algorithm field: %.*s\n", (int)value.size, value.ptr);
+                PUBNUB_LOG_WARNING("Unknown or unsupported HTTP digest algorithm field: %.*s\n",
+                                   (int)value.size,
+                                   value.ptr);
             }
         }
         else if (LIT_STR_EQ("qop", key.ptr)) {
@@ -175,6 +142,13 @@ void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* h
             PUBNUB_LOG_INFO("Unknown or unsupported HTTP digest auth field: %.*s\n", (int)key.size, key.ptr);
         }
     } while (s != NULL);
+    if (realm_found) {
+        return equal_consecutive_realms ?
+                pbhtdig_EqualConsecutiveRealms :
+                pbhtdig_DifferentConsecutiveRealms;
+    }
+    
+    return pbhtdig_RealmNotFound;
 }
 
 
@@ -211,7 +185,12 @@ char const* pbhttp_digest_algorithm2str(enum pbhttp_digest_algorithm e)
 #define MD5_OF_EMPTY_MESSAGE "d41d8cd98f00b204e9800998ecf8427e"
 
 
-int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char const* username, char const* password, char const* uri, pubnub_chamebl_t *buf)
+int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx,
+                                      char const* username,
+                                      char const* password,
+                                      char const* uri,
+                                      char const* realm,
+                                      pubnub_chamebl_t *buf)
 {
     char ha1[33];
     char ha2[33];
@@ -222,6 +201,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char co
     PUBNUB_ASSERT_OPT(username != NULL);
     PUBNUB_ASSERT_OPT(password != NULL);
     PUBNUB_ASSERT_OPT(uri != NULL);
+    PUBNUB_ASSERT_OPT(realm != NULL);
 
     if ((ctx->qop != pbhtdigqopNone) && ('\0' == ctx->nonce[0])) {
         PUBNUB_LOG_ERROR("HTTP digest `qop` defined, but haven't received `nonce`\n");
@@ -237,7 +217,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char co
     pbmd5_init(&md5);
     pbmd5_update(&md5, username, strlen(username));
     pbmd5_update(&md5, ":", 1);
-    pbmd5_update(&md5, ctx->realm, strlen(ctx->realm));
+    pbmd5_update(&md5, realm, strlen(realm));
     pbmd5_update(&md5, ":", 1);
     pbmd5_update(&md5, password, strlen(password));
     md5_final_to_str(&md5, ha1);
@@ -286,7 +266,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char co
             "username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\""
             "%s%s"
             "%s%s",
-            username, ctx->realm, ctx->nonce, uri, response,
+            username, realm, ctx->nonce, uri, response,
             ctx->opaque[0] == '\0' ? "" : ", opaque=", ctx->opaque,
             (pbhtdigalUnknown == ctx->algorithm) ? "" : ", algorithm=", 
             pbhttp_digest_algorithm2str(ctx->algorithm)
@@ -299,7 +279,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char co
             "cnonce=\"%s\", nc=\"%08x\", qop=\"%s\", response=\"%s\""
             "%s%s"
             "%s%s", 
-            username, ctx->realm, ctx->nonce, uri, 
+            username, realm, ctx->nonce, uri, 
             ctx->client_nonce, ctx->nc, pbhttp_digest_qop2str(ctx->qop), response,
             (ctx->opaque[0] == '\0' ? "" : ", opaque="), ctx->opaque,
             (pbhtdigalUnknown == ctx->algorithm) ? "" : ", algorithm=", 

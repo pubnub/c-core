@@ -5,11 +5,6 @@
 #include "pubnub_memory_block.h"
 
 
-/** Maximum length of the "realm" field used in HTTP
-    authentication headers. Server sets this.
-*/
-#define PUBNUB_MAX_HTTP_AUTH_REALM 31
-
 /** Maximum length of the "nonce" field used in HTTP authentication
     headers. Server sets this.
 */
@@ -60,12 +55,26 @@ enum pbhttp_digest_qop {
     pbgtdigqop_auth_int
 };
 
+/** HTTP Digest authentication header parsing result */
+enum pbhttp_digest_parse_header_rslt {
+    /** Authentication parameter(one, or more) is invalid */ 
+    pbhtdig_ParameterError,
+    /** Realm in new 'authentication required' message is different from
+        realm previously used
+     */
+    pbhtdig_DifferentConsecutiveRealms,
+    /** Realm in new 'authentication required' message is the same as
+        realm currently in use
+     */
+    pbhtdig_EqualConsecutiveRealms,
+    /** atribute 'realm' is not found yet in 'authentication required' message header
+     */
+    pbhtdig_RealmNotFound
+};    
+
 /** 
  */
 struct pbhttp_digest_context {
-    /** Authentication realm - received from the server */
-    char realm[PUBNUB_MAX_HTTP_AUTH_REALM + 1];
-
     /** The auth challenge nonce - received from the server */
     char nonce[PUBNUB_MAX_HTTP_NONCE + 1];
 
@@ -101,8 +110,17 @@ void pbhttp_digest_init(struct pbhttp_digest_context *ctx);
 
     @param ctx The HTTP digest context
     @param header The string of the header (key-value pairs)
+    @param realm pointer to the corresponding pubnub context field to be filled in
+    @retvel pbhtdig_ParameterError invalid parameter found while parsing
+    @retval pbhtdig_EqualConsecutiveRealms realm parsed from the header is equal as
+                                           one already in use
+    @retval pbhtdig_DifferentConsecutiveRealms new realm is different from the one previously
+                                               used,
+    @retval pbhtdig_RealmNotFound realm is not discovered(yet) in digest 'auth-info' header line
  */
-void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* header);
+enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx,
+                                                                char const* header,
+                                                                char* realm);
 
 /** Sets the contents of the string buffer to send as the header
     during HTTP Digest authentication.
@@ -111,10 +129,16 @@ void pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx, char const* h
     @param username The username to use
     @param password The password to use
     @param uri The URI to use
+    @param realm The URI realm to use
     @param buf The buffer which contents to set
     @param 0: OK, -1: error
  */
-int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx, char const* username, char const* password, char const* uri, pubnub_chamebl_t *buf);
+int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx,
+                                      char const* username,
+                                      char const* password,
+                                      char const* uri,
+                                      char const* realm,
+                                      pubnub_chamebl_t *buf);
 
 /** Returns a read-only string representation of the HTTP Digest
     Quality of Protection value.

@@ -14,6 +14,9 @@
 #endif
 
 #include <stdint.h>
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+#include <time.h>
+#endif
 
 #define DNS_PORT 53
 
@@ -124,6 +127,9 @@ int read_dns_response(pb_socket_t skt,
     if (msg_size <= 0) {
         return socket_would_block() ? +1 : -1;
     }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    time(&spare_addresses->time_of_the_last_dns_query);
+#endif
     if (pbdns_pick_resolved_addresses(buf,
                                       (size_t)msg_size,
                                       &addr_ipv4
@@ -155,24 +161,6 @@ int read_dns_response(pb_socket_t skt,
 #include <fcntl.h>
 #endif
 
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-#define PBDNS_OPTIONAL_PARAMS_PBP , &pbp->spare_addresses, &pbp->options
-
-static void multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses)
-{
-    spare_addresses->n_ipv4 = 0;
-    spare_addresses->ipv4_index = 0;
-#if PUBNUB_USE_IPV6
-    spare_addresses->n_ipv6 = 0;
-    spare_addresses->ipv6_index = 0;
-#endif
-}
-
-#else
-#define PBDNS_OPTIONAL_PARAMS_PBP
-#endif
-
-
 /* When running this test example PUBNUB_USE_MULTIPLE_ADDRESSES should be defined and
    set to zero in the corresponding make file
 */
@@ -180,15 +168,7 @@ int main()
 {
     struct sockaddr_in  dest;
     struct sockaddr_in6 dest6;
-    struct sockaddr*    resolved_addr;
-    pubnub_t*           pbp = pubnub_alloc();
-    if (NULL == pbp) {
-        printf("Failed to allocate Pubnub context!\n");
-        return -1;
-    }
-#if PUBNUB_USE_SSL
-    pbp->options.fallbackSSL = false;
-#endif
+    struct sockaddr_storage resolved_addr;
     
 #if defined(_WIN32)
     WSADATA wsaData;
@@ -241,13 +221,7 @@ int main()
                timev.tv_sec,
                timev.tv_usec);
 #endif
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-        multiple_addresses_reset_counters(&pbp->spare_addresses)
-#endif
-        read_dns_response(skt,
-                          (struct sockaddr*)&dest,
-                          &resolved_addr
-                          PBDNS_OPTIONAL_PARAMS_PBP);
+        read_dns_response(skt, (struct sockaddr*)&dest, (struct sockaddr*)&resolved_addr);
 #if !defined(_WIN32)
     }
     else {
@@ -294,13 +268,7 @@ int main()
                timev.tv_sec,
                timev.tv_usec);
 #endif
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-        multiple_addresses_reset_counters(&pbp->spare_addresses)
-#endif
-        read_dns_response(skt,
-                          (struct sockaddr*)&dest6,
-                          &resolved_addr
-                          PBDNS_OPTIONAL_PARAMS_PBP);
+        read_dns_response(skt, (struct sockaddr*)&dest6, (struct sockaddr*)&resolved_addr);
 #if !defined(_WIN32)
     }
     else {

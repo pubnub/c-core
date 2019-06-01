@@ -1,7 +1,16 @@
 name: c-core
-version: 2.8.2
+version: 2.8.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.8.3
+    date: May 31, 2019
+    changes:
+      - type: enhancement
+        text: Use TTL from DNS response (cache resolved addresses)
+      - type: enhancement
+        text: Better identification of the platform we run on
+      - type: enhancement
+        text: Detect authenticating proxy that works incorrectly
   - version: v2.8.2
     date: Apr 29, 2019
     changes:

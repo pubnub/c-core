@@ -47,6 +47,7 @@
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
 #include "core/pubnub_proxy.h"
+#include "core/pubnub_proxy_core.h"
 #include "core/pbhttp_digest.h"
 #endif
 
@@ -224,19 +225,24 @@ struct pbdns_servers_check {
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
 struct pubnub_multi_addresses {
+    time_t time_of_the_last_dns_query; 
     /* Number of spare ipv4 addresses */
     int n_ipv4;
-    /* Spare ipv4 address index(from the array) currently used */
+    /* ipv4 address index(from the array) currently used */
     int ipv4_index;
-    /* Spare ipv4 address array */
+    /* ipv4 address array */
     struct pubnub_ipv4_address ipv4_addresses[PUBNUB_MAX_IPV4_ADDRESSES];
+    /* Time to live for each saved ipv4 address */
+    uint16_t ttl_ipv4[PUBNUB_MAX_IPV4_ADDRESSES];
 #if PUBNUB_USE_IPV6
     /* Number of spare ipv6 addresses */
     int n_ipv6;
-    /* Spare ipv6 address index(from the array) currently used */
+    /* ipv6 address index(from the array) currently used */
     int ipv6_index;
-    /* Spare ipv6 address array */
+    /* ipv6 address array */
     struct pubnub_ipv6_address ipv6_addresses[PUBNUB_MAX_IPV6_ADDRESSES];
+    /* Time to live for each saved ipv6 address */
+    uint16_t ttl_ipv6[PUBNUB_MAX_IPV6_ADDRESSES];
 #endif
 };
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
@@ -413,6 +419,23 @@ struct pubnub_ {
         avoiding a sort of "endless loop".
     */
     int proxy_authorization_sent;
+
+    /** Authentication realm - received from the server */
+    char realm[PUBNUB_MAX_HTTP_AUTH_REALM + 1];
+
+    /** Proxy 'authentication required' response message counter for repeating realm
+        within a single transaction.
+        At this point this field is of importance for Digest proxy authentication sheme.
+        See RFC 7616 - 5.4. Limited-Use Nonce Values :
+        ...For example, a server MAY choose to allow each nonce value to be used only once by
+        maintaining a record of whether, or not each recently issued nonce has been returned
+        and sending a next-nonce parameter in the Authentication-Info header field of every
+        response...
+
+        Doing it (within the same transaction)repeatedly, without restrictions, would be a sign
+        of irregular behaviour.
+     */
+    uint8_t auth_msg_count;
 
     /** Data about NTLM authentication */
     struct pbntlm_context ntlm_context;
