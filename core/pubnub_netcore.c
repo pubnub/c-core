@@ -48,8 +48,9 @@ static int send_fin_head(struct pubnub_* pb)
     char s[200];
     snprintf(s,
              sizeof s,
-             "\r\nUser-Agent: %s \r\n" ACCEPT_ENCODING "\r\n",
-             pubnub_uagent());
+             "\r\nUser-Agent: %s%s",
+             pubnub_uagent(),
+             "\r\n" ACCEPT_ENCODING "\r\n");
     return pbpal_send_str(pb, s);
 }
 
