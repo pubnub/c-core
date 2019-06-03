@@ -45,11 +45,14 @@
 
 static int send_fin_head(struct pubnub_* pb)
 {
-    char fin_head[200] = "\r\nUser-Agent: ";
-    strcat(fin_head, pubnub_uagent());
-    strcat(fin_head, "\r\n" ACCEPT_ENCODING "\r\n");
-    return pbpal_send_str(pb, fin_head);
+    char s[200];
+    snprintf(s,
+             sizeof s,
+             "\r\nUser-Agent: %s \r\n" ACCEPT_ENCODING "\r\n",
+             pubnub_uagent());
+    return pbpal_send_str(pb, s);
 }
+
 
 #define SEND_FIN_HEAD(pb)                                                      \
     if (0 > send_fin_head(pb)) {                                               \
@@ -365,7 +368,7 @@ static void initialize_fields_in_state_IDLE(struct pubnub_* pb)
     pb->proxy_tunnel_established = false;
     pb->proxy_saved_path_len     = 0;
     pb->proxy_authorization_sent = false;
-    pb->auth_msg_count = 0;
+    pb->auth_msg_count           = 0;
 #endif
 #if PUBNUB_USE_SSL
     pb->flags.trySSL = pb->options.useSSL;
@@ -574,7 +577,8 @@ next_state:
                     pb->flags.retry_after_close =
                         (++pb->spare_addresses.ipv4_index < pb->spare_addresses.n_ipv4)
 #if PUBNUB_USE_IPV6
-                        || (++pb->spare_addresses.ipv6_index < pb->spare_addresses.n_ipv6)
+                        || (++pb->spare_addresses.ipv6_index
+                            < pb->spare_addresses.n_ipv6)
 #endif
                         ;
                 }
@@ -817,10 +821,12 @@ next_state:
 #if PUBNUB_PROXY_API
                 && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
 #endif
-                ) {
+            ) {
                 char hedr[128] = "\r\n";
-                pbcc_headers_for_publish_via_post(&(pb->core), hedr + 2, sizeof hedr - 2);
-                PUBNUB_LOG_TRACE("Sending HTTP 'publish via POST' headers: '%s'\n", hedr);
+                pbcc_headers_for_publish_via_post(
+                    &(pb->core), hedr + 2, sizeof hedr - 2);
+                PUBNUB_LOG_TRACE(
+                    "Sending HTTP 'publish via POST' headers: '%s'\n", hedr);
                 pb->state = PBS_TX_EXTRA_HEADERS;
                 if (-1 == pbpal_send_str(pb, hedr)) {
                     outcome_detected(pb, PNR_IO_ERROR);
@@ -854,10 +860,11 @@ next_state:
 #if PUBNUB_PROXY_API
                 && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
 #endif
-                ) {
+            ) {
                 const char* message = pb->core.message_to_publish;
 #if PUBNUB_USE_GZIP_COMPRESSION
-                size_t len = (pb->core.gzip_msg_len != 0) ? pb->core.gzip_msg_len : strlen(message);
+                size_t len = (pb->core.gzip_msg_len != 0) ? pb->core.gzip_msg_len
+                                                          : strlen(message);
 #else
                 size_t len = strlen(message);
 #endif
@@ -1167,9 +1174,9 @@ next_state:
         break;
     case PBS_KEEP_ALIVE_IDLE:
 #if PUBNUB_PROXY_API
-        pb->proxy_saved_path_len = 0;
+        pb->proxy_saved_path_len     = 0;
         pb->proxy_authorization_sent = false;
-        pb->auth_msg_count = 0;
+        pb->auth_msg_count           = 0;
 #endif
         pb->state                          = PBS_KEEP_ALIVE_READY;
         pb->flags.started_while_kept_alive = true;
@@ -1192,7 +1199,7 @@ next_state:
             break;
         }
         pb->state = PBS_TX_GET;
-        i         = pbpal_send_str(pb, pb->flags.is_publish_via_post ? "POST " : "GET ");
+        i = pbpal_send_str(pb, pb->flags.is_publish_via_post ? "POST " : "GET ");
         if (i < 0) {
             pb->state = close_kept_alive_connection(pb);
         }

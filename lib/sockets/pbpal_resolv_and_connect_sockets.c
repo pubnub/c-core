@@ -21,8 +21,8 @@
 #define TLS_PORT 443
 
 #ifndef PUBNUB_CALLBACK_API
-#define send_dns_query(x,y,z,v) -1
-#define read_response(x,y,z,v) -1
+#define send_dns_query(x, y, z, v) -1
+#define read_response(x, y, z, v) -1
 #else
 #if PUBNUB_USE_IPV6
 typedef struct sockaddr_storage sockaddr_inX_t;
@@ -34,7 +34,9 @@ typedef struct sockaddr_in sockaddr_inX_t;
 #endif /* PUBNUB_CALLBACK_API */
 
 
-static void prepare_port_and_hostname(pubnub_t *pb, uint16_t* p_port, char const** p_origin)
+static void prepare_port_and_hostname(pubnub_t*    pb,
+                                      uint16_t*    p_port,
+                                      char const** p_origin)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND));
@@ -55,7 +57,7 @@ static void prepare_port_and_hostname(pubnub_t *pb, uint16_t* p_port, char const
         break;
     case pbproxyHTTP_GET:
         *p_origin = pb->proxy_hostname;
-        *p_port = pb->proxy_port;
+        *p_port   = pb->proxy_port;
         PUBNUB_LOG_TRACE("Using proxy: %s : %hu\n", *p_origin, *p_port);
         break;
     default:
@@ -64,6 +66,7 @@ static void prepare_port_and_hostname(pubnub_t *pb, uint16_t* p_port, char const
 #endif
     return;
 }
+
 
 #ifdef PUBNUB_CALLBACK_API
 #if PUBNUB_SET_DNS_SERVERS
@@ -74,32 +77,31 @@ static void get_dns_ip(struct pbdns_servers_check* dns_check, struct sockaddr* a
 #if PUBNUB_USE_IPV6
     void* pv6 = ((struct sockaddr_in6*)addr)->sin6_addr.s6_addr;
 #endif
-    addr->sa_family = AF_INET;
+    addr->sa_family     = AF_INET;
     dns_check->dns_mask = 1;
     if ((pubnub_get_dns_primary_server_ipv4((struct pubnub_ipv4_address*)p) == -1)
-        || (dns_check->dns_server_check & dns_check->dns_mask)
-        ) {
+        || (dns_check->dns_server_check & dns_check->dns_mask)) {
         dns_check->dns_mask <<= 1;
-        if ((pubnub_get_dns_secondary_server_ipv4((struct pubnub_ipv4_address*)p) == -1)
-            || (dns_check->dns_server_check & dns_check->dns_mask)
-           ) {
+        if ((pubnub_get_dns_secondary_server_ipv4((struct pubnub_ipv4_address*)p)
+             == -1)
+            || (dns_check->dns_server_check & dns_check->dns_mask)) {
             dns_check->dns_mask <<= 1;
 #if PUBNUB_USE_IPV6
             addr->sa_family = AF_INET6;
-#else        
+#else
             inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, p);
 #endif /* PUBNUB_USE_IPV6 */
         }
     }
 #if PUBNUB_USE_IPV6
     if (AF_INET6 == addr->sa_family) {
-        if ((pubnub_get_dns_primary_server_ipv6((struct pubnub_ipv6_address*)pv6) == -1)
-            || (dns_check->dns_server_check & dns_check->dns_mask)
-           ) {
+        if ((pubnub_get_dns_primary_server_ipv6((struct pubnub_ipv6_address*)pv6)
+             == -1)
+            || (dns_check->dns_server_check & dns_check->dns_mask)) {
             dns_check->dns_mask <<= 1;
-            if ((pubnub_get_dns_secondary_server_ipv6((struct pubnub_ipv6_address*)pv6) == -1)
-                || (dns_check->dns_server_check & dns_check->dns_mask)
-               ) {
+            if ((pubnub_get_dns_secondary_server_ipv6((struct pubnub_ipv6_address*)pv6)
+                 == -1)
+                || (dns_check->dns_server_check & dns_check->dns_mask)) {
                 dns_check->dns_mask <<= 1;
                 addr->sa_family = AF_INET;
                 inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, p);
@@ -111,24 +113,25 @@ static void get_dns_ip(struct pbdns_servers_check* dns_check, struct sockaddr* a
 #else
 static void get_dns_ip(struct sockaddr* addr)
 {
-    void* p = &(((struct sockaddr_in*)addr)->sin_addr.s_addr);
+    void* p         = &(((struct sockaddr_in*)addr)->sin_addr.s_addr);
 #if PUBNUB_USE_IPV6
-    void* pv6 = ((struct sockaddr_in6*)addr)->sin6_addr.s6_addr;
+    void* pv6       = ((struct sockaddr_in6*)addr)->sin6_addr.s6_addr;
 #endif
     addr->sa_family = AF_INET;
     if ((pubnub_get_dns_primary_server_ipv4((struct pubnub_ipv4_address*)p) == -1)
-        && (pubnub_get_dns_secondary_server_ipv4((struct pubnub_ipv4_address*)p) == -1)
-        ) {
+        && (pubnub_get_dns_secondary_server_ipv4((struct pubnub_ipv4_address*)p)
+            == -1)) {
 #if PUBNUB_USE_IPV6
         addr->sa_family = AF_INET6;
-#else        
+#else
         inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, p);
 #endif /* PUBNUB_USE_IPV6 */
     }
     if (AF_INET6 == addr->sa_family) {
-        if ((pubnub_get_dns_primary_server_ipv6((struct pubnub_ipv6_address*)pv6) == -1)
-            && (pubnub_get_dns_secondary_server_ipv6((struct pubnub_ipv6_address*)pv6) == -1)
-            ) {
+        if ((pubnub_get_dns_primary_server_ipv6((struct pubnub_ipv6_address*)pv6)
+             == -1)
+            && (pubnub_get_dns_secondary_server_ipv6((struct pubnub_ipv6_address*)pv6)
+                == -1)) {
             addr->sa_family = AF_INET;
             inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, p);
         }
@@ -139,35 +142,40 @@ static void get_dns_ip(struct sockaddr* addr)
 static void get_dns_ip(struct sockaddr* addr)
 {
     addr->sa_family = AF_INET;
-    inet_pton(AF_INET, PUBNUB_DEFAULT_DNS_SERVER, &(((struct sockaddr_in*)addr)->sin_addr.s_addr));
+    inet_pton(AF_INET,
+              PUBNUB_DEFAULT_DNS_SERVER,
+              &(((struct sockaddr_in*)addr)->sin_addr.s_addr));
 }
 #endif /* PUBNUB_SET_DNS_SERVERS */
 
-static enum pbpal_resolv_n_connect_result connect_TCP_socket(pb_socket_t* skt,
-                                                             struct pubnub_options* options,
-                                                             struct sockaddr *dest,
-                                                             const uint16_t port)
+
+static enum pbpal_resolv_n_connect_result
+connect_TCP_socket(pb_socket_t*           skt,
+                   struct pubnub_options* options,
+                   struct sockaddr*       dest,
+                   const uint16_t         port)
 {
     size_t sockaddr_size;
 
     PUBNUB_ASSERT_OPT(dest != NULL);
 
     switch (dest->sa_family) {
-    case AF_INET: 
-        sockaddr_size = sizeof(struct sockaddr_in);
+    case AF_INET:
+        sockaddr_size                         = sizeof(struct sockaddr_in);
         ((struct sockaddr_in*)dest)->sin_port = htons(port);
         break;
 #if PUBNUB_USE_IPV6
     case AF_INET6:
-        sockaddr_size = sizeof(struct sockaddr_in6);
+        sockaddr_size                           = sizeof(struct sockaddr_in6);
         ((struct sockaddr_in6*)dest)->sin6_port = htons(port);
         break;
 #endif
     default:
-        PUBNUB_LOG_ERROR("connect_TCP_socket(socket=%d): invalid internet protokol "
-                         "dest->sa_family =%uh\n",
-                         *skt,
-                         dest->sa_family);
+        PUBNUB_LOG_ERROR(
+            "connect_TCP_socket(socket=%ld): invalid internet protokol "
+            "dest->sa_family =%uh\n",
+            (long)*skt,
+            dest->sa_family);
         return pbpal_connect_failed;
     }
     *skt = socket(dest->sa_family, SOCK_STREAM, IPPROTO_TCP);
@@ -178,10 +186,12 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(pb_socket_t* skt,
     pbpal_set_socket_blocking_io(*skt, options->use_blocking_io);
     socket_disable_SIGPIPE(*skt);
     if (SOCKET_ERROR == connect(*skt, dest, sockaddr_size)) {
-        return socket_would_block() ? pbpal_connect_wouldblock : pbpal_connect_failed;
+        return socket_would_block() ? pbpal_connect_wouldblock
+                                    : pbpal_connect_failed;
     }
     return pbpal_connect_success;
 }
+
 
 #if PUBNUB_ADNS_RETRY_AFTER_CLOSE
 static void if_no_retry_close_socket(pb_socket_t* skt, struct pubnub_flags* flags)
@@ -193,10 +203,11 @@ static void if_no_retry_close_socket(pb_socket_t* skt, struct pubnub_flags* flag
 }
 #endif /* PUBNUB_ADNS_RETRY_AFTER_CLOSE */
 
+
 #if PUBNUB_CHANGE_DNS_SERVERS
 static void check_dns_server_error(struct pbdns_servers_check* dns_check,
-                                   struct pubnub_flags* flags)
-{                                   
+                                   struct pubnub_flags*        flags)
+{
     dns_check->dns_server_check |= dns_check->dns_mask;
     if (dns_check->dns_mask < PUBNUB_MAX_DNS_SERVERS_MASK) {
         flags->retry_after_close = true;
@@ -207,28 +218,29 @@ static void check_dns_server_error(struct pbdns_servers_check* dns_check,
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
 void pbpal_multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses)
 {
-    spare_addresses->n_ipv4 = 0;
+    spare_addresses->n_ipv4     = 0;
     spare_addresses->ipv4_index = 0;
 #if PUBNUB_USE_IPV6
-    spare_addresses->n_ipv6 = 0;
+    spare_addresses->n_ipv6     = 0;
     spare_addresses->ipv6_index = 0;
 #endif
 }
 
-static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
-    pb_socket_t* skt,
-    struct pubnub_multi_addresses* spare_addresses,
-    struct pubnub_options* options,
-    struct pubnub_flags* flags,
-    const uint16_t port)
+
+static enum pbpal_resolv_n_connect_result
+try_TCP_connect_spare_address(pb_socket_t*                   skt,
+                              struct pubnub_multi_addresses* spare_addresses,
+                              struct pubnub_options*         options,
+                              struct pubnub_flags*           flags,
+                              const uint16_t                 port)
 {
     enum pbpal_resolv_n_connect_result rslt = pbpal_resolv_resource_failure;
-    
+
     if (spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
         /* Need at least a second to live */
-        if (spare_addresses->ttl_ipv4[spare_addresses->ipv4_index] - 2 >
-            time(NULL) - spare_addresses->time_of_the_last_dns_query) {
-            struct sockaddr_in dest = {0}; 
+        if (spare_addresses->ttl_ipv4[spare_addresses->ipv4_index] - 2
+            > time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            struct sockaddr_in dest = { 0 };
             memcpy(&(dest.sin_addr.s_addr),
                    spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4,
                    sizeof dest.sin_addr.s_addr);
@@ -239,7 +251,8 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
-            flags->retry_after_close = (++spare_addresses->ipv4_index < spare_addresses->n_ipv4);
+            flags->retry_after_close =
+                (++spare_addresses->ipv4_index < spare_addresses->n_ipv4);
             if_no_retry_close_socket(skt, flags);
 #if PUBNUB_USE_SSL
             flags->trySSL = options->useSSL;
@@ -249,9 +262,9 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
 #if PUBNUB_USE_IPV6
     else if (spare_addresses->ipv6_index < spare_addresses->n_ipv6) {
         /* Need at least a second to live */
-        if (spare_addresses->ttl_ipv6[spare_addresses->ipv6_index] - 2 >
-            time(NULL) - spare_addresses->time_of_the_last_dns_query) {
-            struct sockaddr_in6 dest = {0}; 
+        if (spare_addresses->ttl_ipv6[spare_addresses->ipv6_index] - 2
+            > time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            struct sockaddr_in6 dest = { 0 };
             memcpy(dest.sin6_addr.s6_addr,
                    spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6,
                    sizeof dest.sin6_addr.s6_addr);
@@ -262,7 +275,8 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
-            flags->retry_after_close = (++spare_addresses->ipv6_index < spare_addresses->n_ipv6);
+            flags->retry_after_close =
+                (++spare_addresses->ipv6_index < spare_addresses->n_ipv6);
             if_no_retry_close_socket(skt, flags);
 #if PUBNUB_USE_SSL
             flags->trySSL = options->useSSL;
@@ -273,66 +287,72 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
     else {
         pbpal_multiple_addresses_reset_counters(spare_addresses);
     }
-    
+
     return rslt;
 }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #endif /* PUBNUB_CALLBACK_API */
 
 
-enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 {
-    int error;
-    uint16_t port = HTTP_PORT;
+    int         error;
+    uint16_t    port = HTTP_PORT;
     char const* origin;
 
 #ifdef PUBNUB_CALLBACK_API
-    sockaddr_inX_t dest = {0};
+    sockaddr_inX_t dest = { 0 };
 
     prepare_port_and_hostname(pb, &port, &origin);
 #if PUBNUB_PROXY_API
     if (0 != pb->proxy_ipv4_address.ipv4[0]) {
-        struct sockaddr_in dest = {0}; 
-        memcpy(&(dest.sin_addr.s_addr), pb->proxy_ipv4_address.ipv4, sizeof dest.sin_addr.s_addr);
+        struct sockaddr_in dest = { 0 };
+        memcpy(&(dest.sin_addr.s_addr),
+               pb->proxy_ipv4_address.ipv4,
+               sizeof dest.sin_addr.s_addr);
         dest.sin_family = AF_INET;
-        return connect_TCP_socket(&pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        return connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
     }
 #if PUBNUB_USE_IPV6
-    else if ((0 != pb->proxy_ipv6_address.ipv6[0]) || (0 != pb->proxy_ipv6_address.ipv6[1])) {
-        struct sockaddr_in6 dest = {0}; 
-        memcpy(dest.sin6_addr.s6_addr, pb->proxy_ipv6_address.ipv6, sizeof dest.sin6_addr.s6_addr);
+    else if ((0 != pb->proxy_ipv6_address.ipv6[0])
+             || (0 != pb->proxy_ipv6_address.ipv6[1])) {
+        struct sockaddr_in6 dest = { 0 };
+        memcpy(dest.sin6_addr.s6_addr,
+               pb->proxy_ipv6_address.ipv6,
+               sizeof dest.sin6_addr.s6_addr);
         dest.sin6_family = AF_INET6;
-        return connect_TCP_socket(&pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        return connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
     }
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     {
         enum pbpal_resolv_n_connect_result rslt;
-        rslt = try_TCP_connect_spare_address(&pb->pal.socket,
-                                             &pb->spare_addresses,
-                                             &pb->options,
-                                             &pb->flags,
-                                             port);
+        rslt = try_TCP_connect_spare_address(
+            &pb->pal.socket, &pb->spare_addresses, &pb->options, &pb->flags, port);
         if (rslt != pbpal_resolv_resource_failure) {
             return rslt;
         }
     }
-#endif   
+#endif
 #if PUBNUB_CHANGE_DNS_SERVERS
     get_dns_ip(&pb->dns_check, (struct sockaddr*)&dest);
 #else
     get_dns_ip((struct sockaddr*)&dest);
 #endif
     if (SOCKET_INVALID == pb->pal.socket) {
-        pb->pal.socket = socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
-    }    
+        pb->pal.socket =
+            socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
+    }
     if (SOCKET_INVALID == pb->pal.socket) {
         return pbpal_resolv_resource_failure;
     }
     pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
-    error = send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, origin, QUERY_TYPE);
+    error =
+        send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, origin, QUERY_TYPE);
     if (error < 0) {
 #if PUBNUB_CHANGE_DNS_SERVERS
         check_dns_server_error(&pb->dns_check, &pb->flags);
@@ -347,17 +367,17 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     return pbpal_resolv_sent;
 
 #else
-    char port_string[20];
-    struct addrinfo *result;
-    struct addrinfo *it;
-    struct addrinfo hint;
+    char             port_string[20];
+    struct addrinfo* result;
+    struct addrinfo* it;
+    struct addrinfo  hint;
 
     hint.ai_socktype = SOCK_STREAM;
-    hint.ai_family = AF_UNSPEC;
+    hint.ai_family   = AF_UNSPEC;
     hint.ai_protocol = hint.ai_flags = hint.ai_addrlen = 0;
-    hint.ai_addr = NULL;
-    hint.ai_canonname = NULL;
-    hint.ai_next = NULL;
+    hint.ai_addr                                       = NULL;
+    hint.ai_canonname                                  = NULL;
+    hint.ai_next                                       = NULL;
 
     prepare_port_and_hostname(pb, &port, &origin);
     snprintf(port_string, sizeof port_string, "%hu", port);
@@ -378,7 +398,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
                 break;
             }
             else {
-                PUBNUB_LOG_WARNING("socket connect() failed, will try another IP address, if available\n");
+                PUBNUB_LOG_WARNING("socket connect() failed, will try another "
+                                   "IP address, if available\n");
                 socket_close(pb->pal.socket);
                 pb->pal.socket = SOCKET_INVALID;
                 continue;
@@ -405,13 +426,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 #define PBDNS_OPTIONAL_PARAMS_PB
 #endif
 
-enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 {
 #ifdef PUBNUB_CALLBACK_API
 
-    sockaddr_inX_t dns_server = {0};
-    sockaddr_inX_t dest = {0};
-    uint16_t port = HTTP_PORT;
+    sockaddr_inX_t                     dns_server = { 0 };
+    sockaddr_inX_t                     dest       = { 0 };
+    uint16_t                           port       = HTTP_PORT;
     enum pbpal_resolv_n_connect_result rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -434,13 +455,12 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 #endif
     switch (read_dns_response(pb->pal.socket,
                               (struct sockaddr*)&dns_server,
-                              (struct sockaddr*)&dest
-                              PBDNS_OPTIONAL_PARAMS_PB)) {
+                              (struct sockaddr*)&dest PBDNS_OPTIONAL_PARAMS_PB)) {
     case -1:
 #if PUBNUB_CHANGE_DNS_SERVERS
         check_dns_server_error(&pb->dns_check, &pb->flags);
 #endif
-		return pbpal_resolv_failed_rcv;
+        return pbpal_resolv_failed_rcv;
     case +1:
         return pbpal_resolv_rcv_wouldblock;
     case 0:
@@ -448,7 +468,8 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     }
     socket_close(pb->pal.socket);
 
-    rslt = connect_TCP_socket(&pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+    rslt = connect_TCP_socket(
+        &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     if (pbpal_connect_failed == rslt) {
         if (AF_INET == ((struct sockaddr*)&dest)->sa_family) {
@@ -479,10 +500,10 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 }
 
 
-enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
 {
-    fd_set write_set;
-    int rslt;
+    fd_set         write_set;
+    int            rslt;
     struct timeval timev = { 0, 300000 };
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));

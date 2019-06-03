@@ -66,10 +66,8 @@ static enum pubnub_res subscribe_v2_prep(struct pbcc_context* p,
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
 
-    p->http_buf_len = snprintf(p->http_buf,
-                               sizeof p->http_buf,
-                               "/v2/subscribe/%s/",
-                               p->subscribe_key);
+    p->http_buf_len = snprintf(
+        p->http_buf, sizeof p->http_buf, "/v2/subscribe/%s/", p->subscribe_key);
     APPEND_URL_ENCODED_M(p, channel);
     p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
                                 sizeof p->http_buf - p->http_buf_len,
@@ -120,13 +118,12 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     enum pbjson_object_name_parse_result jpresult;
     struct pbjson_elem                   el;
     struct pbjson_elem                   found;
-    char*                                reply    = p->http_reply;
-    int                                  replylen = p->http_buf_len;
+    char*                                reply = p->http_reply;
 
-    if (replylen < MIN_SUBSCRIBE_V2_RESPONSE_LENGTH) {
+    if (p->http_buf_len < MIN_SUBSCRIBE_V2_RESPONSE_LENGTH) {
         return PNR_FORMAT_ERROR;
     }
-    if ((reply[0] != '{') || (reply[replylen - 1] != '}')) {
+    if ((reply[0] != '{') || (reply[p->http_buf_len - 1] != '}')) {
         return PNR_FORMAT_ERROR;
     }
 
@@ -136,16 +133,16 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     if (jonmpOK == jpresult) {
         struct pbjson_elem titel;
         if (jonmpOK == pbjson_get_object_value(&found, "t", &titel)) {
-            unsigned len = titel.end - titel.start - 2;
+            size_t len = titel.end - titel.start - 2;
             if ((*titel.start != '"') || (titel.end[-1] != '"')) {
                 PUBNUB_LOG_ERROR("Time token in response is not a string\n");
                 return PNR_FORMAT_ERROR;
             }
             if (len >= sizeof p->timetoken) {
-                PUBNUB_LOG_ERROR("Time token in response has length %u, longer "
-                                 "than our max %lu\n",
-                                 len,
-                                 sizeof p->timetoken - 1);
+                PUBNUB_LOG_ERROR(
+                    "Time token in response, length %zu, longer than max %zu\n",
+                    len,
+                    sizeof p->timetoken - 1);
                 return PNR_FORMAT_ERROR;
             }
 
@@ -180,8 +177,8 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
      */
     jpresult = pbjson_get_object_value(&el, "m", &found);
     if (jonmpOK == jpresult) {
-        p->msg_ofs = found.start - reply + 1;
-        p->msg_end = found.end - reply - 1;
+        p->msg_ofs = (unsigned)(found.start - reply + 1);
+        p->msg_end = (unsigned)(found.end - reply - 1);
     }
     else {
         PUBNUB_LOG_ERROR(
@@ -223,7 +220,7 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp)
         return rslt;
     }
 
-    p->msg_ofs = seeker - p->http_reply + 2;
+    p->msg_ofs = (unsigned)(seeker - p->http_reply + 2);
     el.start   = start;
     el.end     = seeker;
 
