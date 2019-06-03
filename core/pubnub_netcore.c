@@ -1049,7 +1049,7 @@ next_state:
         case PNR_OK: {
             unsigned len = pbpal_read_len(pb);
             WATCH_UINT(len);
-            WATCH_UINT(pb->core.http_buf_len);
+            WATCH_SIZE_T(pb->core.http_buf_len);
             PUBNUB_ASSERT_OPT(pb->core.http_buf_len + len
                               <= pb->core.http_content_len);
             memcpy(pb->core.http_reply + pb->core.http_buf_len, pb->core.http_buf, len);
