@@ -15,7 +15,7 @@ changelog:
     date: Apr 29, 2019
     changes:
       - type: enhancement
-        text: Will try other address from (async) DNS reponse if first one fails
+        text: Will try other address from (async) DNS response if first one fails
       - type: enhancement
         text: Will try secondary (async) DNS server if primary doesn't work
   - version: v2.8.1
@@ -84,7 +84,7 @@ changelog:
     date: Nov 2, 2018
     changes:
       - type: bug
-        text: TLS connection timeout was prone to errors due to time syncronisation and such.
+        text: TLS connection timeout was prone to errors due to time synchronisation and such.
   - version: v2.5.5
     date: Nov 1, 2018
     changes:
@@ -150,8 +150,8 @@ changelog:
       - type: feature
         text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
   - version: v2.4.1
-    changes:
     date: Jul 6, 2018
+    changes:    
       - type: feature
         text: Enable reading system DNS on Windows
       - type: bug
