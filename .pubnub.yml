@@ -1,358 +1,479 @@
-name: c-core
-version: 2.8.2
-scm: github.com/pubnub/c-core
-changelog:
-  - version: v2.8.2
-    date: Apr 29, 2019
-    changes:
-      - type: enhancement
-        text: Will try other address from (async) DNS reponse if first one fails
-      - type: enhancement
-        text: Will try secondary (async) DNS server if primary doesn't work
-  - version: v2.8.1
-    date: Apr 29, 2019
-    changes:
-      - type: enhancement
-        text: Update pubnub_allooc_std.c to pubnub_cancel() changes
-  - version: v2.8.0
-    date: Mar 18, 2019
-    changes:
-      - type: enhancement
-        text: Support Message Counts API
-  - version: v2.7.0
-    date: Feb 19, 2019
-    changes:
-      - type: enhancement
-        text: Support IPv6 for DNS resolution (mostly for callback interface)
-  - version: v2.6.4
-    date: Jan 17, 2019
-    changes:
-      - type: bug
-        text: URL encode channel name(s)
-  - version: v2.6.3
-    date: Jan 8, 2019
-    changes:
-      - type: enhancement
-        text: Update samples to changes in pubnub_cancel() and other interface changes
-      - type: enhancement
-        text: Update samples to use time() instead of clock() as clock() can measure CPU-only time instead of real time
-      - type: enhancement
-        text: Update Qt functional tests and make them reliable
-      - type: enhancement
-        text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet doesn't incur much memory increase
-      - type: bug
-        text: C++ wrapper and Qt did not have proper multithreading support as they didn't protect _their_ data. Now that's fixed.
-  - version: v2.6.2
-    date: Dec 20, 2018
-    changes:
-      - type: bug
-        text: Fix memory leak regarding OpenSSL
-  - version: v2.6.1
-    date: Dec 2, 2018
-    changes:
-      - type: enhancement
-        text: Publish can now be GZIPed (if done via POST)
-      - type: bug
-        text: Publish via POST encrypted could publish garbage and fail
-  - version: v2.6.0
-    date: Nov 20, 2018
-    changes:
-      - type: enhancement
-        text: Publish can now be done via POST
-      - type: bug
-        text: Several smaller DNS en/de/coding issues fixed
-  - version: v2.5.8
-    date: Nov 8, 2018
-    changes:
-      - type: enhancement
-        text: pubnub_await() in the sync interface now reports PNR_TIMEOUT on, well, (transaction) timeout
-  - version: v2.5.7
-    date: Nov 4, 2018
-    changes:
-      - type: bug
-        text: DNS en/de/coding could fail on some toolchains because of alignment issues.
-  - version: v2.5.6
-    date: Nov 2, 2018
-    changes:
-      - type: bug
-        text: TLS connection timeout was prone to errors due to time syncronisation and such.
-  - version: v2.5.5
-    date: Nov 1, 2018
-    changes:
-      - type: bug
-        text: Fix wrong detection of PNR_TIMEOUT, by reset of TLS connect timer when connection is established.
-  - version: v2.5.4
-    date: Oct 18, 2018
-    changes:
-      - type: bug
-        text: Fix DNS decoding
-  - version: v2.5.3
-    date: Oct 16, 2018
-    changes:
-      - type: feature
-        text: Add support for pubnub_subscribe_v2() w/filter expressions
-      - type: feature
-        text: pubnub_cancel() returns is it done, or it just started the cancellation
-      - type: feature
-        text: Code that is only for TLS/SSL ifdef-ed out when not building w/TLS/SSL
-      - type: feature
-        text: Functional tests for C++ updated and now run on each commit
-  - version: v2.5.2
-    date: Sep 10, 2018
-    changes:
-      - type: bug
-        text: Improved handling of lost connection while in HTTP Keep-Alive
-      - type: feature
-        text: pubnub_free() now implies pubnub_cancel()
-      - type: feature
-        text: pubnub_cancel() will now call pbnc_fsm() in the sync interface. Combined with previous, this makes it possible to call pubnub_free() in sync interface and have it succeed even if transaction is ongoing.
-  - version: v2.5.1
-    date: Aug 30, 2018
-    changes:
-      - type: feature
-        text: Removed (unused) option to ignore TLS/SSL errors
-  - version: v2.5.0
-    date: Aug 28, 2018
-    changes:
-      - type: feature
-        text: Support HTTPS CONNECT proxy
-      - type: feature
-        text: Can set proxy via IP address and `localhost`
-      - type: feature
-        text: Adhere to Connection&#58; close from server
-      - type: bug
-        text: Possible pointer out of bounds fixed in JSON parser
-      - type: feature
-        text: Functional tests improved, can run concurrently
-      - type: bug
-        text: MacOS build fixed
-  - version: v2.4.3
-    date: Jul 25, 2018
-    changes:
-      - type: feature
-        text: Support OpenSSL 1.1.x with callback interface
-      - type: feature
-        text: Add support for filter expressions on subscribe
-      - type: feature
-        text: Enable receiving GZIP-ed reply
-  - version: v2.4.2
-    date: Jul 12, 2018
-    changes:
-      - type: feature
-        text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
-  - version: v2.4.1
-    changes:
-    date: Jul 6, 2018
-      - type: feature
-        text: Enable reading system DNS on Windows
-      - type: bug
-        text: Small fixes in system DNS reading/parsing
-  - version: v2.4.0
-    date: Jun 14, 2018
-    changes:
-      - type: feature
-        text: Callback interface uses (our own) async DNS
-      - type: feature
-        text: Enable sending meta data when publishing
-      - type: feature
-        text: Enable setting `norep` (don't replicate) when publishing (with `store=false`, publish becomes "fire")
-      - type: bug
-        text: Small fixes for async DNS
-      - type: feature
-        text: On MacOS, use SO_NOSIGPIPE to avoid SIGPIPE on the socket
-      - type: bug
-        text: Bad handling of new transaction started in the callback and HTTP keep-alive was active
-      - type: bug
-        text: Bad handling of error (connection lost) when starting a new transaction on a HTTP kept-alive connection
-  - version: v2.3.3
-    date: Apr 11, 2018
-    changes:
-      - type: feature
-        text: On Linux, use MSG_NOSIGNAL to avoid SIGPIPE on send()
-      - type: feature
-        text: Add API to read proxy configuration
-      - type: bug
-        text: Avoid (currently harmless) inconsistent locking order
-      - type: bug
-        text: Fix HTTP GET & CONNECT proxy w/HTTP Keep-Alive
-      - type: feature
-        text: Send up-to-date version info in User-Agent HTTP header
-  - version: v2.3.2
-    date: Mar 10, 2018
-    changes:
-      - type: bug
-        text: Unify default blocking I/O setting to block in sync and non-block in callback interface
-  - version: v2.3.1
-    date: Mar 8, 2018
-    changes:
-      - type: bug
-        text: Read from OpenSSL in a loop, to handle more than one record received at a time
-      - type: bug
-        text: Fix minor race condition on timer expiry
-  - version: v2.3.0
-    date: Mar 5, 2018
-    changes:
-      - type: feature
-        text: Use HTTP Keep-alive, where possible
-  - version: v2.2.14
-    date: Feb 6, 2018
-    changes:
-      - type: bug
-        text: Fix removing the first context from the timer list
-  - version: v2.2.13
-    date: Feb 6, 2018
-    changes:
-      - type: feature
-        text: Support OpenSSL 1.1.0+ (BIO_(s|g)et_conn_ip -> BIO_(s|g)et_conn_address)
-      - type: bug
-        text: Handle chunks larger than http_buff
-      - type: bug
-        text: Fix receiving data longer than http_buff at a time
-  - version: v2.2.12
-    date: Dec 30, 2017
-    changes:
-      - type: bug
-        text: Cleanups, fix build issue and warnings on Windows
-  - version: v2.2.11
-    date: Oct 30, 2017
-    changes:
-      - type: bug
-        text: Fix resource leaks in C++ pubnub::futres on Windows
-  - version: v2.2.10
-    date: Oct 5, 2017
-    changes:
-      - type: bug
-        text: Fix build issues on Mac
-  - version: v2.2.9
-    date: Oct 1, 2017
-    changes:
-      - type: bug
-        text: Fix high CPU utilization when network out on Mac
-  - version: v2.2.8
-    date: Sep 25, 2017
-    changes:
-      - type: bug
-        text: Fix off-by-one error
-  - version: v2.2.7
-    date: Sep 14, 2017
-    changes:
-      - type: bug
-        text: Fix handling of recv() errrno on MacOS
-  - version: v2.2.6
-    date: Sep 10, 2017
-    changes:
-      - type: feature
-        text: Support OpenSSL 1.1.0+ (removed BIO_set_conn_port_int)
-      - type: bug
-        text: Some logging code was not using proper types
-  - version: v2.2.5
-    date: Sep 1, 2017
-    changes:
-      - type: bug
-        text: Fix potential issue in interpreting UTF-8 char values
-  - version: v2.2.4
-    date: Aug 30, 2017
-    changes:
-      - type: bug
-        text: Fix off-by-one error
-  - version: v2.2.3
-    date: Mar 9, 2017
-    changes:
-      - type: bug
-        text: Fix handling of segmented messages
-      - type: feature
-        text: Improve exising and add new logging
-  - version: v2.2.2
-    date: Oct 12, 2016
-    changes:
-      - type: feature
-        text: Improve parsing of bad publish/subscribe key error
-      - type: feature
-        text: Add option to turn of SSL/TLS session reuse
-      - type: feature
-        text: PNR_TIMEOUT no longer resets the time token
-      - type: bug
-        text: Fixes and improvements of the console sample application
-  - version: v2.2.1
-    date: Apr 2, 2016
-    changes:
-      - type: bug
-        text: Fix C++ pubnub::futres destructor hanging up
-  - version: v2.2.0
-    date: Feb 22, 2016
-    changes:
-      - type: feature
-        text: First "core feature complete" release
-features:
-  channel-groups:
+--- 
+changelog: 
+  - 
+    changes: 
+      - 
+        text: "Will try other address from (async) DNS response if first one fails"
+        type: enhancement
+      - 
+        text: "Will try secondary (async) DNS server if primary doesn't work"
+        type: enhancement
+    date: "Apr 29, 2019"
+    version: v2.8.2
+  - 
+    changes: 
+      - 
+        text: "Update pubnub_allooc_std.c to pubnub_cancel() changes"
+        type: enhancement
+    date: "Apr 29, 2019"
+    version: v2.8.1
+  - 
+    changes: 
+      - 
+        text: "Support Message Counts API"
+        type: enhancement
+    date: "Mar 18, 2019"
+    version: v2.8.0
+  - 
+    changes: 
+      - 
+        text: "Support IPv6 for DNS resolution (mostly for callback interface)"
+        type: enhancement
+    date: "Feb 19, 2019"
+    version: v2.7.0
+  - 
+    changes: 
+      - 
+        text: "URL encode channel name(s)"
+        type: bug
+    date: "Jan 17, 2019"
+    version: v2.6.4
+  - 
+    changes: 
+      - 
+        text: "Update samples to changes in pubnub_cancel() and other interface changes"
+        type: enhancement
+      - 
+        text: "Update samples to use time() instead of clock() as clock() can measure CPU-only time instead of real time"
+        type: enhancement
+      - 
+        text: "Update Qt functional tests and make them reliable"
+        type: enhancement
+      - 
+        text: "UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet doesn't incur much memory increase"
+        type: enhancement
+      - 
+        text: "C++ wrapper and Qt did not have proper multithreading support as they didn't protect _their_ data. Now that's fixed."
+        type: bug
+    date: "Jan 8, 2019"
+    version: v2.6.3
+  - 
+    changes: 
+      - 
+        text: "Fix memory leak regarding OpenSSL"
+        type: bug
+    date: "Dec 20, 2018"
+    version: v2.6.2
+  - 
+    changes: 
+      - 
+        text: "Publish can now be GZIPed (if done via POST)"
+        type: enhancement
+      - 
+        text: "Publish via POST encrypted could publish garbage and fail"
+        type: bug
+    date: "Dec 2, 2018"
+    version: v2.6.1
+  - 
+    changes: 
+      - 
+        text: "Publish can now be done via POST"
+        type: enhancement
+      - 
+        text: "Several smaller DNS en/de/coding issues fixed"
+        type: bug
+    date: "Nov 20, 2018"
+    version: v2.6.0
+  - 
+    changes: 
+      - 
+        text: "pubnub_await() in the sync interface now reports PNR_TIMEOUT on, well, (transaction) timeout"
+        type: enhancement
+    date: "Nov 8, 2018"
+    version: v2.5.8
+  - 
+    changes: 
+      - 
+        text: "DNS en/de/coding could fail on some toolchains because of alignment issues."
+        type: bug
+    date: "Nov 4, 2018"
+    version: v2.5.7
+  - 
+    changes: 
+      - 
+        text: "TLS connection timeout was prone to errors due to time synchronisation and such."
+        type: bug
+    date: "Nov 2, 2018"
+    version: v2.5.6
+  - 
+    changes: 
+      - 
+        text: "Fix wrong detection of PNR_TIMEOUT, by reset of TLS connect timer when connection is established."
+        type: bug
+    date: "Nov 1, 2018"
+    version: v2.5.5
+  - 
+    changes: 
+      - 
+        text: "Fix DNS decoding"
+        type: bug
+    date: "Oct 18, 2018"
+    version: v2.5.4
+  - 
+    changes: 
+      - 
+        text: "Add support for pubnub_subscribe_v2() w/filter expressions"
+        type: feature
+      - 
+        text: "pubnub_cancel() returns is it done, or it just started the cancellation"
+        type: feature
+      - 
+        text: "Code that is only for TLS/SSL ifdef-ed out when not building w/TLS/SSL"
+        type: feature
+      - 
+        text: "Functional tests for C++ updated and now run on each commit"
+        type: feature
+    date: "Oct 16, 2018"
+    version: v2.5.3
+  - 
+    changes: 
+      - 
+        text: "Improved handling of lost connection while in HTTP Keep-Alive"
+        type: bug
+      - 
+        text: "pubnub_free() now implies pubnub_cancel()"
+        type: feature
+      - 
+        text: "pubnub_cancel() will now call pbnc_fsm() in the sync interface. Combined with previous, this makes it possible to call pubnub_free() in sync interface and have it succeed even if transaction is ongoing."
+        type: feature
+    date: "Sep 10, 2018"
+    version: v2.5.2
+  - 
+    changes: 
+      - 
+        text: "Removed (unused) option to ignore TLS/SSL errors"
+        type: feature
+    date: "Aug 30, 2018"
+    version: v2.5.1
+  - 
+    changes: 
+      - 
+        text: "Support HTTPS CONNECT proxy"
+        type: feature
+      - 
+        text: "Can set proxy via IP address and `localhost`"
+        type: feature
+      - 
+        text: "Adhere to Connection: close from server"
+        type: feature
+      - 
+        text: "Possible pointer out of bounds fixed in JSON parser"
+        type: bug
+      - 
+        text: "Functional tests improved, can run concurrently"
+        type: feature
+      - 
+        text: "MacOS build fixed"
+        type: bug
+    date: "Aug 28, 2018"
+    version: v2.5.0
+  - 
+    changes: 
+      - 
+        text: "Support OpenSSL 1.1.x with callback interface"
+        type: feature
+      - 
+        text: "Add support for filter expressions on subscribe"
+        type: feature
+      - 
+        text: "Enable receiving GZIP-ed reply"
+        type: feature
+    date: "Jul 25, 2018"
+    version: v2.4.3
+  - 
+    changes: 
+      - 
+        text: "Enable setting HTTP Keep-Alive use on/off for C++ and Qt"
+        type: feature
+    date: "Jul 12, 2018"
+    version: v2.4.2
+  - 
+    changes: 
+      - 
+        text: "Enable reading system DNS on Windows"
+        type: feature
+      - 
+        text: "Small fixes in system DNS reading/parsing"
+        type: bug
+    date: "Jul 6, 2018"
+    version: v2.4.1
+  - 
+    changes: 
+      - 
+        text: "Callback interface uses (our own) async DNS"
+        type: feature
+      - 
+        text: "Enable sending meta data when publishing"
+        type: feature
+      - 
+        text: "Enable setting `norep` (don't replicate) when publishing (with `store=false`, publish becomes \"fire\")"
+        type: feature
+      - 
+        text: "Small fixes for async DNS"
+        type: bug
+      - 
+        text: "On MacOS, use SO_NOSIGPIPE to avoid SIGPIPE on the socket"
+        type: feature
+      - 
+        text: "Bad handling of new transaction started in the callback and HTTP keep-alive was active"
+        type: bug
+      - 
+        text: "Bad handling of error (connection lost) when starting a new transaction on a HTTP kept-alive connection"
+        type: bug
+    date: "Jun 14, 2018"
+    version: v2.4.0
+  - 
+    changes: 
+      - 
+        text: "On Linux, use MSG_NOSIGNAL to avoid SIGPIPE on send()"
+        type: feature
+      - 
+        text: "Add API to read proxy configuration"
+        type: feature
+      - 
+        text: "Avoid (currently harmless) inconsistent locking order"
+        type: bug
+      - 
+        text: "Fix HTTP GET & CONNECT proxy w/HTTP Keep-Alive"
+        type: bug
+      - 
+        text: "Send up-to-date version info in User-Agent HTTP header"
+        type: feature
+    date: "Apr 11, 2018"
+    version: v2.3.3
+  - 
+    changes: 
+      - 
+        text: "Unify default blocking I/O setting to block in sync and non-block in callback interface"
+        type: bug
+    date: "Mar 10, 2018"
+    version: v2.3.2
+  - 
+    changes: 
+      - 
+        text: "Read from OpenSSL in a loop, to handle more than one record received at a time"
+        type: bug
+      - 
+        text: "Fix minor race condition on timer expiry"
+        type: bug
+    date: "Mar 8, 2018"
+    version: v2.3.1
+  - 
+    changes: 
+      - 
+        text: "Use HTTP Keep-alive, where possible"
+        type: feature
+    date: "Mar 5, 2018"
+    version: v2.3.0
+  - 
+    changes: 
+      - 
+        text: "Fix removing the first context from the timer list"
+        type: bug
+    date: "Feb 6, 2018"
+    version: v2.2.14
+  - 
+    changes: 
+      - 
+        text: "Support OpenSSL 1.1.0+ (BIO_(s|g)et_conn_ip -> BIO_(s|g)et_conn_address)"
+        type: feature
+      - 
+        text: "Handle chunks larger than http_buff"
+        type: bug
+      - 
+        text: "Fix receiving data longer than http_buff at a time"
+        type: bug
+    date: "Feb 6, 2018"
+    version: v2.2.13
+  - 
+    changes: 
+      - 
+        text: "Cleanups, fix build issue and warnings on Windows"
+        type: bug
+    date: "Dec 30, 2017"
+    version: v2.2.12
+  - 
+    changes: 
+      - 
+        text: "Fix resource leaks in C++ pubnub::futres on Windows"
+        type: bug
+    date: "Oct 30, 2017"
+    version: v2.2.11
+  - 
+    changes: 
+      - 
+        text: "Fix build issues on Mac"
+        type: bug
+    date: "Oct 5, 2017"
+    version: v2.2.10
+  - 
+    changes: 
+      - 
+        text: "Fix high CPU utilization when network out on Mac"
+        type: bug
+    date: "Oct 1, 2017"
+    version: v2.2.9
+  - 
+    changes: 
+      - 
+        text: "Fix off-by-one error"
+        type: bug
+    date: "Sep 25, 2017"
+    version: v2.2.8
+  - 
+    changes: 
+      - 
+        text: "Fix handling of recv() errrno on MacOS"
+        type: bug
+    date: "Sep 14, 2017"
+    version: v2.2.7
+  - 
+    changes: 
+      - 
+        text: "Support OpenSSL 1.1.0+ (removed BIO_set_conn_port_int)"
+        type: feature
+      - 
+        text: "Some logging code was not using proper types"
+        type: bug
+    date: "Sep 10, 2017"
+    version: v2.2.6
+  - 
+    changes: 
+      - 
+        text: "Fix potential issue in interpreting UTF-8 char values"
+        type: bug
+    date: "Sep 1, 2017"
+    version: v2.2.5
+  - 
+    changes: 
+      - 
+        text: "Fix off-by-one error"
+        type: bug
+    date: "Aug 30, 2017"
+    version: v2.2.4
+  - 
+    changes: 
+      - 
+        text: "Fix handling of segmented messages"
+        type: bug
+      - 
+        text: "Improve exising and add new logging"
+        type: feature
+    date: "Mar 9, 2017"
+    version: v2.2.3
+  - 
+    changes: 
+      - 
+        text: "Improve parsing of bad publish/subscribe key error"
+        type: feature
+      - 
+        text: "Add option to turn of SSL/TLS session reuse"
+        type: feature
+      - 
+        text: "PNR_TIMEOUT no longer resets the time token"
+        type: feature
+      - 
+        text: "Fixes and improvements of the console sample application"
+        type: bug
+    date: "Oct 12, 2016"
+    version: v2.2.2
+  - 
+    changes: 
+      - 
+        text: "Fix C++ pubnub::futres destructor hanging up"
+        type: bug
+    date: "Apr 2, 2016"
+    version: v2.2.1
+  - 
+    changes: 
+      - 
+        text: "First \"core feature complete\" release"
+        type: feature
+    date: "Feb 22, 2016"
+    version: v2.2.0
+features: 
+  channel-groups: 
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
     - CHANNEL-GROUPS-REMOVE-GROUPS
     - CHANNEL-GROUPS-LIST-CHANNELS-IN-GROUP
-  presence:
+  presence: 
     - PRESENCE-HERE-NOW
     - PRESENCE-WHERE-NOW
     - PRESENCE-SET-STATE
     - PRESENCE-GET-STATE
     - PRESENCE-HEARTBEAT
-  publish:
+  publish: 
     - PUBLISH-STORE-FLAG
     - PUBLISH-RAW-JSON
     - PUBLISH-WITH-METADATA
     - PUBLISH-GET
     - PUBLISH-SYNC
     - PUBLISH-ASYNC
-  storage:
+  storage: 
     - STORAGE-INCLUDE-TIMETOKEN
     - STORAGE-COUNT
     - STORAGE-REVERSE
     - STORAGE-START-END
     - STORAGE-MESSAGE-COUNT
-  time:
-    - TIME-TIME
-  subscribe:
+  subscribe: 
     - SUBSCRIBE-CHANNELS
     - SUBSCRIBE-CHANNEL-GROUPS
     - SUBSCRIBE-PRESENCE-CHANNELS
     - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
     - SUBSCRIBE-WILDCARD
-supported-platforms:
+  time: 
+    - TIME-TIME
+name: c-core
+scm: github.com/pubnub/c-core
+supported-platforms: 
   - 
-    version: PubNub POSIX C SDK
-    platforms:
-      - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
-      - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+    platforms: 
+      - "Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work."
+      - "Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work."
+      - "For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all."
+    version: "PubNub POSIX C SDK"
   - 
-    version: PubNub POSIX C++ SDK
-    platforms:
-      - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
-      - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
-      - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
+    platforms: 
+      - "Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work."
+      - "Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work."
+      - "For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all."
+      - "Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)"
+    version: "PubNub POSIX C++ SDK"
   - 
-    version: PubNub Windows C SDK
-    platforms:
-      - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+    platforms: 
+      - "Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work."
+      - "For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all."
+    version: "PubNub Windows C SDK"
   - 
-    version: PubNub Windows C++ SDK
-    platforms:
-      - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
-      - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the Windows C++ SDK)
+    platforms: 
+      - "Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work."
+      - "For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all."
+      - "Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the Windows C++ SDK)"
+    version: "PubNub Windows C++ SDK"
   - 
-    version: PubNub FreeRTOS SDK
-    platforms:
-      - FreeRTOS+ 150825 or newer is supported. 
+    platforms: 
+      - "FreeRTOS+ 150825 or newer is supported. "
+    version: "PubNub FreeRTOS SDK"
   - 
-    version: PubNub Qt SDK
-    platforms:
-      - Qt5 is fully supported.
-      - Qt4 is not supported, but 'C core' is known to build on Qt4 and some features work.
-      - Older versions are not supported.
+    platforms: 
+      - "Qt5 is fully supported."
+      - "Qt4 is not supported, but 'C core' is known to build on Qt4 and some features work."
+      - "Older versions are not supported."
+    version: "PubNub Qt SDK"
   - 
-    version: PubNub mBed SDK
-    platforms:
-      - mBed 2 is supported.
-      - Newer versions should work, but are not supported out of the box.
+    platforms: 
+      - "mBed 2 is supported."
+      - "Newer versions should work, but are not supported out of the box."
+    version: "PubNub mBed SDK"
+version: "2.8.2"
