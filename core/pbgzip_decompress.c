@@ -30,12 +30,12 @@ static enum pubnub_res inflate_total_to_context_buffer(pubnub_t*      pb,
             return PNR_OK;
         }
         else {
-            PUBNUB_LOG_ERROR("Decompressed length[%u] is smaller than the "
-                             "'unpacked_size' value[%u]!\n"
+            PUBNUB_LOG_ERROR("Decompressed length[%zu] is smaller than the "
+                             "'unpacked_size' value[%zu]!\n"
                              "(Unpacked:['%.*s'])\n",
-                             (unsigned)dst_buf_size,
-                             (unsigned)out_len,
-                             (int)dst_buf_size,
+                             dst_buf_size,
+                             out_len,
+                             (long)dst_buf_size,
                              pb->core.decomp_http_reply);
         }
         break;
@@ -69,8 +69,8 @@ static enum pubnub_res inflate_total_to_context_buffer(pubnub_t*      pb,
 static void swap_reply_buffer(pubnub_t* pb)
 {
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
-    char*    aux_buf           = pb->core.http_reply;
-    unsigned aux_buf_len       = pb->core.http_buf_len;
+    char*  aux_buf             = pb->core.http_reply;
+    size_t aux_buf_len         = pb->core.http_buf_len;
     pb->core.http_reply        = pb->core.decomp_http_reply;
     pb->core.http_buf_len      = pb->core.decomp_buf_size;
     pb->core.decomp_http_reply = aux_buf;
@@ -85,6 +85,7 @@ static void swap_reply_buffer(pubnub_t* pb)
     return;
 }
 
+
 static enum pubnub_res inflate_total(pubnub_t*      pb,
                                      const uint8_t* p_in_buf_next,
                                      size_t         in_buf_size,
@@ -96,7 +97,7 @@ static enum pubnub_res inflate_total(pubnub_t*      pb,
         char* newbuf = (char*)realloc(pb->core.decomp_http_reply, out_len + 1);
         if (NULL == newbuf) {
             PUBNUB_LOG_ERROR("Failed to reallocate decompression buffer!\n"
-                             "Out length:%lu\n",
+                             "Out length:%zu\n",
                              out_len);
             return PNR_REPLY_TOO_BIG;
         }
@@ -105,7 +106,7 @@ static enum pubnub_res inflate_total(pubnub_t*      pb,
 #else
     if (out_len >= sizeof pb->core.decomp_http_reply) {
         PUBNUB_LOG_ERROR("Decompression buffer too small!\n"
-                         "Size of buffer:%lu - Out length:%lu\n",
+                         "Size of buffer:%zu - Out length:%zu\n",
                          sizeof pb->core.decomp_http_reply,
                          out_len);
         return PNR_REPLY_TOO_BIG;
@@ -120,6 +121,7 @@ static enum pubnub_res inflate_total(pubnub_t*      pb,
     return result;
 }
 
+
 enum pubnub_res pbgzip_decompress(pubnub_t* pb)
 {
     const uint8_t* data = (uint8_t*)pb->core.http_reply;
@@ -132,16 +134,14 @@ enum pubnub_res pbgzip_decompress(pubnub_t* pb)
         return PNR_BAD_COMPRESSION_FORMAT;
     }
     if (data[2] != 8) {
-        PUBNUB_LOG_ERROR("Not used 'deflate' compression method(8)!\n"
-                         "Compression method value:%u\n",
+        PUBNUB_LOG_ERROR("Unknown compression method %uX - only 'deflate'(8) "
+                         "is supported!\n",
                          (unsigned)data[2]);
         return PNR_BAD_COMPRESSION_FORMAT;
     }
     if (data[3] != 0) {
-        PUBNUB_LOG_ERROR(
-            "Pubnub gzip doesn't expect any flags on filename and extras!\n"
-            "Got gzip flags:%u\n",
-            (unsigned)data[3]);
+        PUBNUB_LOG_ERROR("GZIP flags should be 0, but are %uX\n",
+                         (unsigned)data[3]);
         return PNR_BAD_COMPRESSION_FORMAT;
     }
     /* Unpacked message size is placed at the end of the 'gzip' formated message
@@ -151,11 +151,11 @@ enum pubnub_res pbgzip_decompress(pubnub_t* pb)
     unpacked_size |= (uint32_t)data[size - 3] << 8;
     unpacked_size |= (uint32_t)data[size - 2] << 16;
     unpacked_size |= (uint32_t)data[size - 1] << 24;
-    PUBNUB_LOG_TRACE("pbgzip_decompress(pb=%p)-Length before:%lu and after "
+    PUBNUB_LOG_TRACE("pbgzip_decompress(pb=%p)-Length before:%zu and after "
                      "decompresion:%lu\n",
                      pb,
-                     (long unsigned)size,
-                     (long unsigned)unpacked_size);
+                     size,
+                     (unsigned long)unpacked_size);
     size -= (GZIP_HEADER_LENGTH_BYTES + GZIP_FOOTER_LENGTH_BYTES);
 
     return inflate_total(

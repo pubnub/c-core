@@ -6,6 +6,7 @@
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pbpal.h"
+#include "core/pubnub_version.h"
 #include "core/pubnub_version_internal.h"
 #include "core/pubnub_helper.h"
 #if PUBNUB_USE_ADVANCED_HISTORY
@@ -42,14 +43,23 @@
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 
 
+static int send_fin_head(struct pubnub_* pb)
+{
+    char s[200];
+    snprintf(s,
+             sizeof s,
+             "\r\nUser-Agent: %s%s",
+             pubnub_uagent(),
+             "\r\n" ACCEPT_ENCODING "\r\n");
+    return pbpal_send_str(pb, s);
+}
+
+
 #define SEND_FIN_HEAD(pb)                                                      \
-                if (0 > pbpal_send_literal_str(                                \
-                           pb,                                                 \
-                           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION \
-                           "\r\n" ACCEPT_ENCODING "\r\n")) {                   \
-                    outcome_detected(pb, PNR_IO_ERROR);                        \
-                    break;                                                     \
-                }
+    if (0 > send_fin_head(pb)) {                                               \
+        outcome_detected(pb, PNR_IO_ERROR);                                    \
+        break;                                                                 \
+    }
 
 
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
@@ -71,6 +81,7 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
         case PNR_CANCELLED:
         case PNR_STARTED:
         case PNR_INTERNAL_ERROR:
+        case PNR_AUTHENTICATION_FAILED:
             return false;
         default:
             return true;
@@ -344,17 +355,26 @@ static char const* pbnc_state2str(enum pubnub_state e)
     }
 }
 
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-static void multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses)
+static void initialize_fields_in_state_IDLE(struct pubnub_* pb)
 {
-    spare_addresses->n_ipv4 = 0;
-    spare_addresses->ipv4_index = 0;
-#if PUBNUB_USE_IPV6
-    spare_addresses->n_ipv6 = 0;
-    spare_addresses->ipv6_index = 0;
+#if PUBNUB_CHANGE_DNS_SERVERS
+    pb->dns_check.dns_server_check = 0;
+#endif
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
+    pb->flags.retry_after_close = false;
+#else
+    PUBNUB_UNUSED(pb);
+#endif
+#if PUBNUB_PROXY_API
+    pb->proxy_tunnel_established = false;
+    pb->proxy_saved_path_len     = 0;
+    pb->proxy_authorization_sent = false;
+    pb->auth_msg_count           = 0;
+#endif
+#if PUBNUB_USE_SSL
+    pb->flags.trySSL = pb->options.useSSL;
 #endif
 }
-#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 
 int pbnc_fsm(struct pubnub_* pb)
 {
@@ -369,19 +389,7 @@ next_state:
     case PBS_NULL:
         break;
     case PBS_IDLE:
-#if PUBNUB_CHANGE_DNS_SERVERS
-        pb->dns_check.dns_server_check = 0;
-#endif
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-        multiple_addresses_reset_counters(&pb->spare_addresses);
-#endif
-#if PUBNUB_NEED_RETRY_AFTER_CLOSE
-        pb->flags.retry_after_close = false;
-#endif
-#if PUBNUB_PROXY_API
-        pb->proxy_tunnel_established = false;
-        pb->proxy_saved_path_len     = 0;
-#endif
+        initialize_fields_in_state_IDLE(pb);
         pb->state = PBS_READY;
         switch (pbntf_enqueue_for_processing(pb)) {
         case -1:
@@ -565,6 +573,17 @@ next_state:
                     pb->flags.trySSL            = false;
                     pb->flags.retry_after_close = true;
                 }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+                else {
+                    pb->flags.retry_after_close =
+                        (++pb->spare_addresses.ipv4_index < pb->spare_addresses.n_ipv4)
+#if PUBNUB_USE_IPV6
+                        || (++pb->spare_addresses.ipv6_index
+                            < pb->spare_addresses.n_ipv6)
+#endif
+                        ;
+                }
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
                 outcome_detected(pb, PNR_CONNECT_FAILED);
                 return 0;
             default:
@@ -573,7 +592,7 @@ next_state:
                 return 0;
             }
         }
-#endif
+#endif /* PUBNUB_USE_SSL */
         i = pbpal_send_str(pb, pb->flags.is_publish_via_post ? "POST " : "GET ");
         if (i < 0) {
             outcome_detected(pb, PNR_IO_ERROR);
@@ -600,6 +619,16 @@ next_state:
                 pb->flags.trySSL            = false;
                 pb->flags.retry_after_close = true;
             }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+            else {
+                pb->flags.retry_after_close =
+                    (++pb->spare_addresses.ipv4_index < pb->spare_addresses.n_ipv4)
+#if PUBNUB_USE_IPV6
+                    || (++pb->spare_addresses.ipv6_index < pb->spare_addresses.n_ipv6)
+#endif
+                    ;
+            }
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
             outcome_detected(pb, PNR_CONNECT_FAILED);
             break;
         default:
@@ -611,12 +640,6 @@ next_state:
     }
 #endif /* PUBNUB_USE_SSL */
     case PBS_TX_GET:
-#if PUBNUB_CHANGE_DNS_SERVERS
-        pb->dns_check.dns_server_check = 0;
-#endif
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
-        multiple_addresses_reset_counters(&pb->spare_addresses);
-#endif
         i = pbpal_send_status(pb);
         if (i <= 0) {
 #if PUBNUB_PROXY_API
@@ -799,10 +822,12 @@ next_state:
 #if PUBNUB_PROXY_API
                 && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
 #endif
-                ) {
+            ) {
                 char hedr[128] = "\r\n";
-                pbcc_headers_for_publish_via_post(&(pb->core), hedr + 2, sizeof hedr - 2);
-                PUBNUB_LOG_TRACE("Sending HTTP 'publish via POST' headers: '%s'\n", hedr);
+                pbcc_headers_for_publish_via_post(
+                    &(pb->core), hedr + 2, sizeof hedr - 2);
+                PUBNUB_LOG_TRACE(
+                    "Sending HTTP 'publish via POST' headers: '%s'\n", hedr);
                 pb->state = PBS_TX_EXTRA_HEADERS;
                 if (-1 == pbpal_send_str(pb, hedr)) {
                     outcome_detected(pb, PNR_IO_ERROR);
@@ -836,10 +861,11 @@ next_state:
 #if PUBNUB_PROXY_API
                 && (pb->proxy_tunnel_established || (pbproxyNONE == pb->proxy_type))
 #endif
-                ) {
+            ) {
                 const char* message = pb->core.message_to_publish;
 #if PUBNUB_USE_GZIP_COMPRESSION
-                size_t len = (pb->core.gzip_msg_len != 0) ? pb->core.gzip_msg_len : strlen(message);
+                size_t len = (pb->core.gzip_msg_len != 0) ? pb->core.gzip_msg_len
+                                                          : strlen(message);
 #else
                 size_t len = strlen(message);
 #endif
@@ -979,8 +1005,9 @@ next_state:
                 pb->data_compressed = compressionGZIP;
             }
 #endif
-            else {
-                pbproxy_handle_http_header(pb, pb->core.http_buf);
+            else if (pbproxy_handle_http_header(pb, pb->core.http_buf) != 0) {
+                outcome_detected(pb, PNR_AUTHENTICATION_FAILED);
+                return 0;
             }
             pb->state = PBS_RX_HEADERS;
             goto next_state;
@@ -1023,7 +1050,7 @@ next_state:
         case PNR_OK: {
             unsigned len = pbpal_read_len(pb);
             WATCH_UINT(len);
-            WATCH_UINT(pb->core.http_buf_len);
+            WATCH_SIZE_T(pb->core.http_buf_len);
             PUBNUB_ASSERT_OPT(pb->core.http_buf_len + len
                               <= pb->core.http_content_len);
             memcpy(pb->core.http_reply + pb->core.http_buf_len, pb->core.http_buf, len);
@@ -1148,7 +1175,9 @@ next_state:
         break;
     case PBS_KEEP_ALIVE_IDLE:
 #if PUBNUB_PROXY_API
-        pb->proxy_saved_path_len = 0;
+        pb->proxy_saved_path_len     = 0;
+        pb->proxy_authorization_sent = false;
+        pb->auth_msg_count           = 0;
 #endif
         pb->state                          = PBS_KEEP_ALIVE_READY;
         pb->flags.started_while_kept_alive = true;
@@ -1171,7 +1200,7 @@ next_state:
             break;
         }
         pb->state = PBS_TX_GET;
-        i         = pbpal_send_str(pb, pb->flags.is_publish_via_post ? "POST " : "GET ");
+        i = pbpal_send_str(pb, pb->flags.is_publish_via_post ? "POST " : "GET ");
         if (i < 0) {
             pb->state = close_kept_alive_connection(pb);
         }

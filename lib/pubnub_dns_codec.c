@@ -68,6 +68,9 @@ enum DNSoptionsMask {
 #define RESOURCE_DATA_TYPE_OFFSET -10
 
 /** Offset of the data length sub-field of the RESOURCE DATA */
+#define RESOURCE_DATA_TTL_OFFSET -6
+
+/** Offset of the data length sub-field of the RESOURCE DATA */
 #define RESOURCE_DATA_DATA_LEN_OFFSET -2
 
 
@@ -510,17 +513,32 @@ static int check_answer(const uint8_t** o_reader,
         if (false == *p_address_found) {
             memcpy(resolved_addr_ipv4->ipv4, reader, 4);
             *p_address_found = true;
-#if PUBNUB_USE_MULTIPLE_ADDRESSES && PUBNUB_USE_SSL
-            if (options->fallbackSSL) {
-                memcpy(spare_addresses->ipv4_addresses[spare_addresses->n_ipv4++].ipv4,
-                       resolved_addr_ipv4->ipv4,
-                       4);
-            }
-#endif /* PUBNUB_USE_SSL */
         }
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-        else if (spare_addresses->n_ipv4 < PUBNUB_MAX_IPV4_ADDRESSES) {
-            memcpy(spare_addresses->ipv4_addresses[spare_addresses->n_ipv4++].ipv4, reader, 4);
+        if (spare_addresses->n_ipv4 < PUBNUB_MAX_IPV4_ADDRESSES) {
+            /* Time to live. Network byte order - big endian */
+            uint32_t ttl_ipv4 = ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET] << 24) |
+                                ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 1] << 16) |
+                                ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 2] << 8) |
+                                 (uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 3];
+            if (ttl_ipv4 > 0) {
+                /* We have intention remembering 2 least significant bytes(lower 16 bits:
+                   2^16 == 65536(seconds), considering that transaction('subscribe') is allowed
+                   to last up to five minutes(300 seconds) and we aim to use only necessary
+                   amount of memory.
+                 */
+                if (ttl_ipv4 >= 65536) {
+                    PUBNUB_LOG_WARNING("Warning: ttl for ipv4 received is out of range: "
+                                       "ttl_ipv4=%u seconds\n",
+                                       ttl_ipv4);
+                    spare_addresses->ttl_ipv4[spare_addresses->n_ipv4] = 0xFFFF;
+                }
+                else {
+                    PUBNUB_LOG_TRACE("ttl_ipv4= %u seconds\n", ttl_ipv4);
+                    spare_addresses->ttl_ipv4[spare_addresses->n_ipv4] = (uint16_t)ttl_ipv4;
+                }
+                memcpy(spare_addresses->ipv4_addresses[spare_addresses->n_ipv4++].ipv4, reader, 4);
+            }
         }
 #endif
         return 0;
@@ -548,17 +566,27 @@ static int check_answer(const uint8_t** o_reader,
         if (false == *p_address_found) {
             memcpy(resolved_addr_ipv6->ipv6, reader, 16);
             *p_address_found = true;
-#if PUBNUB_USE_MULTIPLE_ADDRESSES && PUBNUB_USE_SSL
-            if (options->fallbackSSL) {
-                memcpy(spare_addresses->ipv6_addresses[spare_addresses->n_ipv6++].ipv6,
-                       resolved_addr_ipv6->ipv6,
-                       16);
-            }
-#endif /* PUBNUB_USE_SSL */
         }
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-        else if (spare_addresses->n_ipv6 < PUBNUB_MAX_IPV6_ADDRESSES) {
-            memcpy(spare_addresses->ipv6_addresses[spare_addresses->n_ipv6++].ipv6, reader, 16);
+        if (spare_addresses->n_ipv6 < PUBNUB_MAX_IPV6_ADDRESSES) {
+            /* Time to live. Network byte order - big endian */
+            uint32_t ttl_ipv6 = ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET] << 24) |
+                                ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 1] << 16) |
+                                ((uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 2] << 8) |
+                                 (uint32_t)reader[RESOURCE_DATA_TTL_OFFSET + 3];
+            if (ttl_ipv6 > 0) {
+                if (ttl_ipv6 >= 65536) {
+                    PUBNUB_LOG_WARNING("Warning: ttl for ipv6 received is out of range: "
+                                       "ttl_ipv6=%u seconds\n",
+                                       ttl_ipv6);
+                    spare_addresses->ttl_ipv6[spare_addresses->n_ipv6] = 0xFFFF;
+                }
+                else {
+                    PUBNUB_LOG_TRACE("ttl_ipv6= %u seconds\n", ttl_ipv6);
+                    spare_addresses->ttl_ipv6[spare_addresses->n_ipv6] = (uint16_t)ttl_ipv6;
+                }
+                memcpy(spare_addresses->ipv6_addresses[spare_addresses->n_ipv6++].ipv6, reader, 16);
+            }
         }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
         return 0;

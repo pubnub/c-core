@@ -21,11 +21,11 @@ char const *pubnub_version(void)
 
 char const *pubnub_uname(void)
 {
-    return PUBNUB_SDK_NAME "-PubNub-C-core%2F" PUBNUB_SDK_VERSION;
+    return PUBNUB_SDK_NAME "-PubNub-C++-core%2F" PUBNUB_SDK_VERSION;
 }
 
 
 char const *pubnub_uagent(void)
 {
-    return PUBNUB_SDK_NAME "-PubNub-C-core/" PUBNUB_SDK_VERSION;
+    return PUBNUB_SDK_NAME "-PubNub-C++-core/" PUBNUB_SDK_VERSION;
 }

@@ -64,6 +64,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_BAD_COMPRESSION_FORMAT: return "Bad data compression format";
     case PNR_INVALID_PARAMETERS: return "Invalid function parameters";
     case PNR_ERROR_ON_SERVER: return "Server reported an error";
+    case PNR_AUTHENTICATION_FAILED: return "Proxy authentication failed";
     }
     return "!?!?!";
 }
@@ -95,6 +96,7 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_BAD_COMPRESSION_FORMAT: return pbccNotSet; /* If bad compressing was transient, a retry might help */
     case PNR_INVALID_PARAMETERS: return pbccFalse; /* Check and fix invalid parameters */
     case PNR_ERROR_ON_SERVER: return pbccFalse; /* Fix the error reported */
+    case PNR_AUTHENTICATION_FAILED: return pbccFalse; /* Check and fix the error reported */
     }
     return pbccFalse;
 }
