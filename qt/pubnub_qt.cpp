@@ -64,19 +64,19 @@ pubnub_qt::~pubnub_qt()
 static QString GetOsName()
  {
  #if defined(Q_OS_ANDROID)
-     return QLatin1String("android");
+     return QLatin1String("Android");
  #elif defined(Q_OS_BLACKBERRY)
-     return QLatin1String("blackberry");
+     return QLatin1String("Blackberry");
  #elif defined(Q_OS_IOS)
      return QLatin1String("iOS");
  #elif defined(Q_OS_MACOS)
-     return QLatin1String("MacOS");
+     return QLatin1String("macOS");
  #elif defined(Q_OS_TVOS)
-     return QLatin1String("Tvos");
+     return QLatin1String("tvOS");
  #elif defined(Q_OS_WATCHOS)
-     return QLatin1String("Watchos");
+     return QLatin1String("watchOS");
  #elif defined(Q_OS_WINCE)
-     return QLatin1String("Wince");
+     return QLatin1String("WindowsCE");
  #elif defined(Q_OS_WIN)
      return QLatin1String("Windows");
  #elif defined(Q_OS_CYGWIN)
@@ -86,7 +86,7 @@ static QString GetOsName()
  #elif defined(Q_OS_UNIX)
      return QLatin1String("Unix");
  #else
-     return QLatin1String("Unknown OS");
+     return QLatin1String("UnknownOS");
  #endif
  }
 

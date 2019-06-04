@@ -67,7 +67,7 @@ enum pbhttp_digest_parse_header_rslt {
         realm currently in use
      */
     pbhtdig_EqualConsecutiveRealms,
-    /** atribute 'realm' is not found yet in 'authentication required' message header
+    /** attribute 'realm' is not found yet in 'authentication required' message header
      */
     pbhtdig_RealmNotFound
 };    
