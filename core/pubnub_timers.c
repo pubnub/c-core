@@ -14,7 +14,7 @@ int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms)
         duration_ms = PUBNUB_MIN_TRANSACTION_TIMER;
         PUBNUB_LOG_WARNING(
             "Using minimal transaction timeout %d instead of given %d\n",
-            PUBNUB_MIN_TRANSACTION_TIMEOUT,
+            PUBNUB_MIN_TRANSACTION_TIMER,
             duration_ms);
     }
     p->transaction_timeout_ms = duration_ms;
