@@ -50,7 +50,7 @@
     @param duration_ms Duration of the timeout, in milliseconds
 
     @retval 0 OK
-    @retval -1 timers not supported or duration out of range
+    @retval -1 timers not supported
 */
 int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms);
 

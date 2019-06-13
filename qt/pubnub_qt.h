@@ -809,7 +809,7 @@ public:
      * @param t Duration of the transaction timeout
      * @return 0: OK, else: error, timeout not set
      */
-    int set_transaction_timeout(Qtime t) {
+    int set_transaction_timeout(QTime t) {
         return set_transaction_timeout(t.msecSinceStartOfDay());
     }
 
