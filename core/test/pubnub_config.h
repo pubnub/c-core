@@ -116,7 +116,7 @@
 
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
-#define PUBNUB_MIN_TRANSACTION_TIMER 10000
+#define PUBNUB_MIN_TRANSACTION_TIMER 200
 
 #if !defined(PUBNUB_USE_ADVANCED_HISTORY)
 /** If true (!=0) will enable using the advanced history API, which
