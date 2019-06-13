@@ -161,7 +161,7 @@ public:
 
     /** Returns all (remaining) channels from a context */
     QStringList get_all_channels() const;
-    
+
     /** Cancels an ongoing API transaction. The outcome is not
      * guaranteed to be #PNR_CANCELLED like in other C-core based
      * APIs, because it depends on what Qt actually does with our
@@ -198,7 +198,7 @@ public:
      */
     pubnub_res publish(QString const &channel, QString const &message);
 
-    /** Function that initiates 'publish' transaction via POST method 
+    /** Function that initiates 'publish' transaction via POST method
         @param channel The string with the channel
         @param message The message to publish, expected to be in JSON format
 
@@ -405,7 +405,7 @@ public:
                        bool reverse,
                        QString const& end,
                        bool string_token);
-    
+
     /* In case the server reported en error in the response,
        we'll read the error message using this function
        @retval error_message on successfully read error message,
@@ -416,7 +416,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p timetoken(Meanning
        'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -426,7 +426,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p timetoken(Meanning
        'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -436,7 +436,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
        (Meanning 'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -447,7 +447,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
        (Meanning 'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -457,13 +457,13 @@ public:
 
     /* Starts 'advanced history' pubnub_message_counts transaction
        for unread messages on @p channel_timetokens(channel, ch_timetoken pairs)
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res message_counts(QVector<QPair<QString, QString>> const& channel_timetokens);
-    
+
     /* Extracts channel-message_count paired map from the response on
        'advanced history' pubnub_message_counts transaction.
        If there is no key "channels" in the response, or the corresponding
@@ -762,7 +762,7 @@ public:
      *  transaction was succesfull, will return 0.
      */
     int last_http_code() const;
-    
+
     /** Return the result string that Pubnub returned in the
      * reply to the last publish transaction. If the last
      * transaction was not a publish one, will return an
@@ -805,8 +805,22 @@ public:
      */
     int set_transaction_timeout(int duration_ms);
 
+    /** Sets the duration of the transaction timeout.
+     * @param t Duration of the transaction timeout
+     * @return 0: OK, else: error, timeout not set
+     */
+    int set_transaction_timeout(Qtime t) {
+        return set_transaction_timeout(t.msecSinceStartOfDay());
+    }
+
     /** Returns the current transaction duration, in milliseconds. */
     int transaction_timeout_get();
+
+    /** Give sthe current transaction duration in @p t parameter.
+     */
+    void transaction_timeout_get(QTime& t) {
+        t.fromMSecsSinceStartOfDay(transaction_timeout_get());
+    }
 
 private slots:
     void httpFinished();
@@ -844,7 +858,7 @@ private:
 
     /// Qt's Reply (from a HTTP request)
     QScopedPointer<QNetworkReply> d_reply;
-    
+
     /// C-core context
     QScopedPointer<pbcc_context> d_context;
 

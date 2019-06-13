@@ -1,7 +1,14 @@
 name: c-core
-version: 2.8.3
+version: 2.8.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.8.4
+    date: Jun 12, 2019
+    changes:
+      - type: enhancement
+        text: Introduce minimal transaction timer duration
+      - type: enhancement
+        text: Use QTime for transaction timer duration
   - version: v2.8.3
     date: May 31, 2019
     changes:
