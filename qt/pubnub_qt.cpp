@@ -630,6 +630,9 @@ void pubnub_qt::set_ssl_options(ssl_opts options)
 int pubnub_qt::set_transaction_timeout(int duration_ms)
 {
     if (duration_ms > 0) {
+        if (duration_ms < PUBNUB_MIN_TRANSACTION_TIMER) {
+            return -1;
+        }
         QMutexLocker lk(&d_mutex);
         d_transaction_timeout_duration_ms = duration_ms;
         return 0;

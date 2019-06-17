@@ -5,31 +5,6 @@
 
 /* -- Next few definitions can be tweaked by the user, but with care -- */
 
-/** Maximum number of PubNub contexts. It is used only if the
- * contexts are statically allocated.
- * A context is used to publish messages or subscribe to (get) them.
- *
- * Doesn't make much sense to have less than 1. :)
- * OTOH, don't put too many, as each context takes (for our purposes)
- * a significant amount of memory - app. 128 + @ref PUBNUB_BUF_MAXLEN +
- * @ref PUBNUB_REPLY_MAXLEN bytes.
- *
- * A typical configuration may consist of a single pubnub context for
- * channel subscription and another pubnub context that will periodically
- * publish messages about device status (with timeout lower than message
- * generation frequency).
- *
- * Another typical setup may have a single subscription context and
- * maintain a pool of contexts for each publish call triggered by an
- * external event (e.g. a button push).
- *
- * Of course, there is nothing wrong with having just one context, but
- * you can't publish and subscribe at the same time on the same context.
- * This isn't as bad as it sounds, but may be a source of headaches
- * (lost messages, etc).
- */
-#define PUBNUB_CTX_MAX 2
-
 /** Maximum length of the HTTP buffer. This is a major component of
  * the memory size of the whole pubnub context, but it is also an
  * upper bound on URL-encoded form of published message, so if you
@@ -70,6 +45,12 @@
     provides more data about (unread) messages. */
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
+
+
+/** Mininmal duration of the transaction timer, in milliseconds. You
+ * can't set less than this.
+ */
+#define PUBNUB_MIN_TRANSACTION_TIMER 10000
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */
