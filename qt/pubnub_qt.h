@@ -810,7 +810,7 @@ public:
      * @return 0: OK, else: error, timeout not set
      */
     int set_transaction_timeout(QTime t) {
-        return set_transaction_timeout(t.msecSinceStartOfDay());
+        return set_transaction_timeout(t.msecsSinceStartOfDay());
     }
 
     /** Returns the current transaction duration, in milliseconds. */
