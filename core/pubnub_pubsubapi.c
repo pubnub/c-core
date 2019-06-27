@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_pubsubapi.h"
+#include "pubnub_internal.h"
 
+#include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
 
@@ -28,7 +28,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if defined(PUBNUB_CALLBACK_API)
     p->cb        = NULL;
     p->user_data = NULL;
-#endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
     }
@@ -61,16 +61,18 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
+#if defined(PUBNUB_CALLBACK_API)
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_tunnel_established = false;
     p->proxy_port               = 80;
     p->proxy_auth_scheme        = pbhtauNone;
     p->proxy_auth_username      = NULL;
     p->proxy_auth_password      = NULL;
-    p->proxy_authorization_sent = false;
+    p->realm[0]                 = '\0'; 
 #endif
 
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
@@ -299,18 +301,23 @@ char const* pubnub_get_origin(pubnub_t* pb)
 
 
 int pubnub_origin_set(pubnub_t* pb, char const* origin)
-{
+{    
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     if (PUBNUB_ORIGIN_SETTABLE) {
+        bool origin_set = false;
         if (NULL == origin) {
             origin = PUBNUB_ORIGIN;
         }
 
         pubnub_mutex_lock(pb->monitor);
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        pbpal_multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
         pb->origin = origin;
+        origin_set = (PBS_IDLE == pb->state);
         pubnub_mutex_unlock(pb->monitor);
 
-        return 0;
+        return origin_set ? 0 : +1;
     }
     return -1;
 }

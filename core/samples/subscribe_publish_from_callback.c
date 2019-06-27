@@ -49,8 +49,8 @@ static void callback_sample_free(pubnub_t* p)
         printf("Failed to free the Pubnub context\n");
     }
     else {
-        /* Waits for the context to be released from the processing queue */
-        wait_seconds(1);
+        /* Waits until the context is released from the processing queue */
+        wait_seconds(2);
     }
 }
 
@@ -255,6 +255,7 @@ int main()
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
+    
     pubnub_mutex_init_static(m_lock);
     pubnub_set_transaction_timeout(pbp, 5000);
 

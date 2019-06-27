@@ -9,13 +9,6 @@
 
 #if defined(PUBNUB_CALLBACK_API)
 #include "core/pubnub_ntf_callback.h"
-#endif
-
-#if !defined(PUBNUB_PROXY_API)
-#define PUBNUB_PROXY_API 0
-#elif PUBNUB_PROXY_API
-#include "core/pubnub_proxy.h"
-#include "core/pbhttp_digest.h"
 #include "core/pubnub_dns_servers.h"
 #endif
 
@@ -23,15 +16,43 @@
 #define PUBNUB_USE_IPV6 0
 #endif
 
+#if !defined(PUBNUB_SET_DNS_SERVERS)
+#define PUBNUB_SET_DNS_SERVERS 0
+#endif
+
+#if !defined(PUBNUB_USE_MULTIPLE_ADDRESSES)
+#define PUBNUB_USE_MULTIPLE_ADDRESSES 0
+#endif
+
+#if !defined(PUBNUB_CHANGE_DNS_SERVERS)
+#define PUBNUB_CHANGE_DNS_SERVERS 0
+#endif
+
+#define PUBNUB_ADNS_RETRY_AFTER_CLOSE                               \
+    (PUBNUB_CHANGE_DNS_SERVERS || PUBNUB_USE_MULTIPLE_ADDRESSES)
+
+#if !defined(PUBNUB_ONLY_PUBSUB_API)
+#define PUBNUB_ONLY_PUBSUB_API 0
+#endif
+
+#if !defined(PUBNUB_USE_SUBSCRIBE_V2)
+#define PUBNUB_USE_SUBSCRIBE_V2 0
+#endif
+
 #if !defined(PUBNUB_USE_ADVANCED_HISTORY)
 #define PUBNUB_USE_ADVANCED_HISTORY 0
 #endif
 
-#if !defined PUBNUB_USE_SSL
-#define PUBNUB_USE_SSL 0
+#if !defined(PUBNUB_PROXY_API)
+#define PUBNUB_PROXY_API 0
+#elif PUBNUB_PROXY_API
+#include "core/pubnub_proxy.h"
+#include "core/pubnub_proxy_core.h"
+#include "core/pbhttp_digest.h"
 #endif
 
-#define PUBNUB_NEED_RETRY_AFTER_CLOSE (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
+#define PUBNUB_NEED_RETRY_AFTER_CLOSE                          \
+    (PUBNUB_PROXY_API || PUBNUB_USE_SSL || PUBNUB_ADNS_RETRY_AFTER_CLOSE)
 
 #if !defined PUBNUB_USE_GZIP_COMPRESSION
 #define PUBNUB_USE_GZIP_COMPRESSION 0
@@ -126,6 +147,106 @@ struct pbntlm_context {
 
 typedef struct pbntlm_context pbntlm_ctx_t;
 
+struct pubnub_options {
+#if PUBNUB_BLOCKING_IO_SETTABLE
+    /** Indicates whether to use blocking I/O. Not implemented if
+        choosing between blocking and non-blocking is not supported
+        on a platform.
+     */
+    bool use_blocking_io : 1;
+#endif
+
+    /** Indicates whether to use HTTP keep-alive. If used,
+        subsequent transactions will be faster, unless the (TCP/IP
+        and TLS/SSL) connection drops. OTOH, the "async"
+        drop/close of the connection may be a problem and cause
+        some transactions to fail.
+     */
+    bool use_http_keep_alive : 1;
+
+#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
+    /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
+    bool ipv6_connectivity : 1;
+#endif
+#if PUBNUB_USE_SSL
+    /** Should the PubNub client establish the connection to
+      * PubNub using SSL? */
+    bool useSSL : 1;
+    /** When SSL is enabled, should the client fallback to a
+      * non-SSL connection if it experiences issues handshaking
+      * across local proxies, firewalls, etc?
+      */
+    bool fallbackSSL : 1;
+    /** Use system certificate store (if available) */
+    bool use_system_certificate_store : 1;
+    /** Re-use SSL session on a new connection */
+    bool reuse_SSL_session : 1;
+#endif
+};
+
+struct pubnub_flags {
+#if PUBNUB_USE_SSL
+    /** Try to establish TLS/SSL over existing TCP/IP connection: yes/no */
+    bool trySSL : 1;
+#endif
+    /** Should close connection */
+    bool should_close : 1;
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
+    /** Retry the same Pubnub request after closing current TCP
+        connection.
+      */
+    bool retry_after_close : 1;
+#endif
+    /** Indicates whether current transaction started while connection
+        was kept alive(by client)(true:yes, false:no).
+        Used when deciding whether closed connection detected should be
+        renewed without losing transaction at hand.
+     */
+    bool started_while_kept_alive : 1;
+
+    /** Indicates whether to send the message in http message body, or if not,
+        encoded 'via GET'(, or maybe some third method).
+      */
+    bool is_publish_via_post : 1;
+};
+
+#if PUBNUB_CHANGE_DNS_SERVERS
+struct pbdns_servers_check {
+    /* One-bit mask that shifts */
+    uint8_t dns_mask;
+    /* dns server condition bit indicators(0 - OK, 1 - Error on server).
+       Set to zeros indicates no issues encountered while sending, or receiving
+       valid response from any of available dns servers(up to 8 of them, as 'uint8_t'
+       conains 8 bits. In practise there is up to 5 dns servers). 
+     */
+    uint8_t dns_server_check;
+};
+#endif
+
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+struct pubnub_multi_addresses {
+    time_t time_of_the_last_dns_query; 
+    /* Number of spare ipv4 addresses */
+    int n_ipv4;
+    /* ipv4 address index(from the array) currently used */
+    int ipv4_index;
+    /* ipv4 address array */
+    struct pubnub_ipv4_address ipv4_addresses[PUBNUB_MAX_IPV4_ADDRESSES];
+    /* Time to live for each saved ipv4 address */
+    uint16_t ttl_ipv4[PUBNUB_MAX_IPV4_ADDRESSES];
+#if PUBNUB_USE_IPV6
+    /* Number of spare ipv6 addresses */
+    int n_ipv6;
+    /* ipv6 address index(from the array) currently used */
+    int ipv6_index;
+    /* ipv6 address array */
+    struct pubnub_ipv6_address ipv6_addresses[PUBNUB_MAX_IPV6_ADDRESSES];
+    /* Time to live for each saved ipv6 address */
+    uint16_t ttl_ipv6[PUBNUB_MAX_IPV6_ADDRESSES];
+#endif
+};
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+
 /** The Pubnub context
 
     @note Don't declare any members as `bool`, as there may be
@@ -185,69 +306,9 @@ struct pubnub_ {
 
     struct pubnub_pal pal;
 
-    struct pubnub_options {
-#if PUBNUB_BLOCKING_IO_SETTABLE
-        /** Indicates whether to use blocking I/O. Not implemented if
-            choosing between blocking and non-blocking is not supported
-            on a platform.
-        */
-        bool use_blocking_io : 1;
-#endif
+    struct pubnub_options options;
 
-        /** Indicates whether to use HTTP keep-alive. If used,
-            subsequent transactions will be faster, unless the (TCP/IP
-            and TLS/SSL) connection drops. OTOH, the "async"
-            drop/close of the connection may be a problem and cause
-            some transactions to fail.
-        */
-        bool use_http_keep_alive : 1;
-
-#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
-        /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
-        bool ipv6_connectivity : 1;
-#endif
-#if PUBNUB_USE_SSL
-        /** Should the PubNub client establish the connection to
-         * PubNub using SSL? */
-        bool useSSL : 1;
-        /** When SSL is enabled, should the client fallback to a
-         * non-SSL connection if it experiences issues handshaking
-         * across local proxies, firewalls, etc?
-         */
-        bool fallbackSSL : 1;
-        /** Use system certificate store (if available) */
-        bool use_system_certificate_store : 1;
-        /** Re-use SSL session on a new connection */
-        bool reuse_SSL_session : 1;
-#endif
-    } options;
-
-    struct pubnub_flags {
-#if PUBNUB_USE_SSL
-        /** Try to establish TLS/SSL over existing TCP/IP connection: yes/no */
-        bool trySSL : 1;
-#endif
-        /** Should close connection */
-        bool should_close : 1;
-
-#if PUBNUB_NEED_RETRY_AFTER_CLOSE
-        /** Retry the same Pubnub request after closing current TCP
-            connection.
-        */
-        bool retry_after_close : 1;
-#endif
-        /** Indicates whether current transaction started while connection
-            was kept alive(by client)(true:yes, false:no).
-            Used when deciding whether closed connection detected should be
-            renewed without losing transaction at hand.
-        */
-        bool started_while_kept_alive : 1;
-
-        /** Indicates whether to send the message in http message body, or if not,
-            encoded 'via GET'(, or maybe some third method).
-        */
-        bool is_publish_via_post : 1;
-    } flags;
+    struct pubnub_flags flags;
 
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     struct pubnub_keep_alive_data {
@@ -269,7 +330,7 @@ struct pubnub_ {
     char const* ssl_CApath;
     /** User-defined, in-memory, PEM certificate to use */
     char const* ssl_userPEMcert;
-#endif
+#endif /* PUBNUB_USE_SSL */
 
 #if PUBNUB_THREADSAFE
     pubnub_mutex_t monitor;
@@ -290,8 +351,15 @@ struct pubnub_ {
 #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
     void*             user_data;
-#endif
 
+#if PUBNUB_CHANGE_DNS_SERVERS
+    struct pbdns_servers_check dns_check;
+#endif    
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    struct pubnub_multi_addresses spare_addresses;
+#endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
+    
 #if PUBNUB_PROXY_API
 
     /** The type (protocol) of the proxy to use */
@@ -300,6 +368,7 @@ struct pubnub_ {
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
+#if defined(PUBNUB_CALLBACK_API)
     /** Proxy Ipv4 address, if and when available through hostname string in
        'numbers and dots' notation. If proxy Ipv4 address is not available
        structure array is filled with zeros.
@@ -313,6 +382,7 @@ struct pubnub_ {
      */
     struct pubnub_ipv6_address proxy_ipv6_address;
 #endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     
     /** The (TCP) port to use on the proxy. */
     uint16_t proxy_port;
@@ -349,6 +419,23 @@ struct pubnub_ {
         avoiding a sort of "endless loop".
     */
     int proxy_authorization_sent;
+
+    /** Authentication realm - received from the server */
+    char realm[PUBNUB_MAX_HTTP_AUTH_REALM + 1];
+
+    /** Proxy 'authentication required' response message counter for repeating realm
+        within a single transaction.
+        At this point this field is of importance for Digest proxy authentication sheme.
+        See RFC 7616 - 5.4. Limited-Use Nonce Values :
+        ...For example, a server MAY choose to allow each nonce value to be used only once by
+        maintaining a record of whether, or not each recently issued nonce has been returned
+        and sending a next-nonce parameter in the Authentication-Info header field of every
+        response...
+
+        Doing it (within the same transaction)repeatedly, without restrictions, would be a sign
+        of irregular behaviour.
+     */
+    uint8_t auth_msg_count;
 
     /** Data about NTLM authentication */
     struct pbntlm_context ntlm_context;

@@ -110,7 +110,7 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n);
     literal string, so, handle with care.
  */
 #define pbpal_send_literal_str(pb, litstr) \
-        pbpal_send((pb), litstr, sizeof litstr - 1)
+    pbpal_send((pb), litstr, sizeof litstr - 1)
 
 /** The effect of this is the same as:
 
@@ -226,5 +226,7 @@ int pbpal_set_blocking_io(pubnub_t *pb);
 */
 void pbpal_free(pubnub_t *pb);
 
-
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+void pbpal_multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses);
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #endif /* !defined INC_PBPAL */

@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pbpal.h"
+#include "pubnub_internal.h"
 
+#include "core/pbpal.h"
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
@@ -40,6 +40,9 @@ void pbpal_init(pubnub_t* pb)
     pb->pal.socket = SOCKET_INVALID;
     pb->sock_state = STATE_NONE;
     buf_setup(pb);
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    pbpal_multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
 }
 
 

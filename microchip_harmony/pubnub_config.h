@@ -72,6 +72,12 @@
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
+
+/** Mininmal duration of the transaction timer, in milliseconds. You
+ * can't set less than this.
+ */
+#define PUBNUB_MIN_TRANSACTION_TIMER 10000
+
 #define PUBNUB_HAVE_MD5 0
 #define PUBNUB_HAVE_SHA1 0
 

@@ -33,11 +33,11 @@ static enum pubnub_res deflate_total_to_context_buffer(pubnub_t*   pb,
         if (message_size == unpacked_size) {
             uint32_t crc;
             size_t packed_size = GZIP_HEADER_LENGTH_BYTES + compressed + GZIP_FOOTER_LENGTH_BYTES;
-            long diff = unpacked_size - packed_size;
+            long diff = (long)unpacked_size - (long)packed_size;
 
             PUBNUB_LOG_TRACE("deflate_total_to_context_buffer(pb=%p) - "
                              "Length after compression: %zu bytes - "
-                             "compression ratio=%ld o/oo\n",
+                             "compression ratio=%zd o/oo\n",
                              pb,
                              packed_size,
                              (diff*1000)/unpacked_size);

@@ -95,7 +95,9 @@ enum pubnub_res {
     /** Invalid input parameters passed to a given function */
     PNR_INVALID_PARAMETERS,
     /** Server reports an error in the response */
-    PNR_ERROR_ON_SERVER
+    PNR_ERROR_ON_SERVER,
+    /** Proxy authentication failed */
+    PNR_AUTHENTICATION_FAILED
 };
 
 /** 'pubnub_cancel()' return value */

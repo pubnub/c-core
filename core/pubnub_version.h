@@ -25,5 +25,11 @@ char const *pubnub_version(void);
 */
 char const *pubnub_uname(void);
 
+/** Returns the full identification of the SDK - name, version, etc.
+    (without Url encoding).
+ */
+char const *pubnub_uagent(void);
+
+
 
 #endif /* !defined INC_PUBNUB_VERSION */

@@ -1,8 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#if PUBNUB_USE_IPV6
-#include "core/pubnub_assert.h"
-#include "core/pubnub_dns_servers.h"
+#include "pubnub_config.h"
 
+#if !PUBNUB_USE_IPV6
+#error PUBNUB_USE_IPV6 must be defined and set to 1 before compiling this file
+#endif
+#include "core/pubnub_dns_servers.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
@@ -145,4 +147,3 @@ int pubnub_parse_ipv6_addr(char const* addr, struct pubnub_ipv6_address* p)
     
     return 0;
 }
-#endif /* PUBNUB_USE_IPV6 */

@@ -455,6 +455,11 @@ char const* pubnub_uname(void)
     return "unit-test-0.1";
 }
 
+char const* pubnub_uagent(void)
+{
+    return "Windows-PubNub-C-core/" PUBNUB_SDK_VERSION;
+}
+
 
 /* The Pubnub NTF mocks and stubs */
 
@@ -568,9 +573,9 @@ static void expect_first_outgoing_GET(const char* url)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send",
+    expect("pbpal_send_str",
            pbp,
-           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
            "\r\n" ACCEPT_ENCODING "\r\n",
            0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -590,9 +595,9 @@ static void expect_first_outgoing_CONNECT(void)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send",
+    expect("pbpal_send_str",
            pbp,
-           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
            "\r\n" ACCEPT_ENCODING "\r\n",
            0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -617,9 +622,9 @@ static void expect_outgoing_with_encoded_credentials_GET(char const* url,
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, HTTP_proxy_header, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send",
+    expect("pbpal_send_str",
            pbp,
-           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
            "\r\n" ACCEPT_ENCODING "\r\n",
            0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -642,9 +647,9 @@ static void expect_outgoing_with_encoded_credentials_CONNECT(char const* url,
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, HTTP_proxy_header, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send",
+    expect("pbpal_send_str",
            pbp,
-           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
            "\r\n" ACCEPT_ENCODING "\r\n",
            0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -664,9 +669,9 @@ static void expect_outgoing_with_url(char const* url)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send",
+    expect("pbpal_send_str",
            pbp,
-           "\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
            "\r\n" ACCEPT_ENCODING "\r\n",
            0);
     expect("pbpal_send_status", pbp, "", 0);

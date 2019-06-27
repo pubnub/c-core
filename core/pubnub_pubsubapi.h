@@ -242,8 +242,10 @@ char const* pubnub_get_origin(pubnub_t* p);
 
     @param p Pubnub context to set the origin for
     @param origin The origin to use for context @p p. If NULL,
-    the default origin will be set
-    @return 0: success, -1: fail
+                  the default origin will be set
+    @retval 0 origin set,
+    @retval +1 origin set will be applied with new connection,
+    @retval -1 setting origin not enabled
 */
 int pubnub_origin_set(pubnub_t* p, char const* origin);
 

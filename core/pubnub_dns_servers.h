@@ -16,9 +16,14 @@ struct pubnub_ipv6_address {
     /** The 8 double octets(big endian) of the IPv6 address */
     uint8_t ipv6[16];
 };
-#endif
 
-#include "pubnub_config.h"
+/* primary, secondary(ipv4, ipv6) and default dns server */
+#define PUBNUB_MAX_DNS_SERVERS_MASK 0x10 
+#else
+/* primary, secondary(ipv4) and default dns server */
+#define PUBNUB_MAX_DNS_SERVERS_MASK 0x04
+#endif /* PUBNUB_USE_IPV6 */
+
 #if PUBNUB_SET_DNS_SERVERS
 #include <stdlib.h>
 

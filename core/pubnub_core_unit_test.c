@@ -77,7 +77,7 @@ static void wait_time_in_seconds(time_t time_in_seconds)
 static void buf_setup(pubnub_t* pb)
 {
     pb->ptr  = (uint8_t*)pb->core.http_buf;
-    pb->left = sizeof pb->core.http_buf;
+    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
 void pbpal_init(pubnub_t* pb)
@@ -445,6 +445,11 @@ char const* pubnub_uname(void)
     return "unit-test-0.1";
 }
 
+char const* pubnub_uagent(void)
+{
+    return "POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION;
+}
+
 
 /* The Pubnub NTF mocks and stubs */
 void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
@@ -797,9 +802,9 @@ static inline void expect_outgoing_with_url(char const* url)
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(PUBNUB_ORIGIN)), returns(0));
     expect(pbpal_send_status, returns(0));
-    expect(pbpal_send,
-           when(data,
-                streqs("\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+    expect(pbpal_send_str,
+           when(s,
+                streqs("\r\nUser-Agent: POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION
                        "\r\n" ACCEPT_ENCODING "\r\n")),
            returns(0));
     expect(pbpal_send_status, returns(0));
@@ -1187,9 +1192,9 @@ Ensure(single_context_pubnub, publish_change_origin)
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs("new_origin_server")), returns(0));
     expect(pbpal_send_status, returns(0));
-    expect(pbpal_send,
-           when(data,
-                streqs("\r\nUser-Agent: PubNub-C-core/" PUBNUB_SDK_VERSION
+    expect(pbpal_send_str,
+           when(s,
+                streqs("\r\nUser-Agent: POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION
                        "\r\n" ACCEPT_ENCODING "\r\n")),
            returns(0));
     expect(pbpal_send_status, returns(0));

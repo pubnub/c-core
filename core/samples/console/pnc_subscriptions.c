@@ -19,7 +19,7 @@ static int m_groups_length = 0;
 void pnc_subscribe_list_channels(char *value, unsigned max_length)
 {
     int i;
-    unsigned length;
+    size_t length;
 
     PUBNUB_ASSERT_OPT(max_length > 0);
 
@@ -30,7 +30,7 @@ void pnc_subscribe_list_channels(char *value, unsigned max_length)
     }
    
     for (i = 0; i < m_channels_length; ++i) {
-        unsigned channel_length = strlen(m_channels[i]);
+        size_t channel_length = strlen(m_channels[i]);
         if (channel_length > 0) {
             if (length + channel_length + 1 >= max_length) {
                 PUBNUB_ASSERT_OPT(0);
@@ -50,7 +50,7 @@ void pnc_subscribe_list_channels(char *value, unsigned max_length)
 void pnc_subscribe_list_channel_groups(char *value, unsigned max_length)
 {
     int i;
-    unsigned length;
+    size_t length;
 
     PUBNUB_ASSERT_OPT(max_length > 0);
 
@@ -61,7 +61,7 @@ void pnc_subscribe_list_channel_groups(char *value, unsigned max_length)
     }
    
     for (i = 0; i < m_groups_length; ++i) {
-        unsigned group_length = strlen(m_groups[i]);
+        size_t group_length = strlen(m_groups[i]);
         if (group_length > 0) {
             if (length + group_length + 1 >= max_length) {
                 PUBNUB_ASSERT_OPT(0);
