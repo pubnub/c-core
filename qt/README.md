@@ -9,6 +9,8 @@ platform, this is a "Qt-native C-core" of sorts. It provides
 it's own (Qt) API, while using as much of C-core modules as
 posible.
 
+Doxygen-generated documentation is in [doc/html](doc/html/index.html).
+
 There are sample projects:
 
 - `pubnub.pro`, which will build a Qt command line application which
