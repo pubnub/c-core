@@ -97,7 +97,7 @@ int pbcc_get_error_message(struct pbcc_context* p, pubnub_chamebl_t* o_msg)
                          "response='%.*s'\n",
                          p,
                          jpresult,
-                         p->http_buf_len,
+                         (int)p->http_buf_len,
                          p->http_reply);
         rslt = -1;
     }
