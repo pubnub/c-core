@@ -32,3 +32,6 @@
 *.dSYM/
 *.pdb
 *.ilk
+
+# Doxygen output directories
+doc/

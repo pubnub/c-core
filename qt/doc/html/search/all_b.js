@@ -1,5 +1,0 @@
-var searchData=
-[
-  ['remove_5fchannel_5ffrom_5fgroup',['remove_channel_from_group',['../classpubnub_1_1context.html#ab4dbb9d83e78d144b9960ab603c80b89',1,'pubnub::context::remove_channel_from_group(std::string const &amp;channel, std::string const &amp;channel_group)'],['../classpubnub_1_1context.html#ad43372bc502d8b5e5a7a7a166be26d0d',1,'pubnub::context::remove_channel_from_group(std::vector&lt; std::string &gt; const &amp;channel, std::string const &amp;channel_group)'],['../classpubnub__qt.html#a1dd3390443f273f7d865fd3e192827f1',1,'pubnub_qt::remove_channel_from_group(QString const &amp;channel, QString const &amp;channel_group)'],['../classpubnub__qt.html#a75b935f5e9a10e18f6dfec1081cdd391',1,'pubnub_qt::remove_channel_from_group(QStringList const &amp;channel, QString const &amp;channel_group)']]],
-  ['remove_5fchannel_5fgroup',['remove_channel_group',['../classpubnub_1_1context.html#a85e9892b93ea11fce2eaf89b02aee547',1,'pubnub::context::remove_channel_group()'],['../classpubnub__qt.html#a10da8dcaa610a2b62069a366eeb6179d',1,'pubnub_qt::remove_channel_group()']]]
-];
