@@ -1,0 +1,41 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if !defined INC_PUBNUB_SUBSCRIBE_V2_MESSAGE
+#define      INC_PUBNUB_SUBSCRIBE_V2_MESSAGE
+
+#if !PUBNUB_USE_SUBSCRIBE_V2
+#error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
+#endif
+
+#include <stdbool.h>
+#include "pubnub_memory_block.h"
+
+/** Pubnub V2 message has lots of data and here's how we express them
+    for the pubnub_get_v2().
+
+    The "string fields" are expressed as "Pascal strings", that is, a
+    pointer with string length, and _don't_ include a NUL character.
+    Also, these pointers are actually pointing into the full received
+    message, so, their lifetime is tied to the message lifetime and
+    any subsequent transaction on the same context will invalidate
+    them.
+  */
+struct pubnub_v2_message {
+    /** The time token of the message - when it was published. */
+    struct pubnub_char_mem_block tt;
+    /** Region of the message - not interesting in most cases */
+    int region;
+    /** Message flags */
+    int flags;
+    /** Channel that message was published to */
+    struct pubnub_char_mem_block channel;
+    /** Subscription match or the channel group */
+    struct pubnub_char_mem_block match_or_group;
+    /** The message itself */
+    struct pubnub_char_mem_block payload;
+    /** The message metadata, as published */
+    struct pubnub_char_mem_block metadata;
+    /** is the message a signal(, or published) */ 
+    bool is_signal;
+};
+
+#endif /* INC_PUBNUB_SUBSCRIBE_V2_MESSAGE */

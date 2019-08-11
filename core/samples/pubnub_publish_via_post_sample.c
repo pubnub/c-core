@@ -26,7 +26,7 @@ static void sync_sample_free(pubnub_t* p)
 }
 
 
-static struct pubnub_publish_options publish_opts_method(enum pubnub_publish_method method)
+static struct pubnub_publish_options publish_opts_method(enum pubnub_method method)
 {
     struct pubnub_publish_options opts = pubnub_publish_defopts();
     opts.method = method;
@@ -66,7 +66,7 @@ static int alloc_and_start_publish_via_post(pubnub_t*        pb,
     *publish_res = pubnub_publish_ex(pb,
                                      channel,
                                      mem,
-                                     publish_opts_method(pubnubPublishViaPOST));
+                                     publish_opts_method(pubnubSendViaPOST));
     *allocated = mem;
     return 0;
 }
@@ -135,7 +135,7 @@ int main()
     res = pubnub_publish_ex(pbp,
                             chan,
                             message_via_post_for_gzip,
-                            publish_opts_method(pubnubPublishViaPOSTwithGZIP));
+                            publish_opts_method(pubnubSendViaPOSTwithGZIP));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }

@@ -182,5 +182,13 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
+#if !defined(PUBNUB_USE_ENTITY_API)
+/** If true (!=0) will enable using the entity API, which is a
+    collection of rest API features that enables "CRUD"(Create, Read, Update and Delete)
+    on two new pubnub objects: User and Space, as well as manipulating connections
+    between them. */
+#define PUBNUB_USE_ENTITY_API 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

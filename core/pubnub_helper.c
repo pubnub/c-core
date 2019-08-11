@@ -65,6 +65,9 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_INVALID_PARAMETERS: return "Invalid function parameters";
     case PNR_ERROR_ON_SERVER: return "Server reported an error";
     case PNR_AUTHENTICATION_FAILED: return "Proxy authentication failed";
+    case PNR_ENTITY_API_INVALID_PARAM: return "Entity API invalid parameter";
+    case PNR_ENTITY_API_OK: return "Entity API transaction successfully finished";
+    case PNR_ENTITY_API_ERROR: return "Entity API transaction reported an error";
     }
     return "!?!?!";
 }
@@ -97,6 +100,9 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_INVALID_PARAMETERS: return pbccFalse; /* Check and fix invalid parameters */
     case PNR_ERROR_ON_SERVER: return pbccFalse; /* Fix the error reported */
     case PNR_AUTHENTICATION_FAILED: return pbccFalse; /* Check and fix the error reported */
+    case PNR_ENTITY_API_INVALID_PARAM: return pbccFalse; /* Check and fix the error reported */
+    case PNR_ENTITY_API_OK: return pbccFalse;
+    case PNR_ENTITY_API_ERROR: return pbccFalse; /* Check the error reported */
     }
     return pbccFalse;
 }

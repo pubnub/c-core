@@ -15,6 +15,9 @@
 
 int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char const* msg, char *signature, size_t n)
 {
+#if !PUBNUB_CRYPTO_API
+    return -1;
+#else
     PBMD5_CTX md5;
     char s[2] = { '/', '\0' };
     uint8_t digest[16];
@@ -24,7 +27,7 @@ int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char cons
     PUBNUB_ASSERT_OPT(signature != NULL);
     PUBNUB_ASSERT_OPT(n > 32);
 
-    if (!PUBNUB_CRYPTO_API || (NULL == pbcc->secret_key)) {
+    if (NULL == pbcc->secret_key) {
         return -1;
     }
 
@@ -52,6 +55,7 @@ int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char cons
         );
 
     return 0;
+#endif /* !PUBNUB_CRYPTO_API */
 }
 
 

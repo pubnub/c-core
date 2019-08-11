@@ -1,7 +1,14 @@
 name: c-core
-version: 2.8.4
+version: 2.9.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.9.0
+    date: Aug 9, 2019
+    changes:
+      - type: enhancement
+        text: Introduce Signals support
+      - type: enhancement
+        text: Support subscribe V2 in C++ & Qt
   - version: v2.8.4
     date: Jun 12, 2019
     changes:
@@ -318,6 +325,7 @@ features:
     - PUBLISH-GET
     - PUBLISH-SYNC
     - PUBLISH-ASYNC
+    - SIGNAL-SEND
   storage:
     - STORAGE-INCLUDE-TIMETOKEN
     - STORAGE-COUNT
@@ -332,6 +340,7 @@ features:
     - SUBSCRIBE-PRESENCE-CHANNELS
     - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
     - SUBSCRIBE-WILDCARD
+    - SUBSCRIBE-SIGNAL-LISTENER 
 supported-platforms:
   - 
     version: PubNub POSIX C SDK
