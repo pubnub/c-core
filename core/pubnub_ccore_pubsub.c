@@ -364,7 +364,7 @@ void pbcc_via_post_headers(struct pbcc_context* pb,
 #if PUBNUB_USE_GZIP_COMPRESSION
     if (pb->gzip_msg_len != 0) {
         char h_encoding[] = "Content-Encoding: gzip";
-        length = snprintf(header, max_length, "%lu\r\n", pb->gzip_msg_len);
+        length = snprintf(header, max_length, "%lu\r\n", (unsigned long)pb->gzip_msg_len);
         PUBNUB_ASSERT_OPT(max_length > length + sizeof h_encoding - 1);
         memcpy(header + length, h_encoding, sizeof h_encoding - 1);
         return;
