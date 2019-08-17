@@ -126,7 +126,6 @@ enum pubnub_res pubnub_signal(pubnub_t* pb,
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SIGNAL;
         pb->core.last_result = PNR_STARTED;
-        pb->method           = method;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
