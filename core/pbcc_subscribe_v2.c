@@ -211,14 +211,14 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     jpresult = pbjson_get_object_value(&el, "e", &found);
     if (jonmpOK == jpresult) {
         if (pbjson_elem_equals_string(&found, "1")) {
-            rslt.is_signal = true;
+            rslt.message_type = pbsbSignal;
         }
         else {
-            rslt.is_signal = false;
+            rslt.message_type = pbsbPublished;
         }
     }
     else {
-        rslt.is_signal = false;
+        rslt.message_type = pbsbPublished;
     }
     
     jpresult = pbjson_get_object_value(&el, "p", &found);

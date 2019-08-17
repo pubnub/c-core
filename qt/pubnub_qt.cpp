@@ -8,7 +8,7 @@ extern "C" {
 #include "lib/pbcrc32.c"
 #include "core/pubnub_memory_block.h"
 #include "core/pubnub_advanced_history.h"
-#include "core/pbcc_entity_api.h"
+#include "core/pbcc_objects_api.h"
 #define MAX_ERROR_MESSAGE_LENGTH 100
 }
 
@@ -117,7 +117,7 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         switch (transaction) {
         case PBTT_PUBLISH:
         case PBTT_SIGNAL:
-#if PUBNUB_USE_ENTITY_API
+#if PUBNUB_USE_OBJECTS_API
         case PBTT_CREATE_USER:
         case PBTT_UPDATE_USER:
         case PBTT_DELETE_USER:
@@ -126,7 +126,7 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         case PBTT_DELETE_SPACE:
         case PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS:
         case PBTT_UPDATE_MEMBERS_IN_SPACE:
-#endif /* PUBNUB_USE_ENTITY_API */
+#endif /* PUBNUB_USE_OBJECTS_API */
             switch (d_method) {
             case pubnubSendViaPOSTwithGZIP:
             case pubnubUsePATCHwithGZIP:
@@ -654,7 +654,7 @@ pubnub_res pubnub_qt::list_channel_group(QString const& channel_group)
         PBTT_LIST_CHANNEL_GROUP);
 }
 
-#if PUBNUB_USE_ENTITY_API
+#if PUBNUB_USE_OBJECTS_API
 pubnub_res pubnub_qt::fetch_all_users(list_options& options)
 {
     KEEP_THREAD_SAFE();
@@ -877,7 +877,7 @@ pubnub_res pubnub_qt::update_members_in_space(QString const& space_id,
             d_message_to_send.data()),
         PBTT_UPDATE_MEMBERS_IN_SPACE);
 }
-#endif /* PUBNUB_USE_ENTITY_API */
+#endif /* PUBNUB_USE_OBJECTS_API */
 
 int pubnub_qt::last_http_code() const
 {
@@ -1032,7 +1032,7 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
         pbres = pbcc_parse_message_counts_response(d_context.data());
         break;
 #endif
-#if PUBNUB_USE_ENTITY_API
+#if PUBNUB_USE_OBJECTS_API
     case PBTT_FETCH_ALL_USERS:
     case PBTT_CREATE_USER:
     case PBTT_FETCH_USER:
@@ -1047,7 +1047,7 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
     case PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS:
     case PBTT_FETCH_MEMBERS_IN_SPACE:
     case PBTT_UPDATE_MEMBERS_IN_SPACE:
-        pbres = pbcc_parse_entity_api_response(d_context.data());
+        pbres = pbcc_parse_objects_api_response(d_context.data());
         break;
 #endif
     default:
@@ -1111,6 +1111,8 @@ void pubnub_qt::httpFinished()
         case QNetworkReply::ProtocolUnknownError:
             emit outcome(PNR_CONNECT_FAILED);
             return;
+        default:
+            break;
         }
     }
 

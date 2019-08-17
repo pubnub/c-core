@@ -15,8 +15,8 @@
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pbcc_advanced_history.h"
 #endif
-#if PUBNUB_USE_ENTITY_API
-#include "core/pbcc_entity_api.h"
+#if PUBNUB_USE_OBJECTS_API
+#include "core/pbcc_objects_api.h"
 #endif
 #include "core/pubnub_proxy_core.h"
 
@@ -253,26 +253,26 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
 #if PUBNUB_USE_ADVANCED_HISTORY
     , pbcc_parse_message_counts_response /* PBTT_MESSAGE_COUNTS */
 #endif
-#if PUBNUB_USE_ENTITY_API
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_ALL_USERS */
-    , pbcc_parse_entity_api_response /* PBTT_CREATE_USER */
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_USER */
-    , pbcc_parse_entity_api_response /* PBTT_UPDATE_USER */
-    , pbcc_parse_entity_api_response /* PBTT_DELETE_USER */
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_ALL_SPACES */
-    , pbcc_parse_entity_api_response /* PBTT_CREATE_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_UPDATE_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_DELETE_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_USERS_SPACE_MEMBERSHIPS */
-    , pbcc_parse_entity_api_response /* PBTT_ADD_USERS_SPACE_MEMBERSHIPS */
-    , pbcc_parse_entity_api_response /* PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS */
-    , pbcc_parse_entity_api_response /* PBTT_REMOVE_USERS_SPACE_MEMBERSHIPS */
-    , pbcc_parse_entity_api_response /* PBTT_FETCH_MEMBERS_IN_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_ADD_MEMBERS_IN_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_UPDATE_MEMBERS_IN_SPACE */
-    , pbcc_parse_entity_api_response /* PBTT_REMOVE_MEMBERS_IN_SPACE */
-#endif /* PUBNUB_USE_ENTITY_API */
+#if PUBNUB_USE_OBJECTS_API
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_ALL_USERS */
+    , pbcc_parse_objects_api_response /* PBTT_CREATE_USER */
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_USER */
+    , pbcc_parse_objects_api_response /* PBTT_UPDATE_USER */
+    , pbcc_parse_objects_api_response /* PBTT_DELETE_USER */
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_ALL_SPACES */
+    , pbcc_parse_objects_api_response /* PBTT_CREATE_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_UPDATE_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_DELETE_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_USERS_SPACE_MEMBERSHIPS */
+    , pbcc_parse_objects_api_response /* PBTT_ADD_USERS_SPACE_MEMBERSHIPS */
+    , pbcc_parse_objects_api_response /* PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS */
+    , pbcc_parse_objects_api_response /* PBTT_REMOVE_USERS_SPACE_MEMBERSHIPS */
+    , pbcc_parse_objects_api_response /* PBTT_FETCH_MEMBERS_IN_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_ADD_MEMBERS_IN_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_UPDATE_MEMBERS_IN_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_REMOVE_MEMBERS_IN_SPACE */
+#endif /* PUBNUB_USE_OBJECTS_API */
 #endif /* PUBNUB_ONLY_PUBSUB_API */
 };
 

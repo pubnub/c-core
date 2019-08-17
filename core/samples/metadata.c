@@ -36,7 +36,7 @@ static enum pubnub_res signal_trans(pubnub_t* pbp, char const* chan)
     puts("------------------");
     puts("Signal");
     puts("------------------");
-    res = pubnub_signal(pbp, chan, pubnubSendViaGET, "\"Signal world - sync w/meta\"");
+    res = pubnub_signal(pbp, chan, "\"Signal world - sync w/meta\"");
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -57,7 +57,7 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
         printf("  Timetoken  = '%.*s'\n", (int)msg.tt.size, msg.tt.ptr);
         printf("  Metadata   = '%.*s'\n", (int)msg.metadata.size, msg.metadata.ptr);
         printf("  Payload    = '%.*s'\n", (int)msg.payload.size, msg.payload.ptr);
-        printf("  Is_signal  = '%s'\n", msg.is_signal ? "true" : "false");
+        printf("  MessageType= '%s'\n", pubnub_msg_type_to_str(msg.message_type));
     }
     return 0;
 }

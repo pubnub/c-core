@@ -9,6 +9,14 @@
 #include <stdbool.h>
 #include "pubnub_memory_block.h"
 
+/* subscribe_v2 message types */
+enum pubnub_message_type {
+    /* Indicates that message was received as a signal */ 
+    pbsbSignal,
+    /* Indicates that message was published */ 
+    pbsbPublished
+};
+
 /** Pubnub V2 message has lots of data and here's how we express them
     for the pubnub_get_v2().
 
@@ -34,8 +42,9 @@ struct pubnub_v2_message {
     struct pubnub_char_mem_block payload;
     /** The message metadata, as published */
     struct pubnub_char_mem_block metadata;
-    /** is the message a signal(, or published) */ 
-    bool is_signal;
+    /** Indicates the message type: a signal, published, or something else */ 
+    enum pubnub_message_type message_type;
 };
+
 
 #endif /* INC_PUBNUB_SUBSCRIBE_V2_MESSAGE */

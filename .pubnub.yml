@@ -9,6 +9,8 @@ changelog:
         text: Introduce Signals support
       - type: enhancement
         text: Support subscribe V2 in C++ & Qt
+      - type: enhancement
+        text: Add pubnub_stop() for graceful shutdown when using callback interface
   - version: v2.8.4
     date: Jun 12, 2019
     changes:

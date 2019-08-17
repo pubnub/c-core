@@ -7,8 +7,8 @@
 #include "core/pubnub_timers.h"
 #include "core/pubnub_log.h"
 #include "lib/pb_strnlen_s.h"
-#include "core/pbcc_entity_api.h"
-#include "core/pubnub_entity_api.h"
+#include "core/pbcc_objects_api.h"
+#include "core/pubnub_objects_api.h"
 
 #include "core/pbpal.h"
 

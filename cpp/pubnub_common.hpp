@@ -17,6 +17,9 @@ extern "C" {
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_free_with_timeout.h"
+#if defined(PUBNUB_CALLBACK_API)
+#include "core/pubnub_ntf_callback.h"
+#endif
 #if PUBNUB_PROXY_API
 #include "core/pubnub_proxy.h"
 #endif
@@ -28,8 +31,8 @@ extern "C" {
 #endif
 #include "core/pubnub_advanced_history.h"
 #define MAX_ERROR_MESSAGE_LENGTH 100
-#if PUBNUB_USE_ENTITY_API
-#include "core/pubnub_entity_api.h"
+#if PUBNUB_USE_OBJECTS_API
+#include "core/pubnub_objects_api.h"
 #define MAX_INCLUDE_DIMENSION 100
 #define MAX_ELEM_LENGTH 30
 #endif
@@ -368,8 +371,8 @@ public:
     pubnub_history_options data() { return d_; }
 };
 
-#if PUBNUB_USE_ENTITY_API
-/** A wrapper class for entity api managing include parameter */
+#if PUBNUB_USE_OBJECTS_API
+/** A wrapper class for objects api managing include parameter */
 class include_options {
     char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
     size_t d_include_count;
@@ -402,7 +405,7 @@ public:
     char const** include_c_strings_array() { return (char const**)d_include_c_strings_array; }
 };
     
-/** A wrapper class for entity api paging option parameters, enabling a nicer
+/** A wrapper class for objects api paging option parameters, enabling a nicer
     usage. Something like:
        pbp.fetch_users(list_options().start(last_bookmark));
 
@@ -454,7 +457,7 @@ public:
         return pbccNotSet;
     }
 };
-#endif /* PUBNUB_USE_ENTITY_API */    
+#endif /* PUBNUB_USE_OBJECTS_API */    
 
 /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
  * not a "native" C++ implementation.
@@ -706,29 +709,11 @@ public:
         return doit(pubnub_publish_ex(d_pb, channel.c_str(), d_message_to_send, opt.data()));
     }
 
-    /// Sends a signal @p message on the @p channel via chosen @p method.
-    /// (Method GET by default).
+    /// Sends a signal @p message on the @p channel.
     /// @see pubnub_signal
-    futres signal(std::string const& channel,
-                  std::string const& message,
-                  pubnub_method method=pubnubSendViaGET)
+    futres signal(std::string const& channel, std::string const& message)
     {
-        if (method != pubnubSendViaGET) {
-            if (message.size() + 1 > sizeof d_message_to_send) {
-                throw std::range_error("string for signal message too long");
-            }
-            lock_guard lck(d_mutex);
-            if (!pubnub_can_start_transaction(d_pb)) {
-                return futres(d_pb, *this, PNR_IN_PROGRESS);
-            }
-            strcpy(d_message_to_send, message.c_str());
-        }
-        return doit(pubnub_signal(d_pb,
-                                  channel.c_str(),
-                                  method,
-                                  (pubnubSendViaGET == method)
-                                  ? message.c_str()
-                                  : d_message_to_send));
+        return doit(pubnub_signal(d_pb, channel.c_str(), message.c_str());
     }
     
 #if PUBNUB_CRYPTO_API
@@ -1097,7 +1082,7 @@ public:
         return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
     }
 
-#if PUBNUB_USE_ENTITY_API
+#if PUBNUB_USE_OBJECTS_API
     /// Starts a transaction for optaining a paginated list of users associated
     /// with the subscription key.
     /// @see pubnub_fetch_all_users
@@ -1327,7 +1312,7 @@ public:
                         inc.include_count(),
                         d_message_to_send));
     }
-#endif /* PUBNUB_USE_ENTITY_API */
+#endif /* PUBNUB_USE_OBJECTS_API */
 
     /// Return the HTTP code (result) of the last transaction.
     /// @see pubnub_last_http_code
@@ -1505,6 +1490,16 @@ public:
         return rslt;
     }
 #endif
+
+    /// Enables safe exit from the main() in callback environment by disabling
+    /// platform watcher thread.
+    /// @see pubnub_stop()
+    void stop(void)
+    {
+#if defined(PUBNUB_CALLBACK_API)
+        pubnub_stop();
+#endif
+    }
 
     ~context()
     {

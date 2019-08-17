@@ -43,8 +43,8 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 0
 #endif
 
-#if !defined(PUBNUB_USE_ENTITY_API)
-#define PUBNUB_USE_ENTITY_API 0
+#if !defined(PUBNUB_USE_OBJECTS_API)
+#define PUBNUB_USE_OBJECTS_API 0
 #endif
 
 #if !defined(PUBNUB_PROXY_API)

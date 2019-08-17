@@ -110,7 +110,6 @@ enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* me
 
 enum pubnub_res pubnub_signal(pubnub_t* pb,
                               const char* channel,
-                              enum pubnub_method method,
                               const char* message)
 {
     enum pubnub_res rslt;
@@ -123,7 +122,7 @@ enum pubnub_res pubnub_signal(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_signal_prep(&pb->core, channel, method, message);
+    rslt = pbcc_signal_prep(&pb->core, channel, message);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SIGNAL;
         pb->core.last_result = PNR_STARTED;

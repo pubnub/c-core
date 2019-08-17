@@ -2,6 +2,9 @@
 #include "pubnub_helper.h"
 
 #include "pubnub_assert.h"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "pubnub_subscribe_v2_message.h"
+#endif
 
 #include <string.h>
 
@@ -65,12 +68,24 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_INVALID_PARAMETERS: return "Invalid function parameters";
     case PNR_ERROR_ON_SERVER: return "Server reported an error";
     case PNR_AUTHENTICATION_FAILED: return "Proxy authentication failed";
-    case PNR_ENTITY_API_INVALID_PARAM: return "Entity API invalid parameter";
-    case PNR_ENTITY_API_OK: return "Entity API transaction successfully finished";
-    case PNR_ENTITY_API_ERROR: return "Entity API transaction reported an error";
+    case PNR_OBJECTS_API_INVALID_PARAM: return "Objects API invalid parameter";
+    case PNR_OBJECTS_API_OK: return "Objects API transaction successfully finished";
+    case PNR_OBJECTS_API_ERROR: return "Objects API transaction reported an error";
+    default: return "!?!?!";
     }
-    return "!?!?!";
 }
+
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+char const* pubnub_msg_type_to_str(enum pubnub_message_type type)
+{
+    switch (type) {
+    case pbsbSignal: return "signal";
+    case pbsbPublished: return "published";
+    default: return "!?!?!";
+    }
+}
+#endif
 
 
 enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
@@ -100,9 +115,9 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_INVALID_PARAMETERS: return pbccFalse; /* Check and fix invalid parameters */
     case PNR_ERROR_ON_SERVER: return pbccFalse; /* Fix the error reported */
     case PNR_AUTHENTICATION_FAILED: return pbccFalse; /* Check and fix the error reported */
-    case PNR_ENTITY_API_INVALID_PARAM: return pbccFalse; /* Check and fix the error reported */
-    case PNR_ENTITY_API_OK: return pbccFalse;
-    case PNR_ENTITY_API_ERROR: return pbccFalse; /* Check the error reported */
+    case PNR_OBJECTS_API_INVALID_PARAM: return pbccFalse; /* Check and fix the error reported */
+    case PNR_OBJECTS_API_OK: return pbccFalse;
+    case PNR_OBJECTS_API_ERROR: return pbccFalse; /* Check the error reported */
     }
     return pbccFalse;
 }

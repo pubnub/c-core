@@ -36,8 +36,8 @@ QT_END_NAMESPACE
 #define MAX_INCLUDE_DIMENSION 100
 #define MAX_ELEM_LENGTH 30
 
-#if PUBNUB_USE_ENTITY_API
-/** A wrapper class for entity api managing include parameter */
+#if PUBNUB_USE_OBJECTS_API
+/** A wrapper class for objects api managing include parameter */
 class include_options {
     char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
     size_t d_include_count;
@@ -73,7 +73,7 @@ public:
     }
 };
     
-/** A wrapper class for entity api options for manipulating specified requirements
+/** A wrapper class for objects api options for manipulating specified requirements
     and paged response, enabling a nicer usage. Something like:
        pbp.fetch_users(list_options().start(last_bookmark));
 
@@ -126,7 +126,7 @@ public:
         return pbccNotSet;
     }
 };
-#endif /* PUBNUB_USE_ENTITY_API */
+#endif /* PUBNUB_USE_OBJECTS_API */
 
 struct pbcc_context;
 
@@ -991,7 +991,7 @@ public:
     */
     pubnub_res list_channel_group(QString const& channel_group);
 
-#if PUBNUB_USE_ENTITY_API
+#if PUBNUB_USE_OBJECTS_API
     /** Initiates a transaction that returns a paginated list of users
         associated with the subscription key, optionally including each
         record's custom data object.
@@ -1453,7 +1453,7 @@ public:
                                        update_obj.toJson(),
                                        include);
     }
-#endif /* PUBNUB_USE_ENTITY_API */
+#endif /* PUBNUB_USE_OBJECTS_API */
     
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.

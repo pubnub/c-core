@@ -469,7 +469,6 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 
 enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                  const char* channel,
-                                 enum pubnub_method method,
                                  const char* message)
 {
     char const* const uname = pubnub_uname();
@@ -484,17 +483,11 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                 pb->publish_key,
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
-    APPEND_URL_LITERAL_M(pb, "/0");
-    if (pubnubSendViaGET == method) {
-        pb->http_buf[pb->http_buf_len++] = '/';
-        APPEND_URL_ENCODED_M(pb, message);
-    }
+    APPEND_URL_LITERAL_M(pb, "/0/");
+    APPEND_URL_ENCODED_M(pb, message);
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    if (method != pubnubSendViaGET) {
-        APPEND_MESSAGE_BODY_M(pb, message);
-    }
         
     return PNR_STARTED;
 }

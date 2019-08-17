@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#if !defined INC_PUBNUB_ENTITY_API
-#define INC_PUBNUB_ENTITY_API
+#if !defined INC_PUBNUB_OBJECTS_API
+#define INC_PUBNUB_OBJECTS_API
 
 
 #include "pubnub_api_types.h"
@@ -350,4 +350,4 @@ enum pubnub_res pubnub_remove_members_in_space(pubnub_t* pb,
                                                char const* update_obj);
 
 
-#endif /* !defined INC_PUBNUB_ENTITY_API */
+#endif /* !defined INC_PUBNUB_OBJECTS_API */

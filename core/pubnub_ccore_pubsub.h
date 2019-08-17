@@ -311,7 +311,6 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
  */
 enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                  const char* channel,
-                                 enum pubnub_method method,
                                  const char* message);
 
 /** Prepares the Subscribe operation (transaction), mostly by
