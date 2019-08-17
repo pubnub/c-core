@@ -713,7 +713,7 @@ public:
     /// @see pubnub_signal
     futres signal(std::string const& channel, std::string const& message)
     {
-        return doit(pubnub_signal(d_pb, channel.c_str(), message.c_str());
+        return doit(pubnub_signal(d_pb, channel.c_str(), message.c_str()));
     }
     
 #if PUBNUB_CRYPTO_API
