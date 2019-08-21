@@ -50,6 +50,14 @@ enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
  */
 char const* pubnub_res_2_string(enum pubnub_res e);
 
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "pubnub_subscribe_v2_message.h"
+/** Returns a string literal describing enum value @p type
+    Used when looking at pubnub V2 message received by pubnub_subscribe_v2().
+ */
+char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
+#endif
+
 /** Returns whether retrying a Pubnub transaction makes sense.  This
     is mostly interesting for publishing, but is useful in general. It
     is least useful for subscribing, because you will most probably

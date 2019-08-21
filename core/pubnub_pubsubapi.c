@@ -50,7 +50,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->options.ipv6_connectivity = false;
 #endif
     p->flags.started_while_kept_alive = false;
-    p->flags.is_publish_via_post   = false;
+    p->method                         = pubnubSendViaGET;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     p->keep_alive.max     = 1000;
     p->keep_alive.timeout = 50;
@@ -95,9 +95,36 @@ enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* me
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL, pubnubPublishViaGET);
+    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL, pubnubSendViaGET);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+    }
+    pubnub_mutex_unlock(pb->monitor);
+
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_signal(pubnub_t* pb,
+                              const char* channel,
+                              const char* message)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+
+    rslt = pbcc_signal_prep(&pb->core, channel, message);
+    if (PNR_STARTED == rslt) {
+        pb->trans            = PBTT_SIGNAL;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
@@ -252,7 +279,8 @@ static char const* do_last_publish_result(pubnub_t* pb)
     if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
         return "";
     }
-    if ((pb->trans != PBTT_PUBLISH) || (pb->core.http_reply[0] == '\0')) {
+    if (((pb->trans != PBTT_PUBLISH) && (pb->trans != PBTT_SIGNAL))  ||
+        (pb->core.http_reply[0] == '\0')) {
         return "";
     }
 

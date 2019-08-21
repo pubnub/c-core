@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if !defined INC_PBNTF_TRANS_OUTCOME_COMMON
+#define      INC_PBNTF_TRANS_OUTCOME_COMMON
 
 /** This macro does the common "stuff to do" on the outcome of a
     transaction. Should be used by all `pbntf_trans_outcome()`
@@ -23,6 +25,8 @@
         default:                                                                   \
             break;                                                                 \
         }                                                                          \
-        M_pb_->flags.is_publish_via_post = false;                                  \
+        M_pb_->method = pubnubSendViaGET;                                          \
         M_pb_->state = state;                                                      \
     } while (0)
+
+#endif /* INC_PBNTF_TRANS_OUTCOME_COMMON */

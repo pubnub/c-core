@@ -144,7 +144,7 @@ void pubnub_qt_sample::execute()
     connect(&d_pb, SIGNAL(outcome(pubnub_res)), this, SLOT(onPublish(pubnub_res)));
     pubnub_res result = d_pb.publish(chann, "\"Hello world from Qt!\"");
     if (result != PNR_STARTED) {
-        d_out << "Subscribe failed, result: '"<< pubnub_res_2_string(result) << "'\n";
+        d_out << "Publish failed, result: '"<< pubnub_res_2_string(result) << "'\n";
         QCoreApplication::instance()->quit();
     }
 }

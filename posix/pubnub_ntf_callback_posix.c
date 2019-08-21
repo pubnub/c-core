@@ -21,8 +21,10 @@
 
 struct SocketWatcherData {
     struct pbpal_poll_data* poll pubnub_guarded_by(mutw);
+    bool stop_socket_watcher_thread pubnub_guarded_by(stoplock);
     pthread_mutex_t mutw;
     pthread_mutex_t timerlock;
+    pthread_mutex_t stoplock;
     pthread_t       thread_id;
 #if PUBNUB_TIMERS_API
     pubnub_t* timer_head pubnub_guarded_by(timerlock);
@@ -62,7 +64,15 @@ void* socket_watcher_thread(void* arg)
 
     for (;;) {
         struct timespec timspec;
-
+        bool stop_thread;
+        
+        pthread_mutex_lock(&m_watcher.stoplock);
+        stop_thread = m_watcher.stop_socket_watcher_thread;
+        pthread_mutex_unlock(&m_watcher.stoplock);
+        if (stop_thread) {
+            break;
+        }
+        
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
         monotonic_clock_get_time(&timspec);
@@ -95,6 +105,14 @@ void* socket_watcher_thread(void* arg)
 }
 
 
+void pubnub_stop(void)
+{
+    pthread_mutex_lock(&m_watcher.stoplock);
+    m_watcher.stop_socket_watcher_thread = true;
+    pthread_mutex_unlock(&m_watcher.stoplock);
+}
+    
+
 int pbntf_init(void)
 {
     int                 rslt;
@@ -113,10 +131,17 @@ int pbntf_init(void)
         pthread_mutexattr_destroy(&attr);
         return -1;
     }
+    rslt = pthread_mutex_init(&m_watcher.stoplock, &attr);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR("Failed to initialize 'stoplock' mutex, error code: %d", rslt);
+        pthread_mutexattr_destroy(&attr);
+        return -1;
+    }
     rslt = pthread_mutex_init(&m_watcher.mutw, &attr);
     if (rslt != 0) {
         PUBNUB_LOG_ERROR("Failed to initialize mutex, error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
+        pthread_mutex_destroy(&m_watcher.stoplock);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher.timerlock, &attr);
@@ -124,6 +149,7 @@ int pbntf_init(void)
         PUBNUB_LOG_ERROR("Failed to initialize mutex for timers, error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
+        pthread_mutex_destroy(&m_watcher.stoplock);
         return -1;
     }
 
@@ -132,9 +158,11 @@ int pbntf_init(void)
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
         pthread_mutex_destroy(&m_watcher.timerlock);
+        pthread_mutex_destroy(&m_watcher.stoplock);
         return -1;
     }
     pbpal_ntf_callback_queue_init(&m_watcher.queue);
+    m_watcher.stop_socket_watcher_thread = false;
 
 #if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB)                              \
     && (PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB > 0)
@@ -148,7 +176,7 @@ int pbntf_init(void)
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
-            pthread_mutex_destroy(&m_watcher.queue_lock);
+            pthread_mutex_destroy(&m_watcher.stoplock);
             pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
             pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
             return -1;
@@ -163,7 +191,7 @@ int pbntf_init(void)
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
-            pthread_mutex_destroy(&m_watcher.queue_lock);
+            pthread_mutex_destroy(&m_watcher.stoplock);
             pthread_attr_destroy(&thread_attr);
             pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
             pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
@@ -177,7 +205,7 @@ int pbntf_init(void)
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
-            pthread_mutex_destroy(&m_watcher.queue_lock);
+            pthread_mutex_destroy(&m_watcher.stoplock);
             pthread_attr_destroy(&thread_attr);
             pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
             pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
@@ -193,6 +221,7 @@ int pbntf_init(void)
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
         pthread_mutex_destroy(&m_watcher.timerlock);
+        pthread_mutex_destroy(&m_watcher.stoplock);
         pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
         pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
         return -1;

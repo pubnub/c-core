@@ -5,13 +5,12 @@
 #include "pubnub_config.h"
 
 #include "pubnub_api_types.h"
-#include "pubnub_memory_block.h"
-
 
 #if !PUBNUB_USE_SUBSCRIBE_V2
 #error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
 #endif
 
+#include "pubnub_subscribe_v2_message.h"
 
 /** @file pubnub_subscribe_v2.h
 
@@ -41,7 +40,7 @@ struct pubnub_subscribe_v2_options {
         be received, otherwise, it will be skipped (as if not
         published). Syntax is not trivial, but can be described as
         mostly Javascript on the metadata (which is JSON, thus,
-        "integrates well" wtih Javascript). For example, if your
+        "integrates well" with Javascript). For example, if your
         metadata is: `{"zec":3}`, then this filter _would_ match it:
         `zec==3`, while `zec==4` would _not_.
 
@@ -79,43 +78,14 @@ enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
                                     struct pubnub_subscribe_v2_options opts);
 
 
-/** Pubnub V2 message has lots of data and here's how we express them
-    for the pubnub_get_v2().
-
-    The "string fields" are expressed as "Pascal strings", that is, a
-    pointer with string length, and _don't_ include a NUL character.
-    Also, these pointers are actually pointing into the full received
-    message, so, their lifetime is tied to the message lifetime and
-    any subsequent transaction on the same context will invalidate
-    them.
-
-*/
-struct pubnub_v2_message {
-    /** The time token of the message - when it was published. */
-    struct pubnub_char_mem_block tt;
-    /** Region of the message - not interesting in most cases */
-    int region;
-    /** Message flags */
-    int flags;
-    /** Channel that message was published to */
-    struct pubnub_char_mem_block channel;
-    /** Subscription match or the channel group */
-    struct pubnub_char_mem_block match_or_group;
-    /** The message itself */
-    struct pubnub_char_mem_block payload;
-    /** The message metadata, as published */
-    struct pubnub_char_mem_block metadata;
-};
-
 /** Parse and return the next V2 message, if any.
 
     Do keep in mind that you can use pubnub_get() to get the full
     message in JSON, but, then you'll have to parse it yourself, and
     pubnub_channel() and pubnub_channel_group() would not work.
 
-    If there are no more messages, this will return a struct "memset
-    to zero". Since message must have the payload, the fail safe
-    way of checking is:
+    If there are no more messages, this will return an empty message v2 structure.
+    Since message must have the payload, the fail-safe way of checking is:
 
         v2msg = pubnub_get_v2(pbp);
         if (NULL == v2msg.payload.ptr) {
