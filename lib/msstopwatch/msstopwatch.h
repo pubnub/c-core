@@ -29,8 +29,8 @@
 #include <stdbool.h>
 
 
-typedef struct { int32_t t_ref; } pbmsref_t;
-typedef int32_t pbms_t;
+typedef struct { int64_t t_ref; } pbmsref_t;
+typedef int32_t pbms_t;		/* Warning!  Overflows after 24d 20h 31m	*/
 
 /** Starts a stopwatch. The result has no particular meaning, 
     is only to be used as the parameter of pbms_elapsed().

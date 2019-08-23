@@ -11,10 +11,11 @@
     clock like POSIX clock_gettime(CLOCK_MONOTONIC,...);
 */
 
-static int32_t msclock(void)
+static int64_t msclock(void)
 {
     struct timespec ts;
     if (0 == monotonic_clock_get_time(&ts)) {
+        /* 32 bit overflows after 2,147,483,648 / 1000 / 24 / 3600 = 24,855 days	*/
         return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
     }
     else {
