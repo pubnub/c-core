@@ -15,10 +15,12 @@ static int32_t msclock(void)
 {
     struct timespec ts;
     if (0 == monotonic_clock_get_time(&ts)) {
-        return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        /* 32 bit overflows after 2,147,483,648 / 1000 / 24 / 3600 = 24,855 days	*/
+        int32_t ret = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        return !ret ? -1 : ret;
     }
     else {
-        return -1;
+        return 0;
     }
 }
 
@@ -32,13 +34,13 @@ pbmsref_t pbms_start(void)
 
 void pbms_stop(pbmsref_t* psw)
 {
-    psw->t_ref = -1;
+    psw->t_ref = 0;
 }
 
 
 bool pbms_active(pbmsref_t stopwatch)
 {
-    return stopwatch.t_ref > -1;
+    return stopwatch.t_ref != 0;
 }
 
 
