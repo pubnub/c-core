@@ -227,6 +227,7 @@ int pbpal_set_blocking_io(pubnub_t *pb);
 void pbpal_free(pubnub_t *pb);
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
+struct pubnub_multi_addresses;
 void pbpal_multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses);
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #endif /* !defined INC_PBPAL */

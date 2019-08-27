@@ -22,7 +22,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.cipher_key = NULL;
     result.replicate  = true;
     result.meta       = NULL;
-    result.method     = pubnubPublishViaGET;
+    result.method     = pubnubSendViaGET;
     return result;
 }
 
@@ -60,7 +60,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
 #endif
 #if PUBNUB_USE_GZIP_COMPRESSION
     pb->core.gzip_msg_len = 0;
-    if (pubnubPublishViaPOSTwithGZIP == opts.method) {
+    if (pubnubSendViaPOSTwithGZIP == opts.method) {
         if (pbgzip_compress(pb, message) == PNR_OK) {
             message = pb->core.gzip_msg_buf;
         }
@@ -71,7 +71,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
-        pb->flags.is_publish_via_post = (opts.method != pubnubPublishViaGET);
+        pb->method           = opts.method;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }

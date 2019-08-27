@@ -31,8 +31,8 @@ struct pbcc_context {
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
     char const* auth;
-    /** Pointer to the message to publish via POST */
-    char const* message_to_publish;
+    /** Pointer to the message to send via POST method */
+    char const* message_to_send;
 
     /** The last recived subscribe time token. */
     char timetoken[20];
@@ -121,16 +121,22 @@ struct pbcc_context {
         }                                                                      \
     }
 
-#define APPEND_URL_LITERAL_M(pbc, string_literal)                              \
+#define APPEND_URL_LITERAL_M_IMP(pbc, string_literal)                          \
     {                                                                          \
-        PUBNUB_ASSERT_OPT((string_literal) != NULL);                           \
         if ((pbc)->http_buf_len + sizeof(string_literal) > sizeof (pbc)->http_buf) {\
+            PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url literal:\n"\
+                             "current_buffer_size = %lu\n"                     \
+                             "required_buffer_size = %lu\n",                   \
+                             (unsigned long)(sizeof (pbc)->http_buf),          \
+                             (unsigned long)((pbc)->http_buf_len + 1 + sizeof(string_literal)));\
             return PNR_TX_BUFF_TOO_SMALL;                                      \
         }                                                                      \
         strcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal));       \
         (pbc)->http_buf_len += sizeof(string_literal) - 1;                     \
     }
-       
+
+#define APPEND_URL_LITERAL_M(pbc, string_literal) APPEND_URL_LITERAL_M_IMP(pbc, "" string_literal)
+
 #define APPEND_URL_ENCODED_M(pbc, what)                                        \
     if ((what) != NULL) {                                                      \
         enum pubnub_res rslt_ = pbcc_url_encode((pbc), (what));                \
@@ -185,6 +191,37 @@ struct pbcc_context {
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                          \
     }
 
+#if PUBNUB_USE_GZIP_COMPRESSION
+#define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
+    if ((pbc)->gzip_msg_len != 0) {                                            \
+        (pbc)->message_to_send = (message);                                    \
+    }                                                                          \
+    else {                                                                     \
+        (pbc)->message_to_send = strcpy((pbc)->http_buf + (pbc)->http_buf_len + 1,\
+                                        (message));                            \
+    }
+#else
+#define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
+    (pbc)->message_to_send = strcpy((pbc)->http_buf + (pbc)->http_buf_len + 1, \
+                                    (message))
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */
+
+#define APPEND_MESSAGE_BODY_M(pbc, message)                                    \
+    if ((message) != NULL) {                                                   \
+        if (pb_strnlen_s(message, PUBNUB_MAX_OBJECT_LENGTH) >                  \
+            sizeof (pbc)->http_buf - (pbc)->http_buf_len - 2) {                \
+            PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot pack the message body:\n"\
+                             "current_buffer_size = %lu\n"                     \
+                             "required_buffer_size = %lu\n",                   \
+                             (unsigned long)(sizeof (pbc)->http_buf),          \
+                             (unsigned long)((pbc)->http_buf_len + 2 + pb_strnlen_s(message,\
+                                                                                    PUBNUB_MAX_OBJECT_LENGTH)));\
+            return PNR_TX_BUFF_TOO_SMALL;                                      \
+        }                                                                      \
+        (pbc)->http_buf[(pbc)->http_buf_len] = '\0';                           \
+        CHECK_IF_GZIP_COMPRESSED((pbc), (message));                            \
+    }
+
 
 /** Initializes the Pubnub C core context */
 void pbcc_init(struct pbcc_context* pbcc,
@@ -236,7 +273,7 @@ typedef enum pubnub_res (*PFpbcc_parse_response_T)(struct pbcc_context*);
     pbcc_get_channel()).
 
     @param p The Pubnub C core context to parse the response "in"
-    @return 0: OK, -1: error (invalid response)
+    @return PNR_OK: OK, PNR_FORMAT_ERROR: error (invalid response)
 */
 enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p);
 
@@ -251,23 +288,30 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p);
 */
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p);
 
-/** Prepares HTTP header lines specific for publish 'via POST' 
+/** Prepares HTTP header lines specific for sending message 'via POST' method.
     @param p The Pubnub C core context with all necessary information
     @param header pointer to char array provided for placing these headers
     @param max_length maximum size of array provided
  */
-void pbcc_headers_for_publish_via_post(struct pbcc_context* p, char* header, size_t max_length);
+void pbcc_via_post_headers(struct pbcc_context* p, char* header, size_t max_length);
 
 /** Prepares the Publish operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_publish_prep(struct pbcc_context*       pb,
-                                  const char*                channel,
-                                  const char*                message,
-                                  bool                       store_in_history,
-                                  bool                       norep,
-                                  char const*                meta,
-                                  enum pubnub_publish_method method);
+enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
+                                  const char*          channel,
+                                  const char*          message,
+                                  bool                 store_in_history,
+                                  bool                 norep,
+                                  char const*          meta,
+                                  enum pubnub_method   method);
+
+/** Prepares the Signal operation (transaction), mostly by
+    formatting the URI of the HTTP request.
+ */
+enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
+                                 const char* channel,
+                                 const char* message);
 
 /** Prepares the Subscribe operation (transaction), mostly by
     formatting the URI of the HTTP request.

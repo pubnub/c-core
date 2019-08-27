@@ -65,6 +65,18 @@ void *pubnub_get_user_data(pubnub_t *pb);
  */
 pubnub_callback_t pubnub_get_callback(pubnub_t *pb);
 
+/** Enables safe exit from the main() by disabling platform watcher thread.
+    It exists and is used in callback environment only.
+    Adequate place for this function call would be the end of main() function.
+    After pubnub_stop() no other pubnub c-core function call is allowed( not even
+    pubnub_free() which only enqueues the event into the queue that is supposed
+    to be processed by the disabled thread).
+    This function can, also, be the one from the 'atexit() list' on 'full' C
+    environment. For example we could have just 'atexit(pubnub_stop)' function call
+    inside the code(You can register your termination function: pubnub_stop()
+    anywhere you like, but it will be called at the time of the program termination).
+ */
+void pubnub_stop(void);
 
 #endif /* !defined INC_PUBNUB_NTF_CALLBACK */
 
