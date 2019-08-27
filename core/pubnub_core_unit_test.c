@@ -146,6 +146,11 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
     return (int)mock(pb);
 }
 
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+{
+    mock(pb);
+}
+
 #if 0
 #include <execinfo.h>
 static void my_stack_trace(void)
