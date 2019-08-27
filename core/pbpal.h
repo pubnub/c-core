@@ -43,7 +43,7 @@ enum pbpal_tls_result {
 };
 
 /* Handles socket condition on given platform */
-enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb);
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line);
 
 /** Handles start of a TCP (HTTP) connection. It first handles DNS
     resolving for the context @p pb.  If DNS is already resolved, it
@@ -199,6 +199,19 @@ int pbpal_start_read(pubnub_t *pb, size_t n);
     @retval otherwise The error that happened during the reading
 */
 enum pubnub_res pbpal_read_status(pubnub_t *pb);
+
+/** Essentialy prints out an error code detected by the environment
+    during transaction, that was going on given @p pb context,
+    for debug purposes.
+*/ 
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line);
+
+/** Determines an operation outcome depending on socket error occurred
+*/
+enum pubnub_res pbpal_handle_socket_error(int socket_result,
+                                          pubnub_t* pb,
+                                          char const* file,
+                                          int line);
 
 /** Returns whether for the given Pubnub context the TCP
     connection has closed.

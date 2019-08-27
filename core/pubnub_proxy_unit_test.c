@@ -140,6 +140,11 @@ int pbpal_send_status(pubnub_t *pb)
     return (bool)mock(pb);
 }
 
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+{
+    mock(pb);
+}
+
 int pbpal_start_read_line(pubnub_t *pb)
 {
     unsigned distance;

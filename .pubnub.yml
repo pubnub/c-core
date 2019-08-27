@@ -1,7 +1,12 @@
 name: c-core
-version: 2.9.0
+version: 2.9.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.9.1
+    date Aug 25, 2019
+    changes:
+      - type: enhancement
+        text: Improvements in sockets and DNS error reporting
   - version: v2.9.0
     date: Aug 9, 2019
     changes:
