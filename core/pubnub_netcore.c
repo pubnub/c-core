@@ -114,10 +114,27 @@ static int send_fin_head(struct pubnub_* pb)
 
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
+    PUBNUB_LOG_DEBUG("should_keep_alive(pb=%p, rslt=%d('%s')) pb->flags.should_close = %d\n",
+                     pb,
+                     rslt,
+                     pubnub_res_2_string(rslt),
+                     (int)pb->flags.should_close);
     if (!pb->flags.should_close) {
 #if PUBNUB_ADVANCED_KEEP_ALIVE
+        time_t tt = time(NULL);
+        PUBNUB_LOG_DEBUG("should_keep_alive(pb=%p): pb->keep_alive.count = %d, "
+                         "pb->keep_alive.max = %d, "
+                         "pb->keep_alive.t_connect = %ld, "
+                         "pb->keep_alive.timeout = %ld, "
+                         "time = %ld\n",
+                         pb,
+                         pb->keep_alive.count,
+                         pb->keep_alive.max,
+                         (long)pb->keep_alive.t_connect,
+                         (long)pb->keep_alive.timeout,
+                         (long)tt);
         if ((++pb->keep_alive.count >= pb->keep_alive.max)
-            || ((time(NULL) - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
+            || ((tt - pb->keep_alive.t_connect) > pb->keep_alive.timeout)) {
             return false;
         }
 #endif
@@ -498,6 +515,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             break;
         default:
+            pbpal_report_error_from_environment(pb, __FILE__, __LINE__);
             pb->core.last_result = PNR_ADDR_RESOLUTION_FAILED;
 #if PUBNUB_ADNS_RETRY_AFTER_CLOSE
             if (pb->flags.retry_after_close) {
@@ -543,6 +561,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
+            pbpal_report_error_from_environment(pb, __FILE__, __LINE__);
             pbntf_update_socket(pb);
             outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
@@ -571,6 +590,7 @@ next_state:
             pbntf_watch_out_events(pb);
             goto next_state;
         default:
+            pbpal_report_error_from_environment(pb, __FILE__, __LINE__);
             pbntf_update_socket(pb);
             outcome_detected(pb, PNR_ADDR_RESOLUTION_FAILED);
             break;
@@ -593,6 +613,7 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
+            pbpal_report_error_from_environment(pb, __FILE__, __LINE__);
             outcome_detected(pb, PNR_CONNECT_FAILED);
             break;
         }
