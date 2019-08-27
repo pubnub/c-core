@@ -232,7 +232,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     PUBNUB_ASSERT(NULL != ssl);
 
     rslt = SSL_connect(ssl);
-    rslt = pbpal_handle_socket_condition(rslt, pb);
+    rslt = pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__);
     if (PNR_OK != rslt) {
         return (rslt == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
     }

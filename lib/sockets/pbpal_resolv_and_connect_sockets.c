@@ -163,11 +163,21 @@ connect_TCP_socket(pb_socket_t*           skt,
     case AF_INET:
         sockaddr_size                         = sizeof(struct sockaddr_in);
         ((struct sockaddr_in*)dest)->sin_port = htons(port);
+        PUBNUB_LOG_TRACE("connect_TCP_socket(Ipv4:%s)\n",
+                         inet_ntoa(((struct sockaddr_in*)dest)->sin_addr));
         break;
 #if PUBNUB_USE_IPV6
     case AF_INET6:
-        sockaddr_size                           = sizeof(struct sockaddr_in6);
-        ((struct sockaddr_in6*)dest)->sin6_port = htons(port);
+        {
+            char str[INET6_ADDRSTRLEN];
+            sockaddr_size                           = sizeof(struct sockaddr_in6);
+            ((struct sockaddr_in6*)dest)->sin6_port = htons(port);
+            PUBNUB_LOG_TRACE("connect_TCP_socket(Ipv6:%s)\n",
+                             inet_ntop(AF_INET6,
+                                       &(((struct sockaddr_in6*)dest)->sin6_addr),
+                                       str,
+                                       INET6_ADDRSTRLEN));
+        }
         break;
 #endif
     default:
@@ -235,12 +245,17 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
                               const uint16_t                 port)
 {
     enum pbpal_resolv_n_connect_result rslt = pbpal_resolv_resource_failure;
+    time_t tt = time(NULL);
 
     if (spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
         /* Need at least a second to live */
         if (spare_addresses->ttl_ipv4[spare_addresses->ipv4_index] - 2
-            > time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            > tt - spare_addresses->time_of_the_last_dns_query) {
             struct sockaddr_in dest = { 0 };
+            PUBNUB_LOG_TRACE("spare_addresses->ttl_ipv4[spare_addresses->ipv4_index]=%ld > "
+                             "(time() - spare_addresses->time_of_the_last_dns_query)=%ld\n",
+                             (long)(spare_addresses->ttl_ipv4[spare_addresses->ipv4_index]),
+                             (long)(tt - spare_addresses->time_of_the_last_dns_query));
             memcpy(&(dest.sin_addr.s_addr),
                    spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4,
                    sizeof dest.sin_addr.s_addr);
@@ -251,6 +266,7 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
+            pbpal_report_error_from_environment(NULL, __FILE__, __LINE__);
             flags->retry_after_close =
                 (++spare_addresses->ipv4_index < spare_addresses->n_ipv4);
             if_no_retry_close_socket(skt, flags);
@@ -263,8 +279,12 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
     else if (spare_addresses->ipv6_index < spare_addresses->n_ipv6) {
         /* Need at least a second to live */
         if (spare_addresses->ttl_ipv6[spare_addresses->ipv6_index] - 2
-            > time(NULL) - spare_addresses->time_of_the_last_dns_query) {
+            > tt - spare_addresses->time_of_the_last_dns_query) {
             struct sockaddr_in6 dest = { 0 };
+            PUBNUB_LOG_TRACE("spare_addresses->ttl_ipv6[spare_addresses->ipv6_index]=%ld > "
+                             "(time() - spare_addresses->time_of_the_last_dns_query)=%ld\n",
+                             (long)(spare_addresses->ttl_ipv6[spare_addresses->ipv6_index]),
+                             (long)(tt - spare_addresses->time_of_the_last_dns_query));
             memcpy(dest.sin6_addr.s6_addr,
                    spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6,
                    sizeof dest.sin6_addr.s6_addr);
@@ -275,6 +295,7 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
+            pbpal_report_error_from_environment(NULL, __FILE__, __LINE__);
             flags->retry_after_close =
                 (++spare_addresses->ipv6_index < spare_addresses->n_ipv6);
             if_no_retry_close_socket(skt, flags);
@@ -307,6 +328,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #if PUBNUB_PROXY_API
     if (0 != pb->proxy_ipv4_address.ipv4[0]) {
         struct sockaddr_in dest = { 0 };
+        PUBNUB_LOG_TRACE("0 != pb->proxy_ipv4_address.ipv4[0]");
         memcpy(&(dest.sin_addr.s_addr),
                pb->proxy_ipv4_address.ipv4,
                sizeof dest.sin_addr.s_addr);
@@ -318,6 +340,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     else if ((0 != pb->proxy_ipv6_address.ipv6[0])
              || (0 != pb->proxy_ipv6_address.ipv6[1])) {
         struct sockaddr_in6 dest = { 0 };
+        PUBNUB_LOG_TRACE("(0 != pb->proxy_ipv6_address.ipv6[0]) ||"
+                         " (0 != pb->proxy_ipv6_address.ipv6[1]");
         memcpy(dest.sin6_addr.s6_addr,
                pb->proxy_ipv6_address.ipv6,
                sizeof dest.sin6_addr.s6_addr);
