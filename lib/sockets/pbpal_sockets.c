@@ -65,63 +65,6 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 }
 
 
-static void report_error_from_environment(pubnub_t* pb)
-{
-    char const* err_str;
-
-#if HAVE_STRERROR_R
-    char errstr_r[1024];
-    strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
-    err_str = errstr_r;
-#elif HAVE_STRERROR_S
-    char errstr_s[1024];
-    strerror_s(errstr_s, sizeof errstr_s / sizeof errstr_s[0], errno);
-    err_str = errstr_s;
-#else
-    err_str = strerror(errno);
-#endif
-    PUBNUB_LOG_DEBUG(
-        "pbpal_line_read_status(pb=%p): errno=%d('%s') use_blocking_io=%d\n",
-        pb,
-        errno,
-        err_str,
-        (int)pb->options.use_blocking_io);
-#if defined(_WIN32)
-    PUBNUB_LOG_DEBUG("pbpal_line_read_status(pb=%p): GetLastErrror()=%lu "
-                     "WSAGetLastError()=%d\n",
-                     pb,
-                     GetLastError(),
-                     WSAGetLastError());
-#endif
-}
-
-
-static enum pubnub_res handle_socket_error(int socket_result, pubnub_t* pb)
-{
-    PUBNUB_ASSERT_INT_OPT(socket_result, <=, 0);
-    if (socket_result < 0) {
-        if (socket_would_block()) {
-            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                pb->sock_state = STATE_NONE;
-                return PNR_TIMEOUT;
-            }
-            return PNR_IN_PROGRESS;
-        }
-        else {
-            pb->sock_state = STATE_NONE;
-            report_error_from_environment(pb);
-            return socket_timed_out() ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
-        }
-    }
-    else if (0 == socket_result) {
-        pb->sock_state = STATE_NONE;
-        return PNR_TIMEOUT;
-    }
-    pb->sock_state = STATE_NONE;
-    return PNR_INTERNAL_ERROR;
-}
-
-
 int pbpal_send_status(pubnub_t* pb)
 {
     int rslt;
@@ -134,7 +77,7 @@ int pbpal_send_status(pubnub_t* pb)
 
     rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     if (rslt <= 0) {
-        rslt = (handle_socket_error(rslt, pb) == PNR_IN_PROGRESS) ? +1 : -1;
+        rslt = (pbpal_handle_socket_error(rslt, pb, __FILE__, __LINE__) == PNR_IN_PROGRESS) ? +1 : -1;
     }
     else {
         PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
@@ -187,7 +130,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
                           == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
-            return handle_socket_error(recvres, pb);
+            return pbpal_handle_socket_error(recvres, pb, __FILE__, __LINE__);
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
         PUBNUB_LOG_TRACE(
@@ -272,7 +215,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
         PUBNUB_ASSERT_OPT(to_recv > 0);
         have_read = socket_recv(pb->pal.socket, (char*)pb->ptr, to_recv, 0);
         if (have_read <= 0) {
-            return handle_socket_error(have_read, pb);
+            return pbpal_handle_socket_error(have_read, pb, __FILE__, __LINE__);
         }
         PUBNUB_ASSERT_OPT(pb->left >= have_read);
         pb->left -= have_read;
