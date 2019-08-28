@@ -1,9 +1,18 @@
 name: c-core
-version: 2.9.1
+version: 2.9.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.9.2
+    date: Aug 28, 2019
+    changes:
+      - type: bug
+        text: Proxy admin functions (set, get) were not protected by mutex/monitor, so caused a race condition
+      - type: bug
+        text: Setting new proxy might have been ignored until the resolved DNS addresses of the previous proxy expire.
+      - type: bug
+        text: If all resolved addresses on file expire, we would report transaction failure instead of just asking for new ones.
   - version: v2.9.1
-    date Aug 25, 2019
+    date: Aug 25, 2019
     changes:
       - type: enhancement
         text: Improvements in sockets and DNS error reporting
@@ -71,7 +80,7 @@ changelog:
       - type: enhancement
         text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet doesn't incur much memory increase
       - type: bug
-        text: C++ wrapper and Qt did not have proper multithreading support as they didn't protect _their_ data. Now that's fixed.
+        text: C++ wrapper and Qt did not have proper multithreading support as they did not protect _their_ data. Now that's fixed.
   - version: v2.6.2
     date: Dec 20, 2018
     changes:
@@ -185,7 +194,7 @@ changelog:
       - type: feature
         text: Enable sending meta data when publishing
       - type: feature
-        text: Enable setting `norep` (don't replicate) when publishing (with `store=false`, publish becomes "fire")
+        text: Enable setting `norep` (do not replicate) when publishing (with `store=false`, publish becomes "fire")
       - type: bug
         text: Small fixes for async DNS
       - type: feature
@@ -366,7 +375,7 @@ supported-platforms:
     version: PubNub Windows C SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
   - 
     version: PubNub Windows C++ SDK
     platforms:
