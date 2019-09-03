@@ -459,8 +459,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         pb->http_buf[pb->http_buf_len++] = '=';
         rslt                             = pbcc_url_encode(pb, meta);
     }
-    if ((PNR_OK == rslt) && (method != pubnubSendViaGET)) {
-        APPEND_MESSAGE_BODY_M(pb, message);
+    if (method != pubnubSendViaGET) {
+        APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
 
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
@@ -485,6 +485,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0/");
     APPEND_URL_ENCODED_M(pb, message);
+
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');

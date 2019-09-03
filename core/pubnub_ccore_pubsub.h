@@ -191,7 +191,9 @@ struct pbcc_context {
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                          \
     }
 
+#if !defined(INC_PUBNUB_QT)
 #if PUBNUB_USE_GZIP_COMPRESSION
+#define NOT_COMPRESSED_AND(pbc) ((pbc)->gzip_msg_len == 0) &&
 #define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
     if ((pbc)->gzip_msg_len != 0) {                                            \
         (pbc)->message_to_send = (message);                                    \
@@ -201,15 +203,16 @@ struct pbcc_context {
                                         (message));                            \
     }
 #else
+#define NOT_COMPRESSED_AND(pbc)
 #define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
     (pbc)->message_to_send = strcpy((pbc)->http_buf + (pbc)->http_buf_len + 1, \
                                     (message))
 #endif /* PUBNUB_USE_GZIP_COMPRESSION */
 
-#define APPEND_MESSAGE_BODY_M(pbc, message)                                    \
-    if ((message) != NULL) {                                                   \
-        if (pb_strnlen_s(message, PUBNUB_MAX_OBJECT_LENGTH) >                  \
-            sizeof (pbc)->http_buf - (pbc)->http_buf_len - 2) {                \
+#define APPEND_MESSAGE_BODY_M(rslt, pbc, message)                              \
+    if ((PNR_OK == (rslt)) && ((message) != NULL)) {                           \
+        if (NOT_COMPRESSED_AND(pbc)(pb_strnlen_s(message, PUBNUB_MAX_OBJECT_LENGTH) >\
+                                    sizeof (pbc)->http_buf - (pbc)->http_buf_len - 2)) {\
             PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot pack the message body:\n"\
                              "current_buffer_size = %lu\n"                     \
                              "required_buffer_size = %lu\n",                   \
@@ -221,7 +224,9 @@ struct pbcc_context {
         (pbc)->http_buf[(pbc)->http_buf_len] = '\0';                           \
         CHECK_IF_GZIP_COMPRESSED((pbc), (message));                            \
     }
-
+#else
+#define APPEND_MESSAGE_BODY_M(rslt, pbc, message)
+#endif /* !defined(INC_PUBNUB_QT) */
 
 /** Initializes the Pubnub C core context */
 void pbcc_init(struct pbcc_context* pbcc,

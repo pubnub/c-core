@@ -409,8 +409,8 @@ public:
         return publish_via_post_with_gzip(channel, message.toJson());
     }
 
-    /** Sends a signal @p message (in JSON format) on @p channel via chosen
-        @p method(GET, or POST). This actually means "initiate a signal transaction".
+    /** Sends a signal @p message (in JSON format) on @p channel.
+        This actually means "initiate a signal transaction".
         It has similar behaviour as publish, but unlike publish transaction, signal
         erases previous signal message on server(, on a given channel,) and you
         can not send any metadata.
@@ -419,8 +419,6 @@ public:
         certain amount of time.
         Signal message is much shorter and its maximum length( around 500 bytes)
         is smaller than full publish message.
-        If gzip compression is 'activated'(linked) SDK will try to gzip-commpress
-        signal message before sending it.
 
         You can't 'signal' if a transaction is in progress on @p p context.
 
@@ -440,13 +438,9 @@ public:
 
         @param channel The string with the channel to signal to.
         @param message The signal message to send, expected to be in JSON format
-        @param method The chosen performing method(GET, or POST) for the transaction
-                      (Method GET by default).
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res signal(QString const &channel,
-                      QByteArray const &message,
-                      pubnub_method method=pubnubSendViaGET);
+    pubnub_res signal(QString const &channel, QByteArray const &message);
     
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
@@ -996,9 +990,10 @@ public:
         associated with the subscription key, optionally including each
         record's custom data object.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param options options for manipulating specified requirements
@@ -1010,9 +1005,10 @@ public:
     /** Initiates a transaction for creating a user with the attributes specified in
         @p user_obj.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the created user object, optionally including the user's custom data object.
 
@@ -1032,9 +1028,10 @@ public:
         you're sending is valid Json, unlike the case when applying the function that receives
         byte array and doesn't check whether those bytes represent sound Json.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the created user object, optionally including the user's custom data object.
 
@@ -1052,9 +1049,10 @@ public:
     /** Initiates transaction that returns the user object specified with @p user_id,
         optionally including the user's custom data object.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the created user object, optionally including the user's custom data object.
 
@@ -1068,9 +1066,10 @@ public:
     /** Initiates trnsaction that updates the user object specified with the `id` key
         of the @p user_obj with any new information you provide.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the updated user object, optionally including the user's custom data object.
 
@@ -1090,9 +1089,10 @@ public:
         you're sending is valid Json, unlike the case when applying the function that receives
         byte array and doesn't check whether those bytes represent sound Json.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the updated user object, optionally including the user's custom data object.
 
@@ -1109,9 +1109,10 @@ public:
 
     /** Initiates transaction that deletes the user specified with @p user_id.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param user_id The User ID.
@@ -1122,9 +1123,10 @@ public:
     /** Initiates transaction that returns the spaces associated with the subscriber key,
         optionally including each space's custom data object.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param options options for manipulating specified requirements
@@ -1137,9 +1139,10 @@ public:
         in @p space_obj.
         @note Space ID and name are required properties of @p space_obj
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the created space object, optionally including its custom data object.
 
@@ -1159,9 +1162,10 @@ public:
         you're sending is valid Json, unlike the case when applying the function that
         receives byte array and doesn't check whether those bytes represent sound Json.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the created space object, optionally including its custom data object.
 
@@ -1177,9 +1181,10 @@ public:
     /** Initiates transaction that returns the space object specified with @p space_id,
         optionally including its custom data object.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param space_id The Space ID for which to retrieve the space object.
@@ -1193,9 +1198,10 @@ public:
         of the @p space_obj.
         @note Space ID and name are required properties of @p space_obj
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the space object, optionally including its custom data object.
 
@@ -1215,9 +1221,10 @@ public:
         you're sending is valid Json, unlike the case when applying the function that
         receives byte array and doesn't check whether those bytes represent sound Json.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the space object, optionally including its custom data object.
 
@@ -1232,9 +1239,10 @@ public:
 
     /** Initiates transaction that deletes the space specified with @p space_id.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param space_id The Space ID.
@@ -1245,9 +1253,10 @@ public:
     /** Initiates transaction that returns the space memberships of the user specified
         by @p user_id, optionally including the custom data objects for...
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param user_id The User ID for which to retrieve the space memberships for.
@@ -1257,34 +1266,104 @@ public:
       */
     pubnub_res fetch_users_space_memberships(QString const& user_id, list_options& options);
 
-    /** Initiates transaction that updates the space memberships of the user specified
-        by @p user_id. Use the `add`, `update`, and `remove` properties in the
-        @p update_obj to perform those operations on one, or more memberships.
+    /** Initiates transaction that adds the space memberships for the user specified
+        by @p user_id. Uses the `add` property on the @p update_obj to perform that
+        operations on one, or more memberships.
         An example for @update_obj:
-        {
-          "add": [
+          [
+            {
+              "id": "main",
+              "custom": {
+                "starred": true
+              }
+            },
+            {
+              "id": "space-0"
+            }
+          ]
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to add the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_users_space_memberships(QString const& user_id,
+                                           QByteArray const& update_obj,
+                                           QStringList& include);
+
+    /** Initiates transaction that adds the space memberships for the user specified
+        by @p user_id. Uses the `add` property on the @p update_obj to perform that
+        operation on one, or more memberships.
+        An example for @update_obj:
+          [
             {
               "id": "my-channel"
-            }
-          ],
-          "update": [
+              "some_key": {
+                "other_key": other_value
+              }
+            },
             {
               "id": "main",
               "custom": {
                 "starred": true
               }
             }
-          ],
-          "remove": [
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to add the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_users_space_memberships(QString const& user_id,
+                                           QJsonDocument const& update_obj,
+                                           QStringList& include) {
+        return add_users_space_memberships(user_id,
+                                           update_obj.toJson(),
+                                           include);
+    }
+
+    /** Initiates transaction that updates the space memberships for the user specified
+        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        operations on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "main",
+              "custom": {
+                "starred": true
+              }
+            },
             {
               "id": "space-0"
             }
           ]
-        }
     
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the user's space memberships, optionally including the custom data objects.
 
@@ -1298,39 +1377,34 @@ public:
                                               QByteArray const& update_obj,
                                               QStringList& include);
 
-    /** Initiates transaction that updates the space memberships of the user specified
-        by @p user_id. Use the `add`, `update`, and `remove` properties in the
-        @p update_obj to perform those operations on one, or more memberships.
+    /** Initiates transaction that updates the space memberships for the user specified
+        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        operation on one, or more memberships.
         An example for @update_obj:
-        {
-          "add": [
+          [
             {
               "id": "my-channel"
-            }
-          ],
-          "update": [
+              "some_key": {
+                "other_key": other_value
+              }
+            },
             {
               "id": "main",
               "custom": {
                 "starred": true
               }
             }
-          ],
-          "remove": [
-            {
-              "id": "space-0"
-            }
           ]
-        }
 
         Function receives 'Qt Json' document.
         Helpful if you're already using Qt support for Json in your code, ensuring message
         you're sending is valid Json, unlike the case when applying the function that
         receives byte array and doesn't check whether those bytes represent sound Json.
     
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the user's space memberships, optionally including the custom data objects.
 
@@ -1348,12 +1422,91 @@ public:
                                               include);
     }
 
+    /** Initiates transaction that removes the space memberships for the user specified
+        by @p user_id. Uses the `remove` property on the @p update_obj to perform that
+        operations on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "main",
+              "custom": {
+                "starred": true
+              }
+            },
+            {
+              "id": "space-0"
+            }
+          ]
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to remove the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_users_space_memberships(QString const& user_id,
+                                              QByteArray const& update_obj,
+                                              QStringList& include);
+
+    /** Initiates transaction that removes the space memberships for the user specified
+        by @p user_id. Uses the `remove` property on the @p update_obj to perform that
+        operation on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "my-channel"
+              "some_key": {
+                "other_key": other_value
+              }
+            },
+            {
+              "id": "main",
+              "custom": {
+                "starred": true
+              }
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to remove the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_users_space_memberships(QString const& user_id,
+                                              QJsonDocument const& update_obj,
+                                              QStringList& include) {
+        return remove_users_space_memberships(user_id,
+                                              update_obj.toJson(),
+                                              include);
+    }
+
     /** Initiates transaction that returns all users in the space specified by @p space_id,
         optionally including the custom data objects for...
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
 
         @param space_id The Space ID for which to retrieve all users in the space.
@@ -1363,34 +1516,101 @@ public:
       */
     pubnub_res fetch_members_in_space(QString const& space_id, list_options& options);
 
-    /** Initiates transaction that updates the list of members of the space specified by
-        @p space_id. Use the `add`, `update`, and `remove` properties in the @p update_obj
-        to perform those operations on one or more memberships.
+    /** Initiates transaction that adds the list of members to the space specified by
+        @p space_id. Use the `add` property on the @p update_obj to perform that
+        operation on one or more members.
         An example for @update_obj:
-        {
-          "add": [
+          [
             {
               "id": "user-1"
-            }
-          ],
-          "update": [
+            },
             {
               "id": "user-2",
               "custom": {
                 "role": “moderator”
               }
             }
-          ],
-          "remove": [
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to add the list of members to the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_members_in_space(QString const& space_id,
+                                    QByteArray const& update_obj,
+                                    QStringList& include);
+
+    /** Initiates transaction that adds the list of members to the space specified by
+        @p space_id. Uses the `add` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            },
             {
               "id": "user-0"
             }
           ]
-        }
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to add the list of members to the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_members_in_space(QString const& space_id,
+                                    QJsonDocument const& update_obj,
+                                    QStringList& include) {
+        return add_members_in_space(space_id,
+                                    update_obj.toJson(),
+                                    include);
+    }
+
+    /** Initiates transaction that updates the list of members in the space specified by
+        @p space_id. Use the `update` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-1"
+            },
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            }
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the spaces's memberships, optionally including the custom data objects for...
 
@@ -1404,39 +1624,31 @@ public:
                                        QByteArray const& update_obj,
                                        QStringList& include);
 
-    /** Initiates transaction that updates the list of members of the space specified by
-        @p space_id. Use the `add`, `update`, and `remove` properties in the @p update_obj
-        to perform those operations on one or more memberships.
+    /** Initiates transaction that updates the list of members in the space specified by
+        @p space_id. Uses the `update` property on the @p update_obj to perform that
+        operation on one or more members.
         An example for @update_obj:
-        {
-          "add": [
-            {
-              "id": "user-1"
-            }
-          ],
-          "update": [
+          [
             {
               "id": "user-2",
               "custom": {
                 "role": “moderator”
               }
-            }
-          ],
-          "remove": [
+            },
             {
               "id": "user-0"
             }
           ]
-        }
 
         Function receives 'Qt Json' document.
         Helpful if you're already using Qt support for Json in your code, ensuring message
         you're sending is valid Json, unlike the case when applying the function that
         receives byte array and doesn't check whether those bytes represent sound Json.
 
-        If transaction is successful, the response(a JSON object) will
-        always have key:
-        - "status": with two possible values "ok" and "error"
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
         Complete answer will be available via pubnub_get().
         Contains the spaces's memberships, optionally including the custom data objects for...
 
@@ -1450,6 +1662,81 @@ public:
                                        QJsonDocument const& update_obj,
                                        QStringList& include) {
         return update_members_in_space(space_id,
+                                       update_obj.toJson(),
+                                       include);
+    }
+
+    /** Initiates transaction that removes the list of members from the space specified by
+        @p space_id. Use the `remove` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-1"
+            },
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            }
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to remove the list of members from the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_members_in_space(QString const& space_id,
+                                       QByteArray const& update_obj,
+                                       QStringList& include);
+
+    /** Initiates transaction that removes the list of members from the space specified by
+        @p space_id. Uses the `remove` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            },
+            {
+              "id": "user-0"
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to remove the list of members from the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_members_in_space(QString const& space_id,
+                                       QJsonDocument const& update_obj,
+                                       QStringList& include) {
+        return remove_members_in_space(space_id,
                                        update_obj.toJson(),
                                        include);
     }

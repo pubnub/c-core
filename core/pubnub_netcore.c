@@ -613,7 +613,6 @@ next_state:
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
-            pbpal_report_error_from_environment(pb, __FILE__, __LINE__);
             outcome_detected(pb, PNR_CONNECT_FAILED);
             break;
         }
