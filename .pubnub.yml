@@ -1,7 +1,14 @@
 name: c-core
-version: 2.9.2
+version: 2.9.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.9.3
+    date: Sep 3, 2019
+    changes:
+      - type: enhancement
+        text: Detect TCP/IP connect timeout in callback mode w/sockets - does not seem to work on Windows
+      - type: enhancement
+        text: Add set_proxy_none() to pubnub::context
   - version: v2.9.2
     date: Aug 28, 2019
     changes:

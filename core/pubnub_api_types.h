@@ -102,8 +102,6 @@ enum pubnub_res {
     PNR_AUTHENTICATION_FAILED,
     /** Objects API invalid parameter */
     PNR_OBJECTS_API_INVALID_PARAM,
-    /** Objects API transaction has finished successfully */
-    PNR_OBJECTS_API_OK,
     /** Objects API transaction reported an error */
     PNR_OBJECTS_API_ERROR
 };

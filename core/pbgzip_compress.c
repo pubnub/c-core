@@ -33,15 +33,18 @@ static enum pubnub_res deflate_total_to_context_buffer(pubnub_t*   pb,
         if (message_size == unpacked_size) {
             uint32_t crc;
             size_t packed_size = GZIP_HEADER_LENGTH_BYTES + compressed + GZIP_FOOTER_LENGTH_BYTES;
-            long diff = (long)unpacked_size - (long)packed_size;
+            size_t diff = unpacked_size - packed_size;
 
             PUBNUB_LOG_TRACE("deflate_total_to_context_buffer(pb=%p) - "
-                             "Length after compression: %zu bytes - "
-                             "compression ratio=%zd o/oo\n",
+                             "Length before compression: %lu bytes - "
+                             "Length after compression: %lu bytes - "
+                             "compression ratio=%ld o/oo\n",
                              pb,
-                             packed_size,
-                             (diff*1000)/unpacked_size);
-            if ((diff*100)/unpacked_size < PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO) {
+                             (unsigned long)unpacked_size,
+                             (unsigned long)packed_size,
+                             (long)(diff*1000)/(long)unpacked_size);
+            if ((packed_size > unpacked_size) ||
+                ((diff*100)/unpacked_size < PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO)) {
                 /* With insufficient compression we choose not to pack */
                 return PNR_STARTED;
             }
@@ -111,6 +114,8 @@ enum pubnub_res pbgzip_compress(pubnub_t* pb, char const* message)
 
     PUBNUB_ASSERT_OPT(pb != NULL);
     PUBNUB_ASSERT_OPT(message != NULL);
+
+    pb->core.gzip_msg_len = 0;
     data = pb->core.gzip_msg_buf;
     /* Gzip format */
     data[0] = 0x1f;

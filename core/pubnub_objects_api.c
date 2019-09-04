@@ -15,15 +15,16 @@
 #include <ctype.h>
 #include <string.h>
 
-#define FORM_THE_OBJECT(pb, function_name_literal, obj_buffer, key_literal,json)  \
+
+#define FORM_THE_OBJECT(pbcc, function_name_literal, obj_buffer, key_literal, json)\
 do {                                                                              \
     if (sizeof(obj_buffer) <                                                      \
         sizeof(key_literal) + pb_strnlen_s(json, PUBNUB_MAX_OBJECT_LENGTH) + 1) { \
-        PUBNUB_LOG_ERROR(function_name_literal "(pb=%p) - "                       \
+        PUBNUB_LOG_ERROR(function_name_literal "(pbcc=%p) - "                     \
                          "buffer size is too small: "                             \
                          "current_buffer_size = %lu\n"                            \
                          "required_buffer_size = %lu\n",                          \
-                         (pb),                                                    \
+                         (pbcc),                                                  \
                          (unsigned long)sizeof(obj_buffer),                       \
                          (unsigned long)(sizeof(key_literal) +                    \
                                          pb_strnlen_s(json, PUBNUB_MAX_OBJECT_LENGTH))); \
@@ -85,12 +86,9 @@ enum pubnub_res pubnub_create_user(pubnub_t* pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-
+    
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, user_obj) == PNR_OK) {
-        user_obj = pb->core.gzip_msg_buf;
-    }
+    user_obj = (pbgzip_compress(pb, user_obj) == PNR_OK) ? pb->core.gzip_msg_buf : user_obj;
 #endif
     rslt = pbcc_create_user_prep(&pb->core, include, include_count, user_obj);
     if (PNR_STARTED == rslt) {
@@ -140,6 +138,7 @@ enum pubnub_res pubnub_update_user(pubnub_t* pb,
                                    char const* user_obj)
 {
     enum pubnub_res rslt;
+    struct pbjson_elem parsed_id;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
@@ -148,14 +147,15 @@ enum pubnub_res pubnub_update_user(pubnub_t* pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    
-#if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, user_obj) == PNR_OK) {
-        user_obj = pb->core.gzip_msg_buf;
+    rslt = pbcc_find_objects_id(&pb->core, user_obj, &parsed_id, __FILE__, __LINE__);
+    if (rslt != PNR_OK) {
+        return rslt;
     }
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+    user_obj = (pbgzip_compress(pb, user_obj) == PNR_OK) ? pb->core.gzip_msg_buf : user_obj;
 #endif
-    rslt = pbcc_update_user_prep(&pb->core, include, include_count, user_obj);
+    rslt = pbcc_update_user_prep(&pb->core, include, include_count, user_obj, &parsed_id);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_UPDATE_USER;
         pb->core.last_result = PNR_STARTED;
@@ -248,10 +248,7 @@ enum pubnub_res pubnub_create_space(pubnub_t* pb,
     }
 
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, space_obj) == PNR_OK) {
-        space_obj = pb->core.gzip_msg_buf;
-    }
+    space_obj = (pbgzip_compress(pb, space_obj) == PNR_OK) ? pb->core.gzip_msg_buf : space_obj;
 #endif
     rslt = pbcc_create_space_prep(&pb->core, include, include_count, space_obj);
     if (PNR_STARTED == rslt) {
@@ -301,6 +298,7 @@ enum pubnub_res pubnub_update_space(pubnub_t* pb,
                                     char const* space_obj)
 {
     enum pubnub_res rslt;
+    struct pbjson_elem parsed_id;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
@@ -309,14 +307,15 @@ enum pubnub_res pubnub_update_space(pubnub_t* pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
+    rslt = pbcc_find_objects_id(&pb->core, space_obj, &parsed_id, __FILE__, __LINE__);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
     
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, space_obj) == PNR_OK) {
-        space_obj = pb->core.gzip_msg_buf;
-    }
+    space_obj = (pbgzip_compress(pb, space_obj) == PNR_OK) ? pb->core.gzip_msg_buf : space_obj;
 #endif
-    rslt = pbcc_update_space_prep(&pb->core, include, include_count, space_obj);
+    rslt = pbcc_update_space_prep(&pb->core, include, include_count, space_obj, &parsed_id);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_UPDATE_SPACE;
         pb->core.last_result = PNR_STARTED;
@@ -412,16 +411,13 @@ enum pubnub_res pubnub_add_users_space_memberships(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
 
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_add_users_space_memberships",
                     obj_buffer,
                     "{\"add\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_users_space_memberships_prep(&pb->core,
                                                     user_id,
@@ -458,16 +454,13 @@ enum pubnub_res pubnub_update_users_space_memberships(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
     
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_update_users_space_memberships",
                     obj_buffer,
                     "{\"update\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_users_space_memberships_prep(&pb->core,
                                                     user_id,
@@ -504,16 +497,13 @@ enum pubnub_res pubnub_remove_users_space_memberships(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
     
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_remove_users_space_memberships",
                     obj_buffer,
                     "{\"remove\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_users_space_memberships_prep(&pb->core,
                                                     user_id,
@@ -589,16 +579,13 @@ enum pubnub_res pubnub_add_members_in_space(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
     
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_add_members_in_space",
                     obj_buffer,
                     "{\"add\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_members_in_space_prep(&pb->core,
                                              space_id,
@@ -635,16 +622,13 @@ enum pubnub_res pubnub_update_members_in_space(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
     
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_update_members_in_space",
                     obj_buffer,
                     "{\"update\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_members_in_space_prep(&pb->core,
                                              space_id,
@@ -681,16 +665,13 @@ enum pubnub_res pubnub_remove_members_in_space(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
     
-    FORM_THE_OBJECT(pb,
+    FORM_THE_OBJECT(&pb->core,
                     "pubnub_remove_members_in_space",
                     obj_buffer,
                     "{\"remove\":",
                     update_obj);
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pbgzip_compress(pb, update_obj) == PNR_OK) {
-        update_obj = pb->core.gzip_msg_buf;
-    }
+    update_obj = (pbgzip_compress(pb, update_obj) == PNR_OK) ? pb->core.gzip_msg_buf : update_obj;
 #endif
     rslt = pbcc_update_members_in_space_prep(&pb->core,
                                              space_id,

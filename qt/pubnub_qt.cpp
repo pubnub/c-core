@@ -115,18 +115,23 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
             req.setRawHeader("Connection", "Close");
         }
         switch (transaction) {
-        case PBTT_PUBLISH:
-        case PBTT_SIGNAL:
 #if PUBNUB_USE_OBJECTS_API
+        case PBTT_DELETE_USER:
+        case PBTT_DELETE_SPACE:
+             d_reply.reset(d_qnam.deleteResource(req));
+             break;
         case PBTT_CREATE_USER:
         case PBTT_UPDATE_USER:
-        case PBTT_DELETE_USER:
         case PBTT_CREATE_SPACE:
         case PBTT_UPDATE_SPACE:
-        case PBTT_DELETE_SPACE:
+        case PBTT_ADD_USERS_SPACE_MEMBERSHIPS:
         case PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS:
+        case PBTT_REMOVE_USERS_SPACE_MEMBERSHIPS:
+        case PBTT_ADD_MEMBERS_IN_SPACE:
         case PBTT_UPDATE_MEMBERS_IN_SPACE:
+        case PBTT_REMOVE_MEMBERS_IN_SPACE:
 #endif /* PUBNUB_USE_OBJECTS_API */
+        case PBTT_PUBLISH:
             switch (d_method) {
             case pubnubSendViaPOSTwithGZIP:
             case pubnubUsePATCHwithGZIP:
@@ -144,9 +149,6 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
                 break;
             case pubnubSendViaGET:
                 d_reply.reset(d_qnam.get(req));
-                break;
-            case pubnubUseDELETE:
-                d_reply.reset(d_qnam.deleteResource(req));
                 break;
             default:
                 break;
@@ -298,9 +300,8 @@ static QByteArray pack_message_to_gzip(QByteArray const& message)
      */
     compressedData.remove(0, 6);
     compressedData.chop(4);
-    if ((long)((message.size() - compressedData.size() - GZIP_HEADER_AND_FOOTER_LENGTH)
-               * 100)
-            / message.size()
+    if ((long)((message.size() - compressedData.size() - GZIP_HEADER_AND_FOOTER_LENGTH) * 100)
+        / (long)message.size()
         < PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO) {
         /* With insufficient compression we choose not to pack */
         qDebug() << "pack_message_to_gzip(" << message
@@ -339,24 +340,12 @@ pubnub_res pubnub_qt::publish_via_post_with_gzip(QString const&    channel,
 }
 
 
-pubnub_res pubnub_qt::signal(QString const& channel,
-                             QByteArray const& message,
-                             pubnub_method method)
+pubnub_res pubnub_qt::signal(QString const& channel, QByteArray const& message)
 {
-    QMutexLocker lk(&d_mutex);
-    if (pubnubSendViaGET == method) {
-        d_method = method;
-    }
-    else {
-        d_message_to_send = message;
-        d_method = pubnubSendViaPOST;
-    }
+    KEEP_THREAD_SAFE();
     return startRequest(pbcc_signal_prep(d_context.data(),
                                          channel.toLatin1().data(),
-                                         d_method,
-                                         (pubnubSendViaGET == method)
-                                         ? message.data()
-                                         : d_message_to_send.data()),
+                                         message.data()),
                         PBTT_SIGNAL);
 }
 
@@ -703,7 +692,17 @@ pubnub_res pubnub_qt::fetch_user(QString const& user_id, QStringList& include)
 pubnub_res pubnub_qt::update_user(QByteArray const& user_obj, QStringList& include)
 {
     include_options inc(include);
+    pubnub_res rslt;
+    pbjson_elem parsed_id;
     KEEP_THREAD_SAFE();
+    rslt = pbcc_find_objects_id(d_context.data(),
+                                user_obj.data(),
+                                &parsed_id,
+                                __FILE__,
+                                __LINE__);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
     d_message_to_send = pack_message_to_gzip(user_obj);
     d_method = (d_message_to_send.size() != user_obj.size())
                ? pubnubUsePATCHwithGZIP
@@ -712,7 +711,8 @@ pubnub_res pubnub_qt::update_user(QByteArray const& user_obj, QStringList& inclu
         pbcc_update_user_prep(d_context.data(),
                               inc.include_c_strings_array(),
                               inc.include_count(),
-                              d_message_to_send.data()),
+                              d_message_to_send.data(),
+                              &parsed_id),
         PBTT_UPDATE_USER);
 }
 
@@ -720,7 +720,6 @@ pubnub_res pubnub_qt::update_user(QByteArray const& user_obj, QStringList& inclu
 pubnub_res pubnub_qt::delete_user(QString const& user_id)
 {
     KEEP_THREAD_SAFE();
-    d_method = pubnubUseDELETE;
     return startRequest(
         pbcc_delete_user_prep(d_context.data(),
                               user_id.toLatin1().data()),
@@ -776,7 +775,17 @@ pubnub_res pubnub_qt::fetch_space(QString const& space_id, QStringList& include)
 pubnub_res pubnub_qt::update_space(QByteArray const& space_obj, QStringList& include)
 {
     include_options inc(include);
+    pubnub_res rslt;
+    pbjson_elem parsed_id;
     KEEP_THREAD_SAFE();
+    rslt = pbcc_find_objects_id(d_context.data(),
+                                space_obj.data(),
+                                &parsed_id,
+                                __FILE__,
+                                __LINE__);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
     d_message_to_send = pack_message_to_gzip(space_obj);
     d_method = (d_message_to_send.size() != space_obj.size())
                ? pubnubUsePATCHwithGZIP
@@ -785,7 +794,8 @@ pubnub_res pubnub_qt::update_space(QByteArray const& space_obj, QStringList& inc
         pbcc_update_space_prep(d_context.data(),
                                inc.include_c_strings_array(),
                                inc.include_count(),
-                               d_message_to_send.data()),
+                               d_message_to_send.data(),
+                               &parsed_id),
         PBTT_UPDATE_SPACE);
 }
 
@@ -793,7 +803,6 @@ pubnub_res pubnub_qt::update_space(QByteArray const& space_obj, QStringList& inc
 pubnub_res pubnub_qt::delete_space(QString const& space_id)
 {
     KEEP_THREAD_SAFE();
-    d_method = pubnubUseDELETE;
     return startRequest(
         pbcc_delete_space_prep(d_context.data(),
                                space_id.toLatin1().data()),
@@ -819,14 +828,41 @@ pubnub_res pubnub_qt::fetch_users_space_memberships(QString const& user_id,
 }
 
 
+pubnub_res pubnub_qt::add_users_space_memberships(QString const& user_id,
+                                                  QByteArray const& update_obj,
+                                                  QStringList& include)
+{
+    include_options inc(include);
+    QByteArray obj("{\"add\":");
+    obj.append(update_obj);
+    obj.append("}");
+    KEEP_THREAD_SAFE();
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
+               ? pubnubUsePATCHwithGZIP
+               : pubnubUsePATCH;
+    return startRequest(
+        pbcc_update_users_space_memberships_prep(
+            d_context.data(),
+            user_id.toLatin1().data(),
+            inc.include_c_strings_array(),
+            inc.include_count(),
+            d_message_to_send.data()),
+        PBTT_ADD_USERS_SPACE_MEMBERSHIPS);
+}
+
+
 pubnub_res pubnub_qt::update_users_space_memberships(QString const& user_id,
                                                      QByteArray const& update_obj,
                                                      QStringList& include)
 {
     include_options inc(include);
+    QByteArray obj("{\"update\":");
+    obj.append(update_obj);
+    obj.append("}");
     KEEP_THREAD_SAFE();
-    d_message_to_send = pack_message_to_gzip(update_obj);
-    d_method = (d_message_to_send.size() != update_obj.size())
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
                ? pubnubUsePATCHwithGZIP
                : pubnubUsePATCH;
     return startRequest(
@@ -837,6 +873,30 @@ pubnub_res pubnub_qt::update_users_space_memberships(QString const& user_id,
             inc.include_count(),
             d_message_to_send.data()),
         PBTT_UPDATE_USERS_SPACE_MEMBERSHIPS);
+}
+
+
+pubnub_res pubnub_qt::remove_users_space_memberships(QString const& user_id,
+                                                     QByteArray const& update_obj,
+                                                     QStringList& include)
+{
+    include_options inc(include);
+    QByteArray obj("{\"remove\":");
+    obj.append(update_obj);
+    obj.append("}");
+    KEEP_THREAD_SAFE();
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
+               ? pubnubUsePATCHwithGZIP
+               : pubnubUsePATCH;
+    return startRequest(
+        pbcc_update_users_space_memberships_prep(
+            d_context.data(),
+            user_id.toLatin1().data(),
+            inc.include_c_strings_array(),
+            inc.include_count(),
+            d_message_to_send.data()),
+        PBTT_REMOVE_USERS_SPACE_MEMBERSHIPS);
 }
 
 
@@ -858,14 +918,41 @@ pubnub_res pubnub_qt::fetch_members_in_space(QString const& space_id,
 }
 
 
+pubnub_res pubnub_qt::add_members_in_space(QString const& space_id,
+                                           QByteArray const& update_obj,
+                                           QStringList& include)
+{
+    include_options inc(include);
+    QByteArray obj("{\"add\":");
+    obj.append(update_obj);
+    obj.append("}");
+    KEEP_THREAD_SAFE();
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
+               ? pubnubUsePATCHwithGZIP
+               : pubnubUsePATCH;
+    return startRequest(
+        pbcc_update_members_in_space_prep(
+            d_context.data(),
+            space_id.toLatin1().data(),
+            inc.include_c_strings_array(),
+            inc.include_count(),
+            d_message_to_send.data()),
+        PBTT_ADD_MEMBERS_IN_SPACE);
+}
+
+
 pubnub_res pubnub_qt::update_members_in_space(QString const& space_id,
                                               QByteArray const& update_obj,
                                               QStringList& include)
 {
     include_options inc(include);
+    QByteArray obj("{\"update\":");
+    obj.append(update_obj);
+    obj.append("}");
     KEEP_THREAD_SAFE();
-    d_message_to_send = pack_message_to_gzip(update_obj);
-    d_method = (d_message_to_send.size() != update_obj.size())
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
                ? pubnubUsePATCHwithGZIP
                : pubnubUsePATCH;
     return startRequest(
@@ -876,6 +963,30 @@ pubnub_res pubnub_qt::update_members_in_space(QString const& space_id,
             inc.include_count(),
             d_message_to_send.data()),
         PBTT_UPDATE_MEMBERS_IN_SPACE);
+}
+
+
+pubnub_res pubnub_qt::remove_members_in_space(QString const& space_id,
+                                              QByteArray const& update_obj,
+                                              QStringList& include)
+{
+    include_options inc(include);
+    QByteArray obj("{\"remove\":");
+    obj.append(update_obj);
+    obj.append("}");
+    KEEP_THREAD_SAFE();
+    d_message_to_send = pack_message_to_gzip(obj);
+    d_method = (d_message_to_send.size() != obj.size())
+               ? pubnubUsePATCHwithGZIP
+               : pubnubUsePATCH;
+    return startRequest(
+        pbcc_update_members_in_space_prep(
+            d_context.data(),
+            space_id.toLatin1().data(),
+            inc.include_c_strings_array(),
+            inc.include_count(),
+            d_message_to_send.data()),
+        PBTT_REMOVE_MEMBERS_IN_SPACE);
 }
 #endif /* PUBNUB_USE_OBJECTS_API */
 
