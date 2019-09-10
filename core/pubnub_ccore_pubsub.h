@@ -191,7 +191,6 @@ struct pbcc_context {
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                          \
     }
 
-#if !defined(INC_PUBNUB_QT)
 #if PUBNUB_USE_GZIP_COMPRESSION
 #define NOT_COMPRESSED_AND(pbc) ((pbc)->gzip_msg_len == 0) &&
 #define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
@@ -224,9 +223,6 @@ struct pbcc_context {
         (pbc)->http_buf[(pbc)->http_buf_len] = '\0';                           \
         CHECK_IF_GZIP_COMPRESSED((pbc), (message));                            \
     }
-#else
-#define APPEND_MESSAGE_BODY_M(rslt, pbc, message)
-#endif /* !defined(INC_PUBNUB_QT) */
 
 /** Initializes the Pubnub C core context */
 void pbcc_init(struct pbcc_context* pbcc,

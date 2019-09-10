@@ -93,8 +93,6 @@ void socket_watcher_thread(void* arg)
 
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
-        Sleep(1);
-
         EnterCriticalSection(&m_watcher.mutw);
         pbpal_ntf_poll_away(m_watcher.poll, ms);
         LeaveCriticalSection(&m_watcher.mutw);
@@ -175,7 +173,9 @@ int pbntf_got_socket(pubnub_t* pb)
 
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 
@@ -194,6 +194,32 @@ void pbntf_lost_socket(pubnub_t* pb)
     EnterCriticalSection(&m_watcher.timerlock);
     pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
     LeaveCriticalSection(&m_watcher.timerlock);
+}
+
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    if (PUBNUB_TIMERS_API) {
+        EnterCriticalSection(&m_watcher.timerlock);
+        pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->wait_connect_timeout_ms);
+        LeaveCriticalSection(&m_watcher.timerlock);
+    }
+}
+
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    if (PUBNUB_TIMERS_API) {
+        EnterCriticalSection(&m_watcher.timerlock);
+        pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->transaction_timeout_ms);
+        LeaveCriticalSection(&m_watcher.timerlock);
+    }
 }
 
 

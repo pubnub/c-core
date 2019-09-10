@@ -2,7 +2,6 @@
 #if !defined INC_PUBNUB_CCORE
 #define INC_PUBNUB_CCORE
 
-#include "pubnub_config.h"
 #include "pubnub_api_types.h"
 
 #include <stdbool.h>

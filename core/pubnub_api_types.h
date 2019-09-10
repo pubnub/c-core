@@ -29,6 +29,11 @@ enum pubnub_res {
         Most of the time, this comes down to a DNS error.
     */
     PNR_ADDR_RESOLUTION_FAILED,
+    /** Time-out before the TCP connection was esatblished. This is reported
+        for a time-out detected by Pubnub client itself, not some
+        reported by others.
+	*/
+    PNR_WAIT_CONNECT_TIMEOUT,
     /** Connecting to Pubnub server failed. Most often,
         this means a network outage, but could be many things.
         If using SSL/TLS, it could be some of its errors.

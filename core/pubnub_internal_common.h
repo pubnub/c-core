@@ -348,6 +348,9 @@ struct pubnub_ {
     /** Duration of the transaction timeout, in milliseconds */
     int transaction_timeout_ms;
 
+    /** Duration of the 'wait_connect_TCP_socket' timeout, in milliseconds */
+    int wait_connect_timeout_ms;
+
 #if defined(PUBNUB_CALLBACK_API)
     struct pubnub_* previous;
     struct pubnub_* next;
@@ -467,6 +470,12 @@ int pbntf_init(void);
 int pbntf_got_socket(pubnub_t* pb);
 
 void pbntf_update_socket(pubnub_t* pb);
+
+/** Removes timer running on the context @p p and starts the one for 'wait_connect_TCP_socket' */
+void pbntf_start_wait_connect_timer(pubnub_t* pb);
+
+/** Removes timer running on the context @p p and starts the one for 'transaction' */
+void pbntf_start_transaction_timer(pubnub_t* pb);
 
 void pbntf_lost_socket(pubnub_t* pb);
 

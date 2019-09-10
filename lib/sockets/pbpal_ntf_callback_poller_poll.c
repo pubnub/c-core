@@ -163,6 +163,12 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
     int rslt;
 
     if (0 == data->size) {
+#if !defined(_WIN32)
+        struct timespec sleep_time = { 0, 1000000 };
+        nanosleep(&sleep_time, NULL);
+#else
+        Sleep(1);
+#endif
         return 0;
     }
 

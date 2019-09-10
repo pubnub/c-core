@@ -76,10 +76,20 @@
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
+/** Duration of the 'wait_connect_TCP_socket' timeout set during context
+    initialization, in milliseconds. Can be changed later by the user.
+    */
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+
 /** Mininmal duration of the transaction timer, in milliseconds. You
  * can't set less than this.
  */
 #define PUBNUB_MIN_TRANSACTION_TIMER 10000
+
+/** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
+ *  You can't set less than this.
+ */
+#define PUBNUB_MIN_WAIT_CONNECT_TIMER 5000
 
 #define PUBNUB_HAVE_SHA1 0
 

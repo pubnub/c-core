@@ -19,9 +19,10 @@ void pubnub_timer_list_init(pubnub_t *pbp);
     @pre list != to_add
     @param list Pointer to the head of the list (can be NULL)
     @param to_add Context to add
+    @param timeout_ms timer timeout in milliseconds
     @return The head of the list (may differ from @p list)
  */
-pubnub_t *pubnub_timer_list_add(pubnub_t *list, pubnub_t *to_add);
+pubnub_t *pubnub_timer_list_add(pubnub_t *list, pubnub_t *to_add, int timeout_ms);
 
 /** Remove/dequeue a Pubnub context from a list of contexts/timers.
     It is assumed (i.e. it is a precondition) that @p to_remove

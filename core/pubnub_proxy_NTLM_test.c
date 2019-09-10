@@ -483,6 +483,16 @@ void pbntf_update_socket(pubnub_t* pb)
     mock("pbntf_update_socket", pb, "");
 }
 
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
+}
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
+}
+
 int pbntf_requeue_for_processing(pubnub_t* pb)
 {
     return mock("pbntf_requeue_for_processing", pb, "");

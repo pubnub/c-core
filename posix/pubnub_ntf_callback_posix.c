@@ -252,7 +252,9 @@ int pbntf_got_socket(pubnub_t* pb)
 
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->transaction_timeout_ms);
         pthread_mutex_unlock(&m_watcher.timerlock);
     }
 
@@ -271,6 +273,32 @@ void pbntf_lost_socket(pubnub_t* pb)
     pthread_mutex_lock(&m_watcher.timerlock);
     pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
     pthread_mutex_unlock(&m_watcher.timerlock);
+}
+
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    if (PUBNUB_TIMERS_API) {
+        pthread_mutex_lock(&m_watcher.timerlock);
+        pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->wait_connect_timeout_ms);
+        pthread_mutex_unlock(&m_watcher.timerlock);
+    }
+}
+
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    if (PUBNUB_TIMERS_API) {
+        pthread_mutex_lock(&m_watcher.timerlock);
+        pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
+        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
+                                                     pb,
+                                                     pb->transaction_timeout_ms);
+        pthread_mutex_unlock(&m_watcher.timerlock);
+    }
 }
 
 

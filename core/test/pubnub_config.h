@@ -118,6 +118,16 @@
 
 #define PUBNUB_MIN_TRANSACTION_TIMER 200
 
+/** Duration of the 'wait_connect_TCP_socket' timeout set during context
+    initialization, in milliseconds. Can be changed later by the user.
+    */
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+
+/** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
+ *  You can't set less than this.
+ */
+#define PUBNUB_MIN_WAIT_CONNECT_TIMER 5000
+
 #if !defined(PUBNUB_USE_ADVANCED_HISTORY)
 /** If true (!=0) will enable using the advanced history API, which
     provides more data about (unread) messages. */
