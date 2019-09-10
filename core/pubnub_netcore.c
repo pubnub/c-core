@@ -497,21 +497,30 @@ next_state:
         WATCH_ENUM(rslv);
         switch (rslv) {
         case pbpal_resolv_send_wouldblock:
-            i         = pbntf_got_socket(pb);
+            i = pbntf_got_socket(pb);
+            if (i >= 0) {
+                pbntf_start_wait_connect_timer(pb);
+            }
             pb->state = PBS_WAIT_DNS_SEND;
             break;
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            i         = pbntf_got_socket(pb);
+            i = pbntf_got_socket(pb);
+            if (i >= 0) {
+                pbntf_start_wait_connect_timer(pb);
+            }
             pb->state = PBS_WAIT_DNS_RCV;
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
-            i         = pbntf_got_socket(pb);
+            i = pbntf_got_socket(pb);
+            if (i >= 0) {
+                pbntf_start_wait_connect_timer(pb);
+            }
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
-            i         = pbntf_got_socket(pb);
+            i = pbntf_got_socket(pb);
             pb->state = PBS_CONNECTED;
             break;
         default:
@@ -553,10 +562,12 @@ next_state:
             pbntf_watch_in_events(pb);
             break;
         case pbpal_connect_wouldblock:
+            pbntf_start_wait_connect_timer(pb);
             pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
+            pbntf_start_transaction_timer(pb);
             pbntf_update_socket(pb);
             pb->state = PBS_CONNECTED;
             goto next_state;
@@ -580,11 +591,13 @@ next_state:
         case pbpal_resolv_rcv_wouldblock:
             break;
         case pbpal_connect_wouldblock:
+            pbntf_start_wait_connect_timer(pb);
             pbntf_update_socket(pb);
             pb->state = PBS_WAIT_CONNECT;
             pbntf_watch_out_events(pb);
             break;
         case pbpal_connect_success:
+            pbntf_start_transaction_timer(pb);
             pbntf_update_socket(pb);
             pb->state = PBS_CONNECTED;
             pbntf_watch_out_events(pb);
@@ -604,12 +617,12 @@ next_state:
         case pbpal_resolv_send_wouldblock:
         case pbpal_resolv_sent:
         case pbpal_resolv_rcv_wouldblock:
-            pb->core.last_result = PNR_INTERNAL_ERROR;
-            pbntf_trans_outcome(pb, PBS_IDLE);
+            outcome_detected(pb, PNR_INTERNAL_ERROR);
             break;
         case pbpal_connect_wouldblock:
             break;
         case pbpal_connect_success:
+            pbntf_start_transaction_timer(pb);
             pb->state = PBS_CONNECTED;
             goto next_state;
         default:
@@ -1328,6 +1341,20 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
     switch (pbp->state) {
     case PBS_WAIT_CANCEL:
     case PBS_WAIT_CANCEL_CLOSE:
+        break;
+    case PBS_WAIT_DNS_SEND:
+    case PBS_WAIT_DNS_RCV:
+    case PBS_WAIT_CONNECT:
+        if (PNR_TIMEOUT == outcome_to_report) {
+            pbp->core.last_result = (PBS_WAIT_CONNECT == pbp->state) ? PNR_WAIT_CONNECT_TIMEOUT
+                                                                     : PNR_ADDR_RESOLUTION_FAILED;
+        }
+        pbp->state = PBS_WAIT_CANCEL;
+#if defined(PUBNUB_CALLBACK_API)
+        pbntf_requeue_for_processing(pbp);
+#else
+        pbnc_fsm(pbp);
+#endif
         break;
     case PBS_NULL:
         PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) got called in NULL state\n", pbp);

@@ -21,6 +21,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     pbcc_init(&p->core, publish_key, subscribe_key);
     if (PUBNUB_TIMERS_API) {
         p->transaction_timeout_ms = PUBNUB_DEFAULT_TRANSACTION_TIMER;
+        p->wait_connect_timeout_ms = PUBNUB_DEFAULT_WAIT_CONNECT_TIMER;
 #if defined(PUBNUB_CALLBACK_API)
         p->previous = p->next = NULL;
 #endif
@@ -56,8 +57,6 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->keep_alive.timeout = 50;
 #endif
     pbpal_init(p);
-    pubnub_mutex_unlock(p->monitor);
-
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
@@ -78,6 +77,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
     p->data_compressed = compressionNONE;
 #endif
+    pubnub_mutex_unlock(p->monitor);
 
     return p;
 }

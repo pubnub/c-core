@@ -5,7 +5,7 @@ extern "C" {
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_assert.h"
-#include "lib/pbcrc32.c"
+#include "lib/pbcrc32.h"
 #include "core/pubnub_memory_block.h"
 #include "core/pubnub_advanced_history.h"
 #include "core/pbcc_objects_api.h"

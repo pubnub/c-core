@@ -1,7 +1,14 @@
 name: c-core
-version: 2.9.3
+version: 2.9.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.9.4
+    date: Sep 10, 2019
+    changes:
+      - type: enhancement
+        text: Introduce separate connection timer, to control/limit the duration of DNS resolving and connection establishment, which should be much shorter than full transaction timer, which has to be >5 min for subscribe
+      - type: bug
+        text: Fix high CPU load in callback interface when no context, thus socket, is executing a transaction
   - version: v2.9.3
     date: Sep 3, 2019
     changes:

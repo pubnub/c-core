@@ -12,17 +12,17 @@ void pubnub_timer_list_init(pubnub_t* pbp)
 }
 
 
-pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add)
+pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add, int timeout_to_add_ms)
 {
-    int       timeout_to_add_ms;
     pubnub_t* pbp;
 
     PUBNUB_ASSERT_OPT(to_add != NULL);
+    PUBNUB_ASSERT_OPT(timeout_to_add_ms > 0);
 
-    timeout_to_add_ms = to_add->transaction_timeout_ms;
     if (NULL == list) {
-        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=NULL, to_add=%p)\n",
-                         to_add);
+        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=NULL, to_add=%p, timeout_to_add_ms=%d)\n",
+                         to_add,
+                         timeout_to_add_ms);
         list             = to_add;
         to_add->previous = to_add->next = NULL;
         to_add->timeout_left_ms         = timeout_to_add_ms;
@@ -31,10 +31,12 @@ pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add)
 
     PUBNUB_ASSERT_OPT(list != to_add);
     if (timeout_to_add_ms < list->timeout_left_ms) {
-        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=%p, to_add=%p): "
-                         "list->timeout_left_ms=%d, to_add->transaction_timeout_ms=%d\n",
-                         list, to_add,
-                         list->timeout_left_ms, to_add->transaction_timeout_ms);
+        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=%p, to_add=%p, timeout_to_add_ms=%d): "
+                         "list->timeout_left_ms=%d\n",
+                         list,
+                         to_add,
+                         timeout_to_add_ms,
+                         list->timeout_left_ms);
         list->timeout_left_ms -= timeout_to_add_ms;
         to_add->next            = list;
         to_add->previous        = NULL;
@@ -45,15 +47,19 @@ pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add)
 
     pbp = list;
     while (timeout_to_add_ms >= pbp->timeout_left_ms) {
-        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=%p, to_add=%p) while: "
-                         "pbp=%p, pbp->timeout_left_ms=%d, timeout_to_add_ms=%d\n",
-                         list, to_add, pbp, 
-                         pbp->timeout_left_ms, timeout_to_add_ms);
+        PUBNUB_LOG_TRACE("pubnub_timer_list_add(list=%p, to_add=%p, timeout_to_add_ms=%d) while: "
+                         "pbp=%p, pbp->timeout_left_ms=%d\n",
+                         list,
+                         to_add,
+                         timeout_to_add_ms,
+                         pbp, 
+                         pbp->timeout_left_ms);
         timeout_to_add_ms -= pbp->timeout_left_ms;
         if (NULL == pbp->next) {
             PUBNUB_LOG_TRACE("pubnub_timer_list_add() end while: "
-                     "pbp=%p, timeout_to_add_ms=%d\n",
-                     pbp, timeout_to_add_ms);
+                             "pbp=%p, timeout_to_add_ms=%d\n",
+                             pbp,
+                             timeout_to_add_ms);
             pbp->next               = to_add;
             to_add->previous        = pbp;
             to_add->next            = NULL;
@@ -67,7 +73,8 @@ pubnub_t* pubnub_timer_list_add(pubnub_t* list, pubnub_t* to_add)
     PUBNUB_LOG_TRACE("pubnub_timer_list_add() crocodile: "
                      "pb=%p, pbp->timeout_left_ms=%d, timeout_to_add_ms=%d\n",
                      pbp, 
-                     pbp->timeout_left_ms, timeout_to_add_ms);
+                     pbp->timeout_left_ms,
+                     timeout_to_add_ms);
     pbp->timeout_left_ms -= timeout_to_add_ms;
     to_add->next     = pbp;
     to_add->previous = pbp->previous;
@@ -88,8 +95,9 @@ pubnub_t* pubnub_timer_list_remove(pubnub_t* list, pubnub_t* to_remove)
 
     if (list == to_remove) {
         PUBNUB_LOG_TRACE("pubnub_timer_list_remove(list=%p == to_remove): "
-                     "list->timeout_left_ms=%d\n",
-                     list, list->timeout_left_ms);
+                         "list->timeout_left_ms=%d\n",
+                         list,
+                         list->timeout_left_ms);
         
         list = list->next;
         if (NULL != list) {

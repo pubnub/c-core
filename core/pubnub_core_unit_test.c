@@ -72,22 +72,12 @@ static void wait_time_in_seconds(time_t time_in_seconds)
     return;
 }
 
-/* The Pubnub PAL mocks and stubs */
 
-static void buf_setup(pubnub_t* pb)
+/* The Pubnub NTF mocks and stubs */
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
 {
-    pb->ptr  = (uint8_t*)pb->core.http_buf;
-    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
-}
-
-void pbpal_init(pubnub_t* pb)
-{
-    buf_setup(pb);
-}
-
-enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
-{
-    return (int)mock(pb);
+    pb->state = state;
+    mock(pb);
 }
 
 int pbntf_got_socket(pubnub_t* pb)
@@ -103,6 +93,16 @@ void pbntf_lost_socket(pubnub_t* pb)
 void pbntf_update_socket(pubnub_t* pb)
 {
     mock(pb);
+}
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
+}
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
 }
 
 int pbntf_requeue_for_processing(pubnub_t* pb)
@@ -126,6 +126,23 @@ int pbntf_watch_in_events(pubnub_t* pb)
 }
 
 
+/* The Pubnub PAL mocks and stubs */
+
+static void buf_setup(pubnub_t* pb)
+{
+    pb->ptr  = (uint8_t*)pb->core.http_buf;
+    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
+}
+
+void pbpal_init(pubnub_t* pb)
+{
+    buf_setup(pb);
+}
+
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
+{
+    return (int)mock(pb);
+}
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 {
     return (int)mock(pb);
@@ -453,14 +470,6 @@ char const* pubnub_uname(void)
 char const* pubnub_uagent(void)
 {
     return "POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION;
-}
-
-
-/* The Pubnub NTF mocks and stubs */
-void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
-{
-    pb->state = state;
-    mock(pb);
 }
 
 

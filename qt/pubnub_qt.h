@@ -1272,10 +1272,7 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "main",
-              "custom": {
-                "starred": true
-              }
+              "id": "main-space-id"
             },
             {
               "id": "space-0"
@@ -1305,16 +1302,10 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "my-channel"
-              "some_key": {
-                "other_key": other_value
-              }
+              "id": "my-space-id"
             },
             {
-              "id": "main",
-              "custom": {
-                "starred": true
-              }
+              "id": "main"
             }
           ]
 
@@ -1350,13 +1341,16 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "main",
+              "id": "main-space-id",
               "custom": {
                 "starred": true
               }
             },
             {
-              "id": "space-0"
+              "id": "space-0",
+              "some_key": {
+                "other_key": "other_value"
+              }
             }
           ]
     
@@ -1383,13 +1377,13 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "my-channel"
+              "id": "my-space-id"
               "some_key": {
-                "other_key": other_value
+                "other_key": "other_value"
               }
             },
             {
-              "id": "main",
+              "id": "main-space-id",
               "custom": {
                 "starred": true
               }
@@ -1428,7 +1422,7 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "main",
+              "id": "main-space-id",
               "custom": {
                 "starred": true
               }
@@ -1461,13 +1455,13 @@ public:
         An example for @update_obj:
           [
             {
-              "id": "my-channel"
+              "id": "my-space-id"
               "some_key": {
                 "other_key": other_value
               }
             },
             {
-              "id": "main",
+              "id": "main-space-id",
               "custom": {
                 "starred": true
               }

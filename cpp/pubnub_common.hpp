@@ -1454,15 +1454,37 @@ public:
         std::chrono::milliseconds result(pubnub_transaction_timeout_get(d_pb));
         return result;
     }
+    /// Sets the connection timeout duration
+    int set_connection_timeout(std::chrono::milliseconds duration)
+    {
+        return pubnub_set_wait_connect_timeout(d_pb, duration.count());
+    }
+    /// Returns the connection timeout duration
+    std::chrono::milliseconds connection_timeout_get()
+    {
+        std::chrono::milliseconds result(pubnub_wait_connect_timeout_get(d_pb));
+        return result;
+    }
 #else
-    /// Returns the transaction timeout duration
+    /// Sets the transaction timeout duration
     int set_transaction_timeout(int duration_ms)
     {
         return pubnub_set_transaction_timeout(d_pb, duration_ms);
     }
+    /// Returns the transaction timeout duration
     int transaction_timeout_get()
     {
         return pubnub_transaction_timeout_get(d_pb);
+    }
+    /// Sets the connection timeout duration
+    int set_connection_timeout(int duration_ms)
+    {
+        return pubnub_set_wait_connect_timeout(d_pb, duration_ms);
+    }
+    /// Returns the connection timeout duration
+    int connection_timeout_get()
+    {
+        return pubnub_wait_connect_timeout_get(d_pb);
     }
 #endif
 
