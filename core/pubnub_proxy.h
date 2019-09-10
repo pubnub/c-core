@@ -212,7 +212,7 @@ pubnub_proxy_authentication_scheme_get(pubnub_t* p);
     @retval 0 OK
     @retval otherwise Some error 
 */
-int pubnub_proxy_get_config(pubnub_t const*         pb,
+int pubnub_proxy_get_config(pubnub_t*               pb,
                             enum pubnub_proxy_type* protocol,
                             uint16_t*               port,
                             char*                   host,
