@@ -177,8 +177,8 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_UNSIGNED_M(pb, "count", count, '&');
     APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "stringtoken", string_token, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "reverse", reverse, '&');
+    APPEND_URL_PARAM_BOOL_M(pb, "stringtoken", string_token, '&');
+    APPEND_URL_PARAM_BOOL_M(pb, "reverse", reverse, '&');
     APPEND_URL_PARAM_M(pb, "start", start, '&');
     APPEND_URL_PARAM_M(pb, "start", end, '&');
 
