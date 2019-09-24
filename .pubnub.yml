@@ -1,7 +1,14 @@
 name: c-core
-version: 2.9.4
+version: 2.10.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.10.0
+    date: Sep 23, 2019
+    changes:
+      - type: enhancement
+        text: Introduce Objects API
+      - type: bug
+        text: Fix high history (extended/full) handling of 'reverse' and other boolean parameters
   - version: v2.9.4
     date: Sep 10, 2019
     changes:

@@ -117,9 +117,8 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
  */
 enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
 
-/** Sends a signal @p message (in JSON format) on @p channel 
-    using the @p pb context. This actually means
-    "initiate a signal transaction".
+/** Sends a signal @p message (in JSON format) on @p channel, using @p pb context.
+    This actually means "initiate a signal transaction".
 
     It has similar behaviour as publish, but unlike publish
     transaction, signal erases previous signal message on server(, on

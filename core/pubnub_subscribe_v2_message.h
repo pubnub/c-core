@@ -14,7 +14,9 @@ enum pubnub_message_type {
     /* Indicates that message was received as a signal */ 
     pbsbSignal,
     /* Indicates that message was published */ 
-    pbsbPublished
+    pbsbPublished,
+    /* Indicates action on published message */
+    pbsbAction
 };
 
 /** Pubnub V2 message has lots of data and here's how we express them

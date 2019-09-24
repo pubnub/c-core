@@ -213,6 +213,9 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
         if (pbjson_elem_equals_string(&found, "1")) {
             rslt.message_type = pbsbSignal;
         }
+        else if (pbjson_elem_equals_string(&found, "3")) {
+            rslt.message_type = pbsbAction;
+        }
         else {
             rslt.message_type = pbsbPublished;
         }
