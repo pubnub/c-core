@@ -66,6 +66,11 @@ static enum pubnub_res inflate_total_to_context_buffer(pubnub_t*      pb,
     return PNR_BAD_COMPRESSION_FORMAT;
 }
 
+#if !PUBNUB_DYNAMIC_REPLY_BUFFER
+PUBNUB_STATIC_ASSERT(sizeof((pubnub_t*)0)->core.http_reply == sizeof((pubnub_t*)0)->core.decomp_http_reply,
+                     http_reply_and_gzip_decompression_buffer_dont_match);
+#endif
+
 static void swap_reply_buffer(pubnub_t* pb)
 {
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
@@ -76,8 +81,6 @@ static void swap_reply_buffer(pubnub_t* pb)
     pb->core.decomp_http_reply = aux_buf;
     pb->core.decomp_buf_size   = aux_buf_len;
 #else
-    PUBNUB_STATIC_ASSERT(sizeof pb->core.http_reply
-                         == sizeof pb->core.decomp_http_reply);
     PUBNUB_ASSERT(pb->core.decomp_buf_size < sizeof pb->core.decomp_http_reply);
     memcpy(pb->core.http_reply, pb->core.decomp_http_reply, pb->core.decomp_buf_size);
     pb->core.http_buf_len = pb->core.decomp_buf_size;

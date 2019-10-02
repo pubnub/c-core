@@ -131,6 +131,9 @@
 #endif
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
+/** Maximum number of consecutive retries when sending DNS query in a single transaction */
+#define PUBNUB_MAX_DNS_QUERIES 3
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 /** If true (!=0), enables support for compressed content data*/
@@ -194,6 +197,11 @@
     on two new pubnub objects: User and Space, as well as manipulating connections
     between them. */
 #define PUBNUB_USE_OBJECTS_API 1
+
+/** If true (!=0) will enable using the Actions API, which is a collection
+    of Rest API features that enables adding on, reading and removing actions
+    from published messages */
+#define PUBNUB_USE_ACTIONS_API 1
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */

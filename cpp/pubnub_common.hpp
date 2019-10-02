@@ -29,12 +29,16 @@ extern "C" {
 #if PUBNUB_CRYPTO_API
 #include "core/pubnub_crypto.h"
 #endif
+#if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pubnub_advanced_history.h"
-#define MAX_ERROR_MESSAGE_LENGTH 100
+#endif
 #if PUBNUB_USE_OBJECTS_API
 #include "core/pubnub_objects_api.h"
 #define MAX_INCLUDE_DIMENSION 100
 #define MAX_ELEM_LENGTH 30
+#endif
+#if PUBNUB_USE_ACTIONS_API
+#include "core/pubnub_actions_api.h"
 #endif
 #if PUBNUB_USE_EXTERN_C
 }
@@ -1323,6 +1327,80 @@ public:
     }
 #endif /* PUBNUB_USE_OBJECTS_API */
 
+#if PUBNUB_USE_ACTIONS_API
+    futres add_action(std::string const& channel,
+                      std::string const& message_timetoken,
+                      enum pubnub_action_type actype,
+                      std::string const& value)
+    {
+        return doit(pubnub_add_action(
+                        d_pb, 
+                        channel.c_str(), 
+                        message_timetoken.c_str(), 
+                        actype, 
+                        value.c_str()));
+    }
+
+    std::string get_message_timetoken()
+    {
+        pubnub_chamebl_t result = pubnub_get_message_timetoken(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+
+    std::string get_action_timetoken()
+    {
+        pubnub_chamebl_t result = pubnub_get_action_timetoken(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+
+    futres remove_action(std::string const& channel,
+                         std::string const& message_timetoken,
+                         std::string const& action_timetoken)
+    {
+        return doit(pubnub_remove_action(
+                        d_pb,
+                        channel.c_str(),
+                        message_timetoken.c_str(),
+                        action_timetoken.c_str()));
+    }
+
+    futres get_actions(std::string const& channel,
+                       std::string const& start,
+                       std::string const& end,
+                       size_t limit=0)
+    {
+        return doit(pubnub_get_actions(
+                        d_pb,
+                        channel.c_str(),
+                        (start.size() > 0) ? start.c_str() : NULL,
+                        (end.size() > 0) ? end.c_str() : NULL,
+                        limit));
+    }
+
+    futres get_actions_more()
+    {
+        return doit(pubnub_get_actions_more(d_pb));
+    }
+
+    futres  history_with_actions(std::string const& channel,
+                                 std::string const& start,
+                                 std::string const& end,
+                                 size_t limit=0)
+    {
+        return doit(pubnub_history_with_actions(
+                        d_pb,
+                        channel.c_str(),
+                        (start.size() > 0) ? start.c_str() : NULL,
+                        (end.size() > 0) ? end.c_str() : NULL,
+                        limit));
+    }
+
+    futres history_with_actions_more()
+    {
+        return doit(pubnub_history_with_actions_more(d_pb));
+    }
+#endif /* PUBNUB_USE_ACTIONS_API */
+    
     /// Return the HTTP code (result) of the last transaction.
     /// @see pubnub_last_http_code
     int last_http_code() const

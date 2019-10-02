@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "pbpal.h"
 
 
 /** @file pubnub_helper.h 
@@ -49,6 +50,11 @@ enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
     @p e.
  */
 char const* pubnub_res_2_string(enum pubnub_res e);
+
+/** Returns a string literal describing enum value @p e
+    Used for debugging.
+ */
+char const* pbpal_resolv_n_connect_res_2_string(enum pbpal_resolv_n_connect_result e);
 
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "pubnub_subscribe_v2_message.h"

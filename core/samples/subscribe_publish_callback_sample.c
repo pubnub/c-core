@@ -90,27 +90,17 @@ void sample_callback(pubnub_t*         pb,
 }
 
 
-static void start_await(struct UserData* pUserData)
-{
-#if defined _WIN32
-    ResetEvent(pUserData->condw);
-#else
-    pthread_mutex_lock(&pUserData->mutw);
-    pUserData->triggered = false;
-    pthread_mutex_unlock(&pUserData->mutw);
-#endif
-}
-
-
-static enum pubnub_res end_await(struct UserData* pUserData)
+static enum pubnub_res await(struct UserData* pUserData)
 {
 #if defined _WIN32
     WaitForSingleObject(pUserData->condw, INFINITE);
+    ResetEvent(pUserData->condw);
 #else
     pthread_mutex_lock(&pUserData->mutw);
     while (!pUserData->triggered) {
         pthread_cond_wait(&pUserData->condw, &pUserData->mutw);
     }
+    pUserData->triggered = false;
     pthread_mutex_unlock(&pUserData->mutw);
 #endif
     return pubnub_last_result(pUserData->pb);
@@ -125,6 +115,7 @@ static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
 #else
     pthread_mutex_init(&pUserData->mutw, NULL);
     pthread_cond_init(&pUserData->condw, NULL);
+    pUserData->triggered = false;
 #endif
     pUserData->pb = pb;
 }
@@ -161,8 +152,6 @@ int main()
     puts("Subscribing...");
     puts("-----------------------");
 
-    start_await(&user_data);
-
     /* First subscribe, to get the time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
@@ -173,7 +162,7 @@ int main()
     }
 
     puts("Await subscribe");
-    res = end_await(&user_data);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         callback_sample_free(pbp);
@@ -187,7 +176,6 @@ int main()
         printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
     }
 
-    start_await(&user_data);
     /* The "real" subscribe, with the just acquired time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
@@ -200,9 +188,6 @@ int main()
     puts("-----------------------");
     puts("Publishing...");
     puts("-----------------------");
-
-    /* Don't do "full" await here, because we didn't publish anything yet! */
-    start_await(&user_data_2);
 
     /* Since the subscribe is ongoing in the `pbp` context, we can't
        publish on it, so we use a different context to publish
@@ -217,7 +202,7 @@ int main()
     }
 
     puts("Await publish");
-    res = end_await(&user_data_2);
+    res = await(&user_data_2);
 
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
@@ -239,7 +224,7 @@ int main()
 
     /* Now we await the subscribe on `pbp` */
     puts("Await subscribe");
-    res = end_await(&user_data);
+    res = await(&user_data);
     if (res == PNR_STARTED) {
         printf("await() returned unexpected: PNR_STARTED(%d)\n", res);
         callback_sample_free(pbp);

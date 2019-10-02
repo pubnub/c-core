@@ -24,6 +24,9 @@
 #define send_dns_query(x, y, z, v) -1
 #define read_response(x, y, z, v) -1
 #else
+/** Considering the size of bit field for DNS queries sent */
+PUBNUB_STATIC_ASSERT(PUBNUB_MAX_DNS_QUERIES < (1 << SENT_QUERIES_SIZE_IN_BITS),
+                     PUBNUB_MAX_DNS_QUERIES_is_too_big);
 #if PUBNUB_USE_IPV6
 typedef struct sockaddr_storage sockaddr_inX_t;
 #define QUERY_TYPE pb->options.ipv6_connectivity ? dnsAAAA : dnsA
@@ -216,8 +219,11 @@ static void if_no_retry_close_socket(pb_socket_t* skt, struct pubnub_flags* flag
 static void check_dns_server_error(struct pbdns_servers_check* dns_check,
                                    struct pubnub_flags*        flags)
 {
+    /** We just checked(notified) error with current DNS server */
     dns_check->dns_server_check |= dns_check->dns_mask;
     if (dns_check->dns_mask < PUBNUB_MAX_DNS_SERVERS_MASK) {
+        /** Going with new DNS server, after retry, brings new set of queries */
+        flags->sent_queries = 0;
         flags->retry_after_close = true;
     }
 }
@@ -422,7 +428,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     else if (error > 0) {
         return pbpal_resolv_send_wouldblock;
     }
-
+    pb->flags.sent_queries++;
+    
     return pbpal_resolv_sent;
 
 #else

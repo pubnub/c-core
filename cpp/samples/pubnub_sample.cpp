@@ -24,7 +24,7 @@ int main()
            blocking I/O on most platforms. Uncomment to use non-
            blocking I/O.
         */
-       pb.set_blocking_io(pubnub::non_blocking);
+        pb.set_blocking_io(pubnub::non_blocking);
         
         if (0 != pb.set_uuid_v4_random()) {
             pb.set_uuid("zeka-peka-iz-jendeka");

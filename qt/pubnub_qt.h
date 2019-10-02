@@ -21,6 +21,9 @@ extern "C" {
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "core/pbcc_subscribe_v2.h"
 #endif
+#if PUBNUB_USE_ACTIONS_API
+#include "core/pbcc_actions_api.h"
+#endif
 }
 
 #include "cpp/tribool.hpp"
@@ -33,10 +36,9 @@ class QNetworkReply;
 class QSslError;
 QT_END_NAMESPACE
 
+#if PUBNUB_USE_OBJECTS_API
 #define MAX_INCLUDE_DIMENSION 100
 #define MAX_ELEM_LENGTH 30
-
-#if PUBNUB_USE_OBJECTS_API
 /** A wrapper class for objects api managing include parameter */
 class include_options {
     char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
@@ -1729,7 +1731,43 @@ public:
         return remove_members(space_id, update_obj.toJson(), include);
     }
 #endif /* PUBNUB_USE_OBJECTS_API */
-    
+
+#if PUBNUB_USE_ACTIONS_API
+    pubnub_res add_action(QString const& channel,
+                          QString const& message_timetoken,
+                          pubnub_action_type actype,
+                          QString const& value);
+
+    pubnub_res add_action(QString const& channel,
+                          QString const& message_timetoken,
+                          pubnub_action_type actype,
+                          QJsonDocument const& value) {
+        return add_action(channel, message_timetoken, actype, value.toJson());
+    }
+
+    QString get_message_timetoken();
+
+    QString get_action_timetoken();
+
+    pubnub_res remove_action(QString const& channel,
+                             QString const& message_timetoken,
+                             QString const& action_timetoken);
+
+    pubnub_res get_actions(QString const& channel,
+                           QString const& start,
+                           QString const& end,
+                           size_t limit=0);
+
+    pubnub_res get_actions_more();
+
+    pubnub_res history_with_actions(QString const& channel,
+                                    QString const& start,
+                                    QString const& end,
+                                    size_t limit=0);
+
+    pubnub_res history_with_actions_more();
+#endif /* PUBNUB_USE_ACTIONS_API */
+
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
      */

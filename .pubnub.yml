@@ -1,7 +1,14 @@
 name: c-core
-version: 2.10.0
+version: 2.10.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.10.1
+    date: Oct 2, 2019
+    changes:
+      - type: enhancement
+        text: Retry if DNS server does not respond. Number of retries is a compile-time parameter.
+      - type: bug
+        text: In C++, fix transaction finishing before user starts to wait for it to finish.
   - version: v2.10.0
     date: Sep 23, 2019
     changes:

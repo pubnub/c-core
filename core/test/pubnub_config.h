@@ -107,6 +107,9 @@
 #endif
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
+/** Maximum number of consecutive retries when sending DNS query in a single transaction */
+#define PUBNUB_MAX_DNS_QUERIES 3
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 #if !defined(PUBNUB_RECEIVE_GZIP_RESPONSE)
