@@ -121,10 +121,10 @@ static enum pubnub_res await(struct UserData* pUserData)
     WaitForSingleObject(pUserData->condw, INFINITE);
 #else
     pthread_mutex_lock(&pUserData->mutw);
-    pUserData->triggered = false;
     while (!pUserData->triggered) {
         pthread_cond_wait(&pUserData->condw, &pUserData->mutw);
     }
+    pUserData->triggered = false;
     pthread_mutex_unlock(&pUserData->mutw);
 #endif
     return pubnub_last_result(pUserData->pb);
@@ -139,6 +139,7 @@ static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
 #else
     pthread_mutex_init(&pUserData->mutw, NULL);
     pthread_cond_init(&pUserData->condw, NULL);
+    pUserData->triggered = false;
 #endif
     pUserData->pb = pb;
 }

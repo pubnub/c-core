@@ -53,7 +53,7 @@ public:
         pubnub_mutex_destroy(d_mutex);
         CloseHandle(d_wevent);
     }
-    void start_await() { ResetEvent(d_wevent); }
+    void start_await() { }
     pubnub_res end_await() {
         pubnub_res res;
         {
@@ -62,6 +62,7 @@ public:
         }
         if (PNR_STARTED == res) {
             WaitForSingleObject(d_wevent, INFINITE);
+            ResetEvent(d_wevent);
             lock_guard lck(d_mutex);
             return d_result = pubnub_last_result(d_pb);
         }

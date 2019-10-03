@@ -29,6 +29,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if defined(PUBNUB_CALLBACK_API)
     p->cb        = NULL;
     p->user_data = NULL;
+    p->flags.sent_queries = 0;
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
@@ -72,7 +73,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->proxy_auth_username      = NULL;
     p->proxy_auth_password      = NULL;
     p->realm[0]                 = '\0'; 
-#endif
+#endif /* PUBNUB_PROXY_API */
 
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
     p->data_compressed = compressionNONE;

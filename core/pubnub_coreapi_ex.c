@@ -59,11 +59,8 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     }
 #endif
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
     if (pubnubSendViaPOSTwithGZIP == opts.method) {
-        if (pbgzip_compress(pb, message) == PNR_OK) {
-            message = pb->core.gzip_msg_buf;
-        }
+        message = (pbgzip_compress(pb, message) == PNR_OK) ? pb->core.gzip_msg_buf : message;
     }
 #endif
     rslt = pbcc_publish_prep(

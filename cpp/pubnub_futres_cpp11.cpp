@@ -44,13 +44,14 @@ public:
         (void)pubnub_register_callback(d_pb, NULL, NULL);
     }
     void start_await() {
-        std::lock_guard<std::mutex> lk(d_mutex);
-        d_triggered = false;
     }
     pubnub_res end_await() {
         std::unique_lock<std::mutex> lk(d_mutex);
         if (PNR_STARTED == d_result) {
-            d_cond.wait(lk, [&] { return d_triggered; });
+            if (!d_triggered) {
+                d_cond.wait(lk, [&] { return d_triggered; });
+            }
+            d_triggered = false;
             return d_result = pubnub_last_result(d_pb);
         }
         else {

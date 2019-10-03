@@ -47,6 +47,10 @@
 #define PUBNUB_USE_OBJECTS_API 0
 #endif
 
+#if !defined(PUBNUB_USE_ACTIONS_API)
+#define PUBNUB_USE_ACTIONS_API 0
+#endif
+
 #if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
@@ -55,8 +59,11 @@
 #include "core/pbhttp_digest.h"
 #endif
 
-#define PUBNUB_NEED_RETRY_AFTER_CLOSE                          \
-    (PUBNUB_PROXY_API || PUBNUB_USE_SSL || PUBNUB_ADNS_RETRY_AFTER_CLOSE)
+#if defined(PUBNUB_CALLBACK_API)
+#define PUBNUB_NEED_RETRY_AFTER_CLOSE 1
+#else
+#define PUBNUB_NEED_RETRY_AFTER_CLOSE (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
+#endif
 
 #if !defined PUBNUB_USE_GZIP_COMPRESSION
 #define PUBNUB_USE_GZIP_COMPRESSION 0
@@ -209,6 +216,17 @@ struct pubnub_flags {
         renewed without losing transaction at hand.
      */
     bool started_while_kept_alive : 1;
+#if defined(PUBNUB_CALLBACK_API)
+#define SENT_QUERIES_SIZE_IN_BITS 3
+    /** Number of DNS queries sent cosecutively in a single transaction to a single DNS
+        server.
+        Important when DNS server doesn't answer right away.
+        Normally there should be just up to one request sent to a single DNS server,
+        but, sometimes, there could be more.
+        Macro constant limiting number of retries is defined in 'pubnub_config.h'
+      */
+    int sent_queries : SENT_QUERIES_SIZE_IN_BITS;
+#endif
 };
 
 #if PUBNUB_CHANGE_DNS_SERVERS

@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_qt.h"
 
 extern "C" {
 #include "core/pubnub_version_internal.h"
@@ -7,12 +8,13 @@ extern "C" {
 #include "core/pubnub_assert.h"
 #include "lib/pbcrc32.h"
 #include "core/pubnub_memory_block.h"
+#if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pubnub_advanced_history.h"
+#endif
+#if PUBNUB_USE_OBJECTS_API
 #include "core/pbcc_objects_api.h"
-#define MAX_ERROR_MESSAGE_LENGTH 100
+#endif
 }
-
-#include "pubnub_qt.h"
 
 #include <QtNetwork>
 
@@ -115,6 +117,11 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
             req.setRawHeader("Connection", "Close");
         }
         switch (transaction) {
+#if PUBNUB_USE_ACTIONS_API
+        case PBTT_REMOVE_ACTION:
+             d_reply.reset(d_qnam.deleteResource(req));
+             break;
+#endif /* PUBNUB_USE_ACTIONS_API */
 #if PUBNUB_USE_OBJECTS_API
         case PBTT_DELETE_USER:
         case PBTT_DELETE_SPACE:
@@ -131,6 +138,9 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
         case PBTT_UPDATE_MEMBERS:
         case PBTT_REMOVE_MEMBERS:
 #endif /* PUBNUB_USE_OBJECTS_API */
+#if PUBNUB_USE_ACTIONS_API
+        case PBTT_ADD_ACTION:
+#endif /* PUBNUB_USE_ACTIONS_API */
         case PBTT_PUBLISH:
             switch (d_method) {
             case pubnubSendViaPOSTwithGZIP:
@@ -440,7 +450,7 @@ QString pubnub_qt::get_error_message()
     if (pbcc_get_error_message(d_context.data(), &msg) != 0) {
         return QString("");
     }
-    return QString(QByteArray(msg.ptr, msg.size));
+    return QString(QByteArray(msg.ptr, msg.size));    
 }
 
 
@@ -487,7 +497,7 @@ pubnub_res pubnub_qt::message_counts(QVector<QPair<QString, QString>> const& cha
 {
     QString  ch_list("");
     QString  tt_list("");
-    unsigned n = channel_timetokens.isEmpty() ? 0 : channel_timetokens.size();
+    unsigned n = channel_timetokens.isEmpty() ? 0 : channel_timetokens.size(); 
     unsigned i;
     KEEP_THREAD_SAFE();
     for (i = 0; i < n; i++) {
@@ -649,7 +659,7 @@ pubnub_res pubnub_qt::get_users(list_options& options)
     KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_get_users_prep(d_context.data(),
-                            options.include_c_strings_array(),
+                            options.include_c_strings_array(), 
                             options.include_count(),
                             options.limit(),
                             options.start(),
@@ -688,7 +698,7 @@ pubnub_res pubnub_qt::get_user(QString const& user_id, QStringList& include)
         PBTT_GET_USER);
 }
 
-
+    
 pubnub_res pubnub_qt::update_user(QByteArray const& user_obj, QStringList& include)
 {
     include_options inc(include);
@@ -732,7 +742,7 @@ pubnub_res pubnub_qt::get_spaces(list_options& options)
     KEEP_THREAD_SAFE();
     return startRequest(
         pbcc_get_spaces_prep(d_context.data(),
-                             options.include_c_strings_array(),
+                             options.include_c_strings_array(), 
                              options.include_count(),
                              options.limit(),
                              options.start(),
@@ -771,7 +781,7 @@ pubnub_res pubnub_qt::get_space(QString const& space_id, QStringList& include)
         PBTT_GET_SPACE);
 }
 
-
+    
 pubnub_res pubnub_qt::update_space(QByteArray const& space_obj, QStringList& include)
 {
     include_options inc(include);
@@ -988,6 +998,120 @@ pubnub_res pubnub_qt::remove_members(QString const& space_id,
 }
 #endif /* PUBNUB_USE_OBJECTS_API */
 
+#if PUBNUB_USE_ACTIONS_API
+pubnub_res pubnub_qt::add_action(QString const& channel,
+                                 QString const& message_timetoken,
+                                 pubnub_action_type actype,
+                                 QString const& value)
+{
+    enum pubnub_res rslt;
+    char obj_buffer[PUBNUB_BUF_MAXLEN];
+    char const* val = value.toLatin1().data();
+    KEEP_THREAD_SAFE();
+    rslt = pbcc_form_the_action_object(d_context.data(),
+                                       obj_buffer,
+                                       sizeof obj_buffer,
+                                       actype,
+                                       &val);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
+    QByteArray action_object(val);    
+    d_message_to_send = pack_message_to_gzip(action_object);
+    d_method = (d_message_to_send.size() != action_object.size())
+               ? pubnubSendViaPOSTwithGZIP
+               : pubnubSendViaPOST;
+    return startRequest(
+        pbcc_add_action_prep(d_context.data(),
+                             channel.toLatin1().data(),
+                             message_timetoken.toLatin1().data(),
+                             d_message_to_send.data()),
+        PBTT_ADD_ACTION);
+}
+
+
+QString pubnub_qt::get_message_timetoken()
+{
+    KEEP_THREAD_SAFE();
+    if (d_trans != PBTT_ADD_ACTION) {
+        return QString();
+    }
+    pubnub_chamebl_t result = pbcc_get_message_timetoken(d_context.data());
+    return QString(QByteArray(result.ptr, result.size));
+}
+
+
+QString pubnub_qt::get_action_timetoken()
+{
+    KEEP_THREAD_SAFE();
+    if (d_trans != PBTT_ADD_ACTION) {
+        return QString();
+    }
+    pubnub_chamebl_t result = pbcc_get_action_timetoken(d_context.data());
+    return QString(QByteArray(result.ptr, result.size));
+}
+
+
+pubnub_res pubnub_qt::remove_action(QString const& channel,
+                                    QString const& message_timetoken,
+                                    QString const& action_timetoken)
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(
+        pbcc_remove_action_prep(d_context.data(),
+                                channel.toLatin1().data(),
+                                message_timetoken.toLatin1().data(),
+                                action_timetoken.toLatin1().data()),
+        PBTT_REMOVE_ACTION);
+}
+
+
+pubnub_res pubnub_qt::get_actions(QString const& channel,
+                                  QString const& start,
+                                  QString const& end,
+                                  size_t limit)
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(
+        pbcc_get_actions_prep(d_context.data(),
+                              channel.toLatin1().data(),
+                              start.isEmpty() ? NULL : start.toLatin1().data(),
+                              end.isEmpty() ? NULL : end.toLatin1().data(),
+                              limit),
+        PBTT_GET_ACTIONS);
+}
+
+
+pubnub_res pubnub_qt::get_actions_more()
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(pbcc_get_actions_more_prep(d_context.data()), PBTT_GET_ACTIONS);
+}
+
+
+pubnub_res pubnub_qt::history_with_actions(QString const& channel,
+                                           QString const& start,
+                                           QString const& end,
+                                           size_t limit)
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(
+        pbcc_history_with_actions_prep(d_context.data(),
+                                       channel.toLatin1().data(),
+                                       start.isEmpty() ? NULL : start.toLatin1().data(),
+                                       end.isEmpty() ? NULL : end.toLatin1().data(),
+                                       limit),
+        PBTT_HISTORY_WITH_ACTIONS);
+}
+
+
+pubnub_res pubnub_qt::history_with_actions_more()
+{
+    KEEP_THREAD_SAFE();
+    return startRequest(pbcc_get_actions_more_prep(d_context.data()), PBTT_HISTORY_WITH_ACTIONS);
+}
+#endif /* PUBNUB_USE_ACTIONS_API */
+
 int pubnub_qt::last_http_code() const
 {
     KEEP_THREAD_SAFE();
@@ -1161,6 +1285,16 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
         pbres = pbcc_parse_objects_api_response(d_context.data());
         break;
 #endif
+#if PUBNUB_USE_ACTIONS_API
+    case PBTT_ADD_ACTION:
+    case PBTT_REMOVE_ACTION:
+    case PBTT_GET_ACTIONS:
+        pbres = pbcc_parse_actions_api_response(d_context.data());
+        break;
+    case PBTT_HISTORY_WITH_ACTIONS:
+        pbres = pbcc_parse_history_with_actions_response(d_context.data());
+        break;
+#endif /* PUBNUB_USE_ACTIONS_API */
     default:
         break;
     }

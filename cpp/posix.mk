@@ -28,6 +28,10 @@ ifndef USE_OBJECTS_API
 USE_OBJECTS_API = 1
 endif
 
+ifndef USE_ACTIONS_API
+USE_ACTIONS_API = 1
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 endif
@@ -57,6 +61,11 @@ SOURCEFILES += ../core/pbcc_objects_api.c ../core/pubnub_objects_api.c
 OBJFILES += pbcc_objects_api.o pubnub_objects_api.o
 endif
 
+ifeq ($(USE_ACTIONS_API), 1)
+SOURCEFILES += ../core/pbcc_actions_api.c ../core/pubnub_actions_api.c
+OBJFILES += pbcc_actions_api.o pubnub_actions_api.o
+endif
+
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
 SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
@@ -66,7 +75,7 @@ SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -I .. -I ../posix -I . -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API)
+CFLAGS =-g -I .. -I ../posix -I . -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API)
 # -g enables debugging, remove to get a smaller executable
 
 

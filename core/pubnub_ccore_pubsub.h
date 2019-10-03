@@ -187,7 +187,13 @@ struct pbcc_context {
 
 #define APPEND_URL_PARAM_TRIBOOL_M(pbc, name, var, separator)                  \
     if ((var) != pbccNotSet) {                                                 \
-        char const* v_ = (var) ? "1" : "0";                                    \
+        char const* v_ = (pbccTrue == var) ? "1" : "0";                        \
+        APPEND_URL_PARAM_M(pbc, name, v_, separator);                          \
+    }
+
+#define APPEND_URL_PARAM_TRIBOOL_SIMBOL_M(pbc, name, var, separator)           \
+    if ((var) != pbccNotSet) {                                                 \
+        char const* v_ = (pbccTrue == var) ? "true" : "false";                 \
         APPEND_URL_PARAM_M(pbc, name, v_, separator);                          \
     }
 
