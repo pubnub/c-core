@@ -1,7 +1,12 @@
 name: c-core
-version: 2.10.1
+version: 2.10.2
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.10.2
+    date: Oct 18, 2019
+    changes:
+      - type: bug
+        text: Restore get/set connection timeout in C++ wrapper
   - version: v2.10.1
     date: Oct 2, 2019
     changes:
