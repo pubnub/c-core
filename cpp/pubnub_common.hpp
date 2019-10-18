@@ -1540,7 +1540,7 @@ public:
     {
         return pubnub_set_wait_connection_timeout(d_pb, duration.count());
     }
-    /// Returns the transaction timeout duration
+    /// Returns the connection timeout duration
     std::chrono::milliseconds connection_timeout_get()
     {
         std::chrono::milliseconds result(pubnub_wait_connection_timeout_get(d_pb));
