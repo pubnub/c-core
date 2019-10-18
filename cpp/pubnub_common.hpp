@@ -1538,12 +1538,12 @@ public:
     /// Sets the connection timeout duration
     int set_connection_timeout(std::chrono::milliseconds duration)
     {
-        return pubnub_set_wait_connection_timeout(d_pb, duration.count());
+        return pubnub_set_wait_connect_timeout(d_pb, duration.count());
     }
     /// Returns the connection timeout duration
     std::chrono::milliseconds connection_timeout_get()
     {
-        std::chrono::milliseconds result(pubnub_wait_connection_timeout_get(d_pb));
+        std::chrono::milliseconds result(pubnub_wait_connect_timeout_get(d_pb));
         return result;
     }
 #else
@@ -1560,12 +1560,12 @@ public:
     /// Sets the connection timeout duration, in milliseconds
     int set_connection_timeout(int duration_ms)
     {
-        return pubnub_set_wait_connection_timeout(d_pb, duration_ms);
+        return pubnub_set_wait_connect_timeout(d_pb, duration_ms);
     }
     /// Returns the connection timeout duration, in milliseconds
     int connection_timeout_get()
     {
-        return pubnub_wait_connection_timeout_get(d_pb);
+        return pubnub_wait_connect_timeout_get(d_pb);
     }
 #endif
 
