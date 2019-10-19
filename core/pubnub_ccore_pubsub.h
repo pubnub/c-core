@@ -122,7 +122,7 @@ struct pbcc_context {
     }
 
 #define APPEND_URL_LITERAL_M_IMP(pbc, string_literal)                          \
-    {                                                                          \
+    do {                                                                       \
         if ((pbc)->http_buf_len + sizeof(string_literal) > sizeof (pbc)->http_buf) {\
             PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url literal:\n"\
                              "current_buffer_size = %lu\n"                     \
@@ -133,9 +133,31 @@ struct pbcc_context {
         }                                                                      \
         strcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal));       \
         (pbc)->http_buf_len += sizeof(string_literal) - 1;                     \
-    }
+    } while (0)
 
 #define APPEND_URL_LITERAL_M(pbc, string_literal) APPEND_URL_LITERAL_M_IMP(pbc, "" string_literal)
+
+#define APPEND_URL_STRING_M(pbc, s, n)                                         \
+    do {                                                                       \
+        char const* M_s_ = s;                                                  \
+        if (M_s_ != NULL) {                                                    \
+            struct pbcc_context* M_pbc_ = pbc;                                 \
+            size_t M_n_ = n;                                                   \
+            if (M_pbc_->http_buf_len + M_n_ > sizeof M_pbc_->http_buf) {       \
+                PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url string:\n"\
+                                 "current_buffer_size = %lu\n"                 \
+                                 "required_buffer_size = %lu\n",               \
+                                 (unsigned long)(sizeof M_pbc_->http_buf),     \
+                                 (unsigned long)(M_pbc_->http_buf_len + 1 + M_n_));\
+                return PNR_TX_BUFF_TOO_SMALL;                                  \
+            }                                                                  \
+            M_pbc_->http_buf_len += snprintf(M_pbc_->http_buf + M_pbc_->http_buf_len,\
+                                             sizeof M_pbc_->http_buf - M_pbc_->http_buf_len - 1,\
+                                             "%.*s",                           \
+                                             (int)M_n_,                        \
+                                             M_s_);                            \
+        }                                                                      \
+    } while (0)
 
 #define APPEND_URL_ENCODED_M(pbc, what)                                        \
     if ((what) != NULL) {                                                      \

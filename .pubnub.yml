@@ -1,7 +1,16 @@
 name: c-core
-version: 2.10.2
+version: 2.11.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.11.0
+    date: Oct 20, 2019
+    changes:
+      - type: enhancement
+        text: Introduce Actions API
+      - type: bug
+        text: Fix stopwatch not working after 25 days
+      - type: ehnancement
+        text: Add include_meta parameter to pubnub_history_ex()
   - version: v2.10.2
     date: Oct 18, 2019
     changes:

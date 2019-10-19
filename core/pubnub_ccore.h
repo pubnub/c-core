@@ -85,6 +85,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* p,
                                   bool                 include_token,
                                   enum pubnub_tribool  string_token,
                                   enum pubnub_tribool  reverse,
+                                  enum pubnub_tribool  include_meta,
                                   char const*          start,
                                   char const*          end);
 
