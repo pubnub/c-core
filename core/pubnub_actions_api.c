@@ -13,11 +13,11 @@
 #include <ctype.h>
 #include <string.h>
 
-        
-enum pubnub_res pubnub_add_action(pubnub_t* pb, 
-                                  char const* channel, 
-                                  char const* message_timetoken, 
-                                  enum pubnub_action_type actype, 
+
+enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
+                                  char const* channel,
+                                  char const* message_timetoken,
+                                  enum pubnub_action_type actype,
                                   char const* value)
 {
     enum pubnub_res rslt;
@@ -44,8 +44,8 @@ enum pubnub_res pubnub_add_action(pubnub_t* pb,
     value = (pbgzip_compress(pb, value) == PNR_OK) ? pb->core.gzip_msg_buf : value;
 #endif
     rslt = pbcc_add_action_prep(&pb->core,
-                                channel, 
-                                message_timetoken, 
+                                channel,
+                                message_timetoken,
                                 value);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_ADD_ACTION;
@@ -85,7 +85,7 @@ pubnub_chamebl_t pubnub_get_message_timetoken(pubnub_t* pb)
 }
 
 
-pubnub_chamebl_t pubnub_get_action_timetoken(pubnub_t* pb)
+pubnub_chamebl_t pubnub_get_message_action_timetoken(pubnub_t* pb)
 {
     pubnub_chamebl_t result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -110,7 +110,7 @@ pubnub_chamebl_t pubnub_get_action_timetoken(pubnub_t* pb)
 }
 
 
-enum pubnub_res pubnub_remove_action(pubnub_t* pb,
+enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
                                      char const* channel,
                                      pubnub_chamebl_t message_timetoken,
                                      pubnub_chamebl_t action_timetoken)
@@ -126,8 +126,8 @@ enum pubnub_res pubnub_remove_action(pubnub_t* pb,
     }
 
     rslt = pbcc_remove_action_prep(&pb->core,
-                                   channel, 
-                                   message_timetoken, 
+                                   channel,
+                                   message_timetoken,
                                    action_timetoken);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_REMOVE_ACTION;
@@ -142,7 +142,7 @@ enum pubnub_res pubnub_remove_action(pubnub_t* pb,
 }
 
 
-enum pubnub_res pubnub_get_actions(pubnub_t* pb,
+enum pubnub_res pubnub_get_message_actions(pubnub_t* pb,
                                    char const* channel,
                                    char const* start,
                                    char const* end,
@@ -171,7 +171,7 @@ enum pubnub_res pubnub_get_actions(pubnub_t* pb,
 }
 
 
-enum pubnub_res pubnub_get_actions_more(pubnub_t* pb)
+enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb)
 {
     enum pubnub_res rslt;
 
@@ -205,7 +205,7 @@ enum pubnub_res pubnub_get_actions_more(pubnub_t* pb)
 }
 
 
-enum pubnub_res pubnub_history_with_actions(pubnub_t* pb,
+enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
                                             char const* channel,
                                             char const* start,
                                             char const* end,
@@ -234,7 +234,7 @@ enum pubnub_res pubnub_history_with_actions(pubnub_t* pb,
 }
 
 
-enum pubnub_res pubnub_history_with_actions_more(pubnub_t* pb)
+enum pubnub_res pubnub_history_with_message_actions_more(pubnub_t* pb)
 {
     enum pubnub_res rslt;
 

@@ -210,7 +210,7 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
     if ((*message_timetoken.ptr != '\"') ||
         (*(message_timetoken.ptr + message_timetoken.size - 1) != '\"')) {
         PUBNUB_LOG_ERROR("pbcc_remove_action_prep(pbcc=%p) - "
-                         "mesage timetoken is missing quotation marks: "
+                         "message timetoken is missing quotation marks: "
                          "message_timetoken = %.*s\n",
                          pb,
                          (int)message_timetoken.size,
