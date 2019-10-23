@@ -1359,9 +1359,9 @@ public:
 
     /// Returns action timetoken if previous transaction had been add_action()
     /// @see pubnub_get_action_timetoken()
-    std::string get_action_timetoken()
+    std::string get_message_action_timetoken()
     {
-        pubnub_chamebl_t result = pubnub_get_action_timetoken(d_pb);
+        pubnub_chamebl_t result = pubnub_get_message_action_timetoken(d_pb);
         return std::string(result.ptr, result.size);
     }
 
@@ -1398,7 +1398,7 @@ public:
     /// @see pubnub_get_actions_more()
     futres get_message_actions_more()
     {
-        return doit(pubnub_get_actions_more(d_pb));
+        return doit(pubnub_get_message_actions_more(d_pb));
     }
 
     /// Initiates transaction that returns all actions added on a given @p channel
