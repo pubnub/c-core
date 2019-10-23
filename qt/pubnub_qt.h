@@ -1751,16 +1751,16 @@ public:
         @param value Json string describing the action that is to be added
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res add_action(QString const& channel,
+    pubnub_res add_message_action(QString const& channel,
                           QString const& message_timetoken,
                           pubnub_action_type actype,
                           QString const& value);
 
     /** Function receives 'Qt Json' document for @p value. Helpful if you're already using Qt
         support for Json in your code, ensuring that value you are passing is valid Json.
-        @see add_action()
+        @see add_message_action()
       */
-    pubnub_res add_action(QString const& channel,
+    pubnub_res add_message_action(QString const& channel,
                           QString const& message_timetoken,
                           pubnub_action_type actype,
                           QJsonDocument const& value) {
@@ -1795,7 +1795,7 @@ public:
                                 marks at both ends)
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res remove_action(QString const& channel,
+    pubnub_res remove_message_action(QString const& channel,
                              QString const& message_timetoken,
                              QString const& action_timetoken);
 
@@ -1816,7 +1816,7 @@ public:
                      Any value greater than 100 is considered an error.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_actions(QString const& channel,
+    pubnub_res get_message_actions(QString const& channel,
                            QString const& start,
                            QString const& end,
                            size_t limit=0);
@@ -1834,7 +1834,7 @@ public:
         @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
         @retval corresponding error otherwise
       */
-    pubnub_res get_actions_more();
+    pubnub_res get_message_actions_more();
 
     /** Initiates transaction that returns all actions added on a given @p channel between @p start
         and @p end message timetoken.
@@ -1853,7 +1853,7 @@ public:
                      was 100. Any value greater than 100 is considered an error.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res history_with_actions(QString const& channel,
+    pubnub_res history_with_message_actions(QString const& channel,
                                     QString const& start,
                                     QString const& end,
                                     size_t limit=0);
@@ -1871,7 +1871,7 @@ public:
         @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
         @retval corresponding error otherwise
       */
-    pubnub_res history_with_actions_more();
+    pubnub_res history_with_message_actions_more();
 #endif /* PUBNUB_USE_ACTIONS_API */
 
     /** Returns the HTTP code of the last transaction. If the
