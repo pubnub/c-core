@@ -1002,7 +1002,7 @@ pubnub_res pubnub_qt::remove_members(QString const& space_id,
 #endif /* PUBNUB_USE_OBJECTS_API */
 
 #if PUBNUB_USE_ACTIONS_API
-pubnub_res pubnub_qt::add_action(QString const& channel,
+pubnub_res pubnub_qt::add_message_message_action(QString const& channel,
                                  QString const& message_timetoken,
                                  pubnub_action_type actype,
                                  QString const& value)
@@ -1055,7 +1055,7 @@ QString pubnub_qt::get_action_timetoken()
 }
 
 
-pubnub_res pubnub_qt::remove_action(QString const& channel,
+pubnub_res pubnub_qt::remove_message_action(QString const& channel,
                                     QString const& message_timetoken,
                                     QString const& action_timetoken)
 {
@@ -1069,7 +1069,7 @@ pubnub_res pubnub_qt::remove_action(QString const& channel,
 }
 
 
-pubnub_res pubnub_qt::get_actions(QString const& channel,
+pubnub_res pubnub_qt::get_message_actions(QString const& channel,
                                   QString const& start,
                                   QString const& end,
                                   size_t limit)
@@ -1085,14 +1085,14 @@ pubnub_res pubnub_qt::get_actions(QString const& channel,
 }
 
 
-pubnub_res pubnub_qt::get_actions_more()
+pubnub_res pubnub_qt::get_message_actions_more()
 {
     KEEP_THREAD_SAFE();
     return startRequest(pbcc_get_actions_more_prep(d_context.data()), PBTT_GET_ACTIONS);
 }
 
 
-pubnub_res pubnub_qt::history_with_actions(QString const& channel,
+pubnub_res pubnub_qt::history_with_message_actions(QString const& channel,
                                            QString const& start,
                                            QString const& end,
                                            size_t limit)
@@ -1108,7 +1108,7 @@ pubnub_res pubnub_qt::history_with_actions(QString const& channel,
 }
 
 
-pubnub_res pubnub_qt::history_with_actions_more()
+pubnub_res pubnub_qt::history_with_message_actions_more()
 {
     KEEP_THREAD_SAFE();
     return startRequest(pbcc_get_actions_more_prep(d_context.data()), PBTT_HISTORY_WITH_ACTIONS);
