@@ -1764,7 +1764,7 @@ public:
                           QString const& message_timetoken,
                           pubnub_action_type actype,
                           QJsonDocument const& value) {
-        return add_action(channel, message_timetoken, actype, value.toJson());
+        return add_message_action(channel, message_timetoken, actype, value.toJson());
     }
 
     /** Searches the response, if previous transaction had been 'add_action' and was accomplished
