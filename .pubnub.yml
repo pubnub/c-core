@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: 2.11.0
+version: 2.11.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.11.1
+    date: Oct 25, 2019
+    changes:
+      - type: bug
+        text: Fix Qt
   - version: v2.11.0
     date: Oct 20, 2019
     changes:
