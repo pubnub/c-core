@@ -84,7 +84,7 @@ enum pubnub_res pubnub_history(pubnub_t*   pb,
     }
 
     rslt = pbcc_history_prep(
-        &pb->core, channel, count, include_token, pbccNotSet, pbccNotSet, NULL, NULL);
+        &pb->core, channel, count, include_token, pbccNotSet, pbccNotSet, pbccNotSet, NULL, NULL);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_HISTORY;
         pb->core.last_result = PNR_STARTED;

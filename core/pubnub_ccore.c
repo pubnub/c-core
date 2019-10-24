@@ -156,6 +156,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
                                   bool                 include_token,
                                   enum pubnub_tribool  string_token,
                                   enum pubnub_tribool  reverse,
+                                  enum pubnub_tribool  include_meta,
                                   char const*          start,
                                   char const*          end)
 {
@@ -179,6 +180,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');
     APPEND_URL_PARAM_TRIBOOL_SIMBOL_M(pb, "stringtoken", string_token, '&');
     APPEND_URL_PARAM_TRIBOOL_SIMBOL_M(pb, "reverse", reverse, '&');
+    APPEND_URL_PARAM_TRIBOOL_SIMBOL_M(pb, "include_meta", include_meta, '&');
     APPEND_URL_PARAM_M(pb, "start", start, '&');
     APPEND_URL_PARAM_M(pb, "start", end, '&');
 

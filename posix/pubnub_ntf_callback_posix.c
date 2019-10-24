@@ -2,6 +2,7 @@
 #include "core/pubnub_ntf_callback.h"
 
 #include "posix/monotonic_clock_get_time.h"
+#include "posix/pbtimespec_elapsed_ms.h"
 
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
@@ -34,14 +35,6 @@ struct SocketWatcherData {
 
 
 static struct SocketWatcherData m_watcher;
-
-
-static int elapsed_ms(struct timespec prev_timspec, struct timespec timspec)
-{
-    int s_diff   = timspec.tv_sec - prev_timspec.tv_sec;
-    int m_s_diff = (timspec.tv_nsec - prev_timspec.tv_nsec) / MILLI_IN_NANO;
-    return (s_diff * UNIT_IN_MILLI) + m_s_diff;
-}
 
 
 int pbntf_watch_in_events(pubnub_t* pbp)
@@ -82,7 +75,7 @@ void* socket_watcher_thread(void* arg)
         pthread_mutex_unlock(&m_watcher.mutw);
 
         if (PUBNUB_TIMERS_API) {
-            int elapsed = elapsed_ms(prev_timspec, timspec);
+            int elapsed = pbtimespec_elapsed_ms(prev_timspec, timspec);
             if (elapsed > 0) {
                 if (elapsed > max_poll_ms + 5) {
                     PUBNUB_LOG_TRACE("elapsed = %d: prev_timspec={%ld, %ld}, timspec={%ld,%ld}\n",

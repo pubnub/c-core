@@ -214,10 +214,15 @@ struct pubnub_history_options {
      */
     char const* end;
     /** If true to recieve a timetoken with each history
-     * message. If true, not timetokens per message. Defaults to
+     * message. If false, no timetokens per message. Defaults to
      * false.
      */
     bool include_token;
+    /** If true to recieve metadata with each history
+     * message if any. If false, no metadata per message. Defaults to
+     * false.
+     */
+    bool include_meta;
 };
 
 

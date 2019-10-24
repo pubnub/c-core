@@ -49,5 +49,11 @@ typedef struct pubnub_byte_mem_block pubnub_bymebl_t;
 /** Helper typedef for a char memory block */
 typedef struct pubnub_char_mem_block pubnub_chamebl_t;
 
+/** Returns memory block for a given NUL terminated string.
+    Makes no allocations, nor copies.
+    Result 'ptr' field is equal to @p str and 'size' to its length.
+    In case @p str is NULL, the 'size' field becomes 0.
+  */
+pubnub_chamebl_t pubnub_str_2_chamebl_t(char* str);
 
 #endif /* !defined INC_PUBNUB_MEMORY_BLOCK */

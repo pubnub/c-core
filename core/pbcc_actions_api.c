@@ -20,12 +20,20 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                                             char* obj_buffer,
                                             size_t buffer_size,
                                             enum pubnub_action_type actype,
-                                            char const** json)
+                                            char const** val)
 {
     char const* uuid = pbcc_uuid_get(pb);
     char const* type_literal;
     if (NULL == uuid) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - uuid not set.\n", pb);
+        return PNR_INVALID_PARAMETERS;
+    }
+    if (('\"' != **val) || ('\"' != *(*val + pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) - 1))) {
+        PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
+                         "quotation marks on value ends are missing: "
+                         "value = %s\n",
+                         pb,
+                         *val);
         return PNR_INVALID_PARAMETERS;
     }
     switch(actype) {
@@ -47,7 +55,7 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
     }
     if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
                              pb_strnlen_s(type_literal, sizeof "reaction") +
-                             pb_strnlen_s(*json, PUBNUB_MAX_OBJECT_LENGTH) +
+                             pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                              pb_strnlen_s(uuid, sizeof pb->uuid)) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
                          "buffer size is too small: "
@@ -57,7 +65,7 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                          (unsigned long)buffer_size,
                          (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
                                          pb_strnlen_s(type_literal, sizeof "reaction") +
-                                         pb_strnlen_s(*json, PUBNUB_MAX_OBJECT_LENGTH) +
+                                         pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                                          pb_strnlen_s(uuid, sizeof pb->uuid)));
         return PNR_TX_BUFF_TOO_SMALL;
     }
@@ -65,9 +73,9 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
              buffer_size,
              "{\"type\":\"%s\",\"value\":%s,\"uuid\":\"%s\"}",
              type_literal,
-             *json,
+             *val,
              uuid);
-    *json = obj_buffer;
+    *val = obj_buffer;
     
     return PNR_OK;
 }
@@ -89,7 +97,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v1/actions/%s/channel/",
+                                "/v1/message-actions/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/message/");
@@ -189,27 +197,48 @@ pubnub_chamebl_t pbcc_get_action_timetoken(struct pbcc_context* pb)
 
 enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
                                         char const* channel,
-                                        char const* message_timetoken,
-                                        char const* action_timetoken)
+                                        pubnub_chamebl_t message_timetoken,
+                                        pubnub_chamebl_t action_timetoken)
 {
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
 
     PUBNUB_ASSERT_OPT(channel != NULL);
-    PUBNUB_ASSERT_OPT(message_timetoken != NULL);
-    PUBNUB_ASSERT_OPT(action_timetoken != NULL);
+    PUBNUB_ASSERT_OPT(message_timetoken.ptr != NULL);
+    PUBNUB_ASSERT_OPT(action_timetoken.ptr != NULL);
+
+    if ((*message_timetoken.ptr != '\"') ||
+        (*(message_timetoken.ptr + message_timetoken.size - 1) != '\"')) {
+        PUBNUB_LOG_ERROR("pbcc_remove_action_prep(pbcc=%p) - "
+                         "message timetoken is missing quotation marks: "
+                         "message_timetoken = %.*s\n",
+                         pb,
+                         (int)message_timetoken.size,
+                         message_timetoken.ptr);
+        return PNR_INVALID_PARAMETERS;
+    }
+    if ((*action_timetoken.ptr != '\"') ||
+        (*(action_timetoken.ptr + action_timetoken.size - 1) != '\"')) {
+        PUBNUB_LOG_ERROR("pbcc_remove_action_prep(pbcc=%p) - "
+                         "action timetoken is missing quotation marks: "
+                         "action_timetoken = %.*s\n",
+                         pb,
+                         (int)action_timetoken.size,
+                         action_timetoken.ptr);
+        return PNR_INVALID_PARAMETERS;
+    }
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v1/actions/%s/channel/",
+                                "/v1/message-actions/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/message/");
-    APPEND_URL_ENCODED_M(pb, message_timetoken);
+    APPEND_URL_STRING_M(pb, message_timetoken.ptr + 1, message_timetoken.size - 2);
     APPEND_URL_LITERAL_M(pb, "/action/");
-    APPEND_URL_ENCODED_M(pb, action_timetoken);
+    APPEND_URL_STRING_M(pb, action_timetoken.ptr + 1, action_timetoken.size - 2);
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
     APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
@@ -228,13 +257,13 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
     char const*       uuid = pbcc_uuid_get(pb);
 
     PUBNUB_ASSERT_OPT(channel != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_ACTIONS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v1/actions/%s/channel/",
+                                "/v1/message-actions/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
@@ -242,7 +271,9 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_M(pb, "start", start, '&');
     APPEND_URL_PARAM_M(pb, "end", end, '&');
-    APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
+    if (limit != 0) {
+        APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
+    }
 
     return PNR_STARTED;
 }
@@ -282,13 +313,22 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
 
         return PNR_FORMAT_ERROR;
     }
+    json_rslt = pbjson_get_object_value(&parsed, "url", &elem);
+    if (json_rslt != jonmpOK) {
+        PUBNUB_LOG_ERROR("pbcc_get_actions_more_prep(pbcc=%p) - Invalid response: "
+                         "pbjson_get_object_value(\"url\") reported an error: %s\n",
+                         pb,
+                         pbjson_object_name_parse_result_2_string(json_rslt));
+
+        return PNR_FORMAT_ERROR;
+    }
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
                                 "%.*s",
-                                (int)(parsed.end - parsed.start - 2),
-                                parsed.start + 1);
+                                (int)(elem.end - elem.start - 2),
+                                elem.start + 1);
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '&');
     APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
@@ -307,13 +347,13 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
     char const*       uuid = pbcc_uuid_get(pb);
 
     PUBNUB_ASSERT_OPT(channel != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_ACTIONS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v1/history-with-actions/%s/channel/",
+                                "/v3/history-with-actions/sub-key/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
@@ -321,7 +361,9 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
     APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
     APPEND_URL_PARAM_M(pb, "start", start, '&');
     APPEND_URL_PARAM_M(pb, "end", end, '&');
-    APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
+    if (limit != 0) {
+        APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
+    }
 
     return PNR_STARTED;
 }

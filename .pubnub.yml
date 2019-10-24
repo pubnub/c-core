@@ -1,7 +1,17 @@
 name: c-core
-version: 2.10.2
+schema: 1
+version: 2.11.0
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.11.0
+    date: Oct 20, 2019
+    changes:
+      - type: enhancement
+        text: Introduce Actions API
+      - type: bug
+        text: Fix stopwatch not working after 25 days
+      - type: ehnancement
+        text: Add 'include_meta' parameter to pubnub_history_ex()
   - version: v2.10.2
     date: Oct 18, 2019
     changes:
@@ -111,9 +121,9 @@ changelog:
       - type: enhancement
         text: Update Qt functional tests and make them reliable
       - type: enhancement
-        text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet doesn't incur much memory increase
+        text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet does not incur much memory increase
       - type: bug
-        text: C++ wrapper and Qt did not have proper multithreading support as they did not protect _their_ data. Now that's fixed.
+        text: C++ wrapper and Qt did not have proper multithreading support as they did not protect _their_ data. Now that is fixed.
   - version: v2.6.2
     date: Dec 20, 2018
     changes:
@@ -372,37 +382,72 @@ features:
     - PUBLISH-RAW-JSON
     - PUBLISH-WITH-METADATA
     - PUBLISH-GET
+    - PUBLISH-POST
     - PUBLISH-SYNC
     - PUBLISH-ASYNC
-    - SIGNAL-SEND
+    - PUBLISH-FIRE
+    - PUBLISH-REPLICATION-FLAG
   storage:
     - STORAGE-INCLUDE-TIMETOKEN
     - STORAGE-COUNT
     - STORAGE-REVERSE
     - STORAGE-START-END
     - STORAGE-MESSAGE-COUNT
-  time:
-    - TIME-TIME
+    - STORAGE-HISTORY-WITH-META
+    - STORAGE-FETCH-WITH-META
+    - STORAGE-FETCH-WITH-MESSAGE-ACTIONS
   subscribe:
     - SUBSCRIBE-CHANNELS
     - SUBSCRIBE-CHANNEL-GROUPS
     - SUBSCRIBE-PRESENCE-CHANNELS
     - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
     - SUBSCRIBE-WILDCARD
+    - SUBSCRIBE-FILTER-EXPRESSION 
     - SUBSCRIBE-SIGNAL-LISTENER 
+    - SUBSCRIBE-USER-LISTENER 
+    - SUBSCRIBE-SPACE-LISTENER 
+    - SUBSCRIBE-MEMBERSHIP-LISTENER 
+    - SUBSCRIBE-MESSAGE-ACTIONS-LISTENER 
+  signal:
+    - SIGNAL-SEND
+  objects:
+    - OBJECTS-GET-USER
+    - OBJECTS-GET-USERS
+    - OBJECTS-CREATE-USER
+    - OBJECTS-UPDATE-USER
+    - OBJECTS-DELETE-USER
+    - OBJECTS-GET-SPACE
+    - OBJECTS-GET-SPACES
+    - OBJECTS-CREATE-SPACE
+    - OBJECTS-UPDATE-SPACE
+    - OBJECTS-DELETE-SPACE
+    - OBJECTS-GET-MEMBERSHIPS
+    - OBJECTS-JOIN-SPACES
+    - OBJECTS-UPDATE-MEMBERSHIPS
+    - OBJECTS-LEAVE-SPACES
+    - OBJECTS-GET-MEMBERS
+    - OBJECTS-ADD-MEMBERS
+    - OBJECTS-UPDATE-MEMBERS
+    - OBJECTS-REMOVE-MEMBERS
+  message-actions:
+    - MESSAGE-ACTIONS-GET
+    - MESSAGE-ACTIONS-ADD
+    - MESSAGE-ACTIONS-REMOVE
+  time:
+    - TIME-TIME
 supported-platforms:
   - 
     version: PubNub POSIX C SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doe snot wish to use TLS/SSL, she does not need OpenSSL at all.
   - 
     version: PubNub POSIX C++ SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user does not wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
   - 
     version: PubNub Windows C SDK
@@ -413,7 +458,7 @@ supported-platforms:
     version: PubNub Windows C++ SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
-      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she doesn't need OpenSSL at all.
+      - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the Windows C++ SDK)
   - 
     version: PubNub FreeRTOS SDK

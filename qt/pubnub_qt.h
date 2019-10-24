@@ -611,6 +611,9 @@ public:
         @param reverse Direction of time traversal. False means
         timeline is traversed newest to oldest.
 
+        @param include_meta If true, transaction response will include
+        metadata for every gotten message
+
         @param end Lets you select an “end date”, in Timetoken
         format. If not provided, it will provide up to the number of
         messages defined in the “count” parameter. Page through
@@ -632,6 +635,7 @@ public:
                        bool include_token,
                        QString const& start,
                        bool reverse,
+                       bool include_meta,
                        QString const& end,
                        bool string_token);
 
@@ -1733,39 +1737,141 @@ public:
 #endif /* PUBNUB_USE_OBJECTS_API */
 
 #if PUBNUB_USE_ACTIONS_API
-    pubnub_res add_action(QString const& channel,
+    /** Adds new type of message called action as a support for user reactions on a published
+        messages.
+        Json string @p value is checked for its quotation marks at its ends. If any of the
+        quotation marks is missing function returns parameter error.
+        If the transaction is finished successfully response will have 'data' field with
+        added action data. If there is no data, nor error description in the response,
+        response parsing function returns format error.
+        @param channel The channel on which action is referring to.
+        @param message_timetoken The timetoken(unquoted) of a published message action is
+                                 applying to
+        @param actype Action type
+        @param value Json string describing the action that is to be added
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_message_action(QString const& channel,
                           QString const& message_timetoken,
                           pubnub_action_type actype,
                           QString const& value);
 
-    pubnub_res add_action(QString const& channel,
+    /** Function receives 'Qt Json' document for @p value. Helpful if you're already using Qt
+        support for Json in your code, ensuring that value you are passing is valid Json.
+        @see add_message_action()
+      */
+    pubnub_res add_message_action(QString const& channel,
                           QString const& message_timetoken,
                           pubnub_action_type actype,
                           QJsonDocument const& value) {
         return add_action(channel, message_timetoken, actype, value.toJson());
     }
 
+    /** Searches the response, if previous transaction had been 'add_action' and was accomplished
+        successfully) and retrieves timetoken of a message action was added on.
+        If key expected is not found, preconditions(about right transaction) were not fulfilled,
+        or error was encountered, returnes an empty string.
+        @return Message timetoken value including its quotation marks
+      */
     QString get_message_timetoken();
 
+    /** Searches the response, if previous transaction had been 'add_action' and was accomplished
+        successfully) and retrieves timetoken of a resently added action.
+        If key expected is not found, preconditions were not fulfilled, or error was encountered,
+        returnes an empty string.
+        @return Action timetoken value including its quotation marks
+      */
     QString get_action_timetoken();
 
-    pubnub_res remove_action(QString const& channel,
+    /** Initiates transaction that deletes(removes) previously added action on a published message.
+        If there is no success confirming data, nor error description in the response it is
+        considered format error.
+        @param channel The channel on which action was previously added.
+        @param message_timetoken The timetoken of a published message action was applied to.
+                                 (Obtained from the response when action was added and expected
+                                  with its quotation marks at both ends)
+        @param action_timetoken The action timetoken when it was added(Gotten from the transaction
+                                response when action was added and expected with its quotation
+                                marks at both ends)
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_message_action(QString const& channel,
                              QString const& message_timetoken,
                              QString const& action_timetoken);
 
-    pubnub_res get_actions(QString const& channel,
+    /** Initiates transaction that returns all actions added on a given @p channel between @p start
+        and @p end action timetoken.
+        The response to this transaction can be partial and than it contains the hyperlink string
+        value to the rest.
+        @see get_actions_more()
+        If there is no actions data, nor error description in the response it is considered
+        format error.
+        @param channel The channel on which actions are observed.
+        @param start Start action timetoken(unquoted). Can be an empty string meaning there is
+                     no lower limitation in time.
+        @param end End action timetoken(unquoted). Can be an empty string in which case upper
+                   time limit is present moment.
+        @param limit Number of actions to return in response. Regular values 1 - 100. If you set `0`,
+                     that means “use the default”. At the time of this writing, default was 100.
+                     Any value greater than 100 is considered an error.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_message_actions(QString const& channel,
                            QString const& start,
                            QString const& end,
                            size_t limit=0);
 
-    pubnub_res get_actions_more();
+    /** This function expects previous transaction to be the one for reading the actions and
+        that it was successfully accomplished. If it is not the case, returns corresponding
+        error.
+        When preconditions are fulfilled, it searches the hyperlink to the rest in the existing
+        response buffer which it uses for obtaining another part of the server response.
+        Anotherwords, once the hyperlink is found in the existing response it is used for
+        initiating new request and function than behaves, essentially, as get_actions().
+        If there is no hyperlink encountered in the previous transaction response it
+        returns success: PNR_GOT_ALL_ACTIONS meaning that the answer is complete.
+        @retval PNR_STARTED transaction successfully initiated.
+        @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
+        @retval corresponding error otherwise
+      */
+    pubnub_res get_message_actions_more();
 
-    pubnub_res history_with_actions(QString const& channel,
+    /** Initiates transaction that returns all actions added on a given @p channel between @p start
+        and @p end message timetoken.
+        The response to this transaction can be partial and than it contains the hyperlink string
+        value to the rest.
+        @see history_with_actions_more()
+        If there is no actions data, nor error description in the response it is considered
+        format error.
+        @param channel The channel on which actions are observed.
+        @param start Start message timetoken(unquoted). Can be an empty string meaning there is
+                     no lower limitation in time.
+        @param end End message timetoken(unquoted). Can be an empty string in which case upper
+                   time limit is present moment.
+        @param limit Number of messages to return in response. Regular values 1 - 100. If you
+                     set `0`, that means “use the default”. At the time of this writing, default
+                     was 100. Any value greater than 100 is considered an error.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res history_with_message_actions(QString const& channel,
                                     QString const& start,
                                     QString const& end,
                                     size_t limit=0);
 
-    pubnub_res history_with_actions_more();
+    /** This function expects previous transaction to be the one for reading the history with
+        actions and that it was successfully accomplished. If it is not the case, returns
+        corresponding error.
+        When preconditions are fulfilled it searches for the hyperlink to the rest of the answer
+        in the existing response buffer which it uses for obtaining another part of the server
+        response. Anotherwords, once the hyperlink is found in the existing response it is used
+        for initiating new request and function than behaves as history_with_actions().
+        If there is no hyperlink encountered in the previous transaction response it
+        returns success: PNR_GOT_ALL_ACTIONS meaning that the answer is complete.
+        @retval PNR_STARTED transaction successfully initiated.
+        @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
+        @retval corresponding error otherwise
+      */
+    pubnub_res history_with_message_actions_more();
 #endif /* PUBNUB_USE_ACTIONS_API */
 
     /** Returns the HTTP code of the last transaction. If the

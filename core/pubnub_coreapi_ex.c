@@ -203,6 +203,7 @@ struct pubnub_history_options pubnub_history_defopts(void)
     rslt.start         = NULL;
     rslt.end           = NULL;
     rslt.include_token = false;
+    rslt.include_meta  = false;
 
     return rslt;
 }
@@ -228,6 +229,7 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
                              opt.include_token,
                              opt.string_token ? pbccTrue : pbccFalse,
                              opt.reverse ? pbccTrue : pbccFalse,
+                             opt.include_meta ? pbccTrue : pbccFalse,
                              opt.start,
                              opt.end);
     if (PNR_STARTED == rslt) {

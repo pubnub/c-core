@@ -51,8 +51,8 @@ pubnub_chamebl_t pbcc_get_action_timetoken(struct pbcc_context* pb);
   */
 enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
                                         char const* channel,
-                                        char const* message_timetoken,
-                                        char const* action_timetoken);
+                                        pubnub_chamebl_t message_timetoken,
+                                        pubnub_chamebl_t action_timetoken);
 
 /** Prepares the 'get_actions' transaction, mostly by
     formatting the URI of the HTTP request.

@@ -372,6 +372,11 @@ public:
         d_.include_token = inc_token;
         return *this;
     }
+    history_options& include_meta(bool inc_meta)
+    {
+        d_.include_meta = inc_meta;
+        return *this;
+    }
     pubnub_history_options data() { return d_; }
 };
 
@@ -1328,12 +1333,15 @@ public:
 #endif /* PUBNUB_USE_OBJECTS_API */
 
 #if PUBNUB_USE_ACTIONS_API
-    futres add_action(std::string const& channel,
+    /// Starts a transaction that adds new type of message called action as a support for
+    /// user reactions on a published messages.
+    /// @see pubnub_add_message_action
+    futres add_message_action(std::string const& channel,
                       std::string const& message_timetoken,
                       enum pubnub_action_type actype,
                       std::string const& value)
     {
-        return doit(pubnub_add_action(
+        return doit(pubnub_add_message_action(
                         d_pb, 
                         channel.c_str(), 
                         message_timetoken.c_str(), 
@@ -1341,35 +1349,45 @@ public:
                         value.c_str()));
     }
 
+    /// Returns message timetoken if previous transaction had been add_action()
+    /// @see pubnub_get_message_timetoken()
     std::string get_message_timetoken()
     {
         pubnub_chamebl_t result = pubnub_get_message_timetoken(d_pb);
         return std::string(result.ptr, result.size);
     }
 
-    std::string get_action_timetoken()
+    /// Returns action timetoken if previous transaction had been add_action()
+    /// @see pubnub_get_action_timetoken()
+    std::string get_message_action_timetoken()
     {
-        pubnub_chamebl_t result = pubnub_get_action_timetoken(d_pb);
+        pubnub_chamebl_t result = pubnub_get_message_action_timetoken(d_pb);
         return std::string(result.ptr, result.size);
     }
 
-    futres remove_action(std::string const& channel,
+    /// Initiates transaction that deletes(removes) previously added action on a
+    /// published message.
+    /// @see pubnub_remove_message_action()
+    futres remove_message_action(std::string const& channel,
                          std::string const& message_timetoken,
                          std::string const& action_timetoken)
     {
-        return doit(pubnub_remove_action(
+        return doit(pubnub_remove_message_action(
                         d_pb,
                         channel.c_str(),
-                        message_timetoken.c_str(),
-                        action_timetoken.c_str()));
+                        pubnub_str_2_chamebl_t((char*)message_timetoken.c_str()),
+                        pubnub_str_2_chamebl_t((char*)action_timetoken.c_str())));
     }
 
-    futres get_actions(std::string const& channel,
+    /// Initiates transaction that returns all actions added on a given @p channel
+    /// between @p start and @p end action timetoken.
+    /// @see pubnub_get_message_actions()
+    futres get_message_actions(std::string const& channel,
                        std::string const& start,
                        std::string const& end,
                        size_t limit=0)
     {
-        return doit(pubnub_get_actions(
+        return doit(pubnub_get_message_actions(
                         d_pb,
                         channel.c_str(),
                         (start.size() > 0) ? start.c_str() : NULL,
@@ -1377,17 +1395,21 @@ public:
                         limit));
     }
 
-    futres get_actions_more()
+    /// @see pubnub_get_actions_more()
+    futres get_message_actions_more()
     {
-        return doit(pubnub_get_actions_more(d_pb));
+        return doit(pubnub_get_message_actions_more(d_pb));
     }
 
-    futres  history_with_actions(std::string const& channel,
+    /// Initiates transaction that returns all actions added on a given @p channel
+    /// between @p start and @p end message timetoken.
+    /// @see pubnub_history_with_actions()
+    futres history_with_message_actions(std::string const& channel,
                                  std::string const& start,
                                  std::string const& end,
                                  size_t limit=0)
     {
-        return doit(pubnub_history_with_actions(
+        return doit(pubnub_history_with_message_actions(
                         d_pb,
                         channel.c_str(),
                         (start.size() > 0) ? start.c_str() : NULL,
@@ -1395,9 +1417,10 @@ public:
                         limit));
     }
 
-    futres history_with_actions_more()
+    /// @see pubnub_history_with_actions_more()
+    futres history_with_message_actions_more()
     {
-        return doit(pubnub_history_with_actions_more(d_pb));
+        return doit(pubnub_history_with_message_actions_more(d_pb));
     }
 #endif /* PUBNUB_USE_ACTIONS_API */
     

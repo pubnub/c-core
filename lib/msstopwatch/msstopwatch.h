@@ -24,12 +24,12 @@
     measures.
 
 */
+#include "msstopwatch_pal.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
 
-typedef struct { int32_t t_ref; } pbmsref_t;
 typedef int32_t pbms_t;
 
 /** Starts a stopwatch. The result has no particular meaning, 
