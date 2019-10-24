@@ -1002,7 +1002,7 @@ pubnub_res pubnub_qt::remove_members(QString const& space_id,
 #endif /* PUBNUB_USE_OBJECTS_API */
 
 #if PUBNUB_USE_ACTIONS_API
-pubnub_res pubnub_qt::add_message_message_action(QString const& channel,
+pubnub_res pubnub_qt::add_message_action(QString const& channel,
                                  QString const& message_timetoken,
                                  pubnub_action_type actype,
                                  QString const& value)
