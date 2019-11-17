@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "pubnub_ccore_limits.h"
 
 
 /** @file pubnub_timers.h

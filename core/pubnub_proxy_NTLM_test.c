@@ -1,3 +1,7 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
+#include "pubnub_version_internal.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
@@ -5,8 +9,6 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_internal.h"
-#include "pubnub_version_internal.h"
 #include "pubnub_test_helper.h"
 #include "pubnub_proxy.h"
 

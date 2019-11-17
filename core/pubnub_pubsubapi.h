@@ -217,6 +217,11 @@ char const* pubnub_get_channel(pubnub_t* pb);
     ways: if @p channel_group is NULL, then @p channel cannot be NULL
     and you will subscribe only to the channel(s).
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel_group could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
+
     You can't subscribe if a transaction is in progress on the context.
 
     Also, you can't subscribe if there are unread messages in the

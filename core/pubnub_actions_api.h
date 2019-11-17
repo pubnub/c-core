@@ -23,15 +23,15 @@
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
-                                  char const* channel,
-                                  char const* message_timetoken,
-                                  enum pubnub_action_type actype,
-                                  char const* value);
+                                          char const* channel,
+                                          char const* message_timetoken,
+                                          enum pubnub_action_type actype,
+                                          char const* value);
 
 
 /** Searches the response(if previous transaction on the @p pb context had been
-    pubnub_add_action and was accomplished successfully) and retrieves timetoken of a message
-    action was added on.
+    pubnub_add_message_action and was accomplished successfully) and retrieves timetoken of
+    a message action was added on.
     If key expected is not found, preconditions(about right transaction) were not fulfilled,
     or error was encountered,
     returned structure has 0 'size' field and NULL 'ptr' field.
@@ -43,7 +43,7 @@ pubnub_chamebl_t pubnub_get_message_timetoken(pubnub_t* pb);
 
 
 /** Searches the response(if previous transaction on the @p pb context had been
-    pubnub_add_action and was accomplished successfully) and retrieves timetoken of a
+    pubnub_add_message_action and was accomplished successfully) and retrieves timetoken of a
     resently added action.
     If key expected is not found, preconditions were not fulfilled, or error was encountered,
     returned structure has 0 'size' field and NULL 'ptr' field.
@@ -68,16 +68,16 @@ pubnub_chamebl_t pubnub_get_message_action_timetoken(pubnub_t* pb);
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
-                                     char const* channel,
-                                     pubnub_chamebl_t message_timetoken,
-                                     pubnub_chamebl_t action_timetoken);
+                                             char const* channel,
+                                             pubnub_chamebl_t message_timetoken,
+                                             pubnub_chamebl_t action_timetoken);
 
 
 /** Initiates transaction that returns all actions added on a given @p channel between @p start
     and @p end action timetoken.
     The response to this transaction can be partial and than it contains the hyperlink string
     value to the rest.
-    @see pubnub_get_actions_more()
+    @see pubnub_get_message_actions_more()
     If there is no actions data, nor error description in the response it is considered
     format error.
     @param pb The pubnub context. Can't be NULL
@@ -92,10 +92,10 @@ enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_get_message_actions(pubnub_t* pb,
-                                   char const* channel,
-                                   char const* start,
-                                   char const* end,
-                                   size_t limit);
+                                           char const* channel,
+                                           char const* start,
+                                           char const* end,
+                                           size_t limit);
 
 
 /** This function expects previous transaction to be the one for reading the actions and
@@ -119,7 +119,7 @@ enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb);
     and @p end message timetoken.
     The response to this transaction can be partial and than it contains the hyperlink string
     value to the rest.
-    @see pubnub_history_with_actions_more()
+    @see pubnub_history_with_message_actions_more()
     If there is no actions data, nor error description in the response it is considered
     format error.
     @param pb The pubnub context. Can't be NULL
@@ -134,10 +134,10 @@ enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb);
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
-                                            char const* channel,
-                                            char const* start,
-                                            char const* end,
-                                            size_t limit);
+                                                    char const* channel,
+                                                    char const* start,
+                                                    char const* end,
+                                                    size_t limit);
 
 
 /** This function expects previous transaction to be the one for reading the history with
@@ -147,7 +147,7 @@ enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
     in the existing response context buffer which it uses for obtaining another
     part of the server response. Anotherwords, once the hyperlink is found in the existing
     response it is used for initiating new request and function than behaves as
-    pubnub_history_with_actions().
+    pubnub_history_with_message_actions().
     If there is no hyperlink encountered in the previous transaction response it
     returns success: PNR_GOT_ALL_ACTIONS meaning that the answer is complete.
     @param pb The pubnub context containing response buffer to be searched. Can't be NULL

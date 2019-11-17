@@ -100,6 +100,8 @@ void* socket_watcher_thread(void* arg)
 
 void pubnub_stop(void)
 {
+    pbauto_heartbeat_stop();
+    
     pthread_mutex_lock(&m_watcher.stoplock);
     m_watcher.stop_socket_watcher_thread = true;
     pthread_mutex_unlock(&m_watcher.stoplock);

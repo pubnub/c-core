@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#include "pubnub_server_limits.h"
 #include "pubnub_subscribe_v2.h"
 #include "pbcc_subscribe_v2.h"
 #include "pubnub_ccore_pubsub.h"
@@ -11,12 +12,6 @@
 #include "pubnub_json_parse.h"
 
 #include "pbpal.h"
-
-
-/** Minimal presence heartbeat interval supported by
-    Pubnub, in seconds.
-*/
-#define PUBNUB_MINIMAL_HEARTBEAT_INTERVAL 270
 
 
 struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void)
@@ -41,6 +36,10 @@ enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
     if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
+    }
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(p, &channel, &opt.channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
     }
 
     rslt = pbcc_subscribe_v2_prep(

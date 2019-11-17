@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_coreapi.h"
+#include "pubnub_internal.h"
 
+#include "pubnub_coreapi.h"
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pubnub_timers.h"
 
@@ -18,9 +18,70 @@
 #endif
 
 
+#if PUBNUB_USE_AUTO_HEARTBEAT
+#include "lib/pbstr_remove_from_list.h"
+static void update_channels_and_ch_groups(pubnub_t* pb,
+                                          const char* channel,
+                                          const char* channel_group)
+{
+    PUBNUB_ASSERT_OPT(pb_valid_ctx_ptr(pb));
+
+    if ((NULL == channel) && (NULL == channel_group)) {
+        /** pubnub_leave(default) releases both saved channels and channel groups */
+        pbauto_heartbeat_free_channelInfo(pb);
+        return;
+    }
+    if ((pb->channelInfo.channel != NULL) && (channel != NULL)) {
+        pbstr_remove_from_list(pb->channelInfo.channel, channel);
+        pbstr_free_if_empty(&pb->channelInfo.channel);
+    }
+    if ((pb->channelInfo.channel_group != NULL) && (channel_group != NULL)) {
+        pbstr_remove_from_list(pb->channelInfo.channel_group, channel_group);
+        pbstr_free_if_empty(&pb->channelInfo.channel_group);
+    }
+}
+
+/** Prepares channel and channel groups to be used in pubnub_leave() url request.
+    Checks for default(saved) values if both parameters @p channel nad @p channel_group
+    are passed as NULL.
+  */
+static void check_if_default_channel_and_groups(pubnub_t* p,
+                                                char const* channel,
+                                                char const* channel_group,
+                                                char const** prep_channel,
+                                                char const** prep_channel_group)
+{
+    PUBNUB_ASSERT_OPT(prep_channel != NULL);
+    PUBNUB_ASSERT_OPT(prep_channel_group != NULL);
+
+    if ((NULL == channel) && (NULL == channel_group)) {
+        /** Default read from pubnub context */
+        pbauto_heartbeat_read_channelInfo(p, prep_channel, prep_channel_group);
+    }
+    else {
+        *prep_channel = channel;
+        *prep_channel_group = channel_group;
+    }
+}
+#else
+#define update_channels_and_ch_groups(pb, channel, channel_group)
+#define check_if_default_channel_and_groups(p,                         \
+                                            channel,                   \
+                                            channel_group,             \
+                                            prep_channel,              \
+                                            prep_channel_group)        \
+    do {                                                               \
+        *(prep_channel) = (channel);                                   \
+        *(prep_channel_group) = (channel_group);                       \
+    } while(0)
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+
+
 enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* channel_group)
 {
     enum pubnub_res rslt;
+    char const* prep_channel;
+    char const* prep_channel_group;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
@@ -29,11 +90,17 @@ enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* chann
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-
-    rslt = pbcc_leave_prep(&p->core, channel, channel_group);
+    check_if_default_channel_and_groups(p,
+                                        channel,
+                                        channel_group,
+                                        &prep_channel,
+                                        &prep_channel_group);
+    
+    rslt = pbcc_leave_prep(&p->core, prep_channel, prep_channel_group);
     if (PNR_STARTED == rslt) {
         p->trans            = PBTT_LEAVE;
         p->core.last_result = PNR_STARTED;
+        update_channels_and_ch_groups(p, channel, channel_group);
         pbnc_fsm(p);
         rslt = p->core.last_result;
     }
@@ -109,6 +176,10 @@ enum pubnub_res pubnub_heartbeat(pubnub_t*   pb,
     if (!pbnc_can_start_transaction(pb)) {
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
+    }
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(pb, &channel, &channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
     }
 
     rslt = pbcc_heartbeat_prep(&pb->core, channel, channel_group);

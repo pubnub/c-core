@@ -57,9 +57,6 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
-
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */

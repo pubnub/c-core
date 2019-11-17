@@ -51,6 +51,11 @@
 #define PUBNUB_USE_ACTIONS_API 0
 #endif
 
+#if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
+#define PUBNUB_USE_AUTO_HEARTBEAT 0
+#endif
+#include "core/pubnub_auto_heartbeat.h"
+
 #if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0
 #elif PUBNUB_PROXY_API
@@ -388,7 +393,17 @@ struct pubnub_ {
     struct pubnub_multi_addresses spare_addresses;
 #endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
+
+    /** Subscribed channels and channel groups saved.
+        Exist when auto heartbeat support is enabled.
+      */
+    M_channelInfo()
     
+    /** Pubnub context fields for heartbeat info used by the module for keeping presence.
+        Exist when auto heartbeat support is enabled.
+      */
+    M_heartbeatInfo()
+
 #if PUBNUB_PROXY_API
 
     /** The type (protocol) of the proxy to use */

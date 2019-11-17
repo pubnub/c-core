@@ -95,6 +95,8 @@ enum pubnub_res {
     PNR_REPLY_TOO_BIG,
     /** An internal error in processing */
     PNR_INTERNAL_ERROR,
+    /** Ran out of dynamic memory */
+    PNR_OUT_OF_MEMORY,
     /** Encryption (and decryption) not supported */
     PNR_CRYPTO_NOT_SUPPORTED,
     /** Bad compression format or compressed data corrupted */

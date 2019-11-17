@@ -2,8 +2,9 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
-#include "pubnub_test_helper.h"
+#include "pubnub_internal.h"
 #include "pubnub_version_internal.h"
+#include "pubnub_test_helper.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
@@ -11,7 +12,6 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_internal.h"
 #include "pubnub_keep_alive.h"
 #include "pubnub_proxy.h"
 #include "pubnub_json_parse.h"

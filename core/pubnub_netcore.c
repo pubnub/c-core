@@ -154,6 +154,7 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 #endif
         switch (rslt) {
         case PNR_ADDR_RESOLUTION_FAILED:
+        case PNR_WAIT_CONNECT_TIMEOUT:
         case PNR_CONNECT_FAILED:
         case PNR_CONNECTION_TIMEOUT:
         case PNR_TIMEOUT:
@@ -329,7 +330,10 @@ static enum pubnub_res parse_pubnub_result(struct pubnub_* pb)
                            pbres,
                            pb->core.http_reply);
     }
-
+    else {
+        pbauto_heartbeat_start_timer(pb);
+    }
+    
     return pbres;
 }
 
@@ -1016,6 +1020,7 @@ next_state:
         }
         break;
     case PBS_RX_HTTP_VER:
+        pbauto_heartbeat_transaction_ongoing(pb);
         pbrslt = pbpal_line_read_status(pb);
         PUBNUB_LOG_TRACE("pb=%p PBS_RX_HTTP_VER: pbrslt=%d\n", pb, pbrslt);
         switch (pbrslt) {

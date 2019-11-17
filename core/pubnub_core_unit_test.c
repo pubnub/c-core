@@ -3,6 +3,7 @@
 #include "cgreen/mocks.h"
 
 #include "pubnub_internal.h"
+#include "pubnub_server_limits.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #if PUBNUB_USE_ADVANCED_HISTORY

@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_timers.h"
+#include "pubnub_internal.h"
 
+#include "pubnub_timers.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
-#include "pubnub_internal.h"
 
 
 int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms)

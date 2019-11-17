@@ -77,11 +77,6 @@
     */
 #define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
 
-/** Mininmal duration of the transaction timer, in milliseconds. You
- *  can't set less than this.
- */
-#define PUBNUB_MIN_TRANSACTION_TIMER 10000
-
 /** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
  *  You can't set less than this.
  */
@@ -146,9 +141,6 @@
 /* Maximum compressed message length allowed. Could be shortened by the user */
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
-
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
 
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */

@@ -110,6 +110,11 @@ struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
 /** The extended subscribe. Basically the same as pubnub_subscribe()
     but with options (except @p channel) given in @p opts.
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and channel groups could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
+
     Basic usage:
 
         struct pubnub_subscribe_options opt = pubnub_subscribe_defopts();
