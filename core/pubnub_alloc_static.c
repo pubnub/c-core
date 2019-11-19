@@ -69,6 +69,8 @@ int pubnub_free(pubnub_t *pb)
     pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
         PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
+        pubnub_disable_auto_heartbeat(pb);
+        pbauto_heartbeat_free_channelInfo(pb);
         pb->state = PBS_NULL;
 #if defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pb);

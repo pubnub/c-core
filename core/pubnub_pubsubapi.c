@@ -30,6 +30,11 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->cb        = NULL;
     p->user_data = NULL;
     p->flags.sent_queries = 0;
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    p->thumperIndex = UNASSIGNED;
+    p->channelInfo.channel = NULL;
+    p->channelInfo.channel_group = NULL;
+#endif /* PUBNUB_AUTO_HEARTBEAT */
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
@@ -174,6 +179,10 @@ enum pubnub_res pubnub_subscribe(pubnub_t*   p,
     if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
+    }
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(p, &channel, &channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
     }
 
     rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);

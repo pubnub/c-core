@@ -37,14 +37,6 @@
 
 #define PUBNUB_HAVE_SHA1 0
 
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
-
-/** Minimal presence heartbeat interval supported by
-    Pubnub, in seconds.
-*/
-#define PUBNUB_MINIMAL_HEARTBEAT_INTERVAL 270
-
 #if !defined(PUBNUB_USE_SUBSCRIBE_V2)
 /** If true (!=0) will enable using the subscribe v2 API, which
     provides filter expressions and more data about messages. */
@@ -71,11 +63,6 @@
     from published messages */
 #define PUBNUB_USE_ACTIONS_API 1
 #endif
-
-/** Mininmal duration of the transaction timer, in milliseconds. You
- * can't set less than this.
- */
-#define PUBNUB_MIN_TRANSACTION_TIMER 10000
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */

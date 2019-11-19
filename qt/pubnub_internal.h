@@ -18,16 +18,6 @@ struct pubnub_pal {
 /** The way we use Qt, blocking I/O is not applicable */
 #define PUBNUB_BLOCKING_IO_SETTABLE 0
 
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
-
-#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
-/** If true (!=0) will enable using the advanced history API, which
-    provides more data about (unread) messages. */
-#define PUBNUB_USE_ADVANCED_HISTORY 1
-#endif
-
-
 #include "core/pubnub_internal_common.h"
 
 

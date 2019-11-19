@@ -17,4 +17,4 @@
   */
 size_t pb_strnlen_s(const char *str, size_t strsz);
 
-#endif /* INC_Pb_STRNLEN_S */
+#endif /* INC_PB_STRNLEN_S */

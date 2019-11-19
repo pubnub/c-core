@@ -18,6 +18,11 @@
     various subtle differences in behavior when subscribing with state
     (as opposed to "regular" subscribing without state).
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel_group could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
+
     It is in all aspects quite similar to pubnub_subscribe(), except that
     the caller should provide a JSON object @p state.
 

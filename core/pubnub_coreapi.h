@@ -51,6 +51,11 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
     subscribe to another in the same context to avoid loosing
     messages. Also, it is useful for tracking presence.
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and channel groups could be passed as NULL which suggests default
+    behaviour in which case transaction uses channel and channel groups
+    that are already subscribed and leaves all of them.
+
     You can't leave if a transaction is in progress on the context.
 
     @param p The Pubnub context. Can't be NULL.  
@@ -115,6 +120,11 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
     channel_group.  This actually means "initiate a heartbeat
     transaction". It can be thought of as an update against the
     "presence database".
+
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel_group could be passed as NULL which suggests default
+    behaviour in which case transaction uses channel and channel groups
+    that are already subscribed.
 
     If transaction is successful, the response will be a available
     via pubnub_get() as one message, a JSON object. Following keys

@@ -3,6 +3,7 @@
 
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
+#include "pubnub_server_limits.h"
 #include "pubnub_advanced_history.h"
 #include "pubnub_version.h"
 #include "pubnub_json_parse.h"

@@ -61,6 +61,11 @@ struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void);
     pubnub_get_v2() - keep in mind that it can provide you with
     channel and channel group info.
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and channel groups could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
+
     Basic usage:
 
         struct pubnub_subscribe_v2_options opt = pubnub_subscribe_v2_defopts();
