@@ -109,8 +109,8 @@ pubnub_sync.a : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES)
 	ar rcs pubnub_sync.a $(OBJFILES) $(SYNC_INTF_OBJFILES)
 
-CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_ntf_callback_poller_poll.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
-CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pubnub_timer_list.o pbpal_ntf_callback_poller_poll.o pbpal_adns_sockets.o pubnub_dns_codec.o pbpal_ntf_callback_queue.o pbpal_ntf_callback_admin.o pbpal_ntf_callback_handle_timer_list.o pubnub_callback_subscribe_loop.o
+CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_ntf_callback_poller_poll.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c ../posix/pb_sleep_ms.c
+CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pubnub_timer_list.o pbpal_ntf_callback_poller_poll.o pbpal_adns_sockets.o pubnub_dns_codec.o pbpal_ntf_callback_queue.o pbpal_ntf_callback_admin.o pbpal_ntf_callback_handle_timer_list.o pubnub_callback_subscribe_loop.o pb_sleep_ms.o
 
 ifndef USE_DNS_SERVERS
 USE_DNS_SERVERS = 1
@@ -131,8 +131,8 @@ CALLBACK_INTF_OBJFILES += pubnub_parse_ipv6_addr.o
 endif
 
 ifeq ($(USE_AUTO_HEARTBEAT), 1)
-CALLBACK_INTF_SOURCEFILES += ../posix/pbauto_heartbeat_callback_posix.c
-CALLBACK_INTF_OBJFILES += pbauto_heartbeat_callback_posix.o
+CALLBACK_INTF_SOURCEFILES += ../core/pbauto_heartbeat_callback.c ../posix/pbauto_heartbeat_init_posix.c
+CALLBACK_INTF_OBJFILES += pbauto_heartbeat_callback.o pbauto_heartbeat_init_posix.o
 endif
 
 CFLAGS_CALLBACK = -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_SET_DNS_SERVERS=$(USE_DNS_SERVERS)

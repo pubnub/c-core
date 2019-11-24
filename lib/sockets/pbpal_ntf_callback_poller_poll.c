@@ -4,6 +4,7 @@
 #include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
 
 #include "pubnub_get_native_socket.h"
+#include "core/pb_sleep_ms.h"
 
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
@@ -163,12 +164,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
     int rslt;
 
     if (0 == data->size) {
-#if !defined(_WIN32)
-        struct timespec sleep_time = { 0, 1000000 };
-        nanosleep(&sleep_time, NULL);
-#else
-        Sleep(1);
-#endif
+        pb_sleep_ms(1);
         return 0;
     }
 

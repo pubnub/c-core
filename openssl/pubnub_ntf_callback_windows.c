@@ -1,11 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_ntf_callback.h"
-
-#include <winsock2.h>
-#include <windows.h>
-#include <process.h>
-
 #include "pubnub_internal.h"
+
+#include "core/pubnub_ntf_callback.h"
+#include "windows/pbtimespec_elapsed_ms.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 #include "core/pubnub_timer_list.h"
@@ -14,6 +11,8 @@
 #include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
 #include "core/pbpal_ntf_callback_queue.h"
 #include "core/pbpal_ntf_callback_handle_timer_list.h"
+
+#include <process.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,17 +23,12 @@
 #endif
 
 
-/** The number of Windows FILETIME intervals in a millisecond. Windows
-    FILETIME interval is 100 ns.  In practice, the actual resolution
-    may be (much) different, but, nominally it's 100ns.
-*/
-#define MSEC_IN_FILETIME_INTERVALS (10 * 1000)
-
-
 struct SocketWatcherData {
     _Guarded_by_(mutw) struct pbpal_poll_data* poll;
+    _Guarded_by_(stoplock) bool stop_socket_watcher_thread;
     CRITICAL_SECTION mutw;
     CRITICAL_SECTION timerlock;
+    CRITICAL_SECTION stoplock;
     HANDLE           thread_handle;
     DWORD            thread_id;
 #if PUBNUB_TIMERS_API
@@ -45,18 +39,6 @@ struct SocketWatcherData {
 
 
 static struct SocketWatcherData m_watcher;
-
-
-static int elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
-{
-    ULARGE_INTEGER prev;
-    ULARGE_INTEGER current;
-    prev.LowPart     = prev_timspec.dwLowDateTime;
-    prev.HighPart    = prev_timspec.dwHighDateTime;
-    current.LowPart  = timspec.dwLowDateTime;
-    current.HighPart = timspec.dwHighDateTime;
-    return (int)((current.QuadPart - prev.QuadPart) / MSEC_IN_FILETIME_INTERVALS);
-}
 
 
 int pbntf_watch_in_events(pubnub_t* pbp)
@@ -80,6 +62,14 @@ void socket_watcher_thread(void* arg)
 
     for (;;) {
         const DWORD ms = 100;
+        bool        stop_thread;
+
+        EnterCriticalSection(&m_watcher.stoplock);
+        stop_thread = m_watcher.stop_socket_watcher_thread;
+        LeaveCriticalSection(&m_watcher.stoplock);
+        if (stop_thread) {
+            break;
+        }
 
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
@@ -91,7 +81,7 @@ void socket_watcher_thread(void* arg)
             FILETIME current_time;
             int      elapsed;
             GetSystemTimeAsFileTime(&current_time);
-            elapsed = elapsed_ms(prev_time, current_time);
+            elapsed = pbtimespec_elapsed_ms(prev_time, current_time);
             if (elapsed > 0) {
                 EnterCriticalSection(&m_watcher.timerlock);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
@@ -106,9 +96,11 @@ void socket_watcher_thread(void* arg)
 
 int pbntf_init(void)
 {
+    InitializeCriticalSection(&m_watcher.stoplock);
     InitializeCriticalSection(&m_watcher.mutw);
     InitializeCriticalSection(&m_watcher.timerlock);
 
+    m_watcher.stop_socket_watcher_thread = false;
     m_watcher.poll = pbpal_ntf_callback_poller_init();
     if (NULL == m_watcher.poll) {
         return -1;
@@ -122,6 +114,7 @@ int pbntf_init(void)
                          errno);
         DeleteCriticalSection(&m_watcher.mutw);
         DeleteCriticalSection(&m_watcher.timerlock);
+        DeleteCriticalSection(&m_watcher.stoplock);
         pbpal_ntf_callback_queue_deinit(&m_watcher.queue);
         pbpal_ntf_callback_poller_deinit(&m_watcher.poll);
         return -1;
@@ -129,6 +122,16 @@ int pbntf_init(void)
     m_watcher.thread_id = GetThreadId(m_watcher.thread_handle);
 
     return 0;
+}
+
+
+void pubnub_stop(void)
+{
+    pbauto_heartbeat_stop();
+
+    EnterCriticalSection(&m_watcher.stoplock);
+    m_watcher.stop_socket_watcher_thread = true;
+    LeaveCriticalSection(&m_watcher.stoplock);
 }
 
 

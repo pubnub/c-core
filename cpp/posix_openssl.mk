@@ -110,7 +110,7 @@ openssl/fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES) $(SYNC_INT
 # same until the last `_`, then it's `poll` vs `select.
 SOCKET_POLLER_C=../lib/sockets/pbpal_ntf_callback_poller_poll.c
 
-CALLBACK_INTF_SOURCEFILES= ../openssl/pubnub_ntf_callback_posix.c ../openssl/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c $(SOCKET_POLLER_C) ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
+CALLBACK_INTF_SOURCEFILES= ../openssl/pubnub_ntf_callback_posix.c ../openssl/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c $(SOCKET_POLLER_C) ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c ../posix/pb_sleep_ms.c
 
 ifndef USE_DNS_SERVERS
 USE_DNS_SERVERS = 1
@@ -129,7 +129,7 @@ CALLBACK_INTF_SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
 endif
 
 ifeq ($(USE_AUTO_HEARTBEAT), 1)
-CALLBACK_INTF_SOURCEFILES += ../openssl/pbauto_heartbeat_callback_posix.c
+CALLBACK_INTF_SOURCEFILES += ../core/pbauto_heartbeat_callback.c ../openssl/pbauto_heartbeat_init_posix.c
 endif
 
 CFLAGS_CALLBACK = -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_SET_DNS_SERVERS=$(USE_DNS_SERVERS)
