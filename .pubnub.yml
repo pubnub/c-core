@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: 2.12.0
+version: 2.12.1
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.1
+    date: Nov 22, 2019
+    changes:
+      - type: enhancement
+        text: Add support for automatic sending of heartbeat messages on Windows, callback.
   - version: v2.12.0
     date: Nov 15, 2019
     changes:

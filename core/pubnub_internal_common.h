@@ -54,7 +54,7 @@
 #if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
 #define PUBNUB_USE_AUTO_HEARTBEAT 0
 #endif
-#include "core/pubnub_auto_heartbeat.h"
+#include "core/pbauto_heartbeat.h"
 
 #if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0

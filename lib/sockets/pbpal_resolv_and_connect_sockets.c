@@ -585,7 +585,6 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
             "Error: pbpal_check_connect(pb=%p)---> getsockopt() == SOCKET_ERROR\n"
             "       WSAGetLastError()=%d\n",
             pb,
-            rslt,
             WSAGetLastError());
         return pbpal_connect_failed;
     }
