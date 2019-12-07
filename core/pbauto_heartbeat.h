@@ -29,6 +29,14 @@ struct pubnub_heartbeat_data {
 
 struct HeartbeatWatcherData {
     struct pubnub_heartbeat_data heartbeat_data[PUBNUB_MAX_HEARTBEAT_THUMPERS] pubnub_guarded_by(mutw);
+#if !defined(PUBNUB_CALLBACK_API)
+    /** Array of thumper indices for which auto heartbeat transactions are currently in progress.
+        Used in sync environment.
+      */
+    unsigned heartbeat_in_progress_index_array[PUBNUB_MAX_HEARTBEAT_THUMPERS] pubnub_guarded_by(mutw);
+    /** Number of auto heartbeat transactions currently in progress. */
+    unsigned heartbeats_in_progress pubnub_guarded_by(mutw);
+#endif
     unsigned thumpers_in_use pubnub_guarded_by(mutw);
     /** Times left for each of the thumper timers in progress */
     size_t heartbeat_timers[PUBNUB_MAX_HEARTBEAT_THUMPERS] pubnub_guarded_by(timerlock);
