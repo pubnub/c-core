@@ -1,4 +1,4 @@
-SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../lib/sockets/pbpal_handle_socket_error.c ../openssl/pbpal_openssl.c ../openssl/pbpal_connect_openssl.c  ../openssl/pbpal_add_system_certs_posix.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_free_with_timeout_std.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../lib/md5/md5.c ../lib/base64/pbbase64.c ../lib/pb_strnlen_s.c ../core/pubnub_helper.c pubnub_version_posix.cpp ../posix/pubnub_generate_uuid_posix.c ../openssl/pbpal_openssl_blocking_io.c ../core/pubnub_crypto.c ../core/pubnub_coreapi_ex.c ../openssl/pbaes256.c ../posix/msstopwatch_monotonic_clock.c ../posix/pbtimespec_elapsed_ms.c ../core/pubnub_url_encode.c ../core/pubnub_memory_block.c
+SOURCEFILES = ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../lib/sockets/pbpal_handle_socket_error.c ../openssl/pbpal_openssl.c ../openssl/pbpal_connect_openssl.c  ../openssl/pbpal_add_system_certs_posix.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_free_with_timeout_std.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c ../lib/md5/md5.c ../lib/base64/pbbase64.c ../lib/pb_strnlen_s.c ../core/pubnub_helper.c pubnub_version_posix.cpp ../posix/pubnub_generate_uuid_posix.c ../openssl/pbpal_openssl_blocking_io.c ../core/pubnub_crypto.c ../core/pubnub_coreapi_ex.c ../openssl/pbaes256.c ../posix/msstopwatch_monotonic_clock.c ../posix/pbtimespec_elapsed_ms.c ../core/pubnub_url_encode.c ../core/pubnub_memory_block.c ../posix/pb_sleep_ms.c
 
 ifndef ONLY_PUBSUB_API
 ONLY_PUBSUB_API = 0
@@ -65,7 +65,7 @@ SOURCEFILES += ../core/pbcc_actions_api.c ../core/pubnub_actions_api.c
 endif
 
 ifeq ($(USE_AUTO_HEARTBEAT), 1)
-SOURCEFILES += ../lib/pbstr_remove_from_list.c
+SOURCEFILES += ../core/pbauto_heartbeat.c ../openssl/pbauto_heartbeat_init_posix.c ../lib/pbstr_remove_from_list.c
 endif
 
 CFLAGS =-g -I .. -I . -I ../openssl -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT)
@@ -85,10 +85,6 @@ endif
 all: openssl/pubnub_sync_sample openssl/pubnub_callback_sample openssl/pubnub_callback_cpp11_sample openssl/cancel_subscribe_sync_sample openssl/subscribe_publish_callback_sample openssl/futres_nesting_sync openssl/fntest_runner openssl/futres_nesting_callback openssl/futres_nesting_callback_cpp11
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/srand_from_pubnub_time.c
-
-ifeq ($(USE_AUTO_HEARTBEAT), 1)
-SYNC_INTF_SOURCEFILES += ../core/pbauto_heartbeat_sync.c
-endif
 
 openssl/pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
@@ -110,7 +106,7 @@ openssl/fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES) $(SYNC_INT
 # same until the last `_`, then it's `poll` vs `select.
 SOCKET_POLLER_C=../lib/sockets/pbpal_ntf_callback_poller_poll.c
 
-CALLBACK_INTF_SOURCEFILES= ../openssl/pubnub_ntf_callback_posix.c ../openssl/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c $(SOCKET_POLLER_C) ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c ../posix/pb_sleep_ms.c
+CALLBACK_INTF_SOURCEFILES= ../openssl/pubnub_ntf_callback_posix.c ../openssl/pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c $(SOCKET_POLLER_C) ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
 
 ifndef USE_DNS_SERVERS
 USE_DNS_SERVERS = 1
@@ -126,10 +122,6 @@ endif
 
 ifeq ($(USE_IPV6), 1)
 CALLBACK_INTF_SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
-endif
-
-ifeq ($(USE_AUTO_HEARTBEAT), 1)
-CALLBACK_INTF_SOURCEFILES += ../core/pbauto_heartbeat_callback.c ../openssl/pbauto_heartbeat_init_posix.c
 endif
 
 CFLAGS_CALLBACK = -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_SET_DNS_SERVERS=$(USE_DNS_SERVERS)

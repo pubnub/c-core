@@ -4,6 +4,10 @@
 
 #include <process.h>
 
+#if !defined PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB
+#define PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB 0
+#endif
+
 int pbauto_heartbeat_init(struct HeartbeatWatcherData* m_watcher)
 {
     InitializeCriticalSection(&m_watcher->stoplock);

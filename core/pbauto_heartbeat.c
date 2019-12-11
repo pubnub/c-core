@@ -12,6 +12,7 @@
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi.h"
 #include "core/pubnub_free_with_timeout.h"
+#include "core/pubnub_blocking_io.h"
 #include "lib/pb_strnlen_s.h"
 #include "core/pb_sleep_ms.h"
 #include "core/pubnub_assert.h"
@@ -60,9 +61,6 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
     if (PUBNUB_ORIGIN_SETTABLE) {
         pb_clone->origin = pb->origin;
     }
-#if PUBNUB_BLOCKING_IO_SETTABLE
-    pb_clone->options.use_blocking_io = pb->options.use_blocking_io;
-#endif /* PUBNUB_BLOCKING_IO_SETTABLE */
     pb_clone->options.use_http_keep_alive = pb->options.use_http_keep_alive;
 #if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
     pb_clone->options.ipv6_connectivity = pb->options.ipv6_connectivity;
@@ -102,6 +100,16 @@ static bool pubsub_keys_changed(pubnub_t const* pb_clone, pubnub_t const* pb)
            || (pb_clone->core.subscribe_key != pb->core.subscribe_key);
 }
 
+#if defined(PUBNUB_CALLBACK_API)
+#define add_heartbeat_in_progress(thumper_index)
+#else
+static void add_heartbeat_in_progress(unsigned thumper_index)
+{
+    pubnub_mutex_lock(m_watcher.mutw);
+    m_watcher.heartbeat_in_progress_index_array[m_watcher.heartbeats_in_progress++] = thumper_index;
+    pubnub_mutex_unlock(m_watcher.mutw);
+}
+#endif
 
 static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
 {
@@ -118,6 +126,8 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
     pubnub_mutex_unlock(heartbeat_pb->monitor);
 
     if (keys_changed) {
+        /** Used in sync environment while for callback it's an empty macro */
+        add_heartbeat_in_progress(pb->thumperIndex);
         pubnub_mutex_unlock(pb->monitor);
         pubnub_cancel(heartbeat_pb);
         return;
@@ -132,7 +142,7 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
             "--->heartbeat_thump(pb=%p, heartbeat_pb=%p).\n", pb, heartbeat_pb);
         copy_context_settings(heartbeat_pb, pb);
         res = pubnub_heartbeat(heartbeat_pb, channel, channel_group);
-        if (res != PNR_STARTED) {
+        if ((res != PNR_STARTED) && (res != PNR_OK)) {
             PUBNUB_LOG_ERROR("heartbeat_thump(pb=%p, heartbeat_pb) - "
                              "pubnub_heartbeat(heartbeat_pb=%p) returned "
                              "unexpected: %d('%s')\n",
@@ -141,6 +151,8 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
                              res,
                              pubnub_res_2_string(res));
         }
+        /** Used in sync environment while for callback it's an empty macro */
+        add_heartbeat_in_progress(pb->thumperIndex);
     }
     pubnub_mutex_unlock(pb->monitor);
 }
@@ -209,6 +221,7 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
     pubnub_mutex_unlock(pb->monitor);
 
     pubnub_mutex_lock(pb_new->monitor);
+    pubnub_set_non_blocking_io(pb_new);
     pb_new->thumperIndex = i;
     pubnub_mutex_unlock(pb_new->monitor);
 
@@ -216,13 +229,42 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
 }
 
 
-static void take_the_timer_out(unsigned* indexes, unsigned i, unsigned* active_timers)
+void pbauto_take_the_node_out(unsigned* indexes, unsigned i, unsigned* dimension)
 {
-    unsigned* timer_out = indexes + i;
-    --*active_timers;
-    memmove(timer_out, timer_out + 1, (*active_timers - i) * sizeof(unsigned));
+    unsigned* node_out = indexes + i;
+    --*dimension;
+    memmove(node_out, node_out + 1, (*dimension - i) * sizeof(unsigned));
 }
 
+#if defined(PUBNUB_CALLBACK_API)
+#define handle_heartbeats_in_progress()
+#else
+static void handle_heartbeats_in_progress(void)
+{
+    unsigned  i;
+    enum pubnub_res result;
+    struct pubnub_heartbeat_data* heartbeat_data = m_watcher.heartbeat_data;
+    unsigned* heartbeat_indexes = m_watcher.heartbeat_in_progress_index_array;
+
+    pubnub_mutex_lock(m_watcher.mutw);
+    for (i = 0; i < m_watcher.heartbeats_in_progress;) {
+        pubnub_t* heartbeat_pb = heartbeat_data[heartbeat_indexes[i]].heartbeat_pb;
+        result = pubnub_last_result(heartbeat_pb);
+        if (result != PNR_STARTED) {
+            /** auto heartbeat transaction is finished(not in progress any more) */
+            pbauto_take_the_node_out(heartbeat_indexes, i, &m_watcher.heartbeats_in_progress);
+
+            pubnub_mutex_lock(heartbeat_pb->monitor);
+            auto_heartbeat_callback(heartbeat_pb, heartbeat_pb->trans, result, NULL);
+            pubnub_mutex_unlock(heartbeat_pb->monitor);
+        }
+        else {
+            ++i;
+        }
+    }
+    pubnub_mutex_unlock(m_watcher.mutw);
+}
+#endif
 
 static void handle_heartbeat_timers(int elapsed_ms)
 {
@@ -240,7 +282,7 @@ static void handle_heartbeat_timers(int elapsed_ms)
             pubnub_t* heartbeat_pb;
 
             /* Taking out one that has expired */
-            take_the_timer_out(indexes, i, &active_timers);
+            pbauto_take_the_node_out(indexes, i, &active_timers);
 
             pubnub_mutex_lock(m_watcher.mutw);
             pb           = thumper->pb;
@@ -252,8 +294,9 @@ static void handle_heartbeat_timers(int elapsed_ms)
                 if (NULL == heartbeat_pb) {
                     continue;
                 }
+#if defined(PUBNUB_CALLBACK_API)
                 pubnub_register_callback(heartbeat_pb, auto_heartbeat_callback, NULL);
-
+#endif
                 pubnub_mutex_lock(m_watcher.mutw);
                 thumper->heartbeat_pb = heartbeat_pb;
                 pubnub_mutex_unlock(m_watcher.mutw);
@@ -290,7 +333,8 @@ pubnub_watcher_t pbauto_heartbeat_watcher_thread(void* arg)
         if (stop_thread) {
             break;
         }
-
+        /** Used in sync environment while in callback it is an empty macro */
+        handle_heartbeats_in_progress();
         pb_sleep_ms(1);
 #if !defined(_WIN32)
         monotonic_clock_get_time(&timspec);
@@ -314,7 +358,7 @@ pubnub_watcher_t pbauto_heartbeat_watcher_thread(void* arg)
 
 
 /** Initializes auto heartbeat thumper for @p pb context and if its called for
-   the first time starts auto heartbeat watcher thread.
+    the first time starts auto heartbeat watcher thread.
   */
 static int form_heartbeat_thumper(pubnub_t* pb)
 {
@@ -328,7 +372,6 @@ static int form_heartbeat_thumper(pubnub_t* pb)
         pbauto_heartbeat_init(&m_watcher);
         s_began = true;
     }
-
     pubnub_mutex_lock(m_watcher.mutw);
     if (m_watcher.thumpers_in_use >= PUBNUB_MAX_HEARTBEAT_THUMPERS) {
         PUBNUB_LOG_WARNING(
@@ -352,7 +395,9 @@ static int form_heartbeat_thumper(pubnub_t* pb)
                     pubnub_mutex_unlock(m_watcher.mutw);
                     return -1;
                 }
+#if defined(PUBNUB_CALLBACK_API)
                 pubnub_register_callback(heartbeat_pb, auto_heartbeat_callback, NULL);
+#endif
                 thumper->heartbeat_pb = heartbeat_pb;
             }
             pb->thumperIndex    = i;
@@ -423,7 +468,7 @@ static void auto_heartbeat_stop_timer(unsigned thumper_index)
     for (i = 0, indexes = m_watcher.timer_index_array; i < active_timers; i++) {
         if (indexes[i] == thumper_index) {
             /* Taking timer out */
-            take_the_timer_out(indexes, i, &active_timers);
+            pbauto_take_the_node_out(indexes, i, &active_timers);
             m_watcher.active_timers = active_timers;
             break;
         }
@@ -464,11 +509,16 @@ static void release_thumper(unsigned thumper_index)
     }
 }
 
-/** If it is a thumper pubnub context, it is exempted from some usual procedures. */
+/** If it is a thumper pubnub context, or one that doesn't have thumper assigned, it is
+    exempted from auto heartbeat procedures.
+  */
 static bool is_exempted(pubnub_t const* pb, unsigned thumper_index)
 {
     pubnub_t const* pb_exempted;
 
+    if (UNASSIGNED == thumper_index) {
+        return true;
+    }
     pubnub_mutex_lock(m_watcher.mutw);
     pb_exempted = m_watcher.heartbeat_data[thumper_index].heartbeat_pb;
     pubnub_mutex_unlock(m_watcher.mutw);

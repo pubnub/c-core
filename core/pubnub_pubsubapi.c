@@ -30,11 +30,6 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->cb        = NULL;
     p->user_data = NULL;
     p->flags.sent_queries = 0;
-#if PUBNUB_USE_AUTO_HEARTBEAT
-    p->thumperIndex = UNASSIGNED;
-    p->channelInfo.channel = NULL;
-    p->channelInfo.channel_group = NULL;
-#endif /* PUBNUB_AUTO_HEARTBEAT */
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
@@ -46,6 +41,11 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->options.use_blocking_io = true;
 #endif
 #endif /* PUBNUB_BLOCKING_IO_SETTABLE */
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    p->thumperIndex = UNASSIGNED;
+    p->channelInfo.channel = NULL;
+    p->channelInfo.channel_group = NULL;
+#endif /* PUBNUB_AUTO_HEARTBEAT */
 
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
