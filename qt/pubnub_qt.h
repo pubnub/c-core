@@ -470,6 +470,11 @@ public:
         It goes  both ways: if @p channel_group is empty, then @p channel
         cannot be empty and you will subscribe only to the channel(s).
 
+        When auto heartbeat is enabled at compile time both @p channel
+        and @p channel_group could be passed as empty strings which suggests
+        default behaviour in which case transaction uses channel and
+        channel groups that are already subscribed.
+
         You can't subscribe if a transaction is in progress on the context.
 
         Also, you can't subscribe if there are unread messages in the
@@ -504,6 +509,11 @@ public:
         pbresult = pb.subscribe_v2(pn, "my_channel", opt.filter_expr("'key' == value"));
         ...
 
+        When auto heartbeat is enabled at compile time both @p channel and
+        channel_groups within subscribe_v2 @p opt options could be passed as empty
+        strings which suggests default behaviour in which case transaction uses
+        channel and channel groups that are already subscribed.
+
         @param channel The string with the channel name (or comma-delimited list of
                        channel names) to subscribe for.
         @param opt Subscribe V2 options
@@ -525,6 +535,11 @@ public:
         transaction".  You should leave channel(s) when you want to
         subscribe to another in the same context to avoid loosing
         messages. Also, it is useful for tracking presence.
+
+        When auto heartbeat is enabled at compile time both @p channel
+        and @p channel group could be passed as empty strings which
+        suggests default behaviour in which case transaction uses channel
+        and channel groups that are already subscribed and leaves them all.
 
         You can't leave if a transaction is in progress on the context.
 
@@ -705,6 +720,61 @@ public:
        json value is empty returns an empty map.
      */
     QMap<QString, size_t> get_channel_message_counts();
+
+    /* Inform Pubnub that we're still working on @p channel and/or @p
+       channel_group.  This actually means "initiate a heartbeat
+       transaction". It can be thought of as an update against the
+       "presence database".
+
+       If transaction is successful, the response will be a available
+       via get() as one message, a JSON object. Following keys
+       are always present:
+       - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+       - "message": the string/message describing the status ("OK"...)
+       - "service": should be "Presence"
+
+       If @p channel is empty, then @p channel_group cannot be and
+       you will subscribe only to the channel group(s). It goes both ways:
+       if @p channel_group is empty, then @p channel can't be and
+       you will subscribe only to the channel(s).
+
+       When auto heartbeat is enabled at compile time both @p channel
+       and @p channel_group could be passed as empty strings which
+       suggests default behaviour in which case transaction uses channel
+       and channel groups that are already subscribed.
+
+       You can't initiate heartbeat if a transaction is in progress
+       on the context.
+
+       @param channel The string with the channel name (or comma-delimited
+                      list of channel names) to get presence info for.
+       @param channel_group The string with the channel group name (or
+                            comma-delimited list of channel group names)
+                            to get presence info for.
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res heartbeat(QString const& channel, QString const& channel_group = "");
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) list of channels .
+     */
+    pubnub_res heartbeat(QStringList const& channel, QString const& channel_group = "") {
+        return heartbeat(channel.join(","), channel_group);
+    }
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) list of channel groups.
+     */
+    pubnub_res heartbeat(QString const& channel, QStringList const& channel_group) {
+        return heartbeat(channel, channel_group.join(","));
+    }
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) lists of them.
+     */
+    pubnub_res heartbeat(QStringList const& channel, QStringList const& channel_group) {
+        return heartbeat(channel, channel_group.join(","));
+    }
 
     /** Get the currently present users on a @p channel and/or @p
         channel_group. This actually means "initiate a here_now
@@ -1876,6 +1946,33 @@ public:
     pubnub_res history_with_message_actions_more();
 #endif /* PUBNUB_USE_ACTIONS_API */
 
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /** Enables keeping presence on subscribed channels and channel groups
+     * by performing heartbeat transacton periodically
+     * @param period_sec auto heartbeat period in seconds. If it is shorter than minimal
+                         permitted uses minimal permitted 
+     * @return 0  OK, -1 auto heartbeat not supported
+     */
+    int enable_auto_heartbeat(size_t period_sec);
+
+    /** Sets(changes) heartbeat period for auto heartbeat on subscribed channels
+     * and channel groups. Returns an error if auto heartbeat is disabled.
+     * @param period_sec new auto heartbeat period in seconds. If it is shorter than
+                         minimal permitted uses minimal permitted
+     * @return 0  OK, -1 auto heartbeat is disabled
+     */
+    int set_heartbeat_period(size_t period_sec);
+
+    /** Disables auto heartbeat on subscribed channels and channel groups
+     */
+    void disable_auto_heartbeat();
+
+    /** Returns whether(, or not) auto heartbeat on subscribed channels and channel
+     * groups is enabled
+     */
+    bool is_auto_heartbeat_enabled();
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
      */
@@ -1947,6 +2044,9 @@ private slots:
 #ifndef QT_NO_SSL
     void sslErrors(QNetworkReply* reply, QList<QSslError> const& errors);
 #endif
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    void auto_heartbeatTimeout();
+#endif
 
 signals:
     /** This signal is sent on the outcome of the transaction/operation.
@@ -1961,6 +2061,29 @@ private:
 
     /// Common function which processes the data received in response
     pubnub_res finish(QByteArray const &data, int http_code);
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /// Checks whether to use saved channels and channel groups
+    bool check_if_default_channel_and_groups(QString const& channel,
+                                             QString const& channel_group,
+                                             QString& prep_channels,
+                                             QString& prep_channel_groups);
+    /// Prepares channels and channel groups to be used in transaction request
+    void auto_heartbeat_prepare_channels_and_ch_groups(QString const& channel,
+                                                       QString const& channel_group,
+                                                       QString& prep_channels,
+                                                       QString& prep_channel_groups);
+    /// Removes @p channel list of channels and @p channel_group channel groups
+    /// from saved(subscribed) channels and channel groups
+    void update_channels_and_ch_groups(QString const& channel,
+                                       QString const& channel_group);
+    /// Starts auto heartbeat timer after corresponding transactions
+    void start_auto_heartbeat_timer(pubnub_res pbres);
+    /// Stops auto heartbeat inconditionally
+    void stop_auto_heartbeat();
+    /// Stops auto heartbeat before corresponding transactions
+    void stop_auto_heartbeat_before_transaction(pubnub_trans transaction);
+#endif
 
     /// The publish key
     QByteArray d_pubkey;
@@ -1992,8 +2115,7 @@ private:
 #ifndef QT_NO_SSL
     /// SSL options
     ssl_opts d_ssl_opts;
-#endif
-
+#endif    
     /// Transaction timeout duration, in milliseconds
     int d_transaction_timeout_duration_ms;
 
@@ -2002,6 +2124,18 @@ private:
 
     /// Transaction timer
     QTimer *d_transactionTimer;
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /// Auto heartbeat is enabled and pulsing whenever subscription is not in progress
+    bool d_auto_heartbeat_enabled;
+    /// Auto heartbeat period in seconds
+    size_t d_auto_heartbeat_period_sec;
+    /// Auto heartbeat timer
+    QTimer *d_auto_heartbeatTimer;
+    /// Subscribed channels
+    QStringList d_channels;
+    /// Subscribed channel groups
+    QStringList d_channel_groups;
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
     /// To Keep-Alive or not to Keep-Alive
     bool d_use_http_keep_alive;

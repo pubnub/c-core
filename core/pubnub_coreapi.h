@@ -52,9 +52,9 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
     messages. Also, it is useful for tracking presence.
 
     When auto heartbeat is enabled at compile time both @p channel
-    and channel groups could be passed as NULL which suggests default
-    behaviour in which case transaction uses channel and channel groups
-    that are already subscribed and leaves all of them.
+    and @p channel group could be passed as NULL which suggests
+    default behaviour in which case transaction uses channel and
+    channel groups that are already subscribed and leaves them all.
 
     You can't leave if a transaction is in progress on the context.
 
@@ -138,14 +138,15 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
     if @p channel_group is NULL, then @p channel cannot be NULL and
     you will subscribe only to the channel(s).
 
-    You can't get list of currently present users if a transaction is
-    in progress on the context.
+    You can't initiate heartbeat if a transaction is in progress
+    on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name (or
-    comma-delimited list of channel names) to get presence info for.
-    @param channel_group The string with the channel name (or
-    comma-delimited list of channel group names) to get presence info for.
+    @param channel The string with the channel name (or comma-delimited
+                   list of channel names) to get presence info for.
+    @param channel_group The string with the channel group name (or
+                         comma-delimited list of channel group names)
+                         to get presence info for.
 
     @return #PNR_STARTED on success, an error otherwise
 */

@@ -64,5 +64,14 @@
 #define PUBNUB_USE_ACTIONS_API 1
 #endif
 
+#if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
+/** If true (!=0) will enable using the Auto Heartbeat Thumps(beats), which is a feature
+    that enables keeping presence of the given uuids on channels and channel groups during
+    longer periods without subscription.
+    This gives more freedom to the user while coding whom, othrewise, should take care of
+    these things all by himself using pubnub_heartbeat() transaction */
+#define PUBNUB_USE_AUTO_HEARTBEAT 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */

@@ -2,7 +2,7 @@
 #if !defined INC_PUBNUB_INTERNAL
 #define      INC_PUBNUB_INTERNAL
 
-
+#include <QtGlobal>
 
 typedef int pb_socket_t;
 
