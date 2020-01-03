@@ -3,6 +3,7 @@
 
 extern "C" {
 #include "core/pubnub_version_internal.h"
+#include "core/pubnub_ccore_limits.h"
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_assert.h"
@@ -14,6 +15,9 @@ extern "C" {
 #if PUBNUB_USE_OBJECTS_API
 #include "core/pbcc_objects_api.h"
 #endif
+#if PUBNUB_USE_AUTO_HEARTBEAT
+#include "lib/pbstr_remove_from_list.h"
+#endif
 }
 
 #include <QtNetwork>
@@ -21,6 +25,8 @@ extern "C" {
 /* Minimal acceptable message length difference, between unpacked and packed message, in percents */
 #define PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO 10
 #define GZIP_HEADER_AND_FOOTER_LENGTH 18
+/* One second in milliseconds */
+#define UNIT_IN_MILLI 1000
 #if PUBNUB_THREADSAFE
 #define KEEP_THREAD_SAFE() QMutexLocker lk(&d_mutex)
 #else
@@ -45,6 +51,10 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     d_transaction_timeout_duration_ms(10000)
     , d_transaction_timed_out(false)
     , d_transactionTimer(new QTimer(this))
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    , d_auto_heartbeat_enabled(false)
+    , d_auto_heartbeatTimer(new QTimer(this))
+#endif
     , d_use_http_keep_alive(true)
     , d_mutex(QMutex::Recursive)
 {
@@ -93,9 +103,211 @@ static QString GetOsName()
  #endif
  }
 
+#if PUBNUB_USE_AUTO_HEARTBEAT
+#define PUBNUB_MIN_HEARTBEAT_PERIOD                  \
+    (PUBNUB_MIN_TRANSACTION_TIMER / UNIT_IN_MILLI)
+bool pubnub_qt::check_if_default_channel_and_groups(QString const& channel,
+                                                    QString const& channel_group,
+                                                    QString& prep_channels,
+                                                    QString& prep_channel_groups)
+{
+    if (channel.isEmpty() && channel_group.isEmpty()) {
+        /* Read channel info */
+        prep_channels = d_channels.join(",");
+        prep_channel_groups = d_channel_groups.join(",");        
+        return true;
+    }
+    prep_channels = channel;
+    prep_channel_groups = channel_group;
+    
+    return false;
+}
+
+void pubnub_qt::auto_heartbeat_prepare_channels_and_ch_groups(QString const& channel,
+                                                              QString const& channel_group,
+                                                              QString& prep_channels,
+                                                              QString& prep_channel_groups)
+{
+    if (check_if_default_channel_and_groups(channel,
+                                            channel_group,
+                                            prep_channels,
+                                            prep_channel_groups) == true) {
+        return;
+    }
+    /* Write channel info */
+    d_channels = channel.split(',', QString::SkipEmptyParts);
+    d_channel_groups = channel_group.split(',', QString::SkipEmptyParts);
+}
+
+
+static void remove_from_list(QStringList& list, QStringList const& to_remove)
+{
+    int i;
+    for (i = 0; i < to_remove.size(); ++i) {
+        list.removeAll(to_remove.at(i));
+    }
+}
+
+
+void pubnub_qt::update_channels_and_ch_groups(QString const& channel,
+                                              QString const& channel_group)
+{
+    if (channel.isEmpty() && channel_group.isEmpty()) {
+        d_channels.clear();
+        d_channel_groups.clear();
+    }
+    if (channel.isEmpty() == false) {
+        remove_from_list(d_channels, channel.split(',', QString::SkipEmptyParts));
+    }
+    if (channel_group.isEmpty() == false) {
+        remove_from_list(d_channel_groups, channel_group.split(',', QString::SkipEmptyParts));
+    }
+}
+
+
+void pubnub_qt::auto_heartbeatTimeout()
+{
+    KEEP_THREAD_SAFE();
+    /* Discharge reply buffer */
+    get_all();
+    if (d_channels.empty() && d_channel_groups.empty()) {
+        d_auto_heartbeatTimer->stop();
+        return;
+    }
+    pubnub_res result(heartbeat(d_channels, d_channel_groups));
+    if (result == PNR_IN_PROGRESS) {
+        /* If another transaction is in progress on the context try again
+           with new timeout event
+         */
+        d_auto_heartbeatTimer->start(3);
+    }
+    else if (result != PNR_STARTED) {
+        qDebug() << "auto heartbeat(pbcc=" << d_context <<") failed. - result: '"
+                 << pubnub_res_2_string(result) << "'\n";
+        /* Try again */
+        d_auto_heartbeatTimer->start(3);
+    }
+}
+
+
+int pubnub_qt::set_heartbeat_period(size_t period_sec)
+{
+    KEEP_THREAD_SAFE();
+    if (false == d_auto_heartbeat_enabled) {
+        return -1;
+    }
+    d_auto_heartbeat_period_sec =
+        period_sec < PUBNUB_MIN_HEARTBEAT_PERIOD ? PUBNUB_MIN_HEARTBEAT_PERIOD
+                                                 : period_sec;
+    return 0;
+}
+
+
+int pubnub_qt::enable_auto_heartbeat(size_t period_sec)
+{
+    KEEP_THREAD_SAFE();
+    if (!d_auto_heartbeat_enabled) {
+        connect(d_auto_heartbeatTimer, SIGNAL(timeout()), this, SLOT(auto_heartbeatTimeout()));
+        d_auto_heartbeat_enabled = true;
+    }
+    return set_heartbeat_period(period_sec);
+}
+
+
+void pubnub_qt::stop_auto_heartbeat()
+{
+    if (false == d_auto_heartbeat_enabled) {
+        return;
+    }
+    if (d_auto_heartbeatTimer->isActive()) {
+        d_auto_heartbeatTimer->stop();
+    }
+    else if (PBTT_HEARTBEAT == d_trans){
+        cancel();
+    }
+}
+
+
+void pubnub_qt::stop_auto_heartbeat_before_transaction(pubnub_trans transaction)
+{
+    KEEP_THREAD_SAFE();
+    switch (transaction) {
+    case PBTT_HEARTBEAT:
+    case PBTT_SUBSCRIBE:
+    case PBTT_SUBSCRIBE_V2:
+        stop_auto_heartbeat();
+        break;
+    default:
+        break;
+    }
+}
+
+
+void pubnub_qt::start_auto_heartbeat_timer(pubnub_res pbres)
+{
+    KEEP_THREAD_SAFE();
+    if (false == d_auto_heartbeat_enabled) {
+        return;
+    }
+    switch (d_trans) {
+    case PBTT_HEARTBEAT:
+    case PBTT_SUBSCRIBE:
+    case PBTT_SUBSCRIBE_V2:
+        if (PNR_OK == pbres) {
+            d_auto_heartbeatTimer->start(d_auto_heartbeat_period_sec * UNIT_IN_MILLI);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+
+void pubnub_qt::disable_auto_heartbeat()
+{
+    KEEP_THREAD_SAFE();
+    if (!d_auto_heartbeat_enabled) {
+        return;
+    }
+    stop_auto_heartbeat();
+    disconnect(d_auto_heartbeatTimer, SIGNAL(timeout()), this, SLOT(auto_heartbeatTimeout()));
+    d_auto_heartbeat_enabled = false;
+}
+
+
+bool pubnub_qt::is_auto_heartbeat_enabled()
+{
+    KEEP_THREAD_SAFE();
+    return d_auto_heartbeat_enabled;
+}
+#else
+#define auto_heartbeat_prepare_channels_and_ch_groups(channel,                  \
+                                                      channel_group,            \
+                                                      prep_channels,            \
+                                                      prep_channel_groups)      \
+    do {                                                                        \
+        prep_channels = channel;                                                \
+        prep_channel_groups = channel_group;                                    \
+    } while(0)
+#define check_if_default_channel_and_groups(channel,                            \
+                                            channel_group,                      \
+                                            prep_channels,                      \
+                                            prep_channel_groups)                \
+    auto_heartbeat_prepare_channels_and_ch_groups((channel),                    \
+                                                  (channel_group),              \
+                                                  (prep_channels),              \
+                                                  (prep_channel_groups))
+#define update_channels_and_ch_groups(channel, channel_group)
+#define stop_auto_heartbeat_before_transaction(transaction)
+#define start_auto_heartbeat_timer(pbres)
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
 pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
 {
+    stop_auto_heartbeat_before_transaction(transaction);
+    if (d_transactionTimer->isActive()) {
+        return PNR_IN_PROGRESS;
+    }
     if (PNR_STARTED == result) {
         QUrl url(d_origin
                  + QString::fromLatin1(d_context->http_buf, d_context->http_buf_len));
@@ -362,25 +574,37 @@ pubnub_res pubnub_qt::signal(QString const& channel, QByteArray const& message)
 
 pubnub_res pubnub_qt::subscribe(QString const& channel, QString const& channel_group)
 {
+    QString prep_channels;
+    QString prep_channel_groups;
     KEEP_THREAD_SAFE();
+    auto_heartbeat_prepare_channels_and_ch_groups(channel,
+                                                  channel_group,
+                                                  prep_channels,
+                                                  prep_channel_groups);
     return startRequest(
-        pbcc_subscribe_prep(
-            d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            0),
+        pbcc_subscribe_prep(d_context.data(),
+                            prep_channels.isEmpty() ? 0 : prep_channels.toLatin1().data(),
+                            prep_channel_groups.isEmpty() ? 0 : prep_channel_groups.toLatin1().data(),
+                            0),
         PBTT_SUBSCRIBE);
 }
 
 
 pubnub_res pubnub_qt::subscribe_v2(QString const& channel, subscribe_v2_options opt)
 {
+    QString prep_channels;
+    QString prep_channel_groups;
+    QString channel_group(opt.get_chgroup());
     KEEP_THREAD_SAFE();
+    auto_heartbeat_prepare_channels_and_ch_groups(channel,
+                                                  channel_group,
+                                                  prep_channels,
+                                                  prep_channel_groups);
     return startRequest(
         pbcc_subscribe_v2_prep(
             d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            opt.get_chgroup(),
+            prep_channels.isEmpty() ? 0 : prep_channels.toLatin1().data(),
+            prep_channel_groups.isEmpty() ? 0 : prep_channel_groups.toLatin1().data(),
             opt.get_heartbeat(),
             opt.get_filter_expr()),
         PBTT_SUBSCRIBE_V2);
@@ -389,12 +613,18 @@ pubnub_res pubnub_qt::subscribe_v2(QString const& channel, subscribe_v2_options 
 
 pubnub_res pubnub_qt::leave(QString const& channel, QString const& channel_group)
 {
+    QString prep_channels;
+    QString prep_channel_groups;
     KEEP_THREAD_SAFE();
+    check_if_default_channel_and_groups(channel,
+                                        channel_group,
+                                        prep_channels,
+                                        prep_channel_groups);
+    update_channels_and_ch_groups(channel, channel_group);
     return startRequest(
-        pbcc_leave_prep(
-            d_context.data(),
-            channel.isEmpty() ? 0 : channel.toLatin1().data(),
-            channel_group.isEmpty() ? 0 : channel_group.toLatin1().data()),
+        pbcc_leave_prep(d_context.data(),
+                        prep_channels.isEmpty() ? 0 : prep_channels.toLatin1().data(),
+                        prep_channel_groups.isEmpty() ? 0 : prep_channel_groups.toLatin1().data()),
         PBTT_LEAVE);
 }
 
@@ -537,6 +767,24 @@ QMap<QString, size_t> pubnub_qt::get_channel_message_counts()
     return map;
 }
 #endif /* PUBNUB_USE_ADVANCED_HISTORY */
+
+pubnub_res pubnub_qt::heartbeat(QString const& channel, QString const& channel_group)
+{
+    QString prep_channels;
+    QString prep_channel_groups;
+    KEEP_THREAD_SAFE();
+    auto_heartbeat_prepare_channels_and_ch_groups(channel,
+                                                  channel_group,
+                                                  prep_channels,
+                                                  prep_channel_groups);
+    return startRequest(
+        pbcc_heartbeat_prep(
+            d_context.data(),
+            prep_channels.isEmpty() ? 0 : prep_channels.toLatin1().data(),
+            prep_channel_groups.isEmpty() ? 0 : prep_channel_groups.toLatin1().data()),
+        PBTT_HEARTBEAT);
+}
+
 
 pubnub_res pubnub_qt::here_now(QString const& channel, QString const& channel_group)
 {
@@ -1246,6 +1494,7 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
     case PBTT_WHERENOW:
     case PBTT_SET_STATE:
     case PBTT_STATE_GET:
+    case PBTT_HEARTBEAT:
         if (pbcc_parse_presence_response(d_context.data()) != 0) {
             pbres = PNR_FORMAT_ERROR;
         }
@@ -1309,6 +1558,7 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
     if ((PNR_OK == pbres) && (http_code != 0) && (http_code / 100 != 2)) {
         return PNR_HTTP_ERROR;
     }
+    start_auto_heartbeat_timer(pbres);
 
     return pbres;
 }

@@ -54,7 +54,12 @@
 #if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
 #define PUBNUB_USE_AUTO_HEARTBEAT 0
 #endif
+#if !defined(QT_VERSION)
 #include "core/pbauto_heartbeat.h"
+#else
+#define M_channelInfo()
+#define M_heartbeatInfo()
+#endif /* !defined(QT_VERSION_STR) */
 
 #if !defined(PUBNUB_PROXY_API)
 #define PUBNUB_PROXY_API 0
