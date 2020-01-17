@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: 2.12.2
+version: 2.12.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.3
+    date: Jan 16, 2020
+    changes:
+      - type: bug
+        text: Fix assertion failure while retrying timed out DNS queries with multiple contexts
   - version: v2.12.2
     date: Dec 5, 2019
     changes:
@@ -244,7 +249,7 @@ changelog:
         text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
   - version: v2.4.1
     date: Jul 6, 2018
-    changes:    
+    changes:
       - type: feature
         text: Enable reading system DNS on Windows
       - type: bug
@@ -422,12 +427,12 @@ features:
     - SUBSCRIBE-PRESENCE-CHANNELS
     - SUBSCRIBE-PRESENCE-CHANNELS-GROUPS
     - SUBSCRIBE-WILDCARD
-    - SUBSCRIBE-FILTER-EXPRESSION 
-    - SUBSCRIBE-SIGNAL-LISTENER 
-    - SUBSCRIBE-USER-LISTENER 
-    - SUBSCRIBE-SPACE-LISTENER 
-    - SUBSCRIBE-MEMBERSHIP-LISTENER 
-    - SUBSCRIBE-MESSAGE-ACTIONS-LISTENER 
+    - SUBSCRIBE-FILTER-EXPRESSION
+    - SUBSCRIBE-SIGNAL-LISTENER
+    - SUBSCRIBE-USER-LISTENER
+    - SUBSCRIBE-SPACE-LISTENER
+    - SUBSCRIBE-MEMBERSHIP-LISTENER
+    - SUBSCRIBE-MESSAGE-ACTIONS-LISTENER
   signal:
     - SIGNAL-SEND
   objects:
@@ -456,41 +461,41 @@ features:
   time:
     - TIME-TIME
 supported-platforms:
-  - 
+  -
     version: PubNub POSIX C SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doe snot wish to use TLS/SSL, she does not need OpenSSL at all.
-  - 
+  -
     version: PubNub POSIX C++ SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user does not wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
-  - 
+  -
     version: PubNub Windows C SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
-  - 
+  -
     version: PubNub Windows C++ SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the Windows C++ SDK)
-  - 
+  -
     version: PubNub FreeRTOS SDK
     platforms:
       - FreeRTOS+ 150825 or newer is supported. 
-  - 
+  -
     version: PubNub Qt SDK
     platforms:
       - Qt5 is fully supported.
       - Qt4 is not supported, but 'C core' is known to build on Qt4 and some features work.
       - Older versions are not supported.
-  - 
+  -
     version: PubNub mBed SDK
     platforms:
       - mBed 2 is supported.
