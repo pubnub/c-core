@@ -161,10 +161,12 @@ void socket_watcher_task(void *arg)
 
                     next = expired->next;
 
+                    if (next != NULL) {
+                        next->previous = expired->next = NULL;
+                    }
+
                     pbnc_stop(expired, PNR_TIMEOUT);
 
-                    expired->previous = NULL;
-                    expired->next = NULL;
                     pubnub_mutex_lock(expired->monitor);
 
                     expired = next;

@@ -91,10 +91,12 @@ void pubnub_task(void)
             while (expired != NULL) {
                 pubnub_t *next = expired->next;
 
+                if (next != NULL) {
+                    next->previous = expired->next = NULL;
+                }
+
                 pbnc_stop(expired, PNR_TIMEOUT);
 
-                expired->previous = NULL;
-                expired->next = NULL;
                 expired = next;
             }
             s_tick_prev = tick_now;

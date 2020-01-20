@@ -3,6 +3,11 @@ schema: 1
 version: 2.12.3
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.4
+    date: Jan 20, 2020
+    changes:
+      - type: bug
+        text: Fix crash while handling network timeouts with multiple contexts
   - version: v2.12.3
     date: Jan 16, 2020
     changes:

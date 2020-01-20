@@ -21,9 +21,12 @@ void pbntf_handle_timer_list(int ms_elapsed, pubnub_t** head)
 
         pubnub_mutex_lock(expired->monitor);
         next = expired->next;
+
+        if (next != NULL) {
+            next->previous = expired->next = NULL;
+        }
+
         pbnc_stop(expired, PNR_TIMEOUT);
-        expired->next     = NULL;
-        expired->previous = NULL;
         pubnub_mutex_unlock(expired->monitor);
 
         expired = next;
