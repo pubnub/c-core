@@ -31,14 +31,25 @@ void pbntf_handle_timer_list(int ms_elapsed, pubnub_t** head)
 }
 
 
+static bool contains(pubnub_t* head, pubnub_t* element) {
+    while (head != NULL) {
+        if (head == element) {
+            return true;
+        }
+
+        head = head->next;
+    }
+
+    return false;
+}
+
 void pbpal_remove_timer_safe(pubnub_t* to_remove, pubnub_t** from_head)
 {
     PUBNUB_ASSERT_OPT(to_remove != NULL);
     PUBNUB_ASSERT_OPT(from_head != NULL);
 
     if (PUBNUB_TIMERS_API) {
-        if ((*from_head != NULL) && ((to_remove->previous != NULL) || (to_remove->next != NULL)
-            || (to_remove == *from_head))) {
+        if ((*from_head != NULL) && contains(*from_head, to_remove)) {
             *from_head = pubnub_timer_list_remove(*from_head, to_remove);
         }
         else {

@@ -77,7 +77,7 @@ void pubnub_task(void)
     if (0 == s_tick_prev) {
         s_tick_prev = SYS_TMR_TickCountGet();
     }
-    
+
     if (m_watcher.apb_size > 0) {
         pubnub_t **ppbp;
         uint32_t tick_now = SYS_TMR_TickCountGet();
@@ -129,10 +129,22 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
     PUBNUB_UNUSED(socket);
 }
 
+static bool contains(pubnub_t* head, pubnub_t* element)
+{
+    while (head != NULL) {
+        if (head == element) {
+            return true;
+        }
+
+        head = head->next;
+    }
+
+    return false;
+}
+
 static void remove_timer_safe(pubnub_t *to_remove)
 {
-    if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
-        || (to_remove == m_watcher.timer_head)) {
+    if ((m_watcher.timer_head != NULL) && contains(m_watcher.timer_head, to_remove)) {
         m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
     }
 }

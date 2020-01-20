@@ -133,7 +133,7 @@ void socket_watcher_task(void *arg)
             }
         }
         xSemaphoreGiveRecursive(m_watcher.queue_lock);
- 
+
         if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
             continue;
         }
@@ -156,13 +156,13 @@ void socket_watcher_task(void *arg)
                 pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
                 while (expired != NULL) {
                     pubnub_t *next;
-                    
+
                     pubnub_mutex_lock(expired->monitor);
 
                     next = expired->next;
 
                     pbnc_stop(expired, PNR_TIMEOUT);
-                    
+
                     expired->previous = NULL;
                     expired->next = NULL;
                     pubnub_mutex_lock(expired->monitor);
@@ -188,7 +188,7 @@ int pbntf_init(void)
     if (NULL == m_watcher.mutw) {
         return -1;
     }
-    
+
     m_watcher.queue_size = sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
     m_watcher.queue_head = m_watcher.queue_tail = 0;
 
@@ -197,7 +197,7 @@ int pbntf_init(void)
         vSemaphoreDelete(m_watcher.mutw);
         return -1;
     }
-        
+
     m_watcher.xFD_set = FreeRTOS_CreateSocketSet();
     if (NULL == m_watcher.xFD_set) {
         vSemaphoreDelete(m_watcher.queue_lock);
@@ -205,11 +205,11 @@ int pbntf_init(void)
         return -1;
     }
     if (pdPASS != xTaskCreate(
-        socket_watcher_task, 
-        "Pubnub socket watcher", 
-        SOCKET_WATCHER_STACK_DEPTH, 
-        &m_watcher, 
-        PUBNUB_TASK_PRIORITY, 
+        socket_watcher_task,
+        "Pubnub socket watcher",
+        SOCKET_WATCHER_STACK_DEPTH,
+        &m_watcher,
+        PUBNUB_TASK_PRIORITY,
         &m_watcher.task
         )) {
         vSemaphoreDelete(m_watcher.mutw);
@@ -227,12 +227,12 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
         return -1;
     }
-     
+
     save_socket(&m_watcher, pb);
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
-    
+
     xSemaphoreGiveRecursive(m_watcher.mutw);
 
     xTaskNotifyGive(m_watcher.task);
@@ -240,12 +240,22 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     return +1;
 }
 
+static bool contains(pubnub_t* head, pubnub_t* element) {
+    while (head != NULL) {
+        if (head == element) {
+            return true;
+        }
+
+        head = head->next;
+    }
+
+    return false;
+}
 
 static void remove_timer_safe(pubnub_t *to_remove)
 {
     if (PUBNUB_TIMERS_API) {
-        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
-            || (to_remove == m_watcher.timer_head)) {
+        if ((m_watcher.timer_head != NULL) && contains(m_watcher.timer_head, to_remove)) {
             m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
         }
     }
@@ -352,13 +362,13 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
 enum pubnub_res pubnub_last_result(pubnub_t *pb)
 {
     enum pubnub_res rslt;
-    
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
+
     pubnub_mutex_lock(pb->monitor);
     rslt = pb->core.last_result;
     pubnub_mutex_unlock(pb->monitor);
-    
+
     return rslt;
 }
 
