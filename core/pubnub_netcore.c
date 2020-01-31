@@ -1303,7 +1303,9 @@ next_state:
         }
         break;
     case PBS_WAIT_CANCEL_DNS:
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
         pb->flags.retry_after_close = true;
+#endif
         close_connection(pb);
         goto next_state;
     case PBS_KEEP_ALIVE_IDLE:
