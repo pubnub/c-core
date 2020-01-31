@@ -37,8 +37,8 @@ void pbpal_remove_timer_safe(pubnub_t* to_remove, pubnub_t** from_head)
     PUBNUB_ASSERT_OPT(from_head != NULL);
 
     if (PUBNUB_TIMERS_API) {
-        if ((*from_head != NULL) && ((to_remove->previous != NULL) || (to_remove->next != NULL)
-            || (to_remove == *from_head))) {
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL)
+            || (to_remove == *from_head)) {
             *from_head = pubnub_timer_list_remove(*from_head, to_remove);
         }
         else {

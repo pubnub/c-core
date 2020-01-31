@@ -99,7 +99,17 @@ enum pubnub_state {
         are awating for it to be actually closed before starting the transaction
         via a new connection.
      */
-    PBS_KEEP_ALIVE_WAIT_CLOSE
+    PBS_KEEP_ALIVE_WAIT_CLOSE,
+    /** Waiting to cancel (close 'connection'/socket) if DNS fails due
+     * to timeout, when we want to try again (but first close the
+     * socket, to have a fresh start, maybe it failed because the
+     * socket became corrupt).
+     */
+    PBS_WAIT_CANCEL_DNS,
+    /** Waiting to cancel (close connection) if the transaction timeout
+     * ocurred while in HTTP Keep-Alive.
+     */
+    PBS_WAIT_CANCEL_KEEPALIVE
 };
 
 

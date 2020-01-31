@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: 2.12.3
+version: 2.12.4
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.4
+    date: Jan 31, 2020
+    changes:
+      - type: bug
+        text: Properly handle DNS retries and stale HTTP Kept-Alive connections
   - version: v2.12.3
     date: Jan 16, 2020
     changes:
