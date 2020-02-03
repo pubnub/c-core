@@ -1412,7 +1412,6 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) got called in NULL state\n", pbp);
         break;
     case PBS_IDLE:
-        pbntf_trans_outcome(pbp, PBS_IDLE);
         pbp->trans = PBTT_NONE;
         break;
     case PBS_KEEP_ALIVE_IDLE:
