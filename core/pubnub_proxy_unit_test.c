@@ -450,7 +450,6 @@ AfterEach(single_context_pubnub) {
         expect(pbpal_forget, when(pb, equals(pbp)));
         expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     }
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     expect(pbntf_requeue_for_processing, when(pb, equals(pbp)));
     if (state_not_idle) {
         attest(pubnub_free(pbp), equals(-1));
