@@ -789,8 +789,8 @@ AfterEach(single_context_pubnub)
         expect(pbpal_close, when(pb, equals(pbp)), returns(0));
         expect(pbpal_closed, when(pb, equals(pbp)), returns(true));
         expect(pbpal_forget, when(pb, equals(pbp)));
+        expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     }
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     expect(pbpal_free, when(pb, equals(pbp)));
     attest(pubnub_free(pbp), equals(0));
     free_m_msgs(m_string_msg_array);

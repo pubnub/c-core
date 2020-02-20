@@ -458,6 +458,10 @@ static char const* pbnc_state2str(enum pubnub_state e)
         return "PBS_KEEP_ALIVE_READY";
     case PBS_KEEP_ALIVE_WAIT_CLOSE:
         return "PBS_KEEP_ALIVE_WAIT_CLOSE";
+    case PBS_WAIT_CANCEL_DNS:
+        return "PBS_WAIT_CANCEL_DNS";
+    case PBS_WAIT_CANCEL_KEEPALIVE:
+        return "PBS_WAIT_CANCEL_KEEPALIVE";
     default:
         return "Unknown enum pubnub_state";
     }
@@ -1298,6 +1302,12 @@ next_state:
             pbntf_trans_outcome(pb, PBS_IDLE);
         }
         break;
+    case PBS_WAIT_CANCEL_DNS:
+#if PUBNUB_NEED_RETRY_AFTER_CLOSE
+        pb->flags.retry_after_close = true;
+#endif
+        close_connection(pb);
+        goto next_state;
     case PBS_KEEP_ALIVE_IDLE:
 #if PUBNUB_PROXY_API
         pb->proxy_saved_path_len     = 0;
@@ -1343,6 +1353,9 @@ next_state:
             goto next_state;
         }
         break;
+    case PBS_WAIT_CANCEL_KEEPALIVE:
+        pb->state = close_kept_alive_connection(pb);
+        goto next_state;
     default:
         PUBNUB_LOG_ERROR("pbnc_fsm(pb=%p): unhandled state: %s\n",
                          pb,
@@ -1377,8 +1390,7 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         if (PNR_TIMEOUT == outcome_to_report) {
             if ((pbp->state != PBS_WAIT_CONNECT) &&
                 (pbp->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES)) {
-                pbp->flags.retry_after_close = true;
-                close_connection(pbp);
+                pbp->state = PBS_WAIT_CANCEL_DNS;
             }
             else {
                 pbp->core.last_result = (PBS_WAIT_CONNECT == pbp->state)
@@ -1400,7 +1412,6 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         PUBNUB_LOG_ERROR("pbnc_stop(pbp=%p) got called in NULL state\n", pbp);
         break;
     case PBS_IDLE:
-        pbntf_trans_outcome(pbp, PBS_IDLE);
         pbp->trans = PBTT_NONE;
         break;
     case PBS_KEEP_ALIVE_IDLE:
@@ -1411,11 +1422,7 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
            up in PBS_KEEP_ALIVE_IDLE so previous *FALLTHROUHGH* is safe */
         if ((PNR_TIMEOUT == outcome_to_report)
             && (pbp->flags.started_while_kept_alive)) {
-            /* Closing connection that was kept alive is always done with
-               intention to reestablish it anew and don't lose current
-               transaction.
-            */
-            pbp->state = close_kept_alive_connection(pbp);
+            pbp->state = PBS_WAIT_CANCEL_KEEPALIVE;
             pbntf_requeue_for_processing(pbp);
             break;
         }

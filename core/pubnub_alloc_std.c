@@ -137,7 +137,7 @@ int pubnub_free(pubnub_t* pb)
 {
     int result = -1;
 
-    PUBNUB_ASSERT(check_ctx_ptr(pb));
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
 
