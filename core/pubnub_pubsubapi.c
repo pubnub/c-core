@@ -214,12 +214,14 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* pb)
 }
 
 
-void pubnub_set_uuid(pubnub_t* pb, const char* uuid)
+enum pubnub_res pubnub_set_uuid(pubnub_t* pb, const char* uuid)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
-    pbcc_set_uuid(&pb->core, uuid);
+    enum pubnub_res res = pbcc_set_uuid(&pb->core, uuid);
     pubnub_mutex_unlock(pb->monitor);
+
+    return res;
 }
 
 
