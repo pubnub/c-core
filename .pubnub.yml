@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: 2.12.4
+version: "2.12.5"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.5
+    date: Apr 8, 2020
+    changes:
+      - type: improvement
+        text: "Dynamically allocate memory for `uuid` in `pubnub_set_uuid` function."
   - version: v2.12.4
     date: Jan 31, 2020
     changes:
