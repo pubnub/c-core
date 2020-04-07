@@ -56,7 +56,7 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
     if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
                              pb_strnlen_s(type_literal, sizeof "reaction") +
                              pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
-                             pb_strnlen_s(uuid, sizeof pb->uuid)) {
+                             pb->uuid_len) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
                          "buffer size is too small: "
                          "current_buffer_size = %lu\n"
@@ -66,7 +66,7 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                          (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
                                          pb_strnlen_s(type_literal, sizeof "reaction") +
                                          pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
-                                         pb_strnlen_s(uuid, sizeof pb->uuid)));
+                                         pb->uuid_len));
         return PNR_TX_BUFF_TOO_SMALL;
     }
     snprintf(obj_buffer,

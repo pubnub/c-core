@@ -46,7 +46,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the @p uuid string is not copied to the Pubnub context @p p.  */
-void pubnub_set_uuid(pubnub_t* p, const char* uuid);
+enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the UUID identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it

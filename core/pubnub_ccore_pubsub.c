@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Maximum allowed user-provided UUID string length. */
+#define MAX_UUID_STRING_LENGTH 64
+
 
 void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subscribe_key)
 {
@@ -19,7 +22,8 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->subscribe_key = subscribe_key;
     p->timetoken[0]  = '0';
     p->timetoken[1]  = '\0';
-    p->uuid[0]       = '\0';
+    p->uuid          = NULL;
+    p->uuid_len      = 0;
     p->auth          = NULL;
     p->msg_ofs = p->msg_end = 0;
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
@@ -39,6 +43,7 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 
 void pbcc_deinit(struct pbcc_context* p)
 {
+    pbcc_set_uuid(p, NULL);
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     if (p->http_reply != NULL) {
         free(p->http_reply);
@@ -115,22 +120,37 @@ char const* pbcc_get_channel(struct pbcc_context* pb)
 }
 
 
-void pbcc_set_uuid(struct pbcc_context* pb, const char* uuid)
+enum pubnub_res pbcc_set_uuid(struct pbcc_context* pb, const char* uuid)
 {
-    if (uuid != NULL) {
-        PUBNUB_ASSERT_OPT(strlen(uuid) < sizeof pb->uuid);
-        strncpy(pb->uuid, uuid, sizeof pb->uuid);
-        pb->uuid[(sizeof pb->uuid) - 1] = '\0';
+    if (pb->uuid_len > 0) {
+        free(pb->uuid);
+        pb->uuid = NULL;
     }
-    else {
-        pb->uuid[0] = '\0';
+    pb->uuid_len = (NULL == uuid) ? 0 : strlen(uuid);
+    if (pb->uuid_len > 0) {
+        PUBNUB_ASSERT_OPT(pb->uuid_len <= MAX_UUID_STRING_LENGTH);
+        /** Alloc additional space for NULL character */
+        pb->uuid = (char*)malloc((pb->uuid_len + 1) * sizeof(char));
+        if (NULL == pb->uuid) {
+            PUBNUB_LOG_ERROR(
+                "Error: pbcc_set_uuid(pb=%p) - "
+                "Failed to allocate memory for uuid: "
+                "uuid = '%s'\n",
+                pb,
+                uuid);
+            pb->uuid_len = 0;
+            return PNR_OUT_OF_MEMORY;
+        }
+        strncpy(pb->uuid, uuid, pb->uuid_len);
+        pb->uuid[pb->uuid_len] = '\0';
     }
+    return PNR_OK;
 }
 
 
 char const* pbcc_uuid_get(struct pbcc_context* pb)
 {
-    return ('\0' == pb->uuid[0]) ? NULL : pb->uuid;
+    return (0 == pb->uuid_len) ? NULL : pb->uuid;
 }
 
 

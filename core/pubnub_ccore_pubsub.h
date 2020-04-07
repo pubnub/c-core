@@ -27,7 +27,9 @@ struct pbcc_context {
     /** The subscribe key (to use when subscribing) */
     char const* subscribe_key;
     /** The UUID to be sent to server. If empty string, don't send any */
-    char uuid[UUID_SIZE];
+    char *uuid;
+    /** The UUID length */
+    int uuid_len;
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
     char const* auth;
@@ -284,7 +286,7 @@ char const* pbcc_get_msg(struct pbcc_context* pb);
 char const* pbcc_get_channel(struct pbcc_context* pb);
 
 /** Sets the UUID for the context */
-void pbcc_set_uuid(struct pbcc_context* pb, const char* uuid);
+enum pubnub_res pbcc_set_uuid(struct pbcc_context* pb, const char* uuid);
 
 /** Returns the UUID for the context */
 char const* pbcc_uuid_get(struct pbcc_context* pb);
