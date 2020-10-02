@@ -27,6 +27,11 @@
 /** Considering the size of bit field for DNS queries sent */
 PUBNUB_STATIC_ASSERT(PUBNUB_MAX_DNS_QUERIES < (1 << SENT_QUERIES_SIZE_IN_BITS),
                      PUBNUB_MAX_DNS_QUERIES_is_too_big);
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Considering the size of bit field for DNS servers rotations count */
+PUBNUB_STATIC_ASSERT(PUBNUB_MAX_DNS_ROTATION < (1 << ROTATIONS_COUNT_SIZE_IN_BITS),
+                     PUBNUB_MAX_DNS_ROTATION_is_too_big);
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #if PUBNUB_USE_IPV6
 typedef struct sockaddr_storage sockaddr_inX_t;
 #define QUERY_TYPE pb->options.ipv6_connectivity ? dnsAAAA : dnsA
@@ -216,6 +221,32 @@ static void if_no_retry_close_socket(pb_socket_t* skt, struct pubnub_flags* flag
 
 
 #if PUBNUB_CHANGE_DNS_SERVERS
+int pbpal_dns_rotate_server(pubnub_t *pb)
+{
+    struct pbdns_servers_check* dns_check = &pb->dns_check;
+    struct pubnub_flags* flags = &pb->flags;
+    dns_check->dns_server_check |= dns_check->dns_mask;
+
+    if ((dns_check->dns_mask >= PUBNUB_MAX_DNS_SERVERS_MASK)
+        && (flags->rotations_count < PUBNUB_MAX_DNS_ROTATION)) 
+    {
+        dns_check->dns_server_check = 0;
+        /** Update how many times all DNS servers has been tried to process query */
+        flags->rotations_count++;
+    }
+    
+    if (flags->rotations_count >= PUBNUB_MAX_DNS_ROTATION) {
+        flags->retry_after_close = false;
+        flags->rotations_count = 1;
+        return 1;
+    }
+    
+    /** Going with new DNS server, after retry, brings new set of queries */
+    flags->sent_queries = 0;
+
+    return 0;
+}
+
 static void check_dns_server_error(struct pbdns_servers_check* dns_check,
                                    struct pubnub_flags*        flags)
 {
@@ -530,6 +561,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
     case +1:
         return pbpal_resolv_rcv_wouldblock;
     case 0:
+#if PUBNUB_CHANGE_DNS_SERVERS
+        pb->flags.rotations_count = 0;
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
         break;
     }
     socket_close(pb->pal.socket);

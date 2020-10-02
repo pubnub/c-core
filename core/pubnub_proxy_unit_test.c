@@ -128,6 +128,15 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     return (int)mock(pb);
 }
 
+#if defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_CHANGE_DNS_SERVERS
+int pbpal_dns_rotate_server(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+#endif /* defined(PUBNUB_CALLBACK_API) */
+
 bool pbpal_connected(pubnub_t *pb)
 {
     return (bool)mock(pb);

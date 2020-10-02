@@ -129,6 +129,10 @@
 
 /** Maximum number of consecutive retries when sending DNS query in a single transaction */
 #define PUBNUB_MAX_DNS_QUERIES 3
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Maximum number of DNS servers list rotation in a single transaction */
+#define PUBNUB_MAX_DNS_ROTATION 3
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 /** If true (!=0), enables support for compressed content data*/

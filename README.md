@@ -1,6 +1,6 @@
 ## Pubnub C/C++ client libraries
 
-[![Build Status](https://travis-ci.com/pubnub/c-core.svg?branch=master)](https://travis-ci.com/pubnub/c-core)
+[![Build Status](https://travis-ci.org/pubnub/c-core.svg?branch=master)](https://travis-ci.org/pubnub/c-core)
 
 This repository has the source for the C/C++ client libraries,
 designed mostly for embedded systems, but perfectly suitable for

@@ -75,6 +75,22 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb);
 */
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb);
 
+#if defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Rotate DNS servers in following order: 
+         primary->secondary->default->primary->...
+    
+    @note This function used to handle case when one of DNS 
+    servers experience issues and response on DNS query never
+    arrived.
+    
+    @param pb The context for which DNS servers should rotate.
+    @return DNS servers rotate result (0 - success, 1 - failed).
+*/
+int pbpal_dns_rotate_server(pubnub_t *pb);
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+#endif /* defined(PUBNUB_CALLBACK_API) */
+
 /** Checks whether a TCP connection is established. Call after
     starting a TCP connection (thus, after DNS resolution is over).
 */

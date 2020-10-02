@@ -1389,7 +1389,12 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 #if defined(PUBNUB_CALLBACK_API)
         if (PNR_TIMEOUT == outcome_to_report) {
             if ((pbp->state != PBS_WAIT_CONNECT) &&
-                (pbp->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES)) {
+#if PUBNUB_CHANGE_DNS_SERVERS
+                (pbpal_dns_rotate_server(pbp) == 0)
+#else
+                (pbp->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES)
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+            ) {
                 pbp->state = PBS_WAIT_CANCEL_DNS;
             }
             else {

@@ -236,6 +236,16 @@ struct pubnub_flags {
         Macro constant limiting number of retries is defined in 'pubnub_config.h'
       */
     int sent_queries : SENT_QUERIES_SIZE_IN_BITS;
+#if PUBNUB_CHANGE_DNS_SERVERS
+#define ROTATIONS_COUNT_SIZE_IN_BITS 3
+    /** Number of full DNS servers list rotations in single transaction to a single DNS
+        server.
+        Important when DNS server doesn't answer and transaction timeout. List of DNS 
+        servers should rotate to find the one which is able to respond on DNS query.
+        Macro constant limiting number of full DNS servers list rotations.
+     */
+    int rotations_count: ROTATIONS_COUNT_SIZE_IN_BITS;
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif
 };
 
