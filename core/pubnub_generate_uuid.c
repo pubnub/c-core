@@ -46,7 +46,7 @@ int pubnub_generate_uuid_v1_time(
     ud->clock_seq_low = *io_clock_seq & 0xFF;
     ud->clock_seq_hi_and_reserved = (*io_clock_seq & 0x3F00) >> 8;
     ud->clock_seq_hi_and_reserved |= 0x80;
-    memcpy(&ud->node, &i_node, sizeof ud->node);
+    memcpy(ud->node, i_node, sizeof ud->node);
 
     memcpy(s_timestamp, i_timestamp, sizeof s_timestamp);
 
