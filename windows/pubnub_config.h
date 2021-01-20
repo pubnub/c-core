@@ -148,7 +148,9 @@
 
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
+#ifndef PUBNUB_USE_WIN_SSPI 
 #define PUBNUB_USE_WIN_SSPI 1
+#endif
 
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.

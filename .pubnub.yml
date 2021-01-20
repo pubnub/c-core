@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "2.12.6"
+version: "2.12.7"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.12.7
+    date: Jan 20, 2021
+    changes:
+      - type: feature
+        text: "Added support for Universal Windows(UWP)."
   - version: v2.12.6
     date: Oct 3, 2020
     changes:
@@ -503,7 +508,7 @@ supported-platforms:
   -
     version: PubNub FreeRTOS SDK
     platforms:
-      - FreeRTOS+ 150825 or newer is supported. 
+      - FreeRTOS+ 150825 or newer is supported. 
   -
     version: PubNub Qt SDK
     platforms:

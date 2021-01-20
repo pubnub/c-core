@@ -57,20 +57,46 @@
 /** This helper macro will calculate the SHA-256 on the message
     in @p m, having the length @p l and store it in @p d.
 */
+#if __UWP__
+#define pbsha256_digest(m, l, d) do                         \
+    {                                                       \
+        EVP_MD_CTX *ctx;                                    \
+        ctx = EVP_MD_CTX_create();                          \
+        const EVP_MD* md = EVP_get_digestbyname("SHA256" ); \
+        EVP_DigestInit(ctx, EVP_sha256());                  \
+        EVP_DigestUpdate(ctx, (m)), (l)));                  \
+        EVP_DigestFinal(ctx, (d), NULL);                    \
+        EVP_MD_CTX_destroy(ctx);                            \
+    } while(0);
+#else
 #define pbsha256_digest(m, l, d) do { SHA256_CTX M_ctx_;   \
         SHA256_Init(&M_ctx_);                              \
         SHA256_Update(&M_ctx_, (m), (l));                  \
         SHA256_Final((d), &M_ctx);                         \
     } while (0)
+#endif
 
 /** This helper macro will calculate the SHA-256 on the message in @p str,
     assuming it's an ASCIIZ string andd store it in @p d.
     @warning This macro uses @p str twice!
 */
+#if __UWP__
+#define pbsha256_digest_str(str, d) do                      \
+    {                                                       \
+        EVP_MD_CTX *ctx;                                    \
+        ctx = EVP_MD_CTX_create();                          \
+        const EVP_MD* md = EVP_get_digestbyname("SHA256" ); \
+        EVP_DigestInit(ctx, EVP_sha256());                  \
+        EVP_DigestUpdate(ctx, str, strlen(str));            \
+        EVP_DigestFinal(ctx, d, NULL);                      \
+        EVP_MD_CTX_destroy(ctx);                            \
+    } while(0);
+#else
 #define pbsha256_digest_str(str, d) do { SHA256_CTX M_ctx_;   \
         SHA256_Init(&M_ctx_);                                 \
         SHA256_Update(&M_ctx_, (str), strlen(str));           \
         SHA256_Final((d), &M_ctx_);                           \
     } while (0)
+#endif
 
 #endif /* !defined INC_PBSHA256 */

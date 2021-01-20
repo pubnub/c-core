@@ -96,7 +96,9 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-        ERR_load_BIO_strings();
+        #if !defined(__UWP__)
+        ERR_load_BIO_strings(); //Per OpenSSL 3.0 this is deprecated. Allowing this stmt for non-UWP as it exists.
+        #endif
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
@@ -282,7 +284,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
     /* OpenSSL reads one TLS record at a time,
-       so, we need to call it in a loop to read äll there is
+       so, we need to call it in a loop to read ï¿½ll there is
     */
     for (;;) {
         if (pb->unreadlen == 0) {
@@ -381,7 +383,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
 
     /* OpenSSL reads one TLS record at a time,
-       so, we need to call it in a loop to read äll there is
+       so, we need to call it in a loop to read ï¿½ll there is
     */
     for (;;) {
         if (0 == pb->unreadlen) {

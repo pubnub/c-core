@@ -15,7 +15,11 @@
 int pbpal_add_system_certs(pubnub_t* pb)
 {
     X509_STORE *cert_store = SSL_CTX_get_cert_store(pb->pal.ctx);
+    #if __UWP__
+    HCERTSTORE hStore = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, NULL, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
+    #else
     HCERTSTORE hStore = CertOpenSystemStoreW(0, L"ROOT");
+    #endif
     PCCERT_CONTEXT pContext = NULL;
 
     if (!hStore) {

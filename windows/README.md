@@ -43,6 +43,29 @@ If you have Clang for Windows installed, this should work:
 
     nmake -f windows.mk CC=clang-cl
 
+# Pubnub C-core for the Universal Windows platform(UWP)
+
+This is the part of C-core for the UWP platform.
+It has a sample Makefile (`uwp.mk`), which will build, two (static) libraries will be created:
+
+- `pubnub_sync.lib`: library for the "sync" interface
+- `pubnub_callback.lib`: library for the "callback" interface
+
+You are free to use these libraries in your projects, but keep in mind
+that they are configured for the purposes of the samples. Please check
+if those are right for you before using them.
+
+So, to build the libraries, just run:
+
+	nmake uwp.mk
+
+from a Visual Studio Command Prompt. This was tested mainly
+on MSVS 2019 and Windows 10.
+
+If you have Clang for Windows installed, this should work:
+
+    nmake -f uwp.mk CC=clang-cl
+
 ## Makefile for GCC
 
 There is a Makefile for a `gcc` compatible compiler - `windows-gcc.mk`.
