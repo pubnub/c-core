@@ -104,6 +104,9 @@ char const* pubnub_msg_type_to_str(enum pubnub_message_type type)
     switch (type) {
     case pbsbSignal: return "signal";
     case pbsbPublished: return "published";
+    case pbsbAction: return "action";
+    case pbsbObjects: return "objects";
+    case pbsbFiles: return "files";
     default: return "!?!?!";
     }
 }

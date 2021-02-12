@@ -213,8 +213,14 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
         if (pbjson_elem_equals_string(&found, "1")) {
             rslt.message_type = pbsbSignal;
         }
+        else if (pbjson_elem_equals_string(&found, "2")) {
+            rslt.message_type = pbsbObjects;
+        }
         else if (pbjson_elem_equals_string(&found, "3")) {
             rslt.message_type = pbsbAction;
+        }
+        else if (pbjson_elem_equals_string(&found, "4")) {
+            rslt.message_type = pbsbFiles;
         }
         else {
             rslt.message_type = pbsbPublished;
