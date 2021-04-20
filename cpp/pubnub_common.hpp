@@ -425,7 +425,8 @@ public:
     instead of:
        pbp.get_users(nullopt, nullopt, last_bookmark, “”, nullopt);
   */
-class list_options : public include_options {
+class list_options {
+    std::string d_include;
     size_t d_limit;
     std::string d_start;
     std::string d_end;
@@ -436,6 +437,13 @@ public:
         : d_limit(0)
         , d_count(tribool::not_set)
     {}
+    list_options& include(std::string const& incl)
+    {
+        d_include = incl;
+        return *this;
+    }
+    char const* include() { return (d_include.size() > 0) ? d_include.c_str() : NULL; }
+
     list_options& limit(size_t lim)
     {
         d_limit = lim;
@@ -1088,15 +1096,14 @@ public:
     }
 
 #if PUBNUB_USE_OBJECTS_API
-    /// Starts a transaction for optaining a paginated list of users associated
+    /// Starts a transaction for optaining a paginated list of uuids associated
     /// with the subscription key.
-    /// @see pubnub_get_users
-    futres get_users(list_options& options)
+    /// @see pubnub_getall_uuidmetadata
+    futres getall_uuidmetadata(list_options& options)
     {
-        return doit(pubnub_get_users(
+        return doit(pubnub_getall_uuidmetadata(
                         d_pb, 
-                        options.include_c_strings_array(),
-                        options.include_count(),
+                        options.include(),
                         options.limit(),
                         options.start(),
                         options.end(),
@@ -1104,180 +1111,125 @@ public:
     }
 
     /// Starts a transaction that creates a user with the attributes specified in @p user_obj.
-    /// @see pubnub_create_user
-    futres create_user(std::string const& user_obj, std::vector<std::string>& include)
+    /// @see pubnub_set_uuidmetadata
+    futres set_uuidmetadata(std::string const& uuid_metadataid, std::string const& include, std::string const& user_obj)
     {
-        include_options inc(include);
-        return doit(pubnub_create_user(
+        return doit(pubnub_set_uuidmetadata(
                         d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
+                        uuid_metadataid.c_str(),
+                        include.c_str(),
                         user_obj.c_str()));
     }
 
-    /// Starts a transaction that returns the user object specified by @p user_id.
-    /// @see pubnub_get_user
-    futres get_user(std::string const& user_id, std::vector<std::string>& include)
+    /// Starts a transaction that returns the user object specified by @p uuid.
+    /// @see pubnub_get_uuidmetadata
+    futres get_uuidmetadata(std::string const& uuid, std::string const& include)
     {
-        include_options inc(include);
-        return doit(pubnub_get_user(
+        return doit(pubnub_get_uuidmetadata(
                         d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        user_id.c_str()));
+                        include.c_str(),
+                        uuid.c_str()));
     }
 
-    /// Starts a transaction that updates the user object specified by the `id` key
-    /// of the @p user_obj.
-    /// @see pubnub_update_user
-    futres update_user(std::string const& user_obj, std::vector<std::string>& include)
+    /// Starts a transaction that deletes the user specified by @p uuid.
+    /// @see pubnub_remove_uuidmetadata
+    futres remove_uuidmetadata(std::string const& uuid)
     {
-        include_options inc(include);
-        return doit(pubnub_update_user(
-                        d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        user_obj.c_str()));
-    }
-
-    /// Starts a transaction that deletes the user specified by @p user_id.
-    /// @see pubnub_delete_user
-    futres delete_user(std::string const& user_id)
-    {
-        return doit(pubnub_delete_user(d_pb, user_id.c_str()));
+        return doit(pubnub_remove_uuidmetadata(d_pb, uuid.c_str()));
     }
 
     /// Starts a transaction that returns the spaces associated with the subscriber key.
-    /// @see pubnub_get_spaces
-    futres get_spaces(list_options& options)
+    /// @see pubnub_getall_channelmetadata
+    futres getall_channelmetadata(list_options& options)
     {
-        return doit(pubnub_get_spaces(
+        return doit(pubnub_getall_channelmetadata(
                         d_pb, 
-                        options.include_c_strings_array(),
-                        options.include_count(),
+                        options.include(),
                         options.limit(),
                         options.start(),
                         options.end(),
                         options.count()));
     }
 
-    /// Starts a transaction that creates a space with the attributes specified in @p space_obj.
-    /// @see pubnub_create_space
-    futres create_space(std::string const& space_obj, std::vector<std::string>& include)
+    /// Starts a transaction that creates a space with the attributes specified in @p channel_metadata_obj.
+    /// @see pubnub_set_channelmetadata
+    futres set_channelmetadata(std::string const& channel_metadataid, std::string const& include, std::string const& channel_metadata_obj)
     {
-        include_options inc(include);
-        return doit(pubnub_create_space(
+        return doit(pubnub_set_channelmetadata(
                         d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        space_obj.c_str()));
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        channel_metadata_obj.c_str()));
     }
 
     /// Starts a transaction that returns the space object specified by @p space_id.
-    /// @see pubnub_get_space
-    futres get_space(std::string const& space_id, std::vector<std::string>& include)
+    /// @see pubnub_get_channelmetadata
+    futres get_channelmetadata(std::string const& channel_metadataid, std::string const& include)
     {
-        include_options inc(include);
-        return doit(pubnub_get_space(
+        return doit(pubnub_get_channelmetadata(
                         d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        space_id.c_str()));
+                        include.c_str(),
+                        channel_metadataid.c_str()));
     }
 
-    /// Starts a transaction that updates the space specified by the `id` property
-    /// of the @p space_obj.
-    /// @see pubnub_update_space
-    futres update_space(std::string const& space_obj, std::vector<std::string>& include)
+    /// Starts a transaction that deletes the space specified with @p channel_metadataid.
+    /// @see pubnub_remove_channelmetadata
+    futres remove_channelmetadata(std::string const& channel_metadataid)
     {
-        include_options inc(include);
-        return doit(pubnub_update_space(
-                        d_pb,
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        space_obj.c_str()));
-    }
-
-    /// Starts a transaction that deletes the space specified with @p space_id.
-    /// @see pubnub_delete_space
-    futres delete_space(std::string const& space_id)
-    {
-        return doit(pubnub_delete_space(d_pb, space_id.c_str()));
+        return doit(pubnub_remove_channelmetadata(d_pb, channel_metadataid.c_str()));
     }
 
     /// Starts a transaction that returns the space memberships of the user specified
     /// by @p user_id.
     /// @see pubnub_get_memberships
-    futres get_memberships(std::string const& user_id, list_options& options)
+    futres get_memberships(std::string const& metadata_uuid, list_options& options)
     {
         return doit(pubnub_get_memberships(
                         d_pb,
-                        user_id.c_str(),
-                        options.include_c_strings_array(),
-                        options.include_count(),
+                        metadata_uuid.c_str(),
+                        options.include(),
                         options.limit(),
                         options.start(),
                         options.end(),
                         options.count()));
     }
 
-    /// Starts a transaction that adds the space memberships of the user specified
-    /// by @p user_id.
-    /// @see pubnub_join_spaces
-    futres join_spaces(std::string const& user_id,
-                       std::string const& update_obj,
-                       std::vector<std::string>& include)
-    {
-        include_options inc(include);
-        return doit(pubnub_join_spaces(
-                        d_pb,
-                        user_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        update_obj.c_str()));
-    }
-
     /// Starts a transaction that updates the space memberships of the user specified
-    /// by @p user_id.
-    /// @see pubnub_update_memberships
-    futres update_memberships(std::string const& user_id,
-                              std::string const& update_obj,
-                              std::vector<std::string>& include)
+    /// by @p metadata_uuid.
+    /// @see pubnub_set_memberships
+    futres set_memberships(std::string const& metadata_uuid,
+                              std::string const& set_obj,
+                              std::string const& include)
     {
-        include_options inc(include);
-        return doit(pubnub_update_memberships(
+        return doit(pubnub_set_memberships(
                         d_pb,
-                        user_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        update_obj.c_str()));
+                        metadata_uuid.c_str(),
+                        include.c_str(),
+                        set_obj.c_str()));
     }
 
-    /// Starts a transaction that removes the space memberships of the user specified
-    /// by @p user_id.
-    /// @see pubnub_leave_spaces
-    futres leave_spaces(std::string const& user_id,
-                        std::string const& update_obj,
-                        std::vector<std::string>& include)
+    /// Starts a transaction that removes the channel memberships of the user specified
+    /// by @p metadata_uuid.
+    /// @see pubnub_remove_memberships
+    futres remove_memberships(std::string const& metadata_uuid,
+                        std::string const& remove_obj,
+                        std::string const& include)
     {
-        include_options inc(include);
-        return doit(pubnub_leave_spaces(
+        return doit(pubnub_remove_memberships(
                         d_pb,
-                        user_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        update_obj.c_str()));
+                        metadata_uuid.c_str(),
+                        include.c_str(),
+                        remove_obj.c_str()));
     }
 
     /// Starts a transaction that returns all users in the space specified by @p space_id.
     /// @see pubnub_get_members
-    futres get_members(std::string const& space_id, list_options& options)
+    futres get_members(std::string const& channel_metadataid, list_options& options)
     {
         return doit(pubnub_get_members(
                         d_pb,
-                        space_id.c_str(),
-                        options.include_c_strings_array(),
-                        options.include_count(),
+                        channel_metadataid.c_str(),
+                        options.include(),
                         options.limit(),
                         options.start(),
                         options.end(),
@@ -1285,51 +1237,45 @@ public:
     }
 
     /// Starts a transaction that adds the list of members of the space specified
-    /// by @p space_id.
+    /// by @p channel_metadataid.
     /// @see pubnub_add_members
-    futres add_members(std::string const& space_id,
+    futres add_members(std::string const& channel_metadataid,
                        std::string const& update_obj,
-                       std::vector<std::string>& include)
+                       std::string const& include)
     {
-        include_options inc(include);
         return doit(pubnub_add_members(
                         d_pb,
-                        space_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
+                        channel_metadataid.c_str(),
+                        include.c_str(),
                         update_obj.c_str()));
     }
 
     /// Starts a transaction that updates the list of members of the space specified
-    /// by @p space_id.
-    /// @see pubnub_update_members
-    futres update_members(std::string const& space_id,
-                          std::string const& update_obj,
-                          std::vector<std::string>& include)
+    /// by @p channel_metadataid.
+    /// @see pubnub_set_members
+    futres set_members(std::string const& channel_metadataid,
+                          std::string const& set_obj,
+                          std::string const& include)
     {
-        include_options inc(include);
-        return doit(pubnub_update_members(
+        return doit(pubnub_set_members(
                         d_pb,
-                        space_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        update_obj.c_str()));
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        set_obj.c_str()));
     }
 
     /// Starts a transaction that removes the list of members of the space specified
-    /// by @p space_id.
+    /// by @p channel_metadataid.
     /// @see pubnub_remove_members
-    futres remove_members(std::string const& space_id,
-                          std::string const& update_obj,
-                          std::vector<std::string>& include)
+    futres remove_members(std::string const& channel_metadataid,
+                          std::string const& remove_obj,
+                          std::string const& include)
     {
-        include_options inc(include);
         return doit(pubnub_remove_members(
                         d_pb,
-                        space_id.c_str(),
-                        inc.include_c_strings_array(),
-                        inc.include_count(),
-                        update_obj.c_str()));
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        remove_obj.c_str()));
     }
 #endif /* PUBNUB_USE_OBJECTS_API */
 

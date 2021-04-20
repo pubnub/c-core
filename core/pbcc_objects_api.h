@@ -26,135 +26,117 @@ enum pubnub_res pbcc_find_objects_id(struct pbcc_context* pb,
 /** Prepares the 'get_users' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_get_users_prep(struct pbcc_context* pb,
-                                    char const** include,
-                                    size_t include_count,
+enum pubnub_res pbcc_getall_uuidmetadata_prep(struct pbcc_context* pb,
+                                    char const* include,
                                     size_t limit,
                                     char const* start,
                                     char const* end,
-                                    enum pubnub_tribool count);
+                                    enum pubnub_tribool count,
+                                    enum pubnub_trans pt);
 
-/** Prepares the 'create_user' transaction, mostly by
+/** Prepares the 'set_uuidmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_create_user_prep(struct pbcc_context* pb,
-                                      char const** include,
-                                      size_t include_count,
-                                      const char* user_obj);
+enum pubnub_res pbcc_set_uuidmetadata_prep(struct pbcc_context* pb,
+                                      char const* uuid_metadataid,
+                                      char const* include,
+                                      const char* uuid_metadata_obj,
+                                      enum pubnub_trans pt);
 
-/** Prepares the 'get_user' transaction, mostly by
+/** Prepares the 'get_uuidmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_get_user_prep(struct pbcc_context* pb,
-                                   char const** include,
-                                   size_t include_count,
-                                   char const* user_id);
+enum pubnub_res pbcc_get_uuidmetadata_prep(struct pbcc_context* pb,
+                                   char const* include,
+                                   char const* uuid_metadataid,
+                                   enum pubnub_trans pt);
 
-/** Prepares the 'update_user' transaction, mostly by
+
+/** Prepares the 'remove_uuidmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_update_user_prep(struct pbcc_context* pb,
-                                      char const** include,
-                                      size_t include_count,
-                                      char const* user_obj,
-                                      struct pbjson_elem const* id);
+enum pubnub_res pbcc_remove_uuidmetadata_prep(struct pbcc_context* pb, char const* uuid_metadataid, enum pubnub_trans pt);
 
 
-
-/** Prepares the 'delete_user' transaction, mostly by
+/** Prepares the 'getall_channelmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_delete_user_prep(struct pbcc_context* pb, char const* user_id);
-
-
-/** Prepares the 'get_spaces' transaction, mostly by
-    formatting the URI of the HTTP request.
-  */
-enum pubnub_res pbcc_get_spaces_prep(struct pbcc_context* pb,
-                                     char const** include,
-                                     size_t include_count,
+enum pubnub_res pbcc_getall_channelmetadata_prep(struct pbcc_context* pb,
+                                     char const* include,
                                      size_t limit,
                                      char const* start,
                                      char const* end,
-                                     enum pubnub_tribool count);
+                                     enum pubnub_tribool count,
+                                     enum pubnub_trans pt);
 
 
-/** Prepares the 'create_space' transaction, mostly by
+/** Prepares the 'set_channelmetatdata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_create_space_prep(struct pbcc_context* pb,
-                                       char const** include,
-                                       size_t include_count,
-                                       const char* space_obj);
+enum pubnub_res pbcc_set_channelmetadata_prep(struct pbcc_context* pb,
+                                       char const* channel_metadataid,
+                                       char const* include,
+                                       const char* channel_metadata_obj,
+                                       enum pubnub_trans pt);
 
 
-/** Prepares the 'get_space' transaction, mostly by
+/** Prepares the 'get_channelmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_get_space_prep(struct pbcc_context* pb,
-                                    char const** include,
-                                    size_t include_count,
-                                    char const* space_id);
+enum pubnub_res pbcc_get_channelmetadata_prep(struct pbcc_context* pb,
+                                    char const* include,
+                                    char const* channel_metadataid,
+                                    enum pubnub_trans pt);
 
 
-/** Prepares the 'update_space' transaction, mostly by
+/** Prepares the 'remove_channelmetadata' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_update_space_prep(struct pbcc_context* pb,
-                                       char const** include,
-                                       size_t include_count,
-                                       char const* space_obj,
-                                       struct pbjson_elem const* id);
-
-
-/** Prepares the 'delete_space' transaction, mostly by
-    formatting the URI of the HTTP request.
-  */
-enum pubnub_res pbcc_delete_space_prep(struct pbcc_context* pb, char const* space_id);
+enum pubnub_res pbcc_remove_channelmetadata_prep(struct pbcc_context* pb, char const* channel_metadataid, enum pubnub_trans pt);
 
 
 /** Prepares the 'get_memberships' transaction, mostly by
     formatting the URI of the HTTP request.
   */
 enum pubnub_res pbcc_get_memberships_prep(struct pbcc_context* pb,
-                                          char const* user_id,
-                                          char const** include,
-                                          size_t include_count,
+                                          char const* uuid_metadataid,
+                                          char const* include,
                                           size_t limit,
                                           char const* start,
                                           char const* end,
-                                          enum pubnub_tribool count);
+                                          enum pubnub_tribool count,
+                                          enum pubnub_trans pt);
 
 
-/** Prepares the 'add', 'update' or 'remove' 'users space memberships' transactions
+/** Prepares the 'add', 'update' or 'remove' 'set_memberships' transactions
     depending on @p update_obj formed, mostly by formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_update_memberships_prep(struct pbcc_context* pb,
-                                             char const* user_id,
-                                             char const** include,
-                                             size_t include_count,
-                                             char const* update_obj);
+enum pubnub_res pbcc_set_memberships_prep(struct pbcc_context* pb,
+                                             char const* uuid_metadataid,
+                                             char const* include,
+                                             char const* update_obj,
+                                             enum pubnub_trans pt);
 
 /** Prepares the 'get_members' transaction, mostly by
     formatting the URI of the HTTP request.
   */
 enum pubnub_res pbcc_get_members_prep(struct pbcc_context* pb,
-                                      char const* space_id,
-                                      char const** include,
-                                      size_t include_count,
+                                      char const* channel_metadataid,
+                                      char const* include,
                                       size_t limit,
                                       char const* start,
                                       char const* end,
-                                      enum pubnub_tribool count);
+                                      enum pubnub_tribool count,
+                                      enum pubnub_trans pt);
 
-/** Prepares the 'update_members' transaction, mostly by
+/** Prepares the 'set_members' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_update_members_prep(struct pbcc_context* pb,
-                                         char const* space_id,
-                                         char const** include,
-                                         size_t include_count,
-                                         char const* update_obj);
+enum pubnub_res pbcc_set_members_prep(struct pbcc_context* pb,
+                                         char const* channel_metadataid,
+                                         char const* include,
+                                         char const* set_obj, 
+                                         enum pubnub_trans pt);
 
 
 /** Parses server response simply on any 'Objects API' transaction request.

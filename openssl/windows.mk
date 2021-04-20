@@ -28,14 +28,14 @@ PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\c
 PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj pbntlm_core.obj pbntlm_packer_sspi.obj pubnub_set_proxy_from_system_windows.obj 
 !endif
 
-CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY)
+CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D _CRT_SECURE_NO_WARNINGS /D PUBNUB_CRYPTO_API=1
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include
 
-all: pubnub_sync_sample.exe metadata.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe subscribe_publish_callback_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_advanced_history_sample.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe
+all: pubnub_sync_sample.exe metadata.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe pubnub_publish_via_post_secretkey_sample.exe subscribe_publish_callback_sample.exe subscribe_publish_callback_secretkey_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_advanced_history_sample.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe pubnub_objects_secretkey_sample.exe
 
 SYNC_INTF_SOURCEFILES= ..\core\pubnub_ntf_sync.c ..\core\pubnub_sync_subscribe_loop.c ..\core\srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES= pubnub_ntf_sync.obj pubnub_sync_subscribe_loop.obj srand_from_pubnub_time.obj
@@ -54,6 +54,12 @@ pubnub_callback.lib : $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(CALLBACK_INTF_S
 pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_sample.c pubnub_sync.lib $(LIBS)
 
+pubnub_sync_secretkey_sample.exe: ..\core\samples\pubnub_sync_secretkey_sample.c pubnub_sync.lib
+	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_secretkey_sample.c pubnub_sync.lib $(LIBS)
+
+pubnub_objects_secretkey_sample.exe: ..\core\samples\pubnub_objects_secretkey_sample.c pubnub_sync.lib	
+	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_objects_secretkey_sample.c pubnub_sync.lib $(LIBS)
+
 metadata.exe: ..\core\samples\metadata.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\metadata.c pubnub_sync.lib $(LIBS)
 
@@ -69,11 +75,17 @@ pubnub_advanced_history_sample.exe: ..\core\samples\pubnub_advanced_history_samp
 pubnub_publish_via_post_sample.exe: ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LIBS)
 
+pubnub_publish_via_post_secretkey_sample.exe: ..\core\samples\pubnub_publish_via_post_secretkey_sample.c pubnub_sync.lib
+	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_secretkey_sample.c pubnub_sync.lib $(LIBS)
+
 pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\pubnub_callback_sample.c  pubnub_callback.lib $(LIBS)
 
 subscribe_publish_callback_sample.exe: ..\core\samples\subscribe_publish_callback_sample.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\subscribe_publish_callback_sample.c  pubnub_callback.lib $(LIBS)
+
+subscribe_publish_callback_secretkey_sample.exe: ..\core\samples\subscribe_publish_callback_secretkey_sample.c pubnub_callback.lib
+	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\subscribe_publish_callback_secretkey_sample.c  pubnub_callback.lib $(LIBS) -DPUBNUB_CRYPTO_API=1 -D_CRT_SECURE_NO_WARNINGS 
 
 subscribe_publish_from_callback.exe: ..\core\samples\subscribe_publish_from_callback.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\subscribe_publish_from_callback.c  pubnub_callback.lib  $(LIBS)

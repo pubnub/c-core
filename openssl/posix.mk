@@ -98,7 +98,7 @@ endif
 
 INCLUDES=-I .. -I .
 
-all: pubnub_sync_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_advanced_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop
+all: pubnub_sync_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
@@ -134,9 +134,11 @@ pubnub_callback.a : $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES)
 	$(CC) -c $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) -D PUBNUB_CALLBACK_API $(SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES)
 	ar rcs pubnub_callback.a $(OBJFILES) $(CALLBACK_INTF_OBJFILES)
 
-
 pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_sample.c pubnub_sync.a $(LDLIBS)
+
+pubnub_objects_secretkey_sample: ../core/samples/pubnub_objects_secretkey_sample.c pubnub_sync.a	
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_objects_secretkey_sample.c pubnub_sync.a $(LDLIBS)
 
 metadata: ../core/samples/metadata.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/metadata.c pubnub_sync.a $(LDLIBS)
@@ -152,6 +154,9 @@ pubnub_sync_subloop_sample: ../core/samples/pubnub_sync_subloop_sample.c pubnub_
 
 pubnub_publish_via_post_sample: ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a $(LDLIBS)
+
+pubnub_publish_via_post_secretkey_sample: ../core/samples/pubnub_publish_via_post_secretkey_sample.c pubnub_sync.a
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_secretkey_sample.c pubnub_sync.a $(LDLIBS)
 
 pubnub_advanced_history_sample: ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a $(LDLIBS)
@@ -187,4 +192,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 
 
 clean:
-	rm pubnub_sync_sample metadata pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_publish_via_post_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample pubnub_sync.a pubnub_callback.a pubnub_callback_subloop_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
+	rm pubnub_sync_sample pubnub_objects_secretkey_sample metadata pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample pubnub_sync.a pubnub_callback.a pubnub_callback_subloop_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM

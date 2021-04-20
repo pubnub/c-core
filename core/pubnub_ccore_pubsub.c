@@ -7,7 +7,11 @@
 #include "pubnub_url_encode.h"
 #include "lib/pb_strnlen_s.h"
 #include "pubnub_ccore_pubsub.h"
+#include "pubnub_api_types.h"
 
+#if PUBNUB_CRYPTO_API
+#include "pubnub_crypto.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +39,9 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
     p->message_to_send = NULL;
 
+#if PUBNUB_USE_GZIP_COMPRESSION
+    p->gzip_msg_len = 0;
+#endif
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
 #endif
@@ -220,6 +227,7 @@ bool pbcc_split_array(char* buf)
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 {
     char* reply    = p->http_reply;
+    PUBNUB_LOG_DEBUG("\n%s\n", reply);
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
@@ -256,6 +264,7 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
     int      previous_i;
     unsigned time_token_length;
     char*    reply    = p->http_reply;
+    PUBNUB_LOG_DEBUG("\n%s\n", reply);
     int      replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
@@ -383,7 +392,7 @@ void pbcc_via_post_headers(struct pbcc_context* pb,
     max_length -= sizeof lines - 1;
 #if PUBNUB_USE_GZIP_COMPRESSION
     if (pb->gzip_msg_len != 0) {
-        char h_encoding[] = "Content-Encoding: gzip";
+        char h_encoding[] = "Content-Encoding: gzip\0";
         length = snprintf(header, max_length, "%lu\r\n", (unsigned long)pb->gzip_msg_len);
         PUBNUB_ASSERT_OPT(max_length > length + sizeof h_encoding - 1);
         memcpy(header + length, h_encoding, sizeof h_encoding - 1);
@@ -398,13 +407,12 @@ void pbcc_via_post_headers(struct pbcc_context* pb,
 }
 
 
-enum pubnub_res pbcc_url_encode(struct pbcc_context* pb, char const* what)
+enum pubnub_res pbcc_url_encode(struct pbcc_context* pb, char const* what, enum pubnub_trans pt)
 {
     int url_encoded_length;
-
     url_encoded_length = pubnub_url_encode(pb->http_buf + pb->http_buf_len,
                                            what,
-                                           sizeof pb->http_buf - pb->http_buf_len);
+                                           sizeof pb->http_buf - pb->http_buf_len, pt);
     if (url_encoded_length < 0) {
         pb->http_buf_len = 0;
         return PNR_TX_BUFF_TOO_SMALL;
@@ -419,7 +427,8 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
                                               char const*          param_name,
                                               size_t      param_name_len,
                                               char const* param_val,
-                                              char        separator)
+                                              char        separator,
+                                              enum pubnub_trans pt)
 {
     if (pb->http_buf_len + 1 + param_name_len + 1 > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
@@ -429,7 +438,7 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
     memcpy(pb->http_buf + pb->http_buf_len, param_name, param_name_len);
     pb->http_buf_len += param_name_len;
     pb->http_buf[pb->http_buf_len++] = '=';
-    return pbcc_url_encode(pb, param_val);
+    return pbcc_url_encode(pb, param_val, pt);
 }
 
 
@@ -459,31 +468,68 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         pb->http_buf[pb->http_buf_len++] = '/';
         APPEND_URL_ENCODED_M(pb, message);
     }
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    if ((PNR_OK == rslt) && !store_in_history) {
-        rslt = pbcc_append_url_param(pb, "store", sizeof "store" - 1, "0", '&');
-    }
-    if ((PNR_OK == rslt) && norep) {
-        rslt = pbcc_append_url_param(pb, "norep", sizeof "norep" - 1, "true", '&');
-    }
-    if ((PNR_OK == rslt) && (meta != NULL)) {
-        size_t const param_name_len = sizeof "meta" - 1;
-        if (pb->http_buf_len + 1 + param_name_len + 1 + 1 > sizeof pb->http_buf) {
-            return PNR_TX_BUFF_TOO_SMALL;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    if (!store_in_history) { ADD_URL_PARAM(qparam, store, "0"); }
+    if (norep) { ADD_URL_PARAM(qparam, norep, "true"); }
+    if (meta) { ADD_URL_PARAM(qparam, meta, meta); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, message, method, false);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, message, method);
         }
-        pb->http_buf[pb->http_buf_len++] = '&';
-        memcpy(pb->http_buf + pb->http_buf_len, "meta", param_name_len);
-        pb->http_buf_len += param_name_len;
-        pb->http_buf[pb->http_buf_len++] = '=';
-        rslt                             = pbcc_url_encode(pb, meta);
     }
+#endif
+
     if (method != pubnubSendViaGET) {
         APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
-
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
+}
+
+enum pubnub_res pbcc_sign_url(struct pbcc_context* pc, const char* msg, enum pubnub_method method, bool v3sign){
+    enum pubnub_res rslt_ = PNR_INTERNAL_ERROR;
+    char* url = (char*)malloc(sizeof(pc->http_buf));
+    char* ques = strchr(pc->http_buf, '?');
+    size_t pos_ques_char = (int)(ques - pc->http_buf);
+    if (url != NULL) {
+        url[pos_ques_char] = '\0';
+        memcpy(url, pc->http_buf, pos_ques_char);
+        char final_signature[60];
+#if PUBNUB_CRYPTO_API
+        char* query_str = ques + 1;
+        if (v3sign) {
+            rslt_ = pn_gen_pam_v3_sign((pubnub_t *)pc, query_str, url, msg, final_signature);
+        }
+        else {
+            rslt_ = pn_gen_pam_v2_sign((pubnub_t *)pc, query_str, url, final_signature);
+        }
+#endif
+        if (rslt_ == PNR_OK) {
+            const char* param_ = "signature";
+            rslt_ = pbcc_append_url_param(
+                (pc), param_, strlen(param_), (final_signature), ('&'));
+            if (rslt_ != PNR_OK) {
+                return rslt_;
+            }
+        }
+    }
+    free(url);
+    PUBNUB_LOG_DEBUG("\nREQUEST = %s\n", pc->http_buf);
+    return rslt_;
 }
 
 
@@ -491,6 +537,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                  const char* channel,
                                  const char* message)
 {
+    enum pubnub_res   rslt = PNR_OK;
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
 
@@ -506,11 +553,30 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
     APPEND_URL_LITERAL_M(pb, "/0/");
     APPEND_URL_ENCODED_M(pb, message);
 
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-        
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubSendViaGET);
+        }
+    }
+#endif
+
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -520,6 +586,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     unsigned*            heartbeat)
 {
     char const* uuid = pbcc_uuid_get(p);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -539,13 +606,29 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     APPEND_URL_ENCODED_M(p, channel);
     p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
                                 sizeof p->http_buf - p->http_buf_len,
-                                "/0/%s?pnsdk=%s",
-                                p->timetoken,
-                                pubnub_uname());
-    APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(p, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
-    APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
+                                "/0/%s",
+                                p->timetoken);
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key == NULL && p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+#endif
 
-    return PNR_STARTED;
+    if (heartbeat) { ADD_URL_PARAM_SIZET(qparam, heartbeat, (unsigned long)(*heartbeat)); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(p, qparam);
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key != NULL) {
+        rslt = pbcc_sign_url(p, "", pubnubSendViaGET, true);
+    }
+#endif
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }

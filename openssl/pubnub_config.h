@@ -165,7 +165,9 @@
 #define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
 
 /** If true (!=0), enable support for message encryption/decryption */
+#ifndef PUBNUB_CRYPTO_API
 #define PUBNUB_CRYPTO_API 1
+#endif
 
 #if !defined(PUBNUB_ONLY_PUBSUB_API)
 /** If true (!=0), will enable only publish and subscribe. All
@@ -214,5 +216,5 @@
     these things all by himself using pubnub_heartbeat() transaction */
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
-
+#define PUBNUB_MAX_URL_PARAMS 10
 #endif /* !defined INC_PUBNUB_CONFIG */

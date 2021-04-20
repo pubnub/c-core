@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "2.12.7"
+version: "2.13.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.13.0
+    date: Apr 20, 2021
+    changes:
+      - type: feature
+        text: "Implemented Pubnub Access Manager Support."
+      - type: feature
+        text: "Implemented Objects V2. Removed Objects V1."
   - version: v2.12.7
     date: Jan 20, 2021
     changes:

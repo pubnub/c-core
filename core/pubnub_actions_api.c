@@ -43,6 +43,7 @@ enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
 #if PUBNUB_USE_GZIP_COMPRESSION
     value = (pbgzip_compress(pb, value) == PNR_OK) ? pb->core.gzip_msg_buf : value;
 #endif
+    pb->method = pubnubSendViaPOST;
     rslt = pbcc_add_action_prep(&pb->core,
                                 channel,
                                 message_timetoken,
@@ -124,7 +125,7 @@ enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-
+    pb->method = pubnubUseDELETE;
     rslt = pbcc_remove_action_prep(&pb->core,
                                    channel,
                                    message_timetoken,

@@ -189,27 +189,23 @@ enum pubnub_trans {
     /** Objects API transaction Returns a paginated list of users associated with the
         subscription key.
       */
-    PBTT_GET_USERS,
+    PBTT_GETALL_UUIDMETADATA,
     /** Objects API transaction Creates a user with the attributes specified. */
-    PBTT_CREATE_USER,
-    /** Objects API transaction Returns the user object specified with user_id */
-    PBTT_GET_USER,
-    /** Objects API transaction Updates users data( on pubnub server) specified with user_id */
-    PBTT_UPDATE_USER,
-    /** Objects API transaction Deletes user data( on pubnub server) specified with user_id */
-    PBTT_DELETE_USER,
+    PBTT_SET_UUIDMETADATA,
+    /** Objects API transaction Returns the user object specified with metadata_uuid */
+    PBTT_GET_UUIDMETADATA,
+    /** Objects API transaction Deletes user data( on pubnub server) specified with metadata_uuid */
+    PBTT_DELETE_UUIDMETADATA,
     /** Objects API transaction Returns a paginated list of spaces associated with the
         subscription key.
       */
-    PBTT_GET_SPACES,
+    PBTT_GETALL_CHANNELMETADATA,
     /** Objects API transaction Creates a space with the attributes specified. */
-    PBTT_CREATE_SPACE,
+    PBTT_SET_CHANNELMETADATA,
     /** Objects API transaction Returns the space object specified with space_id */
-    PBTT_GET_SPACE,
-    /** Objects API transaction Updates space data( on pubnub server) specified with space_id */
-    PBTT_UPDATE_SPACE,
+    PBTT_GET_CHANNELMETADATA,
     /** Objects API transaction Deletes space data( on pubnub server) specified with space_id */
-    PBTT_DELETE_SPACE,
+    PBTT_REMOVE_CHANNELMETADATA,
     /** Objects API transaction Returns the space memberships of the user specified with user_id.
       */
     PBTT_GET_MEMBERSHIPS,
@@ -218,10 +214,10 @@ enum pubnub_trans {
     PBTT_JOIN_SPACES,
     /** Objects API transaction Updates the users space memberships specified with user_id.
       */
-    PBTT_UPDATE_MEMBERSHIPS,
+    PBTT_SET_MEMBERSHIPS,
     /** Objects API transaction Removes the users space memberships specified with user_id.
       */
-    PBTT_LEAVE_SPACES,
+    PBTT_REMOVE_MEMBERSHIPS,
     /** Objects API transaction Returns all users in the space specified by space_id.
       */
     PBTT_GET_MEMBERS,
@@ -230,7 +226,7 @@ enum pubnub_trans {
     PBTT_ADD_MEMBERS,
     /** Objects API transaction Updates the list of members of the space specified with space_id.
       */
-    PBTT_UPDATE_MEMBERS,
+    PBTT_SET_MEMBERS,
     /** Objects API transaction Removes the list of members of the space specified with space_id.
       */
     PBTT_REMOVE_MEMBERS,

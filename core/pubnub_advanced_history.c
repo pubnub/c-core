@@ -65,10 +65,10 @@ enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
     }
 
     if (strchr(timetoken, ',') == NULL) {
-        rslt = pbcc_message_counts_prep(&(pb->core), channel, timetoken, NULL);
+        rslt = pbcc_message_counts_prep(PBTT_MESSAGE_COUNTS , &(pb->core), channel, timetoken, NULL);
     }
     else {
-        rslt = pbcc_message_counts_prep(&(pb->core), channel, NULL, timetoken);
+        rslt = pbcc_message_counts_prep(PBTT_MESSAGE_COUNTS , &(pb->core), channel, NULL, timetoken);
     }
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_MESSAGE_COUNTS;

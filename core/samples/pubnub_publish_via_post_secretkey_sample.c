@@ -4,6 +4,7 @@
 #include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
+#include "core/pubnub_crypto.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -85,6 +86,7 @@ int main()
         printf("Failed to allocate Pubnub context!\n");
         return -1;
     }
+
     char* my_env_publish_key = getenv("PUBNUB_PUBLISH_KEY");
     char* my_env_subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
     char* my_env_secret_key = getenv("PUBNUB_SECRET_KEY");
@@ -95,6 +97,7 @@ int main()
     printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
 
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
+    pubnub_set_secret_key(pbp, my_env_secret_key);
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 

@@ -10,8 +10,14 @@
 #include "pbsha256.h"
 #include "pbaes256.h"
 #include "lib/base64/pbbase64.h"
+#include "pubnub_log.h"
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/pem.h>
 
-
+#ifdef _MSC_VER
+#define strdup(p) _strdup(p)
+#endif
 
 int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char const* msg, char *signature, size_t n)
 {
@@ -53,7 +59,6 @@ int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char cons
              digest[8], digest[9], digest[10], digest[11],
              digest[12], digest[13], digest[14], digest[15]
         );
-
     return 0;
 #endif /* !PUBNUB_CRYPTO_API */
 }
@@ -298,3 +303,240 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key)
 #endif
 }
 
+#if __UWP__
+int mx_hmac_sha256(
+    const char *key, 
+    int keylen,
+    const unsigned char* msg,
+    size_t mlen,
+    unsigned char** sig, size_t* slen) {
+    /* Returned to caller */
+    int result = -1;
+
+    EVP_PKEY* pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, (const unsigned char*)key, strlen(key));
+
+    if (!msg || !mlen || !sig || !pkey) {
+        printf("Param error: mx_hmac_sha256()\n");
+        return -1;
+    }
+
+    if (*sig)
+        OPENSSL_free(*sig);
+
+    *sig = NULL;
+    *slen = 0;
+
+    EVP_MD_CTX* ctx = NULL;
+
+    do
+    {
+        ctx = EVP_MD_CTX_create();
+        if (ctx == NULL) {
+            printf("EVP_MD_CTX_create failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        OpenSSL_add_all_algorithms();
+        const EVP_MD* md = EVP_get_digestbyname("SHA256");
+        if (md == NULL) {
+            printf("EVP_get_digestbyname failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        int rc = EVP_DigestInit_ex(ctx, md, NULL);
+        if (rc != 1) {
+            printf("EVP_DigestInit_ex failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        rc = EVP_DigestSignInit(ctx, NULL, md, NULL, pkey);
+        if (rc != 1) {
+            printf("EVP_DigestSignInit failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        rc = EVP_DigestSignUpdate(ctx, msg, mlen);
+        if (rc != 1) {
+            printf("EVP_DigestSignUpdate failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        size_t req = 0;
+        rc = EVP_DigestSignFinal(ctx, NULL, &req);
+        if (rc != 1) {
+            printf("EVP_DigestSignFinal failed (1), error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        if (!(req > 0)) {
+            printf("EVP_DigestSignFinal failed (2), error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        *sig = (char*)OPENSSL_malloc(req);
+        if (*sig == NULL) {
+            printf("OPENSSL_malloc failed, error 0x%x\n", ERR_get_error());
+            break; /* failed */
+        }
+
+        *slen = req;
+        rc = EVP_DigestSignFinal(ctx, (unsigned char*)*sig, slen);
+        if (rc != 1) {
+            printf("EVP_DigestSignFinal failed (3), return code %d, error 0x%x\n", rc, ERR_get_error());
+            break; /* failed */
+        }
+
+        if (req != *slen) {
+            printf("EVP_DigestSignFinal failed, mismatched signature sizes %d, %d\n", req, *slen);
+            break; /* failed */
+        }
+
+        result = 0;
+
+    } while (0);
+
+    if (ctx) {
+        EVP_MD_CTX_destroy(ctx);
+        ctx = NULL;
+    }
+
+    /* Convert to 0/1 result */
+    return !!result;
+}
+#else
+unsigned char* mx_hmac_sha256(
+    const void* key, 
+    int keylen,
+    const unsigned char* data,
+    int datalen,
+    unsigned char* result, unsigned int* resultlen) {
+        return HMAC(EVP_sha256(), key, keylen, data, datalen, result, resultlen);
+}
+#endif
+
+char* base64encode(const void* b64_encode_this, int encode_this_many_bytes) {
+    BIO* b64_bio, * mem_bio;      //Declares two OpenSSL BIOs: a base64 filter and a memory BIO.
+    BUF_MEM* mem_bio_mem_ptr;    //Pointer to a "memory BIO" structure holding our base64 data.
+    b64_bio = BIO_new(BIO_f_base64());                      //Initialize our base64 filter BIO.
+    mem_bio = BIO_new(BIO_s_mem());                           //Initialize our memory sink BIO.
+    BIO_push(b64_bio, mem_bio);            //Link the BIOs by creating a filter-sink BIO chain.
+    BIO_set_flags(b64_bio, BIO_FLAGS_BASE64_NO_NL);  //No newlines every 64 characters or less.
+    BIO_write(b64_bio, b64_encode_this, encode_this_many_bytes); //Records base64 encoded data.
+    BIO_flush(b64_bio);   //Flush data.  Necessary for b64 encoding, because of pad characters.
+    BIO_get_mem_ptr(mem_bio, &mem_bio_mem_ptr);  //Store address of mem_bio's memory structure.
+    BIO_set_close(mem_bio, BIO_NOCLOSE);   //Permit access to mem_ptr after BIOs are destroyed.
+    BIO_free_all(b64_bio);  //Destroys all BIOs in chain, starting with b64 (i.e. the 1st one).
+    BUF_MEM_grow(mem_bio_mem_ptr, (*mem_bio_mem_ptr).length + 1);   //Makes space for end null.
+    (*mem_bio_mem_ptr).data[(*mem_bio_mem_ptr).length] = '\0';  //Adds null-terminator to tail.
+    return (*mem_bio_mem_ptr).data; //Returns base-64 encoded data. (See: "buf_mem_st" struct).
+}
+
+char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
+    int keylen = strlen(key);
+    const unsigned char* msgdata = (const unsigned char*)strdup(message);
+    if (NULL == msgdata) { return NULL; }
+
+    int datalen = strlen((char*)msgdata);
+    #if __UWP__
+    unsigned char* result = NULL;
+    size_t* resultlen = 0;
+    int ret = mx_hmac_sha256(key, keylen, (const unsigned char*)msgdata, (size_t)datalen, &result, (size_t*)&resultlen);
+    if (ret != 0){ return NULL; }
+    #else
+    unsigned char* result = NULL;
+    unsigned int resultlen = -1;
+    result = mx_hmac_sha256((const void*)key, keylen, msgdata, datalen, result, &resultlen);
+    #endif
+    int bytes_to_encode = (int)resultlen;
+    if (bytes_to_encode <= 0) {
+        PUBNUB_LOG_DEBUG("hmac_sha256 result len %d is low\n", bytes_to_encode);
+        return NULL;
+    }
+    char* base64_encoded = base64encode(result, bytes_to_encode); //Base-64 encoding.
+    int counter = 0;
+    while (base64_encoded[counter] != '\0') {
+        if (base64_encoded[counter] == '+') {
+            base64_encoded[counter] = '-';
+        }
+        else if (base64_encoded[counter] == '/') {
+            base64_encoded[counter] = '_';
+        }
+        counter++;
+    }
+    free((unsigned char*)msgdata);
+    return base64_encoded;
+}
+
+enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature) {
+    enum pubnub_res sign_status = PNR_OK;
+    int str_to_sign_len = strlen(p->core.subscribe_key) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign);
+    char* str_to_sign = (char*)malloc(sizeof(char) * str_to_sign_len + 5); // 4 variables concat + 1
+    if (str_to_sign != NULL) {
+        sprintf(str_to_sign, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
+    }
+    PUBNUB_LOG_DEBUG("\nv2 str_to_sign = %s\n", str_to_sign);
+    char* part_sign = "";
+#if PUBNUB_CRYPTO_API
+    part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
+    if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }
+#else
+    sign_status = PNR_CRYPTO_NOT_SUPPORTED;
+#endif
+    free((char*)str_to_sign);
+    if (sign_status == PNR_OK) {
+        sprintf(signature, "%s", part_sign);
+    }
+    return sign_status;
+}
+
+enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature) {
+    enum pubnub_res sign_status = PNR_OK;
+    char* method_verb;
+    switch (p->method) {
+    case pubnubSendViaGET:
+        method_verb = "GET";
+        break;
+    case pubnubSendViaPOST:
+#if PUBNUB_USE_GZIP_COMPRESSION
+    case pubnubSendViaPOSTwithGZIP:
+#endif
+        method_verb = "POST";
+        break;
+    case pubnubUsePATCH:
+#if PUBNUB_USE_GZIP_COMPRESSION
+    case pubnubUsePATCHwithGZIP:
+#endif
+        method_verb = "PATCH";
+        break;
+    case pubnubUseDELETE:
+        method_verb = "DELETE";
+        break;
+    default:
+        PUBNUB_LOG_ERROR("Error: get_method_verb_string(method): unhandled method: %u\n", p->method);
+        method_verb = "UNKOWN";
+        return PNR_CRYPTO_NOT_SUPPORTED;
+    }
+    int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + strlen(msg);
+    char* str_to_sign = (char*)malloc(sizeof(char) * (str_to_sign_len + 1));
+    if (str_to_sign != NULL) {
+        sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
+    }
+    PUBNUB_LOG_DEBUG("\nv3 str_to_sign = %s\n", str_to_sign);
+    char* part_sign = "";
+#if PUBNUB_CRYPTO_API
+    part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
+    if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }
+#else
+    sign_status = PNR_CRYPTO_NOT_SUPPORTED;
+#endif
+    free((char*)str_to_sign);
+    if (sign_status == PNR_OK) {
+        char last_sign_char = part_sign[strlen(part_sign) - 1];
+        while (last_sign_char == '=') {
+            part_sign[strlen(part_sign) - 1] = '\0';
+            last_sign_char = part_sign[strlen(part_sign) - 1];
+        }
+        sprintf(signature, "v2.%s", part_sign);
+    }
+    return sign_status;
+}

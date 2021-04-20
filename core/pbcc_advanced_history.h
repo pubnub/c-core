@@ -64,7 +64,9 @@ int pbcc_get_message_counts(struct pbcc_context* p, char const* channel, int* o_
 /** Prepares the 'message_counts' operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_message_counts_prep(struct pbcc_context* p,
+enum pubnub_res pbcc_message_counts_prep(
+                                         enum pubnub_trans pt,
+                                         struct pbcc_context* p,
                                          char const*          channel,
                                          char const*          timetoken,
                                          char const*          channel_timetokens);

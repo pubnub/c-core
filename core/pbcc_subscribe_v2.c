@@ -28,6 +28,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
 {
     char        region_str[20];
     char const* tr;
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -56,17 +57,42 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
     APPEND_URL_ENCODED_M(p, channel);
     p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
                                 sizeof p->http_buf - p->http_buf_len,
-                                "/0?tt=%s&pnsdk=%s",
-                                p->timetoken,
-                                pubnub_uname());
-    APPEND_URL_PARAM_M(p, "tr", tr, '&');
-    APPEND_URL_PARAM_M(p, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(p, "uuid", p->uuid, '&');
-    APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
-    APPEND_URL_PARAM_ENCODED_M(p, "filter-expr", filter_expr, '&');
-    APPEND_URL_OPT_PARAM_UNSIGNED_M(p, "heartbeat", heartbeat, '&');
+                                "/0");
 
-    return PNR_STARTED;
+    char const* const uname = pubnub_uname();
+    char * tt = p->timetoken;
+
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (tt != NULL) { ADD_URL_PARAM(qparam, tt, tt); }
+    if (tr) { ADD_URL_PARAM(qparam, tr, tr); }
+
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (p->uuid) { ADD_URL_PARAM(qparam, uuid, p->uuid); }
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key == NULL && p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+#endif
+
+    if (filter_expr) { ADD_URL_PARAM(qparam, filter_expr, filter_expr); }
+    if (heartbeat) { ADD_URL_PARAM_SIZET(qparam, heartbeat, (unsigned long)*heartbeat); }
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(p, qparam);
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key != NULL) {
+        rslt = pbcc_sign_url(p, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", p, "", pubnubSendViaGET);
+        }
+    }
+#endif
+
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -213,8 +239,14 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
         if (pbjson_elem_equals_string(&found, "1")) {
             rslt.message_type = pbsbSignal;
         }
+        else if (pbjson_elem_equals_string(&found, "2")) {
+            rslt.message_type = pbsbObjects;
+        }
         else if (pbjson_elem_equals_string(&found, "3")) {
             rslt.message_type = pbsbAction;
+        }
+        else if (pbjson_elem_equals_string(&found, "4")) {
+            rslt.message_type = pbsbFiles;
         }
         else {
             rslt.message_type = pbsbPublished;

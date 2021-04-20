@@ -73,5 +73,6 @@
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
 
+#define PUBNUB_MAX_URL_PARAMS 10
 
 #endif /* !defined INC_PUBNUB_CONFIG */

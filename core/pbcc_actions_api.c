@@ -88,6 +88,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
 {
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
+    enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken != NULL);
@@ -102,12 +103,33 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/message/");
     APPEND_URL_ENCODED_M(pb, message_timetoken);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, value, pubnubSendViaPOST, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, value, pubnubSendViaPOST);
+        }
+    }
+#endif
+
     APPEND_MESSAGE_BODY_M(PNR_OK, pb, value);
 
-    return PNR_STARTED;
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -202,6 +224,7 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
 {
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
+    enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken.ptr != NULL);
@@ -239,11 +262,31 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
     APPEND_URL_STRING_M(pb, message_timetoken.ptr + 1, message_timetoken.size - 2);
     APPEND_URL_LITERAL_M(pb, "/action/");
     APPEND_URL_STRING_M(pb, action_timetoken.ptr + 1, action_timetoken.size - 2);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubUseDELETE, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubUseDELETE);
+        }
+    }
+#endif
+
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -255,6 +298,7 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
 {
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
+    enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
@@ -266,21 +310,40 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
                                 "/v1/message-actions/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "start", start, '&');
-    APPEND_URL_PARAM_M(pb, "end", end, '&');
-    if (limit != 0) {
-        APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
-    }
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    if (start) { ADD_URL_PARAM(qparam, start, start); }
+    if (end) { ADD_URL_PARAM(qparam, end, end); }
+    if (limit != 0) { ADD_URL_PARAM_SIZET(qparam, limit, limit); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubSendViaGET);
+        }
+    }
+#endif
+
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
 enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
 {
+    enum pubnub_res rslt = PNR_OK;
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
     char const* reply = pb->http_reply;
@@ -329,11 +392,30 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
                                 "%.*s",
                                 (int)(elem.end - elem.start - 2),
                                 elem.start + 1);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubSendViaGET);
+        }
+    }
+#endif
 
-    return PNR_STARTED;
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -345,6 +427,7 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
 {
     char const* const uname = pubnub_uname();
     char const*       uuid = pbcc_uuid_get(pb);
+    enum pubnub_res rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
@@ -356,16 +439,34 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
                                 "/v3/history-with-actions/sub-key/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "start", start, '&');
-    APPEND_URL_PARAM_M(pb, "end", end, '&');
-    if (limit != 0) {
-        APPEND_URL_PARAM_UNSIGNED_M(pb, "limit", (unsigned)limit, '&');
-    }
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+#endif
+    if (start) { ADD_URL_PARAM(qparam, start, start); }
+    if (end) { ADD_URL_PARAM(qparam, end, end); }
+    if (limit != 0) { ADD_URL_PARAM_SIZET(qparam, limit, limit); }
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubSendViaGET);
+        }
+    }
+#endif
+
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 

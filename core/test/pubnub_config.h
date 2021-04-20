@@ -138,5 +138,5 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
-
+#define PUBNUB_MAX_URL_PARAMS 10
 #endif /* !defined INC_PUBNUB_CONFIG */

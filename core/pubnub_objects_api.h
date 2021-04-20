@@ -8,13 +8,11 @@
 #include <stdbool.h>
 
 
-/** Returns a paginated list of users associated with the subscription key of the context @p pbp,
+/** Returns a paginated list of metadata objects for users associated with the subscription key of the context @p pbp,
     optionally including each record's custom data object.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex user attributes to include in
+    @param include The comma delimited (C) string with additional/complex user attributes to include in
                    response. Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
     @param limit Number of entities to return in response. Regular values 1 - 100. If you set `0`,
                  that means “use the default”. At the time of this writing, default was 100.
     @param start Previously-returned cursor bookmark for fetching the next page. Use NULL if you
@@ -26,82 +24,59 @@
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_users(pubnub_t* pb, 
-                                 char const** include, 
-                                 size_t include_count,
+enum pubnub_res pubnub_getall_uuidmetadata(pubnub_t* pb,
+                                 char const* include, 
                                  size_t limit,
                                  char const* start,
                                  char const* end,
                                  enum pubnub_tribool count);
 
-/** Creates a user with the attributes specified in @p user_obj.
-    Returns the created user object, optionally including the user's custom data object.
-    @note User ID and name are required properties in the @p user_obj
+/** Creates a metadata for a uuid with the attributes specified in @p uuid_metadata_obj.
+    Returns the created metadata uuid object, optionally including the user's custom data object.
+    @note User ID and name are required properties in the @p uuid_metadata_obj
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex user attributes to include in
+    @param include The comma delimited (C) string with additional/complex user attributes to include in
                    response. Use NULL if you don't want to retrieve additional attributes.
     @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
                          attributes
-    @param user_obj The JSON string with the definition of the User
+    @param uuid_metadata_obj The JSON string with the definition of the UUID Metadata
                     Object to create.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_create_user(pubnub_t* pb, 
-                                   char const** include, 
-                                   size_t include_count,
-                                   char const* user_obj);
+enum pubnub_res pubnub_set_uuidmetadata(pubnub_t* pb, 
+    char const* uuid_metadataid,
+    char const* include,
+    char const* uuid_metadata_obj);
 
 
-/** Returns the user object specified with @p user_id, optionally including the user's
+/** Returns the uuid metadata object specified with @p user_id, optionally including the user's
     custom data object.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex user attributes to include in
+    @param include The comma delimited (C) string with additional/complex user attributes to include in
                    response. Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param user_id The User ID for which to retrieve the user object.
+    @param uuid_metadataid The UUID Metadata ID for which to retrieve the user object.
                    Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_user(pubnub_t* pb,
-                                char const** include, 
-                                size_t include_count,
-                                char const* user_id);
+enum pubnub_res pubnub_get_uuidmetadata(pubnub_t* pb,
+                                char const* include, 
+                                char const* uuid_metadataid);
 
 
-/** Updates the user object specified with the `id` key of the @p user_obj with any new
-    information you provide. Returns the updated user object, optionally including
-    the user's custom data object. 
+
+/** Deletes the uuid metadata specified with @p uuid_metadataid.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex user attributes to include in
-                   response. Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param user_obj The JSON string with the description of the User
-                    Object to update.
+    @param uuid_metadataid The UUID Metatdata ID. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_update_user(pubnub_t* pb, 
-                                   char const** include,
-                                   size_t include_count,
-                                   char const* user_obj);
-
-
-/** Deletes the user specified with @p user_id.
-    @param pb The pubnub context. Can't be NULL
-    @param user_id The User ID. Cannot be NULL.
-    @return #PNR_STARTED on success, an error otherwise
-  */
-enum pubnub_res pubnub_delete_user(pubnub_t* pb, char const* user_id);
+enum pubnub_res pubnub_remove_uuidmetadata(pubnub_t* pb, char const* uuid_metadataid);
 
 
 /** Returns the spaces associated with the subscriber key of the context @p pbp, optionally
     including each space's custom data object.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
     @param limit Number of entities to return in response. Regular values 1 - 100. If you set `0`,
                  that means “use the default”. At the time of this writing, default was 100.
     @param start Previously-returned cursor bookmark for fetching the next page. Use NULL if you
@@ -113,81 +88,58 @@ enum pubnub_res pubnub_delete_user(pubnub_t* pb, char const* user_id);
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_spaces(pubnub_t* pb, 
-                                  char const** include, 
-                                  size_t include_count,
+enum pubnub_res pubnub_getall_channelmetadata(pubnub_t* pb, 
+                                  char const* include, 
                                   size_t limit,
                                   char const* start,
                                   char const* end,
                                   enum pubnub_tribool count);
 
 
-/** Creates a space with the attributes specified in @p space_obj.
+/** Creates a metadata for the specified channel with the attributes specified in @p channel_metadata_obj.
     Returns the created space object, optionally including its custom data object.
-    @note Space ID and name are required properties of @p space_obj
+    @note Channel ID and name are required properties of @p channel_metadata_obj
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param space_obj The JSON string with the definition of the Space Object to create.
+    @param channel_metadata_obj The JSON string with the definition of the channel metadata Object to create.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_create_space(pubnub_t* pb, 
-                                    char const** include, 
-                                    size_t include_count,
-                                    char const* space_obj);
+enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
+                                    char const* channel_metadataid,
+                                    char const* include, 
+                                    char const* channel_metadata_obj);
 
 
-/** Returns the space object specified with @p space_id, optionally including its custom
+/** Returns the channel metadata object specified with @p channel_metadataid, optionally including its custom
     data object.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param space_id The Space ID for which to retrieve the space object. Cannot be NULL.
+    @param channel_metadataid The Channel ID for which to retrieve the channel metadata object. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_space(pubnub_t* pb,
-                                 char const** include, 
-                                 size_t include_count,
-                                 char const* space_id);
+enum pubnub_res pubnub_get_channelmetadata(pubnub_t* pb,
+                                 char const* include, 
+                                 char const* channel_metadataid);
 
 
-/** Updates the space specified by the `id` property of the @p space_obj. Returns the space object,
-    optionally including its custom data object. 
+
+/** Deletes the channel metadata specified with @p channel_metadataid.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
-                   Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param space_obj The JSON string with the description of the Space Object to update.
+    @param channel_metadataid The Channel ID. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_update_space(pubnub_t* pb, 
-                                    char const** include,
-                                    size_t include_count,
-                                    char const* space_obj);
+enum pubnub_res pubnub_remove_channelmetadata(pubnub_t* pb, char const* channel_metadataid);
 
 
-/** Deletes the space specified with @p space_id.
-    @param pb The pubnub context. Can't be NULL
-    @param space_id The Space ID. Cannot be NULL.
-    @return #PNR_STARTED on success, an error otherwise
-  */
-enum pubnub_res pubnub_delete_space(pubnub_t* pb, char const* space_id);
-
-
-/** Returns the space memberships of the user specified by @p user_id, optionally including
+/** Returns the channel memberships of the user specified by @p uuid_metadataid, optionally including
     the custom data objects for...
     @param pb The pubnub context. Can't be NULL
-    @param user_id The User ID for which to retrieve the space memberships for.
+    @param uuid_metadataid The UUID to retrieve the memberships.
                    Cannot be NULL.
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
     @param limit Number of entities to return in response. Regular values 1 - 100.
                  If you set `0`, that means “use the default”. At the time of this writing,
                  default was 100.
@@ -201,55 +153,26 @@ enum pubnub_res pubnub_delete_space(pubnub_t* pb, char const* space_id);
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_get_memberships(pubnub_t* pb,
-                                       char const* user_id,
-                                       char const** include,
-                                       size_t include_count,
+                                       char const* uuid_metadataid,
+                                       char const* include,
                                        size_t limit,
                                        char const* start,
                                        char const* end,
                                        enum pubnub_tribool count);
 
 
-/** Adds the space memberships of the user specified by @p user_id. Uses the `add` property
+/** Add/Update the channel memberships of the UUID specified by @p metadata_uuid. Uses the `set` property
     to perform those operations on one, or more memberships.
-    An example for @update_obj:
+    An example for @set_obj:
        [
          {
-           "id": "main-space-id"
-         },
-         {
-           "id": "space-0"
-         }
-       ]
-
-    @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
-                   Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform.
-                      Cannot be NULL.
-    @return #PNR_STARTED on success, an error otherwise
-  */
-enum pubnub_res pubnub_join_spaces(pubnub_t* pb, 
-                                   char const* user_id,
-                                   char const** include,
-                                   size_t include_count,
-                                   char const* update_obj);
-
-
-/** Updates the space memberships of the user specified by @p user_id. Uses the `update` property
-    to perform those operations on one, or more memberships.
-    An example for @update_obj:
-       [
-         {
-           "id": "main-space-id",
+           "channel":{ "id": "main-channel-id" },
            "custom": {
              "starred": true
            }
          },
          {
-           "id": "space-0",
+           "channel":{ "id": "channel-0" },
             "some_key": {
               "other_key": "other_value"
             }
@@ -257,60 +180,53 @@ enum pubnub_res pubnub_join_spaces(pubnub_t* pb,
        ]
 
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param uuid_metadataid The UUID to add/update the memberships.
+                   Cannot be NULL.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform.
+    @param set_obj The JSON object that defines the add/update to perform.
                       Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_update_memberships(pubnub_t* pb, 
-                                          char const* user_id,
-                                          char const** include,
-                                          size_t include_count,
-                                          char const* update_obj);
+enum pubnub_res pubnub_set_memberships(pubnub_t* pb, 
+                                          char const* uuid_metadataid,
+                                          char const* include,
+                                          char const* set_obj);
 
 
-/** Removes the space memberships of the user specified by @p user_id. Uses the `remove` property
+/** Removes the memberships of the user specified by @p uuid_metadataid. Uses the `delete` property
     to perform those operations on one, or more memberships.
-    An example for @update_obj:
+    An example for @remove_obj:
       [
         {
-          "id": "main-space-id",
-          "custom": {
-            "starred": true
-          }
+          "id": "main-channel-id"
         },
         {
-          "id": "space-0"
+          "id": "channel-0"
         }
       ]
 
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param uuid_metadataid The UUID to remove the memberships.
+                   Cannot be NULL.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform.
+    @param remove_obj The JSON object that defines the remove to perform.
                       Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_leave_spaces(pubnub_t* pb, 
-                                    char const* user_id,
-                                    char const** include,
-                                    size_t include_count,
-                                    char const* update_obj);
+enum pubnub_res pubnub_remove_memberships(pubnub_t* pb, 
+                                    char const* uuid_metadataid,
+                                    char const* include,
+                                    char const* remove_obj);
 
 
-/** Returns all users in the space specified with @p space_id, optionally including
+/** Returns all users in the channel specified with @p channel_metadataid, optionally including
     the custom data objects for...
     @param pb The pubnub context. Can't be NULL
-    @param space_id The Space ID for which to retrieve the user object.
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param channel_metadataid The Channel ID for which to retrieve the user metadata object.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
     @param limit Number of entities to return in response. Regular values 1 - 100.
                  If you set `0`, that means “use the default”. At the time of this writing,
                  default was 100.
@@ -324,18 +240,17 @@ enum pubnub_res pubnub_leave_spaces(pubnub_t* pb,
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_get_members(pubnub_t* pb,
-                                   char const* space_id,
-                                   char const** include,
-                                   size_t include_count,
+                                   char const* channel_metadataid,
+                                   char const* include,
                                    size_t limit,
                                    char const* start,
                                    char const* end,
                                    enum pubnub_tribool count);
 
 
-/** Adds the list of members of the space specified with @p space_id. Uses the `add`
+/** Adds the list of members of the channel specified with @p channel_metadataid. Uses the `add`
     property to perform the operation on one or more members.
-    An example for @update_obj:
+    An example for @add_obj:
        [
          {
            "id": "some-user-id"
@@ -346,23 +261,21 @@ enum pubnub_res pubnub_get_members(pubnub_t* pb,
        ]
 
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param channel_metadataid The Channel ID.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform. Cannot be NULL.
+    @param add_obj The JSON object that defines the add to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_add_members(pubnub_t* pb, 
-                                   char const* space_id,
-                                   char const** include,
-                                   size_t include_count,
-                                   char const* update_obj);
+                                   char const* channel_metadataid,
+                                   char const* include,
+                                   char const* add_obj);
 
 
 /** Updates the list of members of the space specified with @p space_id. Uses the `update`
     property to perform the operation on one or more members.
-    An example for @update_obj:
+    An example for @set_obj:
        [
          {
            "id": "some-user-id",
@@ -379,18 +292,16 @@ enum pubnub_res pubnub_add_members(pubnub_t* pb,
        ]
 
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param channel_metadataid The Channel ID for which to add/update the user metadata.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform. Cannot be NULL.
+    @param set_obj The JSON object that defines the add/update to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_update_members(pubnub_t* pb, 
-                                      char const* space_id,
-                                      char const** include,
-                                      size_t include_count,
-                                      char const* update_obj);
+enum pubnub_res pubnub_set_members(pubnub_t* pb, 
+                                      char const* channel_metadataid,
+                                      char const* include,
+                                      char const* set_obj);
 
 
 /** Removes the list of members of the space specified with @p space_id. Uses the `remove`
@@ -409,18 +320,16 @@ enum pubnub_res pubnub_update_members(pubnub_t* pb,
       ]
 
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings with additional/complex attributes to include in response.
+    @param channel_metadataid The Channel ID.
+    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
-    @param include_count dimension of @p include. Set 0 if you don’t want to retrieve additional
-                         attributes
-    @param update_obj The JSON object that defines the updates to perform. Cannot be NULL.
+    @param remove_obj The JSON object that defines the remove to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
 enum pubnub_res pubnub_remove_members(pubnub_t* pb, 
-                                      char const* space_id,
-                                      char const** include,
-                                      size_t include_count,
-                                      char const* update_obj);
+                                      char const* channel_metadataid,
+                                      char const* include,
+                                      char const* remove_obj);
 
 
 #endif /* !defined INC_PUBNUB_OBJECTS_API */
