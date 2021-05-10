@@ -102,16 +102,26 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
     struct pbjson_elem                   el;
     struct pbjson_elem                   found;
     char*                                reply = p->http_reply;
+    int                                  replylen = p->http_buf_len;
 
     if (p->http_buf_len < MIN_SUBSCRIBE_V2_RESPONSE_LENGTH) {
         return PNR_FORMAT_ERROR;
     }
+
+    el.start = reply;
+    el.end = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")) {
+        PUBNUB_LOG_ERROR("pbcc_parse_subscribe_v2_response(pbcc=%p) - AccessDenied: "
+                         "response from server - response='%s'\n",
+                         p,
+                         reply);
+        return PNR_ACCESS_DENIED;
+    }
+
     if ((reply[0] != '{') || (reply[p->http_buf_len - 1] != '}')) {
         return PNR_FORMAT_ERROR;
     }
 
-    el.start = p->http_reply;
-    el.end   = p->http_reply + p->http_buf_len;
     jpresult = pbjson_get_object_value(&el, "t", &found);
     if (jonmpOK == jpresult) {
         struct pbjson_elem titel;

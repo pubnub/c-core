@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "2.13.0"
+version: "2.14.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v2.14.0
+    date: May 10, 2021
+    changes:
+      - type: bug
+        text: "Handling Access Denied server error in Pubnub Access Manager requests."
   - version: v2.13.0
     date: Apr 20, 2021
     changes:

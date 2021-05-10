@@ -226,11 +226,22 @@ bool pbcc_split_array(char* buf)
 
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     char* reply    = p->http_reply;
     PUBNUB_LOG_DEBUG("\n%s\n", reply);
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
+    }
+
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("pbcc_parse_publish_response(pbcc=%p) - AccessDenied: "
+                         "response from server - response='%s'\n",
+                         p,
+                         reply);
+        return PNR_ACCESS_DENIED;
     }
 
     p->chan_ofs = p->chan_end = 0;
@@ -260,6 +271,7 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 
 enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     int      i;
     int      previous_i;
     unsigned time_token_length;
@@ -268,6 +280,15 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
     int      replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
+    }
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("pbcc_parse_subscribe_response(pbcc=%p) - AccessDenied: "
+                         "response from server - response='%s'\n",
+                         p,
+                         reply);
+        return PNR_ACCESS_DENIED;
     }
     if (reply[replylen - 1] != ']' && replylen > 2) {
         replylen -= 2; /* XXX: this seems required by Manxiang */

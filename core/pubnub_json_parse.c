@@ -265,3 +265,12 @@ size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n)
 
     return len + 1;
 }
+
+bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name, char const* value) {
+    enum pbjson_object_name_parse_result result;
+    struct pbjson_elem                   found;
+
+    result = pbjson_get_object_value(p, name, &found);
+
+    return jonmpOK == result && pbjson_elem_equals_string(&found, value);
+}

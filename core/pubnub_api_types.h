@@ -114,7 +114,10 @@ enum pubnub_res {
     /** Actions API pbcc_get_actions_more() did not find another hyperlink to the rest */
     PNR_GOT_ALL_ACTIONS,
     /** Actions API transaction reported an error */
-    PNR_ACTIONS_API_ERROR
+    PNR_ACTIONS_API_ERROR,
+    /** Access/Permission denied */
+    PNR_ACCESS_DENIED
+
 };
 
 /** 'pubnub_cancel()' return value */

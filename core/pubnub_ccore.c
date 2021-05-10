@@ -12,11 +12,23 @@
 
 static enum pubnub_res simple_parse_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     char* reply    = p->http_reply;
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
+
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("simple_parse_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            reply);
+        return PNR_ACCESS_DENIED;
+    }
+    
     if ((reply[0] != '[') || (reply[replylen - 1] != ']')) {
         return PNR_FORMAT_ERROR;
     }
@@ -45,11 +57,23 @@ enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p)
 
 enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     char* reply    = p->http_reply;
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
+
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("pbcc_parse_presence_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            reply);
+        return PNR_ACCESS_DENIED;
+    }
+
     if ((reply[0] != '{') || (reply[replylen - 1] != '}')) {
         return PNR_FORMAT_ERROR;
     }
@@ -71,6 +95,13 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context* p)
 
     el.start    = p->http_reply;
     el.end      = p->http_reply + p->http_buf_len;
+    if (pbjson_value_for_field_found(&el, "status", "403")) {
+        PUBNUB_LOG_ERROR("pbcc_parse_channel_registry_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            p->http_reply);
+        return PNR_ACCESS_DENIED;
+    }
     p->chan_ofs = 0;
     p->chan_end = p->http_buf_len;
 

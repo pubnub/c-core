@@ -37,6 +37,14 @@ enum pubnub_res pbcc_parse_message_counts_response(struct pbcc_context* p)
     }
     el.start = reply;
     el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("Error: pbcc_parse_message_counts_response(pbcc=%p) - "
+                         "Access Denied: response='%.*s'\n",
+                         p,
+                         replylen,
+                         reply);
+        return PNR_ACCESS_DENIED;
+    }
     jpresult = pbjson_get_object_value(&el, "error", &found);
     if (jonmpOK == jpresult) {
         if (pbjson_elem_equals_string(&found, "false")) {

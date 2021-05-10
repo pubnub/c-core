@@ -1,9 +1,8 @@
-## [v2.13.0](https://github.com/pubnub/c-core/releases/tag/v2.13.0)
-April 20 2021
+## [v2.14.0](https://github.com/pubnub/c-core/releases/tag/v2.14.0)
+May 10 2021
 
-[Full Changelog](https://github.com/pubnub/c-core/compare/v2.12.7...v2.13.0)
+[Full Changelog](https://github.com/pubnub/c-core/compare/v2.13.0...v2.14.0)
 
-- Implemented Pubnub Access Manager Support. 
-- Implemented Objects V2. Removed Objects V1. 
+- Handling Access Denied server error in Pubnub Access Manager requests. 
 
 

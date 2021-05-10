@@ -731,7 +731,7 @@ enum pubnub_res pbcc_parse_objects_api_response(struct pbcc_context* pb)
     if ((replylen < 2) || (reply[0] != '{')) {
         return PNR_FORMAT_ERROR;
     }
-
+    
     pb->chan_ofs = pb->chan_end = 0;
     pb->msg_ofs = 0;
     pb->msg_end = replylen + 1;
@@ -747,6 +747,15 @@ enum pubnub_res pbcc_parse_objects_api_response(struct pbcc_context* pb)
         return PNR_FORMAT_ERROR;
     }
     elem.start = reply;
+
+    if (pbjson_value_for_field_found(&elem, "status", "403")){
+        PUBNUB_LOG_ERROR("pbcc_parse_objects_api_response(pbcc=%p) - AccessDenied: "
+                         "response from server - response='%s'\n",
+                         pb,
+                         reply);
+        return PNR_ACCESS_DENIED;
+    }
+
     json_rslt = pbjson_get_object_value(&elem, "data", &parsed);
     if (jonmpKeyNotFound == json_rslt) {
         json_rslt = pbjson_get_object_value(&elem, "error", &parsed);
