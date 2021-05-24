@@ -217,4 +217,9 @@
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
 #define PUBNUB_MAX_URL_PARAMS 10
+
+#ifndef PUBNUB_RAND_INIT_VECTOR
+#define PUBNUB_RAND_INIT_VECTOR 1
+#endif
+
 #endif /* !defined INC_PUBNUB_CONFIG */

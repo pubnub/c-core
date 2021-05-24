@@ -9,9 +9,7 @@
 
 #include <stdlib.h>
 
-
-
-static int print_to_pubnub_log(const char *s, size_t len, void *p)
+static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
     PUBNUB_UNUSED(len);
     PUBNUB_UNUSED(p);
@@ -22,7 +20,7 @@ static int print_to_pubnub_log(const char *s, size_t len, void *p)
 }
 
 
-static int do_encrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t msg, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t *encrypted)
+static int do_encrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t msg, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t* encrypted)
 {
     int len = 0;
 
@@ -43,12 +41,12 @@ static int do_encrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t msg, uint8_t const
         return -1;
     }
     encrypted->size += len;
-    
+
     return 0;
 }
- 
 
-int pbaes256_encrypt(pubnub_bymebl_t msg, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t *encrypted)
+
+int pbaes256_encrypt(pubnub_bymebl_t msg, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t* encrypted)
 {
     int result;
     EVP_CIPHER_CTX* aes256 = EVP_CIPHER_CTX_new();
@@ -77,13 +75,18 @@ pubnub_bymebl_t pbaes256_encrypt_alloc(pubnub_bymebl_t msg, uint8_t const* key, 
         return result;
     }
 
+#if PUBNUB_RAND_INIT_VECTOR
+    result.ptr = (uint8_t*)malloc(msg.size + EVP_CIPHER_block_size(EVP_aes_256_cbc())*2);
+#else
     result.ptr = (uint8_t*)malloc(msg.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()));
+#endif
+
     if (NULL == result.ptr) {
         EVP_CIPHER_CTX_free(aes256);
         PUBNUB_LOG_ERROR("Failed to allocate memory for AES-256 encryption\n");
         return result;
     }
-    
+
     encrypt_result = do_encrypt(aes256, msg, key, iv, &result);
     if (-1 == encrypt_result) {
         free(result.ptr);
@@ -95,7 +98,7 @@ pubnub_bymebl_t pbaes256_encrypt_alloc(pubnub_bymebl_t msg, uint8_t const* key, 
 }
 
 
-static int do_decrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t *msg)
+static int do_decrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t* msg)
 {
     int len = 0;
     if (!EVP_DecryptInit_ex(aes256, EVP_aes_256_cbc(), NULL, key, iv)) {
@@ -117,15 +120,15 @@ static int do_decrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t data, uint8_t cons
         return -1;
     }
     msg->size += len;
-
+    msg->ptr[msg->size] = '\0';
     return 0;
 }
 
 
-int pbaes256_decrypt(pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t *msg)
+int pbaes256_decrypt(pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t* msg)
 {
     int result;
-    EVP_CIPHER_CTX *aes256;
+    EVP_CIPHER_CTX* aes256;
 
     if (msg->size < data.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()) + 1) {
         PUBNUB_LOG_ERROR("Not enough room to save AES-256 decrypted data\n");
@@ -139,7 +142,7 @@ int pbaes256_decrypt(pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv
     }
 
     result = do_decrypt(aes256, data, key, iv, msg);
-
+    
     EVP_CIPHER_CTX_free(aes256);
 
     return result;
@@ -149,7 +152,7 @@ int pbaes256_decrypt(pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv
 pubnub_bymebl_t pbaes256_decrypt_alloc(pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv)
 {
     int decrypt_result;
-    EVP_CIPHER_CTX *aes256;
+    EVP_CIPHER_CTX* aes256;
     pubnub_bymebl_t result;
 
     result.size = data.size + EVP_CIPHER_block_size(EVP_aes_256_cbc()) + 1;
@@ -175,6 +178,6 @@ pubnub_bymebl_t pbaes256_decrypt_alloc(pubnub_bymebl_t data, uint8_t const* key,
         free(result.ptr);
         result.ptr = NULL;
     }
-
+    result.ptr[result.size] = '\0';
     return result;
 }

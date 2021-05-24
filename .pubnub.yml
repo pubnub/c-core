@@ -1,109 +1,114 @@
 name: c-core
 schema: 1
-version: "2.14.0"
+version: "3.0.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v3.0.0
+    date: 2021-05-24
+    changes:
+      - type: feature
+        text: "BREAKING CHANGE - Added PUBNUB_RAND_INIT_VECTOR to support dynamic."
   - version: v2.14.0
-    date: May 10, 2021
+    date: 2021-05-10
     changes:
       - type: bug
         text: "Handling Access Denied server error in Pubnub Access Manager requests."
   - version: v2.13.0
-    date: Apr 20, 2021
+    date: 2021-04-20
     changes:
       - type: feature
         text: "Implemented Pubnub Access Manager Support."
       - type: feature
         text: "Implemented Objects V2. Removed Objects V1."
   - version: v2.12.7
-    date: Jan 20, 2021
+    date: 2021-01-20
     changes:
       - type: feature
         text: "Added support for Universal Windows(UWP)."
   - version: v2.12.6
-    date: Oct 3, 2020
+    date: 2020-10-03
     changes:
       - type: bug
         text: "Fix DNS servers rotation during transaction origin DNS resolution timeout."
   - version: v2.12.5
-    date: Apr 8, 2020
+    date: 2020-04-08
     changes:
       - type: improvement
         text: "Dynamically allocate memory for `uuid` in `pubnub_set_uuid` function."
   - version: v2.12.4
-    date: Jan 31, 2020
+    date: 2020-01-31
     changes:
       - type: bug
         text: Properly handle DNS retries and stale HTTP Kept-Alive connections
   - version: v2.12.3
-    date: Jan 16, 2020
+    date: 2020-01-16
     changes:
       - type: bug
         text: Fix assertion failure while retrying timed out DNS queries with multiple contexts
   - version: v2.12.2
-    date: Dec 5, 2019
+    date: 2019-12-05
     changes:
-      - type: enhancement
+      - type: improvement
         text: Add support for automatic sending of heartbeat messages with sync interface (POSIX and Windows)
   - version: v2.12.1
-    date: Nov 22, 2019
+    date: 2019-11-22
     changes:
-      - type: enhancement
+      - type: improvement
         text: Add support for automatic sending of heartbeat messages on Windows, callback.
   - version: v2.12.0
-    date: Nov 15, 2019
+    date: 2019-11-15
     changes:
-      - type: enhancement
+      - type: improvement
         text: Support automatic sending of heartbeat messages (only on POSIX, callback, for now).
   - version: v2.11.1
-    date: Oct 25, 2019
+    date: 2019-10-25
     changes:
       - type: bug
         text: Fix Qt
   - version: v2.11.0
-    date: Oct 20, 2019
+    date: 2019-10-20
     changes:
-      - type: enhancement
+      - type: improvement
         text: Introduce Actions API
       - type: bug
         text: Fix stopwatch not working after 25 days
-      - type: ehnancement
+      - type: improvement
         text: Add 'include_meta' parameter to pubnub_history_ex()
   - version: v2.10.2
-    date: Oct 18, 2019
+    date: 2019-10-18
     changes:
       - type: bug
         text: Restore get/set connection timeout in C++ wrapper
   - version: v2.10.1
-    date: Oct 2, 2019
+    date: 2019-10-02
     changes:
-      - type: enhancement
+      - type: improvement
         text: Retry if DNS server does not respond. Number of retries is a compile-time parameter.
       - type: bug
         text: In C++, fix transaction finishing before user starts to wait for it to finish.
   - version: v2.10.0
-    date: Sep 23, 2019
+    date: 2019-09-23
     changes:
-      - type: enhancement
+      - type: improvement
         text: Introduce Objects API
       - type: bug
         text: Fix high history (extended/full) handling of 'reverse' and other boolean parameters
   - version: v2.9.4
-    date: Sep 10, 2019
+    date: 2019-09-10
     changes:
-      - type: enhancement
+      - type: improvement
         text: Introduce separate connection timer, to control/limit the duration of DNS resolving and connection establishment, which should be much shorter than full transaction timer, which has to be >5 min for subscribe
       - type: bug
         text: Fix high CPU load in callback interface when no context, thus socket, is executing a transaction
   - version: v2.9.3
-    date: Sep 3, 2019
+    date: 2019-09-03
     changes:
-      - type: enhancement
+      - type: improvement
         text: Detect TCP/IP connect timeout in callback mode w/sockets - does not seem to work on Windows
-      - type: enhancement
+      - type: improvement
         text: Add set_proxy_none() to pubnub::context
   - version: v2.9.2
-    date: Aug 28, 2019
+    date: 2019-08-28
     changes:
       - type: bug
         text: Proxy admin functions (set, get) were not protected by mutex/monitor, so caused a race condition
@@ -112,121 +117,121 @@ changelog:
       - type: bug
         text: If all resolved addresses on file expire, we would report transaction failure instead of just asking for new ones.
   - version: v2.9.1
-    date: Aug 25, 2019
+    date: 2019-08-25
     changes:
-      - type: enhancement
+      - type: improvement
         text: Improvements in sockets and DNS error reporting
   - version: v2.9.0
-    date: Aug 9, 2019
+    date: 2019-08-09
     changes:
-      - type: enhancement
+      - type: improvement
         text: Introduce Signals support
-      - type: enhancement
+      - type: improvement
         text: Support subscribe V2 in C++ & Qt
-      - type: enhancement
+      - type: improvement
         text: Add pubnub_stop() for graceful shutdown when using callback interface
   - version: v2.8.4
-    date: Jun 12, 2019
+    date: 2019-06-12
     changes:
-      - type: enhancement
+      - type: improvement
         text: Introduce minimal transaction timer duration
-      - type: enhancement
+      - type: improvement
         text: Use QTime for transaction timer duration
   - version: v2.8.3
-    date: May 31, 2019
+    date: 2019-05-31
     changes:
-      - type: enhancement
+      - type: improvement
         text: Use TTL from DNS response (cache resolved addresses)
-      - type: enhancement
+      - type: improvement
         text: Better identification of the platform we run on
-      - type: enhancement
+      - type: improvement
         text: Detect authenticating proxy that works incorrectly
   - version: v2.8.2
-    date: Apr 29, 2019
+    date: 2019-04-29
     changes:
-      - type: enhancement
+      - type: improvement
         text: Will try other address from (async) DNS response if first one fails
-      - type: enhancement
+      - type: improvement
         text: Will try secondary (async) DNS server if primary doesn't work
   - version: v2.8.1
-    date: Apr 29, 2019
+    date: 2019-04-29
     changes:
-      - type: enhancement
+      - type: improvement
         text: Update pubnub_allooc_std.c to pubnub_cancel() changes
   - version: v2.8.0
-    date: Mar 18, 2019
+    date: 2019-03-18
     changes:
-      - type: enhancement
+      - type: improvement
         text: Support Message Counts API
   - version: v2.7.0
-    date: Feb 19, 2019
+    date: 2019-02-19
     changes:
-      - type: enhancement
+      - type: improvement
         text: Support IPv6 for DNS resolution (mostly for callback interface)
   - version: v2.6.4
-    date: Jan 17, 2019
+    date: 2019-01-17
     changes:
       - type: bug
         text: URL encode channel name(s)
   - version: v2.6.3
-    date: Jan 8, 2019
+    date: 2019-01-08
     changes:
-      - type: enhancement
+      - type: improvement
         text: Update samples to changes in pubnub_cancel() and other interface changes
-      - type: enhancement
+      - type: improvement
         text: Update samples to use time() instead of clock() as clock() can measure CPU-only time instead of real time
-      - type: enhancement
+      - type: improvement
         text: Update Qt functional tests and make them reliable
-      - type: enhancement
+      - type: improvement
         text: UUID is now part of the Pubnub context (instead of a pointer to it). This makes handling its lifetime easier, yet does not incur much memory increase
       - type: bug
         text: C++ wrapper and Qt did not have proper multithreading support as they did not protect _their_ data. Now that is fixed.
   - version: v2.6.2
-    date: Dec 20, 2018
+    date: 2018-12-20
     changes:
       - type: bug
         text: Fix memory leak regarding OpenSSL
   - version: v2.6.1
-    date: Dec 2, 2018
+    date: 2018-12-02
     changes:
-      - type: enhancement
+      - type: improvement
         text: Publish can now be GZIPed (if done via POST)
       - type: bug
         text: Publish via POST encrypted could publish garbage and fail
   - version: v2.6.0
-    date: Nov 20, 2018
+    date: 2018-11-20
     changes:
-      - type: enhancement
+      - type: improvement
         text: Publish can now be done via POST
       - type: bug
         text: Several smaller DNS en/de/coding issues fixed
   - version: v2.5.8
-    date: Nov 8, 2018
+    date: 2018-11-08
     changes:
-      - type: enhancement
+      - type: improvement
         text: pubnub_await() in the sync interface now reports PNR_TIMEOUT on, well, (transaction) timeout
   - version: v2.5.7
-    date: Nov 4, 2018
+    date: 2018-11-04
     changes:
       - type: bug
         text: DNS en/de/coding could fail on some toolchains because of alignment issues.
   - version: v2.5.6
-    date: Nov 2, 2018
+    date: 2018-11-02
     changes:
       - type: bug
         text: TLS connection timeout was prone to errors due to time synchronisation and such.
   - version: v2.5.5
-    date: Nov 1, 2018
+    date: 2018-11-01
     changes:
       - type: bug
         text: Fix wrong detection of PNR_TIMEOUT, by reset of TLS connect timer when connection is established.
   - version: v2.5.4
-    date: Oct 18, 2018
+    date: 2018-10-18
     changes:
       - type: bug
         text: Fix DNS decoding
   - version: v2.5.3
-    date: Oct 16, 2018
+    date: 2018-10-16
     changes:
       - type: feature
         text: Add support for pubnub_subscribe_v2() w/filter expressions
@@ -237,7 +242,7 @@ changelog:
       - type: feature
         text: Functional tests for C++ updated and now run on each commit
   - version: v2.5.2
-    date: Sep 10, 2018
+    date: 2018-09-10
     changes:
       - type: bug
         text: Improved handling of lost connection while in HTTP Keep-Alive
@@ -246,12 +251,12 @@ changelog:
       - type: feature
         text: pubnub_cancel() will now call pbnc_fsm() in the sync interface. Combined with previous, this makes it possible to call pubnub_free() in sync interface and have it succeed even if transaction is ongoing.
   - version: v2.5.1
-    date: Aug 30, 2018
+    date: 2018-08-30
     changes:
       - type: feature
         text: Removed (unused) option to ignore TLS/SSL errors
   - version: v2.5.0
-    date: Aug 28, 2018
+    date: 2018-08-28
     changes:
       - type: feature
         text: Support HTTPS CONNECT proxy
@@ -266,7 +271,7 @@ changelog:
       - type: bug
         text: MacOS build fixed
   - version: v2.4.3
-    date: Jul 25, 2018
+    date: 2018-07-25
     changes:
       - type: feature
         text: Support OpenSSL 1.1.x with callback interface
@@ -275,19 +280,19 @@ changelog:
       - type: feature
         text: Enable receiving GZIP-ed reply
   - version: v2.4.2
-    date: Jul 12, 2018
+    date: 2018-07-12
     changes:
       - type: feature
         text: Enable setting HTTP Keep-Alive use on/off for C++ and Qt
   - version: v2.4.1
-    date: Jul 6, 2018
+    date: 2018-07-06
     changes:
       - type: feature
         text: Enable reading system DNS on Windows
       - type: bug
         text: Small fixes in system DNS reading/parsing
   - version: v2.4.0
-    date: Jun 14, 2018
+    date: 2018-06-14
     changes:
       - type: feature
         text: Callback interface uses (our own) async DNS
@@ -304,7 +309,7 @@ changelog:
       - type: bug
         text: Bad handling of error (connection lost) when starting a new transaction on a HTTP kept-alive connection
   - version: v2.3.3
-    date: Apr 11, 2018
+    date: 2018-04-11
     changes:
       - type: feature
         text: On Linux, use MSG_NOSIGNAL to avoid SIGPIPE on send()
@@ -317,29 +322,29 @@ changelog:
       - type: feature
         text: Send up-to-date version info in User-Agent HTTP header
   - version: v2.3.2
-    date: Mar 10, 2018
+    date: 2018-03-10
     changes:
       - type: bug
         text: Unify default blocking I/O setting to block in sync and non-block in callback interface
   - version: v2.3.1
-    date: Mar 8, 2018
+    date: 2018-03-08
     changes:
       - type: bug
         text: Read from OpenSSL in a loop, to handle more than one record received at a time
       - type: bug
         text: Fix minor race condition on timer expiry
   - version: v2.3.0
-    date: Mar 5, 2018
+    date: 2018-03-05
     changes:
       - type: feature
         text: Use HTTP Keep-alive, where possible
   - version: v2.2.14
-    date: Feb 6, 2018
+    date: 2018-02-06
     changes:
       - type: bug
         text: Fix removing the first context from the timer list
   - version: v2.2.13
-    date: Feb 6, 2018
+    date: 2018-02-06
     changes:
       - type: feature
         text: Support OpenSSL 1.1.0+ (BIO_(s|g)et_conn_ip -> BIO_(s|g)et_conn_address)
@@ -348,61 +353,61 @@ changelog:
       - type: bug
         text: Fix receiving data longer than http_buff at a time
   - version: v2.2.12
-    date: Dec 30, 2017
+    date: 2017-12-30
     changes:
       - type: bug
         text: Cleanups, fix build issue and warnings on Windows
   - version: v2.2.11
-    date: Oct 30, 2017
+    date: 2017-10-30
     changes:
       - type: bug
         text: Fix resource leaks in C++ pubnub::futres on Windows
   - version: v2.2.10
-    date: Oct 5, 2017
+    date: 2017-10-05
     changes:
       - type: bug
         text: Fix build issues on Mac
   - version: v2.2.9
-    date: Oct 1, 2017
+    date: 2017-10-01
     changes:
       - type: bug
         text: Fix high CPU utilization when network out on Mac
   - version: v2.2.8
-    date: Sep 25, 2017
+    date: 2017-09-25
     changes:
       - type: bug
         text: Fix off-by-one error
   - version: v2.2.7
-    date: Sep 14, 2017
+    date: 2017-09-14
     changes:
       - type: bug
         text: Fix handling of recv() errrno on MacOS
   - version: v2.2.6
-    date: Sep 10, 2017
+    date: 2017-09-10
     changes:
       - type: feature
         text: Support OpenSSL 1.1.0+ (removed BIO_set_conn_port_int)
       - type: bug
         text: Some logging code was not using proper types
   - version: v2.2.5
-    date: Sep 1, 2017
+    date: 2017-09-01
     changes:
       - type: bug
         text: Fix potential issue in interpreting UTF-8 char values
   - version: v2.2.4
-    date: Aug 30, 2017
+    date: 2017-08-30
     changes:
       - type: bug
         text: Fix off-by-one error
   - version: v2.2.3
-    date: Mar 9, 2017
+    date: 2017-03-09
     changes:
       - type: bug
         text: Fix handling of segmented messages
       - type: feature
         text: Improve exising and add new logging
   - version: v2.2.2
-    date: Oct 12, 2016
+    date: 2016-10-12
     changes:
       - type: feature
         text: Improve parsing of bad publish/subscribe key error
@@ -413,12 +418,12 @@ changelog:
       - type: bug
         text: Fixes and improvements of the console sample application
   - version: v2.2.1
-    date: Apr 2, 2016
+    date: 2016-04-02
     changes:
       - type: bug
         text: Fix C++ pubnub::futres destructor hanging up
   - version: v2.2.0
-    date: Feb 22, 2016
+    date: 2016-02-22
     changes:
       - type: feature
         text: First "core feature complete" release
@@ -532,3 +537,422 @@ supported-platforms:
     platforms:
       - mBed 2 is supported.
       - Newer versions should work, but are not supported out of the box.
+sdks:
+  -
+    full-name: PubNub POSIX C SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C
+        tier: 1
+        tags:
+          - Server
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://www.pubnub.com/docs/sdks/c-core/posix-c
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Linux:
+                    target-architecture:
+                      - i386
+                      - amd64
+                    minimum-os-version:
+                      - Ubuntu 12.04
+                    maximum-os-version:
+                      - Ubuntu 20.04 LTS
+                  macOS:
+                    target-architecture:
+                      - x86-64
+                    minimum-os-version:
+                      - Mac OS X 10.8
+                    maximum-os-version:
+                      - macOS 11.3.1
+  -
+    full-name: PubNub POSIX C++ SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C/C++
+        tier: 1
+        tags:
+          - Server
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://www.pubnub.com/docs/sdks/c-core/posix-cpp
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Linux:
+                    target-architecture:
+                      - i386
+                      - amd64
+                    minimum-os-version:
+                      - Ubuntu 12.04
+                    maximum-os-version:
+                      - Ubuntu 20.04 LTS
+                  macOS:
+                    target-architecture:
+                      - x86-64
+                    minimum-os-version:
+                      - Mac OS X 10.8
+                    maximum-os-version:
+                      - macOS 11.3.1
+  -
+    full-name: PubNub Windows C SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C
+        tier: 1
+        tags:
+          - Server
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://www.pubnub.com/docs/sdks/c-core/windows-c
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Windows:
+                    target-architecture:
+                      - i386
+                      - amd64
+                    minimum-os-version:
+                      - Windows 7 Professional
+                      - Windows 7 Enterprise
+                      - Windows 7 Ultimate
+                    maximum-os-version:
+                      - Windows 10 Pro
+                      - Windows 10 Enterprise
+  -
+    full-name: PubNub Windows C++ SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C/C++
+        tier: 1
+        tags:
+          - Server
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://www.pubnub.com/docs/sdks/c-core/windows-cpp
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Windows:
+                    target-architecture:
+                      - i386
+                      - amd64
+                    minimum-os-version:
+                      - Windows 7 Professional
+                      - Windows 7 Enterprise
+                      - Windows 7 Ultimate
+                    maximum-os-version:
+                      - Windows 10 Pro
+                      - Windows 10 Enterprise
+  -
+    full-name: PubNub FreeRTOS SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C
+        tier: 1
+        tags:
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://www.pubnub.com/docs/sdks/c-core/freertos
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  FreeRTOS+:
+                    target-architecture:
+                      - i386
+                      - amd64
+                    minimum-os-version:
+                      - 150825
+  -
+    full-name: PubNub Qt SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C
+        tier: 1
+        tags:
+          - Mobile
+        source-repository: https://github.com/pubnub/c-core
+        documentation: https://github.com/pubnub/c-core-private/tree/master/qt
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Qt:
+                    minimum-os-version:
+                      - Qt5
+  -
+    full-name: PubNub Mbed SDK
+    short-name: C-Core
+    artifacts:      
+      -
+        artifact-type: api-client
+        language: C
+        tier: 1
+        tags:
+          - Mobile
+        source-repository: https://os.mbed.com/users/sveljko/code/Pubnub_mbed2_sync/
+        documentation: https://www.pubnub.com/docs/sdks/c-core/mbed
+        distributions:
+          -
+            distribution-type: source code
+            distribution-repository: GitHub release
+            package-name: C-Core
+            location: https://github.com/pubnub/c-core/releases/tag/v2.14.0
+            requires:
+              -
+                name: "miniz"
+                min-version: "2.0.8"
+                license: "MIT"
+                license-url: "https://github.com/richgel999/miniz"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "MD5"
+                min-version: "1.0.0"
+                license: "heavily cut-down BSD license"
+                license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
+                location: "Shipped with SDK"
+                is-required: "Required"
+              -
+                name: "OpenSSL"
+                min-version: "0.9.8"
+                max-version: "1.1.1"
+                license: "Dual OpenSSL and SSLeay license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+              -
+                name: "OpenSSL"
+                min-version: "3.0.0"
+                license: "Apache license"
+                license-url: "https://www.openssl.org/source/license.html"
+                location: "Installation required"
+                is-required: "Optional"
+            supported-platforms:
+                supported-operating-systems:                  
+                  Mbed:
+                    minimum-os-version:
+                      - 2.0

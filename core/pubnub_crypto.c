@@ -14,12 +14,13 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 
 #ifdef _MSC_VER
 #define strdup(p) _strdup(p)
 #endif
 
-int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char const* msg, char *signature, size_t n)
+int pbcrypto_signature(struct pbcc_context* pbcc, char const* channel, char const* msg, char* signature, size_t n)
 {
 #if !PUBNUB_CRYPTO_API
     return -1;
@@ -52,13 +53,13 @@ int pbcrypto_signature(struct pbcc_context *pbcc, char const *channel, char cons
 
     pbmd5_final(&md5, digest);
 
-    snprintf(signature, n, 
-             "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-             digest[0], digest[1], digest[2], digest[3],
-             digest[4], digest[5], digest[6], digest[7],
-             digest[8], digest[9], digest[10], digest[11],
-             digest[12], digest[13], digest[14], digest[15]
-        );
+    snprintf(signature, n,
+        "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        digest[0], digest[1], digest[2], digest[3],
+        digest[4], digest[5], digest[6], digest[7],
+        digest[8], digest[9], digest[10], digest[11],
+        digest[12], digest[13], digest[14], digest[15]
+    );
     return 0;
 #endif /* !PUBNUB_CRYPTO_API */
 }
@@ -69,80 +70,155 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
     uint8_t digest[32];
     pbsha256_digest_str(cipher_key, digest);
 
-    snprintf((char*)hash, 33, 
-             "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-             digest[0], digest[1], digest[2], digest[3],
-             digest[4], digest[5], digest[6], digest[7],
-             digest[8], digest[9], digest[10], digest[11],
-             digest[12], digest[13], digest[14], digest[15]
-        );
+    snprintf((char*)hash, 33,
+        "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        digest[0], digest[1], digest[2], digest[3],
+        digest[4], digest[5], digest[6], digest[7],
+        digest[8], digest[9], digest[10], digest[11],
+        digest[12], digest[13], digest[14], digest[15]
+    );
 
     return 0;
 }
 
 
-int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n)
+int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n)
 {
     pubnub_bymebl_t encrypted;
-    uint8_t const iv[] = "0123456789012345";
     uint8_t key[33];
     int result;
+    unsigned char iv[17] = "0123456789012345";
+#if PUBNUB_RAND_INIT_VECTOR
+    int rand_status = RAND_bytes(iv, 16);
+    PUBNUB_ASSERT_OPT(rand_status == 1);
+#endif
 
     cipher_hash(cipher_key, key);
     encrypted = pbaes256_encrypt_alloc(msg, key, iv);
     if (NULL == encrypted.ptr) {
         return -1;
     }
-    result = pbbase64_encode_std(encrypted, base64_str, n);
+
+#if PUBNUB_RAND_INIT_VECTOR
+    memmove(encrypted.ptr + 16, encrypted.ptr, encrypted.size);
+    memcpy(encrypted.ptr, iv, 16);
+    encrypted.size += 16;
+    encrypted.ptr[encrypted.size] = '\0';
+#endif
+
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
+    for (int i = 0; i < (int)encrypted.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", encrypted.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    char* base64_output = base64encode(encrypted.ptr, encrypted.size);
+    result = sprintf(base64_str, "%s", base64_output);
+    *n = (size_t)strlen(base64_str);
+
     free(encrypted.ptr);
 
-    return result;
+    return result >= 0 ? 0 : -1;
 }
 
 
-int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer)
+int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n, pubnub_bymebl_t buffer)
 {
-    uint8_t const iv[] = "0123456789012345";
     uint8_t key[33];
+    unsigned char iv[17] = "0123456789012345";
+#if PUBNUB_RAND_INIT_VECTOR
+    int rand_status = RAND_bytes(iv, 16);
+    PUBNUB_ASSERT_OPT(rand_status == 1);
+#endif
 
     cipher_hash(cipher_key, key);
+
     if (-1 == pbaes256_encrypt(msg, key, iv, &buffer)) {
         return -1;
     }
-    return pbbase64_encode_std(buffer, base64_str, n);
+
+#if PUBNUB_RAND_INIT_VECTOR
+    memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
+    memcpy(buffer.ptr, iv, 16);
+    buffer.size += 16;
+    buffer.ptr[buffer.size] = '\0';
+#endif
+
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
+    for (int i = 0; i < (int)buffer.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    char* base64_output = base64encode(buffer.ptr, buffer.size);
+    int result = sprintf(base64_str, "%s", base64_output);
+    *n = (size_t)strlen(base64_str);
+
+    return result >= 0 ? 0 : -1;
 }
 
 
 
-int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data)
+int pubnub_decrypt(char const* cipher_key, char const* base64_str, pubnub_bymebl_t* data)
 {
     pubnub_bymebl_t decoded;
-    uint8_t iv[] = "0123456789012345";
+    unsigned char iv[17] = "0123456789012345";
     uint8_t key[33];
 
     cipher_hash(cipher_key, key);
+
     decoded = pbbase64_decode_alloc_std_str(base64_str);
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
+    for (size_t i = 0; i < decoded.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", decoded.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
     if (decoded.ptr != NULL) {
         int result;
 
+#if PUBNUB_RAND_INIT_VECTOR
+        memcpy(iv, decoded.ptr, 16);
+        memmove(decoded.ptr, decoded.ptr + 16, decoded.size - 16);
+        decoded.size = decoded.size - 16;
+#endif
         decoded.ptr[decoded.size] = '\0';
+
         result = pbaes256_decrypt(decoded, key, iv, data);
         free(decoded.ptr);
 
         return result;
     }
-
     return -1;
 }
 
 
-int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer)
+int pubnub_decrypt_buffered(char const* cipher_key, char const* base64_str, pubnub_bymebl_t* data, pubnub_bymebl_t* buffer)
 {
     if (0 == pbbase64_decode_std_str(base64_str, buffer)) {
-        uint8_t const iv[] = "0123456789012345";
+        #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+        PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
+        for (size_t i = 0; i < buffer->size; i++) {
+            PUBNUB_LOG_DEBUG("%d ", buffer->ptr[i]);
+        }
+        PUBNUB_LOG_DEBUG("]\n");
+        #endif
+
+        unsigned char iv[17] = "0123456789012345";
         uint8_t key[33];
 
         cipher_hash(cipher_key, key);
+#if PUBNUB_RAND_INIT_VECTOR
+        memcpy(iv, buffer->ptr, 16);
+        memmove(buffer->ptr, buffer->ptr + 16, buffer->size - 16);
+        buffer->size = buffer->size - 16;
+#endif        
         buffer->ptr[buffer->size] = '\0';
 
         return pbaes256_decrypt(*buffer, key, iv, data);
@@ -152,35 +228,43 @@ int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubn
 }
 
 
-pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str)
+pubnub_bymebl_t pubnub_decrypt_alloc(char const* cipher_key, char const* base64_str)
 {
     pubnub_bymebl_t decoded;
-    uint8_t iv[] = "0123456789012345";
+    unsigned char iv[17] = "0123456789012345";
     uint8_t key[33];
 
     cipher_hash(cipher_key, key);
     decoded = pbbase64_decode_alloc_std_str(base64_str);
     if (decoded.ptr != NULL) {
-        pubnub_bymebl_t result;
-
+#if PUBNUB_RAND_INIT_VECTOR
+        memcpy(iv, decoded.ptr, 16);
+        memmove(decoded.ptr, decoded.ptr + 16, decoded.size - 16);
+        decoded.size = decoded.size - 16;
+#endif
         decoded.ptr[decoded.size] = '\0';
+
+        pubnub_bymebl_t result;
         result = pbaes256_decrypt_alloc(decoded, key, iv);
         free(decoded.ptr);
 
         return result;
+    }
+    else{
+        PUBNUB_LOG_ERROR("Failed to decode %s\n", base64_str);
     }
 
     return decoded;
 }
 
 
-char *pubnub_json_string_unescape_slash(char *json_string)
+char* pubnub_json_string_unescape_slash(char* json_string)
 {
-    char *s = json_string;
+    char* s = json_string;
     size_t to_pad = 0;
     size_t distance;
-    char *dest = s;
-    char *end = s;
+    char* dest = s;
+    char* end = s;
 
     while (*end) {
         if (('\\' == *end) && ('/' == end[1])) {
@@ -213,9 +297,9 @@ char *pubnub_json_string_unescape_slash(char *json_string)
 }
 
 
-enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n)
+enum pubnub_res pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char* s, size_t* n)
 {
-    char *msg;
+    char* msg;
     size_t msg_len;
     uint8_t decoded_msg[PUBNUB_BUF_MAXLEN];
     pubnub_bymebl_t data = { (uint8_t*)s, *n };
@@ -231,7 +315,7 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
         return PNR_INTERNAL_ERROR;
     }
     msg_len = strlen(msg);
-    if ((msg[0] != '"') || (msg[msg_len-1] != '"')) {
+    if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return PNR_FORMAT_ERROR;
     }
     msg[msg_len - 1] = '\0';
@@ -249,9 +333,9 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
 }
 
 
-pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
+pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
 {
-    char *msg;
+    char* msg;
     size_t msg_len;
     pubnub_bymebl_t result = { NULL, 0 };
 
@@ -263,7 +347,7 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
         return result;
     }
     msg_len = strlen(msg);
-    if ((msg[0] != '"') || (msg[msg_len-1] != '"')) {
+    if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return result;
     }
     msg[msg_len - 1] = '\0';
@@ -280,15 +364,15 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
 }
 
 
-enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key)
+enum pubnub_res pubnub_publish_encrypted(pubnub_t* p, char const* channel, char const* message, char const* cipher_key)
 {
-    struct pubnub_publish_options opts =  pubnub_publish_defopts();
+    struct pubnub_publish_options opts = pubnub_publish_defopts();
     opts.cipher_key = cipher_key;
     return pubnub_publish_ex(p, channel, message, opts);
 }
 
 
-enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key)
+enum pubnub_res pubnub_set_secret_key(pubnub_t* p, char const* secret_key)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
@@ -305,7 +389,7 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key)
 
 #if __UWP__
 int mx_hmac_sha256(
-    const char *key, 
+    const char* key,
     int keylen,
     const unsigned char* msg,
     size_t mlen,
@@ -405,12 +489,12 @@ int mx_hmac_sha256(
 }
 #else
 unsigned char* mx_hmac_sha256(
-    const void* key, 
+    const void* key,
     int keylen,
     const unsigned char* data,
     int datalen,
     unsigned char* result, unsigned int* resultlen) {
-        return HMAC(EVP_sha256(), key, keylen, data, datalen, result, resultlen);
+    return HMAC(EVP_sha256(), key, keylen, data, datalen, result, resultlen);
 }
 #endif
 
@@ -437,16 +521,16 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
     if (NULL == msgdata) { return NULL; }
 
     int datalen = strlen((char*)msgdata);
-    #if __UWP__
+#if __UWP__
     unsigned char* result = NULL;
     size_t* resultlen = 0;
     int ret = mx_hmac_sha256(key, keylen, (const unsigned char*)msgdata, (size_t)datalen, &result, (size_t*)&resultlen);
-    if (ret != 0){ return NULL; }
-    #else
+    if (ret != 0) { return NULL; }
+#else
     unsigned char* result = NULL;
     unsigned int resultlen = -1;
     result = mx_hmac_sha256((const void*)key, keylen, msgdata, datalen, result, &resultlen);
-    #endif
+#endif
     int bytes_to_encode = (int)resultlen;
     if (bytes_to_encode <= 0) {
         PUBNUB_LOG_DEBUG("hmac_sha256 result len %d is low\n", bytes_to_encode);
@@ -540,3 +624,4 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
     }
     return sign_status;
 }
+

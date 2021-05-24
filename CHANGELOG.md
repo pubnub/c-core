@@ -1,8 +1,8 @@
-## [v2.14.0](https://github.com/pubnub/c-core/releases/tag/v2.14.0)
-May 10 2021
+## [v3.0.0](https://github.com/pubnub/c-core/releases/tag/v3.0.0)
+May 24 2021
 
-[Full Changelog](https://github.com/pubnub/c-core/compare/v2.13.0...v2.14.0)
+[Full Changelog](https://github.com/pubnub/c-core/compare/v2.14.0...v3.0.0)
 
-- Handling Access Denied server error in Pubnub Access Manager requests. 
+- BREAKING CHANGE - Added PUBNUB_RAND_INIT_VECTOR to support dynamic. 
 
 
