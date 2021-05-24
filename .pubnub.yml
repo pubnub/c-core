@@ -7,7 +7,7 @@ changelog:
     date: 2021-05-24
     changes:
       - type: feature
-        text: "BREAKING CHANGE - Added PUBNUB_RAND_INIT_VECTOR to support dynamic."
+        text: "BREAKING CHANGE - Added PUBNUB_RAND_INIT_VECTOR to support dynamic IV, default to true."
   - version: v2.14.0
     date: 2021-05-10
     changes:
