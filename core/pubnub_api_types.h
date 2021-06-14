@@ -115,6 +115,8 @@ enum pubnub_res {
     PNR_GOT_ALL_ACTIONS,
     /** Actions API transaction reported an error */
     PNR_ACTIONS_API_ERROR,
+    /** Grant Token API transaction reported an error */
+    PNR_GRANT_TOKEN_API_ERROR,
     /** Access/Permission denied */
     PNR_ACCESS_DENIED
 
@@ -248,6 +250,11 @@ enum pubnub_trans {
       */
     PBTT_HISTORY_WITH_ACTIONS,
 #endif /* PUBNUB_USE_ACTIONS_API */
+#if PUBNUB_USE_GRANT_TOKEN_API
+    /** PAMv3 Grant API transaction sets the permissions for resources and patterns.
+      */
+    PBTT_GRANT_TOKEN,
+#endif /* PUBNUB_USE_GRANT_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX
 };

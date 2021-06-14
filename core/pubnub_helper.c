@@ -75,6 +75,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_GOT_ALL_ACTIONS: return "Actions API got all actions";
     case PNR_ACTIONS_API_ERROR: return "Actions API transaction reported an error";
     case PNR_ACCESS_DENIED: return "Access/Permission denied";
+    case PNR_GRANT_TOKEN_API_ERROR: return "Grant Token API reported error";
     default: return "!?!?!";
     }
 }
@@ -148,6 +149,7 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_GOT_ALL_ACTIONS: return pbccFalse; /* Successfully finished */
     case PNR_ACTIONS_API_ERROR: return pbccFalse; /* Check the error reported */
     case PNR_ACCESS_DENIED: return pbccFalse; /* Permission issue. Check the error reported */
+    case PNR_GRANT_TOKEN_API_ERROR: return pbccFalse; /* Check the error reported */
     }
     return pbccFalse;
 }

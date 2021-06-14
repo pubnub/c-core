@@ -203,6 +203,10 @@
     from published messages */
 #define PUBNUB_USE_ACTIONS_API 1
 
+#ifndef PUBNUB_USE_GRANT_TOKEN_API
+#define PUBNUB_USE_GRANT_TOKEN_API 1
+#endif
+
 /** If true (!=0) will enable using the Auto Heartbeat Thumps(beats), which is a feature
     that enables keeping presence of the given uuids on channels and channel groups during
     longer periods without subscription.

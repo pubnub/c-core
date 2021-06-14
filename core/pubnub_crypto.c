@@ -559,7 +559,7 @@ enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char con
         sprintf(str_to_sign, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
     }
     PUBNUB_LOG_DEBUG("\nv2 str_to_sign = %s\n", str_to_sign);
-    char* part_sign = "";
+    char* part_sign = (char*)"";
 #if PUBNUB_CRYPTO_API
     part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
     if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }
@@ -578,26 +578,26 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
     char* method_verb;
     switch (p->method) {
     case pubnubSendViaGET:
-        method_verb = "GET";
+        method_verb = (char*)"GET";
         break;
     case pubnubSendViaPOST:
 #if PUBNUB_USE_GZIP_COMPRESSION
     case pubnubSendViaPOSTwithGZIP:
 #endif
-        method_verb = "POST";
+        method_verb = (char*)"POST";
         break;
     case pubnubUsePATCH:
 #if PUBNUB_USE_GZIP_COMPRESSION
     case pubnubUsePATCHwithGZIP:
 #endif
-        method_verb = "PATCH";
+        method_verb = (char*)"PATCH";
         break;
     case pubnubUseDELETE:
-        method_verb = "DELETE";
+        method_verb = (char*)"DELETE";
         break;
     default:
         PUBNUB_LOG_ERROR("Error: get_method_verb_string(method): unhandled method: %u\n", p->method);
-        method_verb = "UNKOWN";
+        method_verb = (char*)"UNKOWN";
         return PNR_CRYPTO_NOT_SUPPORTED;
     }
     int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + strlen(msg);
@@ -606,7 +606,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
         sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
     }
     PUBNUB_LOG_DEBUG("\nv3 str_to_sign = %s\n", str_to_sign);
-    char* part_sign = "";
+    char* part_sign = (char*)"";
 #if PUBNUB_CRYPTO_API
     part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
     if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }

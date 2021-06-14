@@ -40,6 +40,9 @@ extern "C" {
 #if PUBNUB_USE_ACTIONS_API
 #include "core/pubnub_actions_api.h"
 #endif
+#if PUBNUB_USE_GRANT_TOKEN_API
+#include "core/pubnub_grant_token_api.h"
+#endif
 #include "core/pubnub_auto_heartbeat.h"
 #if PUBNUB_USE_EXTERN_C
 }
@@ -548,6 +551,31 @@ public:
         @see pubnub_get_origin
      */
     std::string origin() const { return pubnub_get_origin(d_pb); }
+
+    /** Sets the secret key to @p secret_key. If @p secret_key is an 
+        empty string, `secret_key` will not be used.
+        @see pubnub_set_secret_key
+     */
+    void set_secret_key(std::string const& secret_key)
+    {
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            throw std::logic_error("setting 'secret_key' key while transaction in progress");
+        }
+        d_secret_key = secret_key;
+        #if PUBNUB_CRYPTO_API
+        pubnub_set_secret_key(d_pb, secret_key.empty() ? NULL : d_secret_key.c_str());
+        #else
+        throw std::logic_error("PUBNUB_CRYPTO_API is not enabled to use 'secret_key'");
+        #endif
+    }
+
+    /// Returns the current `secret_key` for this context
+    std::string const& secret_key() const
+    {
+        lock_guard lck(d_mutex);
+        return d_secret_key;
+    }
 
     /** Sets the `auth` key to @p auth. If @p auth is an
         empty string, `auth` will not be used.
@@ -1094,6 +1122,25 @@ public:
     {
         return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
     }
+
+#if PUBNUB_USE_GRANT_TOKEN_API
+    /// Starts a transaction that grants a token with the attributes specified in @p grant_obj.
+    /// @see pubnub_grant_token
+    futres grant_token(std::string const& grant_obj)
+    {
+        return doit(pubnub_grant_token(
+                        d_pb,
+                        grant_obj.c_str()));
+    }
+
+     /// Returns grant token
+    /// @see pubnub_get_grant_token()
+    std::string get_grant_token()
+    {
+        pubnub_chamebl_t result = pubnub_get_grant_token(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+#endif
 
 #if PUBNUB_USE_OBJECTS_API
     /// Starts a transaction for optaining a paginated list of uuids associated
@@ -1647,6 +1694,8 @@ private:
     std::string d_pubk;
     /// The subscribe key
     std::string d_ksub;
+    /// The secret key
+    std::string d_secret_key;
     /// The auth key
     std::string d_auth;
     /// The UUID
