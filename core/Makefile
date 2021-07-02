@@ -61,4 +61,4 @@ pubnub_proxy_unittest: $(PROJECT_SOURCEFILES) $(PROXY_PROJECT_SOURCEFILES) pubnu
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
-	rm pubnub_core_unit_test.so pubnub_timer_list_unit_test.so pubnub_proxy_unit_test.so *.gcda *.gcno *.html
+	-rm pubnub_core_unit_test.so pubnub_timer_list_unit_test.so pubnub_proxy_unit_test.so *.gcda *.gcno *.html
