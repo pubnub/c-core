@@ -618,7 +618,6 @@ sdks:
       -
         artifact-type: api-client
         language: C/C++
-        tier: 2
         tags:
           - Server
           - Mobile
