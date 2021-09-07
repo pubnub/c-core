@@ -545,12 +545,12 @@ supported-platforms:
 sdks:
   -
     full-name: PubNub POSIX C SDK
-    short-name: C-Core
+    short-name: POSIX C
+    tier: 1
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
         tags:
           - Server
           - Mobile
@@ -611,12 +611,13 @@ sdks:
                       - macOS 11.3.1
   -
     full-name: PubNub POSIX C++ SDK
-    short-name: C-Core
+    short-name: POSIX C++
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C/C++
-        tier: 1
         tags:
           - Server
           - Mobile
@@ -677,12 +678,13 @@ sdks:
                       - macOS 11.3.1
   -
     full-name: PubNub Windows C SDK
-    short-name: C-Core
+    short-name: Windows C
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
         tags:
           - Server
           - Mobile
@@ -739,12 +741,13 @@ sdks:
                       - Windows 10 Enterprise
   -
     full-name: PubNub Windows C++ SDK
-    short-name: C-Core
+    short-name: Windows C++
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C/C++
-        tier: 1
         tags:
           - Server
           - Mobile
@@ -801,12 +804,13 @@ sdks:
                       - Windows 10 Enterprise
   -
     full-name: PubNub FreeRTOS SDK
-    short-name: C-Core
+    short-name: FreeRTOS
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
         tags:
           - Mobile
         source-repository: https://github.com/pubnub/c-core
@@ -857,12 +861,13 @@ sdks:
                       - 150825
   -
     full-name: PubNub Qt SDK
-    short-name: C-Core
+    short-name: Qt
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
         tags:
           - Mobile
         source-repository: https://github.com/pubnub/c-core
@@ -910,12 +915,13 @@ sdks:
                       - Qt5
   -
     full-name: PubNub Mbed SDK
-    short-name: C-Core
+    short-name: mBed
+    tier: 2
+    parent: C-Core
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
         tags:
           - Mobile
         source-repository: https://os.mbed.com/users/sveljko/code/Pubnub_mbed2_sync/
