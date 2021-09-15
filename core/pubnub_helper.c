@@ -54,6 +54,9 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_IO_ERROR: return "I/O (communication) error";
     case PNR_HTTP_ERROR: return "HTTP error received from server";
     case PNR_FORMAT_ERROR: return "Response format error";
+    case PNR_SUB_TT_FORMAT_ERROR: return "Subscribe Timetoken not in expected format";
+    case PNR_SUB_NO_TT_ERROR: return "No Timetoken in the subscribe response";
+    case PNR_SUB_NO_REG_ERROR: return "No Region in the subscribe response";
     case PNR_CANCELLED: return "Pubnub API transaction cancelled";
     case PNR_STARTED: return "Pubnub API transaction started";
     case PNR_IN_PROGRESS: return "Pubnub API transaction already in progress";

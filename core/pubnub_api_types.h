@@ -59,6 +59,12 @@ enum pubnub_res {
     PNR_HTTP_ERROR,
     /** Unexpected input in received JSON. */
     PNR_FORMAT_ERROR,
+    /** Subscribe Timetoken not in expected format */
+    PNR_SUB_TT_FORMAT_ERROR,
+    /** No Timetoken in the subscribe response */
+    PNR_SUB_NO_TT_ERROR,
+    /** No Region in the subscribe response */
+    PNR_SUB_NO_REG_ERROR,
     /** Request cancelled by user. */
     PNR_CANCELLED,
     /** Transaction started. Await the outcome. */

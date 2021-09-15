@@ -129,14 +129,14 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
             size_t len = titel.end - titel.start - 2;
             if ((*titel.start != '"') || (titel.end[-1] != '"')) {
                 PUBNUB_LOG_ERROR("Time token in response is not a string\n");
-                return PNR_FORMAT_ERROR;
+                return PNR_SUB_TT_FORMAT_ERROR;
             }
             if (len >= sizeof p->timetoken) {
                 PUBNUB_LOG_ERROR(
                     "Time token in response, length %lu, longer than max %lu\n",
                     (unsigned long)len,
                     (unsigned long)(sizeof p->timetoken - 1));
-                return PNR_FORMAT_ERROR;
+                return PNR_SUB_TT_FORMAT_ERROR;
             }
 
             memcpy(p->timetoken, titel.start + 1, len);
@@ -145,7 +145,7 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
         else {
             PUBNUB_LOG_ERROR(
                 "No timetoken value in subscribe V2 response found\n");
-            return PNR_FORMAT_ERROR;
+            return PNR_SUB_NO_TT_ERROR;
         }
         if (jonmpOK == pbjson_get_object_value(&found, "r", &titel)) {
             p->region = strtol(titel.start, NULL, 0);
@@ -153,13 +153,13 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
         else {
             PUBNUB_LOG_ERROR(
                 "No region value in subscribe V2 response found\n");
-            return PNR_FORMAT_ERROR;
+            return PNR_SUB_NO_REG_ERROR;
         }
     }
     else {
         PUBNUB_LOG_ERROR(
             "No timetoken in subscribe V2 response found, error=%d\n", jpresult);
-        return PNR_FORMAT_ERROR;
+        return PNR_SUB_NO_TT_ERROR;
     }
 
     p->chan_ofs = p->chan_end = 0;
