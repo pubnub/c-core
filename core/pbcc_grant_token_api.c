@@ -93,6 +93,7 @@ enum pubnub_res pbcc_grant_token_prep(
 
     APPEND_MESSAGE_BODY_M(rslt, pb, perm_obj);
 
+    PUBNUB_LOG_DEBUG("pbcc_grant_token_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 

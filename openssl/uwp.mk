@@ -33,8 +33,8 @@ USE_GRANT_TOKEN = 1
 !endif
 
 !if $(USE_GRANT_TOKEN)
-GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c  
-GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.obj pubnub_grant_token_api.obj  
+GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c ..\lib\cbor\cborparser.c ..\lib\cbor\cborerrorstrings.c ..\lib\cbor\cborparser_dup_string.c  
+GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.obj pubnub_grant_token_api.obj cborparser.obj cborerrorstrings.obj cborparser_dup_string.obj  
 !endif
 
 DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_WIN_SSPI=0 -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN)
@@ -51,15 +51,15 @@ all: pubnub_sync.lib pubnub_callback.lib
 SYNC_INTF_SOURCEFILES= ..\core\pubnub_ntf_sync.c ..\core\pubnub_sync_subscribe_loop.c ..\core\srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES= pubnub_ntf_sync.obj pubnub_sync_subscribe_loop.obj srand_from_pubnub_time.obj
 
-pubnub_sync.lib : $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
-	$(CC) -c $(CFLAGS) $(INCLUDES) $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
+pubnub_sync.lib : $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) 
+	$(CC) -c $(CFLAGS) $(INCLUDES) $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) 
 	lib $(OBJFILES) $(SYNC_INTF_OBJFILES) $(PROXY_INTF_OBJFILES) $(GRANT_TOKEN_OBJFILES) -OUT:$@
 
 CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_windows.c pubnub_get_native_socket.c ..\core\pubnub_timer_list.c ..\lib\sockets\pbpal_ntf_callback_poller_poll.c ..\lib\sockets\pbpal_adns_sockets.c ..\lib\pubnub_dns_codec.c ..\core\pubnub_dns_servers.c ..\windows\pubnub_dns_system_servers.c ..\lib\pubnub_parse_ipv4_addr.c ..\lib\pubnub_parse_ipv6_addr.c ..\core\pbpal_ntf_callback_queue.c ..\core\pbpal_ntf_callback_admin.c ..\core\pbpal_ntf_callback_handle_timer_list.c  ..\core\pubnub_callback_subscribe_loop.c
 CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_windows.obj pubnub_get_native_socket.obj pubnub_timer_list.obj pbpal_ntf_callback_poller_poll.obj pbpal_adns_sockets.obj pubnub_dns_codec.obj pubnub_dns_servers.obj pubnub_dns_system_servers.obj pubnub_parse_ipv4_addr.obj pubnub_parse_ipv6_addr.obj pbpal_ntf_callback_queue.obj pbpal_ntf_callback_admin.obj pbpal_ntf_callback_handle_timer_list.obj pubnub_callback_subscribe_loop.obj
 
-pubnub_callback.lib : $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
-	$(CC) -c $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
+pubnub_callback.lib : $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) 
+	$(CC) -c $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) 
 	lib $(OBJFILES) $(CALLBACK_INTF_OBJFILES) $(PROXY_INTF_OBJFILES) $(GRANT_TOKEN_OBJFILES) -OUT:$@
 
 clean:

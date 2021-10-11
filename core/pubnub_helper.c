@@ -79,6 +79,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_ACTIONS_API_ERROR: return "Actions API transaction reported an error";
     case PNR_ACCESS_DENIED: return "Access/Permission denied";
     case PNR_GRANT_TOKEN_API_ERROR: return "Grant Token API reported error";
+    case PNR_GROUP_EMPTY: return "Channel Group is empty";
     default: return "!?!?!";
     }
 }

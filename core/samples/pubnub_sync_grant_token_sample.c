@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <time.h>
 
-
 static void generate_uuid(pubnub_t* pbp)
 {
     char const*                      uuid_default = "zeka-peka-iz-jendeka";
@@ -26,7 +25,6 @@ static void generate_uuid(pubnub_t* pbp)
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
-
 
 static void sync_sample_free(pubnub_t* p)
 {
@@ -69,7 +67,6 @@ static int do_time(pubnub_t* pbp)
     return 0;
 }
 
-
 int main()
 {
     time_t          t0;
@@ -109,39 +106,43 @@ int main()
 
     puts("Grant Token...");
     time(&t0);
-    int perm_hello_world = pubnub_get_grant_bit_mask_value(true, true, false, false, false);
-    int perm_channel_group = pubnub_get_grant_bit_mask_value(true, true, true, false, false);
+    struct pam_permission h_perm = {.read=true, .write=true };
+    int perm_hello_world = pubnub_get_grant_bit_mask_value(h_perm);
+    struct pam_permission cg_perm = {.read=true, .write=true, .manage=true};
+    int perm_channel_group = pubnub_get_grant_bit_mask_value(cg_perm);
     int ttl_minutes = 60;
     char perm_obj[2000];
-    sprintf(perm_obj,"{\"ttl\":%d, \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, perm_hello_world, perm_channel_group);
+    char* authorized_uuid = "my_authorized_uuid";
+    sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
     res = pubnub_grant_token(gtp, perm_obj);
     pubnub_chamebl_t grant_token_resp;
     if (PNR_STARTED == res) {
         res = pubnub_await(gtp);
         if (PNR_OK == res) {
-            const char* grant_token_resp_json = pubnub_get(gtp);
-            printf("pubnub_grant_token() JSON Response from Pubnub: %s\n", grant_token_resp_json);
-
+            //const char* grant_token_resp_json = pubnub_get(gtp);
+            //printf("pubnub_grant_token() JSON Response from Pubnub: %s\n", grant_token_resp_json);
+            // OR below code
             grant_token_resp = pubnub_get_grant_token(gtp);
             printf("pubnub_grant_token() Response from Pubnub: %s\n", grant_token_resp.ptr);
+
+            char* cbor_data = pubnub_parse_token(gtp, grant_token_resp.ptr);
+            printf("pubnub_parse_token() = %s\n", cbor_data);
         }
         else{
             printf("pubnub_grant_token() failed with code: %d('%s')\n",
                 res,
                 pubnub_res_2_string(res));
-            return 0;
         }
     }
     else{
         printf("pubnub_grant_token() failed with code: %d('%s')\n",
                res,
                pubnub_res_2_string(res));
-        return 0;
     }
 
-    char* auth_key = grant_token_resp.ptr;
+    char* auth_token = grant_token_resp.ptr;
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
-    pubnub_set_auth(pbp, auth_key);
+    pubnub_set_auth_token(pbp, auth_token);
 
     pubnub_set_transaction_timeout(gtp, PUBNUB_DEFAULT_SUBSCRIBE_TIMEOUT);
 

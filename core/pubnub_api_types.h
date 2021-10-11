@@ -124,8 +124,9 @@ enum pubnub_res {
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
     /** Access/Permission denied */
-    PNR_ACCESS_DENIED
-
+    PNR_ACCESS_DENIED,
+    /** No Channels in the ChannelGroup */
+    PNR_GROUP_EMPTY
 };
 
 /** 'pubnub_cancel()' return value */

@@ -1,9 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#define PUBNUB_USE_GRANT_TOKEN_API 1
 #include "pubnub.hpp"
 
 #include <iostream>
 #include <exception>
 #include <stdio.h>
+#include "core/pubnub_grant_token_api.h"
 
 /* Please note that this sample is the same whether you use the Pubnub
    C "sync" or "callback" interface during the build.
@@ -39,17 +41,23 @@ int main()
             std::cout << "Grant Generated UUID: " << gb.uuid() << std::endl;
         }
         std::cout << "Grant Token" << std::endl;
-        int perm_hello_world = pubnub_get_grant_bit_mask_value(true, true, false, false, false);
-        int perm_channel_group = pubnub_get_grant_bit_mask_value(true, true, true, false, false);
+        struct pam_permission h_perm = { h_perm.read=true, h_perm.write=true };
+        int perm_hello_world = pubnub_get_grant_bit_mask_value(h_perm);
+        struct pam_permission cg_perm = {cg_perm.read=true, cg_perm.write=true, cg_perm.manage=true};
+        int perm_channel_group = pubnub_get_grant_bit_mask_value(cg_perm);
         int ttl_minutes = 60;
         char perm_obj[2000];
-        sprintf(perm_obj,"{\"ttl\":%d, \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, perm_hello_world, perm_channel_group);
+        char* authorized_uuid = "my_authorized_uuid";
+        sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
         pubnub::futres futgres = gb.grant_token(perm_obj);
         res = futgres.await();
         std::string tkn = "";
         if (PNR_OK == res) {
             tkn = gb.get_grant_token();
             std::cout << "Grant Token done! token = " << tkn << std::endl;
+
+            std::string cbor_data = gb.parse_token(tkn);
+            std::cout << "pubnub_parse_token() = " << cbor_data << std::endl;
         }
         else {
             std::cout << "Grant Token failed with code: " << res << std::endl;
@@ -70,7 +78,7 @@ int main()
         else {
             std::cout << "Generated UUID: " << pb.uuid() << std::endl;
         }
-        pb.set_auth(tkn);
+        pb.set_auth_token(tkn);
 
         pb.set_transaction_timeout(
 #if __cplusplus >= 201103L

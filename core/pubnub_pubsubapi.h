@@ -6,7 +6,7 @@
 #include "pubnub_api_types.h"
 
 #include <stdbool.h>
-
+#include <stdint.h>
 
 /** @file pubnub_pubsubapi.h
     This is the "Pub/Sub" API of the Pubnub client library.
@@ -290,6 +290,18 @@ char const* pubnub_get_origin(pubnub_t* p);
     @retval -1 setting origin not enabled
 */
 int pubnub_origin_set(pubnub_t* p, char const* origin);
+
+/** Sets the port to be used for the context @p p.  If setting of
+    the port is not enabled, this will fail.  It may also fail if it
+    detects an invalid port.
+
+    @param p Pubnub context to set the port for
+    @param origin The port to use for context @p p. 
+    @retval 0 port set,
+    @retval +1 port set will be applied with new connection,
+    @retval -1 setting port not enabled
+*/
+int pubnub_port_set(pubnub_t* p, uint16_t port);
 
 /** Enables the use of HTTP Keep-Alive ("persistent connections")
     on the context @p p.

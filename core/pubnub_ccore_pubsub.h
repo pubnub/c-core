@@ -33,6 +33,9 @@ struct pbcc_context {
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
     char const* auth;
+    /** The `auth_token` parameter to be sent to server. If NULL, don't send
+     * any */
+    char const* auth_token;
     /** Pointer to the message to send via POST method */
     char const* message_to_send;
 
@@ -271,6 +274,10 @@ struct pbcc_context {
     name[(int)(name##_index)].param_val = value;                            \
     (int)(name##_index)++;
 
+#define ADD_URL_AUTH_PARAM(pb, name, key)                                     \
+        if (pb->auth_token != NULL) { ADD_URL_PARAM(name, key, pb->auth_token); } \
+        else if (pb->auth != NULL) { ADD_URL_PARAM(name, key, pb->auth); }        
+
 #define ADD_URL_PARAM_SIZET(name, key, value)                               \
     int val_len = snprintf(NULL, 0, "%lu", value);                          \
     char val_str[21];                                                       \
@@ -376,6 +383,9 @@ char const* pbcc_uuid_get(struct pbcc_context* pb);
 
 /** Sets the `auth` for the context */
 void pbcc_set_auth(struct pbcc_context* pb, const char* auth);
+
+/** Sets the `auth` for the context */
+void pbcc_set_auth_token(struct pbcc_context* pb, const char* token);
 
 /** Response parser function prototype */
 typedef enum pubnub_res (*PFpbcc_parse_response_T)(struct pbcc_context*);

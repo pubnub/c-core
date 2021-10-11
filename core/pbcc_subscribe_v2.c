@@ -70,10 +70,10 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
     if (p->uuid) { ADD_URL_PARAM(qparam, uuid, p->uuid); }
 #if PUBNUB_CRYPTO_API
-    if (p->secret_key == NULL && p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    ADD_URL_AUTH_PARAM(p, qparam, auth);
 #endif
 
     if (filter_expr) { ADD_URL_PARAM(qparam, filter_expr, filter_expr); }
@@ -91,7 +91,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
         }
     }
 #endif
-
+    PUBNUB_LOG_DEBUG("pbcc_subscribe_v2_prep. REQUEST =%s\n", p->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -116,6 +116,16 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
                          p,
                          reply);
         return PNR_ACCESS_DENIED;
+    }
+
+    if (pbjson_value_for_field_found(&el, "status", "400")){
+        char* msgtext = pbjson_get_status_400_message_value(&el);
+        if (msgtext != NULL && strcmp(msgtext,"\"Channel group or groups result in empty subscription set\"") == 0){
+            return PNR_GROUP_EMPTY;
+        }
+        else{
+            return PNR_FORMAT_ERROR;
+        }
     }
 
     if ((reply[0] != '{') || (reply[p->http_buf_len - 1] != '}')) {

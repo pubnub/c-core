@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
+#include "pubnub_internal_common.h"
 
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_ccore.h"
@@ -33,6 +34,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
+        p->port = INITIAL_PORT_VALUE;
     }
 #if PUBNUB_BLOCKING_IO_SETTABLE
 #if defined(PUBNUB_CALLBACK_API)
@@ -246,7 +248,6 @@ void pubnub_set_auth(pubnub_t* pb, const char* auth)
     pubnub_mutex_unlock(pb->monitor);
 }
 
-
 char const* pubnub_auth_get(pubnub_t* pb)
 {
     char const* result;
@@ -358,6 +359,20 @@ int pubnub_origin_set(pubnub_t* pb, char const* origin)
         pubnub_mutex_unlock(pb->monitor);
 
         return origin_set ? 0 : +1;
+    }
+    return -1;
+}
+
+int pubnub_port_set(pubnub_t* pb, uint16_t port)
+{    
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    if (PUBNUB_ORIGIN_SETTABLE) {
+        pubnub_mutex_lock(pb->monitor);
+        pb->port = port;
+        bool port_set = (PBS_IDLE == pb->state);
+        pubnub_mutex_unlock(pb->monitor);
+
+        return port_set ? 0 : +1;
     }
     return -1;
 }

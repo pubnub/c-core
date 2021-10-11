@@ -6,6 +6,7 @@
 #include "pubnub_netcore.h"
 #include "pubnub_assert.h"
 #include "pubnub_timers.h"
+#include "pubnub_memory_block.h"
 
 #include "pbpal.h"
 
@@ -447,4 +448,21 @@ bool pubnub_can_start_transaction(pubnub_t* pb)
     pubnub_mutex_unlock(pb->monitor);
 
     return rslt;
+}
+
+/** Should be called only if server reported an error */
+int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return -1;
+    }
+    o_msg->size = pb->core.http_buf_len;
+    o_msg->ptr = pb->core.http_reply;
+
+    pubnub_mutex_unlock(pb->monitor);
+    return 0;
 }

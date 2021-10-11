@@ -515,10 +515,10 @@ enum pubnub_res pbcc_message_counts_prep(
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (p->secret_key == NULL && p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (p->auth != NULL) { ADD_URL_PARAM(qparam, auth, p->auth); }
+    ADD_URL_AUTH_PARAM(p, qparam, auth);
 #endif
     if (timetoken) { ADD_URL_PARAM(qparam, timetoken, timetoken); }
     if (channel_timetokens) { ADD_URL_PARAM(qparam, channelsTimetoken, channel_timetokens); }
@@ -536,5 +536,6 @@ enum pubnub_res pbcc_message_counts_prep(
     }
 #endif
 
+    PUBNUB_LOG_DEBUG("pbcc_message_counts_prep. REQUEST =%s\n", p->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
