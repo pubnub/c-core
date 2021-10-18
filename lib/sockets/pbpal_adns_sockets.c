@@ -98,7 +98,7 @@ int read_dns_response(pb_socket_t skt,
 {
     uint8_t                    buf[8192];
     int                        msg_size;
-    unsigned                   sockaddr_size;
+    socklen_t                   sockaddr_size;
     struct pubnub_ipv4_address addr_ipv4 = {{0}};
 #if PUBNUB_USE_IPV6
     struct pubnub_ipv6_address addr_ipv6 = {{0}};
