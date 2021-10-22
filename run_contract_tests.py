@@ -15,7 +15,7 @@ def parse_and_run_feature_file():
 
     for line in feature_file:
         if "@contract=" in line:
-            _, _, contract_name = line.split("=")
+            _, contract_name = line.split("=")
             res = requests.get(f"http://localhost:8090/init", params={"__contract__script__": contract_name})
             assert res
             collect_result = True
