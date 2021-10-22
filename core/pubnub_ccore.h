@@ -6,6 +6,8 @@
 
 #include <stdbool.h>
 
+typedef struct pubnub_char_mem_block pubnub_chamebl_t;
+
 
 /** @file pubnub_ccore.h
 
@@ -140,6 +142,5 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* p,
                                            char const*          channel_group,
                                            char const*          param,
                                            char const*          channel);
-
 
 #endif /* !defined INC_PUBNUB_CCORE */

@@ -108,10 +108,10 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
 
 #if PUBNUB_CRYPTO_API
@@ -129,6 +129,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
 
     APPEND_MESSAGE_BODY_M(PNR_OK, pb, value);
 
+    PUBNUB_LOG_DEBUG("pbcc_add_action_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -267,10 +268,12 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    if (pb->secret_key == NULL){
+        ADD_URL_AUTH_PARAM(pb, qparam, auth);
+    }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
     
 #if PUBNUB_CRYPTO_API
@@ -285,7 +288,8 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
         }
     }
 #endif
-
+    
+    PUBNUB_LOG_DEBUG("pbcc_remove_action_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -315,10 +319,10 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
     if (start) { ADD_URL_PARAM(qparam, start, start); }
     if (end) { ADD_URL_PARAM(qparam, end, end); }
@@ -337,6 +341,7 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
     }
 #endif
 
+    PUBNUB_LOG_DEBUG("pbcc_get_actions_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -396,10 +401,10 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
     
 #if PUBNUB_CRYPTO_API
@@ -415,6 +420,7 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
     }
 #endif
 
+    PUBNUB_LOG_DEBUG("pbcc_get_actions_more_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -444,10 +450,10 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
-    if (pb->secret_key == NULL && pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
-    if (pb->auth != NULL) { ADD_URL_PARAM(qparam, auth, pb->auth); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
     if (start) { ADD_URL_PARAM(qparam, start, start); }
     if (end) { ADD_URL_PARAM(qparam, end, end); }
@@ -466,6 +472,7 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
     }
 #endif
 
+    PUBNUB_LOG_DEBUG("pbcc_history_with_actions_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 

@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 
+
 #include <stdbool.h>
 
 typedef struct pubnub_char_mem_block pubnub_chamebl_t;
@@ -429,5 +430,12 @@ bool pubnub_can_start_transaction(pubnub_t* pb);
     @retval -1 on error(not found, or transaction still in progress on the context)
  */
 int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg);
+
+/** Returns body from the transaction response on the context @p pb into @p o_msg.
+    Can be called for any response
+    @retval 0 in case of transaction is not in progress
+    @retval -1 if transaction is still in progress on the context
+ */
+int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
 #endif /* defined INC_PUBNUB_COREAPI */

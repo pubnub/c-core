@@ -2,7 +2,7 @@
 #include "pubnub_json_parse.h"
 
 #include "pubnub_assert.h"
-
+#include "pubnub_log.h"
 #include <string.h>
 
 
@@ -273,4 +273,21 @@ bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name,
     result = pbjson_get_object_value(p, name, &found);
 
     return jonmpOK == result && pbjson_elem_equals_string(&found, value);
+}
+
+char* pbjson_get_status_400_message_value(struct pbjson_elem const* el){
+    enum pbjson_object_name_parse_result json_rslt;
+    struct pbjson_elem parsed;
+    json_rslt = pbjson_get_object_value(el, "message", &parsed);
+    if (json_rslt == jonmpOK) {
+        int parse_len = (int)(parsed.end - parsed.start);
+        PUBNUB_LOG_ERROR("pbjson_get_status_400_message_value: \"error\"='%.*s'\n",
+                        parse_len,
+                        parsed.start);
+        char* msgtext = (char*)malloc(sizeof(char) * (parse_len+3));
+        sprintf(msgtext, "%.*s", parse_len, parsed.start);
+        return msgtext;
+    }
+
+    return NULL;
 }

@@ -1,8 +1,20 @@
 name: c-core
 schema: 1
-version: "3.1.0"
+version: "3.3.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - version: v3.3.0
+    date: 2021-10-11
+    changes:
+      - type: feature
+        text: "Implemented PAMv3 support."
+      - type: bug
+        text: "Handle subscribe error for empty channel-group."
+  - version: v3.2.0
+    date: 2021-09-15
+    changes:
+      - type: bug
+        text: "Error codes for missing subscribe timetoken."
   - version: v3.1.0
     date: 2021-06-14
     changes:
@@ -433,6 +445,11 @@ changelog:
       - type: feature
         text: First "core feature complete" release
 features:
+  access:
+    - ACCESS-OBJECTS-V2-MANAGEMENT 
+    - ACCESS-GRANT-TOKEN
+    - ACCESS-PARSE-TOKEN
+    - ACCESS-SET-TOKEN
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
@@ -545,7 +562,7 @@ supported-platforms:
 sdks:
   -
     full-name: PubNub POSIX C SDK
-    short-name: C-Core
+    short-name: POSIX C
     artifacts:      
       -
         artifact-type: api-client
@@ -611,12 +628,12 @@ sdks:
                       - macOS 11.3.1
   -
     full-name: PubNub POSIX C++ SDK
-    short-name: C-Core
+    short-name: POSIX C++
     artifacts:      
       -
         artifact-type: api-client
         language: C/C++
-        tier: 1
+        tier: 2
         tags:
           - Server
           - Mobile
@@ -677,12 +694,12 @@ sdks:
                       - macOS 11.3.1
   -
     full-name: PubNub Windows C SDK
-    short-name: C-Core
+    short-name: Windows C
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
+        tier: 2
         tags:
           - Server
           - Mobile
@@ -739,12 +756,12 @@ sdks:
                       - Windows 10 Enterprise
   -
     full-name: PubNub Windows C++ SDK
-    short-name: C-Core
+    short-name: Windows C++
     artifacts:      
       -
         artifact-type: api-client
         language: C/C++
-        tier: 1
+        tier: 2
         tags:
           - Server
           - Mobile
@@ -801,12 +818,12 @@ sdks:
                       - Windows 10 Enterprise
   -
     full-name: PubNub FreeRTOS SDK
-    short-name: C-Core
+    short-name: FreeRTOS
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
+        tier: 2
         tags:
           - Mobile
         source-repository: https://github.com/pubnub/c-core
@@ -857,12 +874,12 @@ sdks:
                       - 150825
   -
     full-name: PubNub Qt SDK
-    short-name: C-Core
+    short-name: Qt
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
+        tier: 2
         tags:
           - Mobile
         source-repository: https://github.com/pubnub/c-core
@@ -910,12 +927,12 @@ sdks:
                       - Qt5
   -
     full-name: PubNub Mbed SDK
-    short-name: C-Core
+    short-name: mBed
     artifacts:      
       -
         artifact-type: api-client
         language: C
-        tier: 1
+        tier: 2
         tags:
           - Mobile
         source-repository: https://os.mbed.com/users/sveljko/code/Pubnub_mbed2_sync/

@@ -99,6 +99,10 @@
 /* Maximum object length that will be sent via PATCH, or POST methods */
 #define PUBNUB_MAX_OBJECT_LENGTH 30000
 
+/* Default value port is initialized with in case of settable origin. Only 
+   values different than this are taken into account when making connections */
+#define INITIAL_PORT_VALUE 0
+
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
  */
@@ -346,6 +350,8 @@ struct pubnub_ {
 
 #if defined PUBNUB_ORIGIN_SETTABLE
     char const* origin;
+    
+    uint16_t port;
 #endif
 
     struct pubnub_pal pal;

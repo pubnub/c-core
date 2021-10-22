@@ -59,6 +59,12 @@ enum pubnub_res {
     PNR_HTTP_ERROR,
     /** Unexpected input in received JSON. */
     PNR_FORMAT_ERROR,
+    /** Subscribe Timetoken not in expected format */
+    PNR_SUB_TT_FORMAT_ERROR,
+    /** No Timetoken in the subscribe response */
+    PNR_SUB_NO_TT_ERROR,
+    /** No Region in the subscribe response */
+    PNR_SUB_NO_REG_ERROR,
     /** Request cancelled by user. */
     PNR_CANCELLED,
     /** Transaction started. Await the outcome. */
@@ -118,8 +124,9 @@ enum pubnub_res {
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
     /** Access/Permission denied */
-    PNR_ACCESS_DENIED
-
+    PNR_ACCESS_DENIED,
+    /** No Channels in the ChannelGroup */
+    PNR_GROUP_EMPTY
 };
 
 /** 'pubnub_cancel()' return value */

@@ -30,7 +30,7 @@ PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\c
 !endif
 
 !if $(USE_GRANT_TOKEN)
-GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c 
+GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c ..\lib\cbor\cborparser.c ..\lib\cbor\cborerrorstrings.c ..\lib\cbor\cborparser_dup_string.c   
 !endif
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include

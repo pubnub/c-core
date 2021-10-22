@@ -174,4 +174,6 @@ size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n);
 */
 bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name, char const* value);
 
+char* pbjson_get_status_400_message_value(struct pbjson_elem const* el);
+
 #endif /* !defined INC_PUBNUB_JSON_PARSE */

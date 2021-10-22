@@ -552,6 +552,16 @@ public:
      */
     std::string origin() const { return pubnub_get_origin(d_pb); }
 
+
+    /** Sets the port to @p port on this context. This may fail.
+        @see pubnub_port_set
+     */
+    int set_port(uint16_t port)
+    {
+        lock_guard lck(d_mutex);
+        return pubnub_port_set(d_pb, port);
+    }
+
     /** Sets the secret key to @p secret_key. If @p secret_key is an 
         empty string, `secret_key` will not be used.
         @see pubnub_set_secret_key
@@ -595,6 +605,30 @@ public:
     {
         lock_guard lck(d_mutex);
         return d_auth;
+    }
+
+    /** Sets the auth `token` to @p token. If @p token is an
+        empty string, `token` will not be used.
+        @see pubnub_set_auth_token
+     */
+    void set_auth_token(std::string const& token)
+    {
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            throw std::logic_error("setting 'auth_token' while transaction in progress");
+        }
+        d_auth_token = token;
+        #if PUBNUB_USE_GRANT_TOKEN_API
+        pubnub_set_auth_token(d_pb, token.empty() ? NULL : d_auth_token.c_str());
+        #else
+        throw std::logic_error("grant token not enabled");
+        #endif
+    }
+    /// Returns the current `auth_token` for this context
+    std::string const& auth_token() const
+    {
+        lock_guard lck(d_mutex);
+        return d_auth_token;
     }
 
     /** Sets the UUID to @p uuid. If @p uuid is an empty string,
@@ -882,6 +916,19 @@ public:
         return std::string(msg.ptr, msg.size);
     }
 
+    /// In case the server reported en error in the response,
+    /// we'll read the error message using this function
+    /// @retval error_message on successfully read error message,
+    /// @retval empty_string otherwise
+    std::string last_http_response_body()
+    {
+        pubnub_chamebl_t msg;
+        if (pubnub_last_http_response_body(d_pb, &msg) != 0) {
+            return std::string("");
+        }
+        return std::string(msg.ptr, msg.size);
+    }
+
     /// Starts 'advanced history' pubnub_message_counts operation
     /// for unread messages on @p channel(channel list) starting from
     /// the given @p timetoken
@@ -1140,6 +1187,14 @@ public:
         pubnub_chamebl_t result = pubnub_get_grant_token(d_pb);
         return std::string(result.ptr, result.size);
     }
+
+    /// Parses the @p token and returns the json string.
+    /// @see pubnub_grant_token
+    std::string parse_token(std::string const& token)
+    {
+        return pubnub_parse_token(d_pb, token.c_str());
+    }
+
 #endif
 
 #if PUBNUB_USE_OBJECTS_API
@@ -1698,6 +1753,8 @@ private:
     std::string d_secret_key;
     /// The auth key
     std::string d_auth;
+    /// The auth token containing pam permissions
+    std::string d_auth_token;
     /// The UUID
     std::string d_uuid;
     /// The origin set last time (doen't have to be the one used,
