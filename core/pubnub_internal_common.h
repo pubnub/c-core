@@ -43,6 +43,10 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 0
 #endif
 
+#if !defined(PUBNUB_USE_FETCH_HISTORY)
+#define PUBNUB_USE_FETCH_HISTORY 0
+#endif
+
 #if !defined(PUBNUB_USE_OBJECTS_API)
 #define PUBNUB_USE_OBJECTS_API 0
 #endif

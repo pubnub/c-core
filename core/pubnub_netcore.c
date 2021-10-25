@@ -15,6 +15,9 @@
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pbcc_advanced_history.h"
 #endif
+#if PUBNUB_USE_FETCH_HISTORY
+#include "core/pbcc_fetch_history.h"
+#endif
 #if PUBNUB_USE_OBJECTS_API
 #include "core/pbcc_objects_api.h"
 #endif

@@ -192,6 +192,10 @@
     provides more data about (unread) messages. */
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 
+/** If true (!=0) will enable using the fetch history API, which
+    provides more data about single/multip channel messages. */
+#define PUBNUB_USE_FETCH_HISTORY 1
+
 /** If true (!=0) will enable using the objects API, which is a
     collection of rest API features that enables "CRUD"(Create, Read, Update and Delete)
     on two new pubnub objects: User and Space, as well as manipulating connections
