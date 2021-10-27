@@ -123,6 +123,8 @@ enum pubnub_res {
     PNR_ACTIONS_API_ERROR,
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
+    /** Fetch History API transaction reported an error */
+    PNR_FETCH_HISTORY_ERROR,
     /** Access/Permission denied */
     PNR_ACCESS_DENIED,
     /** No Channels in the ChannelGroup */
@@ -262,6 +264,11 @@ enum pubnub_trans {
       */
     PBTT_GRANT_TOKEN,
 #endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_FETCH_HISTORY
+    /** History V3 (get fetch history for the channel(s) from Pubnub
+     * server) operation/transaction */
+    PBTT_FETCH_HISTORY,
+#endif
     /** Count the number of transaction types */
     PBTT_MAX
 };
