@@ -9,6 +9,7 @@
 #if PUBNUB_USE_IPV6
 #include "lib/pubnub_parse_ipv6_addr.h"
 #endif
+#include "pbpal.h"
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 #include <string.h>
@@ -40,6 +41,7 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
     if (ip_or_url_len >= sizeof p->proxy_hostname) {
         return -1;
     }
+    pubnub_mutex_lock(p->monitor);
     p->proxy_type = protocol;
     p->proxy_port = port;
 #if defined(PUBNUB_CALLBACK_API)
@@ -55,8 +57,12 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
         }
 #endif
     }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    pbpal_multiple_addresses_reset_counters(&p->spare_addresses);
+#endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
     memcpy(p->proxy_hostname, ip_address_or_url, ip_or_url_len + 1);
+    pubnub_mutex_unlock(p->monitor);
 
     return 0;
 }
@@ -66,27 +72,38 @@ void pubnub_set_proxy_none(pubnub_t* p)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
+    pubnub_mutex_lock(p->monitor);
 #if defined(PUBNUB_CALLBACK_API)
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    pbpal_multiple_addresses_reset_counters(&p->spare_addresses);
+#endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_type = pbproxyNONE;
     p->proxy_port = 0;
     p->proxy_hostname[0] = '\0';
+    pubnub_mutex_unlock(p->monitor);
 }
     
 
 enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p)
 {
+    enum pubnub_proxy_type proxy_type;
+    
     PUBNUB_ASSERT_OPT(p != NULL);
+    
+    pubnub_mutex_lock(p->monitor);
+    proxy_type = p->proxy_type;
+    pubnub_mutex_unlock(p->monitor);
 
-    return p->proxy_type;
+    return proxy_type;
 }
 
 
-int pubnub_proxy_get_config(pubnub_t const*         pb,
+int pubnub_proxy_get_config(pubnub_t*               pb,
                             enum pubnub_proxy_type* protocol,
                             uint16_t*               port,
                             char*                   host,
@@ -99,13 +116,16 @@ int pubnub_proxy_get_config(pubnub_t const*         pb,
     PUBNUB_ASSERT_OPT(port != NULL);
     PUBNUB_ASSERT_OPT(host != NULL);
 
+    pubnub_mutex_lock(pb->monitor);
     *protocol = pb->proxy_type;
     *port     = pb->proxy_port;
     hnlen     = strlen(pb->proxy_hostname);
     if (hnlen + 1 < n) {
+        pubnub_mutex_unlock(pb->monitor);
         return -1;
     }
     memcpy(host, pb->proxy_hostname, hnlen + 1);
+    pubnub_mutex_unlock(pb->monitor);
 
     return 0;
 }
@@ -117,8 +137,10 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
+    pubnub_mutex_lock(p->monitor);
     p->proxy_auth_username = username;
     p->proxy_auth_password = password;
+    pubnub_mutex_unlock(p->monitor);
 
     return 0;
 }

@@ -163,5 +163,17 @@ pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e)
 */
 size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n);
 
+/** Copies the element @p p to the given string @p s, allocated by the
+    caller as an array of @p n elements, which thus includes the
+    terminating NUL character.
+
+    If @p p can't fit in the given string, at most @p n - 1 elements
+    will be copied to it. This is not considered an error.
+
+    @return bool value whether field value matched or not.
+*/
+bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name, char const* value);
+
+char* pbjson_get_status_400_message_value(struct pbjson_elem const* el);
 
 #endif /* !defined INC_PUBNUB_JSON_PARSE */

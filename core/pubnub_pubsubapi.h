@@ -6,7 +6,7 @@
 #include "pubnub_api_types.h"
 
 #include <stdbool.h>
-
+#include <stdint.h>
 
 /** @file pubnub_pubsubapi.h
     This is the "Pub/Sub" API of the Pubnub client library.
@@ -46,7 +46,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the @p uuid string is not copied to the Pubnub context @p p.  */
-void pubnub_set_uuid(pubnub_t* p, const char* uuid);
+enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the UUID identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
@@ -93,7 +93,7 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
     @p p context. This actually means "initiate a publish
     transaction".
 
-    You can't publish if a transaction is in progress in @p p context.
+    You can't publish if a transaction is in progress on @p p context.
 
     If transaction is not successful (@c PNR_PUBLISH_FAILED), you can
     get the string describing the reason for failure by calling
@@ -110,13 +110,50 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
     result code and the description).
 
     @param p The pubnub context. Can't be NULL
-    @param channel The string with the channel (or comma-delimited list
-    of channels) to publish to.
+    @param channel The string with the channel to publish to.
     @param message The message to publish, expected to be in JSON format
 
-    @return #PNR_STARTED on success, an error otherwise
+    @return #PNR_STARTED or #PNR_OK on success, an error otherwise
  */
 enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
+
+/** Sends a signal @p message (in JSON format) on @p channel, using @p pb context.
+    This actually means "initiate a signal transaction".
+
+    It has similar behaviour as publish, but unlike publish
+    transaction, signal erases previous signal message on server(, on
+    a given channel,) and you can not send any metadata.
+
+    There can be only up to one signal message at the time. If it's
+    not renewed by another signal, signal message disappears from
+    channel history after certain amount of time.
+
+    You can't (send a) 'signal' if a transaction is in progress on @p
+    p context.
+
+    If transaction is not successful (@c PNR_PUBLISH_FAILED), you can
+    get the string describing the reason for failure by calling
+    pubnub_last_publish_result().
+
+    Keep in mind that the time token from the signal operation
+    response is _not_ parsed by the library, just relayed to the
+    user. Only time-tokens from the subscribe operation are parsed
+    by the library.
+
+    Also, for all error codes known at the time of this writing, the
+    HTTP error will be set also, so the result of the Pubnub operation
+    will not be @c PNR_OK (but you will still be able to get the
+    result code and the description).
+
+    @param pb The pubnub context. Can't be NULL
+    @param channel The string with the channel to signal to.
+    @param message The signal message to send, expected to be in JSON format
+
+    @return #PNR_STARTED or #PNR_OK on success, an error otherwise
+ */
+enum pubnub_res pubnub_signal(pubnub_t* pb,
+                              const char* channel,
+                              const char* message);
 
 /** Returns a pointer to an arrived message or other element of the
     response to an operation/transaction. Message(s) arrive on finish
@@ -180,6 +217,11 @@ char const* pubnub_get_channel(pubnub_t* pb);
     ways: if @p channel_group is NULL, then @p channel cannot be NULL
     and you will subscribe only to the channel(s).
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel_group could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
+
     You can't subscribe if a transaction is in progress on the context.
 
     Also, you can't subscribe if there are unread messages in the
@@ -191,7 +233,7 @@ char const* pubnub_get_channel(pubnub_t* pb);
     @param channel_group The string with the channel group name (or
     comma-delimited list of channel group names) to subscribe to.
 
-    @return #PNR_STARTED on success, an error otherwise
+    @return #PNR_STARTED or #PNR_OK on success, an error otherwise
 
     @see pubnub_get
  */
@@ -248,6 +290,18 @@ char const* pubnub_get_origin(pubnub_t* p);
     @retval -1 setting origin not enabled
 */
 int pubnub_origin_set(pubnub_t* p, char const* origin);
+
+/** Sets the port to be used for the context @p p.  If setting of
+    the port is not enabled, this will fail.  It may also fail if it
+    detects an invalid port.
+
+    @param p Pubnub context to set the port for
+    @param origin The port to use for context @p p. 
+    @retval 0 port set,
+    @retval +1 port set will be applied with new connection,
+    @retval -1 setting port not enabled
+*/
+int pubnub_port_set(pubnub_t* p, uint16_t port);
 
 /** Enables the use of HTTP Keep-Alive ("persistent connections")
     on the context @p p.

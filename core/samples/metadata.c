@@ -29,6 +29,21 @@ static enum pubnub_res publish(pubnub_t* pbp, char const* chan, char const* meta
 }
 
 
+static enum pubnub_res signal_trans(pubnub_t* pbp, char const* chan)
+{
+    enum pubnub_res res;
+    
+    puts("------------------");
+    puts("Signal");
+    puts("------------------");
+    res = pubnub_signal(pbp, chan, "\"Signal world - sync w/meta\"");
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    return res;
+}
+
+
 static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
 {
     struct pubnub_v2_message msg;
@@ -42,6 +57,7 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
         printf("  Timetoken  = '%.*s'\n", (int)msg.tt.size, msg.tt.ptr);
         printf("  Metadata   = '%.*s'\n", (int)msg.metadata.size, msg.metadata.ptr);
         printf("  Payload    = '%.*s'\n", (int)msg.payload.size, msg.payload.ptr);
+        printf("  MessageType= '%s'\n", pubnub_msg_type_to_str(msg.message_type));
     }
     return 0;
 }
@@ -49,14 +65,6 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
 
 static void sync_sample_free(pubnub_t* p)
 {
-    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
-        enum pubnub_res pnru = pubnub_await(p);
-        if (pnru != PNR_OK) {
-            printf("Awaiting cancel failed: %d('%s')\n",
-                   pnru,
-                   pubnub_res_2_string(pnru));
-        }
-    }
     if (pubnub_free(p) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
@@ -89,13 +97,30 @@ static int doit(pubnub_t* pbp)
         printf("publish failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
         return -1;
     }
-
+    
     puts("------------------------------------");
     puts("Subscribe w/filter that's satisfied.");
     puts("------------------------------------");
     subopts             = pubnub_subscribe_v2_defopts();
     subopts.filter_expr = "pub == 'nub'";
     res                 = pubnub_subscribe_v2(pbp, chan, subopts);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    if (0 != printout_subscribe_v2_outcome(pbp, res)) {
+        return -1;
+    }
+
+    res = signal_trans(pbp, chan);
+    if (PNR_OK != res) {
+        printf("signal failed, result=%d('%s')\n", res, pubnub_res_2_string(res));
+        return -1;
+    }
+
+    puts("----------------------------------------");
+    puts("No subscribe w/filter.");
+    puts("----------------------------------------");
+    res = pubnub_subscribe_v2(pbp, chan, pubnub_subscribe_v2_defopts());
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }

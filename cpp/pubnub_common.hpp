@@ -17,19 +17,42 @@ extern "C" {
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_free_with_timeout.h"
+#if defined(PUBNUB_CALLBACK_API)
+#include "core/pubnub_ntf_callback.h"
+#endif
 #if PUBNUB_PROXY_API
 #include "core/pubnub_proxy.h"
+#endif
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "core/pubnub_subscribe_v2.h"
 #endif
 #if PUBNUB_CRYPTO_API
 #include "core/pubnub_crypto.h"
 #endif
+#if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pubnub_advanced_history.h"
-#define MAX_ERROR_MESSAGE_LENGTH 100
+#endif
+#if PUBNUB_USE_OBJECTS_API
+#include "core/pubnub_objects_api.h"
+#define MAX_INCLUDE_DIMENSION 100
+#define MAX_ELEM_LENGTH 30
+#endif
+#if PUBNUB_USE_ACTIONS_API
+#include "core/pubnub_actions_api.h"
+#endif
+#if PUBNUB_USE_GRANT_TOKEN_API
+#include "core/pubnub_grant_token_api.h"
+#endif
+#include "core/pubnub_auto_heartbeat.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif
 
 #include "pubnub_mutex.hpp"
+#include "tribool.hpp"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "pubnub_v2_message.hpp"
+#endif
 
 #include <string>
 #include <cstring>
@@ -193,6 +216,44 @@ public:
 };
 
 
+#if PUBNUB_USE_SUBSCRIBE_V2
+/** A wrapper class for subscribe_v2 options, enabling a nicer
+    usage. Something like:
+
+        pn.subscribe(chan, subscribe_v2_options().heartbeat(412));
+*/
+class subscribe_v2_options {
+    pubnub_subscribe_v2_options d_;
+    std::string d_chgrp;
+    std::string d_filter_expr;
+    
+public:
+    subscribe_v2_options() { d_ = pubnub_subscribe_v2_defopts(); }
+    subscribe_v2_options& channel_group(std::string const& chgroup)
+    {
+        d_chgrp          = chgroup;
+        d_.channel_group = d_chgrp.empty() ? 0 : d_chgrp.c_str();
+        return *this;
+    }
+    subscribe_v2_options& channel_group(std::vector<std::string> const& chgroup)
+    {
+        return channel_group(join(chgroup));
+    }
+    subscribe_v2_options& heartbeat(unsigned hb_interval)
+    {
+        d_.heartbeat = hb_interval;
+        return *this;
+    }
+    subscribe_v2_options& filter_expr(std::string const& filter_exp)
+    {
+        d_filter_expr = filter_exp;
+        d_.filter_expr = d_filter_expr.empty() ? 0 : d_filter_expr.c_str();
+        return *this;
+    }
+    pubnub_subscribe_v2_options data() { return d_; }
+};
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+
 /** A wrapper class for publish options, enabling a nicer
     usage. Something like:
 
@@ -228,7 +289,7 @@ public:
         d_.meta = d_mtdt.c_str();
         return *this;
     }
-    publish_options& method(pubnub_publish_method method)
+    publish_options& method(pubnub_method method)
     {
         d_.method = method;
         return *this;
@@ -315,9 +376,112 @@ public:
         d_.include_token = inc_token;
         return *this;
     }
+    history_options& include_meta(bool inc_meta)
+    {
+        d_.include_meta = inc_meta;
+        return *this;
+    }
     pubnub_history_options data() { return d_; }
 };
 
+#if PUBNUB_USE_OBJECTS_API
+/** A wrapper class for objects api managing include parameter */
+class include_options {
+    char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
+    size_t d_include_count;
+    
+public:
+    include_options()
+        : d_include_count(0)
+    {}
+    char const** include_c_strings_array()
+    {
+        return (d_include_count > 0) ? (char const**)d_include_c_strings_array : NULL;
+    }
+    char const** include_to_c_strings_array(std::vector<std::string> const& inc)
+    {
+        size_t n = inc.size();
+        unsigned i;
+        if (n > MAX_INCLUDE_DIMENSION) {
+            throw std::range_error("include parameter has too many elements.");
+        }
+        for (i = 0; i < n; i++) {
+            if (inc[i].size() > MAX_ELEM_LENGTH) {
+                throw std::range_error("include string element is too long.");
+            }
+            strcpy(d_include_c_strings_array[i], inc[i].c_str());
+        }
+        d_include_count = n;
+        return include_c_strings_array();
+    }
+    include_options(std::vector<std::string> const& inc)
+    {
+        include_to_c_strings_array(inc);
+    }
+    size_t include_count() { return d_include_count; }
+};
+    
+/** A wrapper class for objects api paging option parameters, enabling a nicer
+    usage. Something like:
+       pbp.get_users(list_options().start(last_bookmark));
+
+    instead of:
+       pbp.get_users(nullopt, nullopt, last_bookmark, “”, nullopt);
+  */
+class list_options {
+    std::string d_include;
+    size_t d_limit;
+    std::string d_start;
+    std::string d_end;
+    tribool d_count;
+
+public:
+    list_options()
+        : d_limit(0)
+        , d_count(tribool::not_set)
+    {}
+    list_options& include(std::string const& incl)
+    {
+        d_include = incl;
+        return *this;
+    }
+    char const* include() { return (d_include.size() > 0) ? d_include.c_str() : NULL; }
+
+    list_options& limit(size_t lim)
+    {
+        d_limit = lim;
+        return *this;
+    }
+    size_t limit() { return d_limit; }
+    list_options& start(std::string const& st)
+    {
+        d_start = st;
+        return *this;
+    }
+    char const* start() { return (d_start.size() > 0) ? d_start.c_str() : NULL; }
+    list_options& end(std::string const& e)
+    {
+        d_end = e;
+        return *this;
+    }
+    char const* end() { return (d_end.size() > 0) ? d_end.c_str() : NULL; }
+    list_options& count(tribool co)
+    {
+        d_count = co;
+        return *this;
+    }
+    pubnub_tribool count()
+    {
+        if (false == d_count) {
+            return pbccFalse;
+        }
+        else if (true == d_count) {
+            return pbccTrue;
+        }
+        return pbccNotSet;
+    }
+};
+#endif /* PUBNUB_USE_OBJECTS_API */    
 
 /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
  * not a "native" C++ implementation.
@@ -388,6 +552,41 @@ public:
      */
     std::string origin() const { return pubnub_get_origin(d_pb); }
 
+
+    /** Sets the port to @p port on this context. This may fail.
+        @see pubnub_port_set
+     */
+    int set_port(uint16_t port)
+    {
+        lock_guard lck(d_mutex);
+        return pubnub_port_set(d_pb, port);
+    }
+
+    /** Sets the secret key to @p secret_key. If @p secret_key is an 
+        empty string, `secret_key` will not be used.
+        @see pubnub_set_secret_key
+     */
+    void set_secret_key(std::string const& secret_key)
+    {
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            throw std::logic_error("setting 'secret_key' key while transaction in progress");
+        }
+        d_secret_key = secret_key;
+        #if PUBNUB_CRYPTO_API
+        pubnub_set_secret_key(d_pb, secret_key.empty() ? NULL : d_secret_key.c_str());
+        #else
+        throw std::logic_error("PUBNUB_CRYPTO_API is not enabled to use 'secret_key'");
+        #endif
+    }
+
+    /// Returns the current `secret_key` for this context
+    std::string const& secret_key() const
+    {
+        lock_guard lck(d_mutex);
+        return d_secret_key;
+    }
+
     /** Sets the `auth` key to @p auth. If @p auth is an
         empty string, `auth` will not be used.
         @see pubnub_set_auth
@@ -406,6 +605,30 @@ public:
     {
         lock_guard lck(d_mutex);
         return d_auth;
+    }
+
+    /** Sets the auth `token` to @p token. If @p token is an
+        empty string, `token` will not be used.
+        @see pubnub_set_auth_token
+     */
+    void set_auth_token(std::string const& token)
+    {
+        lock_guard lck(d_mutex);
+        if (!pubnub_can_start_transaction(d_pb)) {
+            throw std::logic_error("setting 'auth_token' while transaction in progress");
+        }
+        d_auth_token = token;
+        #if PUBNUB_USE_GRANT_TOKEN_API
+        pubnub_set_auth_token(d_pb, token.empty() ? NULL : d_auth_token.c_str());
+        #else
+        throw std::logic_error("grant token not enabled");
+        #endif
+    }
+    /// Returns the current `auth_token` for this context
+    std::string const& auth_token() const
+    {
+        lock_guard lck(d_mutex);
+        return d_auth_token;
     }
 
     /** Sets the UUID to @p uuid. If @p uuid is an empty string,
@@ -454,6 +677,29 @@ public:
         }
         return all;
     }
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+    /// Returns the next v2 message from the context. If there are
+    /// none, returns an empty message structure(checked through
+    /// v2_mesage::is_empty()). 
+    /// @see pubnub_get_v2
+    v2_message get_v2() const
+    {
+        return v2_message(pubnub_get_v2(d_pb));
+    }
+    /// Returns a vector of all v2 messages from the context.
+    std::vector<v2_message> get_all_v2() const
+    {
+        std::vector<v2_message> all;
+        v2_message msg = get_v2();
+
+        while (!msg.is_empty()) {
+            all.push_back(msg);
+            msg = get_v2();
+        }
+        return all;
+    }
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
 
 #if PUBNUB_CRYPTO_API
     /// Returns the next message from the context, decrypted with
@@ -529,24 +775,22 @@ public:
         return doit(pubnub_publish(d_pb, channel.c_str(), message.c_str()));
     }
 
-    /// Publishes a @p message on the @p channel with "extendded"
-    /// (full) options. The @p channel can have many channels
-    /// separated by a comma @see pubnub_publish
+    /// Publishes a @p message on the @p channel with "extended"
+    /// (full) options.
     futres publish(std::string const& channel,
                    std::string const& message,
                    publish_options    opt)
     {
-        if (message.size() + 1 > sizeof d_message_to_publish) {
-            throw std::range_error("string for publish too long");
-        }
-        lock_guard lck(d_mutex);
-        if (!pubnub_can_start_transaction(d_pb)) {
-            return futres(d_pb, *this, PNR_IN_PROGRESS);
-        }
-        strcpy(d_message_to_publish, message.c_str());
-        return doit(pubnub_publish_ex(d_pb, channel.c_str(), d_message_to_publish, opt.data()));
+        return doit(pubnub_publish_ex(d_pb, channel.c_str(), message.c_str(), opt.data()));
     }
 
+    /// Sends a signal @p message on the @p channel.
+    /// @see pubnub_signal
+    futres signal(std::string const& channel, std::string const& message)
+    {
+        return doit(pubnub_signal(d_pb, channel.c_str(), message.c_str()));
+    }
+    
 #if PUBNUB_CRYPTO_API
     /// Publishes a @p message on the @p channel encrypted with @p
     /// cipher_key.
@@ -593,6 +837,23 @@ public:
     {
         return subscribe(join(channel), opt);
     }
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+    /// V2 subscribes to @p channel with "extended" (full) options
+    /// @see pubnub_subscribe_v2
+    futres subscribe_v2(std::string const& channel, subscribe_v2_options opt)
+    {
+        char const* ch = channel.empty() ? 0 : channel.c_str();
+        return doit(pubnub_subscribe_v2(d_pb, ch, opt.data()));
+    }
+
+    /// Pass a vector of channels in the @p channel and we'll put
+    /// commas between them. A helper function.
+    futres subscribe_v2(std::vector<std::string> const& channel, subscribe_v2_options opt)
+    {
+        return subscribe_v2(join(channel), opt);
+    }
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
 
     /// Leaves a @p channel and/or @p channel_group
     /// @see pubnub_leave
@@ -650,6 +911,19 @@ public:
     {
         pubnub_chamebl_t msg;
         if (pubnub_get_error_message(d_pb, &msg) != 0) {
+            return std::string("");
+        }
+        return std::string(msg.ptr, msg.size);
+    }
+
+    /// In case the server reported en error in the response,
+    /// we'll read the error message using this function
+    /// @retval error_message on successfully read error message,
+    /// @retval empty_string otherwise
+    std::string last_http_response_body()
+    {
+        pubnub_chamebl_t msg;
+        if (pubnub_last_http_response_body(d_pb, &msg) != 0) {
             return std::string("");
         }
         return std::string(msg.ptr, msg.size);
@@ -896,6 +1170,349 @@ public:
         return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
     }
 
+#if PUBNUB_USE_GRANT_TOKEN_API
+    /// Starts a transaction that grants a token with the attributes specified in @p grant_obj.
+    /// @see pubnub_grant_token
+    futres grant_token(std::string const& grant_obj)
+    {
+        return doit(pubnub_grant_token(
+                        d_pb,
+                        grant_obj.c_str()));
+    }
+
+     /// Returns grant token
+    /// @see pubnub_get_grant_token()
+    std::string get_grant_token()
+    {
+        pubnub_chamebl_t result = pubnub_get_grant_token(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+
+    /// Parses the @p token and returns the json string.
+    /// @see pubnub_grant_token
+    std::string parse_token(std::string const& token)
+    {
+        return pubnub_parse_token(d_pb, token.c_str());
+    }
+
+#endif
+
+#if PUBNUB_USE_OBJECTS_API
+    /// Starts a transaction for optaining a paginated list of uuids associated
+    /// with the subscription key.
+    /// @see pubnub_getall_uuidmetadata
+    futres getall_uuidmetadata(list_options& options)
+    {
+        return doit(pubnub_getall_uuidmetadata(
+                        d_pb, 
+                        options.include(),
+                        options.limit(),
+                        options.start(),
+                        options.end(),
+                        options.count()));
+    }
+
+    /// Starts a transaction that creates a user with the attributes specified in @p user_obj.
+    /// @see pubnub_set_uuidmetadata
+    futres set_uuidmetadata(std::string const& uuid_metadataid, std::string const& include, std::string const& user_obj)
+    {
+        return doit(pubnub_set_uuidmetadata(
+                        d_pb,
+                        uuid_metadataid.c_str(),
+                        include.c_str(),
+                        user_obj.c_str()));
+    }
+
+    /// Starts a transaction that returns the user object specified by @p uuid.
+    /// @see pubnub_get_uuidmetadata
+    futres get_uuidmetadata(std::string const& uuid, std::string const& include)
+    {
+        return doit(pubnub_get_uuidmetadata(
+                        d_pb,
+                        include.c_str(),
+                        uuid.c_str()));
+    }
+
+    /// Starts a transaction that deletes the user specified by @p uuid.
+    /// @see pubnub_remove_uuidmetadata
+    futres remove_uuidmetadata(std::string const& uuid)
+    {
+        return doit(pubnub_remove_uuidmetadata(d_pb, uuid.c_str()));
+    }
+
+    /// Starts a transaction that returns the spaces associated with the subscriber key.
+    /// @see pubnub_getall_channelmetadata
+    futres getall_channelmetadata(list_options& options)
+    {
+        return doit(pubnub_getall_channelmetadata(
+                        d_pb, 
+                        options.include(),
+                        options.limit(),
+                        options.start(),
+                        options.end(),
+                        options.count()));
+    }
+
+    /// Starts a transaction that creates a space with the attributes specified in @p channel_metadata_obj.
+    /// @see pubnub_set_channelmetadata
+    futres set_channelmetadata(std::string const& channel_metadataid, std::string const& include, std::string const& channel_metadata_obj)
+    {
+        return doit(pubnub_set_channelmetadata(
+                        d_pb,
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        channel_metadata_obj.c_str()));
+    }
+
+    /// Starts a transaction that returns the space object specified by @p space_id.
+    /// @see pubnub_get_channelmetadata
+    futres get_channelmetadata(std::string const& channel_metadataid, std::string const& include)
+    {
+        return doit(pubnub_get_channelmetadata(
+                        d_pb,
+                        include.c_str(),
+                        channel_metadataid.c_str()));
+    }
+
+    /// Starts a transaction that deletes the space specified with @p channel_metadataid.
+    /// @see pubnub_remove_channelmetadata
+    futres remove_channelmetadata(std::string const& channel_metadataid)
+    {
+        return doit(pubnub_remove_channelmetadata(d_pb, channel_metadataid.c_str()));
+    }
+
+    /// Starts a transaction that returns the space memberships of the user specified
+    /// by @p user_id.
+    /// @see pubnub_get_memberships
+    futres get_memberships(std::string const& metadata_uuid, list_options& options)
+    {
+        return doit(pubnub_get_memberships(
+                        d_pb,
+                        metadata_uuid.c_str(),
+                        options.include(),
+                        options.limit(),
+                        options.start(),
+                        options.end(),
+                        options.count()));
+    }
+
+    /// Starts a transaction that updates the space memberships of the user specified
+    /// by @p metadata_uuid.
+    /// @see pubnub_set_memberships
+    futres set_memberships(std::string const& metadata_uuid,
+                              std::string const& set_obj,
+                              std::string const& include)
+    {
+        return doit(pubnub_set_memberships(
+                        d_pb,
+                        metadata_uuid.c_str(),
+                        include.c_str(),
+                        set_obj.c_str()));
+    }
+
+    /// Starts a transaction that removes the channel memberships of the user specified
+    /// by @p metadata_uuid.
+    /// @see pubnub_remove_memberships
+    futres remove_memberships(std::string const& metadata_uuid,
+                        std::string const& remove_obj,
+                        std::string const& include)
+    {
+        return doit(pubnub_remove_memberships(
+                        d_pb,
+                        metadata_uuid.c_str(),
+                        include.c_str(),
+                        remove_obj.c_str()));
+    }
+
+    /// Starts a transaction that returns all users in the space specified by @p space_id.
+    /// @see pubnub_get_members
+    futres get_members(std::string const& channel_metadataid, list_options& options)
+    {
+        return doit(pubnub_get_members(
+                        d_pb,
+                        channel_metadataid.c_str(),
+                        options.include(),
+                        options.limit(),
+                        options.start(),
+                        options.end(),
+                        options.count()));
+    }
+
+    /// Starts a transaction that adds the list of members of the space specified
+    /// by @p channel_metadataid.
+    /// @see pubnub_add_members
+    futres add_members(std::string const& channel_metadataid,
+                       std::string const& update_obj,
+                       std::string const& include)
+    {
+        return doit(pubnub_add_members(
+                        d_pb,
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        update_obj.c_str()));
+    }
+
+    /// Starts a transaction that updates the list of members of the space specified
+    /// by @p channel_metadataid.
+    /// @see pubnub_set_members
+    futres set_members(std::string const& channel_metadataid,
+                          std::string const& set_obj,
+                          std::string const& include)
+    {
+        return doit(pubnub_set_members(
+                        d_pb,
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        set_obj.c_str()));
+    }
+
+    /// Starts a transaction that removes the list of members of the space specified
+    /// by @p channel_metadataid.
+    /// @see pubnub_remove_members
+    futres remove_members(std::string const& channel_metadataid,
+                          std::string const& remove_obj,
+                          std::string const& include)
+    {
+        return doit(pubnub_remove_members(
+                        d_pb,
+                        channel_metadataid.c_str(),
+                        include.c_str(),
+                        remove_obj.c_str()));
+    }
+#endif /* PUBNUB_USE_OBJECTS_API */
+
+#if PUBNUB_USE_ACTIONS_API
+    /// Starts a transaction that adds new type of message called action as a support for
+    /// user reactions on a published messages.
+    /// @see pubnub_add_message_action
+    futres add_message_action(std::string const& channel,
+                              std::string const& message_timetoken,
+                              enum pubnub_action_type actype,
+                              std::string const& value)
+    {
+        return doit(pubnub_add_message_action(
+                        d_pb, 
+                        channel.c_str(), 
+                        message_timetoken.c_str(), 
+                        actype, 
+                        value.c_str()));
+    }
+
+    /// Returns message timetoken if previous transaction had been add_action()
+    /// @see pubnub_get_message_timetoken()
+    std::string get_message_timetoken()
+    {
+        pubnub_chamebl_t result = pubnub_get_message_timetoken(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+
+    /// Returns action timetoken if previous transaction had been add_action()
+    /// @see pubnub_get_message_action_timetoken()
+    std::string get_message_action_timetoken()
+    {
+        pubnub_chamebl_t result = pubnub_get_message_action_timetoken(d_pb);
+        return std::string(result.ptr, result.size);
+    }
+
+    /// Initiates transaction that deletes(removes) previously added action on a
+    /// published message.
+    /// @see pubnub_remove_message_action()
+    futres remove_message_action(std::string const& channel,
+                                 std::string const& message_timetoken,
+                                 std::string const& action_timetoken)
+    {
+        return doit(pubnub_remove_message_action(
+                        d_pb,
+                        channel.c_str(),
+                        pubnub_str_2_chamebl_t((char*)message_timetoken.c_str()),
+                        pubnub_str_2_chamebl_t((char*)action_timetoken.c_str())));
+    }
+
+    /// Initiates transaction that returns all actions added on a given @p channel
+    /// between @p start and @p end action timetoken.
+    /// @see pubnub_get_message_actions()
+    futres get_message_actions(std::string const& channel,
+                               std::string const& start,
+                               std::string const& end,
+                               size_t limit=0)
+    {
+        return doit(pubnub_get_message_actions(
+                        d_pb,
+                        channel.c_str(),
+                        (start.size() > 0) ? start.c_str() : NULL,
+                        (end.size() > 0) ? end.c_str() : NULL,
+                        limit));
+    }
+
+    /// @see pubnub_get_message_actions_more()
+    futres get_message_actions_more()
+    {
+        return doit(pubnub_get_message_actions_more(d_pb));
+    }
+
+    /// Initiates transaction that returns all actions added on a given @p channel
+    /// between @p start and @p end message timetoken.
+    /// @see pubnub_history_with_message_actions()
+    futres history_with_message_actions(std::string const& channel,
+                                        std::string const& start,
+                                        std::string const& end,
+                                        size_t limit=0)
+    {
+        return doit(pubnub_history_with_message_actions(
+                        d_pb,
+                        channel.c_str(),
+                        (start.size() > 0) ? start.c_str() : NULL,
+                        (end.size() > 0) ? end.c_str() : NULL,
+                        limit));
+    }
+
+    /// @see pubnub_history_with_message_actions_more()
+    futres history_with_message_actions_more()
+    {
+        return doit(pubnub_history_with_message_actions_more(d_pb));
+    }
+#endif /* PUBNUB_USE_ACTIONS_API */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /// Enables keeping presence on subscribed channels and channel groups
+    /// @see pubnub_enable_auto_heartbeat()
+    int enable_auto_heartbeat(size_t period_sec)
+    {
+        return pubnub_enable_auto_heartbeat(d_pb, period_sec);
+    }
+
+    /// Sets(changes) heartbeat period for keeping presence on subscribed channels
+    /// and channel groups.
+    /// @see pubnub_set_heartbeat_period()
+    int set_heartbeat_period(size_t period_sec)
+    {
+        return pubnub_set_heartbeat_period(d_pb, period_sec);
+    }
+
+    /// Disables keeping presence on subscribed channels and channel groups
+    /// @see pubnub_disable_auto_heartbeat()
+    void disable_auto_heartbeat()
+    {
+        pubnub_disable_auto_heartbeat(d_pb);
+    }
+
+    /// Returns whether(, or not) auto heartbeat on subscribed channels and channel
+    /// groups is enabled
+    /// @see pubnub_is_auto_heartbeat_enabled()
+    bool is_auto_heartbeat_enabled()
+    {
+        return pubnub_is_auto_heartbeat_enabled(d_pb);
+    }
+
+    /// Releases all allocated heartbeat thumpers.
+    /// Done on any object of the class, once, suffices.
+    /// @see pubnub_heartbeat_free_thumpers()
+    void heartbeat_free_thumpers()
+    {
+        pubnub_heartbeat_free_thumpers();
+    }
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+    
     /// Return the HTTP code (result) of the last transaction.
     /// @see pubnub_last_http_code
     int last_http_code() const
@@ -986,6 +1603,13 @@ public:
             d_pb, ccore_proxy, ip_address_or_url.c_str(), port);
     }
 
+    /// Sets a proxy to none
+    /// @see pubnub_set_proxy_none
+    void set_proxy_none()
+    {
+        pubnub_set_proxy_none(d_pb);
+    }
+
     /// Set the proxy to use from system configuration.
     /// @see pubnub_set_proxy_from_system
     int set_proxy_from_system(proxy_type protocol)
@@ -1023,15 +1647,37 @@ public:
         std::chrono::milliseconds result(pubnub_transaction_timeout_get(d_pb));
         return result;
     }
+    /// Sets the connection timeout duration
+    int set_connection_timeout(std::chrono::milliseconds duration)
+    {
+        return pubnub_set_wait_connect_timeout(d_pb, duration.count());
+    }
+    /// Returns the connection timeout duration
+    std::chrono::milliseconds connection_timeout_get()
+    {
+        std::chrono::milliseconds result(pubnub_wait_connect_timeout_get(d_pb));
+        return result;
+    }
 #else
-    /// Returns the transaction timeout duration
+    /// Sets the transaction timeout duration, in milliseconds
     int set_transaction_timeout(int duration_ms)
     {
         return pubnub_set_transaction_timeout(d_pb, duration_ms);
     }
+    /// Returns the transaction timeout duration, in milliseconds
     int transaction_timeout_get()
     {
         return pubnub_transaction_timeout_get(d_pb);
+    }
+    /// Sets the connection timeout duration, in milliseconds
+    int set_connection_timeout(int duration_ms)
+    {
+        return pubnub_set_wait_connect_timeout(d_pb, duration_ms);
+    }
+    /// Returns the connection timeout duration, in milliseconds
+    int connection_timeout_get()
+    {
+        return pubnub_wait_connect_timeout_get(d_pb);
     }
 #endif
 
@@ -1073,6 +1719,16 @@ public:
     }
 #endif
 
+    /// Enables safe exit from the main() in callback environment by disabling
+    /// platform watcher thread.
+    /// @see pubnub_stop()
+    void stop(void)
+    {
+#if defined(PUBNUB_CALLBACK_API)
+        pubnub_stop();
+#endif
+    }
+
     ~context()
     {
         if (d_pb) {
@@ -1093,15 +1749,17 @@ private:
     std::string d_pubk;
     /// The subscribe key
     std::string d_ksub;
+    /// The secret key
+    std::string d_secret_key;
     /// The auth key
     std::string d_auth;
+    /// The auth token containing pam permissions
+    std::string d_auth_token;
     /// The UUID
     std::string d_uuid;
     /// The origin set last time (doen't have to be the one used,
     /// the default can be used instead)
     std::string d_origin;
-    /// Buffer for message to be published
-    char d_message_to_publish[PUBNUB_BUF_MAXLEN];
     /// The (C) Pubnub context
     pubnub_t* d_pb;
 };

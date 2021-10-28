@@ -116,6 +116,59 @@ of the MSVC standard  `cl`, like:
 
 	nmake -f windows.mk CC=clang-cl
 
+## Pubnub OpenSSL on Universal Windoows Platform (UWP)
+
+OpenSSL doesn't cover threads, so there is some Windows-specific code. 
+
+But, the biggest issue is that OpenSSL is not a part of any Windows installation
+`per se`. Actually, a typical Windows computer has dozens of OpenSSL libraries
+used by various programs. We provide one solution for this in our sample
+Makefile (`uwp.mk`) as described below.
+
+You should decide what OpenSSL you want to compile & link against. To do
+that, pass the path of your OpenSSL of choice as macro `OPENSSLPATH` to
+`nmake`. We have found that OpenSSL 
+(could be found here https://github.com/openssl/openssl
+at the time of this writing) works fine. To support UWP, you need to compile based on the instructions available at https://github.com/openssl/openssl/blob/master/NOTES-Windows.txt (check Special notes for Universal Windows Platform builds, aka VC-*-UWP). 
+We used the following commands to build OpenSSL library
+1. vcvarsall.bat x86 onecore 10.0.19041.0
+2. nmake clean
+3. perl Configure VC-WIN32-ONECORE --prefix=C:\OpenSSL-Win32 --openssldir=C:\SSL no-shared enable-capieng
+4. nmake test
+5. nmake install_sw
+
+For example, the default install directory of OpenSSL for 32-bit OpenSSL for Windows is 
+`c:\OpenSSL-Win32`, so to use that, you would:
+
+	nmake -f uwp.mk OPENSSLPATH=c:\OpenSSL-Win32
+
+If you don't pass `OPENSSLPATH`, it will use a default, which might not be
+good for you, so please check the default in `uwp.mk` before invoking 
+nmake without setting `OPENSSLPATH`.
+
+We expect that the `OPENSSLPATH` has two sub-directories:
+
+- `include`: with the OpenSSL include files
+- `lib`: with OpenSSL (import) library files
+
+In general, this should work with both import library files (for DLLs) and
+static libraries, but that depends on your OpenSSL of choice. The important
+thing here is that if you use import libraries, you will have to distribute
+the DLLs that are a part of your OpenSSL with your applications.
+	
+The sample Makefile (`uwp.mk`) will build static
+libraries (they will have `.lib` extension on Windows) so that they can be 
+used in building UWP applications. SSPI and Proxy is NOT supported at this time.
+
+The sample Makefile is designed to work with MS Visual Studio compilers
+(MSVS 2008 or newer should work fine). Rewriting it to use some other
+compiler should not be too hard, mostly would involve changing the compiler
+switches. But, if you have a compiler that supports MSVC switches
+(like some Clang "distributions"), you should be able to use it instead
+of the MSVC standard  `cl`, like:
+
+	nmake -f uwp.mk CC=clang-cl
+
 ## Notes
 
 We have not tested Pubnub OpenSSL on OSX yet.

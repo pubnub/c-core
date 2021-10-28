@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
+#include "pubnub_internal_common.h"
 
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_ccore.h"
@@ -21,6 +22,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     pbcc_init(&p->core, publish_key, subscribe_key);
     if (PUBNUB_TIMERS_API) {
         p->transaction_timeout_ms = PUBNUB_DEFAULT_TRANSACTION_TIMER;
+        p->wait_connect_timeout_ms = PUBNUB_DEFAULT_WAIT_CONNECT_TIMER;
 #if defined(PUBNUB_CALLBACK_API)
         p->previous = p->next = NULL;
 #endif
@@ -28,9 +30,11 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if defined(PUBNUB_CALLBACK_API)
     p->cb        = NULL;
     p->user_data = NULL;
+    p->flags.sent_queries = 0;
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
+        p->port = INITIAL_PORT_VALUE;
     }
 #if PUBNUB_BLOCKING_IO_SETTABLE
 #if defined(PUBNUB_CALLBACK_API)
@@ -39,6 +43,11 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->options.use_blocking_io = true;
 #endif
 #endif /* PUBNUB_BLOCKING_IO_SETTABLE */
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    p->thumperIndex = UNASSIGNED;
+    p->channelInfo.channel = NULL;
+    p->channelInfo.channel_group = NULL;
+#endif /* PUBNUB_AUTO_HEARTBEAT */
 
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
@@ -50,14 +59,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->options.ipv6_connectivity = false;
 #endif
     p->flags.started_while_kept_alive = false;
-    p->flags.is_publish_via_post   = false;
+    p->method                         = pubnubSendViaGET;
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     p->keep_alive.max     = 1000;
     p->keep_alive.timeout = 50;
 #endif
     pbpal_init(p);
-    pubnub_mutex_unlock(p->monitor);
-
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
@@ -73,11 +80,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->proxy_auth_username      = NULL;
     p->proxy_auth_password      = NULL;
     p->realm[0]                 = '\0'; 
-#endif
+#endif /* PUBNUB_PROXY_API */
 
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
     p->data_compressed = compressionNONE;
 #endif
+    pubnub_mutex_unlock(p->monitor);
 
     return p;
 }
@@ -95,9 +103,36 @@ enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* me
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL, pubnubPublishViaGET);
+    rslt = pbcc_publish_prep(&pb->core, channel, message, true, false, NULL, pubnubSendViaGET);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+    }
+    pubnub_mutex_unlock(pb->monitor);
+
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_signal(pubnub_t* pb,
+                              const char* channel,
+                              const char* message)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+
+    rslt = pbcc_signal_prep(&pb->core, channel, message);
+    if (PNR_STARTED == rslt) {
+        pb->trans            = PBTT_SIGNAL;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
@@ -147,6 +182,10 @@ enum pubnub_res pubnub_subscribe(pubnub_t*   p,
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(p, &channel, &channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
 
     rslt = pbcc_subscribe_prep(&p->core, channel, channel_group, NULL);
     if (PNR_STARTED == rslt) {
@@ -177,12 +216,14 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* pb)
 }
 
 
-void pubnub_set_uuid(pubnub_t* pb, const char* uuid)
+enum pubnub_res pubnub_set_uuid(pubnub_t* pb, const char* uuid)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
-    pbcc_set_uuid(&pb->core, uuid);
+    enum pubnub_res res = pbcc_set_uuid(&pb->core, uuid);
     pubnub_mutex_unlock(pb->monitor);
+
+    return res;
 }
 
 
@@ -206,7 +247,6 @@ void pubnub_set_auth(pubnub_t* pb, const char* auth)
     pbcc_set_auth(&pb->core, auth);
     pubnub_mutex_unlock(pb->monitor);
 }
-
 
 char const* pubnub_auth_get(pubnub_t* pb)
 {
@@ -252,7 +292,8 @@ static char const* do_last_publish_result(pubnub_t* pb)
     if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
         return "";
     }
-    if ((pb->trans != PBTT_PUBLISH) || (pb->core.http_reply[0] == '\0')) {
+    if (((pb->trans != PBTT_PUBLISH) && (pb->trans != PBTT_SIGNAL))  ||
+        (pb->core.http_reply[0] == '\0')) {
         return "";
     }
 
@@ -318,6 +359,20 @@ int pubnub_origin_set(pubnub_t* pb, char const* origin)
         pubnub_mutex_unlock(pb->monitor);
 
         return origin_set ? 0 : +1;
+    }
+    return -1;
+}
+
+int pubnub_port_set(pubnub_t* pb, uint16_t port)
+{    
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    if (PUBNUB_ORIGIN_SETTABLE) {
+        pubnub_mutex_lock(pb->monitor);
+        pb->port = port;
+        bool port_set = (PBS_IDLE == pb->state);
+        pubnub_mutex_unlock(pb->monitor);
+
+        return port_set ? 0 : +1;
     }
     return -1;
 }

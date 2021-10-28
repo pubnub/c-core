@@ -4,6 +4,7 @@
 #include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
 
 #include "pubnub_get_native_socket.h"
+#include "core/pb_sleep_ms.h"
 
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
@@ -163,6 +164,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
     int rslt;
 
     if (0 == data->size) {
+        pb_sleep_ms(1);
         return 0;
     }
 
@@ -184,7 +186,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
         size_t i;
         size_t apoll_size = data->size;
         for (i = 0; i < apoll_size; ++i) {
-            if (data->apoll[i].revents & (POLLIN | POLLOUT)) {
+            if (data->apoll[i].revents & (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
                 pbntf_requeue_for_processing(data->apb[i]);
             }
         }

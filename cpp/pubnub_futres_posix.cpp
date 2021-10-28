@@ -62,8 +62,6 @@ public:
     }
     void start_await()
     {
-        pthread_lock_guard lck(&d_mutex);
-        d_triggered = false;
     }
     pubnub_res end_await()
     {
@@ -72,6 +70,7 @@ public:
             while (!d_triggered) {
                 pthread_cond_wait(&d_cond, &d_mutex);
             }
+            d_triggered = false;
             return d_result = pubnub_last_result(d_pb);
         }
         else {

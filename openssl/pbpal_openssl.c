@@ -96,7 +96,9 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-        ERR_load_BIO_strings();
+        #if !defined(__UWP__)
+        ERR_load_BIO_strings(); //Per OpenSSL 3.0 this is deprecated. Allowing this stmt for non-UWP as it exists.
+        #endif
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
@@ -130,6 +132,9 @@ void pbpal_init(pubnub_t* pb)
     pb->ssl_userPEMcert             = NULL;
     pb->sock_state                  = STATE_NONE;
     buf_setup(pb);
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    pbpal_multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
 }
 
 
@@ -151,63 +156,13 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
     return pbpal_send(pb, s, strlen(s));
 }
 
-static void report_error_from_environment(pubnub_t* pb)
-{
-    char const* err_str;
 
-#if HAVE_STRERROR_R
-    char errstr_r[1024];
-    strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
-    err_str = errstr_r;
-#elif HAVE_STRERROR_S
-    char errstr_s[1024];
-    strerror_s(errstr_s, sizeof errstr_s / sizeof errstr_s[0], errno);
-    err_str = errstr_s;
-#else
-    err_str = strerror(errno);
-#endif
-    PUBNUB_LOG_DEBUG("report_error_from_environment(pb=%p): errno=%d('%s') "
-                     "use_blocking_io=%d\n",
-                     pb,
-                     errno,
-                     err_str,
-                     (int)pb->options.use_blocking_io);
-#if defined(_WIN32)
-    PUBNUB_LOG_DEBUG(
-        "report_error_from_environment(pb=%p): GetLastErrror()=%lu "
-        "WSAGetLastError()=%d\n",
-        pb,
-        GetLastError(),
-        WSAGetLastError());
-#endif
-}
-
-enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb)
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
 {
     SSL* ssl = pb->pal.ssl;
 
     if (NULL == ssl) {
-        PUBNUB_ASSERT_INT_OPT(result, <=, 0);
-        if (result < 0) {
-            if (socket_would_block()) {
-                if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                    pb->sock_state = STATE_NONE;
-                    return PNR_TIMEOUT;
-                }
-                return PNR_IN_PROGRESS;
-            }
-            else {
-                pb->sock_state = STATE_NONE;
-                report_error_from_environment(pb);
-                return socket_timed_out() ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
-            }
-        }
-        else if (0 == result) {
-            pb->sock_state = STATE_NONE;
-            return PNR_TIMEOUT;
-        }
-        pb->sock_state = STATE_NONE;
-        return PNR_INTERNAL_ERROR;
+        return pbpal_handle_socket_error(result, pb, file, line);
     }
     else {
         PUBNUB_ASSERT(pb->options.useSSL);
@@ -278,8 +233,8 @@ int pbpal_send_status(pubnub_t* pb)
         rslt = SSL_write(ssl, pb->ptr, pb->len);
     }
     if (rslt <= 0) {
-        rslt = (pbpal_handle_socket_condition(rslt, pb) == PNR_IN_PROGRESS) ? +1
-                                                                            : -1;
+        rslt = (pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__) == PNR_IN_PROGRESS) ? +1
+                                                                                                : -1;
     }
     else {
         PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
@@ -329,7 +284,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
     /* OpenSSL reads one TLS record at a time,
-       so, we need to call it in a loop to read äll there is
+       so, we need to call it in a loop to read ï¿½ll there is
     */
     for (;;) {
         if (pb->unreadlen == 0) {
@@ -343,7 +298,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
                 recvres = SSL_read(ssl, (char*)pb->ptr, pb->left);
             }
             if (recvres <= 0) {
-                return pbpal_handle_socket_condition(recvres, pb);
+                return pbpal_handle_socket_condition(recvres, pb, __FILE__, __LINE__);
             }
 
             PUBNUB_ASSERT_OPT(recvres <= pb->left);
@@ -428,7 +383,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
 
     /* OpenSSL reads one TLS record at a time,
-       so, we need to call it in a loop to read äll there is
+       so, we need to call it in a loop to read ï¿½ll there is
     */
     for (;;) {
         if (0 == pb->unreadlen) {
@@ -444,7 +399,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
                 have_read = SSL_read(ssl, pb->ptr, to_recv);
             }
             if (have_read <= 0) {
-                return pbpal_handle_socket_condition(have_read, pb);
+                return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__);
             }
             PUBNUB_ASSERT_OPT(pb->left >= have_read);
             pb->left -= have_read;

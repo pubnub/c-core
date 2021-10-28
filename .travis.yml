@@ -1,34 +1,75 @@
+dist: xenial
 language: c
-os:
-  - linux
-  - osx
-dist: trusty
-compiler:
-  - clang
-  - gcc
-before_install:
-# Getting the latest version of "Codacy coverage reporter" often fails.
-# Until we figure out why and how to handle it, it's commented out
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install jq ; fi
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url) ; fi 
+os: linux
+
+
+_shared_unit_tests: &shared_unit_tests
+  script:
+    - cd "$TRAVIS_BUILD_DIR/core"
+    - make generate_report
+    - cd "$TRAVIS_BUILD_DIR/lib"
+    - make generate_report
+
+_shared_integration_tests: &shared_integration_tests
+  before_script: 
+    - cd "$TRAVIS_BUILD_DIR"
+    - make -f posix.mk
+  script:
+    - posix/pubnub_fntest
+    - openssl/pubnub_fntest
+    - cpp/fntest_runner
+    - cpp/openssl/fntest_runner
+
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user gcovr ; fi
-script:
+
+before_script:
   - git clone https://github.com/cgreen-devs/cgreen.git
   - cd cgreen
   - mkdir -p build
   - cd build
   - cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
   - make -j2
-  - cd ../../core
-  - make generate_report
-  - cd ../lib
-  - make generate_report
-  - cd ..
-  - make -f posix.mk
-  - posix/pubnub_fntest
-  - openssl/pubnub_fntest
-  - cpp/fntest_runner
-  - cpp/openssl/fntest_runner
-after_success:
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then java -jar ~/codacy-coverage-reporter-assembly-latest.jar report -l c --force-language -r core/coverage.xml ; fi
+  - cd ../..
+
+
+stages:
+  - name: "Unit tests"
+  - name: "Integration tests"
+
+jobs:
+  include:
+    - stage: "Unit tests"
+      name: "[Linux] Unit tests (clang)"
+      os: linux
+      compiler: clang
+      <<: *shared_unit_tests
+    - name: "[Linux] Unit tests (GCC)"
+      os: linux
+      compiler: gcc
+      <<: *shared_unit_tests
+    - name: "[macOS] Unit tests (clang)"
+      os: osx
+      compiler: clang
+      <<: *shared_unit_tests
+    - name: "[macOS] Unit tests (GCC)"
+      os: osx
+      compiler: gcc
+      <<: *shared_unit_tests
+    - stage: "Integration tests"
+      name: "[Linux] Integration tests (clang)"
+      os: linux
+      compiler: clang
+      <<: *shared_integration_tests
+    - name: "[Linux] Integration tests (GCC)"
+      os: linux
+      compiler: gcc
+      <<: *shared_integration_tests
+    - name: "[macOS] Integration tests (clang)"
+      os: osx
+      compiler: clang
+      <<: *shared_integration_tests
+    - name: "[macOS] Integration tests (GCC)"
+      os: osx
+      compiler: gcc
+      <<: *shared_integration_tests

@@ -2,6 +2,8 @@
 #if !defined INC_PUBNUB_QT
 #define      INC_PUBNUB_QT
 
+#include <stdexcept>
+
 #include <QUrl>
 #include <QUuid>
 #include <QNetworkAccessManager>
@@ -14,17 +16,169 @@
 #include <QPair>
 
 extern "C" {
+#include "core/pubnub_server_limits.h"
 #include "core/pubnub_api_types.h"
+#include "core/pubnub_ccore_limits.h"
 #include "core/pubnub_helper.h"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "core/pbcc_subscribe_v2.h"
+#endif
+#if PUBNUB_USE_ACTIONS_API
+#include "core/pbcc_actions_api.h"
+#endif
+#if PUBNUB_USE_GRANT_TOKEN
+#include "core/pbcc_grant_token_api.h"
+#endif
 }
+
+#include "cpp/tribool.hpp"
+#if PUBNUB_USE_SUBSCRIBE_V2
+#include "cpp/pubnub_v2_message.hpp"
+#endif
 
 QT_BEGIN_NAMESPACE
 class QNetworkReply;
 class QSslError;
 QT_END_NAMESPACE
 
+#if PUBNUB_USE_OBJECTS_API
+#define MAX_INCLUDE_DIMENSION 100
+#define MAX_ELEM_LENGTH 30
+/** A wrapper class for objects api managing include parameter */
+class include_options {
+    char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
+    size_t d_include_count;
+    
+public:
+    include_options()
+        : d_include_count(0)
+    {}
+    const char** include_c_strings_array()
+    {
+        return (d_include_count > 0) ? (const char**)d_include_c_strings_array : 0;
+    }
+    const char** include_to_c_strings_array(QStringList const& inc)
+    {
+        size_t n = inc.size();
+        unsigned i;
+        if (n > MAX_INCLUDE_DIMENSION) {
+            throw std::range_error("include parameter has too many elements.");
+        }
+        for (i = 0; i < n; i++) {
+            if (inc[i].size() > MAX_ELEM_LENGTH) {
+                throw std::range_error("include string element is too long.");
+            }
+            strcpy(d_include_c_strings_array[i], inc[i].toLatin1().data());
+        }
+        d_include_count = n;
+        return include_c_strings_array();
+    }
+    include_options(QStringList const& inc)
+    {
+        include_to_c_strings_array(inc);
+    }
+    size_t include_count() { return d_include_count; }
+};
+    
+/** A wrapper class for objects api options for manipulating specified requirements
+    and paged response, enabling a nicer usage. Something like:
+       pbp.get_users(list_options().start(last_bookmark));
+
+    instead of:
+       pbp.get_users(nullopt, nullopt, last_bookmark, “”, nullopt);
+  */
+using namespace pubnub;
+class list_options : public include_options {
+    size_t d_limit;
+    QString d_start;
+    QString d_end;
+    tribool d_count;
+
+public:
+    list_options()
+        : d_limit(0)
+        , d_count(tribool::not_set)
+    {}
+    list_options& limit(size_t lim)
+    {
+        d_limit = lim;
+        return *this;
+    }
+    size_t limit() { return d_limit; }
+    list_options& start(QString const& st)
+    {
+        d_start = st;
+        return *this;
+    }
+    char const* start() { return d_start.isEmpty() ? 0 : d_start.toLatin1().data(); }
+    list_options& end(QString const& e)
+    {
+        d_end = e;
+        return *this;
+    }
+    char const* end() { return d_end.isEmpty() ? 0 : d_end.toLatin1().data(); }
+    list_options& count(tribool co)
+    {
+        d_count = co;
+        return *this;
+    }
+    pubnub_tribool count()
+    {
+        if (false == d_count) {
+            return pbccFalse;
+        }
+        else if (true == d_count) {
+            return pbccTrue;
+        }
+        return pbccNotSet;
+    }
+};
+#endif /* PUBNUB_USE_OBJECTS_API */
 
 struct pbcc_context;
+
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+/** A wrapper class for subscribe_v2 options, enabling a nicer
+    usage. Something like:
+
+        pn.subscribe_v2(chan, subscribe_v2_options().heartbeat(412));
+*/
+class subscribe_v2_options {
+    unsigned    d_heartbeat;
+    std::string d_chgrp;
+    std::string d_filter_expr;
+    
+public:
+    subscribe_v2_options() : d_heartbeat(PUBNUB_MINIMAL_HEARTBEAT_INTERVAL) {}
+    subscribe_v2_options& channel_group(QString const& chgroup)
+    {
+        d_chgrp = chgroup.toStdString();
+        return *this;
+    }
+    subscribe_v2_options& channel_group(QStringList const& chgroup)
+    {
+        return channel_group(chgroup.join(","));
+    }
+    subscribe_v2_options& heartbeat(unsigned hb_interval)
+    {
+        d_heartbeat = hb_interval;
+        return *this;
+    }
+    subscribe_v2_options& filter_expr(QString const& filter_exp)
+    {
+        d_filter_expr = filter_exp.toStdString();
+        return *this;
+    }
+    unsigned* get_heartbeat() { return &d_heartbeat; }
+    char const* get_chgroup() { return d_chgrp.empty() ? 0 : d_chgrp.c_str(); }
+    char const* get_filter_expr()
+    {
+        return d_filter_expr.empty() ? 0 : d_filter_expr.c_str();
+    }
+};
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+
 
 /** @mainpage Pubnub C-core for Qt
 
@@ -129,9 +283,9 @@ public:
         return d_origin;
     }
 
-    /** Returns the string of an arrived message or other element of the
+    /** Returns the string of an arrived message, or other element of the
         response to an operation/transaction. Message(s) arrive on finish
-        of a subscribe operation, while for  other operations this will give
+        of a subscribe operation, while for other operations this will give
         access to the whole response or the next element of the response.
         That is documented in the function that starts the operation.
 
@@ -148,9 +302,29 @@ public:
     /** Returns all (remaining) messages from a context */
     QStringList get_all() const;
 
+#if PUBNUB_USE_SUBSCRIBE_V2
+    /** Returns the v2 message object of an arrived message. Message(s)
+        arrive on finish of a subscribe_v2 operation.
+        That is documented in the function that starts the operation.
 
+        Subsequent call to this function will return the next message (if
+        any). All messages are from the channel(s) the operation was for.
+        Whather or not message is empty can be checked through class member
+        function is_empty().
+        @see pubnub_v2_message.hpp
+
+        @note Context doesn't keep track of the channel(s) you subscribed(v2)
+        to. This is a memory saving design decision, as most users won't
+        change the channel(s) they subscribe_v2 too.
+        */
+    v2_message get_v2() const;
+
+    /** Returns all (remaining) v2 messages from a context */
+    QVector<v2_message> get_all_v2() const;
+#endif
+    
     /** Returns a string of a fetched subscribe operation/transaction's
-        next channel.  Each transaction may hold a list of channels, and
+        next channel. Each transaction may hold a list of channels, and
         this functions provides a way to read them.  Subsequent call to
         this function will return the next channel (if any).
 
@@ -161,7 +335,7 @@ public:
 
     /** Returns all (remaining) channels from a context */
     QStringList get_all_channels() const;
-    
+
     /** Cancels an ongoing API transaction. The outcome is not
      * guaranteed to be #PNR_CANCELLED like in other C-core based
      * APIs, because it depends on what Qt actually does with our
@@ -174,7 +348,7 @@ public:
         @p p context. This actually means "initiate a publish
         transaction".
 
-        You can't publish if a transaction is in progress in @p p context.
+        You can't publish if a transaction is in progress on @p p context.
 
         If transaction is not successful (@c PNR_PUBLISH_FAILED), you can
         get the string describing the reason for failure by calling
@@ -190,15 +364,14 @@ public:
         will not be @c PNR_OK (but you will still be able to get the
         result code and the description).
 
-        @param channel The string with the channel (or comma-delimited list
-        of channels) to publish to.
+        @param channel The string with the channel to publish to.
         @param message The message to publish, expected to be in JSON format
 
         @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res publish(QString const &channel, QString const &message);
 
-    /** Function that initiates 'publish' transaction via POST method 
+    /** Function that initiates 'publish' transaction via POST method
         @param channel The string with the channel
         @param message The message to publish, expected to be in JSON format
 
@@ -243,6 +416,39 @@ public:
         return publish_via_post_with_gzip(channel, message.toJson());
     }
 
+    /** Sends a signal @p message (in JSON format) on @p channel.
+        This actually means "initiate a signal transaction".
+        It has similar behaviour as publish, but unlike publish transaction, signal
+        erases previous signal message on server(, on a given channel,) and you
+        can not send any metadata.
+        There can be only up to one signal message at the time. If it's not renewed
+        by another signal, signal message  disappears from channel history after
+        certain amount of time.
+        Signal message is much shorter and its maximum length( around 500 bytes)
+        is smaller than full publish message.
+
+        You can't 'signal' if a transaction is in progress on @p p context.
+
+        If transaction is not successful (@c PNR_PUBLISH_FAILED), you can
+        get the string describing the reason for failure by calling
+        pubnub_last_publish_result().
+
+        Keep in mind that the time token from the signal operation
+        response is _not_ parsed by the library, just relayed to the
+        user. Only time-tokens from the subscribe operation are parsed
+        by the library.
+
+        Also, for all error codes known at the time of this writing, the
+        HTTP error will be set also, so the result of the Pubnub operation
+        will not be @c PNR_OK (but you will still be able to get the
+        result code and the description).
+
+        @param channel The string with the channel to signal to.
+        @param message The signal message to send, expected to be in JSON format
+        @return #PNR_STARTED on success, an error otherwise
+    */
+    pubnub_res signal(QString const &channel, QByteArray const &message);
+    
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
         will be retrieved by the "notification" API, which is different
@@ -267,6 +473,11 @@ public:
         It goes  both ways: if @p channel_group is empty, then @p channel
         cannot be empty and you will subscribe only to the channel(s).
 
+        When auto heartbeat is enabled at compile time both @p channel
+        and @p channel_group could be passed as empty strings which suggests
+        default behaviour in which case transaction uses channel and
+        channel groups that are already subscribed.
+
         You can't subscribe if a transaction is in progress on the context.
 
         Also, you can't subscribe if there are unread messages in the
@@ -290,10 +501,48 @@ public:
         return subscribe(channel.join(","), channel_group.join(","));
     }
 
+#if PUBNUB_USE_SUBSCRIBE_V2
+    /** The V2 subscribe. To get messages for subscribe V2, use pb.get_v2().
+        - keep in mind that it can provide you with channel and channel group info.
+
+        Basic usage initiating transaction:
+
+        subscribe_v2_options opt;
+        pubnub_qt pb;
+        pbresult = pb.subscribe_v2(pn, "my_channel", opt.filter_expr("'key' == value"));
+        ...
+
+        When auto heartbeat is enabled at compile time both @p channel and
+        channel_groups within subscribe_v2 @p opt options could be passed as empty
+        strings which suggests default behaviour in which case transaction uses
+        channel and channel groups that are already subscribed.
+
+        @param channel The string with the channel name (or comma-delimited list of
+                       channel names) to subscribe for.
+        @param opt Subscribe V2 options
+        @return #PNR_STARTED on success, an error otherwise
+
+        @see get_v2
+      */
+    pubnub_res subscribe_v2(QString const &channel, subscribe_v2_options opt);
+
+    /** A helper method to subscribe_v2 to several channels and/or channel groups
+     * by giving a (string) list of channels and passing suitable options.
+     */
+    pubnub_res subscribe_v2(QStringList const &channel, subscribe_v2_options opt) {
+        return subscribe_v2(channel.join(","), opt);
+    }
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+
     /** Leave the @p channel. This actually means "initiate a leave
         transaction".  You should leave channel(s) when you want to
         subscribe to another in the same context to avoid loosing
         messages. Also, it is useful for tracking presence.
+
+        When auto heartbeat is enabled at compile time both @p channel
+        and @p channel group could be passed as empty strings which
+        suggests default behaviour in which case transaction uses channel
+        and channel groups that are already subscribed and leaves them all.
 
         You can't leave if a transaction is in progress on the context.
 
@@ -382,6 +631,9 @@ public:
         @param reverse Direction of time traversal. False means
         timeline is traversed newest to oldest.
 
+        @param include_meta If true, transaction response will include
+        metadata for every gotten message
+
         @param end Lets you select an “end date”, in Timetoken
         format. If not provided, it will provide up to the number of
         messages defined in the “count” parameter. Page through
@@ -403,9 +655,10 @@ public:
                        bool include_token,
                        QString const& start,
                        bool reverse,
+                       bool include_meta,
                        QString const& end,
                        bool string_token);
-    
+
     /* In case the server reported en error in the response,
        we'll read the error message using this function
        @retval error_message on successfully read error message,
@@ -416,7 +669,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p timetoken(Meanning
        'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -426,7 +679,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p timetoken(Meanning
        'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -436,7 +689,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
        (Meanning 'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -447,7 +700,7 @@ public:
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
        (Meanning 'initiates 'advanced history' message_counts operation/transaction')
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
@@ -457,19 +710,74 @@ public:
 
     /* Starts 'advanced history' pubnub_message_counts transaction
        for unread messages on @p channel_timetokens(channel, ch_timetoken pairs)
-       
+
        If successful message will be available through get_channel_message_counts()
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res message_counts(QVector<QPair<QString, QString>> const& channel_timetokens);
-    
+
     /* Extracts channel-message_count paired map from the response on
        'advanced history' pubnub_message_counts transaction.
        If there is no key "channels" in the response, or the corresponding
        json value is empty returns an empty map.
      */
     QMap<QString, size_t> get_channel_message_counts();
+
+    /* Inform Pubnub that we're still working on @p channel and/or @p
+       channel_group.  This actually means "initiate a heartbeat
+       transaction". It can be thought of as an update against the
+       "presence database".
+
+       If transaction is successful, the response will be a available
+       via get() as one message, a JSON object. Following keys
+       are always present:
+       - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+       - "message": the string/message describing the status ("OK"...)
+       - "service": should be "Presence"
+
+       If @p channel is empty, then @p channel_group cannot be and
+       you will subscribe only to the channel group(s). It goes both ways:
+       if @p channel_group is empty, then @p channel can't be and
+       you will subscribe only to the channel(s).
+
+       When auto heartbeat is enabled at compile time both @p channel
+       and @p channel_group could be passed as empty strings which
+       suggests default behaviour in which case transaction uses channel
+       and channel groups that are already subscribed.
+
+       You can't initiate heartbeat if a transaction is in progress
+       on the context.
+
+       @param channel The string with the channel name (or comma-delimited
+                      list of channel names) to get presence info for.
+       @param channel_group The string with the channel group name (or
+                            comma-delimited list of channel group names)
+                            to get presence info for.
+       @return #PNR_STARTED on success, an error otherwise
+     */
+    pubnub_res heartbeat(QString const& channel, QString const& channel_group = "");
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) list of channels .
+     */
+    pubnub_res heartbeat(QStringList const& channel, QString const& channel_group = "") {
+        return heartbeat(channel.join(","), channel_group);
+    }
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) list of channel groups.
+     */
+    pubnub_res heartbeat(QString const& channel, QStringList const& channel_group) {
+        return heartbeat(channel, channel_group.join(","));
+    }
+
+    /** A helper method for heartbeat on several channels and/or channel groups
+     * by giving a (string) lists of them.
+     */
+    pubnub_res heartbeat(QStringList const& channel, QStringList const& channel_group) {
+        return heartbeat(channel, channel_group.join(","));
+    }
 
     /** Get the currently present users on a @p channel and/or @p
         channel_group. This actually means "initiate a here_now
@@ -758,11 +1066,921 @@ public:
     */
     pubnub_res list_channel_group(QString const& channel_group);
 
+#if PUBNUB_USE_OBJECTS_API
+    /** Initiates a transaction that returns a paginated list of users
+        associated with the subscription key, optionally including each
+        record's custom data object.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param options options for manipulating specified requirements
+                       and paginated response
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_users(list_options& options);
+
+    /** Initiates a transaction for creating a user with the attributes specified in
+        @p user_obj.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the created user object, optionally including the user's custom data object.
+
+        @note User ID and name are required properties in the @p user_obj
+        @param user_obj The JSON string with the definition of the User
+                        Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res create_user(QByteArray const& user_obj, QStringList& include);
+
+    /** Initiates a transaction for creating a user with the attributes specified in
+        @p user_obj.
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that receives
+        byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the created user object, optionally including the user's custom data object.
+
+        @note User ID and name are required properties in the @p user_obj
+        @param user_obj The JSON string with the definition of the User
+                        Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res create_user(QJsonDocument const& user_obj, QStringList& include) {
+        return create_user(user_obj.toJson(), include);
+    }
+    
+    /** Initiates transaction that returns the user object specified with @p user_id,
+        optionally including the user's custom data object.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the created user object, optionally including the user's custom data object.
+
+        @param user_id The User ID for which to retrieve the user object.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_user(QString const& user_id, QStringList& include);
+
+    /** Initiates trnsaction that updates the user object specified with the `id` key
+        of the @p user_obj with any new information you provide.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the updated user object, optionally including the user's custom data object.
+
+        @note User ID and name are required properties in the @p user_obj
+        @param user_obj The JSON string with the definition of the User
+                        Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_user(QByteArray const& user_obj, QStringList& include);
+
+    /** Initiates trnsaction that updates the user object specified with the `id` key
+        of the @p user_obj with any new information you provide.
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that receives
+        byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the updated user object, optionally including the user's custom data object.
+
+        @note User ID and name are required properties in the @p user_obj
+        @param user_obj The JSON string with the definition of the User
+                        Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_user(QJsonDocument const& user_obj, QStringList& include) {
+        return update_user(user_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that deletes the user specified with @p user_id.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param user_id The User ID.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res delete_user(QString const& user_id);
+
+    /** Initiates transaction that returns the spaces associated with the subscriber key,
+        optionally including each space's custom data object.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param options options for manipulating specified requirements
+                       and paginated response
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_spaces(list_options& options);
+
+    /** Initiates transaction that creates a space with the attributes specified
+        in @p space_obj.
+        @note Space ID and name are required properties of @p space_obj
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the created space object, optionally including its custom data object.
+
+        @param space_obj The JSON string with the definition of the Space Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res create_space(QByteArray const& space_obj, QStringList& include);
+
+    /** Initiates transaction that creates a space with the attributes specified
+        in @p space_obj.
+        @note Space ID and name are required properties of @p space_obj
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the created space object, optionally including its custom data object.
+
+        @param space_obj The JSON string with the definition of the Space Object to create.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res create_space(QJsonDocument const& space_obj, QStringList& include) {
+        return create_space(space_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that returns the space object specified with @p space_id,
+        optionally including its custom data object.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param space_id The Space ID for which to retrieve the space object.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_space(QString const& space_id, QStringList& include);
+
+    /** Initiates transaction that updates the space specified by the `id` property
+        of the @p space_obj.
+        @note Space ID and name are required properties of @p space_obj
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the space object, optionally including its custom data object.
+
+        @param space_obj The JSON string with the description of the Space Object to update.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_space(QByteArray const& space_obj, QStringList& include);
+
+    /** Initiates transaction that updates the space specified by the `id` property
+        of the @p space_obj.
+        @note Space ID and name are required properties of @p space_obj
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the space object, optionally including its custom data object.
+
+        @param space_obj The JSON string with the description of the Space Object to update.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_space(QJsonDocument const& space_obj, QStringList& include) {
+        return update_space(space_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that deletes the space specified with @p space_id.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param space_id The Space ID.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res delete_space(QString const& space_id);
+
+    /** Initiates transaction that returns the space memberships of the user specified
+        by @p user_id, optionally including the custom data objects for...
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param user_id The User ID for which to retrieve the space memberships for.
+        @param options options for manipulating specified requirements
+                       and paginated response
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_memberships(QString const& user_id, list_options& options);
+
+    /** Initiates transaction that adds the space memberships for the user specified
+        by @p user_id. Uses the `add` property on the @p update_obj to perform that
+        operations on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "main-space-id"
+            },
+            {
+              "id": "space-0"
+            }
+          ]
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to add the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res join_spaces(QString const& user_id,
+                           QByteArray const& update_obj,
+                           QStringList& include);
+
+    /** Initiates transaction that adds the space memberships for the user specified
+        by @p user_id. Uses the `add` property on the @p update_obj to perform that
+        operation on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "my-space-id"
+            },
+            {
+              "id": "main"
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to add the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res join_spaces(QString const& user_id,
+                           QJsonDocument const& update_obj,
+                           QStringList& include) {
+        return join_spaces(user_id, update_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that updates the space memberships for the user specified
+        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        operations on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "main-space-id",
+              "custom": {
+                "starred": true
+              }
+            },
+            {
+              "id": "space-0",
+              "some_key": {
+                "other_key": "other_value"
+              }
+            }
+          ]
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to update the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_memberships(QString const& user_id,
+                                  QByteArray const& update_obj,
+                                  QStringList& include);
+
+    /** Initiates transaction that updates the space memberships for the user specified
+        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        operation on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "my-space-id"
+              "some_key": {
+                "other_key": "other_value"
+              }
+            },
+            {
+              "id": "main-space-id",
+              "custom": {
+                "starred": true
+              }
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to update the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_memberships(QString const& user_id,
+                                  QJsonDocument const& update_obj,
+                                  QStringList& include) {
+        return update_memberships(user_id, update_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that removes the space memberships for the user specified
+        by @p user_id. Uses the `remove` property on the @p update_obj to perform that
+        operations on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "main-space-id",
+              "custom": {
+                "starred": true
+              }
+            },
+            {
+              "id": "space-0"
+            }
+          ]
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to remove the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res leave_spaces(QString const& user_id,
+                            QByteArray const& update_obj,
+                            QStringList& include);
+
+    /** Initiates transaction that removes the space memberships for the user specified
+        by @p user_id. Uses the `remove` property on the @p update_obj to perform that
+        operation on one, or more memberships.
+        An example for @update_obj:
+          [
+            {
+              "id": "my-space-id"
+              "some_key": {
+                "other_key": other_value
+              }
+            },
+            {
+              "id": "main-space-id",
+              "custom": {
+                "starred": true
+              }
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+    
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the user's space memberships, optionally including the custom data objects.
+
+        @param user_id The User ID for which to remove the space memberships for.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res leave_spaces(QString const& user_id,
+                            QJsonDocument const& update_obj,
+                            QStringList& include) {
+        return leave_spaces(user_id, update_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that returns all users in the space specified by @p space_id,
+        optionally including the custom data objects for...
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+
+        @param space_id The Space ID for which to retrieve all users in the space.
+        @param options options for manipulating specified requirements
+                       and paginated response
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_members(QString const& space_id, list_options& options);
+
+    /** Initiates transaction that adds the list of members to the space specified by
+        @p space_id. Use the `add` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-1-id"
+            },
+            {
+              "id": "user-2-id",
+              "custom": {
+                "role": “moderator”
+              }
+            }
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to add the list of members to the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_members(QString const& space_id,
+                           QByteArray const& update_obj,
+                           QStringList& include);
+
+    /** Initiates transaction that adds the list of members to the space specified by
+        @p space_id. Uses the `add` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-2-id",
+              "custom": {
+                "role": “moderator”
+              }
+            },
+            {
+              "id": "user-0-id"
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to add the list of members to the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_members(QString const& space_id,
+                           QJsonDocument const& update_obj,
+                           QStringList& include) {
+        return add_members(space_id, update_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that updates the list of members in the space specified by
+        @p space_id. Use the `update` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-1-id"
+              "custom": {
+                "starred": true
+              }
+            },
+            {
+              "id": "user-2-id",
+              "custom": {
+                "role": “moderator”
+              }
+            }
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to update the list of members in the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_members(QString const& space_id,
+                              QByteArray const& update_obj,
+                              QStringList& include);
+
+    /** Initiates transaction that updates the list of members in the space specified by
+        @p space_id. Uses the `update` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-2-id",
+              "custom": {
+                "role": “moderator”
+              }
+            },
+            {
+              "id": "user-0-id"
+              "custom": {
+                "starred": true
+              }
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to update the list of members in the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res update_members(QString const& space_id,
+                              QJsonDocument const& update_obj,
+                              QStringList& include) {
+        return update_members(space_id, update_obj.toJson(), include);
+    }
+
+    /** Initiates transaction that removes the list of members from the space specified by
+        @p space_id. Use the `remove` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-1"
+            },
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            }
+          ]
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to remove the list of members from the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_members(QString const& space_id,
+                              QByteArray const& update_obj,
+                              QStringList& include);
+
+    /** Initiates transaction that removes the list of members from the space specified by
+        @p space_id. Uses the `remove` property on the @p update_obj to perform that
+        operation on one or more members.
+        An example for @update_obj:
+          [
+            {
+              "id": "user-2",
+              "custom": {
+                "role": “moderator”
+              }
+            },
+            {
+              "id": "user-0"
+            }
+          ]
+
+        Function receives 'Qt Json' document.
+        Helpful if you're already using Qt support for Json in your code, ensuring message
+        you're sending is valid Json, unlike the case when applying the function that
+        receives byte array and doesn't check whether those bytes represent sound Json.
+
+        If transaction is successful, the response(a JSON object) will have key
+        "data" with corresponding value. If not, there should be "error" key 'holding'
+        error description. If there is neither of the two keys mentioned, response parsing
+        function returns response format error.
+        Complete answer will be available via pubnub_get().
+        Contains the spaces's memberships, optionally including the custom data objects for...
+
+        @param space_id The Space ID for which to remove the list of members from the space.
+        @param update_obj The JSON object that defines the updates to perform.
+        @param include list with additional/complex attributes to include in response.
+                       Use empty list if you don't want to retrieve additional attributes.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_members(QString const& space_id,
+                              QJsonDocument const& update_obj,
+                              QStringList& include) {
+        return remove_members(space_id, update_obj.toJson(), include);
+    }
+#endif /* PUBNUB_USE_OBJECTS_API */
+
+#if PUBNUB_USE_ACTIONS_API
+    /** Adds new type of message called action as a support for user reactions on a published
+        messages.
+        Json string @p value is checked for its quotation marks at its ends. If any of the
+        quotation marks is missing function returns parameter error.
+        If the transaction is finished successfully response will have 'data' field with
+        added action data. If there is no data, nor error description in the response,
+        response parsing function returns format error.
+        @param channel The channel on which action is referring to.
+        @param message_timetoken The timetoken(unquoted) of a published message action is
+                                 applying to
+        @param actype Action type
+        @param value Json string describing the action that is to be added
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res add_message_action(QString const& channel,
+                                  QString const& message_timetoken,
+                                  pubnub_action_type actype,
+                                  QString const& value);
+
+    /** Function receives 'Qt Json' document for @p value. Helpful if you're already using Qt
+        support for Json in your code, ensuring that value you are passing is valid Json.
+        @see add_message_action()
+      */
+    pubnub_res add_message_action(QString const& channel,
+                                  QString const& message_timetoken,
+                                  pubnub_action_type actype,
+                                  QJsonDocument const& value) {
+        return add_message_action(channel, message_timetoken, actype, value.toJson());
+    }
+
+    /** Searches the response, if previous transaction had been 'add_message_action' and was
+        accomplished successfully) and retrieves timetoken of a message action was added on.
+        If key expected is not found, preconditions(about right transaction) were not fulfilled,
+        or error was encountered, returnes an empty string.
+        @return Message timetoken value including its quotation marks
+      */
+    QString get_message_timetoken();
+
+    /** Searches the response, if previous transaction had been 'add_message_action' and was
+        accomplished successfully) and retrieves timetoken of a resently added action.
+        If key expected is not found, preconditions were not fulfilled, or error was encountered,
+        returnes an empty string.
+        @return Action timetoken value including its quotation marks
+      */
+    QString get_message_action_timetoken();
+
+    /** Initiates transaction that deletes(removes) previously added action on a published message.
+        If there is no success confirming data, nor error description in the response it is
+        considered format error.
+        @param channel The channel on which action was previously added.
+        @param message_timetoken The timetoken of a published message action was applied to.
+                                 (Obtained from the response when action was added and expected
+                                  with its quotation marks at both ends)
+        @param action_timetoken The action timetoken when it was added(Gotten from the transaction
+                                response when action was added and expected with its quotation
+                                marks at both ends)
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res remove_message_action(QString const& channel,
+                                     QString const& message_timetoken,
+                                     QString const& action_timetoken);
+
+    /** Initiates transaction that returns all actions added on a given @p channel between @p start
+        and @p end action timetoken.
+        The response to this transaction can be partial and than it contains the hyperlink string
+        value to the rest.
+        @see get_message_actions_more()
+        If there is no actions data, nor error description in the response it is considered
+        format error.
+        @param channel The channel on which actions are observed.
+        @param start Start action timetoken(unquoted). Can be an empty string meaning there is
+                     no lower limitation in time.
+        @param end End action timetoken(unquoted). Can be an empty string in which case upper
+                   time limit is present moment.
+        @param limit Number of actions to return in response. Regular values 1 - 100. If you set `0`,
+                     that means “use the default”. At the time of this writing, default was 100.
+                     Any value greater than 100 is considered an error.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res get_message_actions(QString const& channel,
+                                   QString const& start,
+                                   QString const& end,
+                                   size_t limit=0);
+
+    /** This function expects previous transaction to be the one for reading the actions and
+        that it was successfully accomplished. If it is not the case, returns corresponding
+        error.
+        When preconditions are fulfilled, it searches the hyperlink to the rest in the existing
+        response buffer which it uses for obtaining another part of the server response.
+        Anotherwords, once the hyperlink is found in the existing response it is used for
+        initiating new request and function than behaves, essentially, as get_message_actions().
+        If there is no hyperlink encountered in the previous transaction response it
+        returns success: PNR_GOT_ALL_ACTIONS meaning that the answer is complete.
+        @retval PNR_STARTED transaction successfully initiated.
+        @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
+        @retval corresponding error otherwise
+      */
+    pubnub_res get_message_actions_more();
+
+    /** Initiates transaction that returns all actions added on a given @p channel between @p start
+        and @p end message timetoken.
+        The response to this transaction can be partial and than it contains the hyperlink string
+        value to the rest.
+        @see history_with_message_actions_more()
+        If there is no actions data, nor error description in the response it is considered
+        format error.
+        @param channel The channel on which actions are observed.
+        @param start Start message timetoken(unquoted). Can be an empty string meaning there is
+                     no lower limitation in time.
+        @param end End message timetoken(unquoted). Can be an empty string in which case upper
+                   time limit is present moment.
+        @param limit Number of messages to return in response. Regular values 1 - 100. If you
+                     set `0`, that means “use the default”. At the time of this writing, default
+                     was 100. Any value greater than 100 is considered an error.
+        @return #PNR_STARTED on success, an error otherwise
+      */
+    pubnub_res history_with_message_actions(QString const& channel,
+                                            QString const& start,
+                                            QString const& end,
+                                            size_t limit=0);
+
+    /** This function expects previous transaction to be the one for reading the history with
+        actions and that it was successfully accomplished. If it is not the case, returns
+        corresponding error.
+        When preconditions are fulfilled it searches for the hyperlink to the rest of the answer
+        in the existing response buffer which it uses for obtaining another part of the server
+        response. Anotherwords, once the hyperlink is found in the existing response it is used
+        for initiating new request and function than behaves as history_with_message_actions().
+        If there is no hyperlink encountered in the previous transaction response it
+        returns success: PNR_GOT_ALL_ACTIONS meaning that the answer is complete.
+        @retval PNR_STARTED transaction successfully initiated.
+        @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
+        @retval corresponding error otherwise
+      */
+    pubnub_res history_with_message_actions_more();
+#endif /* PUBNUB_USE_ACTIONS_API */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /** Enables keeping presence on subscribed channels and channel groups
+     * by performing heartbeat transacton periodically
+     * @param period_sec auto heartbeat period in seconds. If it is shorter than minimal
+                         permitted uses minimal permitted 
+     * @return 0  OK, -1 auto heartbeat not supported
+     */
+    int enable_auto_heartbeat(size_t period_sec);
+
+    /** Sets(changes) heartbeat period for auto heartbeat on subscribed channels
+     * and channel groups. Returns an error if auto heartbeat is disabled.
+     * @param period_sec new auto heartbeat period in seconds. If it is shorter than
+                         minimal permitted uses minimal permitted
+     * @return 0  OK, -1 auto heartbeat is disabled
+     */
+    int set_heartbeat_period(size_t period_sec);
+
+    /** Disables auto heartbeat on subscribed channels and channel groups
+     */
+    void disable_auto_heartbeat();
+
+    /** Returns whether(, or not) auto heartbeat on subscribed channels and channel
+     * groups is enabled
+     */
+    bool is_auto_heartbeat_enabled();
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
      */
     int last_http_code() const;
-    
+
     /** Return the result string that Pubnub returned in the
      * reply to the last publish transaction. If the last
      * transaction was not a publish one, will return an
@@ -805,8 +2023,22 @@ public:
      */
     int set_transaction_timeout(int duration_ms);
 
+    /** Sets the duration of the transaction timeout.
+     * @param t Duration of the transaction timeout
+     * @return 0: OK, else: error, timeout not set
+     */
+    int set_transaction_timeout(QTime t) {
+        return set_transaction_timeout(t.msecsSinceStartOfDay());
+    }
+
     /** Returns the current transaction duration, in milliseconds. */
     int transaction_timeout_get();
+
+    /** Give sthe current transaction duration in @p t parameter.
+     */
+    void transaction_timeout_get(QTime& t) {
+        t.fromMSecsSinceStartOfDay(transaction_timeout_get());
+    }
 
 private slots:
     void httpFinished();
@@ -814,6 +2046,9 @@ private slots:
 
 #ifndef QT_NO_SSL
     void sslErrors(QNetworkReply* reply, QList<QSslError> const& errors);
+#endif
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    void auto_heartbeatTimeout();
 #endif
 
 signals:
@@ -830,6 +2065,29 @@ private:
     /// Common function which processes the data received in response
     pubnub_res finish(QByteArray const &data, int http_code);
 
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /// Checks whether to use saved channels and channel groups
+    bool check_if_default_channel_and_groups(QString const& channel,
+                                             QString const& channel_group,
+                                             QString& prep_channels,
+                                             QString& prep_channel_groups);
+    /// Prepares channels and channel groups to be used in transaction request
+    void auto_heartbeat_prepare_channels_and_ch_groups(QString const& channel,
+                                                       QString const& channel_group,
+                                                       QString& prep_channels,
+                                                       QString& prep_channel_groups);
+    /// Removes @p channel list of channels and @p channel_group channel groups
+    /// from saved(subscribed) channels and channel groups
+    void update_channels_and_ch_groups(QString const& channel,
+                                       QString const& channel_group);
+    /// Starts auto heartbeat timer after corresponding transactions
+    void start_auto_heartbeat_timer(pubnub_res pbres);
+    /// Stops auto heartbeat inconditionally
+    void stop_auto_heartbeat();
+    /// Stops auto heartbeat before corresponding transactions
+    void stop_auto_heartbeat_before_transaction(pubnub_trans transaction);
+#endif
+
     /// The publish key
     QByteArray d_pubkey;
 
@@ -844,7 +2102,7 @@ private:
 
     /// Qt's Reply (from a HTTP request)
     QScopedPointer<QNetworkReply> d_reply;
-    
+
     /// C-core context
     QScopedPointer<pbcc_context> d_context;
 
@@ -860,8 +2118,7 @@ private:
 #ifndef QT_NO_SSL
     /// SSL options
     ssl_opts d_ssl_opts;
-#endif
-
+#endif    
     /// Transaction timeout duration, in milliseconds
     int d_transaction_timeout_duration_ms;
 
@@ -870,15 +2127,27 @@ private:
 
     /// Transaction timer
     QTimer *d_transactionTimer;
+#if PUBNUB_USE_AUTO_HEARTBEAT
+    /// Auto heartbeat is enabled and pulsing whenever subscription is not in progress
+    bool d_auto_heartbeat_enabled;
+    /// Auto heartbeat period in seconds
+    size_t d_auto_heartbeat_period_sec;
+    /// Auto heartbeat timer
+    QTimer *d_auto_heartbeatTimer;
+    /// Subscribed channels
+    QStringList d_channels;
+    /// Subscribed channel groups
+    QStringList d_channel_groups;
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
     /// To Keep-Alive or not to Keep-Alive
     bool d_use_http_keep_alive;
 
-    ///  publish transaction method
-    enum pubnub_publish_method d_publish_method;
+    ///  transaction method(GET, POST, PATCH, or DELETE)
+    enum pubnub_method d_method;
 
-    /// Message to publish via POST method
-    QByteArray d_message_to_publish;
+    /// Message to send via POST method
+    QByteArray d_message_to_send;
 
     mutable QMutex d_mutex;
 };

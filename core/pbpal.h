@@ -43,7 +43,7 @@ enum pbpal_tls_result {
 };
 
 /* Handles socket condition on given platform */
-enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb);
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line);
 
 /** Handles start of a TCP (HTTP) connection. It first handles DNS
     resolving for the context @p pb.  If DNS is already resolved, it
@@ -74,6 +74,22 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb);
     wasn't done synchronously during pbpal_resolve_and_connect().
 */
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb);
+
+#if defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Rotate DNS servers in following order: 
+         primary->secondary->default->primary->...
+    
+    @note This function used to handle case when one of DNS 
+    servers experience issues and response on DNS query never
+    arrived.
+    
+    @param pb The context for which DNS servers should rotate.
+    @return DNS servers rotate result (0 - success, 1 - failed).
+*/
+int pbpal_dns_rotate_server(pubnub_t *pb);
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+#endif /* defined(PUBNUB_CALLBACK_API) */
 
 /** Checks whether a TCP connection is established. Call after
     starting a TCP connection (thus, after DNS resolution is over).
@@ -200,6 +216,19 @@ int pbpal_start_read(pubnub_t *pb, size_t n);
 */
 enum pubnub_res pbpal_read_status(pubnub_t *pb);
 
+/** Essentialy prints out an error code detected by the environment
+    during transaction, that was going on given @p pb context,
+    for debug purposes.
+*/ 
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line);
+
+/** Determines an operation outcome depending on socket error occurred
+*/
+enum pubnub_res pbpal_handle_socket_error(int socket_result,
+                                          pubnub_t* pb,
+                                          char const* file,
+                                          int line);
+
 /** Returns whether for the given Pubnub context the TCP
     connection has closed.
 */
@@ -227,6 +256,7 @@ int pbpal_set_blocking_io(pubnub_t *pb);
 void pbpal_free(pubnub_t *pb);
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
+struct pubnub_multi_addresses;
 void pbpal_multiple_addresses_reset_counters(struct pubnub_multi_addresses* spare_addresses);
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #endif /* !defined INC_PBPAL */

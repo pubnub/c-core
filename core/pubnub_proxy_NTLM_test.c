@@ -1,3 +1,7 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
+
+#include "pubnub_version_internal.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
@@ -5,8 +9,6 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_internal.h"
-#include "pubnub_version_internal.h"
 #include "pubnub_test_helper.h"
 #include "pubnub_proxy.h"
 
@@ -197,6 +199,15 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
         "pbpal_check_resolv_and_connect", pb, "");
 }
 
+#if defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_CHANGE_DNS_SERVERS
+int pbpal_dns_rotate_server(pubnub_t *pb)
+{
+    return mock("pbpal_dns_rotate_server", pb, "");
+}
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+#endif /* defined(PUBNUB_CALLBACK_API) */
+
 bool pbpal_connected(pubnub_t* pb)
 {
     return (bool)mock("pbpal_connected", pb, "");
@@ -205,6 +216,11 @@ bool pbpal_connected(pubnub_t* pb)
 void pbpal_free(pubnub_t* pb)
 {
     mock("pbpal_free", pb, "");
+}
+
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+{
+    mock("pbpal_report_error_from_environment", pb, "");
 }
 
 enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
@@ -476,6 +492,16 @@ void pbntf_lost_socket(pubnub_t* pb)
 void pbntf_update_socket(pubnub_t* pb)
 {
     mock("pbntf_update_socket", pb, "");
+}
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
+}
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
 }
 
 int pbntf_requeue_for_processing(pubnub_t* pb)

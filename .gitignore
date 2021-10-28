@@ -33,5 +33,6 @@
 *.pdb
 *.ilk
 
-# Doxygen output directories
-doc/
+# GitHub Actions #
+##################
+.github/.release

@@ -57,9 +57,6 @@
 */
 #define PUBNUB_ORIGIN  "pubsub.pubnub.com"
 
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
-
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
@@ -107,6 +104,13 @@
 #endif
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
+/** Maximum number of consecutive retries when sending DNS query in a single transaction */
+#define PUBNUB_MAX_DNS_QUERIES 3
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Maximum number of DNS servers list rotation in a single transaction */
+#define PUBNUB_MAX_DNS_ROTATION 3
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 #if !defined(PUBNUB_RECEIVE_GZIP_RESPONSE)
@@ -116,11 +120,27 @@
 
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
+#define PUBNUB_MIN_TRANSACTION_TIMER 200
+
+/** Duration of the 'wait_connect_TCP_socket' timeout set during context
+    initialization, in milliseconds. Can be changed later by the user.
+    */
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+
+/** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
+ *  You can't set less than this.
+ */
+#define PUBNUB_MIN_WAIT_CONNECT_TIMER 5000
+
 #if !defined(PUBNUB_USE_ADVANCED_HISTORY)
 /** If true (!=0) will enable using the advanced history API, which
     provides more data about (unread) messages. */
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
+#define PUBNUB_MAX_URL_PARAMS 10
 
+#ifndef PUBNUB_RAND_INIT_VECTOR
+#define PUBNUB_RAND_INIT_VECTOR 1
+#endif
 #endif /* !defined INC_PUBNUB_CONFIG */

@@ -1,12 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_coreapi_ex.h"
+#include "pubnub_internal.h"
 
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
-#include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pubnub_timers.h"
 #include "pubnub_crypto.h"
+#include "pubnub_server_limits.h"
+#include "pubnub_coreapi_ex.h"
 
 #include "pbpal.h"
 
@@ -22,7 +23,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.cipher_key = NULL;
     result.replicate  = true;
     result.meta       = NULL;
-    result.method     = pubnubPublishViaGET;
+    result.method     = pubnubSendViaGET;
     return result;
 }
 
@@ -59,11 +60,8 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     }
 #endif
 #if PUBNUB_USE_GZIP_COMPRESSION
-    pb->core.gzip_msg_len = 0;
-    if (pubnubPublishViaPOSTwithGZIP == opts.method) {
-        if (pbgzip_compress(pb, message) == PNR_OK) {
-            message = pb->core.gzip_msg_buf;
-        }
+    if (pubnubSendViaPOSTwithGZIP == opts.method) {
+        message = (pbgzip_compress(pb, message) == PNR_OK) ? pb->core.gzip_msg_buf : message;
     }
 #endif
     rslt = pbcc_publish_prep(
@@ -71,7 +69,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
-        pb->flags.is_publish_via_post = (opts.method != pubnubPublishViaGET);
+        pb->method           = opts.method;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
     }
@@ -79,12 +77,6 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
 
     return rslt;
 }
-
-
-/** Minimal presence heartbeat interval supported by
-    Pubnub, in seconds.
-*/
-#define PUBNUB_MINIMAL_HEARTBEAT_INTERVAL 270
 
 
 struct pubnub_subscribe_options pubnub_subscribe_defopts(void)
@@ -109,7 +101,11 @@ enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(p, &channel, &opt.channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
+    
     rslt = pbcc_subscribe_prep(
         &p->core, channel, opt.channel_group, &opt.heartbeat);
     if (PNR_STARTED == rslt) {
@@ -206,6 +202,7 @@ struct pubnub_history_options pubnub_history_defopts(void)
     rslt.start         = NULL;
     rslt.end           = NULL;
     rslt.include_token = false;
+    rslt.include_meta  = false;
 
     return rslt;
 }
@@ -231,6 +228,7 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
                              opt.include_token,
                              opt.string_token ? pbccTrue : pbccFalse,
                              opt.reverse ? pbccTrue : pbccFalse,
+                             opt.include_meta ? pbccTrue : pbccFalse,
                              opt.start,
                              opt.end);
     if (PNR_STARTED == rslt) {

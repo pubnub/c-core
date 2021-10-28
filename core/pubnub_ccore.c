@@ -1,22 +1,35 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pubnub_internal.h"
 #include "pubnub_ccore.h"
 #include "pubnub_ccore_pubsub.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
-#include "pubnub_internal.h"
 #include "pubnub_json_parse.h"
 #include "pubnub_log.h"
+#include "pubnub_memory_block.h"
 
 #include <stdio.h>
 
 
 static enum pubnub_res simple_parse_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     char* reply    = p->http_reply;
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
+
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("simple_parse_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            reply);
+        return PNR_ACCESS_DENIED;
+    }
+    
     if ((reply[0] != '[') || (reply[replylen - 1] != ']')) {
         return PNR_FORMAT_ERROR;
     }
@@ -45,11 +58,23 @@ enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p)
 
 enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p)
 {
+    struct pbjson_elem el;
     char* reply    = p->http_reply;
     int   replylen = p->http_buf_len;
     if (replylen < 2) {
         return PNR_FORMAT_ERROR;
     }
+
+    el.start = reply;
+    el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("pbcc_parse_presence_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            reply);
+        return PNR_ACCESS_DENIED;
+    }
+
     if ((reply[0] != '{') || (reply[replylen - 1] != '}')) {
         return PNR_FORMAT_ERROR;
     }
@@ -71,6 +96,13 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context* p)
 
     el.start    = p->http_reply;
     el.end      = p->http_reply + p->http_buf_len;
+    if (pbjson_value_for_field_found(&el, "status", "403")) {
+        PUBNUB_LOG_ERROR("pbcc_parse_channel_registry_response(pbcc=%p) - AccessDenied: "
+            "response from server - response='%s'\n",
+            p,
+            p->http_reply);
+        return PNR_ACCESS_DENIED;
+    }
     p->chan_ofs = 0;
     p->chan_end = p->http_buf_len;
 
@@ -100,6 +132,7 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
                                 const char*          channel_group)
 {
     char const* uuid = pbcc_uuid_get(pb);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -120,45 +153,38 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len += snprintf(pb->http_buf + pb->http_buf_len,
                                  sizeof pb->http_buf - pb->http_buf_len,
-                                 "/leave?pnsdk=%s",
-                                 pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+                                 "/leave");
 
-    return PNR_STARTED;
+    char const* const uname = pubnub_uname();
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_leave_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
 enum pubnub_res pbcc_time_prep(struct pbcc_context* pb)
 {
     char const* uuid = pbcc_uuid_get(pb);
-
-    if (pb->msg_ofs < pb->msg_end) {
-        return PNR_RX_BUFF_NOT_EMPTY;
-    }
-
-    pb->http_content_len = 0;
-    pb->msg_ofs = pb->msg_end = 0;
-
-    pb->http_buf_len = snprintf(
-        pb->http_buf, sizeof pb->http_buf, "/time/0?pnsdk=%s", pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-
-    return PNR_STARTED;
-}
-
-
-enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
-                                  const char*          channel,
-                                  unsigned             count,
-                                  bool                 include_token,
-                                  enum pubnub_tribool  string_token,
-                                  enum pubnub_tribool  reverse,
-                                  char const*          start,
-                                  char const*          end)
-{
     char const* const uname = pubnub_uname();
 
     if (pb->msg_ofs < pb->msg_end) {
@@ -168,21 +194,71 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
 
+    pb->http_buf_len = snprintf(pb->http_buf, sizeof pb->http_buf, "/time/0");
+
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+    ENCODE_URL_PARAMETERS(pb, qparam);
+
+    PUBNUB_LOG_DEBUG("pbcc_time_prep. REQUEST =%s\n", pb->http_buf);
+    return PNR_STARTED;
+}
+
+
+enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
+                                  const char*          channel,
+                                  unsigned int         count,
+                                  bool                 include_token,
+                                  enum pubnub_tribool  string_token,
+                                  enum pubnub_tribool  reverse,
+                                  enum pubnub_tribool  include_meta,
+                                  char const*          start,
+                                  char const*          end)
+{
+    char const* const uname = pubnub_uname();
+    enum pubnub_res rslt = PNR_OK;
+
+    pb->http_content_len = 0;
+    pb->msg_ofs = pb->msg_end = 0;
+
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
                                 "/v2/history/sub-key/%s/channel/",
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_UNSIGNED_M(pb, "count", count, '&');
-    APPEND_URL_PARAM_BOOL_M(pb, "include_token", include_token, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "stringtoken", string_token, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "reverse", reverse, '&');
-    APPEND_URL_PARAM_M(pb, "start", start, '&');
-    APPEND_URL_PARAM_M(pb, "start", end, '&');
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    char cnt_buf[sizeof(int) * 4 + 1];
+    sprintf(cnt_buf, "%d", count);
+    if (count) { ADD_URL_PARAM(qparam, count, cnt_buf); }
+    ADD_URL_PARAM(qparam, include_token, include_token ? "true" : "false");
+    if (string_token != pbccNotSet) { ADD_URL_PARAM(qparam, stringtoken, string_token == pbccTrue ? "1" : "0"); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    if (reverse != pbccNotSet) { ADD_URL_PARAM(qparam, reverse, reverse == pbccTrue ? "1" : "0"); }
+    if (include_meta != pbccNotSet) { ADD_URL_PARAM(qparam, include_meta, include_meta == pbccTrue ? "1" : "0"); }
+    if (start) { ADD_URL_PARAM(qparam, start, start); }
+    if (end) { ADD_URL_PARAM(qparam, end, end); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_history_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -191,6 +267,7 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
                                     const char*          channel_group)
 {
     char const* uuid = pbcc_uuid_get(pb);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -212,13 +289,30 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len  += snprintf(pb->http_buf + pb->http_buf_len,
                                   sizeof pb->http_buf - pb->http_buf_len,
-                                  "/heartbeat?pnsdk=%s",
-                                  pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
+                                  "/heartbeat");
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
 
-    return PNR_STARTED;
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_heartbeat_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -230,14 +324,12 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
 {
     char const* const uname = pubnub_uname();
     char const*       uuid  = pbcc_uuid_get(pb);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (channel_group != NULL) {
             channel = ",";
         }
-    }
-    if (pb->msg_ofs < pb->msg_end) {
-        return PNR_RX_BUFF_NOT_EMPTY;
     }
 
     pb->http_content_len = 0;
@@ -249,36 +341,69 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
                                 pb->subscribe_key,
                                 channel ? "/channel/" : "");
     APPEND_URL_ENCODED_M(pb, channel);
-    APPEND_URL_PARAM_M(pb, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    APPEND_URL_PARAM_M(pb, "uuid", uuid, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "disable_uuids", disable_uuids, '&');
-    APPEND_URL_PARAM_TRIBOOL_M(pb, "state", state, '&');
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    if (disable_uuids != pbccNotSet) { ADD_URL_PARAM(qparam, disable_uuids, disable_uuids == pbccTrue ? "1" : "0"); }
+    if (state != pbccNotSet) { ADD_URL_PARAM(qparam, state, state == pbccTrue ? "1" : "0"); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_here_now_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
 enum pubnub_res pbcc_where_now_prep(struct pbcc_context* pb, const char* uuid)
 {
     PUBNUB_ASSERT_OPT(uuid != NULL);
-
-    if (pb->msg_ofs < pb->msg_end) {
-        return PNR_RX_BUFF_NOT_EMPTY;
-    }
+    enum pubnub_res rslt = PNR_OK;
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
 
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/presence/sub-key/%s/uuid/%s?pnsdk=%s",
+                                "/v2/presence/sub-key/%s/uuid/%s",
                                 pb->subscribe_key,
-                                uuid,
-                                pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
-    return PNR_STARTED;
+                                uuid);
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_where_now_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -290,6 +415,7 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
 {
     PUBNUB_ASSERT_OPT(uuid != NULL);
     PUBNUB_ASSERT_OPT(state != NULL);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -308,14 +434,32 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len += snprintf(pb->http_buf + pb->http_buf_len,
                                  sizeof pb->http_buf - pb->http_buf_len,
-                                 "/uuid/%s/data?pnsdk=%s&state=%s",
-                                 uuid,
-                                 pubnub_uname(),
-                                 state);
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+                                 "/uuid/%s/data",
+                                 uuid);
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    if (state){ ADD_URL_PARAM(qparam, state, state); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_set_state_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -325,6 +469,7 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
                                     const char*          uuid)
 {
     PUBNUB_ASSERT_OPT(uuid != NULL);
+    enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -343,13 +488,30 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len += snprintf(pb->http_buf + pb->http_buf_len,
                                  sizeof pb->http_buf - pb->http_buf_len,
-                                 "/uuid/%s?pnsdk=%s",
-                                 uuid,
-                                 pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "channel-group", channel_group, '&');
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+                                 "/uuid/%s",
+                                 uuid);
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
 
-    return PNR_STARTED;
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_state_get_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -357,17 +519,35 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* pb,
                                                char const* channel_group)
 {
     PUBNUB_ASSERT_OPT(channel_group != NULL);
+    enum pubnub_res rslt = PNR_OK;
 
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
-        "/v1/channel-registration/sub-key/%s/channel-group/%s/remove?pnsdk=%s",
+        "/v1/channel-registration/sub-key/%s/channel-group/%s/remove",
         pb->subscribe_key,
-        channel_group,
-        pubnub_uname());
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+        channel_group);
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+    PUBNUB_LOG_DEBUG("pbcc_remove_channel_group_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
@@ -377,23 +557,39 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* pb,
                                            char const*          channel)
 {
     PUBNUB_ASSERT_OPT(channel_group != NULL);
+    enum pubnub_res rslt = PNR_OK;
 
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
-        "/v1/channel-registration/sub-key/%s/channel-group/%s?pnsdk=%s",
+        "/v1/channel-registration/sub-key/%s/channel-group/%s",
         pb->subscribe_key,
-        channel_group,
-        pubnub_uname());
-    if (NULL != param) {
-        enum pubnub_res rslt;
-        PUBNUB_ASSERT_OPT(channel != NULL);
-        rslt = pbcc_append_url_param_encoded(pb, param, strlen(param), channel, '&');
-        if (rslt != PNR_OK) {
-            return rslt;
-        }
-    }
-    APPEND_URL_PARAM_M(pb, "auth", pb->auth, '&');
+        channel_group);
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+
+    if (NULL != param) {
+        PUBNUB_ASSERT_OPT(channel != NULL);
+        ADD_URL_PARAM_TRUE_KEY(qparam, param, channel);
+    }
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_channel_registry_prep. REQUEST =%s\n", pb->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }

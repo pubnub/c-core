@@ -2,8 +2,9 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
-#include "pubnub_test_helper.h"
+#include "pubnub_internal.h"
 #include "pubnub_version_internal.h"
+#include "pubnub_test_helper.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
@@ -11,7 +12,6 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_internal.h"
 #include "pubnub_keep_alive.h"
 #include "pubnub_proxy.h"
 #include "pubnub_json_parse.h"
@@ -51,22 +51,13 @@ static void wait4it(time_t time_in_seconds) {
     return;
 }
 
-/* The Pubnub PAL mocks and stubs */
 
-static void buf_setup(pubnub_t *pb)
-{
-    pb->ptr = (uint8_t*)pb->core.http_buf;
-    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
-}
 
-void pbpal_init(pubnub_t *pb)
+/* The Pubnub NTF mocks and stubs */
+void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_state state)
 {
-    buf_setup(pb);
-}
-
-enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
-{
-    return (int)mock(pb);
+    pb->state = state;
+    mock(pb);
 }
 
 int pbntf_got_socket(pubnub_t *pb)
@@ -82,6 +73,16 @@ void pbntf_lost_socket(pubnub_t *pb)
 void pbntf_update_socket(pubnub_t *pb)
 {
     mock(pb);
+}
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
+}
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    /* This might be mocked at some point */
 }
 
 int pbntf_requeue_for_processing(pubnub_t *pb)
@@ -104,10 +105,37 @@ int pbntf_watch_in_events(pubnub_t *pb)
     return (int)mock(pb);
 }
 
+/* The Pubnub PAL mocks and stubs */
+
+static void buf_setup(pubnub_t *pb)
+{
+    pb->ptr = (uint8_t*)pb->core.http_buf;
+    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
+}
+
+void pbpal_init(pubnub_t *pb)
+{
+    buf_setup(pb);
+}
+
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     return (int)mock(pb);
 }
+
+#if defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_CHANGE_DNS_SERVERS
+int pbpal_dns_rotate_server(pubnub_t *pb)
+{
+    return (int)mock(pb);
+}
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+#endif /* defined(PUBNUB_CALLBACK_API) */
 
 bool pbpal_connected(pubnub_t *pb)
 {
@@ -138,6 +166,11 @@ int pbpal_send_str(pubnub_t *pb, char const* s)
 int pbpal_send_status(pubnub_t *pb)
 {
     return (bool)mock(pb);
+}
+
+void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+{
+    mock(pb);
 }
 
 int pbpal_start_read_line(pubnub_t *pb)
@@ -365,15 +398,6 @@ char const* pubnub_uagent(void)
 }
 
 
-/* The Pubnub NTF mocks and stubs */
-void pbntf_trans_outcome(pubnub_t *pb, enum pubnub_state state)
-{
-    pb->state = state;
-    mock(pb);
-}
-
-
-
 /* Assert "catching" */
 static bool m_expect_assert;
 static jmp_buf m_assert_exp_jmpbuf;
@@ -435,7 +459,6 @@ AfterEach(single_context_pubnub) {
         expect(pbpal_forget, when(pb, equals(pbp)));
         expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     }
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     expect(pbntf_requeue_for_processing, when(pb, equals(pbp)));
     if (state_not_idle) {
         attest(pubnub_free(pbp), equals(-1));

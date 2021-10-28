@@ -3,6 +3,7 @@
 
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
+#include "pubnub_server_limits.h"
 #include "pubnub_advanced_history.h"
 #include "pubnub_version.h"
 #include "pubnub_json_parse.h"
@@ -36,6 +37,14 @@ enum pubnub_res pbcc_parse_message_counts_response(struct pbcc_context* p)
     }
     el.start = reply;
     el.end   = reply + replylen;
+    if (pbjson_value_for_field_found(&el, "status", "403")){
+        PUBNUB_LOG_ERROR("Error: pbcc_parse_message_counts_response(pbcc=%p) - "
+                         "Access Denied: response='%.*s'\n",
+                         p,
+                         replylen,
+                         reply);
+        return PNR_ACCESS_DENIED;
+    }
     jpresult = pbjson_get_object_value(&el, "error", &found);
     if (jonmpOK == jpresult) {
         if (pbjson_elem_equals_string(&found, "false")) {
@@ -97,7 +106,7 @@ int pbcc_get_error_message(struct pbcc_context* p, pubnub_chamebl_t* o_msg)
                          "response='%.*s'\n",
                          p,
                          jpresult,
-                         p->http_buf_len,
+                         (int)p->http_buf_len,
                          p->http_reply);
         rslt = -1;
     }
@@ -235,7 +244,7 @@ int pbcc_get_message_counts(struct pbcc_context* p, char const* channel, int* o_
         int         i = 0;
         /* channel name length */
         unsigned    len;
-        char const* ptr_ch;
+        char const* ptr_ch = NULL;
         char const* ch_end;
         ch_end = (char*)pbjson_find_end_element(ch_start++, end);
         len = ch_end - ch_start;
@@ -475,13 +484,16 @@ static enum pubnub_parameter_error check_parameters(struct pbcc_context* p,
 }
 
 
-enum pubnub_res pbcc_message_counts_prep(struct pbcc_context* p,
+enum pubnub_res pbcc_message_counts_prep(
+                                         enum pubnub_trans pt,
+                                         struct pbcc_context* p,
                                          char const*          channel,
                                          char const*          timetoken,
                                          char const*          channel_timetokens)
 {
     char const* const uname = pubnub_uname();
     char const*       uuid  = pbcc_uuid_get(p);
+    enum pubnub_res   rslt = PNR_OK;
     
     if (check_parameters(p, channel, timetoken, channel_timetokens) != pnarg_PARAMS_OK) {
         return PNR_INVALID_PARAMETERS;
@@ -498,11 +510,32 @@ enum pubnub_res pbcc_message_counts_prep(struct pbcc_context* p,
                                "/v3/history/sub-key/%s/message-counts/",
                                p->subscribe_key);
     APPEND_URL_ENCODED_M(p, channel);
-    APPEND_URL_PARAM_M(p, "pnsdk", uname, '?');
-    APPEND_URL_PARAM_M(p, "auth", p->auth, '&');
-    APPEND_URL_PARAM_M(p, "uuid", uuid, '&');
-    APPEND_URL_PARAM_M(p, "timetoken", timetoken, '&');
-    APPEND_URL_PARAM_M(p, "channelsTimetoken", channel_timetokens, '&');
 
-    return PNR_STARTED;
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(p, qparam, auth);
+#endif
+    if (timetoken) { ADD_URL_PARAM(qparam, timetoken, timetoken); }
+    if (channel_timetokens) { ADD_URL_PARAM(qparam, channelsTimetoken, channel_timetokens); }
+
+#if PUBNUB_CRYPTO_API
+  SORT_URL_PARAMETERS(qparam);
+#endif
+  ENCODE_URL_PARAMS_TRANS(pt, p, qparam);
+#if PUBNUB_CRYPTO_API
+    if (p->secret_key != NULL) {
+        rslt = pbcc_sign_url(p, "", pubnubSendViaGET, true);
+        if (rslt != PNR_OK) {
+            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", p, "", pubnubSendViaGET);
+        }
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_message_counts_prep. REQUEST =%s\n", p->http_buf);
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }

@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 
+
 #include <stdbool.h>
 
 typedef struct pubnub_char_mem_block pubnub_chamebl_t;
@@ -50,6 +51,11 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
     transaction".  You should leave channel(s) when you want to
     subscribe to another in the same context to avoid loosing
     messages. Also, it is useful for tracking presence.
+
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel group could be passed as NULL which suggests
+    default behaviour in which case transaction uses channel and
+    channel groups that are already subscribed and leaves them all.
 
     You can't leave if a transaction is in progress on the context.
 
@@ -116,6 +122,11 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
     transaction". It can be thought of as an update against the
     "presence database".
 
+    When auto heartbeat is enabled at compile time both @p channel
+    and @p channel_group could be passed as NULL which suggests default
+    behaviour in which case transaction uses channel and channel groups
+    that are already subscribed.
+
     If transaction is successful, the response will be a available
     via pubnub_get() as one message, a JSON object. Following keys
     are always present:
@@ -128,14 +139,15 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
     if @p channel_group is NULL, then @p channel cannot be NULL and
     you will subscribe only to the channel(s).
 
-    You can't get list of currently present users if a transaction is
-    in progress on the context.
+    You can't initiate heartbeat if a transaction is in progress
+    on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param channel The string with the channel name (or
-    comma-delimited list of channel names) to get presence info for.
-    @param channel_group The string with the channel name (or
-    comma-delimited list of channel group names) to get presence info for.
+    @param channel The string with the channel name (or comma-delimited
+                   list of channel names) to get presence info for.
+    @param channel_group The string with the channel group name (or
+                         comma-delimited list of channel group names)
+                         to get presence info for.
 
     @return #PNR_STARTED on success, an error otherwise
 */
@@ -418,5 +430,12 @@ bool pubnub_can_start_transaction(pubnub_t* pb);
     @retval -1 on error(not found, or transaction still in progress on the context)
  */
 int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg);
+
+/** Returns body from the transaction response on the context @p pb into @p o_msg.
+    Can be called for any response
+    @retval 0 in case of transaction is not in progress
+    @retval -1 if transaction is still in progress on the context
+ */
+int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
 #endif /* defined INC_PUBNUB_COREAPI */

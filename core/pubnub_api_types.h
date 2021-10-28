@@ -8,7 +8,9 @@
     These are the definitions of types used by most functions of the
     Pubnub C-core API. Users of the SDK in general don't need to
     include it, as other headers of the API will include it for them.
- */
+  */
+
+#include "pubnub_config.h"
 
 struct pubnub_;
 
@@ -27,6 +29,11 @@ enum pubnub_res {
         Most of the time, this comes down to a DNS error.
     */
     PNR_ADDR_RESOLUTION_FAILED,
+    /** Time-out before the TCP connection was esatblished. This is reported
+        for a time-out detected by Pubnub client itself, not some
+        reported by others.
+	*/
+    PNR_WAIT_CONNECT_TIMEOUT,
     /** Connecting to Pubnub server failed. Most often,
         this means a network outage, but could be many things.
         If using SSL/TLS, it could be some of its errors.
@@ -52,6 +59,12 @@ enum pubnub_res {
     PNR_HTTP_ERROR,
     /** Unexpected input in received JSON. */
     PNR_FORMAT_ERROR,
+    /** Subscribe Timetoken not in expected format */
+    PNR_SUB_TT_FORMAT_ERROR,
+    /** No Timetoken in the subscribe response */
+    PNR_SUB_NO_TT_ERROR,
+    /** No Region in the subscribe response */
+    PNR_SUB_NO_REG_ERROR,
     /** Request cancelled by user. */
     PNR_CANCELLED,
     /** Transaction started. Await the outcome. */
@@ -88,6 +101,8 @@ enum pubnub_res {
     PNR_REPLY_TOO_BIG,
     /** An internal error in processing */
     PNR_INTERNAL_ERROR,
+    /** Ran out of dynamic memory */
+    PNR_OUT_OF_MEMORY,
     /** Encryption (and decryption) not supported */
     PNR_CRYPTO_NOT_SUPPORTED,
     /** Bad compression format or compressed data corrupted */
@@ -97,7 +112,21 @@ enum pubnub_res {
     /** Server reports an error in the response */
     PNR_ERROR_ON_SERVER,
     /** Proxy authentication failed */
-    PNR_AUTHENTICATION_FAILED
+    PNR_AUTHENTICATION_FAILED,
+    /** Objects API invalid parameter */
+    PNR_OBJECTS_API_INVALID_PARAM,
+    /** Objects API transaction reported an error */
+    PNR_OBJECTS_API_ERROR,
+    /** Actions API pbcc_get_actions_more() did not find another hyperlink to the rest */
+    PNR_GOT_ALL_ACTIONS,
+    /** Actions API transaction reported an error */
+    PNR_ACTIONS_API_ERROR,
+    /** Grant Token API transaction reported an error */
+    PNR_GRANT_TOKEN_API_ERROR,
+    /** Access/Permission denied */
+    PNR_ACCESS_DENIED,
+    /** No Channels in the ChannelGroup */
+    PNR_GROUP_EMPTY
 };
 
 /** 'pubnub_cancel()' return value */
@@ -105,7 +134,7 @@ enum pubnub_cancel_res {
     /** 'cancel' finished */
     PN_CANCEL_FINISHED,
     /** 'cancel' started */
-    PN_CANCEL_STARTED,
+    PN_CANCEL_STARTED
 };
 
 /** Type of Pubnub operation/transaction */
@@ -116,6 +145,8 @@ enum pubnub_trans {
     PBTT_SUBSCRIBE,
     /** Publish operation/transaction */
     PBTT_PUBLISH,
+    /** Signal operation/transaction */
+    PBTT_SIGNAL,
     /** Leave (channel(s)) operation/transaction */
     PBTT_LEAVE,
     /** Time (get from Pubnub server) operation/transaction */
@@ -153,15 +184,84 @@ enum pubnub_trans {
     /** Inform Pubnub that we're still working on channel and/or
         channel_group operation/transaction */
     PBTT_HEARTBEAT,
+#if PUBNUB_USE_SUBSCRIBE_V2
     /** Subscribe V2 operation/transaction */
     PBTT_SUBSCRIBE_V2,
+#endif
+#if PUBNUB_USE_ADVANCED_HISTORY
     /** Message counts(get counters of unread messages for a user, identified by UUID,
         for the list of channels specified) starting from given timetoken, or(exclusive or)
         list of timetokens per channel.
         If neither timetoken, nor channel_timetokens are specified, gets entire message
         history counts for channels listed.
-     */
+      */
     PBTT_MESSAGE_COUNTS,
+#endif
+#if PUBNUB_USE_OBJECTS_API
+    /** Objects API transaction Returns a paginated list of users associated with the
+        subscription key.
+      */
+    PBTT_GETALL_UUIDMETADATA,
+    /** Objects API transaction Creates a user with the attributes specified. */
+    PBTT_SET_UUIDMETADATA,
+    /** Objects API transaction Returns the user object specified with metadata_uuid */
+    PBTT_GET_UUIDMETADATA,
+    /** Objects API transaction Deletes user data( on pubnub server) specified with metadata_uuid */
+    PBTT_DELETE_UUIDMETADATA,
+    /** Objects API transaction Returns a paginated list of spaces associated with the
+        subscription key.
+      */
+    PBTT_GETALL_CHANNELMETADATA,
+    /** Objects API transaction Creates a space with the attributes specified. */
+    PBTT_SET_CHANNELMETADATA,
+    /** Objects API transaction Returns the space object specified with space_id */
+    PBTT_GET_CHANNELMETADATA,
+    /** Objects API transaction Deletes space data( on pubnub server) specified with space_id */
+    PBTT_REMOVE_CHANNELMETADATA,
+    /** Objects API transaction Returns the space memberships of the user specified with user_id.
+      */
+    PBTT_GET_MEMBERSHIPS,
+    /** Objects API transaction Adds the users space memberships specified with user_id.
+      */
+    PBTT_JOIN_SPACES,
+    /** Objects API transaction Updates the users space memberships specified with user_id.
+      */
+    PBTT_SET_MEMBERSHIPS,
+    /** Objects API transaction Removes the users space memberships specified with user_id.
+      */
+    PBTT_REMOVE_MEMBERSHIPS,
+    /** Objects API transaction Returns all users in the space specified by space_id.
+      */
+    PBTT_GET_MEMBERS,
+    /** Objects API transaction Adds the list of members of the space specified with space_id.
+      */
+    PBTT_ADD_MEMBERS,
+    /** Objects API transaction Updates the list of members of the space specified with space_id.
+      */
+    PBTT_SET_MEMBERS,
+    /** Objects API transaction Removes the list of members of the space specified with space_id.
+      */
+    PBTT_REMOVE_MEMBERS,
+#endif /* PUBNUB_USE_OBJECTS_API */
+#if PUBNUB_USE_ACTIONS_API
+    /** Actions API transaction Adds the action to the message.
+      */
+    PBTT_ADD_ACTION,
+    /** Actions API transaction Removes the action from the message.
+      */
+    PBTT_REMOVE_ACTION,
+    /** Actions API transaction Gets the actions received on a given channel.
+      */
+    PBTT_GET_ACTIONS,
+    /** Actions API transaction Gets the message history with actions on them.
+      */
+    PBTT_HISTORY_WITH_ACTIONS,
+#endif /* PUBNUB_USE_ACTIONS_API */
+#if PUBNUB_USE_GRANT_TOKEN_API
+    /** PAMv3 Grant API transaction sets the permissions for resources and patterns.
+      */
+    PBTT_GRANT_TOKEN,
+#endif /* PUBNUB_USE_GRANT_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX
 };
@@ -180,10 +280,13 @@ enum pubnub_tribool {
     pbccNotSet
 };
 
-enum pubnub_publish_method {
-    pubnubPublishViaPOST,
-    pubnubPublishViaPOSTwithGZIP,
-    pubnubPublishViaGET
+enum pubnub_method {
+    pubnubSendViaGET,
+    pubnubSendViaPOST,
+    pubnubUsePATCH,
+    pubnubSendViaPOSTwithGZIP,
+    pubnubUsePATCHwithGZIP,
+    pubnubUseDELETE
 };
 
 /** Enum that describes an error when checking parameters passed to a function */

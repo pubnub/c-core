@@ -58,7 +58,7 @@ struct pubnub_publish_options {
      */
     char const* meta;
     /** Defines the method by which publish transaction will be performed */
-    enum pubnub_publish_method method; 
+    enum pubnub_method method; 
 };
 
 /** This returns the default options for publish V1 transactions.
@@ -109,6 +109,11 @@ struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
 
 /** The extended subscribe. Basically the same as pubnub_subscribe()
     but with options (except @p channel) given in @p opts.
+
+    When auto heartbeat is enabled at compile time both @p channel
+    and channel groups could be passed as NULL which suggests default
+    behaviour(unless it is uuid's very first subscription) in which case
+    transaction uses channel and channel groups that are already subscribed.
 
     Basic usage:
 
@@ -214,10 +219,15 @@ struct pubnub_history_options {
      */
     char const* end;
     /** If true to recieve a timetoken with each history
-     * message. If true, not timetokens per message. Defaults to
+     * message. If false, no timetokens per message. Defaults to
      * false.
      */
     bool include_token;
+    /** If true to recieve metadata with each history
+     * message if any. If false, no metadata per message. Defaults to
+     * false.
+     */
+    bool include_meta;
 };
 
 

@@ -32,6 +32,18 @@ void pbntf_update_socket(pubnub_t* pb)
 }
 
 
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    PUBNUB_UNUSED(pb);
+}
+
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    PUBNUB_UNUSED(pb);
+}
+
+
 void pbntf_lost_socket(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);

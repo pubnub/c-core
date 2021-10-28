@@ -26,7 +26,7 @@ static void sync_sample_free(pubnub_t* p)
 }
 
 
-static struct pubnub_publish_options publish_opts_method(enum pubnub_publish_method method)
+static struct pubnub_publish_options publish_opts_method(enum pubnub_method method)
 {
     struct pubnub_publish_options opts = pubnub_publish_defopts();
     opts.method = method;
@@ -66,7 +66,7 @@ static int alloc_and_start_publish_via_post(pubnub_t*        pb,
     *publish_res = pubnub_publish_ex(pb,
                                      channel,
                                      mem,
-                                     publish_opts_method(pubnubPublishViaPOST));
+                                     publish_opts_method(pubnubSendViaPOST));
     *allocated = mem;
     return 0;
 }
@@ -85,7 +85,16 @@ int main()
         printf("Failed to allocate Pubnub context!\n");
         return -1;
     }
-    pubnub_init(pbp, "demo", "demo");
+    char* my_env_publish_key = getenv("PUBNUB_PUBLISH_KEY");
+    char* my_env_subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
+    char* my_env_secret_key = getenv("PUBNUB_SECRET_KEY");
+
+    if (NULL == my_env_publish_key) { my_env_publish_key = "demo"; }
+    if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "demo"; }
+    if (NULL == my_env_secret_key) { my_env_secret_key = "demo"; }
+    printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
+
+    pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
@@ -135,7 +144,7 @@ int main()
     res = pubnub_publish_ex(pbp,
                             chan,
                             message_via_post_for_gzip,
-                            publish_opts_method(pubnubPublishViaPOSTwithGZIP));
+                            publish_opts_method(pubnubSendViaPOSTwithGZIP));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }

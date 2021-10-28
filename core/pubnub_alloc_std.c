@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
+#include "pubnub_auto_heartbeat.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 
@@ -136,7 +137,7 @@ int pubnub_free(pubnub_t* pb)
 {
     int result = -1;
 
-    PUBNUB_ASSERT(check_ctx_ptr(pb));
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
 
@@ -144,6 +145,8 @@ int pubnub_free(pubnub_t* pb)
     pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
         PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
+        pubnub_disable_auto_heartbeat(pb);
+        pbauto_heartbeat_free_channelInfo(pb);
         pb->state = PBS_NULL;
 #if defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pb);

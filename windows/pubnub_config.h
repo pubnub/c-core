@@ -72,6 +72,16 @@
     */
 #define PUBNUB_DEFAULT_TRANSACTION_TIMER 310000
 
+/** Duration of the 'wait_connect_TCP_socket' timeout set during context
+    initialization, in milliseconds. Can be changed later by the user.
+    */
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+
+/** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
+ *  You can't set less than this.
+ */
+#define PUBNUB_MIN_WAIT_CONNECT_TIMER 5000
+
 #define PUBNUB_HAVE_SHA1 0
 
 #if !defined(PUBNUB_PROXY_API)
@@ -116,6 +126,13 @@
 #endif
 
 #define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
+
+/** Maximum number of consecutive retries when sending DNS query in a single transaction */
+#define PUBNUB_MAX_DNS_QUERIES 3
+#if PUBNUB_CHANGE_DNS_SERVERS
+/** Maximum number of DNS servers list rotation in a single transaction */
+#define PUBNUB_MAX_DNS_ROTATION 3
+#endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
 /** If true (!=0), enables support for compressed content data*/
@@ -129,12 +146,11 @@
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
 
-/** The maximum channel name length */
-#define PUBNUB_MAX_CHANNEL_NAME_LENGTH 92
-
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
+#ifndef PUBNUB_USE_WIN_SSPI 
 #define PUBNUB_USE_WIN_SSPI 1
+#endif
 
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
@@ -142,7 +158,9 @@
 #define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
 
 /** If true (!=0), enable support for message encryption/decryption */
+#ifndef PUBNUB_CRYPTO_API 
 #define PUBNUB_CRYPTO_API 0
+#endif
 
 
 #if !defined(PUBNUB_ONLY_PUBSUB_API)
@@ -174,5 +192,32 @@
     provides more data about (unread) messages. */
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 
+/** If true (!=0) will enable using the objects API, which is a
+    collection of rest API features that enables "CRUD"(Create, Read, Update and Delete)
+    on two new pubnub objects: User and Space, as well as manipulating connections
+    between them. */
+#define PUBNUB_USE_OBJECTS_API 1
+
+/** If true (!=0) will enable using the Actions API, which is a collection
+    of Rest API features that enables adding on, reading and removing actions
+    from published messages */
+#define PUBNUB_USE_ACTIONS_API 1
+
+#ifndef PUBNUB_USE_GRANT_TOKEN_API
+#define PUBNUB_USE_GRANT_TOKEN_API 1
+#endif
+
+/** If true (!=0) will enable using the Auto Heartbeat Thumps(beats), which is a feature
+    that enables keeping presence of the given uuids on channels and channel groups during
+    longer periods without subscription.
+    This gives more freedom to the user while coding whom, othrewise, should take care of
+    these things all by himself using pubnub_heartbeat() transaction */
+#define PUBNUB_USE_AUTO_HEARTBEAT 1
+
+#define PUBNUB_MAX_URL_PARAMS 10
+
+#ifndef PUBNUB_RAND_INIT_VECTOR
+#define PUBNUB_RAND_INIT_VECTOR 1
+#endif
 
 #endif /* !defined INC_PUBNUB_CONFIG */
