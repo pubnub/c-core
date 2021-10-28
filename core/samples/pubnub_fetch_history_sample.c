@@ -32,17 +32,6 @@ static void generate_uuid(pubnub_t* pbp)
     }
 }
 
-
-static void wait_useconds(unsigned long time_in_microseconds)
-{
-    clock_t  start = clock();
-    unsigned long time_passed_in_microseconds;
-    do {
-        time_passed_in_microseconds = clock() - start;
-    } while (time_passed_in_microseconds < time_in_microseconds);
-}
-
-
 static void sync_sample_free(pubnub_t* p)
 {
     if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
@@ -56,32 +45,6 @@ static void sync_sample_free(pubnub_t* p)
     if (pubnub_free(p) != 0) {
         printf("Failed to free the Pubnub context\n");
     }
-}
-
-
-static int get_timetoken(pubnub_t* pbp, char* timetoken)
-{
-    enum pubnub_res res;
-
-    puts("-----------------------");
-    puts("Getting time...");
-    puts("-----------------------");
-    res = pubnub_time(pbp);
-    if (res == PNR_STARTED) {
-        res = pubnub_await(pbp);
-    }
-    if (PNR_OK == res) {
-        strcpy(timetoken, pubnub_get(pbp));
-        printf("Gotten time: '%s'\n", timetoken);
-    }
-    else {
-        printf("Getting time failed with code %d('%s')\n",
-               res,
-               pubnub_res_2_string(res));
-        return -1;
-    }
-
-    return 0;
 }
 
 

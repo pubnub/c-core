@@ -11,6 +11,7 @@
 
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
+#include "pubnub_helper.h"
 #else
 #error this module can only be used if PUBNUB_USE_FETCH_HISTORY is defined and set to 1
 #endif
@@ -44,10 +45,10 @@ enum pubnub_res pbcc_fetch_history_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
 
     int ch_count = 0;
-    char* ch_lst = strtok(channel, ","); 
+    char* ch_lst = (char*)strtok((char*)channel, ","); 
     while (ch_lst != NULL) {
         ch_count++;
-        ch_lst = strtok(NULL, ",");
+        ch_lst = (char*)strtok(NULL, ",");
     }
     if (max_per_channel <= 0) {
         if (include_message_actions == pbccTrue || ch_count > 1) { max_per_channel = 25; }
@@ -86,11 +87,9 @@ enum pubnub_res pbcc_fetch_history_prep(struct pbcc_context* pb,
 
 enum pubnub_res pbcc_parse_fetch_history_response(struct pbcc_context* pb)
 {
-char* reply    = pb->http_reply;
+    char* reply    = pb->http_reply;
     int   replylen = pb->http_buf_len;
     struct pbjson_elem elem;
-    struct pbjson_elem parsed;
-    enum pbjson_object_name_parse_result json_rslt;
 
     if ((replylen < 2) || (reply[0] != '{')) {
         return PNR_FORMAT_ERROR;
@@ -135,8 +134,6 @@ pubnub_chamebl_t pbcc_get_fetch_history(struct pbcc_context* pb)
     char const* reply = pb->http_reply;
     int replylen = pb->http_buf_len;
     struct pbjson_elem elem;
-    struct pbjson_elem parsed;
-    enum pbjson_object_name_parse_result json_rslt;
     if (pb->last_result != PNR_OK) {
         PUBNUB_LOG_ERROR("pbcc_get_fetch_history(pb=%p) can be called only if "
                          "previous transactin PBTT_FETCH_HISTORY(%d) is finished successfully. "

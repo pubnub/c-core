@@ -42,6 +42,10 @@ ifndef USE_GRANT_TOKEN
 USE_GRANT_TOKEN = 1
 endif
 
+ifndef USE_FETCH_HISTORY
+USE_FETCH_HISTORY = 1
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
@@ -87,7 +91,12 @@ GRANT_TOKEN_SOURCEFILES = ../core/pbcc_grant_token_api.c ../core/pubnub_grant_to
 GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.o pubnub_grant_token_api.o cborparser.o cborerrorstrings.o cborparser_dup_string.o  
 endif
 
-CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN)
+ifeq ($(USE_FETCH_HISTORY), 1)
+SOURCEFILES += ../core/pubnub_fetch_history.c ../core/pbcc_fetch_history.c  
+OBJFILES += pubnub_fetch_history.o pbcc_fetch_history.o  
+endif
+
+CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 # -fsanitize=thread Use ThreadSanitizer
@@ -107,7 +116,7 @@ endif
 
 INCLUDES=-I .. -I .
 
-all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
+all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_fetch_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
@@ -185,6 +194,9 @@ pubnub_publish_via_post_secretkey_sample: ../core/samples/pubnub_publish_via_pos
 
 pubnub_advanced_history_sample: ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_advanced_history_sample.c pubnub_sync.a $(LDLIBS)
+
+pubnub_fetch_history_sample: ../core/samples/pubnub_fetch_history_sample.c pubnub_sync.a
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_fetch_history_sample.c pubnub_sync.a $(LDLIBS)
 
 pubnub_callback_sample: ../core/samples/pubnub_callback_sample.c pubnub_callback.a
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/pubnub_callback_sample.c pubnub_callback.a $(LDLIBS)

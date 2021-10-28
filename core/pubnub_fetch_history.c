@@ -59,7 +59,6 @@ enum pubnub_res pubnub_fetch_history(pubnub_t*                     pb,
 
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
-    
 }
 
 

@@ -132,6 +132,10 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_ABORTED: return pbccNotSet;
     case PNR_IO_ERROR: return pbccNotSet;
     case PNR_HTTP_ERROR: return pbccFalse; /* For all known HTTP erros it doesn't make sense */
+    case PNR_SUB_TT_FORMAT_ERROR: return pbccFalse; /* Timetoken format error for Subscribe  */
+    case PNR_SUB_NO_TT_ERROR: return pbccFalse; /* No Timetoken error for Subscribe  */
+    case PNR_SUB_NO_REG_ERROR: return pbccFalse; /* No Region error for Subscribe  */
+    case PNR_GROUP_EMPTY: return pbccFalse; /* Empty ChannelGroup error for Subscribe  */
     case PNR_FORMAT_ERROR: return pbccFalse; /* Fix the format */
     case PNR_CANCELLED: return pbccFalse; /* User cancelled, what's the use? */
     case PNR_STARTED: return pbccFalse; /* We haven't finished yet! */
