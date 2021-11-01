@@ -139,7 +139,8 @@ int main(int argc, char* argv[])
              m_channel2);    
 
     struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
-    opt.max_per_channel = 5;
+    opt.include_message_type = true;
+    opt.include_meta = true;
     res = pubnub_fetch_history(pbp, string_channels, opt);
     if (res == PNR_STARTED) {
             puts("Await Fetch History");
@@ -148,6 +149,11 @@ int main(int argc, char* argv[])
     if (PNR_OK == res) {
             printf("Got response for Fetch History! Response from Pubnub: %s\n",
                     pubnub_get_fetch_history(pbp).ptr);
+    }
+    else{
+        printf("pubnub_fetch_history() failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
     }
     sync_sample_free(pbp);
 
