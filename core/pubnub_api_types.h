@@ -261,6 +261,7 @@ enum pubnub_trans {
     /** PAMv3 Grant API transaction sets the permissions for resources and patterns.
       */
     PBTT_GRANT_TOKEN,
+    PBTT_REVOKE_TOKEN,
 #endif /* PUBNUB_USE_GRANT_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX

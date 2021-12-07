@@ -42,6 +42,7 @@ extern "C" {
 #endif
 #if PUBNUB_USE_GRANT_TOKEN_API
 #include "core/pubnub_grant_token_api.h"
+#include "core/pubnub_revoke_token.h"
 #endif
 #include "core/pubnub_auto_heartbeat.h"
 #if PUBNUB_USE_EXTERN_C
@@ -1193,6 +1194,11 @@ public:
     std::string parse_token(std::string const& token)
     {
         return pubnub_parse_token(d_pb, token.c_str());
+    }
+
+    int revoke_token()
+    {
+        return pubnub_revoke_token(d_pb, token.c_str());
     }
 
 #endif
