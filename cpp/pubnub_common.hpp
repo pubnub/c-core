@@ -1196,9 +1196,17 @@ public:
         return pubnub_parse_token(d_pb, token.c_str());
     }
 
-    int revoke_token()
+    futres revoke_token(std::string const& token)
     {
-        return pubnub_revoke_token(d_pb, token.c_str());
+        return doit(
+            pubnub_revoke_token(d_pb, token.c_str())
+        );
+    }
+
+    std::string get_revoke_token_result()
+    {
+        pubnub_chamebl_t result = pubnub_get_revoke_token_response(d_pb);
+        return std::string(result.ptr, result.size);
     }
 
 #endif

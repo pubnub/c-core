@@ -123,6 +123,8 @@ enum pubnub_res {
     PNR_ACTIONS_API_ERROR,
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
+    /** Revoke Token API transaction reported an error */
+    PNR_REVOKE_TOKEN_API_ERROR,
     /** Access/Permission denied */
     PNR_ACCESS_DENIED,
     /** No Channels in the ChannelGroup */

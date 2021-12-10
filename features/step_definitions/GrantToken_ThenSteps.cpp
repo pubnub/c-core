@@ -251,5 +251,6 @@ THEN("^the error detail location type is '(.*)'$")
 THEN("^I get confirmation that token has been revoked$")
 {
     ScenarioScope<Ctx> context;
-    BOOST_CHECK_EQUAL(context->revokeTokenResult, 1);
+    std::size_t        found = context->revokeTokenResult.find("Success");
+    BOOST_CHECK_NE(found, std::string::npos);
 }

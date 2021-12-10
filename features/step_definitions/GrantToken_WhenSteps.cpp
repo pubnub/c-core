@@ -159,6 +159,16 @@ WHEN("^I revoke a token$")
     ScenarioScope<Ctx> context;
     pubnub::context    pn(context->pubKey, context->subKey);
 
+    pn.set_origin("mock_server");
+    pn.set_port(8090);
     pn.set_secret_key(context->secKey);
-    context->revokeTokenResult = pn.revoke_token(context->token);
+    pn.set_blocking_io(pubnub::non_blocking);
+    pn.set_secret_key(context->secKey);
+
+    pubnub::futres  futgres = pn.revoke_token(context->token);
+    enum pubnub_res res     = futgres.await();
+
+    BOOST_CHECK_EQUAL(res, PNR_OK);
+
+    context->revokeTokenResult     = pn.get_revoke_token_result();
 }
