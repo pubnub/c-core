@@ -56,7 +56,7 @@ WHEN("^I grant a token specifying those permissions$")
     pubnub::context pn(context->pubKey, context->subKey);
 
   // #ifdef MOCK_SERVER_DOCKER
-    pn.set_origin("mock_server");
+    pn.set_origin("localhost");
   // #else
   //   pn.set_origin("localhost");
   // #endif
@@ -101,7 +101,7 @@ WHEN("^I attempt to grant a token specifying those permissions$")
     pubnub::context pn(context->pubKey, context->subKey);
 
   // #ifdef MOCK_SERVER_DOCKER
-    pn.set_origin("mock_server");
+    pn.set_origin("localhost");
   // #else
   //   pn.set_origin("localhost");
   // #endif
@@ -159,7 +159,7 @@ WHEN("^I revoke a token$")
     ScenarioScope<Ctx> context;
     pubnub::context    pn(context->pubKey, context->subKey);
 
-    pn.set_origin("mock_server");
+    pn.set_origin("localhost");
     pn.set_port(8090);
     pn.set_secret_key(context->secKey);
     pn.set_blocking_io(pubnub::non_blocking);
