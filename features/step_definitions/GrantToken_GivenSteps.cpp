@@ -193,3 +193,11 @@ GIVEN("^a token$")
         "dGhvcml6ZWQtdXVpZENzaWdYIPpU-vCe9rkpYs87YUrFNWkyNq8CVvmKwEjVinnDrJJc";
 
 }
+
+
+GIVEN("^the token string '(.*)'$") 
+{
+    REGEX_PARAM(std::string, token);
+    ScenarioScope<Ctx> context;
+    context->token = "unescaped-_.ABCabc123 escaped;,/?:@&=+$#";
+}

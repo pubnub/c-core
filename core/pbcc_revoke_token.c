@@ -26,11 +26,11 @@ enum pubnub_res pbcc_revoke_token_prep(struct pbcc_context* pb, char const* toke
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
-        "/v3/pam/%s/grant/%s",
-        pb->subscribe_key,
-        token
+        "/v3/pam/%s/grant/",
+        pb->subscribe_key
     );
 
+    APPEND_URL_ENCODED_M(pb, token);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }

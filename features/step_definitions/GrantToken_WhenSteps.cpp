@@ -168,7 +168,11 @@ WHEN("^I revoke a token$")
     pubnub::futres  futgres = pn.revoke_token(context->token);
     enum pubnub_res res     = futgres.await();
 
-    BOOST_CHECK_EQUAL(res, PNR_OK);
-
-    context->revokeTokenResult     = pn.get_revoke_token_result();
+    if(res == PNR_OK)
+      context->revokeTokenResult     = pn.get_revoke_token_result();
+    else
+    {
+      context->statusCode   = pn.last_http_code();
+      context->errorMessage = pn.last_http_response_body();
+    }
 }

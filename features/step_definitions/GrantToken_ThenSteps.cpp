@@ -232,6 +232,7 @@ THEN("^the error detail message is '(.*)'$")
     BOOST_CHECK_NE(found, std::string::npos);
 }
 
+
 THEN("^the error detail location is '(.*)'$")
 {
     REGEX_PARAM(std::string, location);
@@ -239,6 +240,16 @@ THEN("^the error detail location is '(.*)'$")
     std::size_t        found = context->errorMessage.find(location);
     BOOST_CHECK_NE(found, std::string::npos);
 }
+
+
+THEN("^the error detail message is not empty$") 
+{
+    REGEX_PARAM(std::string, locationType);
+    ScenarioScope<Ctx> context;
+    std::size_t        found = context->errorMessage.find("Token parse error");
+    BOOST_CHECK_NE(found, std::string::npos);
+}
+
 
 THEN("^the error detail location type is '(.*)'$")
 {
@@ -248,9 +259,18 @@ THEN("^the error detail location type is '(.*)'$")
     BOOST_CHECK_NE(found, std::string::npos);
 }
 
+
 THEN("^I get confirmation that token has been revoked$")
 {
     ScenarioScope<Ctx> context;
     std::size_t        found = context->revokeTokenResult.find("Success");
+    BOOST_CHECK_NE(found, std::string::npos);
+}
+
+
+THEN("^the error service is '(.*)'$") {
+    REGEX_PARAM(std::string, errorService);
+    ScenarioScope<Ctx> context;
+    std::size_t        found = context->errorMessage.find(errorService);
     BOOST_CHECK_NE(found, std::string::npos);
 }
