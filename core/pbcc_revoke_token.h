@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-// #if !defined INC_PBCC_GRANT_TOKEN_API
-// #define INC_PBCC_GRANT_TOKEN_API
+// #if !defined INC_PBCC_REVOKE_TOKEN_API
+// #define INC_PBCC_REVOKE_TOKEN_API
 
 #include "pubnub_api_types.h"
 #include "pubnub_json_parse.h"
@@ -14,4 +14,4 @@ pubnub_chamebl_t pbcc_get_revoke_token_response(struct pbcc_context* pb);
 
 enum pubnub_res pbcc_parse_revoke_token_response(struct pbcc_context* pb);
 
-// #endif /* !defined INC_PBCC_GRANT_TOKEN_API */
+// #endif /* !defined INC_PBCC_REVOKE_TOKEN_API */
