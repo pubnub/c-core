@@ -24,9 +24,6 @@ enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token)
         return PNR_IN_PROGRESS;
     }
 
-    pb->method = pubnubUseDELETE;
-    pb->trans = PBTT_REVOKE_TOKEN;
-
     rslt = pbcc_revoke_token_prep(&pb->core, token, pb->trans);
 
     if (PNR_STARTED == rslt) {
@@ -41,6 +38,7 @@ enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token)
 
     return rslt;
 }
+
 
 pubnub_chamebl_t pubnub_get_revoke_token_response(pubnub_t* pb)
 {
