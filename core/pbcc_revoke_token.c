@@ -106,7 +106,7 @@ enum pubnub_res pbcc_parse_revoke_token_response(struct pbcc_context* pb)
     elem.start = reply;
 
     if (pbjson_value_for_field_found(&elem, "status", "403")){
-        PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_api_response(pbcc=%p) - AccessDenied: "
+        PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_response(pbcc=%p) - AccessDenied: "
                          "response from server - response='%s'\n",
                          pb,
                          reply);
@@ -117,29 +117,29 @@ enum pubnub_res pbcc_parse_revoke_token_response(struct pbcc_context* pb)
     if (jonmpKeyNotFound == json_rslt) {
         json_rslt = pbjson_get_object_value(&elem, "error", &parsed);
         if (json_rslt != jonmpOK) {
-            PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_api_response(pbcc=%p) - Invalid response: "
+            PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_response(pbcc=%p) - Invalid response: "
                              "pbjson_get_object_value(\"error\") reported an error: %s\n",
                              pb,
                              pbjson_object_name_parse_result_2_string(json_rslt));
 
             return PNR_FORMAT_ERROR;
         }
-        PUBNUB_LOG_WARNING("pbcc_parse_revoke_token_api_response(pbcc=%p): \"error\"='%.*s'\n",
+        PUBNUB_LOG_WARNING("pbcc_parse_revoke_token_response(pbcc=%p): \"error\"='%.*s'\n",
                            pb,
                            (int)(parsed.end - parsed.start),
                            parsed.start);
 
-        return PNR_REVOKE_TOKEN_API_ERROR;  // tutaj do poprawki
+        return PNR_REVOKE_TOKEN_API_ERROR;
     }
     else if (json_rslt != jonmpOK) {
-        PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_api_response(pbcc=%p) - Invalid response: "
+        PUBNUB_LOG_ERROR("pbcc_parse_revoke_token_response(pbcc=%p) - Invalid response: "
                          "pbjson_get_object_value(\"data\") reported an error: %s\n",
                          pb,
                          pbjson_object_name_parse_result_2_string(json_rslt));
 
         return PNR_FORMAT_ERROR;
     }
-    PUBNUB_LOG_TRACE("pbcc_parse_revoke_token_api_response(pbcc=%p): \"data\"='%.*s'\n",
+    PUBNUB_LOG_TRACE("pbcc_parse_revoke_token_response(pbcc=%p): \"data\"='%.*s'\n",
                      pb,
                      (int)(parsed.end - parsed.start),
                      parsed.start);
