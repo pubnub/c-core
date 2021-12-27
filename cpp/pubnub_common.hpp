@@ -40,8 +40,10 @@ extern "C" {
 #if PUBNUB_USE_ACTIONS_API
 #include "core/pubnub_actions_api.h"
 #endif
-#if PUBNUB_USE_PAM_V3_API
+#if PUBNUB_USE_GRANT_TOKEN_API
 #include "core/pubnub_grant_token_api.h"
+#endif
+#if PUBNUB_USE_REVOKE_TOKEN_API
 #include "core/pubnub_revoke_token.h"
 #endif
 #include "core/pubnub_auto_heartbeat.h"
@@ -619,11 +621,7 @@ public:
             throw std::logic_error("setting 'auth_token' while transaction in progress");
         }
         d_auth_token = token;
-        #if PUBNUB_USE_PAM_V3_API
         pubnub_set_auth_token(d_pb, token.empty() ? NULL : d_auth_token.c_str());
-        #else
-        throw std::logic_error("grant token not enabled");
-        #endif
     }
     /// Returns the current `auth_token` for this context
     std::string const& auth_token() const
@@ -1171,7 +1169,7 @@ public:
         return doit(pubnub_list_channel_group(d_pb, channel_group.c_str()));
     }
 
-#if PUBNUB_USE_PAM_V3_API
+#if PUBNUB_USE_GRANT_TOKEN_API
     /// Starts a transaction that grants a token with the attributes specified in @p grant_obj.
     /// @see pubnub_grant_token
     futres grant_token(std::string const& grant_obj)
@@ -1195,7 +1193,9 @@ public:
     {
         return pubnub_parse_token(d_pb, token.c_str());
     }
+#endif
 
+#if PUBNUB_USE_REVOKE_TOKEN_API
     futres revoke_token(std::string const& token)
     {
         return doit(

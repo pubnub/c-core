@@ -8,8 +8,12 @@ LDLIBS=ws2_32.lib IPHlpAPI.lib rpcrt4.lib
 ONLY_PUBSUB_API = 0
 !endif
 
-!ifndef USE_PAM_V3
-USE_PAM_V3 = 0
+!ifndef USE_REVOKE_TOKEN
+USE_REVOKE_TOKEN = 1
+!endif
+
+!ifndef USE_GRANT_TOKEN
+USE_GRANT_TOKEN = 1
 !endif
 
 !ifndef USE_PROXY
@@ -21,7 +25,7 @@ PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\c
 PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj pbntlm_core.obj pbntlm_packer_sspi.obj pubnub_set_proxy_from_system_windows.obj 
 !endif
 
-DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_PAM_V3_API=$(USE_PAM_V3) 
+DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
 CFLAGS = -Zi -MP -W3 $(DEFINES)
 # -Zi enables debugging, remove to get a smaller .exe and no .pdb
 # -MP use one compiler process for each input, faster on multi-core (ignored by clang-cl)

@@ -259,12 +259,16 @@ enum pubnub_trans {
       */
     PBTT_HISTORY_WITH_ACTIONS,
 #endif /* PUBNUB_USE_ACTIONS_API */
-#if PUBNUB_USE_PAM_V3_API
+#if PUBNUB_USE_GRANT_TOKEN_API
     /** PAMv3 Grant API transaction sets the permissions for resources and patterns.
       */
     PBTT_GRANT_TOKEN,
+#endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_REVOKE_TOKEN_API
+    /** PAMv3 Revoke API transaction revokes the PAMv3 token .
+      */
     PBTT_REVOKE_TOKEN,
-#endif /* PUBNUB_USE_PAM_V3_API */
+#endif /* PUBNUB_USE_REVOKE_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX
 };

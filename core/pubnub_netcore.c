@@ -21,8 +21,10 @@
 #if PUBNUB_USE_ACTIONS_API
 #include "core/pbcc_actions_api.h"
 #endif
-#if PUBNUB_USE_PAM_V3_API
+#if PUBNUB_USE_GRANT_TOKEN_API
 #include "core/pbcc_grant_token_api.h"
+#endif
+#if PUBNUB_USE_REVOKE_TOKEN_API
 #include "core/pbcc_revoke_token.h"
 #endif
 #include "core/pubnub_proxy_core.h"
@@ -313,10 +315,12 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
     , pbcc_parse_actions_api_response /* PBTT_GET_ACTIONS */
     , pbcc_parse_history_with_actions_response /* PBTT_HISTORY_WITH_ACTIONS */
 #endif /* PUBNUB_USE_OBJECTS_API */
-#if PUBNUB_USE_PAM_V3_API
+#if PUBNUB_USE_GRANT_TOKEN_API
     , pbcc_parse_grant_token_api_response /* PBTT_GRANT_TOKEN */
+#endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_REVOKE_TOKEN_API
     , pbcc_parse_revoke_token_response /* PBTT_REVOKE_TOKEN */
-#endif /* PUBNUB_USE_PAM_V3_API */
+#endif /* PUBNUB_USE_REVOKE_TOKEN_API */
 #endif /* PUBNUB_ONLY_PUBSUB_API */
 };
 

@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#define PUBNUB_USE_PAM_V3_API 1
+#define PUBNUB_USE_GRANT_TOKEN_API 1
 #include "pubnub.hpp"
 
 #include <iostream>
@@ -14,7 +14,6 @@
    standard "feature test" macro, hopefully your compiler has
    implemented it correctly.
  */
-#define PUBNUB_USE_PAM_V3_API 1
 
 int main()
 {
