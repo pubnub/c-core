@@ -91,11 +91,6 @@ GRANT_TOKEN_SOURCEFILES = ../core/pbcc_grant_token_api.c ../core/pubnub_grant_to
 GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.o pubnub_grant_token_api.o cborparser.o cborerrorstrings.o cborparser_dup_string.o
 endif
 
-# ifeq ($(USE_GRANT_TOKEN), 1)
-# PAM_V3_SOURCEFILES = ../core/pbcc_grant_token_api.c ../core/pubnub_grant_token_api.c ../lib/cbor/cborparser.c ../lib/cbor/cborerrorstrings.c ../lib/cbor/cborparser_dup_string.c
-# PAM_V3_OBJFILES = pbcc_grant_token_api.o pubnub_grant_token_api.o cborparser.o cborerrorstrings.o cborparser_dup_string.o
-# endif
-
 ifeq ($(USE_REVOKE_TOKEN), 1)
 REVOKE_TOKEN_SOURCEFILES = ../core/pubnub_revoke_token.c ../core/pbcc_revoke_token.c
 REVOKE_TOKEN_OBJFILES = pubnub_revoke_token.o pbcc_revoke_token.o
