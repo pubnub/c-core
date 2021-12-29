@@ -34,8 +34,8 @@ ENV CMAKE_CXX_COMPILER=/usr/bin/g++
 RUN apt-get update
 RUN apt-get install -y cmake g++ ruby ruby-dev git ninja-build libboost-all-dev gcovr libssl-dev gdb curl
 
-RUN git clone https://github.com/cgreen-devs/cgreen
-RUN cd cgreen && make
+RUN git clone https://github.com/cgreen-devs/cgreen.git
+RUN cd cgreen && git checkout 1.4.1 && make
 
 FROM ubuntu:20.04 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -91,7 +91,5 @@ RUN g++ -o steps BoostSteps.o cpp/pubnub_sync.a cucumber-cpp/build/src/libcucumb
         -lssl -lcrypto -D PUBNUB_USE_SSL=0
 
 COPY run_contract_tests.py .
-RUN apt-get install -y iputils-ping
 
-# ENTRYPOINT [ "python3", "/home/run_contract_tests.py", "/home/features/access/grant-token.feature", "mock_server"]
-CMD ping localhost
+ENTRYPOINT [ "python3", "/home/run_contract_tests.py", "/home/features/access/revoke-token.feature", "mock_server"]
