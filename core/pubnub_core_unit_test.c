@@ -1022,7 +1022,7 @@ Ensure(single_context_pubnub, leave_changroup)
     //    expect_have_dns_for_pubnub_origin();
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/ssub/channel/,/"
+    expect_outgoing_with_url("/v2/presence/sub-key/ssub/channel/%2C/"
                              "leave?pnsdk=unit-test-0.1&channel-group=mala");
     incoming("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n{}", NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
@@ -1265,7 +1265,7 @@ Ensure(single_context_pubnub, http_headers_no_content_length_or_chunked)
     expect_have_dns_for_pubnub_origin();
 
     expect_outgoing_with_url(
-        "/publish/publkey/subkey/0/,/0/%22zec%22?pnsdk=unit-test-0.1");
+        "/publish/publkey/subkey/0/%2C/0/%22zec%22?pnsdk=unit-test-0.1");
     /* No 'content-length' nor 'chunked' header field */
     incoming("HTTP/1.1 400\r\n\r\n[0,\"Invalid\",\"14178940800999505\"]", NULL);
     expect(pbpal_close, when(pb, equals(pbp)), returns(0));
@@ -1283,7 +1283,7 @@ Ensure(single_context_pubnub, publish_failed_invalid_channel)
     expect_have_dns_for_pubnub_origin();
 
     expect_outgoing_with_url(
-        "/publish/publkey/subkey/0/,/0/%22zec%22?pnsdk=unit-test-0.1");
+        "/publish/publkey/subkey/0/%2C/0/%22zec%22?pnsdk=unit-test-0.1");
     incoming("HTTP/1.1 400\r\nContent-Length: "
              "33\r\n\r\n[0,\"Invalid\",\"14178940800999505\"]",
              NULL);
@@ -1972,10 +1972,10 @@ Ensure(single_context_pubnub, set_state)
     pubnub_set_auth(pbp, "authentic");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/,/uuid/"
+    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/%2C/uuid/"
                              "melwokee/"
                              "data?pnsdk=unit-test-0.1&channel-"
-                             "group=[gr1,gr2]&auth=authentic&state=%7BIOW%7D");
+                             "group=[gr1%2Cgr2]&auth=authentic&state=%7BIOW%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "66\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{IOW}}",
@@ -1994,10 +1994,10 @@ Ensure(single_context_pubnub, set_state)
     pubnub_set_auth(pbp, "three");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/[ch1,ch2]/"
+    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/[ch1%2Cch2]/"
                              "uuid/linda-darnell/"
                              "data?pnsdk=unit-test-0.1&channel-group="
-                             "[gr3,gr4]&auth=three&state=%7BI%7D");
+                             "[gr3%2Cgr4]&auth=three&state=%7BI%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "64\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{I}}",
@@ -2170,8 +2170,8 @@ Ensure(single_context_pubnub, state_get_channelgroup)
      * from parameter to the function */
     pubnub_set_auth(pbp, "mouth");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/,/uuid/"
-                             "fireworks?pnsdk=unit-test-0.1&channel-group=[gr1,"
+    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/%2C/uuid/"
+                             "fireworks?pnsdk=unit-test-0.1&channel-group=[gr1%2C"
                              "gr2]&auth=mouth");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "141\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
@@ -2194,9 +2194,9 @@ Ensure(single_context_pubnub, state_get_channelgroup)
     pubnub_set_auth(pbp, "cat");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/[ch1,ch2]/uuid/"
+    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/[ch1%2Cch2]/uuid/"
                              "leslie-mann?pnsdk=unit-test-0.1&channel-group=["
-                             "gr3,gr4]&auth=cat");
+                             "gr3%2Cgr4]&auth=cat");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "153\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{\"channels\":{\"ch1\":{jason_state},"
@@ -2328,7 +2328,7 @@ Ensure(single_context_pubnub, here_now_channelgroups)
     pubnub_set_auth(pbp, "mouse");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
-                             ",?pnsdk=unit-test-0.1&channel-group=[gr2,gr1]&"
+                             "%2C?pnsdk=unit-test-0.1&channel-group=[gr2%2Cgr1]&"
                              "auth=mouse");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "233\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
@@ -2363,7 +2363,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
     pubnub_set_uuid(pbp, "12345");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
-                             "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
+                             "[ch1%2Cch2]?pnsdk=unit-test-0.1&channel-group=[gr3%2C"
                              "gr4]&uuid=12345&auth=globe");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "290\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
@@ -2411,7 +2411,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
     /* Don't forget that chunk lengths should be in hexadecimal representation
      */
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
-                             "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
+                             "[ch1%2Cch2]?pnsdk=unit-test-0.1&channel-group=[gr3%2C"
                              "gr4]&uuid=12345&auth=globe");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: chunked\r\n\r\n "
              "118\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
@@ -2449,7 +2449,7 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
     pubnub_set_uuid(pbp, "cub");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-one/channel/"
-                             "[ch5,ch7]?pnsdk=unit-test-0.1&channel-group=[gr1,"
+                             "[ch5%2Cch7]?pnsdk=unit-test-0.1&channel-group=[gr1%2C"
                              "gr2]&uuid=cub&auth=lion");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n122\r\n{\"status\":200,\"mes",
@@ -2750,9 +2750,9 @@ Ensure(single_context_pubnub, heartbeat_channelgroups)
     pubnub_init(pbp, "publ-beat", "sub-beat");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/sub-beat/channel/,/"
+    expect_outgoing_with_url("/v2/presence/sub-key/sub-beat/channel/%2C/"
                              "heartbeat?pnsdk=unit-test-0.1&channel-group=["
-                             "deep,shallow]");
+                             "deep%2Cshallow]");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "50\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\"}",
@@ -2778,7 +2778,7 @@ Ensure(single_context_pubnub, heartbeat_channel_and_channelgroups)
     expect_outgoing_with_url("/v2/presence/sub-key/sub-ocean/channel/"
                              "young_and_salty/"
                              "heartbeat?pnsdk=unit-test-0.1&channel-group=["
-                             "deep,shallow]&uuid=capetan&auth=sailing");
+                             "deep%2Cshallow]&uuid=capetan&auth=sailing");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "50\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\"}",
@@ -2813,7 +2813,7 @@ Ensure(single_context_pubnub,
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-game/channel/moves/"
                              "heartbeat?pnsdk=unit-test-0.1&channel-group=["
-                             "fast,slow]&uuid=player&auth=white");
+                             "fast%2Cslow]&uuid=player&auth=white");
     incoming("HTTP/1.1 200\r\nContent-Length:", NULL);
     incoming("", NULL);
     attest(pubnub_heartbeat(pbp, "moves", "[fast,slow]"), equals(PNR_STARTED));
@@ -3122,7 +3122,7 @@ Ensure(single_context_pubnub, subscribe_channel_groups)
     pubnub_init(pbp, "publ-bulletin", "sub-bulletin");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-bulletin/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-bulletin/%2C/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=updates");
     incoming(
         "HTTP/1.1 200\r\nContent-Length: 25\r\n\r\n[[],\"251614978925123457\"]",
@@ -3138,7 +3138,7 @@ Ensure(single_context_pubnub, subscribe_channel_groups)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-bulletin/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-bulletin/%2C/0/"
                              "251614978925123457?pnsdk=unit-test-0.1&channel-"
                              "group=updates");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3163,7 +3163,7 @@ Ensure(single_context_pubnub, subscribe_channel_groups)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-bulletin/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-bulletin/%2C/0/"
                              "251624978925123457?pnsdk=unit-test-0.1&channel-"
                              "group=updates");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3188,8 +3188,8 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
+                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2C"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n[[],\"3516149789251234578\"]",
@@ -3206,9 +3206,9 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
+                             "group=[chgr2%2Cchgr3%2Cchgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "150\r\n\r\n[[msg1,msg2,{\"text\":\"Hello "
              "World!\"},msg4,msg5,{\"key\":\"val\\ue\"}],"
@@ -3266,9 +3266,9 @@ Ensure(single_context_pubnub,
     pubnub_set_uuid(pbp, "technician");
     pubnub_set_auth(pbp, "weather-conditions");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[air-"
-                             "temperature,humidity,wind-speed-and-direction,"
+                             "temperature%2Chumidity%2Cwind-speed-and-direction%2C"
                              "pressure]&uuid=technician&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3287,10 +3287,10 @@ Ensure(single_context_pubnub,
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "1516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[air-temperature,humidity,wind-speed-and-"
-                             "direction,pressure]&uuid=technician&auth=weather-"
+                             "group=[air-temperature%2Chumidity%2Cwind-speed-and-"
+                             "direction%2Cpressure]&uuid=technician&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n9d\r\n[[{\"uuid1\":\"-2\"},{\"uuid2\":\"-5\"},{"
@@ -3331,10 +3331,10 @@ Ensure(single_context_pubnub,
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "1516149789251234583?pnsdk=unit-test-0.1&channel-"
-                             "group=[air-temperature,humidity,wind-speed-and-"
-                             "direction,pressure]&uuid=technician&auth=weather-"
+                             "group=[air-temperature%2Chumidity%2Cwind-speed-and-"
+                             "direction%2Cpressure]&uuid=technician&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n101\r\n[[{\"uuid1\":{\"dir\":w,\"speed\":\"2mph\","
@@ -3385,7 +3385,7 @@ Ensure(single_context_pubnub, subscribe_parse_response_format_error)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-fe/[ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,"
+                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2%2C"
                              "chgr4]");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n{[],\"3516149789251234578\"}",
@@ -3403,9 +3403,9 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
-                             "chgr4]&uuid=admin&auth=msgs");
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0"
+                            "/0?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2Cchgr4]"
+                            "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n[[],\"3516149789251234578\"]",
              NULL);
@@ -3429,9 +3429,9 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     expect(pbpal_forget, when(pb, equals(pbp)));
     /* Renewing DNS resolution and reestablishing connection */
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "3516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
+                             "3516149789251234578?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2Cchgr4]"
+                             "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "150\r\n\r\n[[msg1,msg2,{\"text\":\"Hello "
              "World!\"},msg4,msg5,{\"key\":\"val\\ue\"}],"
@@ -3493,8 +3493,8 @@ Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
+                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2C"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
                        "26\r\n\r\n[[],\"3516149789251234578\"]",
@@ -3518,8 +3518,8 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
+                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2C"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
                        "26\r\n\r\n[[],\"3516149789251234578\"]",
@@ -3537,9 +3537,9 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     pubnub_use_http_keep_alive(pbp);
     /* Renewing DNS resolution with new request */
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
+                             "group=[chgr2%2Cchgr3%2Cchgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "150\r\n\r\n[[msg1,msg2,{\"text\":\"Hello "
              "World!\"},msg4,msg5,{\"key\":\"val\\ue\"}],"
@@ -3796,8 +3796,8 @@ Ensure(single_context_pubnub,
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1%2Cch2]/0/"
+                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2%2Cchgr3%2C"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
                        "26\r\n\r\n[[],\"3516149789251234578\"]",
@@ -3897,9 +3897,9 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     pubnub_set_uuid(pbp, "technician");
     pubnub_set_auth(pbp, "weather-conditions");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[air-"
-                             "temperature,humidity,wind-speed-and-direction,"
+                             "temperature%2Chumidity%2Cwind-speed-and-direction%2C"
                              "pressure]&uuid=technician&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3918,10 +3918,10 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "1516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[air-temperature,humidity,wind-speed-and-"
-                             "direction,pressure]&uuid=technician&auth=weather-"
+                             "group=[air-temperature%2Chumidity%2Cwind-speed-and-"
+                             "direction%2Cpressure]&uuid=technician&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\n"
              "Transfer-Encoding: chunked\r\n"
@@ -3985,10 +3985,10 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
+    expect_outgoing_with_url("/subscribe/sub-measurements/%2C/0/"
                              "1516149789251234583?pnsdk=unit-test-0.1&channel-"
-                             "group=[air-temperature,humidity,wind-speed-and-"
-                             "direction,pressure]&uuid=bird&auth=weather-"
+                             "group=[air-temperature%2Chumidity%2Cwind-speed-and-"
+                             "direction%2Cpressure]&uuid=bird&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\n"
              "Content-Encoding: gzip\r\n"
