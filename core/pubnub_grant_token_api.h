@@ -57,21 +57,4 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token);
 
 static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result);
 
-/** Set the auth token information of PubNub client context @p
-    p. Pass NULL to unset.
-
-    @note The @p token is expected to be valid (ASCIIZ string) pointers
-    throughout the use of context @p pb, that is, until either you call
-    pubnub_done() on @p pb, or the otherwise stop using it (like when
-    the whole software/ firmware stops working). So, the contents of
-    the auth string is not copied to the Pubnub context @p pb.  */
-void pubnub_set_auth_token(pubnub_t* pb, const char* token);
-
-/** Returns the current auth token information for the
-    context @p pb.
-    After pubnub_init(), it will return `NULL` until you change it
-    to non-`NULL` via pubnub_set_auth_token().
-*/
-char const* pubnub_auth_token_get(pubnub_t* pb);
-
 #endif /* !defined INC_PUBNUB_GRANT_TOKEN_API */

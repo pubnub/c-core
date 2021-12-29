@@ -134,25 +134,6 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     return json_result;
 }
 
-void pubnub_set_auth_token(pubnub_t* pb, const char* token)
-{
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    pubnub_mutex_lock(pb->monitor);
-    pbcc_set_auth_token(&pb->core, token);
-    pubnub_mutex_unlock(pb->monitor);
-}
-
-char const* pubnub_auth_token_get(pubnub_t* pb)
-{
-    char const* result;
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-
-    pubnub_mutex_lock(pb->monitor);
-    result = pb->core.auth_token;
-    pubnub_mutex_unlock(pb->monitor);
-
-    return result;
-}
 
 static int currentNestLevel = 0;
 static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result)
