@@ -1,6 +1,6 @@
 {
   ".pubnub.yml": [
-    { "pattern": "^version: \"(.+)\"$", "cleared": true }
+    { "pattern": "^version: \"(.+)\"$", "cleared": true },
     { "pattern": "\/releases\/tag\/v([0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9]+)?)", "cleared": true }
   ],
   "core/pubnub_version_internal.h": [

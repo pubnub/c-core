@@ -5,7 +5,6 @@
 /* RFC 3986 Unreserved characters plus few
  * safe reserved ones. */
 #define OK_SPAN_CHARACTERS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~,;@[]"
-
 #define OK_SPAN_CHARS_MINUS_COMMA "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~;@[]"
 
 /** Url-encodes string @p what to user provided @p buffer which has its @p buffer_size.
