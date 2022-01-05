@@ -156,6 +156,7 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_ACCESS_DENIED: return pbccFalse; /* Permission issue. Check the error reported */
     case PNR_GRANT_TOKEN_API_ERROR: return pbccFalse; /* Check the error reported */
     case PNR_REVOKE_TOKEN_API_ERROR: return pbccFalse; /* Check the error reported */
+    default:
+        return pbccFalse;
     }
-    return pbccFalse;
 }

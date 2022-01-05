@@ -20,8 +20,9 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum p
         /* RFC 3986 Unreserved characters plus few
          * safe reserved ones. */
         size_t okspan;
-#if PUBNUB_USE_OBJECTS_API
         switch(pt){
+#if defined(PUBNUB_USE_OBJECTS_API) || defined(PUBNUB_USE_REVOKE_TOKEN_API)
+#if PUBNUB_USE_REVOKE_TOKEN_API
         case PBTT_GETALL_UUIDMETADATA :
         case PBTT_SET_UUIDMETADATA:
         case PBTT_GET_UUIDMETADATA:
@@ -36,14 +37,17 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum p
         case PBTT_SET_MEMBERS:
         case PBTT_REMOVE_MEMBERS:
         case PBTT_MESSAGE_COUNTS:
+#endif // PUBNUB_USE_OBJECTS_API
+#if PUBNUB_USE_REVOKE_TOKEN_API
+        case PBTT_REVOKE_TOKEN:
+#endif // PUBNUB_USE_REVOKE_TOKEN_API
             okspan = strspn(what, OK_SPAN_CHARS_MINUS_COMMA);
             break;
+#endif // defined(PUBNUB_USE_OBJECTS_API) || defined(PUBNUB_USE_REVOKE_TOKEN_API)
         default:
             okspan = strspn(what, OK_SPAN_CHARACTERS);
         }
-#else
-        okspan = strspn(what, OK_SPAN_CHARACTERS);
-#endif
+
         if (okspan > 0) {
             if (okspan >= (unsigned)(buffer_size - i - 1)) {
                 PUBNUB_LOG_ERROR("Error:|Url-encoded string is longer than permited.\n"
