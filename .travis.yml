@@ -26,7 +26,6 @@ install:
 before_script:
   - git clone https://github.com/cgreen-devs/cgreen.git
   - cd cgreen
-  - git checkout 1.4.1
   - mkdir -p build
   - cd build
   - cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
