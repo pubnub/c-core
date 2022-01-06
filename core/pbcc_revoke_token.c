@@ -30,7 +30,7 @@ enum pubnub_res pbcc_revoke_token_prep(struct pbcc_context* pb, char const* toke
         pb->subscribe_key
     );
 
-    APPEND_URL_ENCODED_M(pb, token);
+    APPEND_URL_ENCODED_M_TRANS(PBTT_REVOKE_TOKEN, pb, token);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
