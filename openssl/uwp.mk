@@ -37,7 +37,7 @@ USE_GRANT_TOKEN = 1
 !endif
 
 !if $(USE_REVOKE_TOKEN)
-REVOKE_TOKEN_SOURCEFILES = ../core/pubnub_revoke_token.c ../core/pbcc_revoke_token.c
+REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token.c ..\core\pbcc_revoke_token.c
 REVOKE_TOKEN_OBJFILES = pubnub_revoke_token.obj pbcc_revoke_token.obj
 !endif
 

@@ -36,8 +36,8 @@ enum pubnub_res pbcc_revoke_token_prep(struct pbcc_context* pb, char const* toke
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 
 #if PUBNUB_CRYPTO_API
-  ADD_TS_TO_URL_PARAM();
-  SORT_URL_PARAMETERS(qparam);
+    ADD_TS_TO_URL_PARAM();
+    SORT_URL_PARAMETERS(qparam);
 #endif
     ENCODE_URL_PARAMS_TRANS(pt, pb, qparam);
 #if PUBNUB_CRYPTO_API
