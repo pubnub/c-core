@@ -42,8 +42,8 @@ PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj p
 !endif
 
 !if $(USE_REVOKE_TOKEN)
-REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token.c ..\core\pbcc_revoke_token.c
-REVOKE_TOKEN_OBJFILES = pubnub_revoke_token.obj pbcc_revoke_token.obj
+REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke_token_api.c
+REVOKE_TOKEN_OBJFILES = pubnub_revoke_token_api.obj pbcc_revoke_token_api.obj
 !endif
 
 !if $(USE_GRANT_TOKEN)
@@ -58,7 +58,7 @@ CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNI
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include
 
-all: pubnub_sync_sample.exe pubnub_sync_grant_token_sample.exe pubnub_encrypt_decrypt_static_iv_sample.exe pubnub_encrypt_decrypt_dynamic_iv_sample.exe metadata.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe pubnub_publish_via_post_secretkey_sample.exe subscribe_publish_callback_sample.exe subscribe_publish_callback_secretkey_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_advanced_history_sample.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe pubnub_objects_secretkey_sample.exe
+all: pubnub_sync_sample.exe pubnub_sync_grant_token_sample.exe pubnub_sync_revoke_token_sample.exe pubnub_encrypt_decrypt_static_iv_sample.exe pubnub_encrypt_decrypt_dynamic_iv_sample.exe metadata.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe pubnub_publish_via_post_secretkey_sample.exe subscribe_publish_callback_sample.exe subscribe_publish_callback_secretkey_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_advanced_history_sample.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe pubnub_objects_secretkey_sample.exe
 
 SYNC_INTF_SOURCEFILES= ..\core\pubnub_ntf_sync.c ..\core\pubnub_sync_subscribe_loop.c ..\core\srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES= pubnub_ntf_sync.obj pubnub_sync_subscribe_loop.obj srand_from_pubnub_time.obj
@@ -83,6 +83,9 @@ pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c pubnub_sync.lib
 
 pubnub_sync_grant_token_sample.exe: ..\core\samples\pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
+
+pubnub_sync_revoke_token_sample.exe: ..\core\samples\pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.lib
+	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
 
 pubnub_encrypt_decrypt_static_iv_sample.exe: ..\core\samples\pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) /Fe:pubnub_encrypt_decrypt_static_iv_sample.exe ..\core\samples\pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.lib $(LIBS)

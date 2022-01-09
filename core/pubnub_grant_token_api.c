@@ -5,6 +5,7 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
+#include "core/pubnub_helper.h"
 #include "core/pubnub_log.h"
 #include "lib/pb_strnlen_s.h"
 #include "core/pbcc_grant_token_api.h"
@@ -93,15 +94,6 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
     pubnub_mutex_unlock(pb->monitor);
 
     return result;
-}
-
-char* replace_char(char* str, char find, char replace){
-    char *current_pos = strchr(str, find);
-    while (current_pos) {
-        *current_pos = replace;
-        current_pos = strchr(current_pos, find);
-    }
-    return str;
 }
 
 char* pubnub_parse_token(pubnub_t* pb, char const* token){

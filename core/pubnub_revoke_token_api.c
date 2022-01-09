@@ -5,10 +5,11 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
+#include "core/pubnub_helper.h"
 #include "core/pubnub_log.h"
 #include "lib/pb_strnlen_s.h"
-#include "pbcc_revoke_token.h"
-#include "pubnub_revoke_token.h"
+#include "pbcc_revoke_token_api.h"
+#include "pubnub_revoke_token_api.h"
 #include "core/pubnub_api_types.h"
 
 #include "core/pbpal.h"
@@ -24,7 +25,12 @@ enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token)
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_revoke_token_prep(&pb->core, token, pb->trans);
+    char * refined = replace_char((char*)token, '/', '_');
+    refined = replace_char((char*)refined, '+', '-');
+
+    pb->trans  = PBTT_REVOKE_TOKEN;
+    pb->method = pubnubUseDELETE;
+    rslt       = pbcc_revoke_token_prep(&pb->core, refined, pb->trans);
 
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_REVOKE_TOKEN;

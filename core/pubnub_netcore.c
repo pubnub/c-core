@@ -25,7 +25,7 @@
 #include "core/pbcc_grant_token_api.h"
 #endif
 #if PUBNUB_USE_REVOKE_TOKEN_API
-#include "core/pbcc_revoke_token.h"
+#include "core/pbcc_revoke_token_api.h"
 #endif
 #include "core/pubnub_proxy_core.h"
 

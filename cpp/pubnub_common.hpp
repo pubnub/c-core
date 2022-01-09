@@ -44,7 +44,7 @@ extern "C" {
 #include "core/pubnub_grant_token_api.h"
 #endif
 #if PUBNUB_USE_REVOKE_TOKEN_API
-#include "core/pubnub_revoke_token.h"
+#include "core/pubnub_revoke_token_api.h"
 #endif
 #include "core/pubnub_auto_heartbeat.h"
 #if PUBNUB_USE_EXTERN_C

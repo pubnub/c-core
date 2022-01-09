@@ -34,11 +34,11 @@ PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\c
 !endif
 
 !if $(USE_REVOKE_TOKEN)
-REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token.c ..\core\pbcc_revoke_token.c
+REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke_token_api.c
 !endif
 
 !if $(USE_GRANT_TOKEN)
-GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c ..\lib\cbor\cborparser.c ..\lib\cbor\cborerrorstrings.c ..\lib\cbor\cborparser_dup_string.c ..\core\pubnub_revoke_token.c ..\core\pbcc_revoke_token.c
+GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c ..\lib\cbor\cborparser.c ..\lib\cbor\cborerrorstrings.c ..\lib\cbor\cborparser_dup_string.c ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke_token_api.c
 !endif
 
 

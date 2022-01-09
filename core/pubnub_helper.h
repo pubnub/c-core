@@ -91,5 +91,13 @@ char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
  */
 enum pubnub_tribool pubnub_should_retry(enum pubnub_res e);
 
+/** Replace specified char in string.
+ *
+ * @param str Source in which char should be replaced.
+ * @param find What should be replaced.
+ * @param replace What should be used instead of searched needle.
+ * @return Updated string.
+ */
+char* replace_char(char* str, char find, char replace);
 
 #endif /* defined INC_PUBNUB_HELPER */

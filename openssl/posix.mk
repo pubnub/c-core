@@ -92,11 +92,11 @@ GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.o pubnub_grant_token_api.o cborparse
 endif
 
 ifeq ($(USE_REVOKE_TOKEN), 1)
-REVOKE_TOKEN_SOURCEFILES = ../core/pubnub_revoke_token.c ../core/pbcc_revoke_token.c
-REVOKE_TOKEN_OBJFILES = pubnub_revoke_token.o pbcc_revoke_token.o
+REVOKE_TOKEN_SOURCEFILES = ../core/pubnub_revoke_token_api.c ../core/pbcc_revoke_token_api.c
+REVOKE_TOKEN_OBJFILES = pubnub_revoke_token_api.o pbcc_revoke_token_api.o
 endif
 
-CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
+CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 # -fsanitize=thread Use ThreadSanitizer
@@ -116,7 +116,7 @@ endif
 
 INCLUDES=-I .. -I .
 
-all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop 
+all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_sync_revoke_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
@@ -161,6 +161,9 @@ pubnub_sync_sample: ../core/samples/pubnub_sync_sample.c pubnub_sync.a
 
 pubnub_sync_grant_token_sample: ../core/samples/pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.a $(LDLIBS)
+
+pubnub_sync_revoke_token_sample: ../core/samples/pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.a
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.a $(LDLIBS)
 
 pubnub_encrypt_decrypt_static_iv_sample: ../core/samples/pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.a
 	$(CC) $(CFLAGS) $(INCLUDES) -o pubnub_encrypt_decrypt_static_iv_sample ../core/samples/pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.a $(LDLIBS)
@@ -226,4 +229,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 
 
 clean:
-	rm pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_objects_secretkey_sample metadata pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample pubnub_sync.a pubnub_callback.a pubnub_callback_subloop_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
+	rm pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_sync_revoke_token_sample pubnub_objects_secretkey_sample metadata pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample pubnub_sync.a pubnub_sync_dynamiciv.a pubnub_callback.a pubnub_callback_subloop_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
