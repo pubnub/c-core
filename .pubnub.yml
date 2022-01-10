@@ -456,10 +456,12 @@ changelog:
         text: First "core feature complete" release
 features:
   access:
-    - ACCESS-OBJECTS-V2-MANAGEMENT 
+    - ACCESS-OBJECTS-V2-MANAGEMENT
+    - ACCESS-SECRET-KEY-ALL-ACCESS
     - ACCESS-GRANT-TOKEN
     - ACCESS-PARSE-TOKEN
     - ACCESS-SET-TOKEN
+    - ACCESS-REVOKE-TOKEN
   channel-groups:
     - CHANNEL-GROUPS-ADD-CHANNELS
     - CHANNEL-GROUPS-REMOVE-CHANNELS
