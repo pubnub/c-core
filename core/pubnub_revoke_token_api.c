@@ -25,12 +25,9 @@ enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token)
         return PNR_IN_PROGRESS;
     }
 
-    char * refined = replace_char((char*)token, '/', '_');
-    refined = replace_char((char*)refined, '+', '-');
-
     pb->trans  = PBTT_REVOKE_TOKEN;
     pb->method = pubnubUseDELETE;
-    rslt       = pbcc_revoke_token_prep(&pb->core, refined, pb->trans);
+    rslt       = pbcc_revoke_token_prep(&pb->core, token, pb->trans);
 
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_REVOKE_TOKEN;

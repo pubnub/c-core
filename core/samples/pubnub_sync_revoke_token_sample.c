@@ -8,6 +8,12 @@
 #include "core/pubnub_revoke_token_api.h"
 #include "core/pubnub_json_parse.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
@@ -198,6 +204,9 @@ int main()
                pubnub_res_2_string(res));
     }
 
+    time(&t0);
+    sleep(70);
+    printf("Slept for %lf seconds.\n", difftime(time(NULL), t0));
     puts("Publishing after revoke...");
     time(&t0);
     res = pubnub_publish(pbp, chan, "\"Hello world from sync!\"");
@@ -210,11 +219,11 @@ int main()
                pubnub_last_publish_result(pbp));
     }
     else if (PNR_PUBLISH_FAILED == res) {
-        printf("Published failed on Pubnub as expected, description: %s\n",
+        printf("Expected publish failure on Pubnub as expected, description: %s\n",
                pubnub_last_publish_result(pbp));
     }
     else {
-        printf("Publishing failed with code: %d('%s')\n",
+        printf("Expected publish failure with code: %d('%s')\n",
                res,
                pubnub_res_2_string(res));
     }

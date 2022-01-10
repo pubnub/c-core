@@ -97,11 +97,12 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
 }
 
 char* pubnub_parse_token(pubnub_t* pb, char const* token){
-    char const * refine1 = replace_char((char*)token, '_', '/');
-    char const * refine2 = replace_char((char*)refine1, '-', '+');
+    char * rawToken = strdup(token);
+    replace_char((char*)rawToken, '_', '/');
+    replace_char((char*)rawToken, '-', '+');
 
     pubnub_bymebl_t decoded;
-    decoded = pbbase64_decode_alloc_std_str(refine2);
+    decoded = pbbase64_decode_alloc_std_str(rawToken);
     #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
     PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
     for (size_t i = 0; i < decoded.size; i++) {
@@ -117,12 +118,13 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     CborParser parser;
     CborValue it;
     
-    char * json_result = (char*)malloc(5*(strlen(refine2)/4));
+    char * json_result = (char*)malloc(5*(strlen(rawToken)/4));
     sprintf(json_result, "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
     if (!err){
         data_recursion(&it, 1, json_result);
     }
+    free(rawToken);
     return json_result;
 }
 
