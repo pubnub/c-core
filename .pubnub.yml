@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "3.3.1"
+version: "3.3.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-01-10
+    version: v3.3.2
+    changes:
+      - type: bug
+        text: "Filter-expr query param typo."
   - date: 2022-01-05
     version: v3.3.1
     changes:
@@ -583,7 +588,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -649,7 +654,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -715,7 +720,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -777,7 +782,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -838,7 +843,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -894,7 +899,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
@@ -947,7 +952,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
             requires:
               -
                 name: "miniz"
