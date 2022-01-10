@@ -1,3 +1,9 @@
+## v3.3.2
+January 10 2022
+
+#### Fixed
+- Filter-expr query param typo.
+
 ## v3.3.1
 January 05 2022
 
