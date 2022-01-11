@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "3.3.2"
+version: "3.4.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-01-11
+    version: v3.4.0
+    changes:
+      - type: feature
+        text: "Add token permissions revoke functionality."
+      - type: bug
+        text: "Remove body from `signature` calculation for requests with DELETE HTTP method."
+      - type: improvement
+        text: "Update `.pubnub.yml` file with access token revoke and secret key all access."
   - date: 2022-01-10
     version: v3.3.2
     changes:
@@ -590,7 +599,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -656,7 +665,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -722,7 +731,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -784,7 +793,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -845,7 +854,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -901,7 +910,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
@@ -954,7 +963,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
             requires:
               -
                 name: "miniz"
