@@ -60,6 +60,9 @@ openssl\pubnub_sync_sample.exe: samples\pubnub_sample.cpp $(SOURCEFILES) $(REVOK
 openssl\pubnub_sync_grant_sample.exe: samples\pubnub_sample_grant_token.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) /Fe$@ $(CFLAGS) samples\pubnub_sample_grant_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
 
+openssl\pubnub_sync_revoke_sample.exe: samples\pubnub_sample_revoke_token.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
+	$(CXX) /Fe$@ $(CFLAGS) samples\pubnub_sample_revoke_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
+
 openssl\cancel_subscribe_sync_sample.exe: samples\cancel_subscribe_sync_sample.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) /Fe$@ $(CFLAGS) samples\cancel_subscribe_sync_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
 
