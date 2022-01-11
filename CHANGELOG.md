@@ -1,3 +1,15 @@
+## v3.4.0
+January 11 2022
+
+#### Added
+- Add token permissions revoke functionality.
+
+#### Fixed
+- Remove body from `signature` calculation for requests with DELETE HTTP method.
+
+#### Modified
+- Update `.pubnub.yml` file with access token revoke and secret key all access.
+
 ## v3.3.2
 January 10 2022
 

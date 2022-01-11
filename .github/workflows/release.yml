@@ -37,6 +37,7 @@ jobs:
         with:
           # This should be the same as the one specified for on.pull_request.branches
           ref: master
+          token: ${{ secrets.GH_TOKEN }}
       - name: Checkout actions
         uses: actions/checkout@v2
         with:

@@ -22,6 +22,16 @@ your feature is not small, try to make it optional. If your feature is
 not feasible on all platforms, make provisions for C-core to work fine
 without it on other platforms.
 
+#### Acceptance tests development workflow
+
+If you want to add or modify acceptance tests, it’s recommended to use
+included Docker and docker-compose files.
+
+Change of the `origin` within the `steps` files is required.
+`pn.set_origin(“localhost”);` for GitHub Actions CI workflow 
+`pn.set_origin(“mock_server”);` for local development using Docker
+
+Mock server endpoints will be available from the local machine (localhost:port_assigned_dynamically)
 #### General coding guidelines for PRs
 
 For C, use C89 for code, but it's OK to use C11 libraries that use only

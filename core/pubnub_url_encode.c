@@ -10,40 +10,46 @@
 
 int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum pubnub_trans pt)
 {
+    char *okSpanChars;
     int i = 0;
 
     PUBNUB_ASSERT_OPT(buffer != NULL);
     PUBNUB_ASSERT_OPT(what != NULL);
 
+    switch(pt){
+#if PUBNUB_USE_OBJECTS_API || PUBNUB_USE_REVOKE_TOKEN_API
+#if PUBNUB_USE_OBJECTS_API
+    case PBTT_GETALL_UUIDMETADATA :
+    case PBTT_SET_UUIDMETADATA:
+    case PBTT_GET_UUIDMETADATA:
+    case PBTT_GETALL_CHANNELMETADATA:
+    case PBTT_SET_CHANNELMETADATA:
+    case PBTT_GET_CHANNELMETADATA:
+    case PBTT_GET_MEMBERSHIPS:
+    case PBTT_SET_MEMBERSHIPS:
+    case PBTT_REMOVE_MEMBERSHIPS:
+    case PBTT_GET_MEMBERS:
+    case PBTT_ADD_MEMBERS:
+    case PBTT_SET_MEMBERS:
+    case PBTT_REMOVE_MEMBERS:
+    case PBTT_MESSAGE_COUNTS:
+#endif // PUBNUB_USE_OBJECTS_API
+#if PUBNUB_USE_REVOKE_TOKEN_API
+    case PBTT_REVOKE_TOKEN:
+#endif // PUBNUB_USE_REVOKE_TOKEN_API
+        okSpanChars = OK_SPAN_CHARS_MINUS_COMMA;
+        break;
+#endif // PUBNUB_USE_OBJECTS_API || PUBNUB_USE_REVOKE_TOKEN_API
+    default:
+        okSpanChars = OK_SPAN_CHARACTERS;
+    }
+
     *buffer='\0';
     while (what[0]) {
         /* RFC 3986 Unreserved characters plus few
          * safe reserved ones. */
-        size_t okspan;
-#if PUBNUB_USE_OBJECTS_API
-        switch(pt){
-        case PBTT_GETALL_UUIDMETADATA :
-        case PBTT_SET_UUIDMETADATA:
-        case PBTT_GET_UUIDMETADATA:
-        case PBTT_GETALL_CHANNELMETADATA:
-        case PBTT_SET_CHANNELMETADATA:
-        case PBTT_GET_CHANNELMETADATA:
-        case PBTT_GET_MEMBERSHIPS:
-        case PBTT_SET_MEMBERSHIPS:
-        case PBTT_REMOVE_MEMBERSHIPS:
-        case PBTT_GET_MEMBERS:
-        case PBTT_ADD_MEMBERS:
-        case PBTT_SET_MEMBERS:
-        case PBTT_REMOVE_MEMBERS:
-        case PBTT_MESSAGE_COUNTS:
-            okspan = strspn(what, OK_SPAN_CHARS_MINUS_COMMA);
-            break;
-        default:
-            okspan = strspn(what, OK_SPAN_CHARACTERS);
-        }
-#else
-        okspan = strspn(what, OK_SPAN_CHARACTERS);
-#endif
+        size_t okspan = strspn(what, okSpanChars);
+
         if (okspan > 0) {
             if (okspan >= (unsigned)(buffer_size - i - 1)) {
                 PUBNUB_LOG_ERROR("Error:|Url-encoded string is longer than permited.\n"

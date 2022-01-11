@@ -26,7 +26,7 @@ extern "C" {
 #if PUBNUB_USE_ACTIONS_API
 #include "core/pbcc_actions_api.h"
 #endif
-#if PUBNUB_USE_GRANT_TOKEN
+#if PUBNUB_USE_PAM_V3
 #include "core/pbcc_grant_token_api.h"
 #endif
 }

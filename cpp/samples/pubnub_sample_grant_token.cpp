@@ -14,7 +14,6 @@
    standard "feature test" macro, hopefully your compiler has
    implemented it correctly.
  */
-#define PUBNUB_USE_GRANT_TOKEN_API 1
 
 int main()
 {

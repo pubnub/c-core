@@ -64,6 +64,7 @@ jobs:
         run: |
           mv sdk-specifications/features/access features
           sudo python3 run_contract_tests.py features/access/grant-token.feature
+          sudo python3 run_contract_tests.py features/access/revoke-token.feature
           ls -la results
       - name: Upload acceptance tests reports
         if: always()

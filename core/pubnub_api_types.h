@@ -123,6 +123,8 @@ enum pubnub_res {
     PNR_ACTIONS_API_ERROR,
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
+    /** Revoke Token API transaction reported an error */
+    PNR_REVOKE_TOKEN_API_ERROR,
     /** Access/Permission denied */
     PNR_ACCESS_DENIED,
     /** No Channels in the ChannelGroup */
@@ -262,6 +264,11 @@ enum pubnub_trans {
       */
     PBTT_GRANT_TOKEN,
 #endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_REVOKE_TOKEN_API
+    /** PAMv3 Revoke API transaction revokes the PAMv3 token .
+      */
+    PBTT_REVOKE_TOKEN,
+#endif /* PUBNUB_USE_REVOKE_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX
 };

@@ -3403,9 +3403,9 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     pubnub_set_uuid(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
-                             "chgr4]&uuid=admin&auth=msgs");
+    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0"
+                            "/0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,chgr4]"
+                            "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n[[],\"3516149789251234578\"]",
              NULL);
@@ -3430,8 +3430,8 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     /* Renewing DNS resolution and reestablishing connection */
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
-                             "3516149789251234578?pnsdk=unit-test-0.1&channel-"
-                             "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
+                             "3516149789251234578?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,chgr4]"
+                             "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "150\r\n\r\n[[msg1,msg2,{\"text\":\"Hello "
              "World!\"},msg4,msg5,{\"key\":\"val\\ue\"}],"
