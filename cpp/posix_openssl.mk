@@ -126,6 +126,9 @@ openssl/pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(SYNC_INTF
 openssl/pubnub_sync_grant_sample: samples/pubnub_sample_grant_token.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_sample_grant_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
+openssl/pubnub_sync_revoke_sample: samples/pubnub_sample_revoke_token.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
+	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_sample_revoke_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
+
 openssl/cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES)  pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/cancel_subscribe_sync_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
