@@ -20,6 +20,9 @@
 #include <ctype.h>
 #include <string.h>
 #include "lib/base64/pbbase64.h"
+#ifdef _MSC_VER
+#define strdup(p) _strdup(p)
+#endif
 
 enum grant_bit_flag { 
     PERM_READ = 1

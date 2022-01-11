@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef _MSC_VER
+#define strdup(p) _strdup(p)
+#endif
+
 static void generate_uuid(pubnub_t* pbp)
 {
     char const*                      uuid_default = "zeka-peka-iz-jendeka";
@@ -205,7 +209,11 @@ int main()
     }
 
     time(&t0);
-    sleep(70);
+    #ifdef _WIN32
+    Sleep(70000); //70 seconds
+    #else
+    sleep(70); //70 seconds
+    #endif
     printf("Slept for %lf seconds.\n", difftime(time(NULL), t0));
     puts("Publishing after revoke...");
     time(&t0);
