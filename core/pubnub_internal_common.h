@@ -59,6 +59,10 @@
 #define PUBNUB_USE_GRANT_TOKEN_API 0
 #endif
 
+#if !defined(PUBNUB_USE_REVOKE_TOKEN_API)
+#define PUBNUB_USE_REVOKE_TOKEN_API 0
+#endif
+
 #if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
 #define PUBNUB_USE_AUTO_HEARTBEAT 0
 #endif

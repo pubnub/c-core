@@ -144,3 +144,27 @@ WHEN("^I parse the token$")
     pn.set_secret_key(context->secKey);
     context->parsedToken = pn.parse_token(context->token);
 }
+
+
+WHEN("^I revoke a token$")
+{
+    ScenarioScope<Ctx> context;
+    pubnub::context    pn(context->pubKey, context->subKey);
+
+    pn.set_origin("localhost");
+    pn.set_port(8090);
+    pn.set_secret_key(context->secKey);
+    pn.set_blocking_io(pubnub::non_blocking);
+    pn.set_secret_key(context->secKey);
+
+    pubnub::futres  futgres = pn.revoke_token(context->token);
+    enum pubnub_res res     = futgres.await();
+
+    if(res == PNR_OK)
+      context->revokeTokenResult     = pn.get_revoke_token_result();
+    else
+    {
+      context->statusCode   = pn.last_http_code();
+      context->errorMessage = pn.last_http_response_body();
+    }
+}

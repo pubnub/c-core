@@ -37,6 +37,10 @@ ifndef USE_AUTO_HEARTBEAT
 USE_AUTO_HEARTBEAT = 1
 endif
 
+ifndef USE_REVOKE_TOKEN
+USE_REVOKE_TOKEN = 1
+endif
+
 ifndef USE_GRANT_TOKEN
 USE_GRANT_TOKEN = 1
 endif
@@ -95,7 +99,12 @@ SOURCEFILES += ../core/pubnub_fetch_history.c ../core/pbcc_fetch_history.c
 OBJFILES += pubnub_fetch_history.o pbcc_fetch_history.o  
 endif
 
-CFLAGS =-g -I .. -I . -I ../openssl -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
+ifeq ($(USE_REVOKE_TOKEN), 1)
+SOURCEFILES += ../core/pubnub_revoke_token_api.c ../core/pbcc_revoke_token_api.c
+OBJFILES += pubnub_revoke_token_api.o pbcc_revoke_token_api.o
+endif
+
+CFLAGS =-g -I .. -I . -I ../openssl -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
 # -g enables debugging, remove to get a smaller executable
 
 OS := $(shell uname)
@@ -125,6 +134,9 @@ openssl/pubnub_sync_sample: samples/pubnub_sample.cpp $(SOURCEFILES) $(SYNC_INTF
 
 openssl/pubnub_sync_grant_sample: samples/pubnub_sample_grant_token.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_sample_grant_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
+
+openssl/pubnub_sync_revoke_sample: samples/pubnub_sample_revoke_token.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
+	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_sample_revoke_token.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
 openssl/cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES)  pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/cancel_subscribe_sync_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)

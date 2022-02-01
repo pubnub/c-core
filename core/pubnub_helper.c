@@ -80,6 +80,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_ACCESS_DENIED: return "Access/Permission denied";
     case PNR_GRANT_TOKEN_API_ERROR: return "Grant Token API reported error";
     case PNR_FETCH_HISTORY_ERROR: return "Fetch History API reported error";
+    case PNR_REVOKE_TOKEN_API_ERROR: return "Revoke Token API reported error";
     case PNR_GROUP_EMPTY: return "Channel Group is empty";
     default: return "!?!?!";
     }
@@ -160,6 +161,17 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e)
     case PNR_ACCESS_DENIED: return pbccFalse; /* Permission issue. Check the error reported */
     case PNR_GRANT_TOKEN_API_ERROR: return pbccFalse; /* Check the error reported */
     case PNR_FETCH_HISTORY_ERROR: return pbccFalse; /* Check the error reported */
+    case PNR_REVOKE_TOKEN_API_ERROR: return pbccFalse; /* Check the error reported */
+    default:
+        return pbccFalse;
     }
-    return pbccFalse;
+}
+
+char* replace_char(char* str, char find, char replace){
+    char *current_pos = strchr(str, find);
+    while (current_pos) {
+        *current_pos = replace;
+        current_pos = strchr(current_pos, find);
+    }
+    return str;
 }

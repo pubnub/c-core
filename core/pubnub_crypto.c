@@ -575,6 +575,7 @@ enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char con
 
 enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature) {
     enum pubnub_res sign_status = PNR_OK;
+    bool hasBody = false;
     char* method_verb;
     switch (p->method) {
     case pubnubSendViaGET:
@@ -585,12 +586,14 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
     case pubnubSendViaPOSTwithGZIP:
 #endif
         method_verb = (char*)"POST";
+        hasBody = true;
         break;
     case pubnubUsePATCH:
 #if PUBNUB_USE_GZIP_COMPRESSION
     case pubnubUsePATCHwithGZIP:
 #endif
         method_verb = (char*)"PATCH";
+        hasBody = true;
         break;
     case pubnubUseDELETE:
         method_verb = (char*)"DELETE";
@@ -600,10 +603,15 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
         method_verb = (char*)"UNKOWN";
         return PNR_CRYPTO_NOT_SUPPORTED;
     }
-    int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + strlen(msg);
+    int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + (hasBody ? strlen(msg) : 0);
     char* str_to_sign = (char*)malloc(sizeof(char) * (str_to_sign_len + 1));
     if (str_to_sign != NULL) {
-        sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
+        if (hasBody) {
+            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
+        }
+        else {
+            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n", method_verb, p->core.publish_key, partial_url, qs_to_sign);
+        }
     }
     PUBNUB_LOG_DEBUG("\nv3 str_to_sign = %s\n", str_to_sign);
     char* part_sign = (char*)"";

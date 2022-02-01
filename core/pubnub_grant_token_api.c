@@ -5,6 +5,7 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
+#include "core/pubnub_helper.h"
 #include "core/pubnub_log.h"
 #include "lib/pb_strnlen_s.h"
 #include "core/pbcc_grant_token_api.h"
@@ -19,6 +20,9 @@
 #include <ctype.h>
 #include <string.h>
 #include "lib/base64/pbbase64.h"
+#ifdef _MSC_VER
+#define strdup(p) _strdup(p)
+#endif
 
 enum grant_bit_flag { 
     PERM_READ = 1
@@ -95,21 +99,13 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
     return result;
 }
 
-char* replace_char(char* str, char find, char replace){
-    char *current_pos = strchr(str, find);
-    while (current_pos) {
-        *current_pos = replace;
-        current_pos = strchr(current_pos, find);
-    }
-    return str;
-}
-
 char* pubnub_parse_token(pubnub_t* pb, char const* token){
-    char const * refine1 = replace_char((char*)token, '_', '/');
-    char const * refine2 = replace_char((char*)refine1, '-', '+');
+    char * rawToken = strdup(token);
+    replace_char((char*)rawToken, '_', '/');
+    replace_char((char*)rawToken, '-', '+');
 
     pubnub_bymebl_t decoded;
-    decoded = pbbase64_decode_alloc_std_str(refine2);
+    decoded = pbbase64_decode_alloc_std_str(rawToken);
     #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
     PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
     for (size_t i = 0; i < decoded.size; i++) {
@@ -125,34 +121,16 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     CborParser parser;
     CborValue it;
     
-    char * json_result = (char*)malloc(5*(strlen(refine2)/4));
+    char * json_result = (char*)malloc(5*(strlen(rawToken)/4));
     sprintf(json_result, "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
     if (!err){
         data_recursion(&it, 1, json_result);
     }
+    free(rawToken);
     return json_result;
 }
 
-void pubnub_set_auth_token(pubnub_t* pb, const char* token)
-{
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    pubnub_mutex_lock(pb->monitor);
-    pbcc_set_auth_token(&pb->core, token);
-    pubnub_mutex_unlock(pb->monitor);
-}
-
-char const* pubnub_auth_token_get(pubnub_t* pb)
-{
-    char const* result;
-    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-
-    pubnub_mutex_lock(pb->monitor);
-    result = pb->core.auth_token;
-    pubnub_mutex_unlock(pb->monitor);
-
-    return result;
-}
 
 static int currentNestLevel = 0;
 static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result)

@@ -1,0 +1,16 @@
+version: "3"
+services:
+  cucumber:
+    build:
+      context: .
+      args:
+        SUB_KEY: "SUB_KEY"
+        PUB_KEY: "PUB_KEY"
+        SEC_KEY: "SEC_KEY"
+        MOCK_SERVER_DOCKER": "mock_server"
+    depends_on:
+      - "mock_server"
+  mock_server: 
+    ports:
+        - "8090"
+    image: pubnub-service-contract

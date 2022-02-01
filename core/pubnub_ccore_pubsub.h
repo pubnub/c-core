@@ -172,6 +172,14 @@ struct pbcc_context {
         }                                                                      \
     }
 
+#define APPEND_URL_ENCODED_M_TRANS(tr, pbc, what)                                        \
+    if ((what) != NULL) {                                                      \
+        enum pubnub_res rslt_ = pbcc_url_encode((pbc), (what), tr);     \
+        if (rslt_ != PNR_OK) {                                                 \
+            return rslt_;                                                      \
+        }                                                                      \
+    }
+
 #define APPEND_URL_PARAM_ENCODED_M(pbc, name, var, separator)                  \
     if ((var) != NULL) {                                                       \
         const char* param_ = name;                                             \

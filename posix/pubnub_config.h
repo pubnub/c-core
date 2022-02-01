@@ -211,6 +211,10 @@
 #define PUBNUB_USE_GRANT_TOKEN_API 1
 #endif
 
+#if !defined(PUBNUB_USE_REVOKE_TOKEN_API)
+/** If true (!=0) will enable using the Revoke Token API */
+#define PUBNUB_USE_REVOKE_TOKEN_API 1
+#endif
 
 #if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
 /** If true (!=0) will enable using the Auto Heartbeat Thumps(beats), which is a feature

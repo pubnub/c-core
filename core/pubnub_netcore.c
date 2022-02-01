@@ -27,6 +27,9 @@
 #if PUBNUB_USE_GRANT_TOKEN_API
 #include "core/pbcc_grant_token_api.h"
 #endif
+#if PUBNUB_USE_REVOKE_TOKEN_API
+#include "core/pbcc_revoke_token_api.h"
+#endif
 #include "core/pubnub_proxy_core.h"
 
 #include <string.h>
@@ -321,6 +324,9 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
 #if PUBNUB_USE_FETCH_HISTORY
     , pbcc_parse_fetch_history_response /* PBTT_FETCH_HISTORY */
 #endif
+#if PUBNUB_USE_REVOKE_TOKEN_API
+    , pbcc_parse_revoke_token_response /* PBTT_REVOKE_TOKEN */
+#endif /* PUBNUB_USE_REVOKE_TOKEN_API */
 #endif /* PUBNUB_ONLY_PUBSUB_API */
 };
 

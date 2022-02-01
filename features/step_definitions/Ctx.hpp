@@ -14,6 +14,7 @@ struct Ctx {
     std::vector<std::shared_ptr<NameTypeAndGrants>> grants;
     std::shared_ptr<NameTypeAndGrants>              currentGrant;
     std::string                                     parsedToken;
+    std::string                                     revokeTokenResult;
     std::string                                     token;
     int                                             currentResourceGrants;
     std::string                                     authorizedUUID;

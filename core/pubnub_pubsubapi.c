@@ -260,6 +260,25 @@ char const* pubnub_auth_get(pubnub_t* pb)
     return result;
 }
 
+void pubnub_set_auth_token(pubnub_t* pb, const char* token)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    pubnub_mutex_lock(pb->monitor);
+    pbcc_set_auth_token(&pb->core, token);
+    pubnub_mutex_unlock(pb->monitor);
+}
+
+char const* pubnub_auth_token_get(pubnub_t* pb)
+{
+    char const* result;
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    result = pb->core.auth_token;
+    pubnub_mutex_unlock(pb->monitor);
+
+    return result;
+}
 
 int pubnub_last_http_code(pubnub_t* pb)
 {

@@ -36,3 +36,5 @@
 # GitHub Actions #
 ##################
 .github/.release
+
+.idea
