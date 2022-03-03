@@ -396,14 +396,24 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
 
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 {
-    int         error;
-    uint16_t    port = HTTP_PORT;
-    char const* origin;
+    int              error;
+    uint16_t         port = HTTP_PORT;
+    char const*      origin;
+    char             port_string[20];
+    struct addrinfo* result;
+    struct addrinfo* it;
+    struct addrinfo  hint;
 
-#ifdef PUBNUB_CALLBACK_API
-    sockaddr_inX_t dest = { 0 };
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_family   = AF_UNSPEC;
+    hint.ai_protocol = hint.ai_flags = hint.ai_addrlen = 0;
+    hint.ai_addr                                       = NULL;
+    hint.ai_canonname                                  = NULL;
+    hint.ai_next                                       = NULL;
 
     prepare_port_and_hostname(pb, &port, &origin);
+
+#ifdef PUBNUB_CALLBACK_API
 #if PUBNUB_PROXY_API
     if (0 != pb->proxy_ipv4_address.ipv4[0]) {
         struct sockaddr_in dest = { 0 };
@@ -440,48 +450,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         }
     }
 #endif
-#if PUBNUB_CHANGE_DNS_SERVERS
-    get_dns_ip(&pb->dns_check, (struct sockaddr*)&dest);
-#else
-    get_dns_ip((struct sockaddr*)&dest);
-#endif
-    if (SOCKET_INVALID == pb->pal.socket) {
-        pb->pal.socket =
-            socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
-    }
-    if (SOCKET_INVALID == pb->pal.socket) {
-        return pbpal_resolv_resource_failure;
-    }
-    pb->options.use_blocking_io = false;
-    pbpal_set_blocking_io(pb);
-    error =
-        send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, origin, QUERY_TYPE);
-    if (error < 0) {
-#if PUBNUB_CHANGE_DNS_SERVERS
-        check_dns_server_error(&pb->dns_check, &pb->flags);
-        if_no_retry_close_socket(&pb->pal.socket, &pb->flags);
-#endif
-        return pbpal_resolv_failed_send;
-    }
-    else if (error > 0) {
-        return pbpal_resolv_send_wouldblock;
-    }
-    pb->flags.sent_queries++;
-    
-    return pbpal_resolv_sent;
-
-#else
-    char             port_string[20];
-    struct addrinfo* result;
-    struct addrinfo* it;
-    struct addrinfo  hint;
-
-    hint.ai_socktype = SOCK_STREAM;
-    hint.ai_family   = AF_UNSPEC;
-    hint.ai_protocol = hint.ai_flags = hint.ai_addrlen = 0;
-    hint.ai_addr                                       = NULL;
-    hint.ai_canonname                                  = NULL;
-    hint.ai_next                                       = NULL;
+#endif /* PUBNUB_CALLBACK_API */
 
     prepare_port_and_hostname(pb, &port, &origin);
     snprintf(port_string, sizeof port_string, "%hu", port);
@@ -521,7 +490,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     socket_disable_SIGPIPE(pb->pal.socket);
 
     return error ? pbpal_connect_wouldblock : pbpal_connect_success;
-#endif /* PUBNUB_CALLBACK_API */
 }
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
