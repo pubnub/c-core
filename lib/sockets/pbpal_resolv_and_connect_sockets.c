@@ -411,8 +411,6 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     hint.ai_canonname                                  = NULL;
     hint.ai_next                                       = NULL;
 
-    prepare_port_and_hostname(pb, &port, &origin);
-
 #ifdef PUBNUB_CALLBACK_API
 #if PUBNUB_PROXY_API
     if (0 != pb->proxy_ipv4_address.ipv4[0]) {
