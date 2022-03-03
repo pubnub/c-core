@@ -307,8 +307,8 @@ struct pbcc_context {
 
 #define ADD_TS_TO_URL_PARAM()                                               \
     time_t epoch_time = time(NULL);                                         \
+    char timestamp[16];                                                     \
     if (epoch_time > 0) {                                                   \
-        char timestamp[16];                                                 \
         sprintf(timestamp, "%lld", (long long)epoch_time);                  \
         ADD_URL_PARAM(qparam, timestamp, timestamp);                        \
     }
