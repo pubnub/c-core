@@ -274,7 +274,9 @@ struct pbcc_context {
     struct name##_data name[(size)];                                           \
     memset(&name, 0, sizeof(struct name##_data) * (size));                     \
     char name##_index = 0;                                                     \
-    int name##_count = 0;
+    int name##_count = 0;                                                      \
+    char name##_val_str[21];                                                   \
+    (void)name##_val_str;
 
 #define ADD_URL_PARAM(name, key, value)                                     \
     name[(int)(name##_index)].param_key = #key;                             \
@@ -288,15 +290,14 @@ struct pbcc_context {
 
 #define ADD_URL_PARAM_SIZET(name, key, value)                               \
     int val_len = snprintf(NULL, 0, "%lu", value);                          \
-    char val_str[21];                                                       \
     if (val_len >= 21) {                                                    \
         PUBNUB_LOG_ERROR("Error: in ADD_URL_PARAM_SIZET:\n");               \
         return PNR_TX_BUFF_TOO_SMALL;                                       \
     }                                                                       \
-    snprintf(val_str, val_len + 1, "%lu", value);                           \
+    snprintf(name##_val_str, val_len + 1, "%lu", value);                    \
     name[(int)(name##_index)].param_key = #key;                             \
     name[(int)(name##_index)].key_size = sizeof(#key)-1;                    \
-    name[(int)(name##_index)].param_val = val_str;                          \
+    name[(int)(name##_index)].param_val = name##_val_str;                   \
     (int)(name##_index)++;
 
 #define ADD_URL_PARAM_TRUE_KEY(name, key, value)                          \
