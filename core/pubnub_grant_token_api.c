@@ -127,6 +127,7 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     if (!err){
         data_recursion(&it, 1, json_result);
     }
+    free(decoded.ptr);
     free(rawToken);
     return json_result;
 }
