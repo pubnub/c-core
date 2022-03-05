@@ -201,9 +201,12 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
             }
             else {
                 if (sig_flag) {
-                    char* sig_base64 = base64encode(buf, n);
+                    int max_size = base64_max_size(n);
+                    char* sig_base64 = malloc(max_size);
+                    base64encode(sig_base64, max_size, buf, n);
                     char base64_str[1000];
                     sprintf(base64_str, "\"%s\"", sig_base64);
+                    free(sig_base64);
                     strcat(json_result, base64_str);
                     sig_flag = false;
                 }

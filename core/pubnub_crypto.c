@@ -114,10 +114,21 @@ int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str
     PUBNUB_LOG_DEBUG("]\n");
     #endif
 
-    char* base64_output = base64encode(encrypted.ptr, encrypted.size);
-    result = sprintf(base64_str, "%s", base64_output);
+    int max_size = base64_max_size(encrypted.size);
+    if (*n + 1 < max_size) {
+        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
+        return -1;
+    }
+    char* base64_output = malloc(max_size);
+    if (base64encode(base64_output, max_size, encrypted.ptr, encrypted.size) != 0) {
+        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, encrypted.size);
+        free(base64_output);
+        return -1;
+    }
+    result = snprintf(base64_str, *n, "%s", base64_output);
     *n = (size_t)strlen(base64_str);
 
+    free(base64_output);
     free(encrypted.ptr);
 
     return result >= 0 ? 0 : -1;
@@ -154,9 +165,21 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
     PUBNUB_LOG_DEBUG("]\n");
     #endif
 
-    char* base64_output = base64encode(buffer.ptr, buffer.size);
-    int result = sprintf(base64_str, "%s", base64_output);
+    int max_size = base64_max_size(buffer.size);
+    if (*n + 1 < max_size) {
+        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
+        return -1;
+    }
+    char* base64_output = malloc(max_size);
+    if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
+        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
+        free(base64_output);
+        return -1;
+    }
+    int result = snprintf(base64_str, *n, "%s", base64_output);
     *n = (size_t)strlen(base64_str);
+
+    free(base64_output);
 
     return result >= 0 ? 0 : -1;
 }
@@ -498,7 +521,12 @@ unsigned char* mx_hmac_sha256(
 }
 #endif
 
-char* base64encode(const void* b64_encode_this, int encode_this_many_bytes) {
+int base64_max_size(int encode_this_many_bytes) {
+    // Base64 overhead is up to 36%, so we allocate an extra 40% + a null character
+    return (int)((float)encode_this_many_bytes * 1.4) + 1;
+}
+
+int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {
     BIO* b64_bio, * mem_bio;      //Declares two OpenSSL BIOs: a base64 filter and a memory BIO.
     BUF_MEM* mem_bio_mem_ptr;    //Pointer to a "memory BIO" structure holding our base64 data.
     b64_bio = BIO_new(BIO_f_base64());                      //Initialize our base64 filter BIO.
@@ -508,11 +536,18 @@ char* base64encode(const void* b64_encode_this, int encode_this_many_bytes) {
     BIO_write(b64_bio, b64_encode_this, encode_this_many_bytes); //Records base64 encoded data.
     BIO_flush(b64_bio);   //Flush data.  Necessary for b64 encoding, because of pad characters.
     BIO_get_mem_ptr(mem_bio, &mem_bio_mem_ptr);  //Store address of mem_bio's memory structure.
-    BIO_set_close(mem_bio, BIO_NOCLOSE);   //Permit access to mem_ptr after BIOs are destroyed.
+
+    // Ensure the provided output buffer is big enough to store the encoded result.
+    if ((*mem_bio_mem_ptr).length + 1 > max_size) {
+        BIO_free_all(b64_bio);
+        return -1;
+    }
+    // Copy from the "memory BIO" (whatever that is) to the provided result pointer.
+    memcpy(result, (*mem_bio_mem_ptr).data, (*mem_bio_mem_ptr).length);
+    result[(*mem_bio_mem_ptr).length] = '\0';
+
     BIO_free_all(b64_bio);  //Destroys all BIOs in chain, starting with b64 (i.e. the 1st one).
-    BUF_MEM_grow(mem_bio_mem_ptr, (*mem_bio_mem_ptr).length + 1);   //Makes space for end null.
-    (*mem_bio_mem_ptr).data[(*mem_bio_mem_ptr).length] = '\0';  //Adds null-terminator to tail.
-    return (*mem_bio_mem_ptr).data; //Returns base-64 encoded data. (See: "buf_mem_st" struct).
+    return 0;
 }
 
 char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
@@ -536,7 +571,13 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
         PUBNUB_LOG_DEBUG("hmac_sha256 result len %d is low\n", bytes_to_encode);
         return NULL;
     }
-    char* base64_encoded = base64encode(result, bytes_to_encode); //Base-64 encoding.
+    int max_size = base64_max_size(bytes_to_encode);
+    char* base64_encoded = malloc(max_size);
+    if (base64encode(base64_encoded, max_size, result, bytes_to_encode) != 0) {
+        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %d bytes\n", max_size, bytes_to_encode);
+        free(base64_encoded);
+        return NULL;
+    }
     int counter = 0;
     while (base64_encoded[counter] != '\0') {
         if (base64_encoded[counter] == '+') {
@@ -570,6 +611,7 @@ enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char con
     if (sign_status == PNR_OK) {
         sprintf(signature, "%s", part_sign);
     }
+    free(part_sign);
     return sign_status;
 }
 
@@ -630,6 +672,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
         }
         sprintf(signature, "v2.%s", part_sign);
     }
+    free(part_sign);
     return sign_status;
 }
 
