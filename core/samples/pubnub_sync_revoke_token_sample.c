@@ -126,18 +126,21 @@ int main()
     char* authorized_uuid = "my_authorized_uuid";
     sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"%s\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, chan, perm_hello_world, perm_channel_group);
     res = pubnub_grant_token(gtp, perm_obj);
-    pubnub_chamebl_t grant_token_resp;
+    char* grant_token = NULL;
     if (PNR_STARTED == res) {
         res = pubnub_await(gtp);
         if (PNR_OK == res) {
             //const char* grant_token_resp_json = pubnub_get(gtp);
             //printf("pubnub_grant_token() JSON Response from Pubnub: %s\n", grant_token_resp_json);
             // OR below code
+            pubnub_chamebl_t grant_token_resp;
             grant_token_resp = pubnub_get_grant_token(gtp);
-            printf("pubnub_grant_token() Response from Pubnub: %s\n", grant_token_resp.ptr);
+            grant_token = strdup(grant_token_resp.ptr);
+            printf("pubnub_grant_token() Response from Pubnub: %s\n", grant_token);
 
-            char* cbor_data = pubnub_parse_token(gtp, grant_token_resp.ptr);
+            char* cbor_data = pubnub_parse_token(gtp, grant_token);
             printf("pubnub_parse_token() = %s\n", cbor_data);
+            free(cbor_data);
         }
         else{
             printf("pubnub_grant_token() failed with code: %d('%s')\n",
@@ -151,9 +154,12 @@ int main()
                pubnub_res_2_string(res));
     }
 
-    char* auth_token = strdup(grant_token_resp.ptr);
+    if (grant_token == NULL) {
+        return 1;
+    }
+
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
-    pubnub_set_auth_token(pbp, strdup(grant_token_resp.ptr));
+    pubnub_set_auth_token(pbp, grant_token);
     pubnub_set_transaction_timeout(gtp, PUBNUB_DEFAULT_SUBSCRIBE_TIMEOUT);
 
 
@@ -188,7 +194,7 @@ int main()
 
     puts("Revoking token...");
     time(&t0);
-    res = pubnub_revoke_token(gtp, auth_token);
+    res = pubnub_revoke_token(gtp, grant_token);
     if (PNR_STARTED == res) {
         res = pubnub_await(gtp);
     }
@@ -239,6 +245,7 @@ int main()
 
     /* We're done, but, keep-alive might be on, so we need to cancel,
      * then free */
+    free(grant_token);
     sync_sample_free(pbp);
     sync_sample_free(gtp);
 
