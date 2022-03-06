@@ -21,6 +21,6 @@ char const *pubnub_version(void)
 
 char const *pubnub_uname(void)
 {
-    return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION;
+    return PUBNUB_SDK_NAME "/" PUBNUB_SDK_VERSION;
 }
 
