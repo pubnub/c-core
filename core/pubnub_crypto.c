@@ -119,7 +119,7 @@ int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str
         PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
         return -1;
     }
-    char* base64_output = malloc(max_size);
+    char* base64_output = (char*)malloc(max_size);
     if (base64encode(base64_output, max_size, encrypted.ptr, encrypted.size) != 0) {
         PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, encrypted.size);
         free(base64_output);
@@ -170,7 +170,7 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
         PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
         return -1;
     }
-    char* base64_output = malloc(max_size);
+    char* base64_output = (char*)malloc(max_size);
     if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
         PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
         free(base64_output);
@@ -572,7 +572,7 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
         return NULL;
     }
     int max_size = base64_max_size(bytes_to_encode);
-    char* base64_encoded = malloc(max_size);
+    char* base64_encoded = (char*)malloc(max_size);
     if (base64encode(base64_encoded, max_size, result, bytes_to_encode) != 0) {
         PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %d bytes\n", max_size, bytes_to_encode);
         free(base64_encoded);
