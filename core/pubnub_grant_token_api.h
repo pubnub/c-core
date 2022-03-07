@@ -55,6 +55,4 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb);
 
 char* pubnub_parse_token(pubnub_t* pb, char const* token);
 
-static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result);
-
 #endif /* !defined INC_PUBNUB_GRANT_TOKEN_API */

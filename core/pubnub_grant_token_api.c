@@ -99,40 +99,6 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
     return result;
 }
 
-char* pubnub_parse_token(pubnub_t* pb, char const* token){
-    char * rawToken = strdup(token);
-    replace_char((char*)rawToken, '_', '/');
-    replace_char((char*)rawToken, '-', '+');
-
-    pubnub_bymebl_t decoded;
-    decoded = pbbase64_decode_alloc_std_str(rawToken);
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
-    for (size_t i = 0; i < decoded.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", decoded.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-    #endif
-
-    size_t length;
-    uint8_t *buf = decoded.ptr;
-    length = decoded.size;
-
-    CborParser parser;
-    CborValue it;
-    
-    char * json_result = (char*)malloc(5*(strlen(rawToken)/4));
-    sprintf(json_result, "%s", "");
-    CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
-    if (!err){
-        data_recursion(&it, 1, json_result);
-    }
-    free(decoded.ptr);
-    free(rawToken);
-    return json_result;
-}
-
-
 static int currentNestLevel = 0;
 static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result)
 {
@@ -308,4 +274,37 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
     }
 
     return CborNoError;
+}
+
+char* pubnub_parse_token(pubnub_t* pb, char const* token){
+    char * rawToken = strdup(token);
+    replace_char((char*)rawToken, '_', '/');
+    replace_char((char*)rawToken, '-', '+');
+
+    pubnub_bymebl_t decoded;
+    decoded = pbbase64_decode_alloc_std_str(rawToken);
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
+    for (size_t i = 0; i < decoded.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", decoded.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    size_t length;
+    uint8_t *buf = decoded.ptr;
+    length = decoded.size;
+
+    CborParser parser;
+    CborValue it;
+    
+    char * json_result = (char*)malloc(5*(strlen(rawToken)/4));
+    sprintf(json_result, "%s", "");
+    CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
+    if (!err){
+        data_recursion(&it, 1, json_result);
+    }
+    free(decoded.ptr);
+    free(rawToken);
+    return json_result;
 }
