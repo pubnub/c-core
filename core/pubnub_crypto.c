@@ -115,7 +115,7 @@ int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str
     #endif
 
     int max_size = base64_max_size(encrypted.size);
-    if (*n + 1 < max_size) {
+    if (*n + 1 < (size_t)max_size) {
         PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
         return -1;
     }
@@ -166,7 +166,7 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
     #endif
 
     int max_size = base64_max_size(buffer.size);
-    if (*n + 1 < max_size) {
+    if (*n + 1 < (size_t)max_size) {
         PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
         return -1;
     }
@@ -538,7 +538,7 @@ int base64encode(char* result, int max_size, const void* b64_encode_this, int en
     BIO_get_mem_ptr(mem_bio, &mem_bio_mem_ptr);  //Store address of mem_bio's memory structure.
 
     // Ensure the provided output buffer is big enough to store the encoded result.
-    if ((*mem_bio_mem_ptr).length + 1 > max_size) {
+    if ((*mem_bio_mem_ptr).length + 1 > (size_t)max_size) {
         BIO_free_all(b64_bio);
         return -1;
     }
