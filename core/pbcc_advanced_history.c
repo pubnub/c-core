@@ -249,11 +249,13 @@ int pbcc_get_message_counts(struct pbcc_context* p, char const* channel, int* o_
         ch_end = (char*)pbjson_find_end_element(ch_start++, end);
         len = ch_end - ch_start;
         for (i = 0; i < n ; i++) {
-            ptr_ch = channel - o_count[i] - 1;
-            /* Comparing channel name found in response message with name from 'channel' list. */
-            if ((memcmp(ptr_ch, ch_start, len) == 0) &&
-                ((' ' == *(ptr_ch + len)) || (',' == *(ptr_ch + len)) || ('\0' == *(ptr_ch + len)))) {
-                break;
+            if (o_count[i] < 0) {
+                ptr_ch = channel - o_count[i] - 1;
+                /* Comparing channel name found in response message with name from 'channel' list. */
+                if ((memcmp(ptr_ch, ch_start, len) == 0) &&
+                    ((' ' == *(ptr_ch + len)) || (',' == *(ptr_ch + len)) || ('\0' == *(ptr_ch + len)))) {
+                    break;
+                }
             }
         }
         if (i == n) {

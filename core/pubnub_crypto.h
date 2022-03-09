@@ -142,9 +142,22 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
 */
 enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
 
-char* base64encode(const void* b64_encode_this, int encode_this_many_bytes);
+/** Get the buffer size required to encode an array with the given
+    number of bytes.
+*/
+int base64_max_size(int encode_this_many_bytes);
 
+/** Base64 encoding. Returns non-zero when the provided buffer is too small
+    to hold the encoded string.
+*/
+int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes);
+
+/** Cryptographic message signing for PAM.
+
+    The caller is responsible for freeing the returned pointer.
+*/
 char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
+
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
 enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
 #endif /* defined INC_PUBNUB_CRYPTO */

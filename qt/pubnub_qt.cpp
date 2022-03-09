@@ -1647,7 +1647,7 @@ extern "C" char const* pubnub_sdk_name()
 
 extern "C" char const* pubnub_uname()
 {
-    return PUBNUB_SDK_NAME "%2F" PUBNUB_SDK_VERSION;
+    return PUBNUB_SDK_NAME "/" PUBNUB_SDK_VERSION;
 }
 
 extern "C" char const* pubnub_version()

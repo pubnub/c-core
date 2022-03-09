@@ -1,3 +1,11 @@
+## v3.4.1
+March 09 2022
+
+#### Fixed
+- Support system name servers in async DNS client.
+- Fix multiple memory safety and leak issues.
+- Fix slash char encoding for pnsdk.
+
 ## v3.4.0
 January 11 2022
 
