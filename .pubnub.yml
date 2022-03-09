@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "3.4.0"
+version: "3.4.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-03-09
+    version: v3.4.1
+    changes:
+      - type: bug
+        text: "Support system name servers in async DNS client."
+      - type: bug
+        text: "Fix multiple memory safety and leak issues."
+      - type: bug
+        text: "Fix slash char encoding for pnsdk."
   - date: 2022-01-11
     version: v3.4.0
     changes:
@@ -599,7 +608,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -665,7 +674,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -731,7 +740,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -793,7 +802,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -854,7 +863,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -910,7 +919,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
@@ -963,7 +972,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.1
             requires:
               -
                 name: "miniz"
