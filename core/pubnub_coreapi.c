@@ -9,7 +9,7 @@
 #include "pubnub_memory_block.h"
 
 #include "pbpal.h"
-
+#include "pubnub_log.h"
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -297,6 +297,10 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
+        if (rslt == PNR_STARTED){
+            pb->core.state = state;
+        }
+        PUBNUB_LOG_DEBUG("pubnub_set_state. rslt =%d(%s); pb->state=%d(%s)\n", rslt, pubnub_res_2_string(rslt), pb->state, pubnub_res_2_string(pb->state));
     }
 
     pubnub_mutex_unlock(pb->monitor);

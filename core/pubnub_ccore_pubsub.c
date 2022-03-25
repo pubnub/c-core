@@ -650,6 +650,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (p->state) {ADD_URL_PARAM(qparam, state, p->state)}
 #if PUBNUB_CRYPTO_API
     if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
