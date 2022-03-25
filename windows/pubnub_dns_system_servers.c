@@ -59,12 +59,11 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
     }
     else {
         PUBNUB_LOG_ERROR("GetNetworkParams failed with error: %d\n", dwRetVal);
+        FREE(pFixedInfo);
         return -1;
     }
 
-    if (pFixedInfo) {
-        FREE(pFixedInfo);
-    }
+    FREE(pFixedInfo);
 
     return j;
 }

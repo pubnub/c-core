@@ -46,6 +46,9 @@ static void generate_uuid(pubnub_t* pbp)
 
 static void wait_useconds(unsigned long time_in_microseconds)
 {
+    double d_time = (double)time_in_microseconds / (1000000.0 / (double)CLOCKS_PER_SEC);
+    time_in_microseconds = (unsigned long)d_time;
+
     clock_t  start = clock();
     unsigned long time_passed_in_microseconds;
     do {
@@ -348,6 +351,7 @@ int main(int argc, char* argv[])
     pubnub_origin_set(pbp_2, origin);
 
     publish_on_channels(pbp);
+    wait_useconds(1500000);
     /* getting last timetoken after all messages had been sent */
     get_timetoken(pbp, m_timetokens[5]);
     snprintf(string_channels,
