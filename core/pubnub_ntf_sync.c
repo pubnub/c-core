@@ -85,6 +85,15 @@ int pbntf_watch_out_events(pubnub_t* pbp)
     return 0;
 }
 
+void pbnc_tran_context(pubnub_t* pb)
+{
+    if (pb->trans == PBTT_SET_STATE)
+    {
+        PUBNUB_LOG_DEBUG("ntf_sync pbnc_tran_context. pb->trans=%d\n", pb->trans);
+        pb->core.state = pb->core.buff_state;
+        pb->core.buff_state = NULL;
+    }
+}
 
 enum pubnub_res pubnub_last_result(pubnub_t* pb)
 {
@@ -96,11 +105,13 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb)
         pbnc_fsm((pubnub_t*)pb);
     }
     result = pb->core.last_result;
+    if (result == PNR_OK){
+        pbnc_tran_context(pb);
+    }
     pubnub_mutex_unlock(pb->monitor);
 
     return result;
 }
-
 
 enum pubnub_res pubnub_await(pubnub_t* pb)
 {
@@ -130,6 +141,9 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
         }
     }
     result = pb->core.last_result;
+    if (result == PNR_OK){
+        pbnc_tran_context(pb);
+    }
     pubnub_mutex_unlock(pb->monitor);
 
     return result;

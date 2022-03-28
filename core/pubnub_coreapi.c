@@ -298,9 +298,9 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED){
-            pb->core.state = state;
+            pb->core.state = NULL;
+            pb->core.buff_state = state;
         }
-        //PUBNUB_LOG_DEBUG("pubnub_set_state. rslt =%d(%s); pb->state=%d(%s)\n", rslt, pubnub_res_2_string(rslt), pb->state, pubnub_res_2_string(pb->state));
     }
 
     pubnub_mutex_unlock(pb->monitor);
