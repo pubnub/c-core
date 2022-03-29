@@ -20,13 +20,12 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
     }
 }
 
-void pbnc_tran_context(pubnub_t* pb)
+void pbnc_tr_cxt_state_reset(pubnub_t* pb)
 {
     if (pb->trans == PBTT_SET_STATE)
     {
-        PUBNUB_LOG_DEBUG("ntf_callback pbnc_tran_context. pb->trans=%d\n", pb->trans);
-        pb->core.state = pb->core.buff_state;
-        pb->core.buff_state = NULL;
+        PUBNUB_LOG_DEBUG("ntf_callback pbnc_tr_cxt_state_reset. pb->trans=%d\n", pb->trans);
+        pb->core.state = NULL;
     }
 }
 
@@ -38,8 +37,8 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb)
 
     pubnub_mutex_lock(pb->monitor);
     rslt = pb->core.last_result;
-    if (rslt == PNR_OK){
-        pbnc_tran_context(pb);
+    if (rslt != PNR_OK){
+        pbnc_tr_cxt_state_reset(pb);
     }
     pubnub_mutex_unlock(pb->monitor);
 

@@ -12,7 +12,9 @@
 #include "pubnub_log.h"
 #include <stdlib.h>
 #include <ctype.h>
-
+#ifdef _MSC_VER
+#define strcspn(p, q) strspn(p, q)
+#endif
 
 #if PUBNUB_ONLY_PUBSUB_API
 #warning This module is not useful if configured to use only the publish and subscribe API
@@ -298,8 +300,35 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED){
-            pb->core.state = NULL;
-            pb->core.buff_state = state;
+            int ch_cnt = 0;
+            int cg_cnt = 0;
+            char * json_state = (char*)malloc(5*((strlen(state)/4) + (channel ? (strlen(channel)/4) : 1) + (channel_group ? (strlen(channel_group)/4) : 1)));
+            memcpy(json_state, "{", 1);
+            if (channel) {
+                char* chan_token = strtok(channel, ",");
+                while( chan_token != NULL ) {
+                    if (' ' != chan_token){
+                        sprintf(json_state, "%s%s\"%s\":%s", json_state, (ch_cnt > 0) ? "," : "", chan_token, state);
+                        ch_cnt++;
+                    }
+                    chan_token = strtok(NULL, ",");
+                }
+            }
+            if (channel_group) {
+                char* cg_token = strtok(channel_group, ",");
+                while( cg_token != NULL ) {
+                    if (' ' != cg_token){
+                        sprintf(json_state, "%s%s\"%s\":%s", json_state, (cg_cnt > 0 || ch_cnt > 0) ? "," : "", cg_token, state);
+                        cg_cnt++;
+                    }
+                    cg_token = strtok(NULL, ",");
+                }
+            }
+            strcat(json_state, "}");
+            PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
+
+            pb->core.state = json_state;
+            free(json_state);
         }
     }
 

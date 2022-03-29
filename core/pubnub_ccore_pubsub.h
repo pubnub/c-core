@@ -42,8 +42,6 @@ struct pbcc_context {
     /** The last recived subscribe time token. */
     char timetoken[20];
 
-    /** Pointer to the presence state - at the start of transaction */
-    char const* buff_state;
     /** Pointer to the presence state */
     char const* state;
 
