@@ -305,7 +305,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             char * json_state = (char*)malloc(5*((strlen(state)/4) + (channel ? (strlen(channel)/4) : 1) + (channel_group ? (strlen(channel_group)/4) : 1)));
             memcpy(json_state, "{", 1);
             if (channel) {
-                char* chan_token = strtok(channel, ",");
+                char* chan_token = strtok((char*)channel, ",");
                 while( chan_token != NULL ) {
                     if (' ' != chan_token){
                         sprintf(json_state, "%s%s\"%s\":%s", json_state, (ch_cnt > 0) ? "," : "", chan_token, state);
@@ -315,7 +315,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 }
             }
             if (channel_group) {
-                char* cg_token = strtok(channel_group, ",");
+                char* cg_token = strtok((char*)channel_group, ",");
                 while( cg_token != NULL ) {
                     if (' ' != cg_token){
                         sprintf(json_state, "%s%s\"%s\":%s", json_state, (cg_cnt > 0 || ch_cnt > 0) ? "," : "", cg_token, state);
