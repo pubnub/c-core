@@ -309,7 +309,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 while( chan_token != NULL ) {
                     if (0 != strncmp((char*)" ", chan_token, 1)) {
                         if (ch_cnt > 0) { strcat(json_state, ","); }
-                        char* ch_state = malloc(strlen(state) + strlen(chan_token) + 3);
+                        char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 3);
                         sprintf(ch_state, "\"%s\":%s", chan_token, state);
                         strcat(json_state, ch_state);
                         ch_cnt++;
@@ -323,7 +323,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 while( cg_token != NULL ) {
                     if (0 != strncmp((char*)" ", cg_token, 1)) {
                         if (cg_cnt > 0 || ch_cnt > 0) { strcat(json_state, ","); }
-                        char* cg_state = malloc(strlen(state) + strlen(cg_token) + 3);
+                        char* cg_state = (char*)malloc(strlen(state) + strlen(cg_token) + 3);
                         sprintf(cg_state, "\"%s\":%s", cg_token, state);
                         strcat(json_state, cg_state);
                         cg_cnt++;
