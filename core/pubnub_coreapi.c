@@ -302,7 +302,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         if (rslt == PNR_STARTED){
             int ch_cnt = 0;
             int cg_cnt = 0;
-            char * json_state = (char*)malloc(5*((strlen(state)/4) + (channel ? (strlen(channel)/4) : 1) + (channel_group ? (strlen(channel_group)/4) : 1)));
+            char * json_state = (char*)malloc(5*((strlen(state)/4) + (channel ? strlen(channel)+1 : 1) + (channel_group ? strlen(channel_group)+1 : 1)));
             memcpy(json_state, "{", 1);
             if (channel) {
                 char* chan_token = strtok((char*)channel, ",");
