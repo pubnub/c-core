@@ -307,7 +307,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             if (channel) {
                 char* chan_token = strtok((char*)channel, ",");
                 while( chan_token != NULL ) {
-                    if ((char*)" " != chan_token){
+                    if (0 != strncmp((char*)" ", chan_token, 1)) {
                         sprintf(json_state, "%s%s\"%s\":%s", json_state, (ch_cnt > 0) ? "," : "", chan_token, state);
                         ch_cnt++;
                     }
@@ -317,7 +317,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             if (channel_group) {
                 char* cg_token = strtok((char*)channel_group, ",");
                 while( cg_token != NULL ) {
-                    if ((char*)" " != cg_token){
+                    if (0 != strncmp((char*)" ", cg_token, 1)) {
                         sprintf(json_state, "%s%s\"%s\":%s", json_state, (cg_cnt > 0 || ch_cnt > 0) ? "," : "", cg_token, state);
                         cg_cnt++;
                     }
