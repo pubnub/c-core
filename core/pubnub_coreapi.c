@@ -302,14 +302,18 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         if (rslt == PNR_STARTED){
             int ch_cnt = 0;
             int cg_cnt = 0;
-            char * json_state = (char*)malloc(5*((strlen(state)/4) + (channel ? strlen(channel)+1 : 1) + (channel_group ? strlen(channel_group)+1 : 1)));
+            char * json_state = (char*)malloc(strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20);
             memcpy(json_state, "{", 1);
             if (channel) {
                 char* chan_token = strtok((char*)channel, ",");
                 while( chan_token != NULL ) {
                     if (0 != strncmp((char*)" ", chan_token, 1)) {
-                        sprintf(json_state, "%s%s\"%s\":%s", json_state, (ch_cnt > 0) ? "," : "", chan_token, state);
+                        if (ch_cnt > 0) { strcat(json_state, ","); }
+                        char* ch_state = malloc(strlen(state) + strlen(chan_token) + 3);
+                        sprintf(ch_state, "\"%s\":%s", chan_token, state);
+                        strcat(json_state, ch_state);
                         ch_cnt++;
+                        free(ch_state);
                     }
                     chan_token = strtok(NULL, ",");
                 }
@@ -318,8 +322,12 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 char* cg_token = strtok((char*)channel_group, ",");
                 while( cg_token != NULL ) {
                     if (0 != strncmp((char*)" ", cg_token, 1)) {
-                        sprintf(json_state, "%s%s\"%s\":%s", json_state, (cg_cnt > 0 || ch_cnt > 0) ? "," : "", cg_token, state);
+                        if (cg_cnt > 0 || ch_cnt > 0) { strcat(json_state, ","); }
+                        char* cg_state = malloc(strlen(state) + strlen(cg_token) + 3);
+                        sprintf(cg_state, "\"%s\":%s", cg_token, state);
+                        strcat(json_state, cg_state);
                         cg_cnt++;
+                        free(cg_state);
                     }
                     cg_token = strtok(NULL, ",");
                 }
