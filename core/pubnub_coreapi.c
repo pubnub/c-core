@@ -299,6 +299,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
+        /*
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
@@ -338,6 +339,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             pb->core.state = json_state;
             free(json_state);
         }
+        */
     }
 
     pubnub_mutex_unlock(pb->monitor);
