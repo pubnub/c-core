@@ -299,7 +299,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
-        if (rslt == PNR_STARTED || rslt == PNR_IN_PROGRESS) {
+        if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
             char * json_state = (char*)malloc(strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20);
