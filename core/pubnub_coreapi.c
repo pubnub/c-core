@@ -314,7 +314,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             if (json_state != NULL && core_state != NULL){
                 //memcpy(json_state, "{", 1);
                 json_state[0] = '{';
-                if (channel && channel != ",") {
+                if (channel && channel != (char*)",") {
                     char* chan_token = strtok((char*)channel, ",");
                     while( chan_token != NULL ) {
                         if (0 != strncmp((char*)" ", chan_token, 1)) {
@@ -351,7 +351,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 strcat(json_state, "}");
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-                strcpy(pb->core.state, json_state);
+                strcpy(pb->core.state, (const char*)json_state);
                 free(json_state);
                 json_state = NULL;
             }
