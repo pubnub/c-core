@@ -306,13 +306,14 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
-                core_state = (char*)realloc(pb->core.state, buff_size);
+                core_state = (char*)realloc((char*)pb->core.state, buff_size);
             }
             else if (pb->core.state == NULL){
                 core_state = (char*)malloc(buff_size);
             }
             if (json_state != NULL && core_state != NULL){
                 //memcpy(json_state, "{", 1);
+                pb->core.state = core_state;
                 json_state[0] = '{';
                 if (channel && channel != (char*)",") {
                     char* chan_token = strtok((char*)channel, ",");
@@ -322,7 +323,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                             char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 5);
                             if (ch_state != NULL){
                                 sprintf(ch_state, "\"%s\":%s", chan_token, state);
-                                strcat(json_state, ch_state);
+                                strcat(json_state, (const char*)ch_state);
                                 ch_cnt++;
                                 free(ch_state);
                                 ch_state = NULL;
@@ -339,7 +340,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                             char* cg_state = (char*)malloc(strlen(state) + strlen(cg_token) + 5);
                             if (cg_state != NULL){
                                 sprintf(cg_state, "\"%s\":%s", cg_token, state);
-                                strcat(json_state, cg_state);
+                                strcat(json_state, (const char*)cg_state);
                                 cg_cnt++;
                                 free(cg_state);
                                 cg_state = NULL;
@@ -351,7 +352,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 strcat(json_state, "}");
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-                strcpy(pb->core.state, (const char*)json_state);
+                strcpy((char*)pb->core.state, (const char*)json_state);
                 free(json_state);
                 json_state = NULL;
             }
