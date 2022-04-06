@@ -302,41 +302,59 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
-            char * json_state = (char*)malloc(strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20);
-            memcpy(json_state, "{", 1);
-            if (channel) {
-                char* chan_token = strtok((char*)channel, ",");
-                while( chan_token != NULL ) {
-                    if (0 != strncmp((char*)" ", chan_token, 1)) {
-                        if (ch_cnt > 0) { strcat(json_state, ","); }
-                        char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 3);
-                        sprintf(ch_state, "\"%s\":%s", chan_token, state);
-                        strcat(json_state, ch_state);
-                        ch_cnt++;
-                        free(ch_state);
-                    }
-                    chan_token = strtok(NULL, ",");
-                }
+            int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
+            char * json_state = (char*)malloc(buff_size);
+            char * core_state;
+            if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
+                core_state = (char*)realloc(pb->core.state, buff_size);
             }
-            if (channel_group) {
-                char* cg_token = strtok((char*)channel_group, ",");
-                while( cg_token != NULL ) {
-                    if (0 != strncmp((char*)" ", cg_token, 1)) {
-                        if (cg_cnt > 0 || ch_cnt > 0) { strcat(json_state, ","); }
-                        char* cg_state = (char*)malloc(strlen(state) + strlen(cg_token) + 3);
-                        sprintf(cg_state, "\"%s\":%s", cg_token, state);
-                        strcat(json_state, cg_state);
-                        cg_cnt++;
-                        free(cg_state);
-                    }
-                    cg_token = strtok(NULL, ",");
-                }
+            else if (pb->core.state == NULL){
+                core_state = (char*)malloc(buff_size);
             }
-            strcat(json_state, "}");
-            PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
+            if (json_state != NULL && core_state != NULL){
+                //memcpy(json_state, "{", 1);
+                json_state[0] = '{';
+                if (channel && channel != ",") {
+                    char* chan_token = strtok((char*)channel, ",");
+                    while( chan_token != NULL ) {
+                        if (0 != strncmp((char*)" ", chan_token, 1)) {
+                            if (ch_cnt > 0) { strcat(json_state, ","); }
+                            char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 5);
+                            if (ch_state != NULL){
+                                sprintf(ch_state, "\"%s\":%s", chan_token, state);
+                                strcat(json_state, ch_state);
+                                ch_cnt++;
+                                free(ch_state);
+                                ch_state = NULL;
+                            }
+                        }
+                        chan_token = strtok(NULL, ",");
+                    }
+                }
+                if (channel_group) {
+                    char* cg_token = strtok((char*)channel_group, ",");
+                    while( cg_token != NULL ) {
+                        if (0 != strncmp((char*)" ", cg_token, 1)) {
+                            if (cg_cnt > 0 || ch_cnt > 0) { strcat(json_state, ","); }
+                            char* cg_state = (char*)malloc(strlen(state) + strlen(cg_token) + 5);
+                            if (cg_state != NULL){
+                                sprintf(cg_state, "\"%s\":%s", cg_token, state);
+                                strcat(json_state, cg_state);
+                                cg_cnt++;
+                                free(cg_state);
+                                cg_state = NULL;
+                            }
+                        }
+                        cg_token = strtok(NULL, ",");
+                    }
+                }
+                strcat(json_state, "}");
+                PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-            pb->core.state = json_state;
-            free(json_state);
+                strcpy(pb->core.state, json_state);
+                free(json_state);
+                json_state = NULL;
+            }
         }
     }
 
