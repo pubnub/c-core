@@ -34,7 +34,7 @@ ifeq ($(USE_ADVANCED_HISTORY), 1)
 PROJECT_SOURCEFILES += pbcc_advanced_history.c pubnub_advanced_history.c
 endif
 
-CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -I. -I../ -I test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
+CFLAGS +=-ggdb -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -I. -I../ -I test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
 
 LDFLAGS=-L../cgreen/build/src
 
@@ -42,7 +42,7 @@ CGREEN_RUNNER=../cgreen/build/tools/cgreen-runner
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 	gcc -o pubnub_core_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_ORIGIN_SETTABLE=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
-	$(CGREEN_RUNNER) ./pubnub_core_unit_test.so
+	gdb $(CGREEN_RUNNER) ./pubnub_core_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 TIMER_LIST_SOURCEFILES = pubnub_alloc_static.c pubnub_assert_std.c pubnub_timers.c
