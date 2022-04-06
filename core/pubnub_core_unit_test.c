@@ -2021,7 +2021,7 @@ Ensure(single_context_pubnub, set_state)
 Ensure(single_context_pubnub, set_state_in_progress)
 {
     pubnub_init(pbp, "publ-one", "sub-one");
-    pubnub_set_uuid(pbp, "blackbeard");
+
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
@@ -2040,7 +2040,7 @@ Ensure(single_context_pubnub, set_state_in_progress)
 Ensure(single_context_pubnub, set_state_in_progress_interrupted_and_accomplished)
 {
     pubnub_init(pbp, "publ-one", "sub-one");
-    pubnub_set_uuid(pbp, "blackbeard");
+
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
