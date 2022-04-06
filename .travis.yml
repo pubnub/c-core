@@ -21,7 +21,7 @@ _shared_integration_tests: &shared_integration_tests
     - cpp/openssl/fntest_runner
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user gcovr gdb ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user gcovr gdb==9.2; fi
 
 before_script:
   - git clone https://github.com/cgreen-devs/cgreen.git
