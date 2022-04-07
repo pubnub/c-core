@@ -90,7 +90,10 @@ void pbnc_tr_cxt_state_reset(pubnub_t* pb)
     if (pb->trans == PBTT_SET_STATE)
     {
         PUBNUB_LOG_DEBUG("ntf_sync pbnc_tr_cxt_state_reset. pb->trans=%d\n", pb->trans);
-        pb->core.state = NULL;
+        if (pb->core.state){
+            free(pb->core.state);
+            pb->core.state = NULL;
+        }
     }
 }
 
