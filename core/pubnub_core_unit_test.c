@@ -2020,16 +2020,20 @@ Ensure(single_context_pubnub, set_state)
 
 Ensure(single_context_pubnub, set_state_in_progress)
 {
+    printf("set_state_in_progress STARTED\n");
     pubnub_init(pbp, "publ-one", "sub-one");
 
     expect_have_dns_for_pubnub_origin();
+    printf("set_state_in_progress DNS check done\n");
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
         "data?pnsdk=unit-test-0.1&state=%7B%22the_pirate%22%3A%22true%22%7D");
     incoming("HTTP/1.1 200\r\n", NULL);
     incoming("", NULL);
+    printf("set_state_in_progress. No cg. uuid = blackbeard\n");
     attest(pubnub_set_state(pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"true\"}"),
            equals(PNR_STARTED));
+    printf("set_state_in_progress. No cg. Change uuid value\n");
     attest(pubnub_set_state(
                pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"arrrrrrr_arrrrr\"}"),
            equals(PNR_IN_PROGRESS));
