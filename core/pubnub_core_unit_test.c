@@ -2018,6 +2018,7 @@ Ensure(single_context_pubnub, set_state)
            equals(PNR_INVALID_CHANNEL));
 }
 
+/*
 Ensure(single_context_pubnub, set_state_in_progress)
 {
     pubnub_init(pbp, "publ-one", "sub-one");
@@ -2045,7 +2046,7 @@ Ensure(single_context_pubnub, set_state_in_progress_interrupted_and_accomplished
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
         "data?pnsdk=unit-test-0.1&state=%7B%22the_pirate%22%3A%22true%22%7D");
-    /* incoming first message */
+    // incoming first message 
     incoming("HTTP/1.1 200\r\n", NULL);
     incoming("", NULL);
 
@@ -2055,7 +2056,7 @@ Ensure(single_context_pubnub, set_state_in_progress_interrupted_and_accomplished
                pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"arrrrrrr_arrrrr\"}"),
            equals(PNR_IN_PROGRESS));
 
-    /* incoming second and last message */
+    // incoming second and last message
     incoming("Content-Length: "
              "82\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{\"the_pirate\":\"true\"}}",
@@ -2072,7 +2073,7 @@ Ensure(single_context_pubnub, set_state_in_progress_interrupted_and_accomplished
     attest(pbp->core.last_result, equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
-
+*/
 
 Ensure(single_context_pubnub, set_state_set_auth_and_uuid)
 {
