@@ -315,7 +315,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 //memcpy(json_state, "{", 1);
                 pb->core.state = core_state;
                 json_state[0] = '{';
-                if (channel && channel != (char*)",") {
+                if (channel && strncmp(channel, (char*)",", 1) != 0) {
                     char* chan_token = strtok((char*)channel, ",");
                     while( chan_token != NULL ) {
                         if (0 != strncmp((char*)" ", chan_token, 1)) {

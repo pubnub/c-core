@@ -26,7 +26,7 @@ void pbnc_tr_cxt_state_reset(pubnub_t* pb)
     {
         PUBNUB_LOG_DEBUG("ntf_callback pbnc_tr_cxt_state_reset. pb->trans=%d\n", pb->trans);
         if (pb->core.state){
-            free(pb->core.state);
+            free((char*)pb->core.state);
             pb->core.state = NULL;
         }
     }
