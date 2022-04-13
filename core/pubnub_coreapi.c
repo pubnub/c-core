@@ -302,7 +302,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
-            int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
+            int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 100;
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
