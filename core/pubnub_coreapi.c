@@ -352,7 +352,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             //     strcat(json_state, "}");
             //     PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-                strcpy((char*)pb->core.state, (const char*)json_state);
+                strcpy((char*)pb->core.state, (char*)json_state);
                 free(json_state);
                 json_state = NULL;
             // }
