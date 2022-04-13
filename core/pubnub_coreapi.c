@@ -300,8 +300,8 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
-            int ch_cnt = 0;
-            int cg_cnt = 0;
+            // int ch_cnt = 0;
+            // int cg_cnt = 0;
             int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
@@ -355,7 +355,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 strcpy((char*)pb->core.state, (const char*)json_state);
                 free(json_state);
                 json_state = NULL;
-            }
+            // }
         }
     }
 
