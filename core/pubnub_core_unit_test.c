@@ -2032,7 +2032,7 @@ Ensure(single_context_pubnub, set_state_in_progress)
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
         "data?pnsdk=unit-test-0.1&state=%7B%22the_pirate%22%3A%22true%22%7D");
-    //incoming("HTTP/1.1 200\r\n", NULL);
+    incoming("HTTP/1.1 200\r\n", NULL);
     //incoming("", NULL);
     // incoming("HTTP/1.1 200\r\nContent-Length: "
     //          "64\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
