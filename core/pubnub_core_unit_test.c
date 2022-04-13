@@ -2021,6 +2021,7 @@ Ensure(single_context_pubnub, set_state)
            equals(PNR_IN_PROGRESS));
     attest(pubnub_set_state(pbp, NULL, NULL, "linda-darnell", "{I}"),
            equals(PNR_INVALID_CHANNEL));
+    cancel_and_cleanup(pbp);
 }
 
 Ensure(single_context_pubnub, set_state_in_progress)
