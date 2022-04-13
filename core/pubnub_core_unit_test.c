@@ -2014,6 +2014,11 @@ Ensure(single_context_pubnub, set_state)
     /* set state for no 'channel' and no 'channel group'.
      */
     pubnub_set_auth(pbp, NULL); // with or without this line
+    attest(pubnub_set_state(pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"true\"}"),
+           equals(PNR_STARTED));
+    attest(pubnub_set_state(
+               pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"arrrrrrr_arrrrr\"}"),
+           equals(PNR_IN_PROGRESS));
     attest(pubnub_set_state(pbp, NULL, NULL, "linda-darnell", "{I}"),
            equals(PNR_INVALID_CHANNEL));
 }
