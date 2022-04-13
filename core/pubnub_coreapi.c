@@ -295,23 +295,19 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
     rslt = pbcc_set_state_prep(
         &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
     if (PNR_STARTED == rslt) {
-        pb->trans            = PBTT_SET_STATE;
-        pb->core.last_result = PNR_STARTED;
-        pbnc_fsm(pb);
-        rslt = pb->core.last_result;
+        
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
             int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
-            core_state = (char*)malloc(buff_size);
-            // if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
-            //     core_state = (char*)realloc((char*)pb->core.state, buff_size);
-            // }
-            // else if (pb->core.state == NULL){
-            //     core_state = (char*)malloc(buff_size);
-            // }
+            if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
+                core_state = (char*)realloc((char*)pb->core.state, buff_size);
+            }
+            else if (pb->core.state == NULL){
+                core_state = (char*)malloc(buff_size);
+            }
             
             pb->core.state = core_state;
             if (json_state != NULL && core_state != NULL){
@@ -358,6 +354,10 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 free((char*)json_state);
                 json_state = NULL;
             }
+            pb->trans            = PBTT_SET_STATE;
+            pb->core.last_result = PNR_STARTED;
+            pbnc_fsm(pb);
+            rslt = pb->core.last_result;
         }
     }
 
