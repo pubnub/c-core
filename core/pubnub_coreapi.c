@@ -306,12 +306,12 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
             core_state = (char*)malloc(buff_size);
-            if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
-                core_state = (char*)realloc((char*)pb->core.state, buff_size);
-            }
-            else if (pb->core.state == NULL){
-                core_state = (char*)malloc(buff_size);
-            }
+            // if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
+            //     core_state = (char*)realloc((char*)pb->core.state, buff_size);
+            // }
+            // else if (pb->core.state == NULL){
+            //     core_state = (char*)malloc(buff_size);
+            // }
             
             pb->core.state = core_state;
             if (json_state != NULL && core_state != NULL){
