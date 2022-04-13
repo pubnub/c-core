@@ -295,7 +295,10 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
     rslt = pbcc_set_state_prep(
         &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
     if (PNR_STARTED == rslt) {
-        
+        pb->trans            = PBTT_SET_STATE;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
@@ -313,23 +316,23 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             if (json_state != NULL && core_state != NULL){
                 //memcpy(json_state, "{", 1);
                 json_state[0] = '{';
-                // if (channel && strncmp(channel, (char*)",", 1) != 0) {
-                //     char* chan_token = strtok((char*)channel, ",");
-                //     while( chan_token != NULL ) {
-                //         if (0 != strncmp((char*)" ", chan_token, 1)) {
-                //             if (ch_cnt > 0) { strcat(json_state, ","); }
-                //             char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 5);
-                //             if (ch_state != NULL){
-                //                 sprintf(ch_state, "\"%s\":%s", chan_token, state);
-                //                 strcat(json_state, (const char*)ch_state);
-                //                 ch_cnt++;
-                //                 free(ch_state);
-                //                 ch_state = NULL;
-                //             }
-                //         }
-                //         chan_token = strtok(NULL, ",");
-                //     }
-                // }
+                if (channel && strncmp(channel, (char*)",", 1) != 0) {
+                    char* chan_token = strtok((char*)channel, ",");
+                    while( chan_token != NULL ) {
+                        if (0 != strncmp((char*)" ", chan_token, 1)) {
+                            if (ch_cnt > 0) { strcat(json_state, ","); }
+                            char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 15);
+                            if (ch_state != NULL){
+                                sprintf(ch_state, "\"%s\":%s", chan_token, state);
+                                strcat(json_state, (const char*)ch_state);
+                                ch_cnt++;
+                                free(ch_state);
+                                ch_state = NULL;
+                            }
+                        }
+                        chan_token = strtok(NULL, ",");
+                    }
+                }
                 if (channel_group) {
                     char* cg_token = strtok((char*)channel_group, ",");
                     while( cg_token != NULL ) {
@@ -354,10 +357,6 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 free((char*)json_state);
                 json_state = NULL;
             }
-            pb->trans            = PBTT_SET_STATE;
-            pb->core.last_result = PNR_STARTED;
-            pbnc_fsm(pb);
-            rslt = pb->core.last_result;
         }
     }
 
