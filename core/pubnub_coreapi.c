@@ -12,8 +12,11 @@
 #include "pubnub_log.h"
 #include <stdlib.h>
 #include <ctype.h>
+#include "dbg.h"
+#include <string.h>
 #ifdef _MSC_VER
 #define strcspn(p, q) strspn(p, q)
+#define strdup(p) _strdup(p)
 #endif
 
 #if PUBNUB_ONLY_PUBSUB_API
@@ -283,7 +286,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                                  char const* state)
 {
     enum pubnub_res rslt;
-
+    log_info("TROUBLESHOOTING: pubnub_set_state");
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -291,49 +294,74 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-
+    log_info("TROUBLESHOOTING: pubnub_set_state -> before pbcc_set_state_prep");
     rslt = pbcc_set_state_prep(
         &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
     if (PNR_STARTED == rslt) {
+        log_info("TROUBLESHOOTING: pubnub_set_state -> done pbcc_set_state_prep");
         pb->trans            = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
+            log_info("TROUBLESHOOTING: pubnub_set_state -> entered new code block");
             int ch_cnt = 0;
             int cg_cnt = 0;
             int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
+            log_info("TROUBLESHOOTING: pubnub_set_state -> malloc buff_size");
             char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
                 core_state = (char*)realloc((char*)pb->core.state, buff_size);
+                log_info("TROUBLESHOOTING: pubnub_set_state -> realloc core_state");
             }
             else if (pb->core.state == NULL){
                 core_state = (char*)malloc(buff_size);
+                log_info("TROUBLESHOOTING: pubnub_set_state -> malloc core_state");
             }
             if (json_state != NULL && core_state != NULL){
+                const char delim[2] = ",";
                 //memcpy(json_state, "{", 1);
                 pb->core.state = core_state;
                 json_state[0] = '{';
                 if (channel && strncmp(channel, (char*)",", 1) != 0) {
-                    char* chan_token = strtok((char*)channel, ",");
-                    while( chan_token != NULL ) {
-                        if (0 != strncmp((char*)" ", chan_token, 1)) {
-                            if (ch_cnt > 0) { strcat(json_state, ","); }
-                            char* ch_state = (char*)malloc(strlen(state) + strlen(chan_token) + 5);
-                            if (ch_state != NULL){
-                                sprintf(ch_state, "\"%s\":%s", chan_token, state);
-                                strcat(json_state, (const char*)ch_state);
-                                ch_cnt++;
-                                free(ch_state);
-                                ch_state = NULL;
-                            }
+                    char* str_ch = (char*)channel;
+                    char* ch_temp;
+                    char* curr_ch;
+                    char* ch_state;
+                    int ch_len;
+                    bool end = false;
+                    do{
+                        ch_temp = strchr(str_ch,',');
+                        if (ch_cnt > 0) { strcat(json_state, ","); }
+                        if (ch_temp == NULL) {
+                            end = true;
+                            ch_len = strlen(str_ch);
                         }
-                        chan_token = strtok(NULL, ",");
-                    }
+                        else { ch_len = ch_temp - str_ch; }
+                        curr_ch = malloc(ch_len);
+                        char* ch_state = (char*)malloc(strlen(state) + ch_len + 5);
+                        if (curr_ch != NULL && ch_state != NULL){
+                            strncpy(curr_ch, str_ch, ch_len);
+                            log_info("TROUBLESHOOTING: pubnub_set_state -> channel state build for %s", curr_ch);
+                            sprintf(ch_state, "\"%s\":%s", curr_ch, state);
+                            strcat(json_state, (const char*)ch_state);
+                            log_info("TROUBLESHOOTING: pubnub_set_state -> in do loop json_state = %s",json_state);
+                            ch_cnt++;
+                            free(ch_state);
+                            free(curr_ch);
+                            ch_state = NULL;
+                            curr_ch = NULL;
+                        }
+                        str_ch = ch_temp + 1;
+                    } while (false == end);
+                    log_info("TROUBLESHOOTING: pubnub_set_state -> channel state %s", json_state);
                 }
                 if (channel_group) {
-                    char* cg_token = strtok((char*)channel_group, ",");
+                    char* str_cg = (char*)channel_group;
+                    log_info("TROUBLESHOOTING: pubnub_set_state -> cg state build for %s", str_cg);
+                    char* cg_token = strtok(str_cg, delim);
+                    log_info("TROUBLESHOOTING: pubnub_set_state -> cg state build");
                     while( cg_token != NULL ) {
                         if (0 != strncmp((char*)" ", cg_token, 1)) {
                             if (cg_cnt > 0 || ch_cnt > 0) { strcat(json_state, ","); }
@@ -346,15 +374,19 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                                 cg_state = NULL;
                             }
                         }
-                        cg_token = strtok(NULL, ",");
+                        cg_token = strtok(NULL, delim);
                     }
+                    log_info("TROUBLESHOOTING: pubnub_set_state -> cg state %s", json_state);
                 }
                 strcat(json_state, "}");
+                log_info("TROUBLESHOOTING: pubnub_set_state -> full state %s", json_state);
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
                 strcpy((char*)pb->core.state, (const char*)json_state);
+                log_info("TROUBLESHOOTING: pubnub_set_state -> assigned to core.state");
                 free(json_state);
                 json_state = NULL;
+                log_info("TROUBLESHOOTING: pubnub_set_state -> free json_state and NULL");
             }
         }
     }
