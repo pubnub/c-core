@@ -12,7 +12,6 @@
 #include "pubnub_log.h"
 #include <stdlib.h>
 #include <ctype.h>
-#include "dbg.h"
 #ifdef _MSC_VER
 #define strcspn(p, q) strspn(p, q)
 #endif
