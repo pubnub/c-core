@@ -26,7 +26,6 @@
 #include <setjmp.h>
 #include <time.h>
 #include <assert.h>
-#include "dbg.h"
 
 /* A less chatty cgreen :) */
 
@@ -2021,19 +2020,14 @@ Ensure(single_context_pubnub, set_state)
 
 Ensure(single_context_pubnub, set_state_in_progress)
 {
-    log_info("TROUBLESHOOTING: set_state_in_progress.");
     pubnub_init(pbp, "publ-one", "sub-one");
-    log_info("TROUBLESHOOTING: set_state_in_progress -> pubnub_init");
 
     expect_have_dns_for_pubnub_origin();
-    log_info("TROUBLESHOOTING: set_state_in_progress -> expect_have_dns_for_pubnub_origin");
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-one/channel/ch/uuid/blackbeard/"
         "data?pnsdk=unit-test-0.1&state=%7B%22the_pirate%22%3A%22true%22%7D");
-    log_info("TROUBLESHOOTING: set_state_in_progress -> expect_outgoing_with_url");
     incoming("HTTP/1.1 200\r\n", NULL);
     incoming("", NULL);
-    log_info("TROUBLESHOOTING: set_state_in_progress -> incoming");
     attest(pubnub_set_state(pbp, "ch", NULL, "blackbeard", "{\"the_pirate\":\"true\"}"),
            equals(PNR_STARTED));
     attest(pubnub_set_state(
