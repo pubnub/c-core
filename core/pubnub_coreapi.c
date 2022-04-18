@@ -283,7 +283,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                                  char const* state)
 {
     enum pubnub_res rslt;
-    log_info("TROUBLESHOOTING: pubnub_set_state");
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -291,37 +291,31 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    log_info("TROUBLESHOOTING: pubnub_set_state -> before pbcc_set_state_prep");
+
     rslt = pbcc_set_state_prep(
         &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
     if (PNR_STARTED == rslt) {
-        log_info("TROUBLESHOOTING: pubnub_set_state -> done pbcc_set_state_prep");
         pb->trans            = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
-            log_info("TROUBLESHOOTING: pubnub_set_state -> entered new code block");
             int ch_cnt = 0;
             int cg_cnt = 0;
             int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
-            log_info("TROUBLESHOOTING: pubnub_set_state -> malloc buff_size");
             char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
                 core_state = (char*)realloc((char*)pb->core.state, buff_size);
-                log_info("TROUBLESHOOTING: pubnub_set_state -> realloc core_state");
             }
             else if (pb->core.state == NULL){
                 core_state = (char*)malloc(buff_size);
-                log_info("TROUBLESHOOTING: pubnub_set_state -> malloc core_state");
             }
             if (json_state != NULL && core_state != NULL){
                 //memcpy(json_state, "{", 1);
                 pb->core.state = core_state;
                 json_state[0] = '{';
                 if (channel && strncmp(channel, (char*)",", 1) != 0) {
-                    log_info("TROUBLESHOOTING: pubnub_set_state -> channel state build");
                     char* chan_token = strtok((char*)channel, ",");
                     while( chan_token != NULL ) {
                         if (0 != strncmp((char*)" ", chan_token, 1)) {
@@ -337,10 +331,8 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         }
                         chan_token = strtok(NULL, ",");
                     }
-                    log_info("TROUBLESHOOTING: pubnub_set_state -> channel state %s", json_state);
                 }
                 if (channel_group) {
-                    log_info("TROUBLESHOOTING: pubnub_set_state -> cg state build");
                     char* cg_token = strtok((char*)channel_group, ",");
                     while( cg_token != NULL ) {
                         if (0 != strncmp((char*)" ", cg_token, 1)) {
@@ -356,17 +348,13 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         }
                         cg_token = strtok(NULL, ",");
                     }
-                    log_info("TROUBLESHOOTING: pubnub_set_state -> cg state %s", json_state);
                 }
                 strcat(json_state, "}");
-                log_info("TROUBLESHOOTING: pubnub_set_state -> full state %s", json_state);
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
                 strcpy((char*)pb->core.state, (const char*)json_state);
-                log_info("TROUBLESHOOTING: pubnub_set_state -> assigned to core.state");
                 free(json_state);
                 json_state = NULL;
-                log_info("TROUBLESHOOTING: pubnub_set_state -> free json_state and NULL");
             }
         }
     }
