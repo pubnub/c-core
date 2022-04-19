@@ -298,7 +298,18 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         if (rslt == PNR_STARTED) {
             int ch_cnt = 0;
             int cg_cnt = 0;
-            int buff_size = strlen(state) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
+            int tot_ch = 0;
+            int tot_cg = 0;
+            if (channel){
+                tot_ch = 1;
+                for (int i=0; i < strlen(channel); i++) { tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch; }
+            }
+            if (channel_group){
+                tot_cg = 1;
+                for (int i=0; i < strlen(channel_group); i++) { tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg; }
+            }
+            
+            int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
             char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
@@ -307,37 +318,55 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             else if (pb->core.state == NULL){
                 core_state = (char*)malloc(buff_size);
             }
+            int m_len = 0;
             if (json_state != NULL && core_state != NULL){
                 pb->core.state = core_state;
-                json_state[0] = '{';
+                m_len = strlen("{");
+                memcpy(json_state, "{", m_len);
+                int cm_len = strlen(",");
+                int dq_len = strlen("\"");
+                int co_len = strlen(":");
+                int st_len = strlen(state);
                 if (channel && strncmp(channel, (char*)",", 1) != 0) {
                     char* str_ch = (char*)channel;
                     char* ch_temp;
-                    int ch_len;
+                    size_t ch_len;
                     bool end = false;
                     do{
                         ch_temp = strchr(str_ch,',');
-                        if (ch_cnt > 0) { strcat(json_state, ","); }
+                        if (ch_cnt > 0) { 
+                            memcpy(json_state + m_len, ",", cm_len);
+                            m_len += cm_len;
+                        }
                         if (ch_temp == NULL) {
                             end = true;
                             ch_len = strlen(str_ch);
                         }
                         else { ch_len = ch_temp - str_ch; }
-                        char* curr_ch = (char*)malloc(ch_len);
-                        char* ch_state = (char*)malloc(strlen(state) + ch_len + 3);
-                        if (curr_ch != NULL && ch_state != NULL){
-                            strncpy(curr_ch, str_ch, ch_len);
-                            sprintf(ch_state, "\"%s\":%s", curr_ch, state);
-                            strcat(json_state, (const char*)ch_state);
-                            ch_cnt++;
-                            free(ch_state);
-                            free(curr_ch);
-                            ch_state = NULL;
-                            curr_ch = NULL;
-                        }
+
+                        if (ch_len == 0) { continue; }
+
+                        char curr_ch[62];
+                        strncpy(curr_ch, str_ch, ch_len);
+                        curr_ch[ch_len] = '\0';
+
+                        memcpy(json_state + m_len, "\"", dq_len);
+                        m_len += dq_len;
+                        memcpy(json_state + m_len, curr_ch, ch_len);
+                        m_len += ch_len;
+                        memcpy(json_state + m_len, "\"", dq_len);
+                        m_len += dq_len;
+                        memcpy(json_state + m_len, ":", co_len);
+                        m_len += co_len;
+                        memcpy(json_state + m_len, state, st_len);
+                        m_len += st_len;
+
+                        ch_cnt++;
+
                         str_ch = ch_temp + 1;
                     } while (false == end);
                 }
+                
                 if (channel_group) {
                     char* str_cg = (char*)channel_group;
                     char* cg_temp;
@@ -345,28 +374,41 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                     bool end = false;
                     do{
                         cg_temp = strchr(str_cg,',');
-                        if (ch_cnt > 0 || cg_cnt > 0) { strcat(json_state, ","); }
+                        if (ch_cnt > 0 || cg_cnt > 0) { 
+                            memcpy(json_state + m_len, ",", cm_len);
+                            m_len += cm_len;
+                        }
                         if (cg_temp == NULL) {
                             end = true;
                             cg_len = strlen(str_cg);
                         }
                         else { cg_len = cg_temp - str_cg; }
-                        char* curr_cg = (char*)malloc(cg_len);
-                        char* cg_state = (char*)malloc(strlen(state) + cg_len + 3);
-                        if (curr_cg != NULL && cg_state != NULL){
-                            strncpy(curr_cg, str_cg, cg_len);
-                            sprintf(cg_state, "\"%s\":%s", curr_cg, state);
-                            strcat(json_state, (const char*)cg_state);
-                            cg_cnt++;
-                            free(cg_state);
-                            free(curr_cg);
-                            cg_state = NULL;
-                            curr_cg = NULL;
-                        }
+
+                         if (cg_len == 0) { continue; }
+
+                        char curr_cg[62];
+                        strncpy(curr_cg, str_cg, cg_len);
+                        curr_cg[cg_len] = '\0';
+
+                        memcpy(json_state + m_len, "\"", dq_len);
+                        m_len += dq_len;
+                        memcpy(json_state + m_len, curr_cg, cg_len);
+                        m_len += cg_len;
+                        memcpy(json_state + m_len, "\"", dq_len);
+                        m_len += dq_len;
+                        memcpy(json_state + m_len, ":", co_len);
+                        m_len += co_len;
+                        memcpy(json_state + m_len, state, st_len);
+                        m_len += st_len;
+
                         str_cg = cg_temp + 1;
                     } while (false == end);
                 }
-                strcat(json_state, "}");
+                
+                int cb_len = strlen("}");
+                memcpy(json_state + m_len, "}", cb_len);
+                m_len += cb_len;
+                json_state[m_len] = '\0';
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
                 strcpy((char*)pb->core.state, (const char*)json_state);
