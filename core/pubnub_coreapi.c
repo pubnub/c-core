@@ -386,7 +386,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
 
                          if (cg_len == 0) { continue; }
 
-                        char curr_cg[62];
+                        char curr_cg[64];
                         strncpy(curr_cg, str_cg, cg_len);
                         curr_cg[cg_len] = '\0';
 
