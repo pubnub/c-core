@@ -415,6 +415,8 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 free(json_state);
                 json_state = NULL;
             }
+            free(core_state);
+            core_state = NULL;
         }
     }
 
