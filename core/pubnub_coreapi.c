@@ -317,10 +317,10 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             else if (pb->core.state == NULL){
                 pb->core.state = (char*)malloc(buff_size);
             }
-            int m_len = 0;
+            int mem_len = 0;
             if (json_state != NULL && pb->core.state != NULL){
-                m_len = strlen("{");
-                memcpy(json_state, "{", m_len);
+                mem_len = strlen("{");
+                memcpy(json_state, "{", mem_len);
                 int cm_len = strlen(",");
                 int dq_len = strlen("\"");
                 int co_len = strlen(":");
@@ -333,28 +333,28 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                     do{
                         ch_temp = strchr(str_ch,',');
                         if (ch_cnt > 0) { 
-                            memcpy(json_state + m_len, ",", cm_len);
-                            m_len += cm_len;
+                            memcpy(json_state + mem_len, ",", cm_len);
+                            mem_len += cm_len;
                         }
                         if (ch_temp == NULL) { end = true; ch_len = strlen(str_ch); }
                         else { ch_len = ch_temp - str_ch; }
 
                         if (ch_len == 0) { continue; }
 
-                        char curr_ch[64];
+                        char curr_ch[92];
                         strncpy(curr_ch, str_ch, ch_len);
                         curr_ch[ch_len] = '\0';
 
-                        memcpy(json_state + m_len, "\"", dq_len);
-                        m_len += dq_len;
-                        memcpy(json_state + m_len, curr_ch, ch_len);
-                        m_len += ch_len;
-                        memcpy(json_state + m_len, "\"", dq_len);
-                        m_len += dq_len;
-                        memcpy(json_state + m_len, ":", co_len);
-                        m_len += co_len;
-                        memcpy(json_state + m_len, state, st_len);
-                        m_len += st_len;
+                        memcpy(json_state + mem_len, "\"", dq_len);
+                        mem_len += dq_len;
+                        memcpy(json_state + mem_len, curr_ch, ch_len);
+                        mem_len += ch_len;
+                        memcpy(json_state + mem_len, "\"", dq_len);
+                        mem_len += dq_len;
+                        memcpy(json_state + mem_len, ":", co_len);
+                        mem_len += co_len;
+                        memcpy(json_state + mem_len, state, st_len);
+                        mem_len += st_len;
 
                         ch_cnt++;
                         str_ch = ch_temp + 1;
@@ -369,28 +369,28 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                     do{
                         cg_temp = strchr(str_cg,',');
                         if (ch_cnt > 0 || cg_cnt > 0) { 
-                            memcpy(json_state + m_len, ",", cm_len);
-                            m_len += cm_len;
+                            memcpy(json_state + mem_len, ",", cm_len);
+                            mem_len += cm_len;
                         }
                         if (cg_temp == NULL) { end = true; cg_len = strlen(str_cg); }
                         else { cg_len = cg_temp - str_cg; }
 
                          if (cg_len == 0) { continue; }
 
-                        char curr_cg[64];
+                        char curr_cg[92];
                         strncpy(curr_cg, str_cg, cg_len);
                         curr_cg[cg_len] = '\0';
 
-                        memcpy(json_state + m_len, "\"", dq_len);
-                        m_len += dq_len;
-                        memcpy(json_state + m_len, curr_cg, cg_len);
-                        m_len += cg_len;
-                        memcpy(json_state + m_len, "\"", dq_len);
-                        m_len += dq_len;
-                        memcpy(json_state + m_len, ":", co_len);
-                        m_len += co_len;
-                        memcpy(json_state + m_len, state, st_len);
-                        m_len += st_len;
+                        memcpy(json_state + mem_len, "\"", dq_len);
+                        mem_len += dq_len;
+                        memcpy(json_state + mem_len, curr_cg, cg_len);
+                        mem_len += cg_len;
+                        memcpy(json_state + mem_len, "\"", dq_len);
+                        mem_len += dq_len;
+                        memcpy(json_state + mem_len, ":", co_len);
+                        mem_len += co_len;
+                        memcpy(json_state + mem_len, state, st_len);
+                        mem_len += st_len;
 
                         cg_cnt++;
                         str_cg = cg_temp + 1;
@@ -398,9 +398,9 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 }
                 
                 int cb_len = strlen("}");
-                memcpy(json_state + m_len, "}", cb_len);
-                m_len += cb_len;
-                json_state[m_len] = '\0';
+                memcpy(json_state + mem_len, "}", cb_len);
+                mem_len += cb_len;
+                json_state[mem_len] = '\0';
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
                 strcpy((char*)pb->core.state, (const char*)json_state);
