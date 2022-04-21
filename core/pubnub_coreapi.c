@@ -311,16 +311,14 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             
             int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
             char * json_state = (char*)malloc(buff_size);
-            char * core_state;
             if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
-                core_state = (char*)realloc((char*)pb->core.state, buff_size);
+                pb->core.state = (char*)realloc((char*)pb->core.state, buff_size);
             }
             else if (pb->core.state == NULL){
-                core_state = (char*)malloc(buff_size);
+                pb->core.state = (char*)malloc(buff_size);
             }
             int m_len = 0;
-            if (json_state != NULL && core_state != NULL){
-                pb->core.state = core_state;
+            if (json_state != NULL && pb->core.state != NULL){
                 m_len = strlen("{");
                 memcpy(json_state, "{", m_len);
                 int cm_len = strlen(",");
@@ -338,10 +336,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                             memcpy(json_state + m_len, ",", cm_len);
                             m_len += cm_len;
                         }
-                        if (ch_temp == NULL) {
-                            end = true;
-                            ch_len = strlen(str_ch);
-                        }
+                        if (ch_temp == NULL) { end = true; ch_len = strlen(str_ch); }
                         else { ch_len = ch_temp - str_ch; }
 
                         if (ch_len == 0) { continue; }
@@ -362,7 +357,6 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         m_len += st_len;
 
                         ch_cnt++;
-
                         str_ch = ch_temp + 1;
                     } while (false == end);
                 }
@@ -378,10 +372,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                             memcpy(json_state + m_len, ",", cm_len);
                             m_len += cm_len;
                         }
-                        if (cg_temp == NULL) {
-                            end = true;
-                            cg_len = strlen(str_cg);
-                        }
+                        if (cg_temp == NULL) { end = true; cg_len = strlen(str_cg); }
                         else { cg_len = cg_temp - str_cg; }
 
                          if (cg_len == 0) { continue; }
@@ -401,6 +392,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         memcpy(json_state + m_len, state, st_len);
                         m_len += st_len;
 
+                        cg_cnt++;
                         str_cg = cg_temp + 1;
                     } while (false == end);
                 }
@@ -415,8 +407,6 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 free(json_state);
                 json_state = NULL;
             }
-            free(core_state);
-            core_state = NULL;
         }
     }
 
