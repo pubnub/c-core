@@ -306,11 +306,13 @@ int json_include_state_for_each(char* json, const char* elements, char* state)
 {
     char* sep = ",";
     char* element;
+    char* elements_copy = (char*)malloc(strlen(elements));
     int pos = 0;
-    for (element = strtok((char*)elements, sep); element; element = strtok(NULL, sep)) {
+    for (element = strtok(elements_copy, sep); element; element = strtok(NULL, sep)) {
         pos += json_kvp_builder(json + pos, element, state);
         pos += json_include(json + pos, sep);
     }
+    free(elements_copy);
     return pos;
 }
 
