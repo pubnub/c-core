@@ -318,11 +318,11 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
             int ch_cnt = 0, cg_cnt = 0, tot_ch = 0, tot_cg = 0;
             if (channel){
                 tot_ch = 1;
-                for (int i=0; i < strlen(channel); i++) { tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch; }
+                for (int i=0; i < (int)strlen(channel); i++) { tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch; }
             }
             if (channel_group){
                 tot_cg = 1;
-                for (int i=0; i < strlen(channel_group); i++) { tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg; }
+                for (int i=0; i < (int)strlen(channel_group); i++) { tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg; }
             }
             
             int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
@@ -358,7 +358,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         strncpy(curr_ch, str_ch, ch_len);
                         curr_ch[ch_len] = '\0';
 
-                        mem_len = json_kvp_builder(json_state, mem_len, curr_ch, state);
+                        mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
 
                         ch_cnt++;
                         str_ch = ch_temp + 1;
@@ -386,7 +386,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         strncpy(curr_cg, str_cg, cg_len);
                         curr_cg[cg_len] = '\0';
 
-                        mem_len = json_kvp_builder(json_state, mem_len, curr_cg, state);
+                        mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
 
                         cg_cnt++;
                         str_cg = cg_temp + 1;
