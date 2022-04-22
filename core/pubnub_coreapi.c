@@ -21,7 +21,7 @@
 
 #if PUBNUB_USE_AUTO_HEARTBEAT
 #include "lib/pbstr_remove_from_list.h"
-static void update_channels_and_ch_groups(pubnub_t* pb,
+static void update_channels_and_ch_groups(pubnub_t*   pb,
                                           const char* channel,
                                           const char* channel_group)
 {
@@ -42,13 +42,13 @@ static void update_channels_and_ch_groups(pubnub_t* pb,
     }
 }
 
-/** Prepares channel and channel groups to be used in pubnub_leave() url request.
-    Checks for default(saved) values if both parameters @p channel nad @p channel_group
-    are passed as NULL.
+/** Prepares channel and channel groups to be used in pubnub_leave() url
+   request. Checks for default(saved) values if both parameters @p channel nad
+   @p channel_group are passed as NULL.
   */
-static void check_if_default_channel_and_groups(pubnub_t* p,
-                                                char const* channel,
-                                                char const* channel_group,
+static void check_if_default_channel_and_groups(pubnub_t*    p,
+                                                char const*  channel,
+                                                char const*  channel_group,
                                                 char const** prep_channel,
                                                 char const** prep_channel_group)
 {
@@ -60,29 +60,26 @@ static void check_if_default_channel_and_groups(pubnub_t* p,
         pbauto_heartbeat_read_channelInfo(p, prep_channel, prep_channel_group);
     }
     else {
-        *prep_channel = channel;
+        *prep_channel       = channel;
         *prep_channel_group = channel_group;
     }
 }
 #else
 #define update_channels_and_ch_groups(pb, channel, channel_group)
-#define check_if_default_channel_and_groups(p,                         \
-                                            channel,                   \
-                                            channel_group,             \
-                                            prep_channel,              \
-                                            prep_channel_group)        \
-    do {                                                               \
-        *(prep_channel) = (channel);                                   \
-        *(prep_channel_group) = (channel_group);                       \
-    } while(0)
+#define check_if_default_channel_and_groups(                                   \
+    p, channel, channel_group, prep_channel, prep_channel_group)               \
+    do {                                                                       \
+        *(prep_channel)       = (channel);                                     \
+        *(prep_channel_group) = (channel_group);                               \
+    } while (0)
 #endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
 
 enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* channel_group)
 {
     enum pubnub_res rslt;
-    char const* prep_channel;
-    char const* prep_channel_group;
+    char const*     prep_channel;
+    char const*     prep_channel_group;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
@@ -91,12 +88,9 @@ enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* chann
         pubnub_mutex_unlock(p->monitor);
         return PNR_IN_PROGRESS;
     }
-    check_if_default_channel_and_groups(p,
-                                        channel,
-                                        channel_group,
-                                        &prep_channel,
-                                        &prep_channel_group);
-    
+    check_if_default_channel_and_groups(
+        p, channel, channel_group, &prep_channel, &prep_channel_group);
+
     rslt = pbcc_leave_prep(&p->core, prep_channel, prep_channel_group);
     if (PNR_STARTED == rslt) {
         p->trans            = PBTT_LEAVE;
@@ -151,8 +145,15 @@ enum pubnub_res pubnub_history(pubnub_t*   pb,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_history_prep(
-        &pb->core, channel, count, include_token, pbccNotSet, pbccNotSet, pbccNotSet, NULL, NULL);
+    rslt = pbcc_history_prep(&pb->core,
+                             channel,
+                             count,
+                             include_token,
+                             pbccNotSet,
+                             pbccNotSet,
+                             pbccNotSet,
+                             NULL,
+                             NULL);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_HISTORY;
         pb->core.last_result = PNR_STARTED;
@@ -178,7 +179,8 @@ enum pubnub_res pubnub_heartbeat(pubnub_t*   pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(pb, &channel, &channel_group);
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(
+        pb, &channel, &channel_group);
     if (rslt != PNR_OK) {
         return rslt;
     }
@@ -273,24 +275,51 @@ enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* uuid)
     return rslt;
 }
 
-int json_kvp_builder(char* jsonbuilder, int pos, char* key, char* val)
+int json_kvp_builder(char* json, char* key, char* val)
 {
-    int dq_len = strlen("\"");
-    int co_len = strlen(":");
+    int dq_len  = strlen("\"");
+    int co_len  = strlen(":");
     int key_len = strlen(key);
     int val_len = strlen(val);
+    int pos = 0;
 
-    memcpy(jsonbuilder + pos, "\"", dq_len);
+    memcpy(json + pos, "\"", dq_len);
     pos += dq_len;
-    memcpy(jsonbuilder + pos, key, key_len);
+    memcpy(json + pos, key, key_len);
     pos += key_len;
-    memcpy(jsonbuilder + pos, "\"", dq_len);
+    memcpy(json + pos, "\"", dq_len);
     pos += dq_len;
-    memcpy(jsonbuilder + pos, ":", co_len);
+    memcpy(json + pos, ":", co_len);
     pos += co_len;
-    memcpy(jsonbuilder + pos, val, val_len);
+    memcpy(json + pos, val, val_len);
     pos += val_len;
     return pos;
+}
+
+int json_include(char* json, char* characters) {
+    int len = strlen(characters);
+    memcpy(json, characters, len);
+    return len;
+} 
+
+int json_include_state_for_each(char* json, const char* elements, char* state)
+{
+    char* sep = ",";
+    char* element;
+    int pos = 0;
+    for (element = strtok((char*)elements, sep); element; element = strtok(NULL, sep)) {
+        pos += json_kvp_builder(json + pos, element, state);
+        pos += json_include(json + pos, sep);
+    }
+    return pos;
+}
+
+bool json_ends_with_separator(char* json, int json_cursor) {
+    if (json_cursor > 0 && strncmp(json + json_cursor - 1, (char*)",", 1) == 0) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 enum pubnub_res pubnub_set_state(pubnub_t*   pb,
@@ -307,97 +336,58 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    rslt = pbcc_set_state_prep(
-        &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
+    rslt = pbcc_set_state_prep(&pb->core,
+                               channel,
+                               channel_group,
+                               uuid ? uuid : pbcc_uuid_get(&pb->core),
+                               state);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
-            int ch_cnt = 0, cg_cnt = 0, tot_ch = 0, tot_cg = 0;
-            if (channel){
+            int tot_ch = 0, tot_cg = 0;
+            if (channel) {
                 tot_ch = 1;
-                for (int i=0; i < (int)strlen(channel); i++) { tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch; }
+                for (int i = 0; i < (int)strlen(channel); i++) {
+                    tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch;
+                }
             }
-            if (channel_group){
+            if (channel_group) {
                 tot_cg = 1;
-                for (int i=0; i < (int)strlen(channel_group); i++) { tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg; }
+                for (int i = 0; i < (int)strlen(channel_group); i++) {
+                    tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg;
+                }
             }
-            
-            int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
-            char * json_state = (char*)malloc(buff_size);
-            if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
+
+            int buff_size = ((tot_ch + tot_cg) * strlen(state))
+                            + (channel ? strlen(channel) : 1)
+                            + (channel_group ? strlen(channel_group) : 1) + 20;
+            char* json_state = (char*)malloc(buff_size);
+            if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)) {
                 pb->core.state = (char*)realloc((char*)pb->core.state, buff_size);
             }
-            else if (pb->core.state == NULL){
+            else if (pb->core.state == NULL) {
                 pb->core.state = (char*)malloc(buff_size);
             }
-            int mem_len = 0;
-            if (json_state != NULL && pb->core.state != NULL){
-                mem_len = strlen("{");
-                memcpy(json_state, "{", mem_len);
-                int cm_len = strlen(",");
+            int json_cursor = 0;
+            if (json_state != NULL && pb->core.state != NULL) {
+                json_cursor += json_include(json_state + json_cursor, "{");
                 if (channel && strncmp(channel, (char*)",", 1) != 0) {
-                    char* str_ch = (char*)channel;
-                    char* ch_temp;
-                    size_t ch_len;
-                    bool end = false;
-                    do{
-                        ch_temp = strchr(str_ch,',');
-                        if (ch_cnt > 0) { 
-                            memcpy(json_state + mem_len, ",", cm_len);
-                            mem_len += cm_len;
-                        }
-                        if (ch_temp == NULL) { end = true; ch_len = strlen(str_ch); }
-                        else { ch_len = ch_temp - str_ch; }
-
-                        if (ch_len == 0) { continue; }
-
-                        char* curr_ch = (char*)malloc(ch_len + 1);
-                        strncpy(curr_ch, str_ch, ch_len);
-                        curr_ch[ch_len] = '\0';
-
-                        mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
-
-                        ch_cnt++;
-                        str_ch = ch_temp + 1;
-                        free(curr_ch);
-                    } while (false == end);
+                    json_cursor += json_include_state_for_each(json_state + json_cursor, channel, (char*)state);
                 }
-                
+
                 if (channel_group) {
-                    char* str_cg = (char*)channel_group;
-                    char* cg_temp;
-                    int cg_len;
-                    bool end = false;
-                    do{
-                        cg_temp = strchr(str_cg,',');
-                        if (ch_cnt > 0 || cg_cnt > 0) { 
-                            memcpy(json_state + mem_len, ",", cm_len);
-                            mem_len += cm_len;
-                        }
-                        if (cg_temp == NULL) { end = true; cg_len = strlen(str_cg); }
-                        else { cg_len = cg_temp - str_cg; }
-
-                         if (cg_len == 0) { continue; }
-
-                        char* curr_cg = (char*)malloc(cg_len + 1);
-                        strncpy(curr_cg, str_cg, cg_len);
-                        curr_cg[cg_len] = '\0';
-
-                        mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
-
-                        cg_cnt++;
-                        str_cg = cg_temp + 1;
-                        free(curr_cg);
-                    } while (false == end);
+                    json_cursor += json_include_state_for_each(json_state + json_cursor, channel_group, (char*)state);
                 }
-                
-                int cb_len = strlen("}");
-                memcpy(json_state + mem_len, "}", cb_len);
-                mem_len += cb_len;
-                json_state[mem_len] = '\0';
+
+                if (json_ends_with_separator(json_state, json_cursor)) {
+                    json_cursor -= strlen(",");
+                }
+
+                json_cursor += json_include(json_state + json_cursor, "}");
+                json_state[json_cursor] = '\0';
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
                 strcpy((char*)pb->core.state, (const char*)json_state);
@@ -569,7 +559,7 @@ int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg)
         return -1;
     }
     o_msg->size = pb->core.http_buf_len;
-    o_msg->ptr = pb->core.http_reply;
+    o_msg->ptr  = pb->core.http_reply;
 
     pubnub_mutex_unlock(pb->monitor);
     return 0;
