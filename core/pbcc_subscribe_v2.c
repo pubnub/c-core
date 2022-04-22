@@ -206,6 +206,7 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     if (p->msg_ofs >= p->msg_end) {
         return rslt;
     }
+    PUBNUB_LOG_DEBUG("RESPONSE = %s\n", p->http_reply);
     start = p->http_reply + p->msg_ofs;
     if (*start != '{') {
         PUBNUB_LOG_ERROR(

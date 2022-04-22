@@ -273,6 +273,25 @@ enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* uuid)
     return rslt;
 }
 
+int json_kvp_builder(char* jsonbuilder, int pos, char* key, char* val)
+{
+    int dq_len = strlen("\"");
+    int co_len = strlen(":");
+    int key_len = strlen(key);
+    int val_len = strlen(val);
+
+    memcpy(jsonbuilder + pos, "\"", dq_len);
+    pos += dq_len;
+    memcpy(jsonbuilder + pos, key, key_len);
+    pos += key_len;
+    memcpy(jsonbuilder + pos, "\"", dq_len);
+    pos += dq_len;
+    memcpy(jsonbuilder + pos, ":", co_len);
+    pos += co_len;
+    memcpy(jsonbuilder + pos, val, val_len);
+    pos += val_len;
+    return pos;
+}
 
 enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                                  char const* channel,
@@ -296,10 +315,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
-            int ch_cnt = 0;
-            int cg_cnt = 0;
-            int tot_ch = 0;
-            int tot_cg = 0;
+            int ch_cnt = 0, cg_cnt = 0, tot_ch = 0, tot_cg = 0;
             if (channel){
                 tot_ch = 1;
                 for (int i=0; i < strlen(channel); i++) { tot_ch = (channel[i] == ',') ? tot_ch + 1 : tot_ch; }
@@ -322,9 +338,6 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 mem_len = strlen("{");
                 memcpy(json_state, "{", mem_len);
                 int cm_len = strlen(",");
-                int dq_len = strlen("\"");
-                int co_len = strlen(":");
-                int st_len = strlen(state);
                 if (channel && strncmp(channel, (char*)",", 1) != 0) {
                     char* str_ch = (char*)channel;
                     char* ch_temp;
@@ -341,23 +354,15 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
 
                         if (ch_len == 0) { continue; }
 
-                        char curr_ch[92];
+                        char* curr_ch = (char*)malloc(ch_len + 1);
                         strncpy(curr_ch, str_ch, ch_len);
                         curr_ch[ch_len] = '\0';
 
-                        memcpy(json_state + mem_len, "\"", dq_len);
-                        mem_len += dq_len;
-                        memcpy(json_state + mem_len, curr_ch, ch_len);
-                        mem_len += ch_len;
-                        memcpy(json_state + mem_len, "\"", dq_len);
-                        mem_len += dq_len;
-                        memcpy(json_state + mem_len, ":", co_len);
-                        mem_len += co_len;
-                        memcpy(json_state + mem_len, state, st_len);
-                        mem_len += st_len;
+                        mem_len = json_kvp_builder(json_state, mem_len, curr_ch, state);
 
                         ch_cnt++;
                         str_ch = ch_temp + 1;
+                        free(curr_ch);
                     } while (false == end);
                 }
                 
@@ -377,23 +382,15 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
 
                          if (cg_len == 0) { continue; }
 
-                        char curr_cg[92];
+                        char* curr_cg = (char*)malloc(cg_len + 1);
                         strncpy(curr_cg, str_cg, cg_len);
                         curr_cg[cg_len] = '\0';
 
-                        memcpy(json_state + mem_len, "\"", dq_len);
-                        mem_len += dq_len;
-                        memcpy(json_state + mem_len, curr_cg, cg_len);
-                        mem_len += cg_len;
-                        memcpy(json_state + mem_len, "\"", dq_len);
-                        mem_len += dq_len;
-                        memcpy(json_state + mem_len, ":", co_len);
-                        mem_len += co_len;
-                        memcpy(json_state + mem_len, state, st_len);
-                        mem_len += st_len;
+                        mem_len = json_kvp_builder(json_state, mem_len, curr_cg, state);
 
                         cg_cnt++;
                         str_cg = cg_temp + 1;
+                        free(curr_cg);
                     } while (false == end);
                 }
                 
