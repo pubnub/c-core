@@ -1,3 +1,9 @@
+## v3.4.2
+April 25 2022
+
+#### Fixed
+- Handle state for subscribe and resubscribe.
+
 ## v3.4.1
 March 09 2022
 

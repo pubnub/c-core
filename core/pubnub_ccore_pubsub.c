@@ -39,6 +39,7 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
     p->message_to_send = NULL;
+    p->state = NULL;
 
 #if PUBNUB_USE_GZIP_COMPRESSION
     p->gzip_msg_len = 0;
@@ -103,6 +104,7 @@ bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
 char const* pbcc_get_msg(struct pbcc_context* pb)
 {
     if (pb->msg_ofs < pb->msg_end) {
+        PUBNUB_LOG_DEBUG("RESPONSE = %s\n", pb->http_reply);
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
@@ -650,6 +652,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (p->state) { ADD_URL_PARAM(qparam, state, p->state); }
 #if PUBNUB_CRYPTO_API
     if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
