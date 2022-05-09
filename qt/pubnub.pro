@@ -11,6 +11,10 @@ INCLUDEPATH += ..
 win32:INCLUDEPATH += ../core/c99
 DEPENDPATH += ../core
 
+DEFINES += PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_DEBUG 
+
+CONFIG += debug
+
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/network/pubnub_qt
 INSTALLS += target

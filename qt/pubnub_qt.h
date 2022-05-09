@@ -88,17 +88,24 @@ public:
        pbp.get_users(nullopt, nullopt, last_bookmark, “”, nullopt);
   */
 using namespace pubnub;
-class list_options : public include_options {
+class list_options {
+    QString d_include;
     size_t d_limit;
     QString d_start;
     QString d_end;
     tribool d_count;
-
+  
 public:
     list_options()
         : d_limit(0)
         , d_count(tribool::not_set)
     {}
+    list_options& include(QString incl)
+    {
+        d_include = incl;
+        return *this;
+    }
+    const char* include() { return qPrintable(d_include); }
     list_options& limit(size_t lim)
     {
         d_limit = lim;
@@ -1081,7 +1088,7 @@ public:
                        and paginated response
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_users(list_options& options);
+    pubnub_res getall_uuidmetadata(list_options& options);
 
     /** Initiates a transaction for creating a user with the attributes specified in
         @p user_obj.
@@ -1100,7 +1107,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_user(QByteArray const& user_obj, QStringList& include);
+    pubnub_res set_uuidmetadata(QByteArray const& user_obj, QStringList& include);
 
     /** Initiates a transaction for creating a user with the attributes specified in
         @p user_obj.
@@ -1123,8 +1130,8 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_user(QJsonDocument const& user_obj, QStringList& include) {
-        return create_user(user_obj.toJson(), include);
+    pubnub_res set_uuidmetadata(QJsonDocument const& user_obj, QStringList& include) {
+        return set_uuidmetadata(user_obj.toJson(), include);
     }
     
     /** Initiates transaction that returns the user object specified with @p user_id,
@@ -1142,51 +1149,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_user(QString const& user_id, QStringList& include);
-
-    /** Initiates trnsaction that updates the user object specified with the `id` key
-        of the @p user_obj with any new information you provide.
-
-        If transaction is successful, the response(a JSON object) will have key
-        "data" with corresponding value. If not, there should be "error" key 'holding'
-        error description. If there is neither of the two keys mentioned, response parsing
-        function returns response format error.
-        Complete answer will be available via pubnub_get().
-        Contains the updated user object, optionally including the user's custom data object.
-
-        @note User ID and name are required properties in the @p user_obj
-        @param user_obj The JSON string with the definition of the User
-                        Object to create.
-        @param include list with additional/complex attributes to include in response.
-                       Use empty list if you don't want to retrieve additional attributes.
-        @return #PNR_STARTED on success, an error otherwise
-      */
-    pubnub_res update_user(QByteArray const& user_obj, QStringList& include);
-
-    /** Initiates trnsaction that updates the user object specified with the `id` key
-        of the @p user_obj with any new information you provide.
-        Function receives 'Qt Json' document.
-        Helpful if you're already using Qt support for Json in your code, ensuring message
-        you're sending is valid Json, unlike the case when applying the function that receives
-        byte array and doesn't check whether those bytes represent sound Json.
-
-        If transaction is successful, the response(a JSON object) will have key
-        "data" with corresponding value. If not, there should be "error" key 'holding'
-        error description. If there is neither of the two keys mentioned, response parsing
-        function returns response format error.
-        Complete answer will be available via pubnub_get().
-        Contains the updated user object, optionally including the user's custom data object.
-
-        @note User ID and name are required properties in the @p user_obj
-        @param user_obj The JSON string with the definition of the User
-                        Object to create.
-        @param include list with additional/complex attributes to include in response.
-                       Use empty list if you don't want to retrieve additional attributes.
-        @return #PNR_STARTED on success, an error otherwise
-      */
-    pubnub_res update_user(QJsonDocument const& user_obj, QStringList& include) {
-        return update_user(user_obj.toJson(), include);
-    }
+    pubnub_res get_uuidmetadata(QString const& user_id, QStringList& include);
 
     /** Initiates transaction that deletes the user specified with @p user_id.
 
@@ -1199,7 +1162,7 @@ public:
         @param user_id The User ID.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res delete_user(QString const& user_id);
+    pubnub_res remove_uuidmetadata(QString const& user_id);
 
     /** Initiates transaction that returns the spaces associated with the subscriber key,
         optionally including each space's custom data object.

@@ -24,7 +24,7 @@ void pubnub_qt_sample::onPublish(pubnub_res result)
 {
     d_out << "onPublish! Result: '" << pubnub_res_2_string(result) << "', Response: " << d_pb.last_publish_result() << "\n";
     
-    reconnect(SLOT(onPublish(pubnub_res)), SLOT(onConnect(pubnub_res)));
+    reconnect(SLOT(onPublish(pubnub_res)), SLOT(onSubscribe(pubnub_res)));
     result = d_pb.subscribe(chann);
     if (result != PNR_STARTED) {
         d_out << "Subscribe failed, result: '"<< pubnub_res_2_string(result) << "'\n";
@@ -36,10 +36,10 @@ void pubnub_qt_sample::onPublish(pubnub_res result)
 void pubnub_qt_sample::onConnect(pubnub_res result)
 {
     d_out << "onConnect! Result: '" << pubnub_res_2_string(result) << "'\n";
-    reconnect(SLOT(onConnect(pubnub_res)), SLOT(onSubscribe(pubnub_res)));
-    result = d_pb.subscribe(chann);
+    reconnect(SLOT(onConnect(pubnub_res)), SLOT(onPublish(pubnub_res)));
+    result = d_pb.publish(chann, "\"Hello world from Qt!\"");
     if (result != PNR_STARTED) {
-        d_out << "Subscribe failed, result: '"<< pubnub_res_2_string(result) << "'\n";
+        d_out << "Publish failed, result: '"<< pubnub_res_2_string(result) << "'\n";
         QCoreApplication::instance()->quit();
     }
 }
@@ -136,15 +136,13 @@ void pubnub_qt_sample::onStateGet(pubnub_res result)
 
 void pubnub_qt_sample::execute()
 {
-    qDebug() << "execute()";
     
 //    d_pb.set_ssl_options(0);
     d_pb.set_uuid_v4_random();
-
-    connect(&d_pb, SIGNAL(outcome(pubnub_res)), this, SLOT(onPublish(pubnub_res)));
-    pubnub_res result = d_pb.publish(chann, "\"Hello world from Qt!\"");
+    connect(&d_pb, SIGNAL(outcome(pubnub_res)), this, SLOT(onConnect(pubnub_res)));
+    pubnub_res result = d_pb.subscribe(chann);
     if (result != PNR_STARTED) {
-        d_out << "Publish failed, result: '"<< pubnub_res_2_string(result) << "'\n";
+        d_out << "Subscribe failed, result: '"<< pubnub_res_2_string(result) << "'\n";
         QCoreApplication::instance()->quit();
     }
 }

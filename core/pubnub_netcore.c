@@ -292,21 +292,21 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
     , pbcc_parse_message_counts_response /* PBTT_MESSAGE_COUNTS */
 #endif
 #if PUBNUB_USE_OBJECTS_API
-    , pbcc_parse_objects_api_response /* PBTT_GET_USERS */
-    , pbcc_parse_objects_api_response /* PBTT_CREATE_USER */
-    , pbcc_parse_objects_api_response /* PBTT_GET_USER */
-    , pbcc_parse_objects_api_response /* PBTT_DELETE_USER */
-    , pbcc_parse_objects_api_response /* PBTT_GET_SPACES */
-    , pbcc_parse_objects_api_response /* PBTT_CREATE_SPACE */
-    , pbcc_parse_objects_api_response /* PBTT_GET_SPACE */
-    , pbcc_parse_objects_api_response /* PBTT_DELETE_SPACE */
+    , pbcc_parse_objects_api_response /* PBTT_GETALL_UUIDMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_SET_UUIDMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_GET_UUIDMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_DELETE_UUIDMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_GETALL_CHANNELMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_SET_CHANNELMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_GET_CHANNELMETADATA */
+    , pbcc_parse_objects_api_response /* PBTT_REMOVE_CHANNELMETADATA */
     , pbcc_parse_objects_api_response /* PBTT_GET_MEMBERSHIPS */
     , pbcc_parse_objects_api_response /* PBTT_JOIN_SPACES */
-    , pbcc_parse_objects_api_response /* PBTT_UPDATE_MEMBERSHIPS */
-    , pbcc_parse_objects_api_response /* PBTT_LEAVE_SPACES */
+    , pbcc_parse_objects_api_response /* PBTT_SET_MEMBERSHIPS */
+    , pbcc_parse_objects_api_response /* PBTT_REMOVE_MEMBERSHIPS */
     , pbcc_parse_objects_api_response /* PBTT_GET_MEMBERS */
     , pbcc_parse_objects_api_response /* PBTT_ADD_MEMBERS */
-    , pbcc_parse_objects_api_response /* PBTT_UPDATE_MEMBERS */
+    , pbcc_parse_objects_api_response /* PBTT_SET_MEMBERS */
     , pbcc_parse_objects_api_response /* PBTT_REMOVE_MEMBERS */
 #endif /* PUBNUB_USE_OBJECTS_API */
 #if PUBNUB_USE_ACTIONS_API
