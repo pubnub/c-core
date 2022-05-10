@@ -26,6 +26,7 @@ private slots:
     void onWhereNow(pubnub_res result);
     void onSetState(pubnub_res result);
     void onStateGet(pubnub_res result);
+    void onUnsubscribe(pubnub_res result);
             
 private:
     bool reconnect(char const *from, char const *to);

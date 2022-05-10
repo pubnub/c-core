@@ -130,9 +130,19 @@ void pubnub_qt_sample::onSetState(pubnub_res result)
 void pubnub_qt_sample::onStateGet(pubnub_res result)
 {
     d_out << "onStateGet! Result: '" << pubnub_res_2_string(result) << "' Response:\n" << d_pb.get() << "\n";
-    QCoreApplication::instance()->quit();
+    reconnect(SLOT(onStateGet(pubnub_res)), SLOT(onUnsubscribe(pubnub_res)));
+    result = d_pb.leave(chann);
+    if (result != PNR_STARTED) {
+        d_out << "leave failed, result: '"<< pubnub_res_2_string(result) << "'\n";
+        QCoreApplication::instance()->quit();
+    }
 }
 
+void pubnub_qt_sample::onUnsubscribe(pubnub_res result)
+{
+    d_out << "onUnsubscribe! Result: '" << pubnub_res_2_string(result) << "' Response:\n" << d_pb.get() << "\n";
+    QCoreApplication::instance()->quit();
+}
 
 void pubnub_qt_sample::execute()
 {
