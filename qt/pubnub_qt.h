@@ -89,10 +89,10 @@ public:
   */
 using namespace pubnub;
 class list_options {
-    QString d_include;
+    std::string d_include;
     size_t d_limit;
-    QString d_start;
-    QString d_end;
+    std::string d_start;
+    std::string d_end;
     tribool d_count;
   
 public:
@@ -100,30 +100,31 @@ public:
         : d_limit(0)
         , d_count(tribool::not_set)
     {}
-    list_options& include(QString incl)
+    list_options& include(std::string const& incl)
     {
         d_include = incl;
         return *this;
     }
-    const char* include() { return qPrintable(d_include); }
+    char const* include() { return (d_include.size() > 0) ? d_include.c_str() : NULL; }
+
     list_options& limit(size_t lim)
     {
         d_limit = lim;
         return *this;
     }
     size_t limit() { return d_limit; }
-    list_options& start(QString const& st)
+    list_options& start(std::string const& st)
     {
         d_start = st;
         return *this;
     }
-    char const* start() { return d_start.isEmpty() ? 0 : d_start.toLatin1().data(); }
-    list_options& end(QString const& e)
+    char const* start() { return (d_start.size() > 0) ? d_start.c_str() : NULL; }
+    list_options& end(std::string const& e)
     {
         d_end = e;
         return *this;
     }
-    char const* end() { return d_end.isEmpty() ? 0 : d_end.toLatin1().data(); }
+    char const* end() { return (d_end.size() > 0) ? d_end.c_str() : NULL; }
     list_options& count(tribool co)
     {
         d_count = co;

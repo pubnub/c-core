@@ -73,7 +73,6 @@ pubnub_qt::~pubnub_qt()
     pbcc_deinit(d_context.data());
 }
 
-
 static QString GetOsName()
  {
  #if defined(Q_OS_ANDROID)
@@ -384,7 +383,8 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
             d_reply.reset(d_qnam.get(req));
             break;
         }
-        connect(d_reply.data(), SIGNAL(finished()), this, SLOT(httpFinished()));
+        const bool connected = connect(d_reply.data(), SIGNAL(finished()), this, SLOT(httpFinished()));
+        qDebug() << "Connection established?" << connected;
         d_transactionTimer->start(d_transaction_timeout_duration_ms);
     }
     return result;
@@ -909,19 +909,20 @@ pubnub_res pubnub_qt::list_channel_group(QString const& channel_group)
 }
 
 #if PUBNUB_USE_OBJECTS_API
-// pubnub_res pubnub_qt::getall_uuidmetadata(list_options& options)
-// {
-//     KEEP_THREAD_SAFE();
-//     return startRequest(
-//         pbcc_getall_uuidmetadata_prep(d_context.data(),
-//                             options.include(), 
-//                             options.limit(),
-//                             options.start(),
-//                             options.end(),
-//                             options.count(),
-//                             PBTT_GETALL_UUIDMETADATA),
-//                     PBTT_GETALL_UUIDMETADATA);
-// }
+pubnub_res pubnub_qt::getall_uuidmetadata(list_options& options)
+{
+    KEEP_THREAD_SAFE();
+    d_method = pubnubSendViaGET;
+    return startRequest(
+        pbcc_getall_uuidmetadata_prep(d_context.data(),
+                            options.include(), 
+                            options.limit(),
+                            options.start(),
+                            options.end(),
+                            options.count(),
+                            PBTT_GETALL_UUIDMETADATA),
+                    PBTT_GETALL_UUIDMETADATA);
+}
 
 
 // pubnub_res pubnub_qt::set_uuidmetadata(QByteArray const& user_obj, QStringList& include)
@@ -1428,7 +1429,6 @@ void pubnub_qt::set_origin(QString const& origin)
         set_ssl_options(d_ssl_opts);
     }
 }
-
 
 pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
 {
