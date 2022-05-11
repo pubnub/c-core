@@ -7,9 +7,9 @@
 #include "pubnub_json_parse.h"
 #include "pubnub_log.h"
 #include "pubnub_memory_block.h"
+#include "pnstdcompat.h"
 
 #include <stdio.h>
-
 
 static enum pubnub_res simple_parse_response(struct pbcc_context* p)
 {
@@ -232,7 +232,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     char cnt_buf[sizeof(int) * 4 + 1];
-    sprintf(cnt_buf, "%d", count);
+    sprintf_s(cnt_buf, sizeof(cnt_buf), "%d", count);
     if (count) { ADD_URL_PARAM(qparam, count, cnt_buf); }
     ADD_URL_PARAM(qparam, include_token, include_token ? "true" : "false");
     if (string_token != pbccNotSet) { ADD_URL_PARAM(qparam, stringtoken, string_token == pbccTrue ? "1" : "0"); }

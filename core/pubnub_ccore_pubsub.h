@@ -5,11 +5,11 @@
 #include "pubnub_config.h"
 #include "pubnub_api_types.h"
 #include "pubnub_generate_uuid.h"
+#include "pnstdcompat.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 /** @file pubnub_ccore_pubsub.h
 
@@ -313,7 +313,7 @@ struct pbcc_context {
     time_t epoch_time = time(NULL);                                         \
     char timestamp[16];                                                     \
     if (epoch_time > 0) {                                                   \
-        sprintf(timestamp, "%lld", (long long)epoch_time);                  \
+        sprintf_s(timestamp, 16, "%lld", (long long)epoch_time);            \
         ADD_URL_PARAM(qparam, timestamp, timestamp);                        \
     }
 

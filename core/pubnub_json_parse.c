@@ -3,6 +3,7 @@
 
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
+#include "pnstdcompat.h"
 #include <string.h>
 
 
@@ -285,7 +286,7 @@ char* pbjson_get_status_400_message_value(struct pbjson_elem const* el){
                         parse_len,
                         parsed.start);
         char* msgtext = (char*)malloc(sizeof(char) * (parse_len+3));
-        sprintf(msgtext, "%.*s", parse_len, parsed.start);
+        sprintf_s(msgtext, sizeof(msgtext), "%.*s", parse_len, parsed.start);
         return msgtext;
     }
 
