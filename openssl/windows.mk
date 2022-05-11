@@ -82,10 +82,10 @@ pubnub_sync_sample.exe: ..\core\samples\pubnub_sync_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_sync_grant_token_sample.exe: ..\core\samples\pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_sync_grant_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
 
 pubnub_sync_revoke_token_sample.exe: ..\core\samples\pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_sync_revoke_token_sample.c pubnub_sync_dynamiciv.lib $(LIBS)
 
 pubnub_encrypt_decrypt_static_iv_sample.exe: ..\core\samples\pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) /Fe:pubnub_encrypt_decrypt_static_iv_sample.exe ..\core\samples\pubnub_encrypt_decrypt_iv_sample.c pubnub_sync.lib $(LIBS)
@@ -98,7 +98,7 @@ pubnub_sync_secretkey_sample.exe: ..\core\samples\pubnub_sync_secretkey_sample.c
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_sync_secretkey_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_objects_secretkey_sample.exe: ..\core\samples\pubnub_objects_secretkey_sample.c pubnub_sync.lib	
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_objects_secretkey_sample.c pubnub_sync.lib $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_objects_secretkey_sample.c pubnub_sync.lib $(LIBS)
 
 metadata.exe: ..\core\samples\metadata.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\metadata.c pubnub_sync.lib $(LIBS)
@@ -110,13 +110,13 @@ cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_advanced_history_sample.exe: ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib  $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib  $(LIBS)
 
 pubnub_publish_via_post_sample.exe: ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_publish_via_post_secretkey_sample.exe: ..\core\samples\pubnub_publish_via_post_secretkey_sample.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_secretkey_sample.c pubnub_sync.lib $(LIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_publish_via_post_secretkey_sample.c pubnub_sync.lib $(LIBS)
 
 pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API $(INCLUDES) ..\core\samples\pubnub_callback_sample.c  pubnub_callback.lib $(LIBS)

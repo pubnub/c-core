@@ -72,10 +72,10 @@ cancel_subscribe_sync_sample.exe: ..\core\samples\cancel_subscribe_sync_sample.c
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\cancel_subscribe_sync_sample.c pubnub_sync.lib  $(LDLIBS)
 
 pubnub_advanced_history_sample.exe: ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib  $(LDLIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_advanced_history_sample.c pubnub_sync.lib  $(LDLIBS)
 
 pubnub_publish_via_post_sample.exe: ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LDLIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\samples\pubnub_publish_via_post_sample.c pubnub_sync.lib $(LDLIBS)
 
 pubnub_callback_sample.exe: ..\core\samples\pubnub_callback_sample.c pubnub_callback.lib
 	$(CC) $(CFLAGS) -DPUBNUB_CALLBACK_API -DPUBNUB_USE_ADNS=1 $(INCLUDES) ..\core\samples\pubnub_callback_sample.c  pubnub_callback.lib  $(LDLIBS)
@@ -96,7 +96,7 @@ pubnub_callback_subloop_sample.exe: ..\core\samples\pubnub_callback_subloop_samp
 	$(CC) -D PUBNUB_CALLBACK_API $(CFLAGS) $(INCLUDES) ..\core\samples\pubnub_callback_subloop_sample.c ..\core\pubnub_create.c pubnub_callback.lib $(LDLIBS)
 
 pubnub_fntest.exe: ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c  fntest\pubnub_fntest_windows.c fntest\pubnub_fntest_runner.c pubnub_sync.lib
-	$(CC) $(CFLAGS) $(INCLUDES) ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c fntest\pubnub_fntest_windows.c fntest\pubnub_fntest_runner.c pubnub_sync.lib  $(LDLIBS)
+	$(CC) $(CFLAGS) /D _CRT_SECURE_NO_WARNINGS $(INCLUDES) ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c fntest\pubnub_fntest_windows.c fntest\pubnub_fntest_runner.c pubnub_sync.lib  $(LDLIBS)
 
 CONSOLE_SOURCEFILES=..\core\samples\console\pubnub_console.c ..\core\samples\console\pnc_helpers.c ..\core\samples\console\pnc_readers.c ..\core\samples\console\pnc_subscriptions.c
 

@@ -43,7 +43,7 @@ futres_nesting_sync.exe: samples\futres_nesting.cpp $(SOURCEFILES) $(PROXY_INTF_
 	$(CXX) /Fe$@ $(CFLAGS) samples\futres_nesting.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
 
 fntest_runner.exe: fntest\pubnub_fntest_runner.cpp $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest\pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp
-	$(CXX) /Fe$@ $(CFLAGS) fntest\pubnub_fntest_runner.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS) 
+	$(CXX) /Fe$@ -D _CRT_SECURE_NO_WARNINGS $(CFLAGS) fntest\pubnub_fntest_runner.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS) 
 
 
 ##
