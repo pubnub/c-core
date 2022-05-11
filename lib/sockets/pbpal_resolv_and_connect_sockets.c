@@ -182,10 +182,14 @@ connect_TCP_socket(pb_socket_t*           skt,
 
     switch (dest->sa_family) {
     case AF_INET:
+        char str[INET_ADDRSTRLEN];
         sockaddr_size                         = sizeof(struct sockaddr_in);
         ((struct sockaddr_in*)dest)->sin_port = htons(port);
         PUBNUB_LOG_TRACE("connect_TCP_socket(Ipv4:%s)\n",
-                         inet_ntoa(((struct sockaddr_in*)dest)->sin_addr));
+                         inet_ntop(AF_INET,
+                                &(((struct sockaddr_in*)dest)->sin_addr),
+                                str,
+                                INET_ADDRSTRLEN));
         break;
 #if PUBNUB_USE_IPV6
     case AF_INET6: {

@@ -37,4 +37,9 @@
 ##################
 .github/.release
 
+#Qt#
+##################
+qt/debug/*
+qt/release/*
+
 .idea

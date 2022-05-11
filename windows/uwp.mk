@@ -26,7 +26,7 @@ PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj p
 !endif
 
 DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_WIN_SSPI=0 -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
-UDEFINES=-D "_UNICODE" -D "UNICODE" -D "WINAPI_FAMILY=WINAPI_FAMILY_APP" -D "__WRL_NO_DEFAULT_LIB__" -D "_CRT_SECURE_NO_WARNINGS" -D "_WINSOCK_DEPRECATED_NO_WARNINGS" -D "__UWP__" -D "HAVE_STRUCT_TIMESPEC"
+UDEFINES=-D "_UNICODE" -D "UNICODE" -D "WINAPI_FAMILY=WINAPI_FAMILY_APP" -D "__WRL_NO_DEFAULT_LIB__" -D "__UWP__" -D "HAVE_STRUCT_TIMESPEC"
 CFLAGS = -Yu"pch.h" -Zi -Y- -MP -W3  -Gy -Zc:wchar_t $(UDEFINES) $(DEFINES) -Gm- -O2 -sdl -errorReport:prompt -WX- -Zc:forScope /Gd /Oy- /Oi /MD /FC -FU"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\lib\x86\store\references\platform.winmd"
 # -Zi enables debugging, remove to get a smaller .exe and no .pdb
 # -MP use one compiler process for each input, faster on multi-core (ignored by clang-cl)

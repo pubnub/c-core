@@ -111,6 +111,7 @@ cppcheck: $(SOURCEFILES) $(CONSOLE_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(CALLB
 
 clean:
 	del *.exe
+	del *.exp
 	del *.obj
 	del *.pdb
 	del *.il?
