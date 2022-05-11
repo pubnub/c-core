@@ -6,6 +6,7 @@
 #include "pubnub_url_encode.h"
 #include "lib/pb_strnlen_s.h"
 #include "pbcc_objects_api.h"
+#include "pnstdcompat.h"
 
 #include "pbpal.h"
 #include <stdio.h>

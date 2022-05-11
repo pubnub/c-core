@@ -23,6 +23,7 @@
 #ifdef _MSC_VER
 #define strdup(p) _strdup(p)
 #endif
+#include "core/pnstdcompat.h"
 
 enum grant_bit_flag { 
     PERM_READ = 1

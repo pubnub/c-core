@@ -4,6 +4,7 @@
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 #include <string.h>
+#include "pnstdcompat.h"
 
 
 char const* pbjson_skip_whitespace(char const* start, char const* end)

@@ -7,6 +7,7 @@
 #include "pubnub_json_parse.h"
 #include "pubnub_log.h"
 #include "pubnub_memory_block.h"
+#include "pnstdcompat.h"
 
 #include <stdio.h>
 

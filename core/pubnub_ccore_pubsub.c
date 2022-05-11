@@ -8,6 +8,7 @@
 #include "lib/pb_strnlen_s.h"
 #include "pubnub_ccore_pubsub.h"
 #include "pubnub_api_types.h"
+#include "pnstdcompat.h"
 
 #if PUBNUB_CRYPTO_API
 #include "pubnub_crypto.h"

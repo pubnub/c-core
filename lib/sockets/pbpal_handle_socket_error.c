@@ -6,6 +6,7 @@
 #include "core/pubnub_log.h"
 
 #include <string.h>
+#include "core/pnstdcompat.h"
 
 
 void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)

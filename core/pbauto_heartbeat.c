@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-
+#include "core/pnstdcompat.h"
 
 #define PUBNUB_MIN_HEARTBEAT_PERIOD                  \
     (PUBNUB_MIN_TRANSACTION_TIMER / UNIT_IN_MILLI)

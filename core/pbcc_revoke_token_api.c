@@ -7,6 +7,7 @@
 #include "pubnub_url_encode.h"
 #include "lib/pb_strnlen_s.h"
 #include "pbcc_revoke_token_api.h"
+#include "pnstdcompat.h"
 
 #include "pbpal.h"
 #include <stdio.h>

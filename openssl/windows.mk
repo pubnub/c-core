@@ -51,7 +51,7 @@ GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_to
 GRANT_TOKEN_OBJFILES = pbcc_grant_token_api.obj pubnub_grant_token_api.obj cborparser.obj cborerrorstrings.obj cborparser_dup_string.obj
 !endif
 
-CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) /D _CRT_SECURE_NO_WARNINGS /D PUBNUB_CRYPTO_API=1 /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
+CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) /D HAVE_STRERROR_S /D PUBNUB_CRYPTO_API=1 /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)

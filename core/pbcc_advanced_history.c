@@ -11,6 +11,7 @@
 
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
+#include "pnstdcompat.h"
 #else
 #error this module can only be used if PUBNUB_USE_ADVANCED_HISTORY is defined and set to 1
 #endif

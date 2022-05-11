@@ -8,7 +8,7 @@
 #include "pubnub_url_encode.h"
 #include "lib/pb_strnlen_s.h"
 #include "pbcc_subscribe_v2.h"
-
+#include "pnstdcompat.h"
 
 #include <stdio.h>
 #include <stdlib.h>

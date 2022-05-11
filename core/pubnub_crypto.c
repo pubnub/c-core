@@ -5,6 +5,7 @@
 #include "pubnub_internal.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi_ex.h"
+#include "core/pnstdcompat.h"
 
 #include "lib/md5/pbmd5.h"
 #include "pbsha256.h"
@@ -538,7 +539,7 @@ int base64encode(char* result, int max_size, const void* b64_encode_this, int en
     BIO_get_mem_ptr(mem_bio, &mem_bio_mem_ptr);  //Store address of mem_bio's memory structure.
 
     // Ensure the provided output buffer is big enough to store the encoded result.
-    if ((*mem_bio_mem_ptr).length + 1 > (size_t)max_size) {
+    if ((size_t)((*mem_bio_mem_ptr).length + 1) > (size_t)max_size) {
         BIO_free_all(b64_bio);
         return -1;
     }

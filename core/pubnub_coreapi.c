@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "core/pnstdcompat.h"
 
 #if PUBNUB_ONLY_PUBSUB_API
 #warning This module is not useful if configured to use only the publish and subscribe API

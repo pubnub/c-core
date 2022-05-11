@@ -8,6 +8,7 @@
 #include "pubnub_json_parse.h"
 #include "lib/pb_strnlen_s.h"
 #include "pbcc_actions_api.h"
+#include "pnstdcompat.h"
 
 #include <stdio.h>
 #include <stdlib.h>
