@@ -356,7 +356,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                         if (ch_len == 0) { continue; }
 
                         char* curr_ch = (char*)malloc(ch_len + 1);
-                        strncpy(curr_ch, str_ch, ch_len);
+                        memcpy(curr_ch, str_ch, ch_len);
                         curr_ch[ch_len] = '\0';
 
                         mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
@@ -384,7 +384,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                          if (cg_len == 0) { continue; }
 
                         char* curr_cg = (char*)malloc(cg_len + 1);
-                        strncpy(curr_cg, str_cg, cg_len);
+                        memcpy(curr_cg, str_cg, cg_len);
                         curr_cg[cg_len] = '\0';
 
                         mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
@@ -401,7 +401,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 json_state[mem_len] = '\0';
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-                strcpy((char*)pb->core.state, (const char*)json_state);
+                memcpy(pb->core.state, (const char*)json_state, strlen(json_state));
                 free(json_state);
                 json_state = NULL;
             }

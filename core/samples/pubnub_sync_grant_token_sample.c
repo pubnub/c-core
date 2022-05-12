@@ -113,7 +113,8 @@ int main()
     int ttl_minutes = 60;
     char perm_obj[2000];
     char* authorized_uuid = "my_authorized_uuid";
-    sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
+    int obj_len = snprintf(perm_obj, sizeof(perm_obj), "{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
+    perm_obj[obj_len] = '\0';
     res = pubnub_grant_token(gtp, perm_obj);
     char* grant_token = NULL;
     if (PNR_STARTED == res) {

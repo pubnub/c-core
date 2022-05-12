@@ -593,13 +593,52 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
     return base64_encoded;
 }
 
+char* pam_frmt_str(pubnub_t* p, bool pamv3, char const* qs_to_sign, char const* partial_url, char* method, char const* msg, bool hasBody)
+{
+    int nlen  = strlen("\n");
+    int sklen = strlen(p->core.subscribe_key);
+    int pklen = strlen(p->core.publish_key);
+    int ulen  = strlen(partial_url);
+    int qlen  = strlen(qs_to_sign);
+    int methodlen  = (method != NULL) ? strlen(method) : 0;
+    int msglen     = (hasBody && msg != NULL) ? strlen(msg) : 0;
+
+    int str_to_sign_len = sklen + pklen + ulen + qlen + (3 * nlen);
+    if (pamv3){
+        str_to_sign_len += methodlen + nlen + msglen;
+    }
+    int ix = 0;
+    char* str_to_sign = (char*)malloc(sizeof(char) * str_to_sign_len+1); // 4 variables concat + 1
+    if (str_to_sign != NULL) {
+        if (pamv3){
+            memcpy(str_to_sign, method, methodlen);
+            ix += methodlen;
+        }
+        else{
+            memcpy(str_to_sign + ix, p->core.subscribe_key, sklen);
+            ix += sklen;
+        }
+        memcpy(str_to_sign + ix, "\n", nlen); ix += nlen;
+        memcpy(str_to_sign+ix, p->core.publish_key, pklen); ix += pklen;
+        memcpy(str_to_sign + ix, "\n", nlen); ix += nlen;
+        memcpy(str_to_sign+ix, partial_url, ulen); ix += ulen;
+        memcpy(str_to_sign + ix, "\n", nlen); ix += nlen;
+        memcpy(str_to_sign+ix, qs_to_sign, qlen); ix += qlen;
+        if (pamv3){
+            memcpy(str_to_sign + ix, "\n", nlen); ix += nlen;
+            if (hasBody){
+                memcpy(str_to_sign+ix, msg, msglen); ix += msglen;
+            }
+        }
+        str_to_sign[str_to_sign_len] = '\0';
+        //sprintf(str_to_sign, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
+    }
+    return str_to_sign;
+}
+
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature) {
     enum pubnub_res sign_status = PNR_OK;
-    int str_to_sign_len = strlen(p->core.subscribe_key) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign);
-    char* str_to_sign = (char*)malloc(sizeof(char) * str_to_sign_len + 5); // 4 variables concat + 1
-    if (str_to_sign != NULL) {
-        sprintf(str_to_sign, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
-    }
+    char* str_to_sign = pam_frmt_str(p, false,qs_to_sign,partial_url, NULL, NULL, false);
     PUBNUB_LOG_DEBUG("\nv2 str_to_sign = %s\n", str_to_sign);
     char* part_sign = (char*)"";
 #if PUBNUB_CRYPTO_API
@@ -646,16 +685,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
         method_verb = (char*)"UNKOWN";
         return PNR_CRYPTO_NOT_SUPPORTED;
     }
-    int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + (hasBody ? strlen(msg) : 0);
-    char* str_to_sign = (char*)malloc(sizeof(char) * (str_to_sign_len + 1));
-    if (str_to_sign != NULL) {
-        if (hasBody) {
-            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
-        }
-        else {
-            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n", method_verb, p->core.publish_key, partial_url, qs_to_sign);
-        }
-    }
+    char* str_to_sign = pam_frmt_str(p, true, qs_to_sign, partial_url, method_verb, msg, hasBody);
     PUBNUB_LOG_DEBUG("\nv3 str_to_sign = %s\n", str_to_sign);
     char* part_sign = (char*)"";
 #if PUBNUB_CRYPTO_API
@@ -671,7 +701,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
             part_sign[strlen(part_sign) - 1] = '\0';
             last_sign_char = part_sign[strlen(part_sign) - 1];
         }
-        sprintf(signature, "v2.%s", part_sign);
+        snprintf(signature, sizeof(signature), "v2.%s", part_sign);
     }
     free(part_sign);
     return sign_status;
