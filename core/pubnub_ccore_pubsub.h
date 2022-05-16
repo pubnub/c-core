@@ -139,7 +139,7 @@ struct pbcc_context {
                              (unsigned long)((pbc)->http_buf_len + 1 + sizeof(string_literal)));\
             return PNR_TX_BUFF_TOO_SMALL;                                      \
         }                                                                      \
-        memcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal), strlen(string_literal));       \
+        strcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal));       \
         (pbc)->http_buf_len += sizeof(string_literal) - 1;                     \
     } while (0)
 
@@ -242,14 +242,14 @@ struct pbcc_context {
         (pbc)->message_to_send = (message);                                    \
     }                                                                          \
     else {                                                                     \
-        (pbc)->message_to_send = memcpy((pbc)->http_buf + (pbc)->http_buf_len + 1,\
-                                        (message), strlen(message));                            \
+        (pbc)->message_to_send = strcpy((pbc)->http_buf + (pbc)->http_buf_len + 1,\
+                                        (message));                            \
     }
 #else
 #define NOT_COMPRESSED_AND(pbc)
 #define CHECK_IF_GZIP_COMPRESSED(pbc, message)                                 \
-    (pbc)->message_to_send = memcpy((pbc)->http_buf + (pbc)->http_buf_len + 1, \
-                                    (message), strlen(message))
+    (pbc)->message_to_send = strcpy((pbc)->http_buf + (pbc)->http_buf_len + 1, \
+                                    (message))
 #endif /* PUBNUB_USE_GZIP_COMPRESSION */
 
 #define APPEND_MESSAGE_BODY_M(rslt, pbc, message)                              \

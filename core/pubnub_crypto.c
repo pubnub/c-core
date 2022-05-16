@@ -701,7 +701,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
             part_sign[strlen(part_sign) - 1] = '\0';
             last_sign_char = part_sign[strlen(part_sign) - 1];
         }
-        snprintf(signature, sizeof(signature), "v2.%s", part_sign);
+        sprintf(signature, "v2.%s", part_sign);
     }
     free(part_sign);
     return sign_status;

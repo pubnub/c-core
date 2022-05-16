@@ -401,7 +401,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                 json_state[mem_len] = '\0';
                 PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-                memcpy(pb->core.state, (const char*)json_state, strlen(json_state));
+                memcpy((char*)pb->core.state, (const char*)json_state, strlen(json_state));
                 free(json_state);
                 json_state = NULL;
             }
