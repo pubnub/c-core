@@ -218,6 +218,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
                                   char const*          end)
 {
     char const* const uname = pubnub_uname();
+    char const* uuid = pbcc_uuid_get(pb);
     enum pubnub_res rslt = PNR_OK;
 
     pb->http_content_len = 0;
@@ -231,6 +232,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
     char cnt_buf[sizeof(int) * 4 + 1];
     sprintf(cnt_buf, "%d", count);
     if (count) { ADD_URL_PARAM(qparam, count, cnt_buf); }
@@ -374,6 +376,7 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context* pb, const char* uuid)
 {
     PUBNUB_ASSERT_OPT(uuid != NULL);
     enum pubnub_res rslt = PNR_OK;
+    char const* pb_uuid = pbcc_uuid_get(pb);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
@@ -385,6 +388,7 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context* pb, const char* uuid)
                                 uuid);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (pb_uuid) { ADD_URL_PARAM(qparam, uuid, pb_uuid); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -416,6 +420,7 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
     PUBNUB_ASSERT_OPT(uuid != NULL);
     PUBNUB_ASSERT_OPT(state != NULL);
     enum pubnub_res rslt = PNR_OK;
+    char const* pb_uuid = pbcc_uuid_get(pb);
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -440,6 +445,7 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (pb_uuid) { ADD_URL_PARAM(qparam, uuid, pb_uuid); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -470,6 +476,7 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
 {
     PUBNUB_ASSERT_OPT(uuid != NULL);
     enum pubnub_res rslt = PNR_OK;
+    char const* pb_uuid = pbcc_uuid_get(pb);
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -493,6 +500,7 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (pb_uuid) { ADD_URL_PARAM(qparam, uuid, pb_uuid); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -520,6 +528,7 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* pb,
 {
     PUBNUB_ASSERT_OPT(channel_group != NULL);
     enum pubnub_res rslt = PNR_OK;
+    char const* uuid = pbcc_uuid_get(pb);
 
     pb->http_buf_len = snprintf(
         pb->http_buf,
@@ -530,6 +539,7 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -558,6 +568,7 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* pb,
 {
     PUBNUB_ASSERT_OPT(channel_group != NULL);
     enum pubnub_res rslt = PNR_OK;
+    char const* uuid = pbcc_uuid_get(pb);
 
     pb->http_buf_len = snprintf(
         pb->http_buf,
@@ -568,6 +579,7 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
 
     if (NULL != param) {
         PUBNUB_ASSERT_OPT(channel != NULL);
