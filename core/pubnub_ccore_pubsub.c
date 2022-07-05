@@ -626,6 +626,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     unsigned*            heartbeat)
 {
     char const* uuid = pbcc_uuid_get(p);
+    char const* const uname = pubnub_uname();
     enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
@@ -649,7 +650,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                 "/0/%s",
                                 p->timetoken);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
-    if (pubnub_uname()) { ADD_URL_PARAM(qparam, pnsdk, pubnub_uname()); }
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
     if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
     if (p->state) { ADD_URL_PARAM(qparam, state, p->state); }
