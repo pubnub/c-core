@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "3.4.2"
+version: "3.4.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-07-05
+    version: v3.4.3
+    changes:
+      - type: bug
+        text: "Removed extra parenthesis in get_dns_ip function code."
+      - type: bug
+        text: "Added uuid query param to history, set/get state, wherenow, channel-group operations."
   - date: 2022-04-25
     version: v3.4.2
     changes:
@@ -613,7 +620,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -679,7 +686,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -745,7 +752,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -807,7 +814,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -868,7 +875,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -924,7 +931,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"
@@ -977,7 +984,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.2
+            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
             requires:
               -
                 name: "miniz"

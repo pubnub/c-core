@@ -164,7 +164,7 @@ static void get_dns_ip(struct sockaddr* addr)
 static void get_dns_ip(struct sockaddr* addr)
 {
     addr->sa_family = AF_INET;
-    struct pubnub_ipv4_address* p = &(((struct sockaddr_in*)addr)->sin_addr.s_addr));
+    struct pubnub_ipv4_address* p = (struct pubnub_ipv4_address*)&(((struct sockaddr_in*)addr)->sin_addr.s_addr);
     get_default_dns_ip(p);
 }
 #endif /* PUBNUB_SET_DNS_SERVERS */

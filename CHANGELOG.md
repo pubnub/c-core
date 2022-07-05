@@ -1,3 +1,10 @@
+## v3.4.3
+July 05 2022
+
+#### Fixed
+- Removed extra parenthesis in get_dns_ip function code.
+- Added uuid query param to history, set/get state, wherenow, channel-group operations.
+
 ## v3.4.2
 April 25 2022
 
