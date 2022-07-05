@@ -42,6 +42,9 @@ struct pbcc_context {
     /** The last recived subscribe time token. */
     char timetoken[20];
 
+    /** Pointer to the presence state */
+    char const* state;
+
 #if PUBNUB_USE_SUBSCRIBE_V2
     /** The last received subscribe V2 region */
     int region;

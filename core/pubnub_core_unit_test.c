@@ -1934,7 +1934,7 @@ Ensure(single_context_pubnub, set_state)
     pubnub_set_uuid(pbp, "universal");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/ch/uuid/"
-                             "universal/data?pnsdk=unit-test-0.1&state=%7B%7D");
+                             "universal/data?pnsdk=unit-test-0.1&uuid=universal&state=%7B%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: 67\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"payload\":{}}",
@@ -1954,7 +1954,7 @@ Ensure(single_context_pubnub, set_state)
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/ch/uuid/"
                              "shazalakazoo/"
-                             "data?pnsdk=unit-test-0.1&auth=auth-key&state=%7B%7D");
+                             "data?pnsdk=unit-test-0.1&uuid=universal&auth=auth-key&state=%7B%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "63\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{}}",
@@ -1975,7 +1975,7 @@ Ensure(single_context_pubnub, set_state)
     expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/,/uuid/"
                              "melwokee/"
                              "data?pnsdk=unit-test-0.1&channel-"
-                             "group=[gr1,gr2]&auth=authentic&state=%7BIOW%7D");
+                             "group=[gr1,gr2]&uuid=universal&auth=authentic&state=%7BIOW%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "66\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{IOW}}",
@@ -1997,7 +1997,7 @@ Ensure(single_context_pubnub, set_state)
     expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/[ch1,ch2]/"
                              "uuid/linda-darnell/"
                              "data?pnsdk=unit-test-0.1&channel-group="
-                             "[gr3,gr4]&auth=three&state=%7BI%7D");
+                             "[gr3,gr4]&uuid=universal&auth=three&state=%7BI%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "64\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{I}}",
@@ -2082,7 +2082,7 @@ Ensure(single_context_pubnub, set_state_set_auth_and_uuid)
     pubnub_set_uuid(pbp, "morgan");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/ch/uuid/morgan/"
-                             "data?pnsdk=unit-test-0.1&auth=portobello&state=%7B%22the_privateer%22%3A%22letter_of_marque%22%7D");
+                             "data?pnsdk=unit-test-0.1&uuid=morgan&auth=portobello&state=%7B%22the_privateer%22%3A%22letter_of_marque%22%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "96\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{\"the_privateer\":\"letter_of_"
@@ -2106,7 +2106,7 @@ Ensure(single_context_pubnub, set_state_bad_response)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/Xsub/channel/ch/uuid/chili_peppers/"
-        "data?pnsdk=unit-test-0.1&state=%7B%22chili%22%3A%22red%22%7D");
+        "data?pnsdk=unit-test-0.1&uuid=chili_peppers&state=%7B%22chili%22%3A%22red%22%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: 2\r\n\r\n<chiki, chiki bum, "
              "chiki bum]",
              NULL);
@@ -2128,7 +2128,7 @@ Ensure(single_context_pubnub, state_get_1channel)
     pubnub_set_uuid(pbp, "speedy");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subY/channel/ch/uuid/speedy?pnsdk=unit-test-0.1");
+        "/v2/presence/sub-key/subY/channel/ch/uuid/speedy?pnsdk=unit-test-0.1&uuid=speedy");
     incoming("HTTP/1.1 200\r\nContent-Length: 76\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"payload\":{\"running\"}}",
@@ -2147,7 +2147,7 @@ Ensure(single_context_pubnub, state_get_1channel)
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/ch/uuid/"
-                             "brza_fotografija?pnsdk=unit-test-0.1&auth=auth-"
+                             "brza_fotografija?pnsdk=unit-test-0.1&uuid=speedy&auth=auth-"
                              "key");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "72\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
@@ -2265,7 +2265,7 @@ Ensure(single_context_pubnub, state_get_bad_response)
     pubnub_set_uuid(pbp, "annoying");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/ch/uuid/"
-                             "annoying?pnsdk=unit-test-0.1");
+                             "annoying?pnsdk=unit-test-0.1&uuid=annoying");
     incoming("HTTP/1.1 200\r\nContent-Length: 18\r\n\r\n[incorrect answer]", NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
@@ -2635,7 +2635,7 @@ Ensure(single_context_pubnub, where_now_set_uuid)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-her/uuid/50fb7a0b-1688-45b9-9f27-ea83308464d8"
-        "-ab3817df?pnsdk=unit-test-0.1");
+        "-ab3817df?pnsdk=unit-test-0.1&uuid=50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "100\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"Payload\":{\"channels\":[discovery,nat_geo,nature]"
@@ -2662,7 +2662,7 @@ Ensure(single_context_pubnub, where_now_set_auth)
     pubnub_set_auth(pbp, "big");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-sea/uuid/whale?pnsdk=unit-test-0.1&auth=big");
+        "/v2/presence/sub-key/sub-sea/uuid/whale?pnsdk=unit-test-0.1&uuid=fish&auth=big");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "107\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"Payload\":{\"channels\":[first,second,third,"
@@ -2690,7 +2690,7 @@ Ensure(single_context_pubnub, where_now_in_progress_interrupted_and_accomplished
     pubnub_set_auth(pbp, "west");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-good/uuid/bad?pnsdk=unit-test-0.1&auth=west");
+        "/v2/presence/sub-key/sub-good/uuid/bad?pnsdk=unit-test-0.1&uuid=man_with_no_name&auth=west");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "140\r\n\r\n{\"status\":200,\"message\":\"OK\",\"ser",
              NULL);
@@ -3964,7 +3964,7 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/sub-measurements/uuid/"
-                             "bird?pnsdk=unit-test-0.1&auth=weather-"
+                             "bird?pnsdk=unit-test-0.1&uuid=bird&auth=weather-"
                              "conditions");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "100\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
