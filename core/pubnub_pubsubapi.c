@@ -216,7 +216,11 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* pb)
 }
 
 
-enum pubnub_res pubnub_set_uuid(pubnub_t* pb, const char* uuid)
+enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid) {
+    return pubnub_set_user_id(p, uuid);
+}
+
+enum pubnub_res pubnub_set_user_id(pubnub_t* pb, const char* uuid)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
@@ -226,8 +230,11 @@ enum pubnub_res pubnub_set_uuid(pubnub_t* pb, const char* uuid)
     return res;
 }
 
+char const* pubnub_uuid_get(pubnub_t* p) {
+    return pubnub_user_id_get(p);
+}
 
-char const* pubnub_uuid_get(pubnub_t* pb)
+char const* pubnub_user_id_get(pubnub_t* pb)
 {
     char const* result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
