@@ -45,14 +45,37 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     throughout the use of context @p p, that is, until either you call
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
-    the @p uuid string is not copied to the Pubnub context @p p.  */
+    the @p uuid string is not copied to the Pubnub context @p p.  
+    
+    @deprecated this is provided as a workaround for existing users.
+    Please use `user_id` instead of `uuid`.
+*/
 enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the UUID identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_uuid().
-    */
+    
+    @deprecated this is provided as a workaround for existing users.
+    Please use `user_id` instead of `uuid`.
+*/
 char const* pubnub_uuid_get(pubnub_t* p);
+
+/** Set the user identification of PubNub client context @p p to @p
+    uuid. Pass NULL to unset.
+
+    @note The @p uuid is expected to be valid (ASCIIZ string) pointers
+    throughout the use of context @p p, that is, until either you call
+    pubnub_done() on @p p, or the otherwise stop using it (like when
+    the whole software/ firmware stops working). So, the contents of
+    the @p uuid string is not copied to the Pubnub context @p p.  */
+enum pubnub_res pubnub_set_user_id(pubnub_t* p, const char* uuid);
+
+/** Get the user identification of PubNub client context @p p.
+    After pubnub_init(), it will return `NULL` until you change it
+    to non-`NULL` via pubnub_set_uuid().
+    */
+char const* pubnub_user_id_get(pubnub_t* p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.
