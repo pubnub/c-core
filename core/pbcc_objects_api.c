@@ -77,7 +77,7 @@ enum pubnub_res pbcc_getall_uuidmetadata_prep(
                                     enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
@@ -134,7 +134,7 @@ enum pubnub_res pbcc_set_uuidmetadata_prep(
     enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_obj != NULL);
@@ -188,7 +188,7 @@ enum pubnub_res pbcc_get_uuidmetadata_prep(
                                    enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     if (NULL == uuid_metadataid) {
@@ -236,7 +236,7 @@ enum pubnub_res pbcc_get_uuidmetadata_prep(
 enum pubnub_res pbcc_remove_uuidmetadata_prep(struct pbcc_context* pb, char const* uuid_metadataid, enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     if (NULL == uuid_metadataid) {
@@ -288,7 +288,7 @@ enum pubnub_res pbcc_getall_channelmetadata_prep(struct pbcc_context* pb,
                                      enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
@@ -342,7 +342,7 @@ enum pubnub_res pbcc_set_channelmetadata_prep(struct pbcc_context* pb,
                                        enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel_metadata_obj != NULL);
@@ -398,7 +398,7 @@ enum pubnub_res pbcc_get_channelmetadata_prep(struct pbcc_context* pb,
                                     enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     if (NULL == channel_metadataid) {
@@ -450,7 +450,7 @@ enum pubnub_res pbcc_get_channelmetadata_prep(struct pbcc_context* pb,
 enum pubnub_res pbcc_remove_channelmetadata_prep(struct pbcc_context* pb, char const* channel_metadataid, enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     if (NULL == channel_metadataid) {
@@ -507,7 +507,7 @@ enum pubnub_res pbcc_get_memberships_prep(struct pbcc_context* pb,
                                           enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
@@ -565,7 +565,7 @@ enum pubnub_res pbcc_set_memberships_prep(struct pbcc_context* pb,
                                              enum pubnub_trans pt)
 {
     char const* const  uname = pubnub_uname();
-    char const*        uuid = pbcc_uuid_get(pb);
+    char const*        uuid = pbcc_user_id_get(pb);
     enum pubnub_res    rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(set_obj != NULL);
@@ -624,7 +624,7 @@ enum pubnub_res pbcc_get_members_prep(struct pbcc_context* pb,
                                       enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
@@ -684,7 +684,7 @@ enum pubnub_res pbcc_set_members_prep(struct pbcc_context* pb,
                                          enum pubnub_trans pt)
 {
     char const* const  uname = pubnub_uname();
-    char const*        uuid = pbcc_uuid_get(pb);
+    char const*        uuid = pbcc_user_id_get(pb);
     enum pubnub_res    rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(set_obj != NULL);

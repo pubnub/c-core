@@ -494,7 +494,7 @@ enum pubnub_res pbcc_message_counts_prep(
                                          char const*          channel_timetokens)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid  = pbcc_uuid_get(p);
+    char const*       uuid  = pbcc_user_id_get(p);
     enum pubnub_res   rslt = PNR_OK;
     
     if (check_parameters(p, channel, timetoken, channel_timetokens) != pnarg_PARAMS_OK) {

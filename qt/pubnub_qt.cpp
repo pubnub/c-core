@@ -389,13 +389,13 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
 void pubnub_qt::set_uuid(QString const& uuid)
 {
     KEEP_THREAD_SAFE();
-    pbcc_set_uuid(d_context.data(), uuid.isEmpty() ? NULL : uuid.toLatin1().data());
+    pbcc_set_user_id(d_context.data(), uuid.isEmpty() ? NULL : uuid.toLatin1().data());
 }
 
 QString pubnub_qt::uuid() const
 {
     QMutexLocker lk(&d_mutex);
-    char const*  uuid = pbcc_uuid_get(d_context.data());
+    char const*  uuid = pbcc_user_id_get(d_context.data());
     return QString((NULL == uuid) ? "" : uuid);
 }
 
@@ -814,7 +814,7 @@ pubnub_res pubnub_qt::where_now(QString const& uuid)
     KEEP_THREAD_SAFE();
     return startRequest(pbcc_where_now_prep(d_context.data(),
                                             uuid.isEmpty()
-                                                ? pbcc_uuid_get(d_context.data())
+                                                ? pbcc_user_id_get(d_context.data())
                                                 : uuid.toLatin1().data()),
                         PBTT_WHERENOW);
 }
@@ -831,7 +831,7 @@ pubnub_res pubnub_qt::set_state(QString const& channel,
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? pbcc_uuid_get(d_context.data()) : uuid.toLatin1().data(),
+            uuid.isEmpty() ? pbcc_user_id_get(d_context.data()) : uuid.toLatin1().data(),
             state.toLatin1().data()),
         PBTT_SET_STATE);
 }
@@ -847,7 +847,7 @@ pubnub_res pubnub_qt::state_get(QString const& channel,
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? pbcc_uuid_get(d_context.data())
+            uuid.isEmpty() ? pbcc_user_id_get(d_context.data())
                            : uuid.toLatin1().data()),
         PBTT_STATE_GET);
 }

@@ -61,7 +61,7 @@ enum pubnub_res pbcc_grant_token_prep(
     enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(perm_obj != NULL);

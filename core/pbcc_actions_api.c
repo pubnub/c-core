@@ -22,7 +22,7 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                                             enum pubnub_action_type actype,
                                             char const** val)
 {
-    char const* uuid = pbcc_uuid_get(pb);
+    char const* uuid = pbcc_user_id_get(pb);
     char const* type_literal;
     if (NULL == uuid) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - uuid not set.\n", pb);
@@ -87,7 +87,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
                                      char const* value)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
@@ -224,7 +224,7 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
                                         pubnub_chamebl_t action_timetoken)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
@@ -301,7 +301,7 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
                                       size_t limit)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);
@@ -350,7 +350,7 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
 {
     enum pubnub_res rslt = PNR_OK;
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     char const* reply = pb->http_reply;
     int replylen = pb->http_buf_len;
     struct pbjson_elem elem;
@@ -432,7 +432,7 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
                                                size_t limit)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       uuid = pbcc_user_id_get(pb);
     enum pubnub_res rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(channel != NULL);

@@ -26,8 +26,8 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
     p->subscribe_key = subscribe_key;
     p->timetoken[0]  = '0';
     p->timetoken[1]  = '\0';
-    p->uuid          = NULL;
-    p->uuid_len      = 0;
+    p->user_id          = NULL;
+    p->user_id_len      = 0;
     p->auth          = NULL;
     p->auth_token    = NULL;
     p->msg_ofs = p->msg_end = 0;
@@ -52,7 +52,7 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 
 void pbcc_deinit(struct pbcc_context* p)
 {
-    pbcc_set_uuid(p, NULL);
+    pbcc_set_user_id(p, NULL);
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     if (p->http_reply != NULL) {
         free(p->http_reply);
@@ -130,37 +130,37 @@ char const* pbcc_get_channel(struct pbcc_context* pb)
 }
 
 
-enum pubnub_res pbcc_set_uuid(struct pbcc_context* pb, const char* uuid)
+enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id)
 {
-    if (pb->uuid_len > 0) {
-        free(pb->uuid);
-        pb->uuid = NULL;
+    if (pb->user_id_len > 0) {
+        free(pb->user_id);
+        pb->user_id = NULL;
     }
-    pb->uuid_len = (NULL == uuid) ? 0 : strlen(uuid);
-    if (pb->uuid_len > 0) {
-        PUBNUB_ASSERT_OPT(pb->uuid_len <= MAX_UUID_STRING_LENGTH);
+    pb->user_id_len = (NULL == user_id) ? 0 : strlen(user_id);
+    if (pb->user_id_len > 0) {
+        PUBNUB_ASSERT_OPT(pb->user_id_len <= MAX_UUID_STRING_LENGTH);
         /** Alloc additional space for NULL character */
-        pb->uuid = (char*)malloc((pb->uuid_len + 1) * sizeof(char));
-        if (NULL == pb->uuid) {
+        pb->user_id = (char*)malloc((pb->user_id_len + 1) * sizeof(char));
+        if (NULL == pb->user_id) {
             PUBNUB_LOG_ERROR(
-                "Error: pbcc_set_uuid(pb=%p) - "
-                "Failed to allocate memory for uuid: "
-                "uuid = '%s'\n",
+                "Error: pbcc_set_user_id(pb=%p) - "
+                "Failed to allocate memory for user_id: "
+                "user_id = '%s'\n",
                 pb,
-                uuid);
-            pb->uuid_len = 0;
+                user_id);
+            pb->user_id_len = 0;
             return PNR_OUT_OF_MEMORY;
         }
-        strncpy(pb->uuid, uuid, pb->uuid_len);
-        pb->uuid[pb->uuid_len] = '\0';
+        strncpy(pb->user_id, user_id, pb->user_id_len);
+        pb->user_id[pb->user_id_len] = '\0';
     }
     return PNR_OK;
 }
 
 
-char const* pbcc_uuid_get(struct pbcc_context* pb)
+char const* pbcc_user_id_get(struct pbcc_context* pb)
 {
-    return (0 == pb->uuid_len) ? NULL : pb->uuid;
+    return (0 == pb->user_id_len) ? NULL : pb->user_id;
 }
 
 
@@ -490,7 +490,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   enum pubnub_method   method)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid  = pbcc_uuid_get(pb);
+    char const*       user_id  = pbcc_user_id_get(pb);
     enum pubnub_res   rslt  = PNR_OK;
 
     PUBNUB_ASSERT_OPT(message != NULL);
@@ -509,7 +509,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     }
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, user_id, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -579,7 +579,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
 {
     enum pubnub_res   rslt = PNR_OK;
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
 
     PUBNUB_ASSERT_OPT(message != NULL);
 
@@ -595,7 +595,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, user_id, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -625,7 +625,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     char const*          channel_group,
                                     unsigned*            heartbeat)
 {
-    char const* uuid = pbcc_uuid_get(p);
+    char const* user_id = pbcc_user_id_get(p);
     char const* const uname = pubnub_uname();
     enum pubnub_res rslt = PNR_OK;
 
@@ -652,7 +652,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, user_id, user_id); }
     if (p->state) { ADD_URL_PARAM(qparam, state, p->state); }
 #if PUBNUB_CRYPTO_API
     if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
