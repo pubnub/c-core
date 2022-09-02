@@ -177,7 +177,7 @@ int main()
                                                   uuid, PNC_UUID_SIZE, true);
             
             if (strlen(uuid) == 0) {
-                strcpy(uuid, pubnub_uuid_get(pn));
+                strcpy(uuid, pubnub_user_id_get(pn));
             }
             
             pnc_ops_parse_response("pubnub_get_state()",
@@ -190,7 +190,7 @@ int main()
             pnc_read_string_from_console("JSON state without escaping",
                                          state, PNC_READ_STRING_SIZE);
             pnc_ops_parse_response("pubnub_set_state()",
-                                   pubnub_set_state(pn, channel, NULL, pubnub_uuid_get(pn), state), pn);
+                                   pubnub_set_state(pn, channel, NULL, pubnub_user_id_get(pn), state), pn);
             break;
         case MENU_WHERE_NOW:
             pnc_read_string_from_console_optional("UUID", uuid, PNC_UUID_SIZE, true);
@@ -305,7 +305,7 @@ static void displayMenuOptions(pubnub_t *pn)
     puts("ENTER "STRINGIFY(MENU_HERE_NOW)"  FOR Here Now");
     puts("ENTER "STRINGIFY(MENU_TIME)"  FOR Time");
     printf("ENTER "STRINGIFY(MENU_AUTH)"  FOR Setting/Unsetting auth key (current: %s)\n", pubnub_auth_get(pn));
-    printf("ENTER "STRINGIFY(MENU_UUID)"  FOR Setting UUID (current: %s)\n", pubnub_uuid_get(pn));
+    printf("ENTER "STRINGIFY(MENU_UUID)"  FOR Setting UUID (current: %s)\n", pubnub_user_id_get(pn));
     puts("ENTER "STRINGIFY(MENU_STATE_GET)"  FOR Getting Subscriber State");
     puts("ENTER "STRINGIFY(MENU_SET_STATE)"  FOR Setting Subscriber State");
     puts("ENTER "STRINGIFY(MENU_WHERE_NOW)"  FOR Where Now");

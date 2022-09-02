@@ -3077,7 +3077,7 @@ Ensure(single_context_pubnub, list_channel_group_interrupted_and_accomplished)
 Ensure(single_context_pubnub, subscribe)
 {
     pubnub_init(pbp, "publ-magazin", "sub-magazin");
-    attest(pubnub_uuid_get(pbp), streqs(NULL));
+    attest(pubnub_user_id_get(pbp), streqs(NULL));
     attest(pubnub_auth_get(pbp), streqs(NULL));
     attest(pubnub_last_time_token(pbp), streqs("0"));
     expect_have_dns_for_pubnub_origin();
@@ -3254,7 +3254,7 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
     attest(pubnub_get_channel(pbp), streqs("ch17"));
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pubnub_uuid_get(pbp), streqs("admin"));
+    attest(pubnub_user_id_get(pbp), streqs("admin"));
     attest(pubnub_auth_get(pbp), streqs("msgs"));
 }
 
@@ -3611,7 +3611,7 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
 Ensure(single_context_pubnub, keeps_connection_alive_for_certain_number_of_operations)
 {
     pubnub_init(pbp, "publ-persian", "sub-persian");
-    attest(pubnub_uuid_get(pbp), streqs(NULL));
+    attest(pubnub_user_id_get(pbp), streqs(NULL));
     attest(pubnub_auth_get(pbp), streqs(NULL));
     attest(pubnub_last_time_token(pbp), streqs("0"));
 
@@ -3695,7 +3695,7 @@ Ensure(single_context_pubnub,
        doesnt_keep_connection_alive_confinement_number_of_operations)
 {
     pubnub_init(pbp, "publ-some", "sub-some");
-    attest(pubnub_uuid_get(pbp), streqs(NULL));
+    attest(pubnub_user_id_get(pbp), streqs(NULL));
     attest(pubnub_auth_get(pbp), streqs(NULL));
     attest(pubnub_last_time_token(pbp), streqs("0"));
 
@@ -3739,7 +3739,7 @@ Ensure(single_context_pubnub,
 Ensure(single_context_pubnub, keep_alive_connection_closes_time_runs_out)
 {
     pubnub_init(pbp, "publ-some", "sub-some");
-    attest(pubnub_uuid_get(pbp), streqs(NULL));
+    attest(pubnub_user_id_get(pbp), streqs(NULL));
     attest(pubnub_auth_get(pbp), streqs(NULL));
     attest(pubnub_last_time_token(pbp), streqs("0"));
 
@@ -4979,7 +4979,7 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_cancel(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_uuid(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
-    expect_assert_in(pubnub_uuid_get(NULL), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_auth_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_last_http_code(NULL), "pubnub_pubsubapi.c");

@@ -248,7 +248,7 @@ int main()
     }
 
     puts("Getting where_now presence...");
-    res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
+    res = pubnub_where_now(pbp, pubnub_user_id_get(pbp));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -269,7 +269,7 @@ int main()
     }
 
     puts("Setting state...");
-    res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
+    res = pubnub_set_state(pbp, chan, NULL, pubnub_user_id_get(pbp), "{\"x\":5}");
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -290,7 +290,7 @@ int main()
     }
 
     puts("Getting state...");
-    res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
+    res = pubnub_state_get(pbp, chan, NULL, pubnub_user_id_get(pbp));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }

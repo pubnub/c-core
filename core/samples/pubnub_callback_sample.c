@@ -415,7 +415,7 @@ int main()
     puts("-----------------------");
     puts("Getting where_now presence...");
     puts("-----------------------");
-    res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
+    res = pubnub_where_now(pbp, pubnub_user_id_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_where_now() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);
@@ -448,7 +448,7 @@ int main()
     puts("-----------------------");
     puts("Setting state...");
     puts("-----------------------");
-    res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
+    res = pubnub_set_state(pbp, chan, NULL, pubnub_user_id_get(pbp), "{\"x\":5}");
     if (res != PNR_STARTED) {
         printf("pubnub_set_state() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);
@@ -481,7 +481,7 @@ int main()
     puts("-----------------------");
     puts("Getting state...");
     puts("-----------------------");
-    res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
+    res = pubnub_state_get(pbp, chan, NULL, pubnub_user_id_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_state_get() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);
