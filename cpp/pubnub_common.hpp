@@ -629,30 +629,56 @@ public:
         lock_guard lck(d_mutex);
         return d_auth_token;
     }
+    
+    /** sets the user_id to @p uuid. if @p uuid is an empty string,
+        user_id will not be used.
 
-    /** Sets the UUID to @p uuid. If @p uuid is an empty string,
-        UUID will not be used.
-        @see pubnub_set_uuid
+	@deprecated this is provided as a workaround for existing users.
+    	Please use `set_user_id` instead.
+
+        @see pubnub_set_user_id
      */
     void set_uuid(std::string const& uuid)
     {
-        pubnub_set_uuid(d_pb, uuid.empty() ? NULL : uuid.c_str());
+	set_user_id(uuid);
     }
-    /// Set the UUID to a random-generated one
+
+    /** sets the uuid to @p uuid. if @p uuid is an empty string,
+        uuid will not be used.
+
+        @see pubnub_set_user_id
+     */
+    void set_user_id(std::string const& user_id)
+    {
+        pubnub_set_user_id(d_pb, user_id.empty() ? user_id : user_id.c_str());
+    }
+
+    /// Set the user_id with a random-generated UUID
     /// @see pubnub_generate_uuid_v4_random
-    int set_uuid_v4_random()
+    int set_user_id_with_random_uuid_v4()
     {
         struct Pubnub_UUID uuid;
         if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
             return -1;
         }
-        set_uuid(pubnub_uuid_to_string(&uuid).uuid);
+        set_user_id(pubnub_uuid_to_string(&uuid).uuid);
         return 0;
     }
-    /// Returns the current UUID
+
+    /** Returns the current user_id
+ 
+	@deprecated this is provided as a workaround for existing users.
+    	Please use `user_id` instead.
+    */
     std::string const uuid() const
     {
-        char const* uuid = pubnub_uuid_get(d_pb);
+	return user_id();
+    }
+
+    /// Returns the current user_id
+    std::string const user_id() const
+    {
+        char const* uuid = pubnub_user_id_get(d_pb);
         return std::string((NULL == uuid) ? "" : uuid);
     }
 
