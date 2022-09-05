@@ -654,6 +654,17 @@ public:
     }
 
     /// Set the user_id with a random-generated UUID
+    /// 
+    /// @deprecated this is provided as a workaround for existing users.
+    ///	Please use `set_user_id_with_random_uuid_v4` instead.
+    ///
+    /// @see pubnub_generate_uuid_v4_random
+    int set_uuid_v4_random() 
+    {
+	return set_user_id_with_random_uuid_v4();
+    }
+
+    /// Set the user_id with a random-generated UUID
     /// @see pubnub_generate_uuid_v4_random
     int set_user_id_with_random_uuid_v4()
     {
