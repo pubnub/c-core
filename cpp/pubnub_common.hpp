@@ -643,8 +643,8 @@ public:
 	set_user_id(uuid);
     }
 
-    /** sets the uuid to @p uuid. if @p uuid is an empty string,
-        uuid will not be used.
+    /** sets the user_id to @p user_id. if @p user_id is an empty string,
+        user_id will not be used.
 
         @see pubnub_set_user_id
      */
@@ -1807,7 +1807,7 @@ private:
     /// The auth token containing pam permissions
     std::string d_auth_token;
     /// The UUID
-    std::string d_uuid;
+    std::string d_uuid; // TODO: this field is not used anywhere!
     /// The origin set last time (doen't have to be the one used,
     /// the default can be used instead)
     std::string d_origin;

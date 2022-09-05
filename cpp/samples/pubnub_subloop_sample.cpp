@@ -33,11 +33,11 @@ int main()
         std::string chan("hello_world");
         pubnub::context pb("demo", "demo");
  
-        if (0 != pb.set_uuid_v4_random()) {
-            pb.set_uuid("zeka-peka-iz-jendeka");
+        if (0 != pb.set_user_id_with_random_uuid_v4()) {
+            pb.set_user_id("zeka-peka-iz-jendeka");
         }
         else {
-            std::cout << "Generated UUID: " << pb.uuid() << std::endl;
+            std::cout << "Generated UUID: " << pb.user_id() << std::endl;
         }
 
         pb.set_transaction_timeout(
