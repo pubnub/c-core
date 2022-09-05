@@ -73,8 +73,8 @@ int main()
     
     pubnub_init(pn, pubkey, subkey);
     pubnub_init(pn_sub, pubkey, subkey);
-    pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
-    pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
+    pubnub_set_user_id(pn, PNC_DEFAULT_UUID);
+    pubnub_set_user_id(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
 
     pnc_ops_init(pn, pn_sub);
     
@@ -168,7 +168,7 @@ int main()
             break;
         case MENU_UUID:
             pnc_read_string_from_console("UUID", uuid, PNC_UUID_SIZE);
-            pubnub_set_uuid(pn, uuid);
+            pubnub_set_user_id(pn, uuid);
             break;
         case MENU_STATE_GET:
             pnc_read_string_from_console("Channel Name",

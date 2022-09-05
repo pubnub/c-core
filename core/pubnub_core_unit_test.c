@@ -1041,7 +1041,7 @@ Ensure(single_context_pubnub, leave_uuid_auth)
     attest(pbp->core.uuid_len, equals(0));
 
     /* Set UUID */
-    pubnub_set_uuid(pbp, "DEDA-BABACECA-DECA");
+    pubnub_set_user_id(pbp, "DEDA-BABACECA-DECA");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/k/"
                              "leave?pnsdk=unit-test-0.1&uuid=DEDA-BABACECA-"
@@ -1067,7 +1067,7 @@ Ensure(single_context_pubnub, leave_uuid_auth)
     attest(pubnub_last_http_code(pbp), equals(200));
 
     /* Reset UUID */
-    pubnub_set_uuid(pbp, NULL);
+    pubnub_set_user_id(pbp, NULL);
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/k3/"
@@ -1334,7 +1334,7 @@ Ensure(single_context_pubnub, publish_uuid_auth)
     pubnub_init(pbp, "pubX", "Xsub");
 
     /* Set UUID */
-    pubnub_set_uuid(pbp, "0ADA-BEDA-0000");
+    pubnub_set_user_id(pbp, "0ADA-BEDA-0000");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/publish/pubX/Xsub/0/k/0/"
                              "4443?pnsdk=unit-test-0.1&uuid=0ADA-BEDA-0000");
@@ -1359,7 +1359,7 @@ Ensure(single_context_pubnub, publish_uuid_auth)
     attest(pubnub_last_http_code(pbp), equals(200));
 
     /* Reset UUID */
-    pubnub_set_uuid(pbp, NULL);
+    pubnub_set_user_id(pbp, NULL);
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/publish/pubX/Xsub/0/k3/0/"
@@ -1931,7 +1931,7 @@ Ensure(single_context_pubnub, set_state)
     pubnub_init(pbp, "publhis", "subhis");
 
     /* with uuid from context */
-    pubnub_set_uuid(pbp, "universal");
+    pubnub_set_user_id(pbp, "universal");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/ch/uuid/"
                              "universal/data?pnsdk=unit-test-0.1&uuid=universal&state=%7B%7D");
@@ -2079,7 +2079,7 @@ Ensure(single_context_pubnub, set_state_set_auth_and_uuid)
     pubnub_init(pbp, "pubX", "Xsub");
 
     pubnub_set_auth(pbp, "portobello");
-    pubnub_set_uuid(pbp, "morgan");
+    pubnub_set_user_id(pbp, "morgan");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/ch/uuid/morgan/"
                              "data?pnsdk=unit-test-0.1&uuid=morgan&auth=portobello&state=%7B%22the_privateer%22%3A%22letter_of_marque%22%7D");
@@ -2102,7 +2102,7 @@ Ensure(single_context_pubnub, set_state_bad_response)
 {
     pubnub_init(pbp, "pubkey", "Xsub");
 
-    pubnub_set_uuid(pbp, "chili_peppers");
+    pubnub_set_user_id(pbp, "chili_peppers");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/Xsub/channel/ch/uuid/chili_peppers/"
@@ -2125,7 +2125,7 @@ Ensure(single_context_pubnub, state_get_1channel)
     pubnub_init(pbp, "key", "subY");
 
     /* with uuid from context */
-    pubnub_set_uuid(pbp, "speedy");
+    pubnub_set_user_id(pbp, "speedy");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subY/channel/ch/uuid/speedy?pnsdk=unit-test-0.1&uuid=speedy");
@@ -2262,7 +2262,7 @@ Ensure(single_context_pubnub, state_get_bad_response)
 {
     pubnub_init(pbp, "publkey", "Xsub");
 
-    pubnub_set_uuid(pbp, "annoying");
+    pubnub_set_user_id(pbp, "annoying");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/Xsub/channel/ch/uuid/"
                              "annoying?pnsdk=unit-test-0.1&uuid=annoying");
@@ -2360,7 +2360,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
 
     /* here_now on 'channel(s)' and 'channel group(s)' with 'auth' and 'uuid' */
     pubnub_set_auth(pbp, "globe");
-    pubnub_set_uuid(pbp, "12345");
+    pubnub_set_user_id(pbp, "12345");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
@@ -2405,7 +2405,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
 
     /* here_now on 'channel(s)' and 'channel group(s)' with 'auth' and 'uuid' */
     pubnub_set_auth(pbp, "globe");
-    pubnub_set_uuid(pbp, "12345");
+    pubnub_set_user_id(pbp, "12345");
     expect_have_dns_for_pubnub_origin();
 
     /* Don't forget that chunk lengths should be in hexadecimal representation
@@ -2446,7 +2446,7 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
 
     /* here_now on 'channel(s)' and 'channel group(s)' with 'auth' and 'uuid' */
     pubnub_set_auth(pbp, "lion");
-    pubnub_set_uuid(pbp, "cub");
+    pubnub_set_user_id(pbp, "cub");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-one/channel/"
                              "[ch5,ch7]?pnsdk=unit-test-0.1&channel-group=[gr1,"
@@ -2528,7 +2528,7 @@ Ensure(single_context_pubnub, global_here_now_chunked)
 
     /* With uuid & auth */
     pubnub_set_auth(pbp, "beograd");
-    pubnub_set_uuid(pbp, "pobednik");
+    pubnub_set_user_id(pbp, "pobednik");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/"
                              "sub-beo?pnsdk=unit-test-0.1&uuid=pobednik&auth=beograd");
@@ -2631,7 +2631,7 @@ Ensure(single_context_pubnub, where_now_set_uuid)
 {
     pubnub_init(pbp, "publ-her", "sub-her");
 
-    pubnub_set_uuid(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df");
+    pubnub_set_user_id(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/sub-her/uuid/50fb7a0b-1688-45b9-9f27-ea83308464d8"
@@ -2658,7 +2658,7 @@ Ensure(single_context_pubnub, where_now_set_auth)
 {
     pubnub_init(pbp, "publ-sea", "sub-sea");
 
-    pubnub_set_uuid(pbp, "fish");
+    pubnub_set_user_id(pbp, "fish");
     pubnub_set_auth(pbp, "big");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
@@ -2686,7 +2686,7 @@ Ensure(single_context_pubnub, where_now_in_progress_interrupted_and_accomplished
 {
     pubnub_init(pbp, "publ-good", "sub-good");
 
-    pubnub_set_uuid(pbp, "man_with_no_name");
+    pubnub_set_user_id(pbp, "man_with_no_name");
     pubnub_set_auth(pbp, "west");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
@@ -2773,7 +2773,7 @@ Ensure(single_context_pubnub, heartbeat_channel_and_channelgroups)
     pubnub_init(pbp, "publ-ocean", "sub-ocean");
 
     pubnub_set_auth(pbp, "sailing");
-    pubnub_set_uuid(pbp, "capetan");
+    pubnub_set_user_id(pbp, "capetan");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-ocean/channel/"
                              "young_and_salty/"
@@ -2809,7 +2809,7 @@ Ensure(single_context_pubnub,
     pubnub_init(pbp, "publ-game", "sub-game");
 
     pubnub_set_auth(pbp, "white");
-    pubnub_set_uuid(pbp, "player");
+    pubnub_set_user_id(pbp, "player");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-game/channel/moves/"
                              "heartbeat?pnsdk=unit-test-0.1&channel-group=["
@@ -3185,7 +3185,7 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
 {
     pubnub_init(pbp, "publ-key", "sub-Key");
 
-    pubnub_set_uuid(pbp, "admin");
+    pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
@@ -3263,7 +3263,7 @@ Ensure(single_context_pubnub,
 {
     pubnub_init(pbp, "publ-measurements", "sub-measurements");
 
-    pubnub_set_uuid(pbp, "technician");
+    pubnub_set_user_id(pbp, "technician");
     pubnub_set_auth(pbp, "weather-conditions");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
@@ -3400,7 +3400,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
 {
     pubnub_init(pbp, "publ-key", "sub-Key");
 
-    pubnub_set_uuid(pbp, "admin");
+    pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0"
@@ -3490,7 +3490,7 @@ Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
     /* Shouldn't make any difference having set these parameters */
     pubnub_set_keep_alive_param(pbp, 49, 50);
 
-    pubnub_set_uuid(pbp, "admin");
+    pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
@@ -3515,7 +3515,7 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     /* Won't be using default 'keep-alive' connection */
     pubnub_dont_use_http_keep_alive(pbp);
 
-    pubnub_set_uuid(pbp, "admin");
+    pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
@@ -3793,7 +3793,7 @@ Ensure(single_context_pubnub,
      * 'keep_alive' is off */
     pubnub_set_keep_alive_param(pbp, 5, 2);
 
-    pubnub_set_uuid(pbp, "admin");
+    pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
@@ -3894,7 +3894,7 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
 
     pubnub_init(pbp, "publ-measurements", "sub-measurements");
 
-    pubnub_set_uuid(pbp, "technician");
+    pubnub_set_user_id(pbp, "technician");
     pubnub_set_auth(pbp, "weather-conditions");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/subscribe/sub-measurements/,/0/"
@@ -3960,7 +3960,7 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 
-    pubnub_set_uuid(pbp, "bird");
+    pubnub_set_user_id(pbp, "bird");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
     expect_outgoing_with_url("/v2/presence/sub-key/sub-measurements/uuid/"
@@ -4977,9 +4977,11 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_subscribe(NULL, "x", NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_leave(NULL, "x", NULL), "pubnub_coreapi.c");
     expect_assert_in(pubnub_cancel(NULL), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_set_user_id(NULL, ""), "pubnub_pubsubapi.c");
+    expect_assert_in(pubnub_set_user_id(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
     expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_uuid(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
-    expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
+ expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_auth_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_last_http_code(NULL), "pubnub_pubsubapi.c");
