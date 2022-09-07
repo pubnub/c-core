@@ -252,22 +252,49 @@ public:
         return d_auth;
     }
 
-    /** Set the UUID to be used in this context.
+    /** Set the user_id to be used in this context.
      * After construction it is empty (null), thus not used.
      * Pass an empty (or null) string to stop using it.
+     *
+     * @deprecated this is provided as a workaround for existing users.
+     * Please use `set_user_id` instead.
      */
     void set_uuid(QString const &uuid);
 
-    /** Set the UUID to a random value, according to stadard
+    /** Set the user_id to be used in this context.
+     * After construction it is empty (null), thus not used.
+     * Pass an empty (or null) string to stop using it.
+     */
+    void set_user_id(QString const &user_id);
+
+
+    /** Set the user_id with a random UUID value, according to stadard
      * v4 representation.
+     *
+     * @deprecated this is provided as a workaround for existing users.
+     * Please use `set_user_id_with_random_uuid_v4` instead.
      */
     void set_uuid_v4_random() {
-        QString uuid = QUuid::createUuid().toString();
-        set_uuid(uuid.mid(1, uuid.size()-2));
+	set_user_id_with_random_uuid_v4();
     }
 
-    /** Returns the current UUID value (string) */
+    /** Set the user_id with a random UUID value, according to stadard
+     * v4 representation.
+     */
+    void set_user_id_with_random_uuid_v4() {
+        QString uuid = QUuid::createUuid().toString();
+        set_user_id(uuid.mid(1, uuid.size()-2));
+    }
+    /** Returns the current user_id value (string)
+     *
+     * @deprecated this is provided as a workaround for existing users.
+     * Please use `user_id` instead.
+     */
     QString uuid() const;
+   
+    /** Returns the current user_id value (string)*/
+    QString user_id() const;
+
 
     /** Sets the Pubnub origin to use, that is, the
      * protocol (http or https) and host part of the URL.

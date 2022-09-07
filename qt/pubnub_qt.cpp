@@ -386,17 +386,26 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
     return result;
 }
 
-void pubnub_qt::set_uuid(QString const& uuid)
+void pubnub_qt::set_uuid(QString const& uuid) {
+    set_user_id(uuid);
+}
+
+void pubnub_qt::set_user_id(QString const& user_id)
 {
     KEEP_THREAD_SAFE();
-    pbcc_set_user_id(d_context.data(), uuid.isEmpty() ? NULL : uuid.toLatin1().data());
+    pbcc_set_user_id(d_context.data(), user_id.isEmpty() ? NULL : user_id.toLatin1().data());
 }
 
 QString pubnub_qt::uuid() const
 {
+	return user_id();
+}
+
+QString pubnub_qt::user_id() const
+{
     QMutexLocker lk(&d_mutex);
-    char const*  uuid = pbcc_user_id_get(d_context.data());
-    return QString((NULL == uuid) ? "" : uuid);
+    char const* user_id = pbcc_user_id_get(d_context.data());
+    return QString((NULL == user_id) ? "" : user_id);
 }
 
 void pubnub_qt::set_auth(QString const& auth)
@@ -809,20 +818,20 @@ pubnub_res pubnub_qt::global_here_now()
 }
 
 
-pubnub_res pubnub_qt::where_now(QString const& uuid)
+pubnub_res pubnub_qt::where_now(QString const& user_id)
 {
     KEEP_THREAD_SAFE();
     return startRequest(pbcc_where_now_prep(d_context.data(),
-                                            uuid.isEmpty()
+                                            user_id.isEmpty()
                                                 ? pbcc_user_id_get(d_context.data())
-                                                : uuid.toLatin1().data()),
+                                                : user_id.toLatin1().data()),
                         PBTT_WHERENOW);
 }
 
 
 pubnub_res pubnub_qt::set_state(QString const& channel,
                                 QString const& channel_group,
-                                QString const& uuid,
+                                QString const& user_id,
                                 QString const& state)
 {
     KEEP_THREAD_SAFE();
@@ -831,7 +840,7 @@ pubnub_res pubnub_qt::set_state(QString const& channel,
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? pbcc_user_id_get(d_context.data()) : uuid.toLatin1().data(),
+            user_id.isEmpty() ? pbcc_user_id_get(d_context.data()) : user_id.toLatin1().data(),
             state.toLatin1().data()),
         PBTT_SET_STATE);
 }
@@ -839,7 +848,7 @@ pubnub_res pubnub_qt::set_state(QString const& channel,
 
 pubnub_res pubnub_qt::state_get(QString const& channel,
                                 QString const& channel_group,
-                                QString const& uuid)
+                                QString const& user_id)
 {
     KEEP_THREAD_SAFE();
     return startRequest(
@@ -847,8 +856,8 @@ pubnub_res pubnub_qt::state_get(QString const& channel,
             d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
-            uuid.isEmpty() ? pbcc_user_id_get(d_context.data())
-                           : uuid.toLatin1().data()),
+            user_id.isEmpty() ? pbcc_user_id_get(d_context.data())
+                           : user_id.toLatin1().data()),
         PBTT_STATE_GET);
 }
 
