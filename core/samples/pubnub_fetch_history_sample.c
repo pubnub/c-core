@@ -16,18 +16,18 @@ static char* m_channel2 = "my_channel2";
 
 
 
-static void generate_uuid(pubnub_t* pbp)
+static void generate_user_id(pubnub_t* pbp)
 {
-    char const*                      uuid_default = "zeka-peka-iz-jendeka";
+    char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
     static struct Pubnub_UUID_String str_uuid;
 
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, uuid_default);
+        pubnub_set_user_id(pbp, user_id_default);
     }
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
     
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
-    generate_uuid(pbp);
+    generate_user_id(pbp);
 
     publish_on_channels(pbp);
     snprintf(string_channels,
