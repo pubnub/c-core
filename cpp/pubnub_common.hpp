@@ -32,6 +32,9 @@ extern "C" {
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pubnub_advanced_history.h"
 #endif
+#if PUBNUB_USE_FETCH_HISTORY
+#include "core/pubnub_fetch_history.h"
+#endif
 #if PUBNUB_USE_OBJECTS_API
 #include "core/pubnub_objects_api.h"
 #define MAX_INCLUDE_DIMENSION 100

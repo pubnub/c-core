@@ -1,3 +1,9 @@
+## v3.5.0
+September 08 2022
+
+#### Added
+- Implemented Fetch History.
+
 ## v3.4.3
 July 05 2022
 

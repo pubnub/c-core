@@ -138,6 +138,12 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
+#if !defined(PUBNUB_USE_FETCH_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about single/multip channel messages. */
+#define PUBNUB_USE_FETCH_HISTORY 1
+#endif
+
 #define PUBNUB_MAX_URL_PARAMS 10
 
 #ifndef PUBNUB_RAND_INIT_VECTOR

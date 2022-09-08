@@ -185,6 +185,12 @@
 #define PUBNUB_USE_ADVANCED_HISTORY 1
 #endif
 
+#if !defined(PUBNUB_USE_FETCH_HISTORY)
+/** If true (!=0) will enable using the fetch history API, which
+    provides more data about single/multip channel messages. */
+#define PUBNUB_USE_FETCH_HISTORY 1
+#endif
+
 #if !defined(PUBNUB_USE_OBJECTS_API)
 /** If true (!=0) will enable using the objects API, which is a
     collection of Rest API features that enables "CRUD"(Create, Read, Update and Delete)
