@@ -1809,8 +1809,6 @@ private:
     std::string d_auth;
     /// The auth token containing pam permissions
     std::string d_auth_token;
-    /// The UUID
-    std::string d_uuid; // TODO: this field is not used anywhere!
     /// The origin set last time (doen't have to be the one used,
     /// the default can be used instead)
     std::string d_origin;
