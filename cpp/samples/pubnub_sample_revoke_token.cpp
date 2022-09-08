@@ -53,7 +53,7 @@ int main()
         int perm_channel_group = pubnub_get_grant_bit_mask_value(cg_perm);
         int ttl_minutes = 60;
         char perm_obj[2000];
-        char* authorized_uuid = "my_authorized_uuid";// TODO: should we change uuid in perm_obj?
+        char* authorized_uuid = "my_authorized_uuid";// TODO: @reviewers should we change uuid in perm_obj?
         sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
         pubnub::futres futgres = gb.grant_token(perm_obj);
         res = futgres.await();
