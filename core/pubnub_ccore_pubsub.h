@@ -26,9 +26,9 @@ struct pbcc_context {
     char const* publish_key;
     /** The subscribe key (to use when subscribing) */
     char const* subscribe_key;
-    /** The UUID to be sent to server. If empty string, don't send any */
+    /** The user_id to be sent to server. If empty string, don't send any */
     char *user_id;
-    /** The UUID length */
+    /** The user_id length */
     int user_id_len;
     /** The `auth` parameter to be sent to server. If NULL, don't send
      * any */
@@ -390,7 +390,7 @@ char const* pbcc_get_channel(struct pbcc_context* pb);
 /** Sets the user_id for the context */
 enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id);
 
-/** Returns the UUID for the context */
+/** Returns the user_id for the context */
 char const* pbcc_user_id_get(struct pbcc_context* pb);
 
 /** Sets the `auth` for the context */

@@ -18,6 +18,7 @@
 
 /* Maximum allowed user-provided UUID string length. */
 #define MAX_UUID_STRING_LENGTH 64
+// TODO: maybe change that UUID to USER_ID
 
 
 void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subscribe_key)

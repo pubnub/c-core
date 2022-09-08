@@ -1038,7 +1038,7 @@ Ensure(single_context_pubnub, leave_changroup)
 Ensure(single_context_pubnub, leave_uuid_auth)
 {
     pubnub_init(pbp, "pubX", "Xsub");
-    attest(pbp->core.uuid_len, equals(0));
+    attest(pbp->core.user_id_len, equals(0));
 
     /* Set UUID */
     pubnub_set_user_id(pbp, "DEDA-BABACECA-DECA");
@@ -1051,7 +1051,7 @@ Ensure(single_context_pubnub, leave_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, "k", NULL), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pbp->core.uuid_len, equals(18));
+    attest(pbp->core.user_id_len, equals(18));
 
     /* Set auth, too */
     pubnub_set_auth(pbp, "super-secret-key");
@@ -1077,7 +1077,7 @@ Ensure(single_context_pubnub, leave_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_leave(pbp, "k3", NULL), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pbp->core.uuid_len, equals(0));
+    attest(pbp->core.user_id_len, equals(0));
 
     /* Reset auth, too */
     pubnub_set_auth(pbp, NULL);
@@ -1343,7 +1343,7 @@ Ensure(single_context_pubnub, publish_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_publish(pbp, "k", "4443"), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pbp->core.uuid_len, equals(14));
+    attest(pbp->core.user_id_len, equals(14));
 
     /* Set auth, too */
     pubnub_set_auth(pbp, "bad-secret-key");
@@ -1369,7 +1369,7 @@ Ensure(single_context_pubnub, publish_uuid_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_publish(pbp, "k3", "4443"), equals(PNR_OK));
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pbp->core.uuid_len, equals(0));
+    attest(pbp->core.user_id_len, equals(0));
 
     /* Reset auth, too */
     pubnub_set_auth(pbp, NULL);
@@ -1942,7 +1942,7 @@ Ensure(single_context_pubnub, set_state)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_set_state(pbp, "ch", NULL, NULL, "{}"), equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(9));
+    attest(pbp->core.user_id_len, equals(9));
 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
     attest(pubnub_get(pbp), equals(NULL));
@@ -2095,7 +2095,7 @@ Ensure(single_context_pubnub, set_state_set_auth_and_uuid)
            equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
-    attest(pbp->core.uuid_len, equals(6));
+    attest(pbp->core.user_id_len, equals(6));
 }
 
 Ensure(single_context_pubnub, set_state_bad_response)
@@ -2114,7 +2114,7 @@ Ensure(single_context_pubnub, set_state_bad_response)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_set_state(pbp, "ch", NULL, NULL, "{\"chili\":\"red\"}"),
            equals(PNR_FORMAT_ERROR));
-    attest(pbp->core.uuid_len, equals(13));
+    attest(pbp->core.user_id_len, equals(13));
 }
 
 
@@ -2136,7 +2136,7 @@ Ensure(single_context_pubnub, state_get_1channel)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_state_get(pbp, "ch", NULL, NULL), equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(6));
+    attest(pbp->core.user_id_len, equals(6));
 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{\"running\"}}"));
     attest(pubnub_get(pbp), equals(NULL));
@@ -2270,7 +2270,7 @@ Ensure(single_context_pubnub, state_get_bad_response)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_state_get(pbp, "ch", NULL, NULL), equals(PNR_FORMAT_ERROR));
-    attest(pbp->core.uuid_len, equals(8));
+    attest(pbp->core.user_id_len, equals(8));
 }
 
 
@@ -2378,7 +2378,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
     attest(pubnub_here_now(pbp, "[ch1,ch2]", "[gr3,gr4]"), equals(PNR_STARTED));
     attest(pbnc_fsm(pbp), equals(0));
     attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get(pbp),
            streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
@@ -2426,7 +2426,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
     attest(pubnub_here_now(pbp, "[ch1,ch2]", "[gr3,gr4]"), equals(PNR_STARTED));
     attest(pbnc_fsm(pbp), equals(0));
     attest(pbp->core.last_result, equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get(pbp),
            streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
@@ -2457,7 +2457,7 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
 
     attest(pubnub_here_now(pbp, "[ch5,ch7]", "[gr1,gr2]"), equals(PNR_STARTED));
     attest(pubnub_here_now(pbp, "ch", NULL), equals(PNR_IN_PROGRESS));
-    attest(pbp->core.uuid_len, equals(3));
+    attest(pbp->core.user_id_len, equals(3));
 
     /* finish chunked */
     incoming("sage\":\"OK\",\"service\":\"Presence\",\"payload\":{channels:{"
@@ -2546,7 +2546,7 @@ Ensure(single_context_pubnub, global_here_now_chunked)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_global_here_now(pbp), equals(PNR_STARTED));
-    attest(pbp->core.uuid_len, equals(8));
+    attest(pbp->core.user_id_len, equals(8));
 
     attest(pbnc_fsm(pbp), equals(0));
     attest(pbp->core.last_result, equals(PNR_OK));
@@ -2645,7 +2645,7 @@ Ensure(single_context_pubnub, where_now_set_uuid)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     /* Recognizes the uuid set from the context */
     attest(pubnub_where_now(pbp, NULL), equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(45));
+    attest(pbp->core.user_id_len, equals(45));
 
     attest(pubnub_get(pbp),
            streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
@@ -2672,7 +2672,7 @@ Ensure(single_context_pubnub, where_now_set_auth)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     /* Chooses the uuid from the call not the one set in context */
     attest(pubnub_where_now(pbp, "whale"), equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(4));
+    attest(pbp->core.user_id_len, equals(4));
 
     attest(pubnub_get(pbp),
            streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
@@ -2698,7 +2698,7 @@ Ensure(single_context_pubnub, where_now_in_progress_interrupted_and_accomplished
     incoming("", NULL);
     attest(pubnub_where_now(pbp, "bad"), equals(PNR_STARTED));
     attest(pubnub_where_now(pbp, "ugly"), equals(PNR_IN_PROGRESS));
-    attest(pbp->core.uuid_len, equals(16));
+    attest(pbp->core.user_id_len, equals(16));
 
     /* client reciving rest of the message */
     incoming("vice\":\"Presence\",\"Payload\":{\"channels\":[western,here,"
@@ -2787,7 +2787,7 @@ Ensure(single_context_pubnub, heartbeat_channel_and_channelgroups)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_heartbeat(pbp, "young_and_salty", "[deep,shallow]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(7));
+    attest(pbp->core.user_id_len, equals(7));
 
     attest(
         pubnub_get(pbp),
@@ -2818,7 +2818,7 @@ Ensure(single_context_pubnub,
     incoming("", NULL);
     attest(pubnub_heartbeat(pbp, "moves", "[fast,slow]"), equals(PNR_STARTED));
     attest(pubnub_heartbeat(pbp, "punches", "[fast,slow]"), equals(PNR_IN_PROGRESS));
-    attest(pbp->core.uuid_len, equals(6));
+    attest(pbp->core.user_id_len, equals(6));
 
     incoming(" 50\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\"}",
@@ -3198,7 +3198,7 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_subscribe(pbp, "[ch1,ch2]", "[chgr2,chgr3,chgr4]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
@@ -3279,7 +3279,7 @@ Ensure(single_context_pubnub,
     attest(pubnub_subscribe(
                pbp, NULL, "[air-temperature,humidity,wind-speed-and-direction,pressure]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(10));
+    attest(pbp->core.user_id_len, equals(10));
 
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
@@ -3413,7 +3413,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_subscribe(pbp, "[ch1,ch2]", "[chgr2,chgr3,chgr4]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
@@ -3501,7 +3501,7 @@ Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
                        NULL);
     attest(pubnub_subscribe(pbp, "[ch1,ch2]", "[chgr2,chgr3,chgr4]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
@@ -3526,7 +3526,7 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
                        NULL);
     attest(pubnub_subscribe(pbp, "[ch1,ch2]", "[chgr2,chgr3,chgr4]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
@@ -3804,7 +3804,7 @@ Ensure(single_context_pubnub,
                        NULL);
     attest(pubnub_subscribe(pbp, "[ch1,ch2]", "[chgr2,chgr3,chgr4]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(5));
+    attest(pbp->core.user_id_len, equals(5));
 
     attest(pubnub_get_channel(pbp), streqs(NULL));
     attest(pubnub_get(pbp), equals(NULL));
@@ -3910,7 +3910,7 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     attest(pubnub_subscribe(
                pbp, NULL, "[air-temperature,humidity,wind-speed-and-direction,pressure]"),
            equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(10));
+    attest(pbp->core.user_id_len, equals(10));
 
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_get_channel(pbp), streqs(NULL));
@@ -3975,7 +3975,7 @@ Ensure(single_context_pubnub, subscribe_gzip_response)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     /* Recognizes the uuid set from the context */
     attest(pubnub_where_now(pbp, NULL), equals(PNR_OK));
-    attest(pbp->core.uuid_len, equals(4));
+    attest(pbp->core.user_id_len, equals(4));
 
     attest(pubnub_get(pbp),
            streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
