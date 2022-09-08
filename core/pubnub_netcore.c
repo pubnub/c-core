@@ -15,6 +15,9 @@
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pbcc_advanced_history.h"
 #endif
+#if PUBNUB_USE_FETCH_HISTORY
+#include "core/pbcc_fetch_history.h"
+#endif
 #if PUBNUB_USE_OBJECTS_API
 #include "core/pbcc_objects_api.h"
 #endif
@@ -318,6 +321,9 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
 #if PUBNUB_USE_GRANT_TOKEN_API
     , pbcc_parse_grant_token_api_response /* PBTT_GRANT_TOKEN */
 #endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_FETCH_HISTORY
+    , pbcc_parse_fetch_history_response /* PBTT_FETCH_HISTORY */
+#endif
 #if PUBNUB_USE_REVOKE_TOKEN_API
     , pbcc_parse_revoke_token_response /* PBTT_REVOKE_TOKEN */
 #endif /* PUBNUB_USE_REVOKE_TOKEN_API */

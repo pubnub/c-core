@@ -123,6 +123,8 @@ enum pubnub_res {
     PNR_ACTIONS_API_ERROR,
     /** Grant Token API transaction reported an error */
     PNR_GRANT_TOKEN_API_ERROR,
+    /** Fetch History API transaction reported an error */
+    PNR_FETCH_HISTORY_ERROR,
     /** Revoke Token API transaction reported an error */
     PNR_REVOKE_TOKEN_API_ERROR,
     /** Access/Permission denied */
@@ -264,6 +266,11 @@ enum pubnub_trans {
       */
     PBTT_GRANT_TOKEN,
 #endif /* PUBNUB_USE_GRANT_TOKEN_API */
+#if PUBNUB_USE_FETCH_HISTORY
+    /** History V3 (get fetch history for the channel(s) from Pubnub
+     * server) operation/transaction */
+    PBTT_FETCH_HISTORY,
+#endif
 #if PUBNUB_USE_REVOKE_TOKEN_API
     /** PAMv3 Revoke API transaction revokes the PAMv3 token .
       */
