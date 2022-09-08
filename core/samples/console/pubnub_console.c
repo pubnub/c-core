@@ -74,8 +74,7 @@ int main()
     pubnub_init(pn, pubkey, subkey);
     pubnub_init(pn_sub, pubkey, subkey);
     pubnub_set_user_id(pn, PNC_DEFAULT_UUID);
-    // TODO: bug? user id set for pb 2 times.  
-    pubnub_set_user_id(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
+    pubnub_set_user_id(pn_sub, PNC_DEFAULT_SUBSCRIBE_UUID);
 
     pnc_ops_init(pn, pn_sub);
     
