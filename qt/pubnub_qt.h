@@ -32,6 +32,7 @@ extern "C" {
 }
 
 #include "cpp/tribool.hpp"
+#include "lib/pb_deprecated.h"
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "cpp/pubnub_v2_message.hpp"
 #endif
@@ -259,7 +260,7 @@ public:
      * @deprecated this is provided as a workaround for existing users.
      * Please use `set_user_id` instead.
      */
-    void set_uuid(QString const &uuid);
+    PUBNUB_DEPRECATED void set_uuid(QString const &uuid);
 
     /** Set the user_id to be used in this context.
      * After construction it is empty (null), thus not used.
@@ -274,7 +275,7 @@ public:
      * @deprecated this is provided as a workaround for existing users.
      * Please use `set_user_id_with_random_uuid_v4` instead.
      */
-    void set_uuid_v4_random() {
+    PUBNUB_DEPRECATED void set_uuid_v4_random() {
 	set_user_id_with_random_uuid_v4();
     }
 
@@ -290,7 +291,7 @@ public:
      * @deprecated this is provided as a workaround for existing users.
      * Please use `user_id` instead.
      */
-    QString uuid() const;
+    PUBNUB_DEPRECATED QString uuid() const;
    
     /** Returns the current user_id value (string)*/
     QString user_id() const;

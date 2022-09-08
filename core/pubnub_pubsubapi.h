@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_deprecated.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -46,7 +47,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 
     @see pubnub_set_user_id
 */
-enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the user identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
@@ -57,7 +58,7 @@ enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
     @see pubnub_user_id_get
 */
-char const* pubnub_uuid_get(pubnub_t* p);
+PUBNUB_DEPRECATED char const* pubnub_uuid_get(pubnub_t* p);
 
 /** Set the user identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.

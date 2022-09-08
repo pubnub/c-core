@@ -3,6 +3,7 @@
 #define      INC_PUBNUB_COMMON_HPP
 
 #include "pubnub_qt.h"
+#include "lib/pb_deprecated.h"
 
 #include <string>
 #include <vector>
@@ -285,7 +286,7 @@ namespace pubnub {
 	    @deprecated this is provided as a workaround for existing users.
 	    Please use `set_user_id` instead.
   	*/
-        void set_uuid(std::string const &uuid) {
+        PUBNUB_DEPRECATED void set_uuid(std::string const &uuid) {
             set_user_id(uuid);
 	}
 
@@ -301,7 +302,7 @@ namespace pubnub {
         /// 
 	/// @deprecated this is provided as a workaround for existing users.
         /// Please use `set_user_id_with_random_uuid_v4` instead.
-   	int set_uuid_v4_random() {
+   	PUBNUB_DEPRECATED int set_uuid_v4_random() {
             return set_user_id_with_random_uuid_v4();
         }
 
@@ -315,7 +316,7 @@ namespace pubnub {
         ///
         /// @deprecated this is provided as a workaround for existing users.
    	/// Please use `user_id` instead.
-    	std::string uuid() const { return user_id() }
+    	PUBNUB_DEPRECATED std::string uuid() const { return user_id() }
 
 	/// Returns the current user_id
     	std::string user_id() const { return d_pbqt.uuid().toStdString(); }

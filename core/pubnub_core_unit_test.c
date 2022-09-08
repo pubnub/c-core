@@ -2,6 +2,7 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
+#include "lib/pb_deprecated.h"
 #include "pubnub_internal.h"
 #include "pubnub_server_limits.h"
 #include "pubnub_pubsubapi.h"
@@ -4979,9 +4980,12 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_cancel(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_user_id(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_user_id(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
+    PUBNUB_DISABLE_WARNING_PUSH
+    PUBNUB_DISABLE_DEPRECATED
     expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_uuid(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
- expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
+    PUBNUB_DISABLE_WARNING_POP
+    expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_auth_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_last_http_code(NULL), "pubnub_pubsubapi.c");

@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 #include "pubnub_config.h"
+#include "lib/pb_deprecated.h"
 #include "core/pubnub_alloc.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi.h"
@@ -641,7 +642,7 @@ public:
 
         @see pubnub_set_user_id
      */
-    void set_uuid(std::string const& uuid)
+    PUBNUB_DEPRECATED void set_uuid(std::string const& uuid)
     {
 	set_user_id(uuid);
     }
@@ -662,7 +663,7 @@ public:
     ///	Please use `set_user_id_with_random_uuid_v4` instead.
     ///
     /// @see pubnub_generate_uuid_v4_random
-    int set_uuid_v4_random() 
+    PUBNUB_DEPRECATED int set_uuid_v4_random() 
     {
 	return set_user_id_with_random_uuid_v4();
     }
@@ -684,7 +685,7 @@ public:
 	@deprecated this is provided as a workaround for existing users.
     	Please use `user_id` instead.
     */
-    std::string const uuid() const
+    PUBNUB_DEPRECATED std::string const uuid() const
     {
 	return user_id();
     }
