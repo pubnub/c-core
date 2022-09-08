@@ -17,8 +17,7 @@
 #include <stdlib.h>
 
 /* Maximum allowed user-provided UUID string length. */
-#define MAX_UUID_STRING_LENGTH 64
-// TODO: maybe change that UUID to USER_ID
+#define MAX_USER_ID_STRING_LENGTH 64
 
 
 void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subscribe_key)
@@ -139,7 +138,7 @@ enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id)
     }
     pb->user_id_len = (NULL == user_id) ? 0 : strlen(user_id);
     if (pb->user_id_len > 0) {
-        PUBNUB_ASSERT_OPT(pb->user_id_len <= MAX_UUID_STRING_LENGTH);
+        PUBNUB_ASSERT_OPT(pb->user_id_len <= MAX_USER_ID_STRING_LENGTH);
         /** Alloc additional space for NULL character */
         pb->user_id = (char*)malloc((pb->user_id_len + 1) * sizeof(char));
         if (NULL == pb->user_id) {
