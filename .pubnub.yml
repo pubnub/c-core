@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "3.4.3"
+version: "3.5.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-09-08
+    version: v3.5.0
+    changes:
+      - type: feature
+        text: "Implemented Fetch History."
   - date: 2022-07-05
     version: v3.4.3
     changes:
@@ -620,7 +625,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -686,7 +691,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -752,7 +757,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -814,7 +819,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -875,7 +880,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -931,7 +936,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
@@ -984,7 +989,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.4.3
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.0
             requires:
               -
                 name: "miniz"
