@@ -653,7 +653,7 @@ public:
      */
     void set_user_id(std::string const& user_id)
     {
-        pubnub_set_user_id(d_pb, user_id.empty() ? user_id : user_id.c_str());
+        pubnub_set_user_id(d_pb, user_id.empty() ? NULL : user_id.c_str());
     }
 
     /// Set the user_id with a random-generated UUID
