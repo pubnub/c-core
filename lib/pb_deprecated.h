@@ -1,3 +1,4 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PB_DEPRECATED
 # define INC_PB_DEPRECATED
 
