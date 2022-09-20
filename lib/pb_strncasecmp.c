@@ -23,7 +23,6 @@ int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 
 	for (size_t s = 0; s < NUMBER_OF_STRINGS; s++) {
 		copied_strings[s] = strndup(strings[s], number_of_chars);
-		strncpy(copied_strings[s], strings[s], number_of_chars);
 
 		for (size_t c = 0; c < number_of_chars; c++) {
 			copied_strings[s][c] = tolower(copied_strings[s][c]);
