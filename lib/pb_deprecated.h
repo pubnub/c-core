@@ -4,7 +4,7 @@
 
 # if defined(_MSC_VER)
 #  if _MSC_VER >= 1310
-#   define PUBNUB_DEPRECATED __declspec(deprecated))
+#   define PUBNUB_DEPRECATED __declspec(deprecated)
 #   define PUBNUB_DISABLE_WARNING_PUSH __pragma(warning(push))
 #   define PUBNUB_DISABLE_WARNING_POP __pragma(warning(pop))
 #   define PUBNUB_DISABLE_DEPRACATED __pragma(warning(disable: 4101))
