@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pb_strncasecmp.h"
+#include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -13,10 +15,10 @@ int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 	}
 
 	const char* strings[NUMBER_OF_STRINGS] = {str1, str2};
-	char copied_strings[NUMBER_OF_STRINGS][number_of_chars];
+	char* copied_strings[NUMBER_OF_STRINGS];
 
 	for (int s = 0; s < NUMBER_OF_STRINGS; s++) {
-		memset(copied_strings[s], '\0', number_of_chars);
+		copied_strings[s] = strndup(strings[s], number_of_chars);
 		strncpy(copied_strings[s], strings[s], number_of_chars);
 
 		for (int c = 0; c < number_of_chars; c++) {
@@ -24,5 +26,11 @@ int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 		}
 	}
 
-	return strncmp(copied_strings[0], copied_strings[1], number_of_chars);	
+	int result = strncmp(copied_strings[0], copied_strings[1], number_of_chars);	
+
+	for (size_t s = 0; s < NUMBER_OF_STRINGS; s++) {
+		free(copied_strings[s]);
+	}
+
+	return result;
 }
