@@ -8,6 +8,10 @@
 
 #define NUMBER_OF_STRINGS 2
 
+#if defined(_MSC_VER)
+char* strndup(char* str, size_t number_of_chars);
+#endif
+
 int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 {
 	if (str1 == NULL || str2 == NULL) {
@@ -17,11 +21,11 @@ int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 	const char* strings[NUMBER_OF_STRINGS] = {str1, str2};
 	char* copied_strings[NUMBER_OF_STRINGS];
 
-	for (int s = 0; s < NUMBER_OF_STRINGS; s++) {
+	for (size_t s = 0; s < NUMBER_OF_STRINGS; s++) {
 		copied_strings[s] = strndup(strings[s], number_of_chars);
 		strncpy(copied_strings[s], strings[s], number_of_chars);
 
-		for (int c = 0; c < number_of_chars; c++) {
+		for (size_t c = 0; c < number_of_chars; c++) {
 			copied_strings[s][c] = tolower(copied_strings[s][c]);
 		}
 	}
@@ -34,3 +38,22 @@ int pb_strncasecmp(const char *str1, const char *str2, size_t number_of_chars)
 
 	return result;
 }
+
+#if defined(_MSC_VER)
+char* strndup(char* str, size_t number_of_chars)
+{
+	char *buffer = malloc(number_of_chars + 1);
+
+	if (buffer != NULL) {
+		for (size_t c = 0; ((c < number_of_chars) && (str[c] != '\0')); c++) {
+			buffer[c] = str[c];
+		}
+
+		buffer[number_of_chars] = "\0";
+	}
+
+	return buffer;
+}
+#endif
+
+
