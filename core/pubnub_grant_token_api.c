@@ -307,8 +307,6 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     PUBNUB_LOG_DEBUG("]\n");
     #endif
 
-PUBNUB_LOG_ERROR("CHUJE MUJE: %s\n", decoded.ptr);
-
     size_t length;
     uint8_t *buf = decoded.ptr;
     length = decoded.size;
