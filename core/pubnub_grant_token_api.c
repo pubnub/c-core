@@ -18,7 +18,6 @@
 #include "core/pubnub_crypto.h"
 
 #include <ctype.h>
-#include <stdio.h>
 #include <string.h>
 #include "lib/base64/pbbase64.h"
 #ifdef _MSC_VER
