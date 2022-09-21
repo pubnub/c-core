@@ -18,6 +18,7 @@
 #include "core/pubnub_crypto.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 #include "lib/base64/pbbase64.h"
 #ifdef _MSC_VER
@@ -104,6 +105,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
 {
     bool containerEnd = false;
     bool sig_flag = false;
+    bool uuid_flag = false;
 
     while (!cbor_value_at_end(it)) {
         CborError err;
@@ -186,7 +188,11 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
             }
             if (strcmp((const char*)buf, "sig") == 0) {
                 sig_flag = true;
-            }
+            } 
+	    // TODO: why????
+	    if (strcmp((const char*)buf, "uuid") == 0) {
+                uuid_flag = true;
+	    }
             free(buf);
             continue;
         }
@@ -196,13 +202,23 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
             size_t n;
             err = cbor_value_dup_text_string(it, &buf, &n, it);
             if (err) { return err; } // parse error
-            char* txt_str = (char*)malloc(sizeof(char) * (n+4));
-            sprintf(txt_str, "\"%s\":", buf);
-            strcat(json_result, txt_str);
-            free(buf);
-            free(txt_str);
-            continue;
-        }
+	    
+	    char* txt_str = (char*)malloc(sizeof(char) * (n+4));
+	    
+	    type = cbor_value_get_type(it);
+	    if (!uuid_flag) {
+		    sprintf(txt_str, "\"%s\":", buf);
+		    uuid_flag = false;
+	    } else {
+		    sprintf(txt_str, "\"%s\",", buf);
+	    }
+
+	    strcat(json_result, txt_str);
+	    free(buf);
+	    free(txt_str);
+
+	    continue;
+	}
 
         case CborTagType: {
             CborTag tag;
@@ -290,6 +306,8 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     }
     PUBNUB_LOG_DEBUG("]\n");
     #endif
+
+PUBNUB_LOG_ERROR("CHUJE MUJE: %s\n", decoded.ptr);
 
     size_t length;
     uint8_t *buf = decoded.ptr;
