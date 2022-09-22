@@ -189,7 +189,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
                 sig_flag = true;
             } 
 	    // TODO: why????
-	    if (strcmp((const char*)buf, "authorized_uuid") == 0) {
+	    if (strcmp((const char*)buf, "uuid") == 0) {
                 uuid_flag = true;
 	    }
             free(buf);
