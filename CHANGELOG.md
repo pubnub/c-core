@@ -1,3 +1,10 @@
+## v3.5.1
+September 22 2022
+
+#### Fixed
+- Fix wrong parsing uuid in parse_token.
+- Fix case sensitive header check.
+
 ## v3.5.0
 September 08 2022
 
