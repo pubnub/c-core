@@ -527,26 +527,21 @@ int base64_max_size(int encode_this_many_bytes) {
 }
 
 int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {
-    BIO* b64_bio, * mem_bio;      //Declares two OpenSSL BIOs: a base64 filter and a memory BIO.
-    BUF_MEM* mem_bio_mem_ptr;    //Pointer to a "memory BIO" structure holding our base64 data.
-    b64_bio = BIO_new(BIO_f_base64());                      //Initialize our base64 filter BIO.
-    mem_bio = BIO_new(BIO_s_mem());                           //Initialize our memory sink BIO.
-    BIO_push(b64_bio, mem_bio);            //Link the BIOs by creating a filter-sink BIO chain.
-    BIO_set_flags(b64_bio, BIO_FLAGS_BASE64_NO_NL);  //No newlines every 64 characters or less.
-    BIO_write(b64_bio, b64_encode_this, encode_this_many_bytes); //Records base64 encoded data.
-    BIO_flush(b64_bio);   //Flush data.  Necessary for b64 encoding, because of pad characters.
-    BIO_get_mem_ptr(mem_bio, &mem_bio_mem_ptr);  //Store address of mem_bio's memory structure.
-
-    // Ensure the provided output buffer is big enough to store the encoded result.
-    if ((*mem_bio_mem_ptr).length + 1 > (size_t)max_size) {
-        BIO_free_all(b64_bio);
+    size_t buf_size = 4 * ((encode_this_many_bytes + 2)/3) + 1; // +1 for tailing 0
+    unsigned char *buf = calloc(buf_size, 1);
+    if (!buf) {
         return -1;
     }
-    // Copy from the "memory BIO" (whatever that is) to the provided result pointer.
-    memcpy(result, (*mem_bio_mem_ptr).data, (*mem_bio_mem_ptr).length);
-    result[(*mem_bio_mem_ptr).length] = '\0';
 
-    BIO_free_all(b64_bio);  //Destroys all BIOs in chain, starting with b64 (i.e. the 1st one).
+    size_t size = EVP_EncodeBlock(buf, b64_encode_this, encode_this_many_bytes);
+    // size does not include tailing 0
+    // https://www.openssl.org/docs/man3.0/man3/EVP_EncodeBlock.html
+    if (size + 1 > (size_t)max_size) {
+        free(buf);
+        return -1;
+    }
+    memcpy(result, buf, size + 1);
+    free(buf);
     return 0;
 }
 

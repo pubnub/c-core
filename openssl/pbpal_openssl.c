@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+#include <openssl/opensslv.h>
 
 #define HTTP_PORT 80
 
@@ -96,7 +97,7 @@ static int pal_init(void)
 {
     static bool s_init = false;
     if (!s_init) {
-        #if !defined(__UWP__)
+        #if !defined(__UWP__) && (OPENSSL_VERSION_MAJOR < 3)
         ERR_load_BIO_strings(); //Per OpenSSL 3.0 this is deprecated. Allowing this stmt for non-UWP as it exists.
         #endif
         SSL_load_error_strings();
