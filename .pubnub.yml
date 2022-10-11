@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "3.5.1"
+version: "3.5.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-10-11
+    version: v3.5.2
+    changes:
+      - type: bug
+        text: "Fix memory leak in cpp `parse_token` method."
+      - type: bug
+        text: "Fix buffer overflow in core `pubnub_parse_token` function for some cases."
+      - type: bug
+        text: "Fix buffer overflow in core `pubnub_encrypt` function for randomized initial vector."
   - date: 2022-09-22
     version: v3.5.1
     changes:
@@ -632,7 +641,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -698,7 +707,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -764,7 +773,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -826,7 +835,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -887,7 +896,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -943,7 +952,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"
@@ -996,7 +1005,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.1
+            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
             requires:
               -
                 name: "miniz"

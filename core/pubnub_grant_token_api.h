@@ -53,6 +53,11 @@ enum pubnub_res pubnub_grant_token(pubnub_t* pb, char const* perm_obj);
 
 pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb);
 
+/** Parses the @p token and returns the json string.
+   
+    @see pubnub_grant_token
+    @return malloc allocated char pointer (must be passed to `free` to avoid a memory leak)
+*/
 char* pubnub_parse_token(pubnub_t* pb, char const* token);
 
 #endif /* !defined INC_PUBNUB_GRANT_TOKEN_API */

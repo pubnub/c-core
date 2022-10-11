@@ -4,6 +4,7 @@
 #include "core/pubnub_log.h"
 #include "core/pubnub_assert.h"
 
+#include "openssl/pubnub_config.h"
 #include <openssl/evp.h>
 #include <openssl/err.h>
 

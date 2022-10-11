@@ -1194,7 +1194,11 @@ public:
     /// @see pubnub_grant_token
     std::string parse_token(std::string const& token)
     {
-        return pubnub_parse_token(d_pb, token.c_str());
+	char* parsed_token_chars = pubnub_parse_token(d_pb, token.c_str());
+        std::string owned_parsed_token(parsed_token_chars);
+	
+	::free(parsed_token_chars);
+	return owned_parsed_token; 
     }
 #endif
 
