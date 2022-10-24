@@ -26,12 +26,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_uuid_v4_random()) {
-            pb.set_user_id("zeka-peka-iz-jendeka");
-        }
-        else {
-            std::cout << "Generated UUID: " << pb.user_id() << std::endl;
-        }
+        pb.set_user_id("zeka-peka-iz-jendeka");
         pb.set_auth("danaske");
 
         pb.set_transaction_timeout(

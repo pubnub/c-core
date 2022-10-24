@@ -31,14 +31,11 @@ int main()
 
         std::string chan("hello_world");
         pubnub::context gb(my_env_publish_key, my_env_subscribe_key);
+        
         gb.set_secret_key(my_env_secret_key);
         gb.set_blocking_io(pubnub::non_blocking);
-        if (0 != gb.set_uuid_v4_random()) {
-            gb.set_user_id("pandu-iz-uuidgra");
-        }
-        else {
-            std::cout << "Grant Generated UUID: " << gb.user_id() << std::endl;
-        }
+        gb.set_user_id("pandu-iz-uuidgra");
+
         std::cout << "Grant Token" << std::endl;
         struct pam_permission h_perm = { h_perm.read=true, h_perm.write=true };
         int perm_hello_world = pubnub_get_grant_bit_mask_value(h_perm);
@@ -71,12 +68,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_uuid_v4_random()) {
-            pb.set_user_id("pandu-iz-uuidsam");
-        }
-        else {
-            std::cout << "Generated UUID: " << pb.user_id() << std::endl;
-        }
+        pb.set_user_id("pandu-iz-uuidsam");
         pb.set_auth_token(tkn);
 
         pb.set_transaction_timeout(
