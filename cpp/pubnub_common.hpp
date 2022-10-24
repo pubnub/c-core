@@ -635,23 +635,23 @@ public:
     }
     
     /** sets the user_id to @p uuid. if @p uuid is an empty string,
-        user_id will not be used.
+      user_id will not be used.
 
-	@deprecated this is provided as a workaround for existing users.
-    	Please use `set_user_id` instead.
+      @deprecated this is provided as a workaround for existing users.
+      Please use `set_user_id` instead.
 
-        @see pubnub_set_user_id
-     */
+      @see pubnub_set_user_id
+      */
     PUBNUB_DEPRECATED void set_uuid(std::string const& uuid)
     {
-	set_user_id(uuid);
+        set_user_id(uuid);
     }
 
     /** sets the user_id to @p user_id. if @p user_id is an empty string,
-        user_id will not be used.
+      user_id will not be used.
 
-        @see pubnub_set_user_id
-     */
+      @see pubnub_set_user_id
+      */
     void set_user_id(std::string const& user_id)
     {
         pubnub_set_user_id(d_pb, user_id.empty() ? NULL : user_id.c_str());
@@ -659,18 +659,10 @@ public:
 
     /// Set the user_id with a random-generated UUID
     /// 
-    /// @deprecated this is provided as a workaround for existing users.
-    ///	Please use `set_user_id_with_random_uuid_v4` instead.
+    /// @deprecated random generated uuid/user_id is deprecated.
     ///
     /// @see pubnub_generate_uuid_v4_random
     PUBNUB_DEPRECATED int set_uuid_v4_random() 
-    {
-	return set_user_id_with_random_uuid_v4();
-    }
-
-    /// Set the user_id with a random-generated UUID
-    /// @see pubnub_generate_uuid_v4_random
-    int set_user_id_with_random_uuid_v4()
     {
         struct Pubnub_UUID uuid;
         if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
@@ -681,13 +673,13 @@ public:
     }
 
     /** Returns the current user_id
- 
-	@deprecated this is provided as a workaround for existing users.
-    	Please use `user_id` instead.
-    */
+
+      @deprecated this is provided as a workaround for existing users.
+      Please use `user_id` instead.
+      */
     PUBNUB_DEPRECATED std::string const uuid() const
     {
-	return user_id();
+        return user_id();
     }
 
     /// Returns the current user_id

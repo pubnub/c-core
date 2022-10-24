@@ -284,44 +284,37 @@ namespace pubnub {
             user_id will not be used.
         
 	    @deprecated this is provided as a workaround for existing users.
-	    Please use `set_user_id` instead.
-  	*/
+        Please use `set_user_id` instead.
+        */
         PUBNUB_DEPRECATED void set_uuid(std::string const &uuid) {
             set_user_id(uuid);
-	}
-
-	/** Sets the user_id to @p user_id. if @p user_id is an empty string,
-            user_id will not be used.
-        */
-    	void set_user_id(std::string const& user_id)
-    	{
-            d_pbqt.set_user_id(QString::fromStdString(uuid));
-    	}
-
-	/// Set the user_id with a random-generated UUID
-        /// 
-	/// @deprecated this is provided as a workaround for existing users.
-        /// Please use `set_user_id_with_random_uuid_v4` instead.
-   	PUBNUB_DEPRECATED int set_uuid_v4_random() {
-            return set_user_id_with_random_uuid_v4();
         }
 
-	/// Set the user_id with a random-generated UUID
-	int set_user_id_with_random_uuid_v4()
-	{
-	    return d_pbqt.set_user_id_with_random_uuid_v4();	
-	}
+        /** Sets the user_id to @p user_id. if @p user_id is an empty string,
+          user_id will not be used.
+          */
+        void set_user_id(std::string const& user_id)
+        {
+            d_pbqt.set_user_id(QString::fromStdString(uuid));
+        }
+
+        /// Set the user_id with a random-generated UUID
+        /// 
+        /// @deprecated random generated uuid/user_id is deprecated.
+        PUBNUB_DEPRECATED int set_uuid_v4_random() {
+            return d_pbqt.set_uuid_v4_random();	
+        }
 
         /// Returns the current user_id
         ///
         /// @deprecated this is provided as a workaround for existing users.
-   	/// Please use `user_id` instead.
-    	PUBNUB_DEPRECATED std::string uuid() const { return user_id() }
+        /// Please use `user_id` instead.
+        PUBNUB_DEPRECATED std::string uuid() const { return user_id() }
 
-	/// Returns the current user_id
-    	std::string user_id() const { return d_pbqt.uuid().toStdString(); }
+        /// Returns the current user_id
+        std::string user_id() const { return d_pbqt.uuid().toStdString(); }
 
-	/// Returns the next message from the context. If there are
+        /// Returns the next message from the context. If there are
         /// none, returns an empty string.
         std::string get() const { return d_pbqt.get().toStdString(); }
 

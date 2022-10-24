@@ -33,7 +33,7 @@ int main()
         std::string chan("hello_world");
         pubnub::context pb("demo", "demo");
  
-        if (0 != pb.set_user_id_with_random_uuid_v4()) {
+        if (0 != pb.set_uuid_v4_random()) {
             pb.set_user_id("zeka-peka-iz-jendeka");
         }
         else {

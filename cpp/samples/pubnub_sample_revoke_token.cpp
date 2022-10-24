@@ -40,7 +40,7 @@ int main()
         pubnub::context gb(my_env_publish_key, my_env_subscribe_key);
         gb.set_secret_key(my_env_secret_key);
         gb.set_blocking_io(pubnub::non_blocking);
-        if (0 != gb.set_user_id_with_random_uuid_v4()) {
+        if (0 != gb.set_uuid_v4_random()) {
             gb.set_user_id("pandu-iz-uuidgra");
         }
         else {
@@ -78,7 +78,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_user_id_with_random_uuid_v4()) {
+        if (0 != pb.set_uuid_v4_random()) {
             pb.set_user_id("pandu-iz-uuidsam");
         }
         else {

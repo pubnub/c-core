@@ -26,7 +26,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_user_id_with_random_uuid_v4()) {
+        if (0 != pb.set_uuid_v4_random()) {
             pb.set_user_id("zeka-peka-iz-jendeka");
         }
         else {

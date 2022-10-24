@@ -43,7 +43,7 @@ struct pubnub_fetch_history_options {
      * false.
      */
     bool include_message_type;
-    /** If true to recieve user_id with each history
+    /** If true to receive user_id with each history
      * message. If false, no user_id per message. Defaults to
      * false.
      */

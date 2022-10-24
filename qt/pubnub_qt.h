@@ -272,18 +272,10 @@ public:
     /** Set the user_id with a random UUID value, according to stadard
      * v4 representation.
      *
-     * @deprecated this is provided as a workaround for existing users.
-     * Please use `set_user_id_with_random_uuid_v4` instead.
+     * @deprecated random generated uuid/user_id is deprecated.
      */
     PUBNUB_DEPRECATED void set_uuid_v4_random() {
-	set_user_id_with_random_uuid_v4();
-    }
-
-    /** Set the user_id with a random UUID value, according to stadard
-     * v4 representation.
-     */
-    void set_user_id_with_random_uuid_v4() {
-        QString uuid = QUuid::createUuid().toString();
+	   QString uuid = QUuid::createUuid().toString();
         set_user_id(uuid.mid(1, uuid.size()-2));
     }
     /** Returns the current user_id value (string)

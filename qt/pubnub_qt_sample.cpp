@@ -139,7 +139,7 @@ void pubnub_qt_sample::execute()
     qDebug() << "execute()";
     
 //    d_pb.set_ssl_options(0);
-    d_pb.set_user_id_with_random_uuid_v4();
+    d_pb.set_uuid_v4_random();
 
     connect(&d_pb, SIGNAL(outcome(pubnub_res)), this, SLOT(onPublish(pubnub_res)));
     pubnub_res result = d_pb.publish(chann, "\"Hello world from Qt!\"");
