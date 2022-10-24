@@ -1,6 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#include "lib/pb_strncasecmp.h"
+
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 #include "core/pubnub_ccore.h"
@@ -1130,10 +1132,10 @@ next_state:
                 }
                 goto next_state;
             }
-            if (strncmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1) == 0) {
+            if (pb_strncasecmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1) == 0) {
                 pb->http_chunked = true;
             }
-            else if (strncmp(pb->core.http_buf, h_length, sizeof h_length - 1) == 0) {
+            else if (pb_strncasecmp(pb->core.http_buf, h_length, sizeof h_length - 1) == 0) {
                 size_t len = atoi(pb->core.http_buf + sizeof h_length - 1);
                 if (0 != pbcc_realloc_reply_buffer(&pb->core, len)) {
                     outcome_detected(pb, PNR_REPLY_TOO_BIG);
@@ -1141,11 +1143,11 @@ next_state:
                 }
                 pb->core.http_content_len = len;
             }
-            else if (strncmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
+            else if (pb_strncasecmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
                 pb->flags.should_close = true;
             }
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
-            else if (strncmp(pb->core.http_buf, h_encoding, sizeof h_encoding - 1)
+            else if (pb_strncasecmp(pb->core.http_buf, h_encoding, sizeof h_encoding - 1)
                      == 0) {
                 pb->data_compressed = compressionGZIP;
             }
