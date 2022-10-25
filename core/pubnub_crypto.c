@@ -528,12 +528,12 @@ int base64_max_size(int encode_this_many_bytes) {
 
 int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {
     size_t buf_size = 4 * ((encode_this_many_bytes + 2)/3) + 1; // +1 for tailing 0
-    unsigned char *buf = calloc(buf_size, 1);
+    unsigned char *buf = (unsigned char*)calloc(buf_size, 1);
     if (!buf) {
         return -1;
     }
 
-    size_t size = EVP_EncodeBlock(buf, b64_encode_this, encode_this_many_bytes);
+    size_t size = EVP_EncodeBlock(buf, (const unsigned char*)b64_encode_this, encode_this_many_bytes);
     // size does not include tailing 0
     // https://www.openssl.org/docs/man3.0/man3/EVP_EncodeBlock.html
     if (size + 1 > (size_t)max_size) {
