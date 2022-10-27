@@ -263,8 +263,6 @@ enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* user_id)
 
     rslt = pbcc_where_now_prep(&pb->core, user_id ? user_id : pbcc_user_id_get(&pb->core));
 
-    PUBNUB_ASSERT_OPT(user_id != NULL);
-
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_WHERENOW;
         pb->core.last_result = PNR_STARTED;
@@ -312,8 +310,6 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
     }
     rslt = pbcc_set_state_prep(
         &pb->core, channel, channel_group, user_id ? user_id : pbcc_user_id_get(&pb->core), state);
-
-    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SET_STATE;
@@ -435,8 +431,6 @@ enum pubnub_res pubnub_state_get(pubnub_t*   pb,
 
     rslt = pbcc_state_get_prep(
         &pb->core, channel, channel_group, user_id ? user_id : pbcc_user_id_get(&pb->core));
-    
-    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_STATE_GET;
