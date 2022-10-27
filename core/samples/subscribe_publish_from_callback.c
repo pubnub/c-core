@@ -237,8 +237,10 @@ int main()
     }
 
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
     pubnub_register_callback(pbp, subscribe_callback, "CH1");
     pubnub_init(pbp_2, "demo", "demo");
+    pubnub_set_user_id(pbp_2, "demo_2");
     pubnub_register_callback(pbp_2, publish_callback, "CH1");
 
     if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
