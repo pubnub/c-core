@@ -21,6 +21,9 @@ int main()
         pubnub::context pb("demo", "demo");
         pubnub::context pb_2("demo", "demo");
 
+        pb.set_user_id("pb");
+        pb_2.set_user_id("pb2");
+
         std::cout << "--------------------------" << std::endl <<
             "Subscribing..." << std::endl <<
             "--------------------------";
