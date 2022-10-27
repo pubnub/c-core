@@ -19,6 +19,7 @@ enum pubnub_res pbcc_revoke_token_prep(struct pbcc_context* pb, char const* toke
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(token != NULL);
 
     pb->http_content_len = 0;

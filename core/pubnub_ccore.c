@@ -132,6 +132,9 @@ enum pubnub_res pbcc_leave_prep(struct pbcc_context* pb,
                                 const char*          channel_group)
 {
     char const* user_id = pbcc_user_id_get(pb);
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
@@ -187,6 +190,8 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context* pb)
     char const* user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     if (pb->msg_ofs < pb->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
     }
@@ -220,6 +225,8 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     char const* const uname = pubnub_uname();
     char const* user_id = pbcc_user_id_get(pb);
     enum pubnub_res rslt = PNR_OK;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
@@ -271,6 +278,8 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
     char const* user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
     enum pubnub_res rslt = PNR_OK;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -329,6 +338,8 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
     char const*       user_id  = pbcc_user_id_get(pb);
     enum pubnub_res rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     if (NULL == channel) {
         if (channel_group != NULL) {
             channel = ",";
@@ -380,6 +391,8 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context* pb, const char* user_id
     char const* const uname = pubnub_uname();
     char const* pb_user_id = pbcc_user_id_get(pb);
 
+    PUBNUB_ASSERT_OPT(pb_user_id != NULL);
+
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
 
@@ -424,6 +437,8 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
     enum pubnub_res rslt = PNR_OK;
     char const* pb_user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
+
+    PUBNUB_ASSERT_OPT(pb_user_id != NULL);
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -481,6 +496,8 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
     enum pubnub_res rslt = PNR_OK;
     char const* pb_user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
+    
+    PUBNUB_ASSERT_OPT(pb_user_id != NULL);
 
     if (NULL == channel) {
         if (NULL == channel_group) {
@@ -535,6 +552,8 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* pb,
     char const* user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
@@ -575,6 +594,8 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* pb,
     enum pubnub_res rslt = PNR_OK;
     char const* user_id = pbcc_user_id_get(pb);
     char const* const uname = pubnub_uname();
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     pb->http_buf_len = snprintf(
         pb->http_buf,

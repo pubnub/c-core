@@ -24,6 +24,9 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
 {
     char const* user_id = pbcc_user_id_get(pb);
     char const* type_literal;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     if (NULL == user_id) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - user_id not set.\n", pb);
         return PNR_INVALID_PARAMETERS;
@@ -90,6 +93,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken != NULL);
     PUBNUB_ASSERT_OPT(value != NULL);
@@ -227,6 +231,7 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken.ptr != NULL);
     PUBNUB_ASSERT_OPT(action_timetoken.ptr != NULL);
@@ -304,6 +309,7 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 
@@ -356,6 +362,9 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
     struct pbjson_elem elem;
     struct pbjson_elem parsed;
     enum pbjson_object_name_parse_result json_rslt;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     if (pb->last_result != PNR_OK) {
         PUBNUB_LOG_ERROR("pbcc_get_actions_more_prep(pb=%p) can be called only if "
                          "previous transaction is finished successfully. "
@@ -435,6 +444,7 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 

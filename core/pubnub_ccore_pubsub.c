@@ -493,6 +493,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     char const*       user_id  = pbcc_user_id_get(pb);
     enum pubnub_res   rslt  = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
@@ -581,6 +582,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
     char const* const uname = pubnub_uname();
     char const*       user_id = pbcc_user_id_get(pb);
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
@@ -627,6 +629,9 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
 {
     char const* user_id = pbcc_user_id_get(p);
     char const* const uname = pubnub_uname();
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {

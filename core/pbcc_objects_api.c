@@ -8,6 +8,7 @@
 #include "pbcc_objects_api.h"
 
 #include "pbpal.h"
+#include <cstddef>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -80,6 +81,7 @@ enum pubnub_res pbcc_getall_uuidmetadata_prep(
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
 
     pb->http_content_len = 0;
@@ -137,6 +139,7 @@ enum pubnub_res pbcc_set_uuidmetadata_prep(
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(user_obj != NULL);
     if (NULL == uuid_metadataid) {
         uuid_metadataid = user_id;
@@ -191,6 +194,7 @@ enum pubnub_res pbcc_get_uuidmetadata_prep(
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     if (NULL == uuid_metadataid) {
         uuid_metadataid = user_id;
     }
@@ -239,6 +243,7 @@ enum pubnub_res pbcc_remove_uuidmetadata_prep(struct pbcc_context* pb, char cons
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     if (NULL == uuid_metadataid) {
         uuid_metadataid = user_id;
     }
@@ -291,6 +296,7 @@ enum pubnub_res pbcc_getall_channelmetadata_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
 
     pb->http_content_len = 0;
@@ -345,6 +351,7 @@ enum pubnub_res pbcc_set_channelmetadata_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel_metadata_obj != NULL);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_set_channelmetadata_prep(pbcc=%p) - Invalid param: "
@@ -401,6 +408,7 @@ enum pubnub_res pbcc_get_channelmetadata_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_get_channelmetadata_prep(pbcc=%p) - Invalid param: "
                          "channel_metadataid=NULL\n",
@@ -453,6 +461,7 @@ enum pubnub_res pbcc_remove_channelmetadata_prep(struct pbcc_context* pb, char c
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_remove_channelmetadata_prep(pbcc=%p) - Invalid param: "
                          "channel_metadataid=NULL\n",
@@ -510,6 +519,7 @@ enum pubnub_res pbcc_get_memberships_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
 
     if (NULL == uuid_metadataid) {
@@ -568,6 +578,7 @@ enum pubnub_res pbcc_set_memberships_prep(struct pbcc_context* pb,
     char const*        user_id = pbcc_user_id_get(pb);
     enum pubnub_res    rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(set_obj != NULL);
 
     if (NULL == uuid_metadataid) {
@@ -627,6 +638,7 @@ enum pubnub_res pbcc_get_members_prep(struct pbcc_context* pb,
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_get_members_prep(pbcc=%p) - Invalid param: "
@@ -687,6 +699,7 @@ enum pubnub_res pbcc_set_members_prep(struct pbcc_context* pb,
     char const*        user_id = pbcc_user_id_get(pb);
     enum pubnub_res    rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(set_obj != NULL);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_set_members_prep(pbcc=%p) - Invalid param: "

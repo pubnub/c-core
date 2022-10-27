@@ -64,6 +64,7 @@ enum pubnub_res pbcc_grant_token_prep(
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(perm_obj != NULL);
 
     pb->http_content_len = 0;
