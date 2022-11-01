@@ -1007,7 +1007,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000001\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"23198786634356573fd7f126fae6cfbf\", "
+                                     "response=\"d2dc552a828b6ef185ea09007dbdb52d\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header2 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1016,7 +1016,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000002\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"e3a11a45ef0052f701febe8f8fe5c20b\", "
+                                     "response=\"aae3ef4d1eeca71de4d1cdc5396adaed\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header3 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1025,7 +1025,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000003\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"91af48a64dd82f8d17a8a05ac6a8ec18\", "
+                                     "response=\"6ba0269934636b5b7bd117c960a540fb\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header4 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1034,7 +1034,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Digest_and_contin
                                      "cnonce=\"51dcb074ff5c49198a94e82aec585562\", "
                                      "nc=\"00000001\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"d0966999c0711a461db101b2d3648bf8\", "
+                                     "response=\"7ccdc3723507e52e4bc0d6d52e975a9e\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
@@ -1224,7 +1224,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000001\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"23198786634356573fd7f126fae6cfbf\", "
+                                     "response=\"d2dc552a828b6ef185ea09007dbdb52d\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header2 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1233,7 +1233,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000002\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"e3a11a45ef0052f701febe8f8fe5c20b\", "
+                                     "response=\"aae3ef4d1eeca71de4d1cdc5396adaed\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header3 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1242,7 +1242,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                      "nc=\"00000003\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"91af48a64dd82f8d17a8a05ac6a8ec18\", "
+                                     "response=\"6ba0269934636b5b7bd117c960a540fb\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header4 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1251,7 +1251,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"51dcb074ff5c49198a94e82aec585562\", "
                                      "nc=\"00000001\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"d0966999c0711a461db101b2d3648bf8\", "
+                                     "response=\"7ccdc3723507e52e4bc0d6d52e975a9e\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header5 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1260,7 +1260,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"51dcb074ff5c49198a94e82aec585562\", "
                                      "nc=\"00000002\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"6580aa5fc33cbe37ffa73412c7c0ca48\", "
+                                     "response=\"8cf6aece1771bc180aa2019233618fc0\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
     char const* HTTP_proxy_header6 = "\r\nProxy-Authorization: Digest username=\"average_user\", "
                                      "realm=\"testrealm@host.com\", "
@@ -1269,7 +1269,7 @@ Ensure(single_context_pubnub, GET_Digest_proxy_closes_connection_after407_and_st
                                      "cnonce=\"291f8e23cd7c4846ba581b3dabd77e50\", "
                                      "nc=\"00000001\", "
                                      "qop=\"auth-int\", "
-                                     "response=\"84085a90c8ceca28b53f01ea11ee0a65\", "
+                                     "response=\"2364446a37c71152b6b0af414e70868e\", "
                                      "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
@@ -1604,7 +1604,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Digest)
                                     "cnonce=\"67458b6bc6234b32a9983c6473483366\", "
                                     "nc=\"00000001\", "
                                     "qop=\"auth-int\", "
-                                    "response=\"91c232a021e8685f6424c44bca532d38\", "
+                                    "response=\"702347a42e8cf3663cbf8542a071e12d\", "
                                     "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
