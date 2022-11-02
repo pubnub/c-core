@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "3.5.2"
+version: "4.0.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-11-02
+    version: v4.0.0
+    changes:
+      - type: feature
+        text: "Add `user_id` configuration option that deprecates `uuid` ones."
+      - type: feature
+        text: "BREAKING CHANGES: now `user_id` (old `uuid`) is a required property!."
   - date: 2022-10-11
     version: v3.5.2
     changes:
@@ -641,7 +648,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -707,7 +714,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -773,7 +780,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -835,7 +842,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -896,7 +903,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -952,7 +959,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
@@ -1005,7 +1012,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v3.5.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
             requires:
               -
                 name: "miniz"
