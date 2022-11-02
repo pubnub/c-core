@@ -142,6 +142,10 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
     pubnub_init(pbp_2, "demo", "demo");
+
+    pubnub_set_user_id(pbp, "demo");
+    pubnub_set_user_id(pbp_2, "demo_2");
+
     pubnub_register_callback(pbp_2, publish_callback, (void*)chan);
 
 	paint_text_white();

@@ -170,6 +170,7 @@ int main()
 {
     try {
         pubnub::context pb("demo", "demo");
+        pb.set_user_id("pb");
  
         /* Leave this commented out to use the default - which is
            blocking I/O on most platforms. Uncomment to use non-

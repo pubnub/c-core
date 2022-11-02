@@ -185,6 +185,7 @@ pubnub_t* pnfntst_create_ctx(void)
     if (pbp != NULL) {
         pubnub_init(pbp, m_test_param.pubkey, m_test_param.keysub);
         pubnub_origin_set(pbp, m_test_param.origin);
+        pubnub_set_user_id(pbp, "test_id");
     }
 
     return pbp;

@@ -494,8 +494,10 @@ enum pubnub_res pbcc_message_counts_prep(
                                          char const*          channel_timetokens)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid  = pbcc_uuid_get(p);
+    char const*       user_id  = pbcc_user_id_get(p);
     enum pubnub_res   rslt = PNR_OK;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     
     if (check_parameters(p, channel, timetoken, channel_timetokens) != pnarg_PARAMS_OK) {
         return PNR_INVALID_PARAMETERS;
@@ -515,7 +517,7 @@ enum pubnub_res pbcc_message_counts_prep(
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
     ADD_TS_TO_URL_PARAM();

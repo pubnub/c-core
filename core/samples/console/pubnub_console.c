@@ -61,7 +61,7 @@ int main()
     char channel[PNC_CHANNEL_NAME_SIZE];
     char channel_group[PNC_CHANNEL_NAME_SIZE];
     char auth_key[PNC_AUTH_KEY_SIZE];
-    char uuid[PNC_UUID_SIZE + 1];
+    char user_id[PNC_UUID_SIZE + 1];
     char state[2048];
     pubnub_t *pn = pubnub_alloc();
     pubnub_t *pn_sub = pubnub_alloc();
@@ -73,8 +73,8 @@ int main()
     
     pubnub_init(pn, pubkey, subkey);
     pubnub_init(pn_sub, pubkey, subkey);
-    pubnub_set_uuid(pn, PNC_DEFAULT_UUID);
-    pubnub_set_uuid(pn, PNC_DEFAULT_SUBSCRIBE_UUID);
+    pubnub_set_user_id(pn, PNC_DEFAULT_UUID);
+    pubnub_set_user_id(pn_sub, PNC_DEFAULT_SUBSCRIBE_UUID);
 
     pnc_ops_init(pn, pn_sub);
     
@@ -167,21 +167,21 @@ int main()
             
             break;
         case MENU_UUID:
-            pnc_read_string_from_console("UUID", uuid, PNC_UUID_SIZE);
-            pubnub_set_uuid(pn, uuid);
+            pnc_read_string_from_console("UUID", user_id, PNC_UUID_SIZE);
+            pubnub_set_user_id(pn, user_id);
             break;
         case MENU_STATE_GET:
             pnc_read_string_from_console("Channel Name",
                                          channel, PNC_CHANNEL_NAME_SIZE);
             pnc_read_string_from_console_optional("UUID",
-                                                  uuid, PNC_UUID_SIZE, true);
+                                                  user_id, PNC_UUID_SIZE, true);
             
-            if (strlen(uuid) == 0) {
-                strcpy(uuid, pubnub_uuid_get(pn));
+            if (strlen(user_id) == 0) {
+                strcpy(user_id, pubnub_user_id_get(pn));
             }
             
             pnc_ops_parse_response("pubnub_get_state()",
-                                   pubnub_state_get(pn, channel, NULL, uuid), pn);
+                                   pubnub_state_get(pn, channel, NULL, user_id), pn);
             break;
         case MENU_SET_STATE:
             // Set State
@@ -190,17 +190,17 @@ int main()
             pnc_read_string_from_console("JSON state without escaping",
                                          state, PNC_READ_STRING_SIZE);
             pnc_ops_parse_response("pubnub_set_state()",
-                                   pubnub_set_state(pn, channel, NULL, pubnub_uuid_get(pn), state), pn);
+                                   pubnub_set_state(pn, channel, NULL, pubnub_user_id_get(pn), state), pn);
             break;
         case MENU_WHERE_NOW:
-            pnc_read_string_from_console_optional("UUID", uuid, PNC_UUID_SIZE, true);
-            if (strlen(uuid) == 0) {
+            pnc_read_string_from_console_optional("UUID", user_id, PNC_UUID_SIZE, true);
+            if (strlen(user_id) == 0) {
                 puts("Using current UUID");
-                strcpy(uuid, PNC_DEFAULT_UUID);
+                strcpy(user_id, PNC_DEFAULT_UUID);
             }
             
             pnc_ops_parse_response("pubnub_where_now()",
-                                   pubnub_where_now(pn, uuid), pn);
+                                   pubnub_where_now(pn, user_id), pn);
             break;
         case MENU_ADD_PRESENCE_CHANNEL:
         {
@@ -305,7 +305,7 @@ static void displayMenuOptions(pubnub_t *pn)
     puts("ENTER "STRINGIFY(MENU_HERE_NOW)"  FOR Here Now");
     puts("ENTER "STRINGIFY(MENU_TIME)"  FOR Time");
     printf("ENTER "STRINGIFY(MENU_AUTH)"  FOR Setting/Unsetting auth key (current: %s)\n", pubnub_auth_get(pn));
-    printf("ENTER "STRINGIFY(MENU_UUID)"  FOR Setting UUID (current: %s)\n", pubnub_uuid_get(pn));
+    printf("ENTER "STRINGIFY(MENU_UUID)"  FOR Setting UUID (current: %s)\n", pubnub_user_id_get(pn));
     puts("ENTER "STRINGIFY(MENU_STATE_GET)"  FOR Getting Subscriber State");
     puts("ENTER "STRINGIFY(MENU_SET_STATE)"  FOR Setting Subscriber State");
     puts("ENTER "STRINGIFY(MENU_WHERE_NOW)"  FOR Where Now");

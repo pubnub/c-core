@@ -249,7 +249,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t* pb)
 }
 
 
-enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* uuid)
+enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* user_id)
 {
     enum pubnub_res rslt;
 
@@ -261,7 +261,8 @@ enum pubnub_res pubnub_where_now(pubnub_t* pb, const char* uuid)
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_where_now_prep(&pb->core, uuid ? uuid : pbcc_uuid_get(&pb->core));
+    rslt = pbcc_where_now_prep(&pb->core, user_id ? user_id : pbcc_user_id_get(&pb->core));
+
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_WHERENOW;
         pb->core.last_result = PNR_STARTED;
@@ -296,7 +297,7 @@ int json_kvp_builder(char* jsonbuilder, int pos, char* key, char* val)
 enum pubnub_res pubnub_set_state(pubnub_t*   pb,
                                  char const* channel,
                                  char const* channel_group,
-                                 const char* uuid,
+                                 const char* user_id,
                                  char const* state)
 {
     enum pubnub_res rslt;
@@ -308,7 +309,8 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         return PNR_IN_PROGRESS;
     }
     rslt = pbcc_set_state_prep(
-        &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core), state);
+        &pb->core, channel, channel_group, user_id ? user_id : pbcc_user_id_get(&pb->core), state);
+
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SET_STATE;
         pb->core.last_result = PNR_STARTED;
@@ -415,7 +417,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
 enum pubnub_res pubnub_state_get(pubnub_t*   pb,
                                  char const* channel,
                                  char const* channel_group,
-                                 const char* uuid)
+                                 const char* user_id)
 {
     enum pubnub_res rslt;
 
@@ -428,7 +430,8 @@ enum pubnub_res pubnub_state_get(pubnub_t*   pb,
     }
 
     rslt = pbcc_state_get_prep(
-        &pb->core, channel, channel_group, uuid ? uuid : pbcc_uuid_get(&pb->core));
+        &pb->core, channel, channel_group, user_id ? user_id : pbcc_user_id_get(&pb->core));
+
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_STATE_GET;
         pb->core.last_result = PNR_STARTED;

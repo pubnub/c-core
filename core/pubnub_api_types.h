@@ -158,19 +158,19 @@ enum pubnub_trans {
     /** History V2 (get message history for the channel from Pubnub
      * server) operation/transaction */
     PBTT_HISTORY,
-    /** Here-now (get UUIDs of currently present users in channel(s))
+    /** Here-now (get USER_IDs of currently present users in channel(s))
      * operation/transaction */
     PBTT_HERENOW,
-    /** Global here-now (get UUIDs of currently present users in all
+    /** Global here-now (get USER_IDs of currently present users in all
         channels) operation/transaction */
     PBTT_GLOBAL_HERENOW,
-    /** Where-now (get channels in which an user (identified by UUID)
+    /** Where-now (get channels in which an user (identified by USER_ID)
         is currently present) operation/transaction */
     PBTT_WHERENOW,
-    /** Set state (for a user (identified by UUID) on channel(s))
+    /** Set state (for a user (identified by USER_ID) on channel(s))
      * operation/transaction */
     PBTT_SET_STATE,
-    /** Get state (for a user (identified by UUID) on channel(s))
+    /** Get state (for a user (identified by USER_ID) on channel(s))
      * operation/transaction */
     PBTT_STATE_GET,
     /** Remove a channel group (from the channel-registry)
@@ -193,7 +193,7 @@ enum pubnub_trans {
     PBTT_SUBSCRIBE_V2,
 #endif
 #if PUBNUB_USE_ADVANCED_HISTORY
-    /** Message counts(get counters of unread messages for a user, identified by UUID,
+    /** Message counts(get counters of unread messages for a user, identified by USER_ID,
         for the list of channels specified) starting from given timetoken, or(exclusive or)
         list of timetokens per channel.
         If neither timetoken, nor channel_timetokens are specified, gets entire message

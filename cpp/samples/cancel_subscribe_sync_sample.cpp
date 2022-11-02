@@ -23,6 +23,8 @@ int main()
         std::string chan = "hello_world";
         pubnub::context pb("demo", "demo");
 
+        pb.set_user_id("pb");
+
         srand((unsigned)time(NULL));
 
         /* This is essential, as otherwise waiting for incoming data will

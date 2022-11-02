@@ -31,14 +31,11 @@ int main()
 
         std::string chan("hello_world");
         pubnub::context gb(my_env_publish_key, my_env_subscribe_key);
+        
         gb.set_secret_key(my_env_secret_key);
         gb.set_blocking_io(pubnub::non_blocking);
-        if (0 != gb.set_uuid_v4_random()) {
-            gb.set_uuid("pandu-iz-uuidgra");
-        }
-        else {
-            std::cout << "Grant Generated UUID: " << gb.uuid() << std::endl;
-        }
+        gb.set_user_id("pandu-iz-uuidgra");
+
         std::cout << "Grant Token" << std::endl;
         struct pam_permission h_perm = { h_perm.read=true, h_perm.write=true };
         int perm_hello_world = pubnub_get_grant_bit_mask_value(h_perm);
@@ -46,7 +43,7 @@ int main()
         int perm_channel_group = pubnub_get_grant_bit_mask_value(cg_perm);
         int ttl_minutes = 60;
         char perm_obj[2000];
-        char* authorized_uuid = (char*)"my_authorized_uuid";
+        char* authorized_uuid = (char*)"my_authorized_uuid"; // TODO: @reviewers should we change uuid in perm_obj?
         sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"hello_world\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, perm_hello_world, perm_channel_group);
         pubnub::futres futgres = gb.grant_token(perm_obj);
         res = futgres.await();
@@ -71,12 +68,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_uuid_v4_random()) {
-            pb.set_uuid("pandu-iz-uuidsam");
-        }
-        else {
-            std::cout << "Generated UUID: " << pb.uuid() << std::endl;
-        }
+        pb.set_user_id("pandu-iz-uuidsam");
         pb.set_auth_token(tkn);
 
         pb.set_transaction_timeout(
@@ -218,7 +210,7 @@ int main()
         }
 
         std::cout << "Setting state" << std::endl;
-        if (PNR_OK ==  pb.set_state(chan, "", pb.uuid(), "{\"x\":5}").await()) {
+        if (PNR_OK ==  pb.set_state(chan, "", pb.user_id(), "{\"x\":5}").await()) {
             std::cout << "State was set: " << pb.get() << std::endl;
         }
         else {

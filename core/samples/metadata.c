@@ -78,6 +78,7 @@ static int doit(pubnub_t* pbp)
     struct pubnub_subscribe_v2_options subopts;
 
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
     srand((unsigned)time(NULL));
 
     puts("----------------------------");

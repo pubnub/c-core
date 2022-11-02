@@ -61,9 +61,10 @@ enum pubnub_res pbcc_grant_token_prep(
     enum pubnub_trans pt)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(perm_obj != NULL);
 
     pb->http_content_len = 0;
@@ -75,7 +76,7 @@ enum pubnub_res pbcc_grant_token_prep(
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 
 #if PUBNUB_CRYPTO_API
   ADD_TS_TO_URL_PARAM();

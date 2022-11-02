@@ -14,6 +14,8 @@ TEST_DEF(complex_send_and_receive_over_several_channels_simultaneously)
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const three(pnfntst_make_name(this_test_name_));
@@ -40,6 +42,8 @@ TEST_DEF_NEED_CHGROUP(complex_send_and_receive_over_channel_plus_group_simultane
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const three(pnfntst_make_name(this_test_name_));
@@ -72,6 +76,7 @@ TEST_ENDDEF
 TEST_DEF(connect_disconnect_and_connect_again)
 {
     context                   pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const         ch(pnfntst_make_name(this_test_name_));
     std::chrono::milliseconds rel_time = Td;
     pubnub_res                result = PNR_STARTED;
@@ -121,6 +126,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_group)
 {
     context                   pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const         ch(pnfntst_make_name(this_test_name_));
     std::string const         gr(pnfntst_make_name(this_test_name_));
     std::chrono::milliseconds rel_time = Td;
@@ -180,6 +186,8 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
 {
     context                   pbp(pubkey, keysub, origin);
     context                   pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const         ch(pnfntst_make_name(this_test_name_));
     std::string const         two(pnfntst_make_name(this_test_name_));
     std::string const         gr(pnfntst_make_name(this_test_name_));
@@ -249,6 +257,7 @@ TEST_ENDDEF
 TEST_DEF(wrong_api_usage)
 {
     context                   pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const         ch(pnfntst_make_name(this_test_name_));
     std::chrono::milliseconds rel_time = Td;
     pubnub_res                result = PNR_STARTED;
@@ -286,6 +295,7 @@ TEST_ENDDEF
 TEST_DEF(handling_errors_from_pubnub)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     
     SENSE(pbp.publish(ch, "\"Test ")).in(Td) == PNR_PUBLISH_FAILED;

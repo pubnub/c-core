@@ -12,6 +12,7 @@ const std::chrono::milliseconds T_chan_registry_propagation(1000);
 TEST_DEF(simple_connect_and_send_over_single_channel)
 {
     context           pb(pubkey, keysub, origin);
+    pb.set_user_id("test_id");
     std::string const chan(pnfntst_make_name(this_test_name_));
 
     SENSE(pb.subscribe(chan)).in(Td) == PNR_OK;
@@ -27,6 +28,7 @@ TEST_ENDDEF
 TEST_DEF(connect_and_send_over_several_channels_simultaneously)
 {
     context           pb(pubkey, keysub, origin);
+    pb.set_user_id("test_id");
     std::string const chan_1st(pnfntst_make_name(this_test_name_));
     std::string const chan_2nd(pnfntst_make_name(this_test_name_));
 
@@ -46,6 +48,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(simple_connect_and_send_over_single_channel_in_group)
 {
     context           pb(pubkey, keysub, origin);
+    pb.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
     
@@ -69,6 +72,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(connect_and_send_over_several_channels_in_group_simultaneously)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -93,6 +97,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(connect_and_send_over_channel_in_group_and_single_channel_simultaneously)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -116,6 +121,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const three(pnfntst_make_name(this_test_name_));
@@ -143,6 +149,8 @@ TEST_DEF(simple_connect_and_receiver_over_single_channel)
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
 
     SENSE(pbp_2.subscribe(ch)).in(Td) == PNR_OK;
@@ -165,6 +173,8 @@ TEST_DEF(connect_and_receive_over_several_channels_simultaneously)
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string       ch_two = ch + comma + two;
@@ -183,6 +193,8 @@ TEST_DEF_NEED_CHGROUP(simple_connect_and_receiver_over_single_channel_in_group)
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
 
@@ -212,6 +224,8 @@ TEST_DEF_NEED_CHGROUP(connect_and_receive_over_several_channels_in_group_simulta
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -238,6 +252,8 @@ TEST_DEF_NEED_CHGROUP(connect_and_receive_over_channel_in_group_and_single_chann
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -263,6 +279,8 @@ TEST_DEF_NEED_CHGROUP(connect_and_receive_over_channel_in_group_and_multi_channe
 {
     context           pbp(pubkey, keysub, origin);
     context           pbp_2(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
+    pbp_2.set_user_id("test_id_2");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const three(pnfntst_make_name(this_test_name_));
@@ -290,6 +308,7 @@ TEST_ENDDEF
 TEST_DEF(broken_connection_test)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
 
     SENSE(pbp.subscribe(ch)).in(Td) == PNR_OK;
@@ -322,6 +341,7 @@ TEST_ENDDEF
 TEST_DEF(broken_connection_test_multi)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string       ch_two = ch + comma + two;
@@ -353,6 +373,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(broken_connection_test_group)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
 
@@ -392,6 +413,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(broken_connection_test_multi_in_group)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -433,6 +455,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(broken_connection_test_group_in_group_out)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const gr(pnfntst_make_name(this_test_name_));
@@ -473,6 +496,7 @@ TEST_ENDDEF
 TEST_DEF_NEED_CHGROUP(broken_connection_test_group_multichannel_out)
 {
     context           pbp(pubkey, keysub, origin);
+    pbp.set_user_id("test_id");
     std::string const ch(pnfntst_make_name(this_test_name_));
     std::string const two(pnfntst_make_name(this_test_name_));
     std::string const three(pnfntst_make_name(this_test_name_));

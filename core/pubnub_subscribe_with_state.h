@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_deprecated.h"
 
 #include <stdbool.h>
 
@@ -41,7 +42,7 @@
     
     @see pubnub_subscribe
  */
-enum pubnub_res pubnub_subscribe_with_state(pubnub_t *p, const char *channel, const char *channel_group, char const *state);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_subscribe_with_state(pubnub_t *p, const char *channel, const char *channel_group, char const *state);
 
 
 

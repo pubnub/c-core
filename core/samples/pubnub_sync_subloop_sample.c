@@ -36,6 +36,7 @@ int main()
         return -1;
     }
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
 
     /* Leave this commented out to use the default - which is
        blocking I/O on most platforms. Uncomment to use non-

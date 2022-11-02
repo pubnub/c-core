@@ -7,19 +7,19 @@
 #include <stdio.h>
 #include <time.h>
 
-
-static void generate_uuid(pubnub_t* pbp)
+ 
+static void generate_user_id(pubnub_t* pbp)  
 {
-    char const*                      uuid_default = "zeka-peka-iz-jendeka";
+    char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
-    static struct Pubnub_UUID_String str_uuid;
-
+    static struct Pubnub_UUID_String str_uuid; 
+  
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, uuid_default);
+        pubnub_set_user_id(pbp, user_id_default);
     }
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
@@ -89,7 +89,7 @@ int main()
     */
     pubnub_set_non_blocking_io(pbp);
 
-    generate_uuid(pbp);
+    generate_user_id(pbp);
 
     pubnub_set_auth(pbp, "danaske");
 
@@ -248,7 +248,7 @@ int main()
     }
 
     puts("Getting where_now presence...");
-    res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
+    res = pubnub_where_now(pbp, pubnub_user_id_get(pbp));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -269,7 +269,7 @@ int main()
     }
 
     puts("Setting state...");
-    res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
+    res = pubnub_set_state(pbp, chan, NULL, pubnub_user_id_get(pbp), "{\"x\":5}");
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
@@ -290,7 +290,7 @@ int main()
     }
 
     puts("Getting state...");
-    res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
+    res = pubnub_state_get(pbp, chan, NULL, pubnub_user_id_get(pbp));
     if (PNR_STARTED == res) {
         res = pubnub_await(pbp);
     }
