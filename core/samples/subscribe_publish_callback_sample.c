@@ -144,8 +144,10 @@ int main()
     InitUserData(&user_data_2, pbp_2);
 
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
     pubnub_register_callback(pbp, sample_callback, &user_data);
     pubnub_init(pbp_2, "demo", "demo");
+    pubnub_set_user_id(pbp_2, "demo_2");
     pubnub_register_callback(pbp_2, sample_callback, &user_data_2);
 
     puts("-----------------------");

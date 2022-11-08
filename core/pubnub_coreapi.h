@@ -234,12 +234,12 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *p);
     in progress on the context.
 
     @param p The Pubnub context. Can't be NULL. 
-    @param uuid The UUID of the user to get the channel presence.
-    If NULL, the current UUID of the @c p context will be used.
+    @param user_id The identification of the user to get the channel presence.
+    If NULL, the current user_id of the @c p context will be used.
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_where_now(pubnub_t *p, const char *uuid);
+enum pubnub_res pubnub_where_now(pubnub_t *p, const char *user_id);
 
 /** Sets some state for the @p channel and/or @channel_group for a
     user, identified by @p uuid. This actually means "initiate a set
@@ -271,13 +271,13 @@ enum pubnub_res pubnub_where_now(pubnub_t *p, const char *uuid);
     comma-delimited list of channel names) to set state for.
     @param channel_group The string with the channel name (or
     comma-delimited list of channel group names) to set state for.
-    @param uuid The UUID of the user for which to set state for.
-    If NULL, the current UUID of the @c p context will be used.
+    @param user_id The identification of the user for which to set state for.
+    If NULL, the current user_id of the @c p context will be used.
     @param state Has to be a JSON object
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *channel_group, const char *uuid, char const *state);
+enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id, char const *state);
 
 
 /** Gets some state for the @p channel and/or @p channel_group for a
@@ -308,12 +308,12 @@ enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *c
     comma-delimited list of channel names) to get state from.
     @param channel_group The string with the channel name (or
     comma-delimited list of channel group names) to get state from.
-    @param uuid The UUID of the user for which to get state for.
-    If NULL, the current UUID of the @p p context will be used.
+    @param user_id The identification of the user for which to get state for.
+    If NULL, the current user_id of the @p p context will be used.
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *channel_group, const char *uuid);
+enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id);
 
 /** Removes a @p channel_group and all its channels. This actually
     means "initiate a remove_channel_group transaction". It can be

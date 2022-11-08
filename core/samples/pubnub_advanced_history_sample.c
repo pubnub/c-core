@@ -27,18 +27,18 @@ static int m_timetoken_index[sizeof m_channel/sizeof m_channel[0]] = {2, 1, 4, 3
 static char m_timetokens[sizeof m_channel/sizeof m_channel[0] + 1][30];
 
 
-static void generate_uuid(pubnub_t* pbp)
+static void generate_user_id(pubnub_t* pbp)
 {
-    char const*                      uuid_default = "zeka-peka-iz-jendeka";
+    char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
     static struct Pubnub_UUID_String str_uuid;
 
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, uuid_default);
+        pubnub_set_user_id(pbp, user_id_default);
     }
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
@@ -345,8 +345,8 @@ int main(int argc, char* argv[])
     
     pubnub_init(pbp, pubkey, keysub);
     pubnub_init(pbp_2, pubkey, keysub);
-    generate_uuid(pbp);
-    generate_uuid(pbp_2);
+    generate_user_id(pbp);
+    generate_user_id(pbp_2);
     pubnub_origin_set(pbp, origin);
     pubnub_origin_set(pbp_2, origin);
 

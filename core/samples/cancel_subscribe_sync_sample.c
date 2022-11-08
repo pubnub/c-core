@@ -38,6 +38,7 @@ int main()
     }
 
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
     srand((unsigned)time(NULL));
 
     /* Using non-blocking I/O is essential, otherwise waiting for

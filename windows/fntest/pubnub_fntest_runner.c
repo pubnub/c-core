@@ -79,6 +79,7 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
     pubnub_t* pbp = pubnub_alloc();
     if (pbp != NULL) {
         pubnub_init(pbp, pubkey, keysub);
+        pubnub_set_user_id(pbp, "test_id");
         if (srand_from_pubnub_time(pbp) != 0) {
             PUBNUB_LOG_ERROR("Error :could not 'srand()' from PubNub time.\n");
         }

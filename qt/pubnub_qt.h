@@ -32,6 +32,7 @@ extern "C" {
 }
 
 #include "cpp/tribool.hpp"
+#include "lib/pb_deprecated.h"
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "cpp/pubnub_v2_message.hpp"
 #endif
@@ -252,22 +253,41 @@ public:
         return d_auth;
     }
 
-    /** Set the UUID to be used in this context.
+    /** Set the user_id to be used in this context.
+     * After construction it is empty (null), thus not used.
+     * Pass an empty (or null) string to stop using it.
+     *
+     * @deprecated this is provided as a workaround for existing users.
+     * Please use `set_user_id` instead.
+     */
+    PUBNUB_DEPRECATED void set_uuid(QString const &uuid);
+
+    /** Set the user_id to be used in this context.
      * After construction it is empty (null), thus not used.
      * Pass an empty (or null) string to stop using it.
      */
-    void set_uuid(QString const &uuid);
+    void set_user_id(QString const &user_id);
 
-    /** Set the UUID to a random value, according to stadard
+
+    /** Set the user_id with a random UUID value, according to stadard
      * v4 representation.
+     *
+     * @deprecated random generated uuid/user_id is deprecated.
      */
-    void set_uuid_v4_random() {
-        QString uuid = QUuid::createUuid().toString();
-        set_uuid(uuid.mid(1, uuid.size()-2));
+    PUBNUB_DEPRECATED void set_uuid_v4_random() {
+	   QString uuid = QUuid::createUuid().toString();
+        set_user_id(uuid.mid(1, uuid.size()-2));
     }
+    /** Returns the current user_id value (string)
+     *
+     * @deprecated this is provided as a workaround for existing users.
+     * Please use `user_id` instead.
+     */
+    PUBNUB_DEPRECATED QString uuid() const;
+   
+    /** Returns the current user_id value (string)*/
+    QString user_id() const;
 
-    /** Returns the current UUID value (string) */
-    QString uuid() const;
 
     /** Sets the Pubnub origin to use, that is, the
      * protocol (http or https) and host part of the URL.

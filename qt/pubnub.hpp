@@ -3,6 +3,7 @@
 #define      INC_PUBNUB_COMMON_HPP
 
 #include "pubnub_qt.h"
+#include "lib/pb_deprecated.h"
 
 #include <string>
 #include <vector>
@@ -279,19 +280,39 @@ namespace pubnub {
         /// Returns the current `auth` key for this context
         std::string auth() const { return d_pbqt.auth().toStdString(); }
 
-        /** Sets the UUID to @p uuid. If @p uuid is an empty string,
-            UUID will not be used.
-         */
-        void set_uuid(std::string const &uuid) {
-            d_pbqt.set_uuid(QString::fromStdString(uuid));
+        /** Sets the user_id to @p uuid. If @p uuid is an empty string,
+            user_id will not be used.
+        
+	    @deprecated this is provided as a workaround for existing users.
+        Please use `set_user_id` instead.
+        */
+        PUBNUB_DEPRECATED void set_uuid(std::string const &uuid) {
+            set_user_id(uuid);
         }
-        /// Set the UUID to a random-generated one
-        int set_uuid_v4_random() {
-            d_pbqt.set_uuid_v4_random();
-            return 0;
+
+        /** Sets the user_id to @p user_id. if @p user_id is an empty string,
+          user_id will not be used.
+          */
+        void set_user_id(std::string const& user_id)
+        {
+            d_pbqt.set_user_id(QString::fromStdString(uuid));
         }
-        /// Returns the current UUID
-        std::string uuid() const { return d_pbqt.uuid().toStdString(); }
+
+        /// Set the user_id with a random-generated UUID
+        /// 
+        /// @deprecated random generated uuid/user_id is deprecated.
+        PUBNUB_DEPRECATED int set_uuid_v4_random() {
+            return d_pbqt.set_uuid_v4_random();	
+        }
+
+        /// Returns the current user_id
+        ///
+        /// @deprecated this is provided as a workaround for existing users.
+        /// Please use `user_id` instead.
+        PUBNUB_DEPRECATED std::string uuid() const { return user_id() }
+
+        /// Returns the current user_id
+        std::string user_id() const { return d_pbqt.uuid().toStdString(); }
 
         /// Returns the next message from the context. If there are
         /// none, returns an empty string.
@@ -377,7 +398,7 @@ namespace pubnub {
         }
 
         /// Starts a transaction to get a list of currently present
-        /// UUIDs on a @p channel and/or @p channel_group
+        /// user_id on a @p channel and/or @p channel_group
         futres here_now(std::string const &channel, std::string const &channel_group = "") {
             return doit(d_pbqt.here_now(QString::fromStdString(channel), QString::fromStdString(channel_group)));
         }
@@ -390,43 +411,43 @@ namespace pubnub {
         }
 
         /// Starts a transaction to get a list of currently present
-        /// UUIDs on all channels
+        /// user_ids on all channels
         /// @see pubnub_global_here_now
         futres global_here_now() {
             return doit(d_pbqt.global_here_now());
         }
         
-        /// Starts a transaction to get a list of channels the @p uuid
-        /// is currently present on. If @p uuid is not given (or is an
+        /// Starts a transaction to get a list of channels the @p user_id
+        /// is currently present on. If @p user_id is not given (or is an
         /// empty string) it will 
         /// @see pubnub_where_now
-        futres where_now(std::string const &uuid = "") {
-            return doit(d_pbqt.where_now(QString::fromStdString(uuid)));
+        futres where_now(std::string const &user_id = "") {
+            return doit(d_pbqt.where_now(QString::fromStdString(user_id)));
         }
 
         /// Starts a transaction to set the @p state JSON object for the
-        /// given @p channel and/or @pchannel_group of the given @p uuid
+        /// given @p channel and/or @pchannel_group of the given @p user_id
         /// @see pubnub_set_state
         futres set_state(std::string const &channel, std::string const &channel_group, std::string const &uuid, std::string const &state) {
-            return doit(d_pbqt.set_state(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(uuid), QString::fromStdString(state)));
+            return doit(d_pbqt.set_state(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(user_id), QString::fromStdString(state)));
         }
 
         /// Pass a vector of channels in the @p channel and a vector
         /// of channel groups for @p channel_group and we will put
         /// commas between them. A helper function.
-        futres set_state(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid, std::string const &state) {
-            return set_state(join(channel), join(channel_group), uuid, state);
+        futres set_state(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &user_id, std::string const &state) {
+            return set_state(join(channel), join(channel_group), user_id, state);
         }
 
         /// Starts a transaction to get the state JSON object for the
         /// given @p channel and/or @pchannel_group of the given @p
-        /// uuid 
+        /// user_id
         /// @see pubnub_set_state
-        futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &uuid = "") {
-            return doit(d_pbqt.state_get(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(uuid)));
+        futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &user_id = "") {
+            return doit(d_pbqt.state_get(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(user_id)));
         }
-        futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &uuid = "") {
-            return state_get(join(channel), join(channel_group), uuid);
+        futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &user_id = "") {
+            return state_get(join(channel), join(channel_group), user_id);
         }
 
         /// Starts a transaction to remove a @p channel_group.

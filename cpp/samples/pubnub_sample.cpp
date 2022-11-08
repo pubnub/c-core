@@ -26,12 +26,7 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
         
-        if (0 != pb.set_uuid_v4_random()) {
-            pb.set_uuid("zeka-peka-iz-jendeka");
-        }
-        else {
-            std::cout << "Generated UUID: " << pb.uuid() << std::endl;
-        }
+        pb.set_user_id("zeka-peka-iz-jendeka");
         pb.set_auth("danaske");
 
         pb.set_transaction_timeout(
@@ -173,7 +168,7 @@ int main()
         }
 
         std::cout << "Setting state" << std::endl;
-        if (PNR_OK ==  pb.set_state(chan, "", pb.uuid(), "{\"x\":5}").await()) {
+        if (PNR_OK ==  pb.set_state(chan, "", pb.user_id(), "{\"x\":5}").await()) {
             std::cout << "State was set: " << pb.get() << std::endl;
         }
         else {

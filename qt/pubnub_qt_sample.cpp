@@ -108,7 +108,7 @@ void pubnub_qt_sample::onWhereNow(pubnub_res result)
     d_out << "onWhereNow! Result: '" << pubnub_res_2_string(result) << "' Response:\n" << d_pb.get() << "\n";
 
     reconnect(SLOT(onWhereNow(pubnub_res)), SLOT(onSetState(pubnub_res)));
-    result = d_pb.set_state(chann, "", d_pb.uuid(), "{\"a\":1}");
+    result = d_pb.set_state(chann, "", d_pb.user_id(), "{\"a\":1}");
     if (result != PNR_STARTED) {
         d_out << "Set state failed, result: '"<< pubnub_res_2_string(result) << "'\n";
         QCoreApplication::instance()->quit();
@@ -139,7 +139,7 @@ void pubnub_qt_sample::execute()
     qDebug() << "execute()";
     
 //    d_pb.set_ssl_options(0);
-    d_pb.set_uuid_v4_random();
+    d_pb.set_user_id("my_user_id");
 
     connect(&d_pb, SIGNAL(outcome(pubnub_res)), this, SLOT(onPublish(pubnub_res)));
     pubnub_res result = d_pb.publish(chann, "\"Hello world from Qt!\"");

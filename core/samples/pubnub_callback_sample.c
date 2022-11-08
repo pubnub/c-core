@@ -145,18 +145,18 @@ static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
 }
 
 
-static void generate_uuid(pubnub_t* pbp)
+static void generate_user_id(pubnub_t* pbp)
 {
-    char const*                      uuid_default = "zeka-peka-iz-jendeka";
+    char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
     static struct Pubnub_UUID_String str_uuid;
 
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, uuid_default);
+        pubnub_set_user_id(pbp, user_id_default);
     }
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
@@ -242,7 +242,7 @@ int main()
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 
-    generate_uuid(pbp);
+    generate_user_id(pbp);
 
     puts("-----------------------");
     puts("Publishing...");
@@ -415,7 +415,7 @@ int main()
     puts("-----------------------");
     puts("Getting where_now presence...");
     puts("-----------------------");
-    res = pubnub_where_now(pbp, pubnub_uuid_get(pbp));
+    res = pubnub_where_now(pbp, pubnub_user_id_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_where_now() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);
@@ -448,7 +448,7 @@ int main()
     puts("-----------------------");
     puts("Setting state...");
     puts("-----------------------");
-    res = pubnub_set_state(pbp, chan, NULL, pubnub_uuid_get(pbp), "{\"x\":5}");
+    res = pubnub_set_state(pbp, chan, NULL, pubnub_user_id_get(pbp), "{\"x\":5}");
     if (res != PNR_STARTED) {
         printf("pubnub_set_state() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);
@@ -481,7 +481,7 @@ int main()
     puts("-----------------------");
     puts("Getting state...");
     puts("-----------------------");
-    res = pubnub_state_get(pbp, chan, NULL, pubnub_uuid_get(pbp));
+    res = pubnub_state_get(pbp, chan, NULL, pubnub_user_id_get(pbp));
     if (res != PNR_STARTED) {
         printf("pubnub_state_get() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
         callback_sample_free(pbp);

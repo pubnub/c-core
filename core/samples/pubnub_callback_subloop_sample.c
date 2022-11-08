@@ -55,6 +55,7 @@ int main()
         return -1;
     }
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
 
     //! [Define subscribe loop]
     pbsld = pubnub_subloop_define(

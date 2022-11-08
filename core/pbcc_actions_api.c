@@ -22,10 +22,13 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                                             enum pubnub_action_type actype,
                                             char const** val)
 {
-    char const* uuid = pbcc_uuid_get(pb);
+    char const* user_id = pbcc_user_id_get(pb);
     char const* type_literal;
-    if (NULL == uuid) {
-        PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - uuid not set.\n", pb);
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
+    if (NULL == user_id) {
+        PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - user_id not set.\n", pb);
         return PNR_INVALID_PARAMETERS;
     }
     if (('\"' != **val) || ('\"' != *(*val + pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) - 1))) {
@@ -53,28 +56,28 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                          actype);
         return PNR_INVALID_PARAMETERS;
     }
-    if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
+    if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
                              pb_strnlen_s(type_literal, sizeof "reaction") +
                              pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
-                             pb->uuid_len) {
+                             pb->user_id_len) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
                          "buffer size is too small: "
                          "current_buffer_size = %lu\n"
                          "required_buffer_size = %lu\n",
                          pb,
                          (unsigned long)buffer_size,
-                         (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"uuid\":\"\"}") +
+                         (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
                                          pb_strnlen_s(type_literal, sizeof "reaction") +
                                          pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
-                                         pb->uuid_len));
+                                         pb->user_id_len));
         return PNR_TX_BUFF_TOO_SMALL;
     }
     snprintf(obj_buffer,
              buffer_size,
-             "{\"type\":\"%s\",\"value\":%s,\"uuid\":\"%s\"}",
+             "{\"type\":\"%s\",\"value\":%s,\"user_id\":\"%s\"}",
              type_literal,
              *val,
-             uuid);
+             user_id);
     *val = obj_buffer;
     
     return PNR_OK;
@@ -87,9 +90,10 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
                                      char const* value)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken != NULL);
     PUBNUB_ASSERT_OPT(value != NULL);
@@ -106,7 +110,7 @@ enum pubnub_res pbcc_add_action_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -224,9 +228,10 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
                                         pubnub_chamebl_t action_timetoken)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(message_timetoken.ptr != NULL);
     PUBNUB_ASSERT_OPT(action_timetoken.ptr != NULL);
@@ -266,7 +271,7 @@ enum pubnub_res pbcc_remove_action_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL){
         ADD_URL_AUTH_PARAM(pb, qparam, auth);
@@ -301,9 +306,10 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
                                       size_t limit)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 
@@ -317,7 +323,7 @@ enum pubnub_res pbcc_get_actions_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -350,12 +356,15 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
 {
     enum pubnub_res rslt = PNR_OK;
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     char const* reply = pb->http_reply;
     int replylen = pb->http_buf_len;
     struct pbjson_elem elem;
     struct pbjson_elem parsed;
     enum pbjson_object_name_parse_result json_rslt;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
+
     if (pb->last_result != PNR_OK) {
         PUBNUB_LOG_ERROR("pbcc_get_actions_more_prep(pb=%p) can be called only if "
                          "previous transaction is finished successfully. "
@@ -399,7 +408,7 @@ enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
                                 elem.start + 1);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -432,9 +441,10 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
                                                size_t limit)
 {
     char const* const uname = pubnub_uname();
-    char const*       uuid = pbcc_uuid_get(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res rslt = PNR_OK;
 
+    PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(limit <= MAX_ACTIONS_LIMIT);
 
@@ -448,7 +458,7 @@ enum pubnub_res pbcc_history_with_actions_prep(struct pbcc_context* pb,
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (uuid) { ADD_URL_PARAM(qparam, uuid, uuid); }
+    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();

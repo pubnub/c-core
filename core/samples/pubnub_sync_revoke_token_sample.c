@@ -21,18 +21,18 @@
 #define strdup(p) _strdup(p)
 #endif
 
-static void generate_uuid(pubnub_t* pbp)
+static void generate_user_id(pubnub_t* pbp)
 {
-    char const*                      uuid_default = "zeka-peka-iz-jendeka";
+    char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
     static struct Pubnub_UUID_String str_uuid;
 
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_uuid(pbp, uuid_default);
+        pubnub_set_user_id(pbp, user_id_default);
     }
     else {
         str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_uuid(pbp, str_uuid.uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
         printf("Generated UUID: %s\n", str_uuid.uuid);
     }
 }
@@ -113,7 +113,7 @@ int main()
     */
     pubnub_set_non_blocking_io(gtp);
 
-    generate_uuid(gtp);
+    generate_user_id(gtp);
 
     puts("Grant Token...");
     time(&t0);
@@ -123,8 +123,8 @@ int main()
     int perm_channel_group = pubnub_get_grant_bit_mask_value(cg_perm);
     int ttl_minutes = 60;
     char perm_obj[2000];
-    char* authorized_uuid = "my_authorized_uuid";
-    sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"%s\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_uuid, chan, perm_hello_world, perm_channel_group);
+    char* authorized_user_id = "my_authorized_uuid";
+    sprintf(perm_obj,"{\"ttl\":%d, \"uuid\":\"%s\", \"permissions\":{\"resources\":{\"channels\":{ \"mych\":31, \"%s\":%d }, \"groups\":{ \"mycg\":31, \"channel-group\":%d }, \"users\":{ \"myuser\":31 }, \"spaces\":{ \"myspc\":31 }}, \"patterns\":{\"channels\":{ }, \"groups\":{ }, \"users\":{ \"^$\":1 }, \"spaces\":{ \"^$\":1 }},\"meta\":{ }}}", ttl_minutes, authorized_user_id, chan, perm_hello_world, perm_channel_group);
     res = pubnub_grant_token(gtp, perm_obj);
     char* grant_token = NULL;
     if (PNR_STARTED == res) {
@@ -169,7 +169,7 @@ int main()
     */
     pubnub_set_non_blocking_io(pbp);
 
-    generate_uuid(pbp);
+    generate_user_id(pbp);
 
     puts("Publishing...");
     time(&t0);

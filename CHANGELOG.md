@@ -4,6 +4,14 @@ November 08 2022
 #### Fixed
 - `ERR_load_BIO_strings()` is deprecated in OpenSSL 3.0. Low-level encoding primitives are also deprecated. `EVP_EncodeBlock()` is available in all currently supported OpenSSL releases.
 
+## v4.0.0
+November 02 2022
+
+#### Added
+- Add `user_id` configuration option that deprecates `uuid` ones.
+- BREAKING CHANGES: now `user_id` (old `uuid`) is a required property!.
+
+
 ## v3.5.2
 October 11 2022
 

@@ -57,7 +57,7 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
 
     pubnub_mutex_lock(pb_clone->monitor);
     pb_clone->core.auth = pb->core.auth;
-    strcpy(pb_clone->core.uuid, pb->core.uuid);
+    strcpy(pb_clone->core.user_id, pb->core.user_id);
     if (PUBNUB_ORIGIN_SETTABLE) {
         pb_clone->origin = pb->origin;
     }

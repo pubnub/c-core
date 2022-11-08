@@ -4,17 +4,17 @@
 
 #if PUBNUB_USE_AUTO_HEARTBEAT
 /** Enables periodical heartbeats that keep presence on subscribed channels and channel
-    groups for uuid provided in @p pb context and sets chosen heartbeat period.
+    groups for user id provided in @p pb context and sets chosen heartbeat period.
     Initially auto heartbeat on @p pb context is disabled.
 
     This module keeps presence by performing pubnub_heartbeat() transaction periodicaly
-    with uuid given whenever subscription on @p pb context is not in progress and
+    with user id given whenever subscription on @p pb context is not in progress and
     auto heartbeat is enabled. This process is independent from anything user
     may be doing with the context when its not subscribing(, or heartbeating).
 
-    If the uuid(or any other relevant data, like dns server, or proxy) is changed at
+    If the user id(or any other relevant data, like dns server, or proxy) is changed at
     some point, the module will update it automatically in its heartbeats.
-    The same goes if the uuid leaves some of the channels, or channel groups.
+    The same goes if the user id leaves some of the channels, or channel groups.
 
     @param pb The pubnub context. Can't be NULL
     @param period_sec Auto heartbeat thumping period in seconds

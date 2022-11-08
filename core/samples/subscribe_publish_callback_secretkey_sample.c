@@ -154,9 +154,11 @@ int main()
     printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
 
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
+    pubnub_set_user_id(pbp, "demo");
     pubnub_set_secret_key(pbp, my_env_secret_key);
     pubnub_register_callback(pbp, sample_callback, &user_data);
     pubnub_init(pbp_2, my_env_publish_key, my_env_subscribe_key);
+    pubnub_set_user_id(pbp_2, "demo_2");
     pubnub_set_secret_key(pbp_2, my_env_secret_key);
     pubnub_register_callback(pbp_2, sample_callback, &user_data_2);
 

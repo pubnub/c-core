@@ -77,6 +77,7 @@ int main()
     time_t          t0;
     enum pubnub_res res;
     char const*     chan = "hello_world";
+    char const*     user_id = "demo";
     char*           allocated;
     char            message_via_post_for_gzip[] = "\"Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample! - Hello world from publish via post(with GZIP) sample!\"";
     pubnub_t*       pbp  = pubnub_alloc();
@@ -95,6 +96,7 @@ int main()
     printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
 
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
+    pubnub_set_user_id(pbp, user_id);
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 

@@ -38,6 +38,7 @@ int main()
         return -1;
     }
     pubnub_init(pbp, "demo", "demo");
+    pubnub_set_user_id(pbp, "demo");
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
     

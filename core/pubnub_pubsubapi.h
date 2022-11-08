@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_deprecated.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -38,21 +39,43 @@
 */
 pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
 
-/** Set the UUID identification of PubNub client context @p p to @p
+/** Set the user identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.
 
-    @note The @p uuid is expected to be valid (ASCIIZ string) pointers
+    @deprecated this is provided as a workaround for existing users.
+    Please use `pubnub_set_user_id` instead.
+
+    @see pubnub_set_user_id
+*/
+PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
+
+/** Get the user identification of PubNub client context @p p.
+    After pubnub_init(), it will return `NULL` until you change it
+    to non-`NULL` via pubnub_set_uuid().
+    
+    @deprecated this is provided as a workaround for existing users.
+    Please use `pubnub_user_id_get` instead.
+
+    @see pubnub_user_id_get
+*/
+PUBNUB_DEPRECATED char const* pubnub_uuid_get(pubnub_t* p);
+
+/** Set the user identification of PubNub client context @p p to @p
+    uuid. Pass NULL to unset.
+
+    @note The @p user_id is expected to be valid (ASCIIZ string) pointers
     throughout the use of context @p p, that is, until either you call
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
-    the @p uuid string is not copied to the Pubnub context @p p.  */
-enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
+    the @p user_id string is not copied to the Pubnub context @p p.  
+*/
+enum pubnub_res pubnub_set_user_id(pubnub_t* p, const char* user_id);
 
-/** Get the UUID identification of PubNub client context @p p.
+/** Get the user identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
-    to non-`NULL` via pubnub_set_uuid().
-    */
-char const* pubnub_uuid_get(pubnub_t* p);
+    to non-`NULL` via pubnub_set_user_id().
+*/
+char const* pubnub_user_id_get(pubnub_t* p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.

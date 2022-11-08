@@ -41,7 +41,7 @@ static enum pubnub_res pbcc_subscribe_with_state_prep(struct pbcc_context *p,
     char const* const uname = pubnub_uname();
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
-    if (p->uuid) { ADD_URL_PARAM(qparam, uuid, p->uuid); }
+    if (p->user_id) { ADD_URL_PARAM(qparam, uuid, p->user_id); }
     if (state) { APPEND_URL_PARAM(qparam, state, state); }
 
 #if PUBNUB_CRYPTO_API
