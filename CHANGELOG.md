@@ -1,3 +1,9 @@
+## v4.0.1
+November 08 2022
+
+#### Fixed
+- `ERR_load_BIO_strings()` is deprecated in OpenSSL 3.0. Low-level encoding primitives are also deprecated. `EVP_EncodeBlock()` is available in all currently supported OpenSSL releases.
+
 ## v3.5.2
 October 11 2022
 
