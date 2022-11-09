@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.0.0"
+version: "4.0.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-11-08
+    version: v4.0.1
+    changes:
+      - type: bug
+        text: "`ERR_load_BIO_strings()` is deprecated in OpenSSL 3.0. Low-level encoding primitives are also deprecated. `EVP_EncodeBlock()` is available in all currently supported OpenSSL releases."
   - date: 2022-11-02
     version: v4.0.0
     changes:
@@ -648,7 +653,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -714,7 +719,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -780,7 +785,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -842,7 +847,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -903,7 +908,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -959,7 +964,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
@@ -1012,7 +1017,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
             requires:
               -
                 name: "miniz"
