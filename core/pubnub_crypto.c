@@ -522,8 +522,8 @@ unsigned char* mx_hmac_sha256(
 #endif
 
 int base64_max_size(int encode_this_many_bytes) {
-    // Base64 overhead is up to 36%, so we allocate an extra 40% + a null character
-    return (int)((float)encode_this_many_bytes * 1.4) + 1;
+    // Base64 overhead is up to 36%, so we allocate an extra 50% + a null character
+    return (int)((float)encode_this_many_bytes * 1.5) + 1;
 }
 
 int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {
