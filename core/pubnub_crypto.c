@@ -81,76 +81,9 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
     return 0;
 }
 
-
-int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n)
+static int memory_encrypt(pubnub_bymebl_t buffer, char* base64_str, size_t* n) 
 {
-    pubnub_bymebl_t encrypted;
-    uint8_t key[33];
-    int result;
-    unsigned char iv[17] = "0123456789012345";
-#if PUBNUB_RAND_INIT_VECTOR
-    int rand_status = RAND_bytes(iv, 16);
-    PUBNUB_ASSERT_OPT(rand_status == 1);
-#endif
-
-    cipher_hash(cipher_key, key);
-    encrypted = pbaes256_encrypt_alloc(msg, key, iv);
-    if (NULL == encrypted.ptr) {
-        return -1;
-    }
-
-#if PUBNUB_RAND_INIT_VECTOR
-    memmove(encrypted.ptr + 16, encrypted.ptr, encrypted.size);
-    memcpy(encrypted.ptr, iv, 16);
-    encrypted.size += 16;
-    encrypted.ptr[encrypted.size] = '\0';
-#endif
-
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
-    for (int i = 0; i < (int)encrypted.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", encrypted.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-    #endif
-
-    int max_size = base64_max_size(encrypted.size);
-    if (*n + 1 < (size_t)max_size) {
-        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
-        return -1;
-    }
-    char* base64_output = (char*)malloc(max_size);
-    if (base64encode(base64_output, max_size, encrypted.ptr, encrypted.size) != 0) {
-        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, encrypted.size);
-        free(base64_output);
-        return -1;
-    }
-    result = snprintf(base64_str, *n, "%s", base64_output);
-    *n = (size_t)strlen(base64_str);
-
-    free(base64_output);
-    free(encrypted.ptr);
-
-    return result >= 0 ? 0 : -1;
-}
-
-
-int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n, pubnub_bymebl_t buffer)
-{
-    uint8_t key[33];
-    unsigned char iv[17] = "0123456789012345";
-#if PUBNUB_RAND_INIT_VECTOR
-    int rand_status = RAND_bytes(iv, 16);
-    PUBNUB_ASSERT_OPT(rand_status == 1);
-#endif
-
-    cipher_hash(cipher_key, key);
-
-    if (-1 == pbaes256_encrypt(msg, key, iv, &buffer)) {
-        return -1;
-    }
-
-#if PUBNUB_RAND_INIT_VECTOR
+ #if PUBNUB_RAND_INIT_VECTOR
     memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
     memcpy(buffer.ptr, iv, 16);
     buffer.size += 16;
@@ -181,7 +114,50 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
 
     free(base64_output);
 
-    return result >= 0 ? 0 : -1;
+    return result >= 0 ? 0 : -1; 
+} 
+
+int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n)
+{
+    pubnub_bymebl_t encrypted;
+    uint8_t key[33];
+    int result;
+    unsigned char iv[17] = "0123456789012345";
+#if PUBNUB_RAND_INIT_VECTOR
+    int rand_status = RAND_bytes(iv, 16);
+    PUBNUB_ASSERT_OPT(rand_status == 1);
+#endif
+
+    cipher_hash(cipher_key, key);
+    encrypted = pbaes256_encrypt_alloc(msg, key, iv);
+    if (NULL == encrypted.ptr) {
+        return -1;
+    }
+
+    result = memory_encrypt(encrypted, base64_str, n);
+
+    free(encrypted.ptr);
+
+    return result;
+}
+
+
+int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n, pubnub_bymebl_t buffer)
+{
+    uint8_t key[33];
+    unsigned char iv[17] = "0123456789012345";
+#if PUBNUB_RAND_INIT_VECTOR
+    int rand_status = RAND_bytes(iv, 16);
+    PUBNUB_ASSERT_OPT(rand_status == 1);
+#endif
+
+    cipher_hash(cipher_key, key);
+
+    if (-1 == pbaes256_encrypt(msg, key, iv, &buffer)) {
+        return -1;
+    }
+
+    return memory_encrypt(buffer, base64_str, n);
 }
 
 
