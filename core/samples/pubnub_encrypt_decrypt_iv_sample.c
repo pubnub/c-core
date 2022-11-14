@@ -53,7 +53,7 @@ int main()
 
     /*  pubnub_encrypt   */
     char noserializemsg_encrypted_str[256];
-    size_t noserializemsg_size;
+    size_t noserializemsg_size = 256;
     char noserialize_msg[7] = "yay!";
     printf("Message to be encrypted = %s\n",noserialize_msg);
     pubnub_bymebl_t no_serialize_data = { (uint8_t*)noserialize_msg, (size_t)strlen(noserialize_msg) };
@@ -81,7 +81,7 @@ int main()
 
     /*  pubnub_encrypt_buffered   */
     char msg_encrypted_str[256];
-    size_t msg_size;
+    size_t msg_size = 256;
     char msg1[5] = "yay!";
     pubnub_bymebl_t msg_data = { (uint8_t*)msg1, (size_t)strlen(msg1) };
     pubnub_bymebl_t buff_data = { (uint8_t*)malloc(2000), 2000};
