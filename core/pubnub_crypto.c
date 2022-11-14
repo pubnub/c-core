@@ -134,7 +134,7 @@ int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str
         return -1;
     }
 
-    result = memory_encrypt(encrypted, base64_str, n);
+    result = memory_encode(encrypted, base64_str, n);
 
     free(encrypted.ptr);
 
@@ -157,7 +157,7 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
         return -1;
     }
 
-    return memory_encrypt(buffer, base64_str, n);
+    return memory_encode(buffer, base64_str, n);
 }
 
 
