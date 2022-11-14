@@ -83,20 +83,20 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
 
 static int memory_encrypt(pubnub_bymebl_t buffer, char* base64_str, size_t* n) 
 {
- #if PUBNUB_RAND_INIT_VECTOR
+#if PUBNUB_RAND_INIT_VECTOR
     memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
     memcpy(buffer.ptr, iv, 16);
     buffer.size += 16;
     buffer.ptr[buffer.size] = '\0';
 #endif
 
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
     PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
     for (int i = 0; i < (int)buffer.size; i++) {
         PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
     }
     PUBNUB_LOG_DEBUG("]\n");
-    #endif
+#endif
 
     int max_size = base64_max_size(buffer.size);
     if (*n + 1 < (size_t)max_size) {
@@ -497,9 +497,22 @@ unsigned char* mx_hmac_sha256(
 }
 #endif
 
+static int base64_include_padding(int size_without_padding) {
+    int result = size_without_padding;
+
+    while (result % 4 != 0) {
+        result++;
+    }
+
+    return result;
+}
+
 int base64_max_size(int encode_this_many_bytes) {
-    // Base64 overhead is up to 36%, so we allocate an extra 50% + a null character
-    return (int)((float)encode_this_many_bytes * 1.5) + 1;
+    // Base64 overhead is approximately 36%, so we allocate an extra 40%
+    int base64_encoding_size = (float)encode_this_many_bytes * 1.4;
+    int base64_padded_size = base64_include_padding(base64_encoding_size); 
+
+    return base64_padded_size + 1; // tailing null character
 }
 
 int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {
