@@ -81,7 +81,7 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
     return 0;
 }
 
-static int memory_encrypt(pubnub_bymebl_t buffer, char* base64_str, size_t* n) 
+static int memory_encode(pubnub_bymebl_t buffer, char* base64_str, size_t* n) 
 {
 #if PUBNUB_RAND_INIT_VECTOR
     memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
