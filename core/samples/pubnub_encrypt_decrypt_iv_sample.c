@@ -57,7 +57,10 @@ int main()
     char noserialize_msg[7] = "yay!";
     printf("Message to be encrypted = %s\n",noserialize_msg);
     pubnub_bymebl_t no_serialize_data = { (uint8_t*)noserialize_msg, (size_t)strlen(noserialize_msg) };
-    pubnub_encrypt(cipher_key, no_serialize_data, noserializemsg_encrypted_str, &noserializemsg_size);
+    if (0 != pubnub_encrypt(cipher_key, no_serialize_data, noserializemsg_encrypted_str, &noserializemsg_size)) {
+        printf("pubnub_encrypt failed! %s %d", __FILE__, __LINE__);
+        return -1;
+    }
     printf("base64 message = %s (size = %d) \n", noserializemsg_encrypted_str, (int)noserializemsg_size);
     printf("\n ***************************************************** \n");
 
