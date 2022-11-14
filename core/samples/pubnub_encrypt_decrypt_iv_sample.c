@@ -61,6 +61,7 @@ int main()
         printf("pubnub_encrypt failed! %s %d", __FILE__, __LINE__);
         return -1;
     }
+    
     printf("base64 message = %s (size = %d) \n", noserializemsg_encrypted_str, (int)noserializemsg_size);
     printf("\n ***************************************************** \n");
 
@@ -84,7 +85,11 @@ int main()
     char msg1[5] = "yay!";
     pubnub_bymebl_t msg_data = { (uint8_t*)msg1, (size_t)strlen(msg1) };
     pubnub_bymebl_t buff_data = { (uint8_t*)malloc(2000), 2000};
-    pubnub_encrypt_buffered(cipher_key, msg_data, msg_encrypted_str, &msg_size, buff_data);
+    if (0 != pubnub_encrypt_buffered(cipher_key, msg_data, msg_encrypted_str, &msg_size, buff_data)) {
+        printf("pubnub_encrypt_buffered failed! %s %d", __FILE__, __LINE__);
+        return -1;
+    }
+
     printf("base64 message = %s (size = %d) \n", msg_encrypted_str, (int)msg_size);
     printf("\n ***************************************************** \n");
 
