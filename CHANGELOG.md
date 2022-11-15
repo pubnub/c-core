@@ -1,3 +1,13 @@
+## v4.0.2
+November 15 2022
+
+#### Fixed
+- Improved accuracy of the base64 encoding size what fixes buffer underflow in encryption module.
+- Fixed undefined behaviours in `pubnub_encrypt_decrypt_iv_sample.c` by including some additional checks and variable initialisations.
+
+#### Modified
+- Made same base for encrypt functions what makes codes easier to understand and maintain.
+
 ## v4.0.1
 November 08 2022
 

@@ -81,6 +81,41 @@ static int cipher_hash(char const* cipher_key, uint8_t hash[33])
     return 0;
 }
 
+static int memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* iv, size_t* n) 
+{
+#if PUBNUB_RAND_INIT_VECTOR
+    memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
+    memcpy(buffer.ptr, iv, 16);
+    buffer.size += 16;
+    buffer.ptr[buffer.size] = '\0';
+#endif
+
+#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
+    for (int i = 0; i < (int)buffer.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+#endif
+
+    int max_size = base64_max_size(buffer.size);
+    if (*n + 1 < (size_t)max_size) {
+        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
+        return -1;
+    }
+    char* base64_output = (char*)malloc(max_size);
+    if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
+        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
+        free(base64_output);
+        return -1;
+    }
+    int result = snprintf(base64_str, *n, "%s", base64_output);
+    *n = (size_t)strlen(base64_str);
+
+    free(base64_output);
+
+    return result >= 0 ? 0 : -1; 
+} 
 
 int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str, size_t* n)
 {
@@ -99,39 +134,11 @@ int pubnub_encrypt(char const* cipher_key, pubnub_bymebl_t msg, char* base64_str
         return -1;
     }
 
-#if PUBNUB_RAND_INIT_VECTOR
-    memmove(encrypted.ptr + 16, encrypted.ptr, encrypted.size);
-    memcpy(encrypted.ptr, iv, 16);
-    encrypted.size += 16;
-    encrypted.ptr[encrypted.size] = '\0';
-#endif
+    result = memory_encode(encrypted, base64_str, iv, n);
 
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
-    for (int i = 0; i < (int)encrypted.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", encrypted.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-    #endif
-
-    int max_size = base64_max_size(encrypted.size);
-    if (*n + 1 < (size_t)max_size) {
-        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
-        return -1;
-    }
-    char* base64_output = (char*)malloc(max_size);
-    if (base64encode(base64_output, max_size, encrypted.ptr, encrypted.size) != 0) {
-        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, encrypted.size);
-        free(base64_output);
-        return -1;
-    }
-    result = snprintf(base64_str, *n, "%s", base64_output);
-    *n = (size_t)strlen(base64_str);
-
-    free(base64_output);
     free(encrypted.ptr);
 
-    return result >= 0 ? 0 : -1;
+    return result;
 }
 
 
@@ -150,38 +157,7 @@ int pubnub_encrypt_buffered(char const* cipher_key, pubnub_bymebl_t msg, char* b
         return -1;
     }
 
-#if PUBNUB_RAND_INIT_VECTOR
-    memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
-    memcpy(buffer.ptr, iv, 16);
-    buffer.size += 16;
-    buffer.ptr[buffer.size] = '\0';
-#endif
-
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
-    for (int i = 0; i < (int)buffer.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-    #endif
-
-    int max_size = base64_max_size(buffer.size);
-    if (*n + 1 < (size_t)max_size) {
-        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
-        return -1;
-    }
-    char* base64_output = (char*)malloc(max_size);
-    if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
-        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
-        free(base64_output);
-        return -1;
-    }
-    int result = snprintf(base64_str, *n, "%s", base64_output);
-    *n = (size_t)strlen(base64_str);
-
-    free(base64_output);
-
-    return result >= 0 ? 0 : -1;
+    return memory_encode(buffer, base64_str, iv, n);
 }
 
 
@@ -521,9 +497,22 @@ unsigned char* mx_hmac_sha256(
 }
 #endif
 
+static int base64_include_padding(int size_without_padding) {
+    int result = size_without_padding;
+
+    while (result % 4 != 0) {
+        result++;
+    }
+
+    return result;
+}
+
 int base64_max_size(int encode_this_many_bytes) {
-    // Base64 overhead is up to 36%, so we allocate an extra 40% + a null character
-    return (int)((float)encode_this_many_bytes * 1.4) + 1;
+    // Base64 overhead is approximately 36%, so we allocate an extra 40%
+    int base64_encoding_size = (float)encode_this_many_bytes * 1.4;
+    int base64_padded_size = base64_include_padding(base64_encoding_size); 
+
+    return base64_padded_size + 1; // tailing null character
 }
 
 int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes) {

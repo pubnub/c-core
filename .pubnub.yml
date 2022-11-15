@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.0.1"
+version: "4.0.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-11-15
+    version: v4.0.2
+    changes:
+      - type: bug
+        text: "Improved accuracy of the base64 encoding size what fixes buffer underflow in encryption module."
+      - type: bug
+        text: "Fixed undefined behaviours in `pubnub_encrypt_decrypt_iv_sample.c` by including some additional checks and variable initialisations."
+      - type: improvement
+        text: "Made same base for encrypt functions what makes codes easier to understand and maintain."
   - date: 2022-11-08
     version: v4.0.1
     changes:
@@ -653,7 +662,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -719,7 +728,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -785,7 +794,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -847,7 +856,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -908,7 +917,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -964,7 +973,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
@@ -1017,7 +1026,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
             requires:
               -
                 name: "miniz"
