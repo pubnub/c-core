@@ -207,13 +207,13 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                 }
             }
             
-	        // TODO: check cbor docs to fix these flags 
+            // TODO: check cbor docs to fix these flags 
             if (strcmp((const char*)buf, "sig") == 0) {
                 sig_flag = true;
             } 
-	        if (strcmp((const char*)buf, "uuid") == 0) {
-                    uuid_flag = true;
-	        }
+            if (strcmp((const char*)buf, "uuid") == 0) {
+                uuid_flag = true;
+            }
 
             free(buf);
             continue;
