@@ -100,26 +100,27 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
     return result;
 }
 
-static unsigned int safe_alloc_strcat(char* destination, const char* source, unsigned int current_allocation_size) {
-    unsigned int concat_size = strlen(destination) + strlen(source);
+static unsigned int safe_alloc_strcat(char** destination, const char* source, unsigned int current_allocation_size) {
+    unsigned int concat_size = strlen(*destination) + strlen(source);
+
     if (concat_size > current_allocation_size) {
-	unsigned int new_allocation_size = (5 * current_allocation_size) / 4; // +20%
-	char* new_alloc = (char*)malloc(new_allocation_size);
-	memmove(new_alloc, destination, current_allocation_size);
+    	unsigned int new_allocation_size = (5 * current_allocation_size) / 4; // +20%
+    	char* new_alloc = (char*)malloc(new_allocation_size);
+    	memmove(new_alloc, *destination, current_allocation_size);
 
-	free(destination);
+    	free(*destination);
 
-	destination = new_alloc;
-	return safe_alloc_strcat(destination, source, new_allocation_size);
+    	*destination = new_alloc;
+    	return safe_alloc_strcat(destination, source, new_allocation_size);
     }
 
-    strcat(destination, source);
+    strcat(*destination, source);
 
     return current_allocation_size;
 }
 
 static int currentNestLevel = 0;
-static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result, unsigned int init_allocation_size)
+static CborError data_recursion(CborValue* it, int nestingLevel, char** json_result, unsigned int init_allocation_size)
 {
     bool containerEnd = false;
     bool sig_flag = false;
@@ -337,10 +338,15 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     char * json_result = (char*)malloc(init_allocation_size);
     sprintf(json_result, "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
+
     if (!err){
-        data_recursion(&it, 1, json_result, init_allocation_size);
+        err = data_recursion(&it, 1, &json_result, init_allocation_size);
+    } else {
+        PUBNUB_LOG_ERROR("JSON parsing failed! Cbor error code = %d\n", err);
     }
+    
     free(decoded.ptr);
     free(rawToken);
+
     return json_result;
 }
