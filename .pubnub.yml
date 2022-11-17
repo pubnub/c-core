@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.0.2"
+version: "4.0.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-11-17
+    version: v4.0.3
+    changes:
+      - type: bug
+        text: "Fixed wrong pointer reallocation in string concatenation."
+      - type: bug
+        text: "Fixed allocation counter that was not taking to the account recursed allocations."
   - date: 2022-11-15
     version: v4.0.2
     changes:
@@ -662,7 +669,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -728,7 +735,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -794,7 +801,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -856,7 +863,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -917,7 +924,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -973,7 +980,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"
@@ -1026,7 +1033,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.3
             requires:
               -
                 name: "miniz"

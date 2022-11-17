@@ -100,32 +100,33 @@ pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb)
     return result;
 }
 
-static unsigned int safe_alloc_strcat(char* destination, const char* source, unsigned int current_allocation_size) {
-    unsigned int concat_size = strlen(destination) + strlen(source);
-    if (concat_size > current_allocation_size) {
-	unsigned int new_allocation_size = (5 * current_allocation_size) / 4; // +20%
-	char* new_alloc = (char*)malloc(new_allocation_size);
-	memmove(new_alloc, destination, current_allocation_size);
+static unsigned int safe_alloc_strcat(char** destination, const char* source, unsigned int alloc_size) {
+    unsigned int concat_size = strlen(*destination) + strlen(source);
+    if (concat_size > alloc_size) {
+    	unsigned int new_allocation_size = (5 * alloc_size) / 4; // +20%
+    	char* new_alloc = (char*)malloc(new_allocation_size);
+    	memmove(new_alloc, *destination, alloc_size);
 
-	free(destination);
+    	free(*destination);
 
-	destination = new_alloc;
-	return safe_alloc_strcat(destination, source, new_allocation_size);
+    	*destination = new_alloc;
+    	return safe_alloc_strcat(destination, source, new_allocation_size);
     }
 
-    strcat(destination, source);
+    strcat(*destination, source);
 
-    return current_allocation_size;
+    return alloc_size;
 }
 
 static int currentNestLevel = 0;
-static CborError data_recursion(CborValue* it, int nestingLevel, char* json_result, unsigned int init_allocation_size)
+static unsigned int current_allocation_size = 0;
+static CborError data_recursion(CborValue* it, int nestingLevel, char** json_result, unsigned int init_allocation_size)
 {
+    current_allocation_size = init_allocation_size;
     bool containerEnd = false;
     bool sig_flag = false;
     bool uuid_flag = false;
 
-    unsigned int current_allocation_size = init_allocation_size;
     while (!cbor_value_at_end(it)) {
         CborError err;
         CborType type = cbor_value_get_type(it);
@@ -153,7 +154,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
             if (err) { return err; }
 
             current_allocation_size = safe_alloc_strcat(json_result, type == CborArrayType ? "]" : "}", current_allocation_size);
-
+            
             bool is_container = cbor_value_is_container(it);
             bool is_array = cbor_value_is_container(it);
             if (!is_container && !is_array && currentNestLevel == nestingLevel && cbor_value_get_type(it) != CborInvalidType) {
@@ -205,13 +206,15 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char* json_resu
                     free(buff_str);
                 }
             }
+            
+            // TODO: check cbor docs to fix these flags 
             if (strcmp((const char*)buf, "sig") == 0) {
                 sig_flag = true;
             } 
-	    // TODO: why????
-	    if (strcmp((const char*)buf, "uuid") == 0) {
+            if (strcmp((const char*)buf, "uuid") == 0) {
                 uuid_flag = true;
-	    }
+            }
+
             free(buf);
             continue;
         }
@@ -337,10 +340,15 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     char * json_result = (char*)malloc(init_allocation_size);
     sprintf(json_result, "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
+
     if (!err){
-        data_recursion(&it, 1, json_result, init_allocation_size);
+        err = data_recursion(&it, 1, &json_result, init_allocation_size);
+    } else {
+        PUBNUB_LOG_ERROR("JSON parsing failed! Cbor error code = %d\n", err);
     }
+    
     free(decoded.ptr);
     free(rawToken);
+
     return json_result;
 }

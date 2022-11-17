@@ -1,3 +1,10 @@
+## v4.0.3
+November 17 2022
+
+#### Fixed
+- Fixed wrong pointer reallocation in string concatenation.
+- Fixed allocation counter that was not taking to the account recursed allocations.
+
 ## v4.0.2
 November 15 2022
 
