@@ -321,6 +321,12 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
 
     pubnub_bymebl_t decoded;
     decoded = pbbase64_decode_alloc_std_str(rawToken);
+    
+    if (decoded.size == 0 && decoded.ptr == NULL) {
+        PUBNUB_LOG_ERROR("Base64 decoding failed! Token \"%s\" is not a valid base64 value!\n", token);
+        return NULL;
+    }
+
     #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
     PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
     for (size_t i = 0; i < decoded.size; i++) {
