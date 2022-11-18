@@ -315,6 +315,8 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
 }
 
 char* pubnub_parse_token(pubnub_t* pb, char const* token){
+    PUBNUB_ASSERT_OPT(token != NULL);
+
     char * rawToken = strdup(token);
     replace_char((char*)rawToken, '_', '/');
     replace_char((char*)rawToken, '-', '+');
