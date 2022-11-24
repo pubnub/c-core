@@ -5098,7 +5098,9 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_get_origin(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_free((pubnub_t*)((char*)pbp + 10000)),
                      "pubnub_alloc_static.c");
+#if PUBNUB_USE_ACTIONS_API
     expect_assert_in(pubnub_parse_token(pbp, NULL), "pubnub_grant_token_api.c");
+#endif
 #if PUBNUB_USE_ADVANCED_HISTORY
     expect_assert_in(pubnub_get_error_message(NULL, o_msg), "pubnub_advanced_history.c");
     expect_assert_in(pubnub_get_chan_msg_counts_size(NULL), "pubnub_advanced_history.c");
