@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_memory_block.h"
 #include "pubnub_internal.h"
 
 #include "core/pubnub_ccore.h"
@@ -15,7 +16,6 @@
 #include "core/pbpal.h"
 
 #include "lib/cbor/cbor.h"
-#include "core/pubnub_crypto.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -190,12 +190,14 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             }
             else {
                 if (sig_flag) {
-                    int max_size = base64_max_size(n);
-                    char* sig_base64 = (char*)malloc(max_size);
-                    base64encode(sig_base64, max_size, buf, n);
+                    pubnub_bymebl_t decoded_sig;
+                    decoded_sig.size = n;
+                    decoded_sig.ptr = buf;
+                    //TODO: error handling?
+                    pubnub_bymebl_t encoded_sig = pbbase64_encode_alloc_std(decoded_sig);
                     char base64_str[1000];
-                    sprintf(base64_str, "\"%s\"", sig_base64);
-                    free(sig_base64);
+                    sprintf(base64_str, "\"%s\"", encoded_sig.ptr);
+                    free(encoded_sig.ptr);
                     current_allocation_size = safe_alloc_strcat(json_result, base64_str, current_allocation_size);
                     sig_flag = false;
                 }

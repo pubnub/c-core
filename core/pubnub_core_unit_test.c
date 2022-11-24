@@ -2,6 +2,7 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
+#include "core/pubnub_grant_token_api.h"
 #include "lib/pb_deprecated.h"
 #include "pubnub_internal.h"
 #include "pubnub_server_limits.h"
@@ -5023,6 +5024,16 @@ Ensure(single_context_pubnub, gzip_bad_compression_format)
            equals(PNR_BAD_COMPRESSION_FORMAT));
 }
 
+#if PUBNUB_USE_GRANT_TOKEN_API
+Ensure(single_context_pubnub, token_parsing_not_crashing_for_not_valid_values)
+{
+    pubnub_init(pbp, "looking-glass", "looking-glass");
+    pubnub_set_user_id(pbp, "test_id");
+
+    attest(pubnub_parse_token(pbp, "dummy data"), equals(NULL));  
+}
+#endif
+
 /* Verify ASSERT gets fired */
 
 Ensure(single_context_pubnub, illegal_context_fires_assert)
@@ -5085,6 +5096,7 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_get_origin(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_free((pubnub_t*)((char*)pbp + 10000)),
                      "pubnub_alloc_static.c");
+    expect_assert_in(pubnub_parse_token(pbp, NULL), "pubnub_grant_token_api.c");
 #if PUBNUB_USE_ADVANCED_HISTORY
     expect_assert_in(pubnub_get_error_message(NULL, o_msg), "pubnub_advanced_history.c");
     expect_assert_in(pubnub_get_chan_msg_counts_size(NULL), "pubnub_advanced_history.c");
