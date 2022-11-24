@@ -198,7 +198,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                     if (encoded_sig.size == 0 && encoded_sig.ptr == NULL) {
                         PUBNUB_LOG_WARNING("\"sig\" field coudn't be encoded! Leaving it empty!");
 
-                        encoded_sig.ptr = malloc(sizeof(char));
+                        encoded_sig.ptr = (uint8_t*)malloc(sizeof(uint8_t));
                         encoded_sig.ptr[0] = '\0';
                     }
 
