@@ -2,7 +2,6 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
 
-#include "core/pubnub_grant_token_api.h"
 #include "lib/pb_deprecated.h"
 #include "pubnub_internal.h"
 #include "pubnub_server_limits.h"
@@ -11,6 +10,9 @@
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
 #include "pubnub_advanced_history.h"
+#endif
+#if PUBNUB_USE_GRANT_TOKEN_API
+#include "pubnub_grant_token_api.h"
 #endif
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
