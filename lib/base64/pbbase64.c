@@ -83,11 +83,13 @@ pubnub_bymebl_t pbbase64_encode_alloc(pubnub_bymebl_t                data,
     result.size = pbbase64_char_array_size_for_encoding(data.size);
     result.ptr  = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
+        result.size = 0;
         return result;
     }
     if (0 != pbbase64_encode(data, (char*)result.ptr, &result.size, options)) {
         free(result.ptr);
         result.ptr = NULL;
+        result.size = 0;
     }
     return result;
 }

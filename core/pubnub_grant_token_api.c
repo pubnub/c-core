@@ -193,12 +193,21 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                     pubnub_bymebl_t decoded_sig;
                     decoded_sig.size = n;
                     decoded_sig.ptr = buf;
-                    //TODO: error handling?
+
                     pubnub_bymebl_t encoded_sig = pbbase64_encode_alloc_std(decoded_sig);
-                    char base64_str[1000];
+                    if (encoded_sig.size == 0 && encoded_sig.ptr == NULL) {
+                        PUBNUB_LOG_WARNING("\"sig\" field coudn't be encoded! Leaving it empty!");
+
+                        encoded_sig.ptr = malloc(sizeof(char));
+                        encoded_sig.ptr[0] = '\0';
+                    }
+
+                    char base64_str[encoded_sig.size + 2];
                     sprintf(base64_str, "\"%s\"", encoded_sig.ptr);
+
                     free(encoded_sig.ptr);
                     current_allocation_size = safe_alloc_strcat(json_result, base64_str, current_allocation_size);
+
                     sig_flag = false;
                 }
                 else {
