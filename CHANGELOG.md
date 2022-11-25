@@ -1,3 +1,9 @@
+## v4.0.4
+November 25 2022
+
+#### Fixed
+- Fixed crashing parsing token for not valid values by logging an error and returning `NULL`.
+
 ## v4.0.3
 November 17 2022
 
