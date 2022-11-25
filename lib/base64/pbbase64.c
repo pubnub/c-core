@@ -83,11 +83,13 @@ pubnub_bymebl_t pbbase64_encode_alloc(pubnub_bymebl_t                data,
     result.size = pbbase64_char_array_size_for_encoding(data.size);
     result.ptr  = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
+        result.size = 0;
         return result;
     }
     if (0 != pbbase64_encode(data, (char*)result.ptr, &result.size, options)) {
         free(result.ptr);
         result.ptr = NULL;
+        result.size = 0;
     }
     return result;
 }
@@ -221,10 +223,12 @@ pubnub_bymebl_t pbbase64_decode_alloc(char const*                    s,
     result.size = pbbase64_decoded_length(n) + 1; /* +1 "just in case" */
     result.ptr  = (uint8_t*)malloc(result.size);
     if (NULL == result.ptr) {
+        result.size = 0;
         return result;
     }
     if (0 != pbbase64_decode(s, n, &result, options)) {
         free(result.ptr);
+        result.size = 0;
         result.ptr = NULL;
     }
     return result;

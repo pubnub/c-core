@@ -15,7 +15,6 @@
 #include "core/pbpal.h"
 
 #include "lib/cbor/cbor.h"
-#include "core/pubnub_crypto.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -190,13 +189,24 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             }
             else {
                 if (sig_flag) {
-                    int max_size = base64_max_size(n);
-                    char* sig_base64 = (char*)malloc(max_size);
-                    base64encode(sig_base64, max_size, buf, n);
-                    char base64_str[1000];
-                    sprintf(base64_str, "\"%s\"", sig_base64);
-                    free(sig_base64);
+                    pubnub_bymebl_t decoded_sig;
+                    decoded_sig.size = n;
+                    decoded_sig.ptr = buf;
+
+                    pubnub_bymebl_t encoded_sig = pbbase64_encode_alloc_std(decoded_sig);
+                    if (encoded_sig.size == 0 && encoded_sig.ptr == NULL) {
+                        PUBNUB_LOG_WARNING("\"sig\" field coudn't be encoded! Leaving it empty!");
+
+                        encoded_sig.ptr = (uint8_t*)malloc(sizeof(uint8_t));
+                        encoded_sig.ptr[0] = '\0';
+                    }
+
+                    char base64_str[encoded_sig.size + 2];
+                    sprintf(base64_str, "\"%s\"", encoded_sig.ptr);
+
+                    free(encoded_sig.ptr);
                     current_allocation_size = safe_alloc_strcat(json_result, base64_str, current_allocation_size);
+
                     sig_flag = false;
                 }
                 else {
@@ -315,12 +325,20 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
 }
 
 char* pubnub_parse_token(pubnub_t* pb, char const* token){
+    PUBNUB_ASSERT_OPT(token != NULL);
+
     char * rawToken = strdup(token);
     replace_char((char*)rawToken, '_', '/');
     replace_char((char*)rawToken, '-', '+');
 
     pubnub_bymebl_t decoded;
     decoded = pbbase64_decode_alloc_std_str(rawToken);
+    
+    if (decoded.size == 0 && decoded.ptr == NULL) {
+        PUBNUB_LOG_ERROR("Base64 decoding failed! Token \"%s\" is not a valid base64 value!\n", token);
+        return NULL;
+    }
+
     #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
     PUBNUB_LOG_DEBUG("\nbytes after decoding base64 string = [");
     for (size_t i = 0; i < decoded.size; i++) {

@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "pubnub_memory_block.h"
 
 #include <stdbool.h>
 #include "lib/cbor/cbor.h"
