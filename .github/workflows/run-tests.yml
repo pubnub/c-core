@@ -1,7 +1,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ runner.os }}-${{ github.ref }}
+  group: ${{ github.ref }}
   cancel-in-progress: true
 
 on:
