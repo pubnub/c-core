@@ -38,3 +38,9 @@
 .github/.release
 
 .idea
+
+.DS_Store
+cgreen-src/
+cgreen/
+cucumber-cpp/
+cucumber-cpp-src/
