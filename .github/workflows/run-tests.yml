@@ -38,6 +38,7 @@ jobs:
           path: cgreen-src
       - name: Build Unit Test framework (${{ runner.os }} ${{ matrix.compiler }})
         if: steps.unit-test-framework.outputs.cache-hit != 'true'
+        shell: bash
         env:
           CC: ${{ matrix.compiler }}
         run: |
@@ -139,12 +140,14 @@ jobs:
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
         with:
           repository: cucumber/cucumber-cpp
           ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961
           path: cucumber-cpp-src
       - name: Build Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
+        shell: bash
         run: |
           cd ./cucumber-cpp-src
           cmake -B build -DCMAKE_BUILD_TYPE=Debug
@@ -155,6 +158,7 @@ jobs:
           mv cucumber-cpp-src/include cucumber-cpp/include
           rm -rf cucumber-cpp-src
       - name: Build acceptance tests
+        shell: bash
         run: |
           cd cpp
           make -f posix_openssl.mk openssl/pubnub_sync
@@ -162,6 +166,7 @@ jobs:
           g++ -std=c++11 -g -o BoostSteps.o -c features/step_definitions/BoostSteps.cpp -Icucumber-cpp/include -Icucumber-cpp/build/src/ -Iposix -Icore -I. -Icpp -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SSL=0
           g++ -o steps BoostSteps.o cpp/pubnub_sync.a cucumber-cpp/build/src/libcucumber-cpp.a -Lboost -lboost_unit_test_framework -lpthread -lboost_regex -lboost_thread -lboost_program_options -lboost_filesystem -lssl -lcrypto -D PUBNUB_USE_SSL=0
       - name: Run acceptance tests
+        shell: bash
         env:
           PAM_PUB_KEY: "pub_key"
           PAM_SUB_KEY: "sub_key"
