@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        on: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         compiler: [gcc, clang]
         cgreen: [1.6.0]
     runs-on: ${{ matrix.os }}
@@ -59,7 +59,7 @@ jobs:
       fail-fast: true
       max-parallel: 2
       matrix:
-        on: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         compiler: [gcc, clang]
         test_kind: [unit, integration]
     runs-on: ${{ matrix.os }}
