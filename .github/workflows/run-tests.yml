@@ -12,14 +12,14 @@ on:
 jobs:
   tests-ubuntu:
     name: Integration and Unit tests
-    uses: pubnub/c-core/.github/workflows/reusable-unit-integration-tests-runner.yml@master
+    uses: pubnub/c-core/.github/workflows/reusable-unit-integration-tests-runner.yml@test/switch-to-actions
     with:
       os: ubuntu-latest
       version: 1.6.0
     secrets: inherit
   tests-macos:
     name: Integration and Unit tests
-    uses: pubnub/c-core/.github/workflows/reusable-unit-integration-tests-runner.yml@master
+    uses: pubnub/c-core/.github/workflows/reusable-unit-integration-tests-runner.yml@test/switch-to-actions
     with:
       os: macos-latest
       version: 1.6.0
