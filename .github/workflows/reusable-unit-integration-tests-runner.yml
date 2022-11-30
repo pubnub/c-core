@@ -11,7 +11,7 @@ on:
 jobs:
   prepare-unit-test-gcc:
     name: Prepare Unit Test framework (gcc)
-    uses: pubnub/c-core/.github/workflows/reusable/prepare-unit-test-framework.yml@master
+    uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@master
       with:
         os: ${{ inputs.os }}
         version: ${{ inputs.version }}
@@ -19,7 +19,7 @@ jobs:
       secrets: inherit
   prepare-unit-test-clang:
     name: Prepare Unit Test framework (clang)
-    uses: pubnub/c-core/.github/workflows/reusable/prepare-unit-test-framework.yml@master
+    uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@master
       with:
         os: ${{ inputs.os }}
         version: ${{ inputs.version }}
