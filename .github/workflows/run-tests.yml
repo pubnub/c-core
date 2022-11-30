@@ -17,7 +17,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         compiler: [gcc, clang]
-        cgreen: [1.6.0]
+        cgreen: [1.4.1]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Cache Unit Test framework (${{ runner.os }} ${{ matrix.compiler }})
@@ -40,10 +40,9 @@ jobs:
         if: steps.unit-test-framework.outputs.cache-hit != 'true'
         shell: bash
         env:
-          CC: -${{ matrix.compiler }}
-          CXX: -${{ matrix.compiler }}
+          CC: ${{ matrix.compiler }}
+          CXX: ${{ matrix.compiler }}
         run: |
-          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd cgreen-src
           mkdir -p build
           cd build
@@ -91,8 +90,8 @@ jobs:
       - name: Run ${{ matrix.test_kind }} tests
         shell: bash
         env:
-          CC: -${{ matrix.compiler }}
-          CXX: -${{ matrix.compiler }}
+          CC: ${{ matrix.compiler }}
+          CXX: ${{ matrix.compiler }}
         run: |
           [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           if [[ "${{ matrix.test_kind }}" == unit ]]; then
