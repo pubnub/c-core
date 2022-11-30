@@ -39,11 +39,10 @@ jobs:
           CC: ${{ matrix.compiler }}
           CXX: "${{ inputs.compiler == 'clang' && 'clang++' || 'g++' }}"
         run: |
-          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd cgreen-src
           mkdir -p build
           cd build
-          cmake -E env LDFLAGS="-lm" cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
+          cmake -E env LDFLAGS="-lm" cmake ..
           make -j2
           cd "$GITHUB_WORKSPACE"
           mkdir -p cgreen
