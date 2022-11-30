@@ -1,0 +1,51 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      compiler:
+        required: true
+        type: string
+
+jobs:
+  build-unit-test-framework:
+    name: Prepare Unit Test framework
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Cache Unit Test framework (${{ runner.os }} ${{ inputs.compiler }})
+        id: unit-test-framework
+        uses: actions/cache@v3
+        with:
+          path: |
+            cgreen
+          key: ${{ runner.os }}-cgreen-${{ inputs.version }}-${{ inputs.compiler }}
+          restore-keys: |
+            ${{ runner.os }}-cgreen-${{ matrix.cgreen }}-
+      - name: Checkout Unit Test framework
+        if: steps.unit-test-framework.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
+        with:
+          repository: cgreen-devs/cgreen
+          ref: ${{ inputs.version }}
+          path: cgreen-src
+      - name: Build Unit Test framework (${{ runner.os }} ${{ inputs.compiler }})
+        if: steps.unit-test-framework.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          CC: ${{ matrix.compiler }}
+          CXX: "${{ inputs.compiler == 'clang' && 'clang++' || 'g++' }}"
+        run: |
+          cd cgreen-src
+          mkdir -p build
+          cd build
+          cmake -E env LDFLAGS="-lm" cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
+          make -j2
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p cgreen
+          mv cgreen-src/build cgreen/build
+          mv cgreen-src/include cgreen/include
+          rm -rf cgreen-src

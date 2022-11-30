@@ -1,0 +1,103 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+
+jobs:
+  prepare-unit-test-gcc:
+    name: Prepare Unit Test framework (gcc)
+    uses: pubnub/c-core/.github/workflows/reusable/prepare-unit-test-framework.yml@master
+      with:
+        os: ${{ inputs.os }}
+        version: ${{ inputs.version }}
+        compiler: gcc
+      secrets: inherit
+  prepare-unit-test-clang:
+    name: Prepare Unit Test framework (clang)
+    uses: pubnub/c-core/.github/workflows/reusable/prepare-unit-test-framework.yml@master
+      with:
+        os: ${{ inputs.os }}
+        version: ${{ inputs.version }}
+        compiler: clang
+      secrets: inherit
+  tests:
+    name: Integration and Unit tests
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Pull Unit Test framework (${{ runner.os }} gcc)
+        id: unit-test-framework
+        uses: actions/cache@v3
+        with:
+          path: |
+            cgreen
+          key: ${{ runner.os }}-cgreen-${{ inputs.version }}-gcc
+          restore-keys: |
+            ${{ runner.os }}-cgreen-${{ inputs.version }}-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Run unit tests (${{ runner.os }} gcc)
+        shell: bash
+        env:
+          CC: gcc
+          CXX: "g++"
+        run: |
+          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
+          cd "$GITHUB_WORKSPACE/core"
+          make generate_report
+          cd "$GITHUB_WORKSPACE/lib"
+          make generate_report
+      - name: Run integration tests (${{ runner.os }} gcc)
+        shell: bash
+        env:
+          CC: gcc
+          CXX: "g++"
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          make -f posix.mk
+          posix/pubnub_fntest
+          openssl/pubnub_fntest
+          cpp/fntest_runner
+          cpp/openssl/fntest_runner
+      - name: Pull Unit Test framework (${{ runner.os }} clang)
+        id: unit-test-framework
+        uses: actions/cache@v3
+        with:
+          path: |
+            cgreen
+          key: ${{ runner.os }}-cgreen-${{ inputs.version }}-clang
+          restore-keys: |
+            ${{ runner.os }}-cgreen-${{ inputs.version }}-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Run unit tests (${{ runner.os }} clang)
+        shell: bash
+        env:
+          CC: clang
+          CXX: "clang++"
+        run: |
+          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
+          cd "$GITHUB_WORKSPACE/core"
+          make generate_report
+          cd "$GITHUB_WORKSPACE/lib"
+          make generate_report
+      - name: Run integration tests (${{ runner.os }} clang)
+        shell: bash
+        env:
+          CC: clang
+          CXX: "clang++"
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          make -f posix.mk
+          posix/pubnub_fntest
+          openssl/pubnub_fntest
+          cpp/fntest_runner
+          cpp/openssl/fntest_runner
