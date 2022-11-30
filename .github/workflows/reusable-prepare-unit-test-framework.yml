@@ -39,6 +39,7 @@ jobs:
           CC: ${{ matrix.compiler }}
           CXX: "${{ inputs.compiler == 'clang' && 'clang++' || 'g++' }}"
         run: |
+          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd cgreen-src
           mkdir -p build
           cd build

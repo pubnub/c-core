@@ -48,7 +48,6 @@ jobs:
           CC: gcc
           CXX: "g++"
         run: |
-          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd "$GITHUB_WORKSPACE/core"
           make generate_report
           cd "$GITHUB_WORKSPACE/lib"
@@ -83,7 +82,6 @@ jobs:
           CC: clang
           CXX: "clang++"
         run: |
-          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd "$GITHUB_WORKSPACE/core"
           make generate_report
           cd "$GITHUB_WORKSPACE/lib"
