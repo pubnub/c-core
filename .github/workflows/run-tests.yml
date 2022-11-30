@@ -40,8 +40,8 @@ jobs:
         if: steps.unit-test-framework.outputs.cache-hit != 'true'
         shell: bash
         env:
-          CC: ${{ matrix.compiler }}
-          CXX: ${{ matrix.compiler }}
+          CC: -${{ matrix.compiler }}
+          CXX: -${{ matrix.compiler }}
         run: |
           [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd cgreen-src
@@ -91,8 +91,8 @@ jobs:
       - name: Run ${{ matrix.test_kind }} tests
         shell: bash
         env:
-          CC: ${{ matrix.compiler }}
-          CXX: ${{ matrix.compiler }}
+          CC: -${{ matrix.compiler }}
+          CXX: -${{ matrix.compiler }}
         run: |
           [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           if [[ "${{ matrix.test_kind }}" == unit ]]; then
