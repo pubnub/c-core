@@ -30,6 +30,10 @@ jobs:
     runs-on: ${{ inputs.os }}
     needs: [prepare-unit-test-gcc, prepare-unit-test-clang]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
       - name: Pull Unit Test framework (${{ runner.os }} gcc)
         uses: actions/cache@v3
         with:
@@ -38,10 +42,6 @@ jobs:
           key: ${{ runner.os }}-cgreen-${{ inputs.version }}-gcc
           restore-keys: |
             ${{ runner.os }}-cgreen-${{ inputs.version }}-
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_TOKEN }}
       - name: Run unit tests (${{ runner.os }} gcc)
         shell: bash
         env:
@@ -72,10 +72,6 @@ jobs:
           key: ${{ runner.os }}-cgreen-${{ inputs.version }}-clang
           restore-keys: |
             ${{ runner.os }}-cgreen-${{ inputs.version }}-
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_TOKEN }}
       - name: Run unit tests (${{ runner.os }} clang)
         shell: bash
         env:
