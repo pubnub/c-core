@@ -43,6 +43,7 @@ jobs:
           CC: ${{ matrix.compiler }}
           CXX: ${{ matrix.compiler }}
         run: |
+          [[ "${{ runner.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           cd cgreen-src
           mkdir -p build
           cd build
