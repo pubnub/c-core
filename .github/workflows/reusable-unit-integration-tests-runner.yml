@@ -26,8 +26,8 @@ jobs:
       compiler: clang
     secrets: inherit
   tests:
-    name: Integration and Unit tests
-    runs-on: ${{ matrix.os }}
+    name: Run tests
+    runs-on: ${{ inputs.os }}
     needs: [prepare-unit-test-gcc, prepare-unit-test-clang]
     steps:
       - name: Pull Unit Test framework (${{ runner.os }} gcc)
