@@ -41,6 +41,7 @@ jobs:
         shell: bash
         env:
           CC: ${{ matrix.compiler }}
+          CXX: ${{ matrix.compiler }}
         run: |
           cd cgreen-src
           mkdir -p build
@@ -90,6 +91,7 @@ jobs:
         shell: bash
         env:
           CC: ${{ matrix.compiler }}
+          CXX: ${{ matrix.compiler }}
         run: |
           [[ "${{ runner.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           if [[ "${{ matrix.test_kind }}" == unit ]]; then
