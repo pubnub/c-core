@@ -41,13 +41,12 @@ jobs:
         shell: bash
         env:
           CC: ${{ matrix.compiler }}
-          CXX: ${{ matrix.compiler }}
+          CXX: "${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}"
         run: |
-          [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && sudo apt-get install -y libmpfr-dev libmpc-dev
           cd cgreen-src
           mkdir -p build
           cd build
-          cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
+          cmake -E env LDFLAGS="-lm" cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=ON ..
           make -j2
           cd "$GITHUB_WORKSPACE"
           mkdir -p cgreen
@@ -79,20 +78,11 @@ jobs:
           key: ${{ runner.os }}-cgreen-${{ matrix.cgreen }}-${{ matrix.compiler }}
           restore-keys: |
             ${{ runner.os }}-cgreen-${{ matrix.cgreen }}-
-      - name: Pull Unit Test framework cache (${{ runner.os }} ${{ matrix.compiler }})
-        if: ${{ matrix.test_kind == 'integration' }}
-        uses: actions/cache@v3
-        with:
-          path: |
-            cgreen
-          key: ${{ runner.os }}-cgreen-${{ matrix.cgreen }}-${{ matrix.compiler }}
-          restore-keys: |
-            ${{ runner.os }}-cgreen-${{ matrix.cgreen }}-
       - name: Run ${{ matrix.test_kind }} tests
         shell: bash
         env:
           CC: ${{ matrix.compiler }}
-          CXX: ${{ matrix.compiler }}
+          CXX: "${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}"
         run: |
           [[ "${{ matrix.os }}" == "ubuntu-latest" ]] && pip install --user gcovr
           if [[ "${{ matrix.test_kind }}" == unit ]]; then
