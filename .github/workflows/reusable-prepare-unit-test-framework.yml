@@ -13,7 +13,7 @@ on:
 
 jobs:
   build-unit-test-framework:
-    name: Prepare Unit Test framework
+    name: Build and cache (${{ runner.os }} ${{ inputs.compiler }})
     runs-on: ${{ inputs.os }}
     steps:
       - name: Cache Unit Test framework (${{ runner.os }} ${{ inputs.compiler }})

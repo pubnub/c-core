@@ -10,7 +10,7 @@ on:
 
 jobs:
   prepare-unit-test-gcc:
-    name: Prepare Unit Test framework (gcc)
+    name: Prepare Unit Test framework (${{ inputs.os }} gcc)
     uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@test/switch-to-actions
     with:
       os: ${{ inputs.os }}
@@ -18,7 +18,7 @@ jobs:
       compiler: gcc
     secrets: inherit
   prepare-unit-test-clang:
-    name: Prepare Unit Test framework (clang)
+    name: Prepare Unit Test framework (${{ inputs.os }} clang)
     uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@test/switch-to-actions
     with:
       os: ${{ inputs.os }}
