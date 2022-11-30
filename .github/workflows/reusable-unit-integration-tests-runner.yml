@@ -12,19 +12,19 @@ jobs:
   prepare-unit-test-gcc:
     name: Prepare Unit Test framework (gcc)
     uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@master
-      with:
-        os: ${{ inputs.os }}
-        version: ${{ inputs.version }}
-        compiler: gcc
-      secrets: inherit
+    with:
+      os: ${{ inputs.os }}
+      version: ${{ inputs.version }}
+      compiler: gcc
+    secrets: inherit
   prepare-unit-test-clang:
     name: Prepare Unit Test framework (clang)
     uses: pubnub/c-core/.github/workflows/reusable-prepare-unit-test-framework.yml@master
-      with:
-        os: ${{ inputs.os }}
-        version: ${{ inputs.version }}
-        compiler: clang
-      secrets: inherit
+    with:
+      os: ${{ inputs.os }}
+      version: ${{ inputs.version }}
+      compiler: clang
+    secrets: inherit
   tests:
     name: Integration and Unit tests
     runs-on: ${{ matrix.os }}
