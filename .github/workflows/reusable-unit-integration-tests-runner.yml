@@ -28,9 +28,9 @@ jobs:
   tests:
     name: Integration and Unit tests
     runs-on: ${{ matrix.os }}
+    needs: [prepare-unit-test-gcc, prepare-unit-test-clang]
     steps:
       - name: Pull Unit Test framework (${{ runner.os }} gcc)
-        id: unit-test-framework
         uses: actions/cache@v3
         with:
           path: |
@@ -66,7 +66,6 @@ jobs:
           cpp/fntest_runner
           cpp/openssl/fntest_runner
       - name: Pull Unit Test framework (${{ runner.os }} clang)
-        id: unit-test-framework
         uses: actions/cache@v3
         with:
           path: |
