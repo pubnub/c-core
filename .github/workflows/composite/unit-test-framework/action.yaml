@@ -25,6 +25,13 @@ runs:
         key: ${{ inputs.os }}-cgreen-${{ inputs.version }}-1
         restore-keys: |
           ${{ inputs.os }}-cgreen-${{ inputs.version }}-
+    - name: Checkout Unit Test framework
+      if: steps.unit-test-framework.outputs.cache-hit != 'true'
+      uses: actions/checkout@v3
+      with:
+        repository: cgreen-devs/cgreen
+        ref: ${{ matrix.cgreen }}
+        path: cgreen
     - name: Build Unit Test frameworks
       if: steps.unit-test-framework.outputs.cache-hit != 'true'
       shell: bash
