@@ -172,4 +172,4 @@ fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCE
 
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
-	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs rm
+	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs -r rm -rf

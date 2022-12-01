@@ -203,4 +203,4 @@ pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_
 
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
-	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs rm
+	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs -r rm -rf

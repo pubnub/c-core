@@ -192,4 +192,4 @@ openssl/futres_nesting_callback_cpp11: samples/futres_nesting.cpp $(SOURCEFILES)
 
 clean:
 	find openssl -type d -iname "*.dSYM" -exec rm -rf {} \+
-	find openssl -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs rm
+	find openssl -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs -r rm -rf
