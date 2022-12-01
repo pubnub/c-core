@@ -22,12 +22,8 @@ runs:
     - name: Prepare Unit Test framework ('${{ inputs.os }}' gcc)
       shell: bash
       run: |
-        ls -la "$GITHUB_WORKSPACE"
-        ls -la "$GITHUB_WORKSPACE/cgreen"
         mv "$GITHUB_WORKSPACE/cgreen" "$GITHUB_WORKSPACE/cgreen-universal"
-        ls -la "$GITHUB_WORKSPACE/cgreen-universal"
         cp -r "$GITHUB_WORKSPACE/cgreen-universal/gcc" "$GITHUB_WORKSPACE/cgreen"
-        ls -la "$GITHUB_WORKSPACE/cgreen"
     - name: Run unit tests ('${{ inputs.os }}' gcc)
       shell: bash
       env:

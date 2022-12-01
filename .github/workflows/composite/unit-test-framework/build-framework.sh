@@ -50,12 +50,6 @@ do
   echo "::endgroup::"
 done
 
-ls -la "$GITHUB_WORKSPACE"
-ls -la "$GITHUB_WORKSPACE/cgreen"
-ls -la "$GITHUB_WORKSPACE/cgreen-tmp"
-
 echo "::debug title=cgreen::Prepare files for caching"
-rm -rf cgreen
+rm -rf "$GITHUB_WORKSPACE/cgreen"
 mv "$GITHUB_WORKSPACE/cgreen-tmp" "$GITHUB_WORKSPACE/cgreen"
-ls -la "$GITHUB_WORKSPACE/cgreen"
-echo "--------------------"
