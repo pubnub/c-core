@@ -7,10 +7,10 @@ inputs:
     description: Environment in which framework should be built.
     required: true
   version:
-    description: "Which version of 'cgreen' should be built".
+    description: "Which version of 'cgreen' should be built."
     required: true
   compilers:
-    description: "Coma-separated list of currently supported C compilers to be used during build (gcc, clang)".
+    description: "Coma-separated list of currently supported C compilers to be used during build (gcc, clang)."
     required: true
 
 runs:

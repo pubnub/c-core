@@ -7,7 +7,7 @@ inputs:
     description: Environment in which framework should be built.
     required: true
   version:
-    description: "Which version of 'cgreen' should be built".
+    description: "Which version of 'cgreen' should be built."
     required: true
 
 runs:
