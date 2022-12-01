@@ -19,7 +19,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Build and run tests
-        uses: .github/workflows/composite/unit-integration-test-runner@test/switch-to-actions
+        uses: ./.github/workflows/composite/unit-integration-test-runner
         with:
           os: ubuntu
           version: 1.6.0
@@ -32,7 +32,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Build and run tests
-        uses: .github/workflows/composite/unit-integration-test-runner@test/switch-to-actions
+        uses: ./.github/workflows/composite/unit-integration-test-runner
         with:
           os: macos
           version: 1.6.0

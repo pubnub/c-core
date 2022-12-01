@@ -14,7 +14,7 @@ runs:
   using: "composite"
   steps:
     - name: Pull Unit Test framework ('${{ inputs.os }}' gcc, clang)
-      uses: .github/workflows/composite/unit-test-framework@test/switch-to-actions
+      uses: ./.github/workflows/composite/unit-test-framework
       with:
         os: ${{ inputs.os }}
         version: ${{ inputs.version }}
