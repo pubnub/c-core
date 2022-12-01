@@ -1,11 +1,10 @@
 #!/bin/bash
 
-echo "'$0'"
-echo "'$1'"
-echo "'$2'"
-
 # Identify make tool which depends from environment.
 [[ $1 =~ (ubuntu|macos) ]] && MAKE_TOOL=make || MAKE_TOOL=$(MAKE)
+
+echo "BEFORE:"
+ls -la "$GITHUB_WORKSPACE"
 
 # Iterating over list of passed compilers.
 for compiler in ${2//,/ }
@@ -25,8 +24,14 @@ do
   fi
 
   echo "::debug title=cgreen::Prepare folders structure"
-  ! [[ -d "$GITHUB_WORKSPACE/cgreen-tmp/$compiler" ]] &&
-   mkdir -p "$GITHUB_WORKSPACE/cgreen-tmp/$compiler"
+  if ! [[ -d "$GITHUB_WORKSPACE/cgreen-tmp/$compiler" ]]; then
+    echo "$GITHUB_WORKSPACE/cgreen-tmp/$compiler DOESN'T EXISTS. CREATE"
+    mkdir -p "$GITHUB_WORKSPACE/cgreen-tmp/$compiler"
+    echo "COMPILER FOLDER CREATE:"
+    ls -la "$GITHUB_WORKSPACE"
+    echo "COMPILER FOLDER INSIDE:"
+    ls -la "$GITHUB_WORKSPACE/cgreen-tmp"
+  fi
   mkdir -p build && cd build
 
   # Enable 'gcov' only for build on Ubuntu.
@@ -53,6 +58,9 @@ do
   unset CC && unset CXX
   echo "::endgroup::"
 done
+
+echo "AFTER:"
+ls -la "$GITHUB_WORKSPACE"
 
 echo "::debug title=cgreen::Prepare files for caching"
 rm -rf cgreen
