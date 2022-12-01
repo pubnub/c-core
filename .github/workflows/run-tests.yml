@@ -23,7 +23,6 @@ jobs:
         with:
           os: ubuntu
           version: 1.6.0
-    secrets: inherit
   tests-macos:
     name: Integration and Unit tests (macOS)
     runs-on: macos-latest
