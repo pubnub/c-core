@@ -1,3 +1,9 @@
+## v4.0.5
+December 02 2022
+
+#### Fixed
+- Fixed compilation error for MSVC in `pubnub_parse_token` function.
+
 ## v4.0.4
 November 25 2022
 
