@@ -11,9 +11,6 @@
 #include "pubnub_memory_block.h"
 #include "pubnub_advanced_history.h"
 #endif
-#if PUBNUB_USE_GRANT_TOKEN_API
-#include "pubnub_grant_token_api.h"
-#endif
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
 #include "pubnub_log.h"
@@ -5026,18 +5023,7 @@ Ensure(single_context_pubnub, gzip_bad_compression_format)
            equals(PNR_BAD_COMPRESSION_FORMAT));
 }
 
-#if PUBNUB_USE_GRANT_TOKEN_API
-Ensure(single_context_pubnub, token_parsing_not_crashing_for_not_valid_values)
-{
-    pubnub_init(pbp, "looking-glass", "looking-glass");
-    pubnub_set_user_id(pbp, "test_id");
-
-    attest(pubnub_parse_token(pbp, "dummy data"), equals(NULL));  
-}
-#endif
-
 /* Verify ASSERT gets fired */
-
 Ensure(single_context_pubnub, illegal_context_fires_assert)
 {
 #if PUBNUB_USE_ADVANCED_HISTORY
