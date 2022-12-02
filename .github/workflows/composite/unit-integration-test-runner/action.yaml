@@ -40,7 +40,7 @@ runs:
       env:
         CC: gcc
         CXX: "g++"
-      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh ${{ inputs.os }}
     - name: Run integration tests ('${{ inputs.os }}' gcc)
       shell: bash
       env:
@@ -57,7 +57,7 @@ runs:
       env:
         CC: clang
         CXX: "clang++"
-      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh ${{ inputs.os }}
     - name: Run integration tests ('${{ inputs.os }}' clang)
       shell: bash
       env:
