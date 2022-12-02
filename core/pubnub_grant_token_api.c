@@ -201,7 +201,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                         encoded_sig.ptr[0] = '\0';
                     }
 
-                    char base64_str[encoded_sig.size + 2];
+                    char base64_str[67]; // HMAC+SHA256 max size + quotes + tailing null
                     sprintf(base64_str, "\"%s\"", encoded_sig.ptr);
 
                     free(encoded_sig.ptr);

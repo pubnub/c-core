@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.0.4"
+version: "4.0.5"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-12-02
+    version: v4.0.5
+    changes:
+      - type: bug
+        text: "Fixed compilation error for MSVC in `pubnub_parse_token` function."
   - date: 2022-11-25
     version: v4.0.4
     changes:
@@ -674,7 +679,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -740,7 +745,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -806,7 +811,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -868,7 +873,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -929,7 +934,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -985,7 +990,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
@@ -1038,7 +1043,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.4
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
             requires:
               -
                 name: "miniz"
