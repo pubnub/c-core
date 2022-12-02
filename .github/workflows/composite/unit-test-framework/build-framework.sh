@@ -17,10 +17,10 @@ do
     export CC="$compiler"
     [[ $compiler == "gcc" ]] && export CXX="g++" || export CXX="$compiler++"
   else
-    echo "::notice::Here should be some setup for Windows compiler"
+    echo "::warning title=compiler flags::Here should be some setup for Windows compiler"
   fi
 
-  echo "::debug title=cgreen::Prepare folders structure"
+  echo "::notice title=cgreen::Prepare folders structure"
   ! [[ -d "$GITHUB_WORKSPACE/cgreen-tmp/$compiler" ]] &&
     mkdir -p "$GITHUB_WORKSPACE/cgreen-tmp/$compiler"
   mkdir -p build && cd build
@@ -28,20 +28,20 @@ do
   # Enable 'gcov' only for build on Ubuntu.
   [[ "$1" == "ubuntu" ]] && WITH_GCOV=ON || WITH_GCOV=OFF
   if [[ "$WITH_GCOV" == ON ]]; then
-    echo "::debug title=gcov::Installing 'gcov' for code coverage."
+    echo "::notice title=gcov::Installing 'gcov' for code coverage."
     pip install --user gcovr
   else
-    echo "::notice title=gcov::'gcov' doesn't work as expected on $1."
-    echo "::notice title=gcov::Configure 'cgreen' without 'gcov' support"
+    echo "::warning title=gcov::'gcov' doesn't work as expected on $1."
+    echo "::warning title=gcov::Configure 'cgreen' without 'gcov' support"
   fi
 
-  echo "::debug title=cgreen::Configure 'cgreen' build"
+  echo "::notice title=cgreen::Configure 'cgreen' build"
   cmake -E env LDFLAGS="-lm" cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=$WITH_GCOV ..
 
-  echo "::debug title=cgreen::Build 'cgreen' framework"
+  echo "::notice title=cgreen::Build 'cgreen' framework"
   make -j2
 
-  echo "::debug::Move built results to compiler specific colder"
+  echo "::notice::Move built results to compiler specific colder"
   mv "$GITHUB_WORKSPACE/cgreen/build" "$GITHUB_WORKSPACE/cgreen-tmp/$compiler/build"
   cp -r "$GITHUB_WORKSPACE/cgreen/include" "$GITHUB_WORKSPACE/cgreen-tmp/$compiler/include"
 
@@ -50,6 +50,6 @@ do
   echo "::endgroup::"
 done
 
-echo "::debug title=cgreen::Prepare files for caching"
+echo "::notice title=cgreen::Prepare files for caching"
 rm -rf "$GITHUB_WORKSPACE/cgreen"
 mv "$GITHUB_WORKSPACE/cgreen-tmp" "$GITHUB_WORKSPACE/cgreen"

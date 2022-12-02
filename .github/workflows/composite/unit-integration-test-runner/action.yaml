@@ -9,10 +9,21 @@ inputs:
   version:
     description: "Which version of 'cgreen' should be built."
     required: true
+  pubNubPubKey:
+    description: "PubNub publish keys which should be used with integration tests"
+    required: true
+  pubNubSubKey:
+    description: "PubNub subscribe keys which should be used with integration tests"
+    required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Prepare environments
+      shell: bash
+      run: |
+        echo "PUBNUB_PUBKEY=${{ inputs.pubNubPubKey }}" >> $GITHUB_ENV
+        echo "PUBNUB_KEYSUB=${{ inputs.pubNubSubKey }}" >> $GITHUB_ENV
     - name: Pull Unit Test framework ('${{ inputs.os }}' gcc, clang)
       uses: ./.github/workflows/composite/unit-test-framework
       with:
@@ -44,7 +55,15 @@ runs:
       run: |
         echo "::group::Run integration tests ('${{ inputs.os }}' gcc)"
         cd "$GITHUB_WORKSPACE"
-        make -f posix.mk clean all
+        
+        if ! build="$(make -f posix.mk clean all 2>&1)"; then
+          echo "::error file=posix.mk::Unable to build test suite: $build"
+          exit 1
+        fi
+        [[ "$build" =~ "deprecated" ]] && echo "::warning title=deprecated::There is deprecated functions used in code."
+        [[ "$build" =~ "not used" ]] && echo "::warning title=unused::There is unused variables and / or functions in code."
+        echo "::debug title=build log::Integration tests build log: $build"
+        
         posix/pubnub_fntest
         openssl/pubnub_fntest
         cpp/fntest_runner
@@ -75,6 +94,15 @@ runs:
       run: |
         echo "::group::Run integration tests ('${{ inputs.os }}' clang)"
         cd "$GITHUB_WORKSPACE"
+        
+        if ! build="$(make -f posix.mk clean all 2>&1)"; then
+          echo "::error file=posix.mk::Unable to build test suite: $build"
+          exit 1
+        fi
+        [[ "$build" =~ "deprecated" ]] && echo "::warning title=deprecated::There is deprecated functions used in code."
+        [[ "$build" =~ "not used" ]] && echo "::warning title=unused::There is unused variables and / or functions in code."
+        echo "::debug title=build log::Integration tests build log: $build"
+        
         make -f posix.mk clean all
         posix/pubnub_fntest
         openssl/pubnub_fntest
