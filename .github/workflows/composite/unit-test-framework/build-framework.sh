@@ -29,7 +29,11 @@ do
   [[ "$1" == "ubuntu" ]] && WITH_GCOV=ON || WITH_GCOV=OFF
   if [[ "$WITH_GCOV" == ON ]]; then
     echo "::notice title=gcov::Installing 'gcov' for code coverage."
-    pip install --user gcovr
+    if ! install="$(pip install --user gcovr)"; then
+      echo "::error title=gcov::Unable to install 'gcov':$install"
+    else
+    echo "::notice title=gcov::Installing 'gcov' for code coverage."
+    fi
   else
     echo "::warning title=gcov::'gcov' doesn't work as expected on $1."
     echo "::warning title=gcov::Configure 'cgreen' without 'gcov' support"

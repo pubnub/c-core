@@ -40,35 +40,13 @@ runs:
       env:
         CC: gcc
         CXX: "g++"
-      run: |
-        echo "::group::Run unit tests ('${{ inputs.os }}' gcc)"
-        cd "$GITHUB_WORKSPACE/core"
-        make clean generate_report
-        cd "$GITHUB_WORKSPACE/lib"
-        make clean generate_report
-        echo "::endgroup::"
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh
     - name: Run integration tests ('${{ inputs.os }}' gcc)
       shell: bash
       env:
         CC: gcc
         CXX: "g++"
-      run: |
-        echo "::group::Run integration tests ('${{ inputs.os }}' gcc)"
-        cd "$GITHUB_WORKSPACE"
-        
-        if ! build="$(make -f posix.mk clean all 2>&1)"; then
-          echo "::error file=posix.mk::Unable to build test suite: $build"
-          exit 1
-        fi
-        [[ "$build" =~ "deprecated" ]] && echo "::warning title=deprecated::There is deprecated functions used in code."
-        [[ "$build" =~ "not used" ]] && echo "::warning title=unused::There is unused variables and / or functions in code."
-        echo "::debug title=build log::Integration tests build log: $build"
-        
-        posix/pubnub_fntest
-        openssl/pubnub_fntest
-        cpp/fntest_runner
-        cpp/openssl/fntest_runner
-        echo "::endgroup::"
+      run: .github/workflows/composite/unit-integration-test-runner/run-integration-tests.sh ${{ inputs.os }}
     - name: Prepare Unit Test framework ('${{ inputs.os }}' clang)
       shell: bash
       run: |
@@ -79,36 +57,13 @@ runs:
       env:
         CC: clang
         CXX: "clang++"
-      run: |
-        echo "::group::Run unit tests ('${{ inputs.os }}' clang)"
-        cd "$GITHUB_WORKSPACE/core"
-        make clean generate_report
-        cd "$GITHUB_WORKSPACE/lib"
-        make clean generate_report
-        echo "::endgroup::"
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh
     - name: Run integration tests ('${{ inputs.os }}' clang)
       shell: bash
       env:
         CC: clang
         CXX: "clang++"
-      run: |
-        echo "::group::Run integration tests ('${{ inputs.os }}' clang)"
-        cd "$GITHUB_WORKSPACE"
-        
-        if ! build="$(make -f posix.mk clean all 2>&1)"; then
-          echo "::error file=posix.mk::Unable to build test suite: $build"
-          exit 1
-        fi
-        [[ "$build" =~ "deprecated" ]] && echo "::warning title=deprecated::There is deprecated functions used in code."
-        [[ "$build" =~ "not used" ]] && echo "::warning title=unused::There is unused variables and / or functions in code."
-        echo "::debug title=build log::Integration tests build log: $build"
-        
-        make -f posix.mk clean all
-        posix/pubnub_fntest
-        openssl/pubnub_fntest
-        cpp/fntest_runner
-        cpp/openssl/fntest_runner
-        echo "::endgroup::"
+      run: .github/workflows/composite/unit-integration-test-runner/run-integration-tests.sh ${{ inputs.os }}
     - name: Restore Unit Test framework ('${{ inputs.os }}' gcc,clang)
       shell: bash
       run: |
