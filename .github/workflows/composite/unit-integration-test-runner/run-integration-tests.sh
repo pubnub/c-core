@@ -17,7 +17,6 @@ if ! build="$(make -f posix.mk clean all 2>&1)"; then
 else
   echo -e "${SUCCESS_BG}Test suit is built 🎉${CLEAR}"
 fi
-echo "::debug title=build::Integration tests build log: $build"
 
 [[ "$build" =~ "deprecated" ]] && echo "::warning title=deprecated::There is deprecated functions used in code."
 [[ "$build" =~ "not used" ]] && echo "::warning title=unused::There is unused variables and / or functions in code."
