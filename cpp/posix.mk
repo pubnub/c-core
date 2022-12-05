@@ -171,4 +171,5 @@ fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCE
 
 
 clean:
-	rm pubnub_sync_sample pubnub_callback_sample pubnub_callback_cpp11_sample pubnub_callback_subloop_sample pubnub_callback_cpp11_subloop_sample cancel_subscribe_sync_sample subscribe_publish_callback_sample futres_nesting_sync pubnub_sync_subloop_sample futres_nesting_callback futres_nesting_callback_cpp11 fntest_runner *.dSYM
+	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
+	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs -r rm -rf

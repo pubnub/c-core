@@ -1,0 +1,71 @@
+---
+name: Tests runner
+description: Unit and integration tests runner for multiple compiler types.
+author: PubNub
+inputs:
+  os:
+    description: Environment in which framework should be built.
+    required: true
+  version:
+    description: "Which version of 'cgreen' should be built."
+    required: true
+  pubNubPubKey:
+    description: "PubNub publish keys which should be used with integration tests"
+    required: true
+  pubNubSubKey:
+    description: "PubNub subscribe keys which should be used with integration tests"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare environments
+      shell: bash
+      run: |
+        echo "PUBNUB_PUBKEY=${{ inputs.pubNubPubKey }}" >> $GITHUB_ENV
+        echo "PUBNUB_KEYSUB=${{ inputs.pubNubSubKey }}" >> $GITHUB_ENV
+    - name: Pull Unit Test framework ('${{ inputs.os }}' gcc, clang)
+      uses: ./.github/workflows/composite/unit-test-framework
+      with:
+        os: ${{ inputs.os }}
+        version: ${{ inputs.version }}
+        compilers: gcc,clang
+    - name: Prepare Unit Test framework ('${{ inputs.os }}' gcc)
+      shell: bash
+      run: |
+        mv "$GITHUB_WORKSPACE/cgreen" "$GITHUB_WORKSPACE/cgreen-universal"
+        cp -r "$GITHUB_WORKSPACE/cgreen-universal/gcc" "$GITHUB_WORKSPACE/cgreen"
+    - name: Run unit tests ('${{ inputs.os }}' gcc)
+      shell: bash
+      env:
+        CC: gcc
+        CXX: "g++"
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh ${{ inputs.os }}
+    - name: Run integration tests ('${{ inputs.os }}' gcc)
+      shell: bash
+      env:
+        CC: gcc
+        CXX: "g++"
+      run: .github/workflows/composite/unit-integration-test-runner/run-integration-tests.sh ${{ inputs.os }}
+    - name: Prepare Unit Test framework ('${{ inputs.os }}' clang)
+      shell: bash
+      run: |
+        rm -rf "$GITHUB_WORKSPACE/cgreen"
+        cp -r "$GITHUB_WORKSPACE/cgreen-universal/clang" "$GITHUB_WORKSPACE/cgreen"
+    - name: Run unit tests ('${{ inputs.os }}' clang)
+      shell: bash
+      env:
+        CC: clang
+        CXX: "clang++"
+      run: .github/workflows/composite/unit-integration-test-runner/run-unit-tests.sh ${{ inputs.os }}
+    - name: Run integration tests ('${{ inputs.os }}' clang)
+      shell: bash
+      env:
+        CC: clang
+        CXX: "clang++"
+      run: .github/workflows/composite/unit-integration-test-runner/run-integration-tests.sh ${{ inputs.os }}
+    - name: Restore Unit Test framework ('${{ inputs.os }}' gcc,clang)
+      shell: bash
+      run: |
+        rm -rf "$GITHUB_WORKSPACE/cgreen"
+        cp -r "$GITHUB_WORKSPACE/cgreen-universal" "$GITHUB_WORKSPACE/cgreen"

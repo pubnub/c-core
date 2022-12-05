@@ -77,4 +77,5 @@ pubnub_proxy_unittest: $(PROJECT_SOURCEFILES) $(PROXY_PROJECT_SOURCEFILES) pubnu
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
-	rm pubnub_core_unit_test.so pubnub_timer_list_unit_test.so pubnub_proxy_unit_test.so *.gcda *.gcno *.html
+	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
+	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf
