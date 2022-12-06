@@ -76,7 +76,7 @@ pubnub_proxy_unittest: $(PROJECT_SOURCEFILES) $(PROXY_PROJECT_SOURCEFILES) pubnu
 GRANT_TOKEN_SOURCEFILES +=  ../lib/cbor/cborparser.c ../lib/cbor/cborparser_dup_string.c pbcc_grant_token_api.c pubnub_grant_token_api.c
 
 pubnub_grant_token_api_unittest: $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) pubnub_grant_token_api_unit_tests.c
-	gcc -o pubnub_grant_token_api_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_USE_GRANT_TOKEN_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) pubnub_grant_token_api_unit_tests.c -lcgreen -lm
+	gcc -o pubnub_grant_token_api_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_USE_GRANT_TOKEN_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) test/pubnub_test_mocks.c pubnub_grant_token_api_unit_tests.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_grant_token_api_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
