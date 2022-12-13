@@ -336,6 +336,8 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
     
     if (decoded.size == 0 && decoded.ptr == NULL) {
         PUBNUB_LOG_ERROR("Base64 decoding failed! Token \"%s\" is not a valid base64 value!\n", token);
+        
+        free(rawToken);
         return NULL;
     }
 
@@ -363,6 +365,9 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
         err = data_recursion(&it, 1, &json_result, init_allocation_size);
     } else {
         PUBNUB_LOG_ERROR("JSON parsing failed! Cbor error code = %d\n", err);
+        
+        free(json_result);
+        json_result = NULL;
     }
     
     free(decoded.ptr);
