@@ -50,7 +50,7 @@ CGREEN_RUNNER=../cgreen/build/tools/cgreen-runner
 
 
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
-	gcc -o pubnub_core_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_ORIGIN_SETTABLE=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
+	gcc -o pubnub_core_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_ORIGIN_SETTABLE=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) test/pubnub_test_mocks.c pubnub_core_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_core_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html

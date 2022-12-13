@@ -1,6 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "cgreen/cgreen.h"
 #include "cgreen/mocks.h"
+#include "pubnub_test_mocks.h"
 
 #include "pubnub_alloc.h"
 #include "pubnub_grant_token_api.h"
@@ -18,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
-#include <time.h>
 #include <assert.h>
 
 /* A less chatty cgreen :) */
@@ -33,11 +33,6 @@
 #define sets(par, val) will_set_contents_of_parameter(par, &(val), sizeof(val))
 #define sets_ex will_set_contents_of_parameter
 #define returns will_return
-
-struct uint8_block {
-    size_t   size;
-    uint8_t* block;
-};
 
 /* Current (simulated) string message received */
 static const char* m_read;
@@ -59,7 +54,7 @@ static int m_j;
 uint8_t string_or_uint8block_mask[10];
 
 /* Awaits given amount of time in seconds */
-static void wait_time_in_seconds(time_t time_in_seconds)
+void wait_time_in_seconds(time_t time_in_seconds)
 {
     time_t time_start = time(NULL);
     do {
@@ -480,6 +475,16 @@ static bool        m_expect_assert;
 static jmp_buf     m_assert_exp_jmpbuf;
 static char const* m_expect_assert_file;
 
+int _set_expected_assert(char const* file) {
+    m_expect_assert      = true;                                           \
+    m_expect_assert_file = file;                                           \
+
+    return setjmp(m_assert_exp_jmpbuf);                    \
+} 
+
+void _test_expected_assert() {
+    attest(!m_expect_assert);
+}
 
 void assert_handler(char const* s, const char* file, long i)
 {
@@ -512,6 +517,27 @@ void free_m_msgs(char** msg_array)
     }
 }
 
+void incoming(char const* str, struct uint8_block* p_data)
+{
+    if (str != NULL) {
+        char* pmsg = malloc(sizeof(char) * (strlen(str) + 1));
+
+        assert(pmsg != NULL);
+        assert(m_num_string_msgs_rcvd < sizeof m_string_msg_array);
+        /** Marks the bit for string to be read(received) in due time.
+            If the bit is 0 uint8_data_block is expected.
+         */
+        string_or_uint8block_mask[(m_num_string_msgs_rcvd + m_num_uint8_data_blocks) / 8] |=
+            1 << (m_num_string_msgs_rcvd + m_num_uint8_data_blocks) % 8;
+        strcpy(pmsg, str);
+        m_string_msg_array[m_num_string_msgs_rcvd++] = pmsg;
+    }
+    if (p_data != NULL) {
+        assert(m_num_uint8_data_blocks < sizeof m_uint8_data_block_array);
+        m_uint8_data_block_array[m_num_uint8_data_blocks++] = p_data;
+    }
+}
+
 void pubnub_setup_mocks(pubnub_t** pbp) 
 {
     pubnub_assert_set_handler((pubnub_assert_handler_t)assert_handler);
@@ -522,7 +548,6 @@ void pubnub_setup_mocks(pubnub_t** pbp)
     m_j                     = 0;
     *pbp                     = pubnub_alloc();
     assert(*pbp != NULL);
-    printf("A address=%p\n", pbp);
 }
 
 void pubnub_cleanup_mocks(pubnub_t* pbp) 
