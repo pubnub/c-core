@@ -83,4 +83,5 @@ pubnub_grant_token_api_unittest: $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILE
 
 
 clean:
-	rm pubnub_core_unit_test.so pubnub_timer_list_unit_test.so pubnub_proxy_unit_test.so *.gcda *.gcno *.html
+	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
+	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf

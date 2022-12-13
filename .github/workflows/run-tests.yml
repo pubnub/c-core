@@ -1,0 +1,120 @@
+name: Tests
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+  workflow_dispatch:
+
+
+jobs:
+  tests-ubuntu:
+    name: Integration and Unit tests (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Build and run tests
+        uses: ./.github/workflows/composite/unit-integration-test-runner
+        with:
+          os: ubuntu
+          version: 1.6.0
+          pubNubPubKey: ${{ secrets.PUBNUB_PUBKEY }}
+          pubNubSubKey: ${{ secrets.PUBNUB_KEYSUB }}
+  tests-macos:
+    name: Integration and Unit tests (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Build and run tests
+        uses: ./.github/workflows/composite/unit-integration-test-runner
+        with:
+          os: macos
+          version: 1.6.0
+          pubNubPubKey: ${{ secrets.PUBNUB_PUBKEY }}
+          pubNubSubKey: ${{ secrets.PUBNUB_KEYSUB }}
+  acceptance:
+    name: Acceptance tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup environment
+        shell: bash
+        run: |
+          sudo apt-get install -y ninja-build libboost-all-dev libssl-dev
+          sudo gem install cucumber
+      - name: Checkout project
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Checkout mock-server action
+        uses: actions/checkout@v3
+        with:
+          repository: pubnub/client-engineering-deployment-tools
+          ref: v1
+          token: ${{ secrets.GH_TOKEN }}
+          path: .github/.release/actions
+      - name: Run mock server action
+        uses: ./.github/.release/actions/actions/mock-server
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Pull Cucumber cache
+        id: cucumber-cpp
+        uses: actions/cache@v3
+        with:
+          path: |
+            cucumber-cpp
+          key: ${{ runner.os }}-cucumber-cpp-c79100eb70fbb34f6ea10030cec051c2cc9f7961
+          restore-keys: |
+            ${{ runner.os }}-cucumber-cpp-
+      - name: Checkout Cucumber
+        if: steps.cucumber-cpp.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
+        with:
+          repository: cucumber/cucumber-cpp
+          ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961
+          path: cucumber-cpp-src
+      - name: Build Cucumber
+        if: steps.cucumber-cpp.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd ./cucumber-cpp-src
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build --config Debug
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p cucumber-cpp
+          mv cucumber-cpp-src/build cucumber-cpp/build
+          mv cucumber-cpp-src/include cucumber-cpp/include
+          rm -rf cucumber-cpp-src
+      - name: Build acceptance tests
+        shell: bash
+        run: |
+          cd cpp
+          make -f posix_openssl.mk openssl/pubnub_sync
+          cd "$GITHUB_WORKSPACE"
+          g++ -std=c++11 -g -o BoostSteps.o -c features/step_definitions/BoostSteps.cpp -Icucumber-cpp/include -Icucumber-cpp/build/src/ -Iposix -Icore -I. -Icpp -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SSL=0
+          g++ -o steps BoostSteps.o cpp/pubnub_sync.a cucumber-cpp/build/src/libcucumber-cpp.a -Lboost -lboost_unit_test_framework -lpthread -lboost_regex -lboost_thread -lboost_program_options -lboost_filesystem -lssl -lcrypto -D PUBNUB_USE_SSL=0
+      - name: Run acceptance tests
+        shell: bash
+        env:
+          PAM_PUB_KEY: "pub_key"
+          PAM_SUB_KEY: "sub_key"
+          PAM_SEC_KEY: "sec_key"
+        run: |
+          mv sdk-specifications/features/access features
+          sudo python3 run_contract_tests.py features/access/grant-token.feature
+          sudo python3 run_contract_tests.py features/access/revoke-token.feature
+          ls -la results
+      - name: Expose acceptance tests reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: acceptance-test-reports
+          path: ./results/**
+          retention-days: 7

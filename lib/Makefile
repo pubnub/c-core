@@ -40,4 +40,5 @@ pubnub_dns_codec_unit_test: pubnub_dns_codec.c pubnub_dns_codec_unit_test.c
 	$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
-	rm pubnub_parse_ipv6_addr_unit_test.so pubnub_dns_codec_unit_test.so *.gcda *.gcno *.html
+	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
+	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf

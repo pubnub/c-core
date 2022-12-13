@@ -1,0 +1,38 @@
+---
+name: Unit Test and Mocking framework
+description: Manage unit test framework build and cache so it can be used with jobs.
+author: PubNub
+inputs:
+  os:
+    description: Environment in which framework should be built.
+    required: true
+  version:
+    description: "Which version of 'cgreen' should be built."
+    required: true
+  compilers:
+    description: "Coma-separated list of currently supported C compilers to be used during build (gcc, clang)."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build and Cache Unit Test framework ('${{ inputs.os }}' ${{ inputs.compilers }})
+      id: unit-test-framework
+      uses: actions/cache@v3
+      with:
+        path: |
+          cgreen
+        key: ${{ inputs.os }}-cgreen-${{ inputs.version }}-1
+        restore-keys: |
+          ${{ inputs.os }}-cgreen-${{ inputs.version }}-
+    - name: Checkout Unit Test framework
+      if: steps.unit-test-framework.outputs.cache-hit != 'true'
+      uses: actions/checkout@v3
+      with:
+        repository: cgreen-devs/cgreen
+        ref: ${{ matrix.cgreen }}
+        path: cgreen
+    - name: Build Unit Test frameworks
+      if: steps.unit-test-framework.outputs.cache-hit != 'true'
+      shell: bash
+      run: .github/workflows/composite/unit-test-framework/build-framework.sh ${{ inputs.os }} ${{ inputs.compilers }}

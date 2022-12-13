@@ -201,6 +201,6 @@ pubnub_console_sync: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync
 pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a
 	$(CC) -o $@ $(CFLAGS) $(CFLAGS_CALLBACK) -D PUBNUB_CALLBACK_API $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
 
-
 clean:
-	rm pubnub_advanced_history_sample pubnub_fetch_history_sample pubnub_sync_sample pubnub_sync_subloop_sample cancel_subscribe_sync_sample pubnub_sync_publish_retry pubnub_publish_via_post_sample pubnub_callback_sample pubnub_callback_subloop_sample subscribe_publish_callback_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_sync.a pubnub_callback.a subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop *.o *.dSYM
+	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
+	find . -type f ! -name "*.*" -o -name "*.a" -o -name "*.o" | xargs -r rm -rf
