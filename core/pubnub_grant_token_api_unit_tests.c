@@ -30,15 +30,29 @@ AfterEach(token_parsing) {
     pubnub_cleanup_mocks(pbp);
 }
 
-// TODO: create valid test cases for this test
+typedef struct TestCase{
+    char* raw_token;
+    char* expected_parsed_token;
+} TestCase;
+
+static TestCase test_cases[] = {
+    {
+        .raw_token = "p0F2AkF0GmOX59NDdHRsGDxDcmVzpURjaGFuomRteWNoGB9raGVsbG9fd29ybGQDQ2dycKJkbXljZxgfbWNoYW5uZWwtZ3JvdXAHQ3NwY6FlbXlzcGMYH0N1c3KhZm15dXNlchgfRHV1aWSgQ3BhdKVEY2hhbqBDZ3JwoENzcGOhYl4kAUN1c3KhYl4kAUR1dWlkoERtZXRhoENzaWdYIJAZo8ma70ti67jei4f1ytynBcNPGm2lMS_tNuEChca8", 
+        .expected_parsed_token = "{\"v\":2, \"t\":1670899667, \"ttl\":60, \"res\":{\"chan\":{\"mych\":31, \"hello_world\":3}, \"grp\":{\"mycg\":31, \"channel-group\":7}, \"spc\":{\"myspc\":31}, \"usr\":{\"myuser\":31}, \"uuid\":{}}, \"pat\":{\"chan\":{}, \"grp\":{}, \"spc\":{\"^$\":1}, \"usr\":{\"^$\":1}, \"uuid\":{}}, \"meta\":{}, \"sig\":\"kBmjyZrvS2LruN6Lh/XK3KcFw08abaUxL+024QKFxrw=\"}"
+    }
+};
+
 Ensure(token_parsing, should_properly_parse_tokens) {
-	char* raw_token = "p0F2AkF0GmOX59NDdHRsGDxDcmVzpURjaGFuomRteWNoGB9raGVsbG9fd29ybGQDQ2dycKJkbXljZxgfbWNoYW5uZWwtZ3JvdXAHQ3NwY6FlbXlzcGMYH0N1c3KhZm15dXNlchgfRHV1aWSgQ3BhdKVEY2hhbqBDZ3JwoENzcGOhYl4kAUN1c3KhYl4kAUR1dWlkoERtZXRhoENzaWdYIJAZo8ma70ti67jei4f1ytynBcNPGm2lMS_tNuEChca8";
-
-	char* parsed_token = pubnub_parse_token(pbp, raw_token);
-
-	char* expected_parsed_token = "{\"v\":2, \"t\":1670899667, \"ttl\":60, \"res\":{\"chan\":{\"mych\":31, \"hello_world\":3}, \"grp\":{\"mycg\":31, \"channel-group\":7}, \"spc\":{\"myspc\":31}, \"usr\":{\"myuser\":31}, \"uuid\":{}}, \"pat\":{\"chan\":{}, \"grp\":{}, \"spc\":{\"^$\":1}, \"usr\":{\"^$\":1}, \"uuid\":{}}, \"meta\":{}, \"sig\":\"kBmjyZrvS2LruN6Lh/XK3KcFw08abaUxL+024QKFxrw=\"}";
-
-	assert_that(*parsed_token, is_equal_to(*expected_parsed_token));
+    size_t test_cases_count = sizeof(test_cases)/sizeof(test_cases[0]);
+    for (int i = 0; i < test_cases_count; i++) {
+    	char* raw_token = test_cases[0].raw_token;
+    
+    	char* parsed_token = pubnub_parse_token(pbp, raw_token);
+    
+    	char* expected_parsed_token = test_cases[0].expected_parsed_token;
+    
+        assert_that(*parsed_token, is_equal_to(*expected_parsed_token));
+    }
 }
 
 Ensure(token_parsing, should_not_crashing_for_not_valid_values) {
