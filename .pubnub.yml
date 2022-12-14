@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.0.5"
+version: "4.0.6"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2022-12-14
+    version: v4.0.6
+    changes:
+      - type: bug
+        text: "Fixed hanging allocated memory after error in `parse_token` by cleaning the result memory on `cbor` error."
+      - type: improvement
+        text: "Implemented more tests for `pubnub_token_parse` function to increase confidence about that function."
+      - type: improvement
+        text: "Refactored implementation of some tests' setups."
   - date: 2022-12-02
     version: v4.0.5
     changes:
@@ -679,7 +688,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -745,7 +754,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -811,7 +820,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -873,7 +882,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -934,7 +943,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -990,7 +999,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"
@@ -1043,7 +1052,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.0.5
+            location: https://github.com/pubnub/c-core/releases/tag/v4.0.6
             requires:
               -
                 name: "miniz"

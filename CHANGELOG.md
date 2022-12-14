@@ -1,3 +1,13 @@
+## v4.0.6
+December 14 2022
+
+#### Fixed
+- Fixed hanging allocated memory after error in `parse_token` by cleaning the result memory on `cbor` error.
+
+#### Modified
+- Implemented more tests for `pubnub_token_parse` function to increase confidence about that function.
+- Refactored implementation of some tests' setups.
+
 ## v4.0.5
 December 02 2022
 
