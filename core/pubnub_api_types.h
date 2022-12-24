@@ -246,6 +246,18 @@ enum pubnub_trans {
     /** Objects API transaction Removes the list of members of the space specified with space_id.
       */
     PBTT_REMOVE_MEMBERS,
+
+    /** TODO: What are these fields??
+     */
+    PBTT_DELETE_USER,
+    PBTT_DELETE_SPACE,
+    PBTT_CREATE_USER,
+    PBTT_UPDATE_USER,
+    PBTT_CREATE_SPACE,
+    PBTT_UPDATE_SPACE,
+    PBTT_UPDATE_MEMBERSHIPS,
+    PBTT_LEAVE_SPACES,
+    PBTT_UPDATE_MEMBERS,
 #endif /* PUBNUB_USE_OBJECTS_API */
 #if PUBNUB_USE_ACTIONS_API
     /** Actions API transaction Adds the action to the message.

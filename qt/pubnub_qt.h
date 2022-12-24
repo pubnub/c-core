@@ -1087,6 +1087,9 @@ public:
     pubnub_res list_channel_group(QString const& channel_group);
 
 #if PUBNUB_USE_OBJECTS_API
+
+    // TODO: fix this objects API to metadata
+
     /** Initiates a transaction that returns a paginated list of users
         associated with the subscription key, optionally including each
         record's custom data object.
@@ -1101,7 +1104,7 @@ public:
                        and paginated response
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_users(list_options& options);
+    //pubnub_res get_users(list_options& options);
 
     /** Initiates a transaction for creating a user with the attributes specified in
         @p user_obj.
@@ -1120,7 +1123,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_user(QByteArray const& user_obj, QStringList& include);
+    //pubnub_res create_user(QByteArray const& user_obj, QStringList& include);
 
     /** Initiates a transaction for creating a user with the attributes specified in
         @p user_obj.
@@ -1143,9 +1146,9 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_user(QJsonDocument const& user_obj, QStringList& include) {
-        return create_user(user_obj.toJson(), include);
-    }
+//    pubnub_res create_user(QJsonDocument const& user_obj, QStringList& include) {
+//        return create_user(user_obj.toJson(), include);
+//    }
     
     /** Initiates transaction that returns the user object specified with @p user_id,
         optionally including the user's custom data object.
@@ -1162,7 +1165,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_user(QString const& user_id, QStringList& include);
+//    pubnub_res get_user(QString const& user_id, QStringList& include);
 
     /** Initiates trnsaction that updates the user object specified with the `id` key
         of the @p user_obj with any new information you provide.
@@ -1181,7 +1184,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_user(QByteArray const& user_obj, QStringList& include);
+//    pubnub_res update_user(QByteArray const& user_obj, QStringList& include);
 
     /** Initiates trnsaction that updates the user object specified with the `id` key
         of the @p user_obj with any new information you provide.
@@ -1204,9 +1207,9 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_user(QJsonDocument const& user_obj, QStringList& include) {
-        return update_user(user_obj.toJson(), include);
-    }
+//    pubnub_res update_user(QJsonDocument const& user_obj, QStringList& include) {
+//        return update_user(user_obj.toJson(), include);
+//    }
 
     /** Initiates transaction that deletes the user specified with @p user_id.
 
@@ -1219,7 +1222,7 @@ public:
         @param user_id The User ID.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res delete_user(QString const& user_id);
+//    pubnub_res delete_user(QString const& user_id);
 
     /** Initiates transaction that returns the spaces associated with the subscriber key,
         optionally including each space's custom data object.
@@ -1234,7 +1237,7 @@ public:
                        and paginated response
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_spaces(list_options& options);
+//    pubnub_res get_spaces(list_options& options);
 
     /** Initiates transaction that creates a space with the attributes specified
         in @p space_obj.
@@ -1252,7 +1255,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_space(QByteArray const& space_obj, QStringList& include);
+//    pubnub_res create_space(QByteArray const& space_obj, QStringList& include);
 
     /** Initiates transaction that creates a space with the attributes specified
         in @p space_obj.
@@ -1275,9 +1278,9 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res create_space(QJsonDocument const& space_obj, QStringList& include) {
-        return create_space(space_obj.toJson(), include);
-    }
+//    pubnub_res create_space(QJsonDocument const& space_obj, QStringList& include) {
+//        return create_space(space_obj.toJson(), include);
+//    }
 
     /** Initiates transaction that returns the space object specified with @p space_id,
         optionally including its custom data object.
@@ -1293,7 +1296,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_space(QString const& space_id, QStringList& include);
+//    pubnub_res get_space(QString const& space_id, QStringList& include);
 
     /** Initiates transaction that updates the space specified by the `id` property
         of the @p space_obj.
@@ -1311,7 +1314,7 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_space(QByteArray const& space_obj, QStringList& include);
+//    pubnub_res update_space(QByteArray const& space_obj, QStringList& include);
 
     /** Initiates transaction that updates the space specified by the `id` property
         of the @p space_obj.
@@ -1334,9 +1337,9 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_space(QJsonDocument const& space_obj, QStringList& include) {
-        return update_space(space_obj.toJson(), include);
-    }
+//    pubnub_res update_space(QJsonDocument const& space_obj, QStringList& include) {
+//        return update_space(space_obj.toJson(), include);
+//    }
 
     /** Initiates transaction that deletes the space specified with @p space_id.
 
@@ -1349,7 +1352,7 @@ public:
         @param space_id The Space ID.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res delete_space(QString const& space_id);
+//    pubnub_res delete_space(QString const& space_id);
 
     /** Initiates transaction that returns the space memberships of the user specified
         by @p user_id, optionally including the custom data objects for...
