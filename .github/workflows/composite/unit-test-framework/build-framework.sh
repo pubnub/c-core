@@ -20,7 +20,7 @@ do
     echo "::warning title=compiler flags::Here should be some setup for Windows compiler"
   fi
 
-  echo "::notice title=cgreen::Prepare folders structure"
+  echo "Prepare folders structure"
   ! [[ -d "$GITHUB_WORKSPACE/cgreen-tmp/$compiler" ]] &&
     mkdir -p "$GITHUB_WORKSPACE/cgreen-tmp/$compiler"
   mkdir -p build && cd build
@@ -28,24 +28,24 @@ do
   # Enable 'gcov' only for build on Ubuntu.
   [[ "$1" == "ubuntu" ]] && WITH_GCOV=ON || WITH_GCOV=OFF
   if [[ "$WITH_GCOV" == ON ]]; then
-    echo "::notice title=gcov::Installing 'gcov' for code coverage."
+    echo "Installing 'gcov' for code coverage."
     if ! install="$(pip install --user gcovr)"; then
       echo "::error title=gcov::Unable to install 'gcov':$install"
     else
-    echo "::notice title=gcov::Installing 'gcov' for code coverage."
+    echo "Installing 'gcov' for code coverage."
     fi
   else
     echo "::warning title=gcov::'gcov' doesn't work as expected on $1."
     echo "::warning title=gcov::Configure 'cgreen' without 'gcov' support"
   fi
 
-  echo "::notice title=cgreen::Configure 'cgreen' build"
+  echo "Configure 'cgreen' build"
   cmake -E env LDFLAGS="-lm" cmake -DCGREEN_INTERNAL_WITH_GCOV:BOOL=$WITH_GCOV ..
 
-  echo "::notice title=cgreen::Build 'cgreen' framework"
+  echo "Build 'cgreen' framework"
   make -j2
 
-  echo "::notice::Move built results to compiler specific colder"
+  echo "Move built results to compiler specific colder"
   mv "$GITHUB_WORKSPACE/cgreen/build" "$GITHUB_WORKSPACE/cgreen-tmp/$compiler/build"
   cp -r "$GITHUB_WORKSPACE/cgreen/include" "$GITHUB_WORKSPACE/cgreen-tmp/$compiler/include"
 
@@ -54,6 +54,6 @@ do
   echo "::endgroup::"
 done
 
-echo "::notice title=cgreen::Prepare files for caching"
+echo "Prepare files for caching"
 rm -rf "$GITHUB_WORKSPACE/cgreen"
 mv "$GITHUB_WORKSPACE/cgreen-tmp" "$GITHUB_WORKSPACE/cgreen"
