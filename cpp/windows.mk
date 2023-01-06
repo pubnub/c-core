@@ -28,7 +28,6 @@ PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\c
 
 !if $(USE_FETCH_HISTORY)
 FETCH_HIST_SOURCEFILES = ..\core\pubnub_fetch_history.c ..\core\pbcc_fetch_history.c  
-FETCH_HIST_OBJFILES = pubnub_fetch_history.obj pbcc_fetch_history.obj  
 !endif
 
 CFLAGS = /EHsc /Zi /MP /TP /I .. /I . /I ..\core\c99 /I ..\windows /W3 /D PUBNUB_THREADSAFE /D HAVE_STRERROR_S /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D _CRT_SECURE_NO_WARNINGS /D _WINSOCK_DEPRECATED_NO_WARNINGS /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
