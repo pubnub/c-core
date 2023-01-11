@@ -306,6 +306,7 @@ enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* pb,
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
+    if (pb->state) { ADD_URL_PARAM(qparam, state, pb->state); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
