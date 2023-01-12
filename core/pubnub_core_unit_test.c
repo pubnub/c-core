@@ -8,6 +8,8 @@
 #include "pubnub_server_limits.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
+// TODO: move to new module
+#include "pubnub_coreapi_ex.h"
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
 #include "pubnub_advanced_history.h"
@@ -1806,16 +1808,16 @@ Ensure(single_context_pubnub, set_state_ex_defaults)
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-}
+} 
 
 Ensure(single_context_pubnub, state_get_with_heartbeat)
-{
+{ 
     pubnub_init(pbp, "pub-key", "sub-key");
     pubnub_set_user_id(pbp, "test-id");
-
+ 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/sub-key/channel/ch/uuid/"
-                             "test-id/heartbeat?pnsdk=unit-test-0.1&uuid=universal&state=%7B%7D");
+    expect_outgoing_with_url("/v2/presence/sub-key/sub-key/channel/ch/"
+                             "heartbeat?pnsdk=unit-test-0.1&uuid=test-id&state=%7B%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: 67\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"payload\":{}}",
@@ -1824,14 +1826,14 @@ Ensure(single_context_pubnub, state_get_with_heartbeat)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     
     struct pubnub_set_state_options options = pubnub_set_state_defopts();
-    options.with_heartbeat = true;
+    options.heartbeat = true;
     attest(pubnub_set_state_ex(pbp, "ch", "{}", options), equals(PNR_OK));
-
+ 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
-}
-
+} 
+ 
 /* HERE_NOW operation */
 
 Ensure(single_context_pubnub, here_now_channel)
