@@ -1800,8 +1800,8 @@ Ensure(single_context_pubnub, state_get_with_heartbeat)
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     
-    pubnub_set_state_options options = pubnub_set_state_defopts();
-    options->with_heartbeat = true;
+    struct pubnub_set_state_options options = pubnub_set_state_defopts();
+    options.with_heartbeat = true;
     attest(pubnub_set_state_ex(pbp, "ch", "{}", options), equals(PNR_OK));
 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
