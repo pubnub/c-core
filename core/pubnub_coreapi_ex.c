@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_coreapi.h"
 #include "pubnub_internal.h"
 
 #include "pubnub_ccore.h"
@@ -241,3 +242,25 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
+
+struct pubnub_set_state_options pubnub_set_state_defopts(void)
+{
+    struct pubnub_set_state_options options;
+
+    options.user_id = NULL;
+    options.channel_group = NULL;
+    options.heartbeat = false;
+
+    return options;
+}
+
+enum pubnub_res pubnub_set_state_ex(pubnub_t *p,
+        const char *channel,
+        const char *state,
+        struct pubnub_set_state_options opts)
+{
+    return opts.heartbeat 
+        ? PNR_OK
+        : pubnub_set_state(p, channel, opts.channel_group, opts.user_id, state);
+}
+
