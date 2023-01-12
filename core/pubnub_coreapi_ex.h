@@ -256,5 +256,54 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
                                   char const*                   channel,
                                   struct pubnub_history_options opt);
 
+/** Options for "extended" set_state. */
+struct pubnub_set_state_options {
+    /** Channel group (a comma-delimited list of channel group names).
+        If NULL, will not be used */
+    char const* channel_group;
+  
+    /** The identification of the user for which to set state for.
+    If NULL, the current user_id of the pubnub context will be used.
+     */ 
+    char const* user_id;
+   
+    /** The channel activity timeout, in seconds. If below the minumum
+        value supported by Pubnub, the minimum value will be used
+        (instead).
+     */
+    bool heartbeat;
+};
+
+
+/** This returns the default options for set_state transactions.  Will
+    set `channel_group = NULL`, `user_id = NULL` and `heartbeat to false`
+ */
+struct pubnub_set_state_options pubnub_set_state_defopts(void);
+
+/** The extended set_state. Basically the same as pubnub_set_state()
+    but with options (except @p channel) given in @p opts.
+
+    When heartbeat is enabled will use `/heartbeat` endpoint instead of 
+    the `/data` one. this change will allow user to set state and make 
+    a heartbeat call at once.
+
+    Basic usage:
+
+        struct pubnub_set_state_options opt = pubnub_set_state_defopts();
+        opt.heartbeat = true;
+        pbresult = pubnub_set_state_ex(pn, "my_channel", "{}", opt);
+
+    @param p The Pubnub context. Can't be NULL.
+    @param channel The string with the channel name (or
+    comma-delimited list of channel names) to subscribe for.
+    @param state State that user want's to provide
+    @param opt Subscribe options
+    @return #PNR_STARTED on success, an error otherwise
+*/
+enum pubnub_res pubnub_set_state_ex(pubnub_t*                       p,
+                                    const char*                     channel,
+                                    const char*                     state,
+                                    struct pubnub_set_state_options opts);
+
 
 #endif /* defined INC_PUBNUB_COREAPI_EX */
