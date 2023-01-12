@@ -260,7 +260,7 @@ enum pubnub_res pubnub_set_state_ex(pubnub_t *p,
         struct pubnub_set_state_options opts)
 {
     return opts.heartbeat 
-        ? PNR_OK
+        ? PNR_OK // TODO: add implementation
         : pubnub_set_state(p, channel, opts.channel_group, opts.user_id, state);
 }
 
