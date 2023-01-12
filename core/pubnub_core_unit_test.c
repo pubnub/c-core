@@ -8,7 +8,7 @@
 #include "pubnub_server_limits.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
-// TODO: move to new module
+// TODO: move coreapi_ex to new module
 #include "pubnub_coreapi_ex.h"
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
@@ -1787,6 +1787,7 @@ Ensure(single_context_pubnub, state_get_bad_response)
     attest(pbp->core.user_id_len, equals(8));
 }
 
+// TODO: move coreapi_ex to new module
 Ensure(single_context_pubnub, set_state_ex_defaults)
 {
     pubnub_init(pbp, "publhis", "subhis");
@@ -1810,6 +1811,7 @@ Ensure(single_context_pubnub, set_state_ex_defaults)
     attest(pubnub_last_http_code(pbp), equals(200));
 } 
 
+// TODO: move coreapi_ex to new module
 Ensure(single_context_pubnub, state_get_with_heartbeat)
 { 
     pubnub_init(pbp, "pub-key", "sub-key");
