@@ -288,6 +288,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
+        // TODO: ADJUST STATE LIKE IN SET_STATE FUNCTION
     }
 
     pubnub_mutex_unlock(pb->monitor);
