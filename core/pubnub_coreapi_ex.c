@@ -276,7 +276,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
     
     size_t state_lenght = strlen(state);
     if (pb->core.state == NULL) {
-        pb->core.state = (char*)alloca(state_lenght + 1);
+        pb->core.state = (char*)malloc(state_lenght + 1);
     } else if (strlen(pb->core.state) < state_lenght) {
         pb->core.state = (char*)realloc((char*)pb->core.state, state_lenght + 1);
     }
