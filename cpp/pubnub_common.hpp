@@ -403,7 +403,7 @@ class set_state_options {
     std::string d_user_id;
 
 public:
-    set_state_options() { d_ = pubnub_set_state_options(); }
+    set_state_options() : d_(pubnub_set_state_options()) {}
 
     set_state_options& channel_group(std::string const& channel_group)
     {
@@ -415,7 +415,7 @@ public:
 
     set_state_options& channel_group(std::vector<std::string> const& channel_groups)
     {
-        return this->channel_group(join(channel_groups));
+        return channel_group(join(channel_groups));
     }
 
     set_state_options& user_id(std::string const& user_id)
@@ -432,6 +432,8 @@ public:
 
         return *this;
     }
+
+    pubnub_set_state_options data() { return d_; }
 };
 
 #if PUBNUB_USE_OBJECTS_API
@@ -1175,6 +1177,30 @@ public:
     {
         return set_state(join(channel), join(channel_group), uuid, state);
     }
+
+    /// Starts a transaction to set the @p state JSON object with selected 
+    /// @options for the given @p channel and/or channel groups chosen 
+    /// in options.
+    /// @see pubnub_set_state_ex
+    futres set_state(std::string const& channel,
+                     std::string const& state,
+                     set_state_options options)
+    {
+        char const* ch = channel.empty() ? 0 : channel.c_str();
+        return doit(pubnub_set_state_ex(d_pb, ch, state.c_str(), options.data()));
+    }
+    
+    /// Starts a transaction to set the @p state JSON object with selected 
+    /// @options for the given @p channels passed as a vector and/or channel
+    /// groups chosen in options.
+    /// @see pubnub_set_state_ex
+    futres set_state(std::vector<std::string> const& channel,
+                     std::string const& state,
+                     set_state_options options)
+    {
+        return set_state(join(channel), state, options);
+    }
+
 
     /// Starts a transaction to get the state JSON object for the
     /// given @p channel and/or @p channel_group of the given @p
