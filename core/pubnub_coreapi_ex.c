@@ -273,8 +273,14 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
     if (rslt != PNR_OK) {
         return rslt;
     }
-
-    pb->core.state = state;
+    
+    size_t state_lenght = strlen(state);
+    if (pb->core.state == NULL) {
+        pb->core.state = (char*)alloca(state_lenght + 1);
+    } else if (strlen(pb->core.state) < state_lenght) {
+        pb->core.state = (char*)realloc((char*)pb->core.state, state_lenght + 1);
+    }
+    strcpy((char*)pb->core.state, state);
 
     rslt = pbcc_heartbeat_prep(&pb->core, channel, opts.channel_group);
     if (PNR_STARTED == rslt) {
