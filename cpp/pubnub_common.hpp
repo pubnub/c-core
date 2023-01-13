@@ -391,6 +391,49 @@ public:
     pubnub_history_options data() { return d_; }
 };
 
+/** A wrapper class for set_state options, enabling a nicer
+    usage. Something like:
+
+        pn.set_state(chan, state, set_state_options().heartbeat(true));
+*/
+
+class set_state_options {
+    pubnub_set_state_options d_;
+    std::string d_channel_group;
+    std::string d_user_id;
+
+public:
+    set_state_options() { d_ = pubnub_set_state_options(); }
+
+    set_state_options& channel_group(std::string const& channel_group)
+    {
+        d_channel_group = channel_group;
+        d_.channel_group = d_channel_group.empty() ? 0 : d_channel_group.c_str();
+
+        return *this;
+    }
+
+    set_state_options& channel_group(std::vector<std::string> const& channel_groups)
+    {
+        return this->channel_group(join(channel_groups));
+    }
+
+    set_state_options& user_id(std::string const& user_id)
+    {
+        d_user_id = user_id;
+        d_.user_id = d_user_id.empty() ? 0 : d_user_id.c_str();
+
+        return *this;
+    }
+
+    set_state_options& heartbeat(bool heartbeat)
+    {
+        d_.heartbeat = heartbeat;
+
+        return *this;
+    }
+};
+
 #if PUBNUB_USE_OBJECTS_API
 /** A wrapper class for objects api managing include parameter */
 class include_options {
