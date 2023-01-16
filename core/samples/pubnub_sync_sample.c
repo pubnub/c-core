@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_coreapi_ex.h"
 #include "pubnub_sync.h"
 
 #include "core/pubnub_helper.h"
@@ -289,6 +290,30 @@ int main()
                pubnub_res_2_string(res));
     }
 
+    puts("Setting state with options...");
+    struct pubnub_set_state_options options = pubnub_set_state_defopts();
+    options.heartbeat = true;
+
+    res = pubnub_set_state_ex(pbp, chan, "{\"x\":5}", options);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    if (PNR_OK == res) {
+        puts("Got set state response!");
+        for (;;) {
+            msg = pubnub_get(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Setting state failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+    
     puts("Getting state...");
     res = pubnub_state_get(pbp, chan, NULL, pubnub_user_id_get(pbp));
     if (PNR_STARTED == res) {
