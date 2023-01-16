@@ -4,8 +4,7 @@
 
 #include "pubnub_api_types.h"
 
-/** Adjusting the @pb state after the call to the pubnub services
-    that afects the presence state 
+/** Adjusting the @pb presence state for pubnub usage 
   */
 void pbcc_adjust_state(pubnub_t* pb,
                         char const* channel,

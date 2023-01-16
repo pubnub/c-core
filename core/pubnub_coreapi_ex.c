@@ -276,13 +276,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         return rslt;
     }
     
-    size_t state_length = strlen(state);
-    if (pb->core.state == NULL) {
-        pb->core.state = (char*)malloc(state_length + 1);
-    } else if (strlen(pb->core.state) < state_length) {
-        pb->core.state = (char*)realloc((char*)pb->core.state, state_length + 1);
-    }
-    strcpy((char*)pb->core.state, state);
+    pbcc_adjust_state(pb, channel, opts.channel_group, state);
 
     rslt = pbcc_heartbeat_prep(&pb->core, channel, opts.channel_group);
     if (PNR_STARTED == rslt) {
@@ -290,10 +284,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
-        if(PNR_STARTED) {
-            pbcc_adjust_state(pb, channel, opts.channel_group, state);
-        }
-    }
+   }
 
     pubnub_mutex_unlock(pb->monitor);
     return rslt;

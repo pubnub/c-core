@@ -1819,7 +1819,7 @@ Ensure(single_context_pubnub, state_get_with_heartbeat)
  
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-key/channel/ch/"
-                             "heartbeat?pnsdk=unit-test-0.1&uuid=test-id&state=%7B%7D");
+                             "heartbeat?pnsdk=unit-test-0.1&uuid=test-id&state=%7B%22ch%22%3A%7B%7D%7D");
     incoming("HTTP/1.1 200\r\nContent-Length: 67\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"payload\":{}}",
