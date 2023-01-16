@@ -1,5 +1,6 @@
 #include "pbcc_set_state.h"
 #include "pubnub_internal.h"
+#include "pubnub_log.h"
 #include <string.h>
 #include <stdlib.h>
 

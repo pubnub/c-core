@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pbcc_set_state.h"
+#include "core/pubnub_api_types.h"
 #include "core/pubnub_coreapi.h"
 #include "pubnub_internal.h"
 
@@ -274,11 +276,11 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         return rslt;
     }
     
-    size_t state_lenght = strlen(state);
+    size_t state_length = strlen(state);
     if (pb->core.state == NULL) {
-        pb->core.state = (char*)malloc(state_lenght + 1);
-    } else if (strlen(pb->core.state) < state_lenght) {
-        pb->core.state = (char*)realloc((char*)pb->core.state, state_lenght + 1);
+        pb->core.state = (char*)malloc(state_length + 1);
+    } else if (strlen(pb->core.state) < state_length) {
+        pb->core.state = (char*)realloc((char*)pb->core.state, state_length + 1);
     }
     strcpy((char*)pb->core.state, state);
 
@@ -288,7 +290,9 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
-        // TODO: ADJUST STATE LIKE IN SET_STATE FUNCTION
+        if(PNR_STARTED) {
+            pbcc_adjust_state(pb, channel, opts.channel_group, state);
+        }
     }
 
     pubnub_mutex_unlock(pb->monitor);
