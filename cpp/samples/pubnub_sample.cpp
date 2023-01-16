@@ -175,6 +175,14 @@ int main()
             std::cout << "Setting state failed!" << std::endl;
         }
 
+        std::cout << "Setting state with options" << std::endl;
+        if (PNR_OK ==  pb.set_state(chan, "{\"x\":5}", pubnub::set_state_options().heartbeat(true)).await()) {
+            std::cout << "State was set: " << pb.get() << std::endl;
+        }
+        else {
+            std::cout << "Setting state failed!" << std::endl;
+        }
+
         std::cout << "Getting state" << std::endl;
         if (PNR_OK ==  pb.state_get(chan).await()) {
             std::cout << "State gotten: " << pb.get() << std::endl;
