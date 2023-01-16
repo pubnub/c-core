@@ -846,6 +846,22 @@ pubnub_res pubnub_qt::set_state(QString const& channel,
 }
 
 
+pubnub_res set_state(QString const &channel, QString const &state, set_state_options &options)
+{
+    KEEP_THREAD_SAFE();
+    
+    pbcc_adjust_state(d_context.data(),
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
+            options.data().channel_group,
+            state.isEmpty() ? 0 : state.toLatin1().data());
+
+    return startRequest(pbcc_heartbeat_prep(d_context.data(),
+                channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                options.data().channel_group);
+
+}
+
+
 pubnub_res pubnub_qt::state_get(QString const& channel,
                                 QString const& channel_group,
                                 QString const& user_id)
