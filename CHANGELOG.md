@@ -1,3 +1,13 @@
+## v4.1.0
+January 16 2023
+
+#### Added
+- Added pubnub_set_state_ex to support heartbeat.
+
+#### Fixed
+- Removed state param from subscribe request.
+- Added state param to hearbeat request.
+
 ## v4.0.6
 December 14 2022
 
