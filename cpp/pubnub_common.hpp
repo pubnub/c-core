@@ -394,7 +394,7 @@ public:
 /** A wrapper class for set_state options, enabling a nicer
     usage. Something like:
 
-        pn.set_state(chan, state, set_state_options().heartbeat(true));
+        pn.set_state(chan, state, pubnub::set_state_options().heartbeat(true));
 */
 
 class set_state_options {
