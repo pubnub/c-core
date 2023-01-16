@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c
+PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c
 # TODO: move coreapi_ex to new module
 
 all: pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
@@ -47,7 +47,7 @@ CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL
 
 LDFLAGS=-L../cgreen/build/src
 
-CGREEN_RUNNER=../cgreen/build/tools/cgreen-runner
+CGREEN_RUNNER=../../../cgreen/build/tools/cgreen-runner
 
 
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c

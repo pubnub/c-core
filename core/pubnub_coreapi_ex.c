@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pbcc_set_state.h"
+#include "core/pubnub_api_types.h"
 #include "core/pubnub_coreapi.h"
 #include "pubnub_internal.h"
 
@@ -273,8 +275,8 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
     if (rslt != PNR_OK) {
         return rslt;
     }
-
-    pb->core.state = state;
+    
+    pbcc_adjust_state(pb, channel, opts.channel_group, state);
 
     rslt = pbcc_heartbeat_prep(&pb->core, channel, opts.channel_group);
     if (PNR_STARTED == rslt) {
@@ -282,7 +284,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
-    }
+   }
 
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
