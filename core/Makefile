@@ -47,7 +47,7 @@ CFLAGS +=-g -D PUBNUB_ADVANCED_KEEP_ALIVE=1 -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL
 
 LDFLAGS=-L../cgreen/build/src
 
-CGREEN_RUNNER=../../../cgreen/build/tools/cgreen-runner
+CGREEN_RUNNER=../cgreen/build/tools/cgreen-runner
 
 
 unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c

@@ -7,7 +7,6 @@
 #include "pubnub_assert.h"
 #include "pubnub_timers.h"
 #include "pubnub_memory_block.h"
-// TODO: why not all pbcc?
 #include "pbcc_set_state.h"
 
 #include "pbpal.h"
