@@ -335,22 +335,23 @@ pubnub_res pubnub_qt::startRequest(pubnub_res result, pubnub_trans transaction)
              break;
 #endif /* PUBNUB_USE_ACTIONS_API */
 #if PUBNUB_USE_OBJECTS_API
-    // 
-    // TODO: change to metadata related API
-    //
-        //case PBTT_DELETE_USER:
-        //case PBTT_DELETE_SPACE:
-             //d_reply.reset(d_qnam.deleteResource(req));
-             //break;
-        //case PBTT_CREATE_USER:
-        //case PBTT_UPDATE_USER:
-        //case PBTT_CREATE_SPACE:
-        //case PBTT_UPDATE_SPACE:
+        case PBTT_DELETE_UUIDMETADATA:
+        case PBTT_REMOVE_CHANNELMETADATA:
+             d_reply.reset(d_qnam.deleteResource(req));
+             break;
         case PBTT_JOIN_SPACES:
-        //case PBTT_UPDATE_MEMBERSHIPS:
-        //case PBTT_LEAVE_SPACES:
+        case PBTT_GETALL_UUIDMETADATA:
+        case PBTT_SET_UUIDMATADATA:
+        case PBTT_GET_UUIDMATADATAA:
+        case PBTT_GETALL_CHANNELMETADATA:
+        case PBTT_SET_CHANNELMETADATA:
+        case PBTT_GET_CHANNELMETADATA:
+        case PBTT_GET_MEMBERSHIPS:
+        case PBTT_SET_MEMBERSHIPS:
+        case PBTT_REMOVE_MEMBERSHIPS:
+        case PBTT_GET_MEMBERS:
+        case PBTT_SET_MEMBERS:
         //case PBTT_ADD_MEMBERS:
-        //case PBTT_UPDATE_MEMBERS:
         case PBTT_REMOVE_MEMBERS:
 #endif /* PUBNUB_USE_OBJECTS_API */
 #if PUBNUB_USE_ACTIONS_API
