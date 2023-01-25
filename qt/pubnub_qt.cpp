@@ -33,6 +33,12 @@ extern "C" {
 #define KEEP_THREAD_SAFE()
 #endif
 
+#if QT_VERSION >= QT_6
+  #define STRING_SKIP_EMPTY_PARTS Qt::SkipEmptyParts
+#else
+  #define STRING_SKIP_EMPTY_PARTS QString::SkipEmptyParts
+#endif
+
 pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     : d_pubkey(pubkey.toLatin1())
     , d_keysub(keysub.toLatin1())
@@ -139,8 +145,8 @@ void pubnub_qt::auto_heartbeat_prepare_channels_and_ch_groups(QString const& cha
         return;
     }
     /* Write channel info */
-    d_channels = channel.split(',', Qt::SkipEmptyParts);
-    d_channel_groups = channel_group.split(',', Qt::SkipEmptyParts);
+    d_channels = channel.split(',', STRING_SKIP_EMPTY_PARTS);
+    d_channel_groups = channel_group.split(',', STRING_SKIP_EMPTY_PARTS);
 }
 
 
@@ -161,10 +167,10 @@ void pubnub_qt::update_channels_and_ch_groups(QString const& channel,
         d_channel_groups.clear();
     }
     if (channel.isEmpty() == false) {
-        remove_from_list(d_channels, channel.split(',', Qt::SkipEmptyParts));
+        remove_from_list(d_channels, channel.split(',', STRING_SKIP_EMPTY_PARTS));
     }
     if (channel_group.isEmpty() == false) {
-        remove_from_list(d_channel_groups, channel_group.split(',', Qt::SkipEmptyParts));
+        remove_from_list(d_channel_groups, channel_group.split(',', STRING_SKIP_EMPTY_PARTS));
     }
 }
 
