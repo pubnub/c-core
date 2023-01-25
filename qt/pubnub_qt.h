@@ -1135,13 +1135,13 @@ public:
 
         @param user_id The User ID for which to update the space memberships for.
         @param set_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res set_memberships(QString const& metadata_uuid,
                                   QByteArray const& set_obj,
-                                  QStringList& include);
+                                  QString& include);
 
     /** Initiates transaction that updates the space memberships for the user specified
         by @p user_id. Uses the `update` property on the @p set_obj to perform that
@@ -1176,13 +1176,13 @@ public:
 
         @param user_id The User ID for which to update the space memberships for.
         @param set_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res set_memberships(QString const& user_id,
                                   QJsonDocument const& set_obj,
-                                  QStringList& include) {
+                                  QString& include) {
         return set_memberships(user_id, set_obj.toJson(), include);
     }
 
@@ -1227,13 +1227,13 @@ public:
 
         @param space_id The Space ID for which to add the list of members to the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res add_members(QString const& space_id,
                            QByteArray const& update_obj,
-                           QStringList& include);
+                           QString& include);
 
     /** Initiates transaction that adds the list of members to the space specified by
         @p space_id. Uses the `add` property on the @p update_obj to perform that
@@ -1265,13 +1265,13 @@ public:
 
         @param space_id The Space ID for which to add the list of members to the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res add_members(QString const& space_id,
                            QJsonDocument const& update_obj,
-                           QStringList& include) {
+                           QString& include) {
         return add_members(space_id, update_obj.toJson(), include);
     }
 
@@ -1303,13 +1303,13 @@ public:
 
         @param space_id The Space ID for which to update the list of members in the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res update_members(QString const& space_id,
                               QByteArray const& update_obj,
-                              QStringList& include);
+                              QString& include);
 
     /** Initiates transaction that updates the list of members in the space specified by
         @p space_id. Uses the `update` property on the @p update_obj to perform that
@@ -1344,13 +1344,13 @@ public:
 
         @param space_id The Space ID for which to update the list of members in the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res update_members(QString const& space_id,
                               QJsonDocument const& update_obj,
-                              QStringList& include) {
+                              QString& include) {
         return update_members(space_id, update_obj.toJson(), include);
     }
 
@@ -1379,13 +1379,13 @@ public:
 
         @param space_id The Space ID for which to remove the list of members from the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res remove_members(QString const& space_id,
                               QByteArray const& update_obj,
-                              QStringList& include);
+                              QString& include);
 
     /** Initiates transaction that removes the list of members from the space specified by
         @p space_id. Uses the `remove` property on the @p update_obj to perform that
@@ -1417,13 +1417,13 @@ public:
 
         @param space_id The Space ID for which to remove the list of members from the space.
         @param update_obj The JSON object that defines the updates to perform.
-        @param include list with additional/complex attributes to include in response.
+        @param include string with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
     pubnub_res remove_members(QString const& space_id,
                               QJsonDocument const& update_obj,
-                              QStringList& include) {
+                              QString& include) {
         return remove_members(space_id, update_obj.toJson(), include);
     }
 #endif /* PUBNUB_USE_OBJECTS_API */

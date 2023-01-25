@@ -956,9 +956,8 @@ pubnub_res pubnub_qt::get_memberships(QString const& user_id, list_options& opti
 
 pubnub_res pubnub_qt::set_memberships(QString const& metadata_uuid,
                                          QByteArray const& set_obj,
-                                         QStringList& include)
+                                         QString& include)
 {
-    include_options inc(include);
     QByteArray obj("{\"set\":");
     obj.append(set_obj);
     obj.append("}");
@@ -971,8 +970,7 @@ pubnub_res pubnub_qt::set_memberships(QString const& metadata_uuid,
         pbcc_set_memberships_prep(
             d_context.data(),
             metadata_uuid.toLatin1().data(),
-            // TODO: WONT WORK
-            *inc.include_c_strings_array(),
+            include.toLatin1().data(),
             d_message_to_send.data(),
             PBTT_UPDATE_MEMBERSHIPS),
         PBTT_UPDATE_MEMBERSHIPS);
@@ -999,9 +997,8 @@ pubnub_res pubnub_qt::get_members(QString const& space_id, list_options& options
 
 pubnub_res pubnub_qt::add_members(QString const& space_id,
                                   QByteArray const& update_obj,
-                                  QStringList& include)
+                                  QString& include)
 {
-    include_options inc(include);
     QByteArray obj("{\"add\":");
     obj.append(update_obj);
     obj.append("}");
@@ -1014,8 +1011,7 @@ pubnub_res pubnub_qt::add_members(QString const& space_id,
         pbcc_set_members_prep(
             d_context.data(),
             space_id.toLatin1().data(),
-            // TODO: this won't work - fix compilation first
-            *inc.include_c_strings_array(),
+            include.toLatin1().data(),
             d_message_to_send.data(),
             PBTT_ADD_MEMBERS),
         PBTT_ADD_MEMBERS);
@@ -1024,9 +1020,8 @@ pubnub_res pubnub_qt::add_members(QString const& space_id,
 
 pubnub_res pubnub_qt::update_members(QString const& space_id,
                                      QByteArray const& update_obj,
-                                     QStringList& include)
+                                     QString& include)
 {
-    include_options inc(include);
     QByteArray obj("{\"update\":");
     obj.append(update_obj);
     obj.append("}");
@@ -1039,8 +1034,7 @@ pubnub_res pubnub_qt::update_members(QString const& space_id,
         pbcc_set_members_prep(
             d_context.data(),
             space_id.toLatin1().data(),
-            // TODO: IT WON"T WORK
-            *inc.include_c_strings_array(),
+            include.toLatin1().data(),
             d_message_to_send.data(),
             PBTT_UPDATE_MEMBERS),
         PBTT_UPDATE_MEMBERS);
@@ -1049,9 +1043,8 @@ pubnub_res pubnub_qt::update_members(QString const& space_id,
 
 pubnub_res pubnub_qt::remove_members(QString const& space_id,
                                      QByteArray const& update_obj,
-                                     QStringList& include)
+                                     QString& include)
 {
-    include_options inc(include);
     QByteArray obj("{\"remove\":");
     obj.append(update_obj);
     obj.append("}");
@@ -1064,8 +1057,7 @@ pubnub_res pubnub_qt::remove_members(QString const& space_id,
         pbcc_set_members_prep(
             d_context.data(),
             space_id.toLatin1().data(),
-            // TODO: IT WONT WORK
-            *inc.include_c_strings_array(),
+            include.toLatin1().data(),
             d_message_to_send.data(),
             PBTT_REMOVE_MEMBERS),
         PBTT_REMOVE_MEMBERS);
