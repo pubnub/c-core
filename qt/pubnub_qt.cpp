@@ -1002,8 +1002,8 @@ pubnub_res pubnub_qt::set_memberships(QString const& metadata_uuid,
             metadata_uuid.toLatin1().data(),
             include.toLatin1().data(),
             d_message_to_send.data(),
-            PBTT_UPDATE_MEMBERSHIPS),
-        PBTT_UPDATE_MEMBERSHIPS);
+            PBTT_SET_MEMBERSHIPS),
+        PBTT_SET_MEMBERSHIPS);
 }
 
 
@@ -1065,8 +1065,8 @@ pubnub_res pubnub_qt::update_members(QString const& space_id,
             space_id.toLatin1().data(),
             include.toLatin1().data(),
             d_message_to_send.data(),
-            PBTT_UPDATE_MEMBERS),
-        PBTT_UPDATE_MEMBERS);
+            PBTT_SET_MEMBERS),
+        PBTT_SET_MEMBERS);
 }
 
 
