@@ -944,7 +944,7 @@ pubnub_res pubnub_qt::get_memberships(QString const& user_id, list_options& opti
         pbcc_get_memberships_prep(
             d_context.data(),
             user_id.toLatin1().data(),
-            *options.include_c_strings_array(),
+            options.include(),
             options.limit(),
             options.start(),
             options.end(),
@@ -984,8 +984,7 @@ pubnub_res pubnub_qt::get_members(QString const& space_id, list_options& options
         pbcc_get_members_prep(
             d_context.data(),
             space_id.toLatin1().data(),
-            // TODO: IT WONT WORK
-            *options.include_c_strings_array(),
+            options.include(),
             options.limit(),
             options.start(),
             options.end(),

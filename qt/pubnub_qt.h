@@ -92,7 +92,8 @@ public:
        pbp.get_users(nullopt, nullopt, last_bookmark, “”, nullopt);
   */
 using namespace pubnub;
-class list_options : public include_options {
+class list_options {
+    QString d_include;
     size_t d_limit;
     QString d_start;
     QString d_end;
@@ -103,6 +104,14 @@ public:
         : d_limit(0)
         , d_count(tribool::not_set)
     {}
+    
+    list_options& include(QString const& in)
+    {
+        d_include = in;
+        return *this;
+    }
+    char const* include() { return d_include.isEmpty() ? 0 : d_include.toLatin1().data(); }
+
     list_options& limit(size_t lim)
     {
         d_limit = lim;
