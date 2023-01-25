@@ -192,8 +192,14 @@ void pubnub_qt::auto_heartbeatTimeout()
         d_auto_heartbeatTimer->start(3);
     }
     else if (result != PNR_STARTED) {
+#if QT_VERSION >= QT_6
+        qDebug() << "auto heartbeat(pbcc=" << d_context.get() <<") failed. - result: '"
+                 << pubnub_res_2_string(result) << "'\n";
+#else
         qDebug() << "auto heartbeat(pbcc=" << d_context <<") failed. - result: '"
                  << pubnub_res_2_string(result) << "'\n";
+
+#endif
         /* Try again */
         d_auto_heartbeatTimer->start(3);
     }
