@@ -139,8 +139,8 @@ void pubnub_qt::auto_heartbeat_prepare_channels_and_ch_groups(QString const& cha
         return;
     }
     /* Write channel info */
-    d_channels = channel.split(',', QString::SkipEmptyParts);
-    d_channel_groups = channel_group.split(',', QString::SkipEmptyParts);
+    d_channels = channel.split(',', Qt::SkipEmptyParts);
+    d_channel_groups = channel_group.split(',', Qt::SkipEmptyParts);
 }
 
 
@@ -161,10 +161,10 @@ void pubnub_qt::update_channels_and_ch_groups(QString const& channel,
         d_channel_groups.clear();
     }
     if (channel.isEmpty() == false) {
-        remove_from_list(d_channels, channel.split(',', QString::SkipEmptyParts));
+        remove_from_list(d_channels, channel.split(',', Qt::SkipEmptyParts));
     }
     if (channel_group.isEmpty() == false) {
-        remove_from_list(d_channel_groups, channel_group.split(',', QString::SkipEmptyParts));
+        remove_from_list(d_channel_groups, channel_group.split(',', Qt::SkipEmptyParts));
     }
 }
 
