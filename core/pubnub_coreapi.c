@@ -299,7 +299,7 @@ enum pubnub_res pubnub_set_state(pubnub_t*   pb,
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
         if (rslt == PNR_STARTED) {
-            pbcc_adjust_state(pb, channel, channel_group, state);
+            pbcc_adjust_state(&pb->core, channel, channel_group, state);
         }
     }
 

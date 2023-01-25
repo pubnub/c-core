@@ -9,6 +9,7 @@ extern "C" {
 #include "core/pubnub_assert.h"
 #include "lib/pbcrc32.h"
 #include "core/pubnub_memory_block.h"
+#include "core/pbcc_set_state.h"
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "core/pubnub_advanced_history.h"
 #endif
@@ -868,19 +869,32 @@ pubnub_res pubnub_qt::set_state(QString const& channel,
 }
 
 
-pubnub_res set_state(QString const &channel, QString const &state, set_state_options &options)
+pubnub_res pubnub_qt::set_state(QString const &channel, QString const &state, set_state_options &options)
 {
+    QString prep_channels;
+    QString prep_channel_groups;
     KEEP_THREAD_SAFE();
     
+    if (!options.data().heartbeat) {
+       return startRequest(pbcc_heartbeat_prep(d_context.data(),
+                channel.isEmpty() ? 0 : channel.toLatin1().data(),
+                options.data().channel_group), PBTT_HEARTBEAT);
+
+    }
+
+    auto_heartbeat_prepare_channels_and_ch_groups(channel,
+            options.data().channel_group,
+            prep_channels,
+            prep_channel_groups);
+
     pbcc_adjust_state(d_context.data(),
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             options.data().channel_group,
             state.isEmpty() ? 0 : state.toLatin1().data());
 
     return startRequest(pbcc_heartbeat_prep(d_context.data(),
-                channel.isEmpty() ? 0 : channel.toLatin1().data(),
-                options.data().channel_group);
-
+            channel.isEmpty() ? 0 : channel.toLatin1().data(),
+            options.data().channel_group), PBTT_HEARTBEAT);
 }
 
 

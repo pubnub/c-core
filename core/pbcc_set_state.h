@@ -3,10 +3,11 @@
 #define INC_PBCC_SET_STATE
 
 #include "pubnub_api_types.h"
+#include "core/pubnub_ccore_pubsub.h"
 
 /** Adjusting the @pb presence state for pubnub usage 
   */
-void pbcc_adjust_state(pubnub_t* pb,
+void pbcc_adjust_state(struct pbcc_context* pb,
                         char const* channel,
                         char const* channel_group,
                         char const* state);

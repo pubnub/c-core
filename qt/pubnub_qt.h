@@ -22,6 +22,7 @@ extern "C" {
 #include "core/pubnub_server_limits.h"
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_ccore_limits.h"
+#include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_helper.h"
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "core/pbcc_subscribe_v2.h"
@@ -53,26 +54,26 @@ QT_END_NAMESPACE
 
 class set_state_options {
     pubnub_set_state_options d_;
-    QTString d_channel_group;
-    QTString d_user_id;
+    QString d_channel_group;
+    QString d_user_id;
 
 public:
     set_state_options() : d_(pubnub_set_state_options()) {}
 
-    set_state_options& channel_group(QTString const& channel_group)
+    set_state_options& channel_group(QString const& channel_group)
     {
         d_channel_group = channel_group;
-        d_.channel_group = d_channel_group.empty() ? 0 : d_channel_group.toLatin1().data();
+        d_.channel_group = d_channel_group.isEmpty() ? 0 : d_channel_group.toLatin1().data();
 
         return *this;
     }
 
-    set_state_options& channel_group(QTStringList const& channel_groups)
+    set_state_options& channel_group(QStringList const& channel_groups)
     {
         return channel_group(channel_groups.join(","));
     }
 
-    set_state_options& user_id(QTString const& user_id)
+    set_state_options& user_id(QString const& user_id)
     {
         d_user_id = user_id;
         d_.user_id = d_user_id.isEmpty() ? 0 : d_user_id.toLatin1().data();
@@ -204,14 +205,14 @@ struct pbcc_context;
 */
 class subscribe_v2_options {
     unsigned    d_heartbeat;
-    std::string d_chgrp;
-    std::string d_filter_expr;
+    QString d_chgrp;
+    QString d_filter_expr;
     
 public:
     subscribe_v2_options() : d_heartbeat(PUBNUB_MINIMAL_HEARTBEAT_INTERVAL) {}
     subscribe_v2_options& channel_group(QString const& chgroup)
     {
-        d_chgrp = chgroup.toStdString();
+        d_chgrp = chgroup;
         return *this;
     }
     subscribe_v2_options& channel_group(QStringList const& chgroup)
@@ -225,14 +226,14 @@ public:
     }
     subscribe_v2_options& filter_expr(QString const& filter_exp)
     {
-        d_filter_expr = filter_exp.toStdString();
+        d_filter_expr = filter_exp;
         return *this;
     }
     unsigned* get_heartbeat() { return &d_heartbeat; }
-    char const* get_chgroup() { return d_chgrp.empty() ? 0 : d_chgrp.c_str(); }
+    char const* get_chgroup() { return d_chgrp.isEmpty() ? 0 : d_chgrp.toLatin1().data(); }
     char const* get_filter_expr()
     {
-        return d_filter_expr.empty() ? 0 : d_filter_expr.c_str();
+        return d_filter_expr.isEmpty() ? 0 : d_filter_expr.toLatin1().data();
     }
 };
 #endif /* PUBNUB_USE_SUBSCRIBE_V2 */
