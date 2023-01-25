@@ -1469,8 +1469,8 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_memberships(QString const& user_id,
-                                  QByteArray const& update_obj,
+    pubnub_res set_memberships(QString const& metadata_uuid,
+                                  QByteArray const& set_obj,
                                   QStringList& include);
 
     /** Initiates transaction that updates the space memberships for the user specified
