@@ -56,7 +56,11 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_auto_heartbeatTimer(new QTimer(this))
 #endif
     , d_use_http_keep_alive(true)
+#if QT_VERSION >= QT_6
+    , d_mutex()
+#else
     , d_mutex(QMutex::Recursive)
+#endif
 {
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam,

@@ -15,6 +15,9 @@
 #include <QMap>
 #include <QPair>
 
+#include <QtGlobal>
+#define QT_6 0x060000
+
 extern "C" {
 #include "core/pubnub_server_limits.h"
 #include "core/pubnub_api_types.h"
@@ -1438,9 +1441,9 @@ public:
     }
 
     /** Initiates transaction that updates the space memberships for the user specified
-        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        by @p user_id. Uses the `update` property on the @p set_obj to perform that
         operations on one, or more memberships.
-        An example for @update_obj:
+        An example for @set_obj:
           [
             {
               "id": "main-space-id",
@@ -1464,7 +1467,7 @@ public:
         Contains the user's space memberships, optionally including the custom data objects.
 
         @param user_id The User ID for which to update the space memberships for.
-        @param update_obj The JSON object that defines the updates to perform.
+        @param set_obj The JSON object that defines the updates to perform.
         @param include list with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
@@ -1474,9 +1477,9 @@ public:
                                   QStringList& include);
 
     /** Initiates transaction that updates the space memberships for the user specified
-        by @p user_id. Uses the `update` property on the @p update_obj to perform that
+        by @p user_id. Uses the `update` property on the @p set_obj to perform that
         operation on one, or more memberships.
-        An example for @update_obj:
+        An example for @set_obj:
           [
             {
               "id": "my-space-id"
@@ -1505,15 +1508,15 @@ public:
         Contains the user's space memberships, optionally including the custom data objects.
 
         @param user_id The User ID for which to update the space memberships for.
-        @param update_obj The JSON object that defines the updates to perform.
+        @param set_obj The JSON object that defines the updates to perform.
         @param include list with additional/complex attributes to include in response.
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_memberships(QString const& user_id,
-                                  QJsonDocument const& update_obj,
+    pubnub_res set_memberships(QString const& user_id,
+                                  QJsonDocument const& set_obj,
                                   QStringList& include) {
-        return update_memberships(user_id, update_obj.toJson(), include);
+        return set_memberships(user_id, set_obj.toJson(), include);
     }
 
     /** Initiates transaction that removes the space memberships for the user specified
@@ -2172,7 +2175,11 @@ private:
     /// Message to send via POST method
     QByteArray d_message_to_send;
 
+#if QT_VERSION >= QT_6
+    mutable QRecursiveMutex d_mutex;
+#else
     mutable QMutex d_mutex;
+#endif
 };
 
 
