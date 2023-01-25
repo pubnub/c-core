@@ -8,6 +8,8 @@
 #include "pubnub_server_limits.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_coreapi.h"
+// TODO: move coreapi_ex to new module
+#include "pubnub_coreapi_ex.h"
 #if PUBNUB_USE_ADVANCED_HISTORY
 #include "pubnub_memory_block.h"
 #include "pubnub_advanced_history.h"
@@ -1785,7 +1787,55 @@ Ensure(single_context_pubnub, state_get_bad_response)
     attest(pbp->core.user_id_len, equals(8));
 }
 
+// TODO: move coreapi_ex to new module
+Ensure(single_context_pubnub, set_state_ex_defaults)
+{
+    pubnub_init(pbp, "publhis", "subhis");
 
+    /* with uuid from context */
+    pubnub_set_user_id(pbp, "universal");
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/ch/uuid/"
+                             "universal/data?pnsdk=unit-test-0.1&uuid=universal&state=%7B%7D");
+    incoming("HTTP/1.1 200\r\nContent-Length: 67\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"payload\":{}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+
+    attest(pubnub_set_state_ex(pbp, "ch", "{}", pubnub_set_state_defopts()), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+} 
+
+// TODO: move coreapi_ex to new module
+Ensure(single_context_pubnub, state_get_with_heartbeat)
+{ 
+    pubnub_init(pbp, "pub-key", "sub-key");
+    pubnub_set_user_id(pbp, "test-id");
+ 
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v2/presence/sub-key/sub-key/channel/ch/"
+                             "heartbeat?pnsdk=unit-test-0.1&uuid=test-id&state=%7B%22ch%22%3A%7B%7D%7D");
+    incoming("HTTP/1.1 200\r\nContent-Length: 67\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"payload\":{}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    
+    struct pubnub_set_state_options options = pubnub_set_state_defopts();
+    options.heartbeat = true;
+    attest(pubnub_set_state_ex(pbp, "ch", "{}", options), equals(PNR_OK));
+ 
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"payload\":{}}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+} 
+ 
 /* HERE_NOW operation */
 
 Ensure(single_context_pubnub, here_now_channel)

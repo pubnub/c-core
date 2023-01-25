@@ -45,6 +45,51 @@ class QNetworkReply;
 class QSslError;
 QT_END_NAMESPACE
 
+/** A wrapper class for set_state options, enabling a nicer
+    usage. Something like:
+
+        pn.set_state(chan, state, set_state_options().heartbeat(true));
+*/
+
+class set_state_options {
+    pubnub_set_state_options d_;
+    QTString d_channel_group;
+    QTString d_user_id;
+
+public:
+    set_state_options() : d_(pubnub_set_state_options()) {}
+
+    set_state_options& channel_group(QTString const& channel_group)
+    {
+        d_channel_group = channel_group;
+        d_.channel_group = d_channel_group.empty() ? 0 : d_channel_group.toLatin1().data();
+
+        return *this;
+    }
+
+    set_state_options& channel_group(QTStringList const& channel_groups)
+    {
+        return channel_group(channel_groups.join(","));
+    }
+
+    set_state_options& user_id(QTString const& user_id)
+    {
+        d_user_id = user_id;
+        d_.user_id = d_user_id.isEmpty() ? 0 : d_user_id.toLatin1().data();
+
+        return *this;
+    }
+
+    set_state_options& heartbeat(bool heartbeat)
+    {
+        d_.heartbeat = heartbeat;
+
+        return *this;
+    }
+
+    pubnub_set_state_options data() { return d_; }
+};
+
 #if PUBNUB_USE_OBJECTS_API
 #define MAX_INCLUDE_DIMENSION 100
 #define MAX_ELEM_LENGTH 30
@@ -947,6 +992,50 @@ public:
     pubnub_res set_state(QStringList const &channel, QStringList const& channel_group, QString const &uuid, QString const &state) {
         return set_state(channel.join(","), channel_group.join(","), uuid, state);
     }
+
+    /** Sets some state for the @p channel and/or channel_group defined
+        in @options for a user, identified by @p uuid or provided in @options.
+        This actually means "initiate a set state transaction".
+        It can be thought of as an update against the "presence database".
+
+        "State" has to be a JSON object (IOW, several "key-value" pairs).
+
+        If transaction is successful, the response will be a available
+        via pubnub_get() as one message, a JSON object with following keys:
+        - "status": the HTTP status of the operation (200 OK, 40x error, etc.)
+        - "message": the string/message describing the status ("OK"...)
+        - "service": should be "Presence"
+        - "payload" the state
+
+        This will set the same state to all channels identified by
+        @p channel and @p channel_group.
+
+        If @p channel is empty or null, then @p channel_group cannot be
+        empty or null and you will set state only for the channel group.
+        It goes both ways: if @p channel_group is empty, then @p channel
+        cannot be empty and you will set state only for the channel.
+
+        You can't set state of channels if a transaction is in progress on
+        the context.
+
+        @param channel The string with the channel name (or
+        comma-delimited list of channel names) to set state for.
+        @param state Has to be a JSON object
+        @options set_state options provided by user
+
+        @return #PNR_STARTED on success, an error otherwise
+    */
+    pubnub_res set_state(QString const &channel, QString const &state, set_state_options &options);
+
+    /** A helper method to set state from several channels
+     * and or channel groups by giving a (string) list of them.
+     */
+    pubnub_res set_state(QStringList const &channel, QString const &state, set_state_options &options) {
+        return set_state(channel.join(","), state, options);
+    }
+
+
+
 
     /** Gets some state for the @p channel and/or @channel_group for a
         user, identified by @p uuid. This actually means "initiate a get
