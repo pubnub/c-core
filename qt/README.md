@@ -22,7 +22,7 @@ pubnub_gui.pro`, and then `make` or, on Windows if using MSVC, `nmake`
 or `jom`.
 
 If you have many Qt versions on your machine, be sure to use
-the Qt5 or Qt6 tools, for which purpose you may utilize the `qtchooser`
+the Qt5 or Qt6 (whereas QT6 is unix tested only) tools, for which purpose you may utilize the `qtchooser`
 app. For example, do:
 
 	qtchooser -run-tool=qmake -qt=5 pubnub.pro
