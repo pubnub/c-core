@@ -1,4 +1,4 @@
-#include "pbcc_set_state.h"
+#include "core/pubnub_ccore_pubsub.h"
 #include "pubnub_internal.h"
 #include "pubnub_log.h"
 #include <string.h>
@@ -25,7 +25,7 @@ static int json_kvp_builder(char* jsonbuilder, int pos, char* key, char* val)
 }
 
 
-void pbcc_adjust_state(pubnub_t* pb,
+void pbcc_adjust_state(struct pbcc_context* core,
         char const* channel,
         char const* channel_group,
         char const* state)
@@ -42,14 +42,14 @@ void pbcc_adjust_state(pubnub_t* pb,
 
     int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
     char * json_state = (char*)malloc(buff_size);
-    if (pb->core.state != NULL && buff_size != sizeof(pb->core.state)){
-        pb->core.state = (char*)realloc((char*)pb->core.state, buff_size);
+    if (core->state != NULL && buff_size != sizeof(core->state)){
+        core->state = (char*)realloc((char*)core->state, buff_size);
     }
-    else if (pb->core.state == NULL){
-        pb->core.state = (char*)malloc(buff_size);
+    else if (core->state == NULL){
+        core->state = (char*)malloc(buff_size);
     }
     int mem_len = 0;
-    if (json_state != NULL && pb->core.state != NULL){
+    if (json_state != NULL && core->state != NULL){
         mem_len = strlen("{");
         memcpy(json_state, "{", mem_len);
         int cm_len = strlen(",");
@@ -115,7 +115,7 @@ void pbcc_adjust_state(pubnub_t* pb,
         json_state[mem_len] = '\0';
         PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
-        strcpy((char*)pb->core.state, (const char*)json_state);
+        strcpy((char*)core->state, (const char*)json_state);
         free(json_state);
         json_state = NULL;
     }

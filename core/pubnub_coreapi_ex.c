@@ -276,7 +276,7 @@ static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
         return rslt;
     }
     
-    pbcc_adjust_state(pb, channel, opts.channel_group, state);
+    pbcc_adjust_state(&pb->core, channel, opts.channel_group, state);
 
     rslt = pbcc_heartbeat_prep(&pb->core, channel, opts.channel_group);
     if (PNR_STARTED == rslt) {

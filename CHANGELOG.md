@@ -1,3 +1,16 @@
+## v4.2.0
+February 07 2023
+
+#### Added
+- Updated QT to version `6.*`.
+
+#### Fixed
+- Fixed not building QT module.
+- Align QT module with current SDK state.
+
+#### Modified
+- Removed some states, classes and structs that aren't currently used.
+
 ## v4.1.0
 January 16 2023
 
