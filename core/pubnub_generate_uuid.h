@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_GENERATE_UUID
-#define      INC_PUBNUB_GENERATE_UUID
+    #define INC_PUBNUB_GENERATE_UUID
 
-#include <stdint.h>
+    #include <stdint.h>
 
-#define UUID_STRING_LENGTH 36
-#define UUID_SIZE (UUID_STRING_LENGTH + 1)
+    #define UUID_STRING_LENGTH 36
+    #define UUID_SIZE (UUID_STRING_LENGTH + 1)
 
 /** @name pubnub_generate_uuid.h
 
@@ -107,11 +107,11 @@ struct Pubnub_UUID_String {
     
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
-				 uint16_t *io_clock_seq,
-				 uint8_t const i_timestamp[8],
-				 uint8_t const i_node[6]
-				 );
+int pubnub_generate_uuid_v1_time(
+    struct Pubnub_UUID* o_uuid,
+    uint16_t* io_clock_seq,
+    uint8_t const i_timestamp[8],
+    uint8_t const i_node[6]);
 
 /** The name based algorithms (this - v3 and the other - v5) don't
     need any other state but the arguments they declare.
@@ -127,11 +127,11 @@ int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
     @param namelen The length of the @p name data
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
-				     struct Pubnub_UUID *nsid,
-				     void *name,
-				     unsigned namelen
-				     );
+int pubnub_generate_uuid_v3_name_md5(
+    struct Pubnub_UUID* uuid,
+    struct Pubnub_UUID* nsid,
+    void* name,
+    unsigned namelen);
 
 /** The nice property of this random-base algorithm is that it needs
     no state what-so-ever. A not so nice property is that it needs a
@@ -142,7 +142,7 @@ int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
     @return 0: OK (generated), otherwise: error, random number generator
     not available
 */
-int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid);
+int pubnub_generate_uuid_v4_random(struct Pubnub_UUID* uuid);
 
 /** The name based algorithms (this - v5 and the other - v3) don't
     need any other state but the arguments they declare.
@@ -158,22 +158,22 @@ int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid);
     @param namelen The length of the @p name data
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
-				     struct Pubnub_UUID *nsid,
-				     void *name,
-				     unsigned namelen
-				     );
-
+int pubnub_generate_uuid_v5_name_sha1(
+    struct Pubnub_UUID* uuid,
+    struct Pubnub_UUID* nsid,
+    void* name,
+    unsigned namelen);
 
 /** Returns UUID as a standard HEX-based representation */
-struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const *uuid);
+struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const* uuid);
 
 /** Compares two UUIDs (@p left and @p right) and returns:
     - 0: equal
     - <0: left < right
     - >0: left > right
 */
-int pubnub_uuid_compare(struct Pubnub_UUID const *left, struct Pubnub_UUID const *right);
-
+int pubnub_uuid_compare(
+    struct Pubnub_UUID const* left,
+    struct Pubnub_UUID const* right);
 
 #endif /* !defined INC_PUBNUB_GENERATE_UUID */

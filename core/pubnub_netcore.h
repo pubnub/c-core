@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_NETCORE
-#define INC_PUBNUB_NETCORE
+    #define INC_PUBNUB_NETCORE
 
 /** @file pubnub_netcore.h
 
@@ -8,7 +8,6 @@
     It is internal, users should not include this or use any
     of its definitions.
  */
-
 
 /** States of a context */
 enum pubnub_state {
@@ -31,10 +30,10 @@ enum pubnub_state {
     PBS_WAIT_CONNECT,
     /** TCP connected */
     PBS_CONNECTED,
-#if PUBNUB_USE_SSL
+    #if PUBNUB_USE_SSL
     /** Waiting for TLS connection establishment */
     PBS_WAIT_TLS_CONNECT,
-#endif
+    #endif
     /** Sending HTTP "GET" */
     PBS_TX_GET,
     /** Sending the path (part of the URL) */
@@ -112,7 +111,6 @@ enum pubnub_state {
     PBS_WAIT_CANCEL_KEEPALIVE
 };
 
-
 struct pubnub_;
 
 /** The Finite State Machine (FSM) of the net-core module.  It's
@@ -122,7 +120,6 @@ struct pubnub_;
  */
 int pbnc_fsm(struct pubnub_* pb);
 
-
 /** Issues a stop command to the FSM of the net-core module. The
     FSM will close a connection (if it is already open) and then
     inform the user of the outcome (as specified) when it is called.
@@ -130,7 +127,6 @@ int pbnc_fsm(struct pubnub_* pb);
     @note This function will _not_ call pbnc_fsm().
 */
 void pbnc_stop(struct pubnub_* pb, enum pubnub_res outcome_to_report);
-
 
 /** Returns whether it's OK to start a new transaction. The FSM needs
     to be in an "idle" state. In general, that means that either there
@@ -142,6 +138,5 @@ void pbnc_stop(struct pubnub_* pb, enum pubnub_res outcome_to_report);
     of current one)
  */
 bool pbnc_can_start_transaction(struct pubnub_ const* pbp);
-
 
 #endif /* !defined INC_PUBNUB_NETCORE */

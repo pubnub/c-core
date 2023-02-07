@@ -55,10 +55,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-#include "system_config.h"
-#include "system_definitions.h"
 #include "peripheral/osc/plib_osc.h"
 #include "system/devcon/sys_devcon.h"
+#include "system_config.h"
+#include "system_definitions.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -87,22 +87,15 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
     the 'configuration bits' to configure the system oscillators. 
 */
 
-void SYS_CLK_Initialize( const SYS_CLK_INIT const * clkInit )
-{
-    SYS_DEVCON_SystemUnlock ( );
-    
-    PLIB_OSC_FRCDivisorSelect( OSC_ID_0, OSC_FRC_DIV_2);
+void SYS_CLK_Initialize(const SYS_CLK_INIT const* clkInit) {
+    SYS_DEVCON_SystemUnlock();
+
+    PLIB_OSC_FRCDivisorSelect(OSC_ID_0, OSC_FRC_DIV_2);
 
     /* Enable Peripheral Bus 1 */
-    PLIB_OSC_PBClockDivisorSet (OSC_ID_0, 0, 1 );
+    PLIB_OSC_PBClockDivisorSet(OSC_ID_0, 0, 1);
 
-
-
-
-
-
-
-    SYS_DEVCON_SystemLock ( );
+    SYS_DEVCON_SystemLock();
 }
 
 //******************************************************************************
@@ -134,8 +127,7 @@ void SYS_CLK_Initialize( const SYS_CLK_INIT const * clkInit )
   Remarks:
  */
 
-inline uint32_t SYS_CLK_SystemFrequencyGet ( void )
-{
+inline uint32_t SYS_CLK_SystemFrequencyGet(void) {
     return SYS_CLK_FREQ;
 }
 
@@ -173,11 +165,10 @@ inline uint32_t SYS_CLK_SystemFrequencyGet ( void )
 	pass CLK_USB_PERIPHERAL_1 as the bus number.
  */
 
-inline uint32_t SYS_CLK_PeripheralFrequencyGet ( CLK_BUSES_PERIPHERAL peripheralBus )
-{
+inline uint32_t
+SYS_CLK_PeripheralFrequencyGet(CLK_BUSES_PERIPHERAL peripheralBus) {
     return SYS_CLK_BUS_PERIPHERAL_1;
 }
-
 
 //******************************************************************************
 /* Function:
@@ -211,9 +202,9 @@ inline uint32_t SYS_CLK_PeripheralFrequencyGet ( CLK_BUSES_PERIPHERAL peripheral
   Remarks:
  */
 
-inline uint32_t SYS_CLK_ReferenceClockFrequencyGet ( CLK_BUSES_REFERENCE referenceBus )
-{
-	return 0;
+inline uint32_t
+SYS_CLK_ReferenceClockFrequencyGet(CLK_BUSES_REFERENCE referenceBus) {
+    return 0;
 }
 
 /******************************************************************************
@@ -230,16 +221,14 @@ inline uint32_t SYS_CLK_ReferenceClockFrequencyGet ( CLK_BUSES_REFERENCE referen
     For more details refer sys_clk.h.
 */
 
-void SYS_CLK_SecondaryOscillatorEnable ( void )
-{
+void SYS_CLK_SecondaryOscillatorEnable(void) {
     /* Check for secondary oscillator status */
-    if (!PLIB_OSC_SecondaryIsEnabled(OSC_ID_0))
-    {    
+    if (!PLIB_OSC_SecondaryIsEnabled(OSC_ID_0)) {
         /* Unlock and enable secondary oscillator */
         SYS_DEVCON_SystemUnlock();
-        
+
         PLIB_OSC_SecondaryEnable(OSC_ID_0);
-        
+
         SYS_DEVCON_SystemLock();
     }
 }
@@ -258,16 +247,14 @@ void SYS_CLK_SecondaryOscillatorEnable ( void )
     For more details refer sys_clk.h.
 */
 
-void SYS_CLK_SecondaryOscillatorDisable ( void )
-{
+void SYS_CLK_SecondaryOscillatorDisable(void) {
     /* Check for secondary oscillator status */
-    if (PLIB_OSC_SecondaryIsEnabled(OSC_ID_0))
-    {    
+    if (PLIB_OSC_SecondaryIsEnabled(OSC_ID_0)) {
         /* Unlock and disable secondary oscillator*/
         SYS_DEVCON_SystemUnlock();
-        
+
         PLIB_OSC_SecondaryDisable(OSC_ID_0);
-        
+
         SYS_DEVCON_SystemLock();
     }
 }
@@ -287,7 +274,6 @@ void SYS_CLK_SecondaryOscillatorDisable ( void )
     For more details refer sys_clk.h.
 */
 
-bool SYS_CLK_SecondaryOscillatorIsEnabled ( void )
-{
+bool SYS_CLK_SecondaryOscillatorIsEnabled(void) {
     return (PLIB_OSC_SecondaryIsEnabled(OSC_ID_0));
 }

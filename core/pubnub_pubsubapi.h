@@ -1,20 +1,18 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PUBSUBAPI
-#define INC_PUBNUB_PUBSUBAPI
+    #define INC_PUBNUB_PUBSUBAPI
 
+    #include <stdbool.h>
+    #include <stdint.h>
 
-#include "pubnub_api_types.h"
-#include "lib/pb_deprecated.h"
-
-#include <stdbool.h>
-#include <stdint.h>
+    #include "lib/pb_deprecated.h"
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_pubsubapi.h
     This is the "Pub/Sub" API of the Pubnub client library.
 
     It is the minimal, publish & subscribe only API.
 */
-
 
 /** Initialize a given pubnub context @p p to the @p publish_key and @p
     subscribe_key. You can customize other parameters of the context by
@@ -37,7 +35,8 @@
     to messages
     @return Returns the @p p context
 */
-pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
+pubnub_t*
+pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
 
 /** Set the user identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.
@@ -47,7 +46,8 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 
     @see pubnub_set_user_id
 */
-PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
+PUBNUB_DEPRECATED enum pubnub_res
+pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the user identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
@@ -156,7 +156,8 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
 
     @return #PNR_STARTED or #PNR_OK on success, an error otherwise
  */
-enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
+enum pubnub_res
+pubnub_publish(pubnub_t* p, const char* channel, const char* message);
 
 /** Sends a signal @p message (in JSON format) on @p channel, using @p pb context.
     This actually means "initiate a signal transaction".
@@ -192,9 +193,8 @@ enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* mes
 
     @return #PNR_STARTED or #PNR_OK on success, an error otherwise
  */
-enum pubnub_res pubnub_signal(pubnub_t* pb,
-                              const char* channel,
-                              const char* message);
+enum pubnub_res
+pubnub_signal(pubnub_t* pb, const char* channel, const char* message);
 
 /** Returns a pointer to an arrived message or other element of the
     response to an operation/transaction. Message(s) arrive on finish
@@ -278,9 +278,8 @@ char const* pubnub_get_channel(pubnub_t* pb);
 
     @see pubnub_get
  */
-enum pubnub_res pubnub_subscribe(pubnub_t*   p,
-                                 const char* channel,
-                                 const char* channel_group);
+enum pubnub_res
+pubnub_subscribe(pubnub_t* p, const char* channel, const char* channel_group);
 
 /** Returns the result of the last transaction in the @p p context.
     This _may_ block if using blocking I/O. It will _not_ block if using
@@ -378,6 +377,5 @@ void pubnub_use_http_keep_alive(pubnub_t* p);
     want to turn that off - see pubnub_use_http_keep_alive().
 */
 void pubnub_dont_use_http_keep_alive(pubnub_t* p);
-
 
 #endif /* !defined INC_PUBNUB_PUBSUBAPI */

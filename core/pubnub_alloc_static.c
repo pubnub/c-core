@@ -1,32 +1,24 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-#include "pubnub_auto_heartbeat.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-
 #include "pbpal.h"
-
+#include "pubnub_assert.h"
+#include "pubnub_auto_heartbeat.h"
+#include "pubnub_internal.h"
+#include "pubnub_log.h"
 
 static struct pubnub_ m_aCtx[PUBNUB_CTX_MAX];
 
-
-bool pb_valid_ctx_ptr(pubnub_t const *pb)
-{
+bool pb_valid_ctx_ptr(pubnub_t const* pb) {
     return ((pb >= m_aCtx) && (pb < m_aCtx + PUBNUB_CTX_MAX));
 }
 
-
-pubnub_t *pballoc_get_ctx(unsigned idx)
-{
+pubnub_t* pballoc_get_ctx(unsigned idx) {
     if (idx >= PUBNUB_CTX_MAX) {
         return NULL;
     }
     return m_aCtx + idx;
 }
 
-
-pubnub_t *pubnub_alloc(void)
-{
+pubnub_t* pubnub_alloc(void) {
     size_t i;
 
     for (i = 0; i < PUBNUB_CTX_MAX; ++i) {
@@ -42,9 +34,7 @@ pubnub_t *pubnub_alloc(void)
     return NULL;
 }
 
-
-void pballoc_free_at_last(pubnub_t *pb)
-{
+void pballoc_free_at_last(pubnub_t* pb) {
     PUBNUB_ASSERT_OPT(pb != NULL);
 
     pubnub_mutex_lock(pb->monitor);
@@ -57,9 +47,7 @@ void pballoc_free_at_last(pubnub_t *pb)
     pubnub_mutex_destroy(pb->monitor);
 }
 
-
-int pubnub_free(pubnub_t *pb)
-{
+int pubnub_free(pubnub_t* pb) {
     int result = -1;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -81,8 +69,7 @@ int pubnub_free(pubnub_t *pb)
         pballoc_free_at_last(pb);
 #endif
         result = 0;
-    }
-    else {
+    } else {
         PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
         pubnub_mutex_unlock(pb->monitor);
     }

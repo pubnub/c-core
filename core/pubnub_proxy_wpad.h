@@ -1,10 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PROXY_WPAD
-#define	INC_PUBNUB_PROXY_WPAD
+    #define INC_PUBNUB_PROXY_WPAD
 
-
-#include "pubnub_api_types.h"
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_proxy_wpad.h 
 
@@ -41,21 +39,19 @@
 
 */
 
-
 /** This starts a transaction to set the proxy configuration on the
     context @p p using the WPAD protocol. Although this is not really
     a Pubnub transaction, for all intents and purposes, you should
     treat it as one.
 */
-enum pubnub_res pubnub_proxy_set_configuration_via_wpad(pubnub_t *p);
-
+enum pubnub_res pubnub_proxy_set_configuration_via_wpad(pubnub_t* p);
 
 /** This starts a transaction to set the proxy configuration on the
     context @p p using the PAC file found at @p url. Although this is
     not really a Pubnub transaction, for all intents and purposes, you
     should treat it as one.
 */
-enum pubnub_res pubnub_proxy_set_configuration_via_pac(pubnub_t *p, char const *url);
-
+enum pubnub_res
+pubnub_proxy_set_configuration_via_pac(pubnub_t* p, char const* url);
 
 #endif /* defined INC_PUBNUB_PROXY_WPAD */

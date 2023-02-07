@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_FREE_WITH_TIMEOUT
-#define	INC_PUBNUB_FREE_WITH_TIMEOUT
-
+    #define INC_PUBNUB_FREE_WITH_TIMEOUT
 
 /** Tries pubnub_free() in a tight loop until either:
     - it succeeds
@@ -25,6 +24,5 @@
     @retval -1 failed to pubnub_free() in @p millisec
  */
 int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec);
-
 
 #endif /* !defined INC_PUBNUB_FREE_WITH_TIMEOUT */

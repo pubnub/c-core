@@ -1,12 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-
-#include "pubnub_assert.h"
 #include "pubnub_blocking_io.h"
 
+#include "pubnub_assert.h"
+#include "pubnub_internal.h"
 
-int pubnub_set_non_blocking_io(pubnub_t *p)
-{
+int pubnub_set_non_blocking_io(pubnub_t* p) {
 #if PUBNUB_BLOCKING_IO_SETTABLE
     pubnub_mutex_lock(p->monitor);
     p->options.use_blocking_io = false;
@@ -16,9 +14,7 @@ int pubnub_set_non_blocking_io(pubnub_t *p)
     return -1;
 }
 
-
-int  pubnub_set_blocking_io(pubnub_t *p)
-{
+int pubnub_set_blocking_io(pubnub_t* p) {
 #if PUBNUB_BLOCKING_IO_SETTABLE
     pubnub_mutex_lock(p->monitor);
     p->options.use_blocking_io = true;

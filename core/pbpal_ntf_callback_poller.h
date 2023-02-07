@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PBPAL_NTF_CALLBACK_POLLER
-#define      INC_PBPAL_NTF_CALLBACK_POLLER
-
+    #define INC_PBPAL_NTF_CALLBACK_POLLER
 
 /** @file pubnub_ntf_callback_poller.h
 
@@ -30,10 +29,8 @@
     interface and here we have it's definition for our purpose.
  */
 
-
 struct pbpal_poll_data;
 typedef struct pubnub_ pubnub_t;
-
 
 /** Allocate and Initialize the poller data */
 struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void);
@@ -42,13 +39,17 @@ struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void);
 void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb);
 
 /** Remove the Pubnub context @p pb from the poll-set @p data */
-void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb);
+void pbpal_ntf_callback_remove_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t* pb);
 
 /** Update the information about the Pubnub context @p pb int the
     poll-set @p data. Essentially, this is used when the socket
     (connection handle) changes, for some reason.
 */
-void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb);
+void pbpal_ntf_callback_update_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t* pb);
 
 /** Watch for "out" events ("can write") on @p pbp context in poll-set
     @p data.
@@ -74,5 +75,4 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms);
 /** Deinitialize and deellocate the poller data */
 void pbpal_ntf_callback_poller_deinit(struct pbpal_poll_data** data);
 
-
-#endif  /* !defined INC_PBPAL_NTF_CALLBACK_POLLER */
+#endif /* !defined INC_PBPAL_NTF_CALLBACK_POLLER */

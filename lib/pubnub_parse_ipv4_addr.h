@@ -1,7 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PARSE_IPV4_ADDR
-#define INC_PUBNUB_PARSE_IPV4_ADDR
-#include "core/pubnub_dns_servers.h"
+    #define INC_PUBNUB_PARSE_IPV4_ADDR
+    #include "core/pubnub_dns_servers.h"
 
 /** Parses Ipv4 address string @p addr and, in case it succeeds, resolved value stores at @p p.
     @retval -1 on error

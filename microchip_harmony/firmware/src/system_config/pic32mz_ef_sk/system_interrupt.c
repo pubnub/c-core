@@ -53,15 +53,15 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 // DOM-IGNORE-END
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
 
-#include <xc.h>
 #include <sys/attribs.h>
+#include <xc.h>
+
 #include "app.h"
 #include "system_definitions.h"
 
@@ -71,44 +71,31 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-    
-void __ISR(_TIMER_2_VECTOR, ipl4AUTO) IntHandlerDrvTmrInstance0(void)
-{
+void __ISR(_TIMER_2_VECTOR, ipl4AUTO) IntHandlerDrvTmrInstance0(void) {
     DRV_TMR_Tasks(sysObj.drvTmr0);
 }
- 	
-	
-	
-void __ISR(_USB_VECTOR, ipl4AUTO) _IntHandlerUSBInstance0(void)
-{
+
+void __ISR(_USB_VECTOR, ipl4AUTO) _IntHandlerUSBInstance0(void) {
     DRV_USBHS_Tasks_ISR(sysObj.drvUSBObject);
 }
 
-void __ISR ( _USB_DMA_VECTOR,ipl4AUTO) _IntHandlerUSBInstance0_USBDMA ( void )
-{
+void __ISR(_USB_DMA_VECTOR, ipl4AUTO) _IntHandlerUSBInstance0_USBDMA(void) {
     DRV_USBHS_Tasks_ISR_USBDMA(sysObj.drvUSBObject);
 }
 
-
-void __ISR(_ETHERNET_VECTOR, ipl5AUTO) _IntHandler_ETHMAC(void)
-{
+void __ISR(_ETHERNET_VECTOR, ipl5AUTO) _IntHandler_ETHMAC(void) {
     DRV_ETHMAC_Tasks_ISR((SYS_MODULE_OBJ)0);
 }
 
 /* This function is used by ETHMAC driver */
-bool SYS_INT_SourceRestore(INT_SOURCE src, int level)
-{
-    if(level)
-    {
+bool SYS_INT_SourceRestore(INT_SOURCE src, int level) {
+    if (level) {
         SYS_INT_SourceEnable(src);
     }
 
     return level;
 }
 
-
- 
 /*******************************************************************************
  End of File
 */
-

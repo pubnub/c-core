@@ -36,17 +36,16 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 //DOM-IGNORE-END
 
-
 #ifndef CONFIG_H
-#define	CONFIG_H
+#define CONFIG_H
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #if defined(INLINE)
-#undef INLINE
-#define INLINE inline
+    #undef INLINE
+    #define INLINE inline
 #endif
 
 #define MICROCHIP_MPLAB_HARMONY
@@ -63,17 +62,14 @@ extern "C" {
 #define NO_FILESYSTEM
 #define WOLFSSL_STATIC_RSA
 
-
 #define SINGLE_THREADED
 
 #define USE_FAST_MATH
 #define TFM_TIMING_RESISTANT
 #define NO_WOLFSSL_SERVER
 
-
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* CONFIG_H */
+#endif /* CONFIG_H */

@@ -1,13 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-
 #include "pubnub_timers.h"
+
 #include "pubnub_assert.h"
+#include "pubnub_internal.h"
 #include "pubnub_log.h"
 
-
-int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms)
-{
+int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms) {
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(duration_ms > 0);
     if (duration_ms < PUBNUB_MIN_TRANSACTION_TIMER) {
@@ -23,9 +21,7 @@ int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms)
     return 0;
 }
 
-
-int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms)
-{
+int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms) {
     PUBNUB_ASSERT_OPT(p != NULL);
     PUBNUB_ASSERT_OPT(duration_ms > 0);
     if (duration_ms < PUBNUB_MIN_WAIT_CONNECT_TIMER) {
@@ -41,9 +37,7 @@ int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms)
     return 0;
 }
 
-
-int pubnub_transaction_timeout_get(pubnub_t* p)
-{
+int pubnub_transaction_timeout_get(pubnub_t* p) {
     int timeout_ms;
 
     PUBNUB_ASSERT_OPT(p != NULL);
@@ -54,9 +48,7 @@ int pubnub_transaction_timeout_get(pubnub_t* p)
     return timeout_ms;
 }
 
-
-int pubnub_wait_connect_timeout_get(pubnub_t* p)
-{
+int pubnub_wait_connect_timeout_get(pubnub_t* p) {
     int timeout_ms;
 
     PUBNUB_ASSERT_OPT(p != NULL);

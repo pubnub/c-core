@@ -1,57 +1,57 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_log.h"
+#include "core/srand_from_pubnub_time.h"
 #include "pubnub_fntest_basic.hpp"
 #include "pubnub_fntest_medium.hpp"
-
-#include "core/srand_from_pubnub_time.h"
-#include "core/pubnub_log.h"
 #if defined _WIN32
-#include "windows/console_subscribe_paint.h"
+    #include "windows/console_subscribe_paint.h"
 #else
-#include "posix/console_subscribe_paint.h"
+    #include "posix/console_subscribe_paint.h"
 #endif
 
-#include <iostream>
-#include <functional>
 #include <condition_variable>
-#include <thread>
-
 #include <cstdlib>
 #include <cstring>
+#include <functional>
+#include <iostream>
+#include <thread>
 
+enum class TestResult { fail, pass, indeterminate };
 
-enum class TestResult {
-    fail,
-    pass,
-    indeterminate
-};
-
-using TestFN_T = std::function<void(std::string const&,
-                                    std::string const&,
-                                    std::string const&,
-                                    bool const&)>;
+using TestFN_T = std::function<void(
+    std::string const&,
+    std::string const&,
+    std::string const&,
+    bool const&)>;
 
 struct TestData {
     TestFN_T pf;
-    char const *name;
+    char const* name;
     TestResult result;
 };
 
-#define LIST_TEST(tstname) { pnfn_test_##tstname, #tstname, TestResult::indeterminate }
+#define LIST_TEST(tstname) \
+    { pnfn_test_##tstname, #tstname, TestResult::indeterminate }
 
 static TestData m_aTest[] = {
     LIST_TEST(simple_connect_and_send_over_single_channel),
     LIST_TEST(connect_and_send_over_several_channels_simultaneously),
     LIST_TEST(simple_connect_and_send_over_single_channel_in_group),
     LIST_TEST(connect_and_send_over_several_channels_in_group_simultaneously),
-    LIST_TEST(connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
-    LIST_TEST(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
+    LIST_TEST(
+        connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
+    LIST_TEST(
+        connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
     LIST_TEST(simple_connect_and_receiver_over_single_channel),
     LIST_TEST(connect_and_receive_over_several_channels_simultaneously),
     LIST_TEST(simple_connect_and_receiver_over_single_channel_in_group),
-    LIST_TEST(connect_and_receive_over_several_channels_in_group_simultaneously),
-    LIST_TEST(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
-    LIST_TEST(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
-/*
+    LIST_TEST(
+        connect_and_receive_over_several_channels_in_group_simultaneously),
+    LIST_TEST(
+        connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
+    LIST_TEST(
+        connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
+    /*
 	LIST_TEST(broken_connection_test),
 	LIST_TEST(broken_connection_test_multi),
 	LIST_TEST(broken_connection_test_group),
@@ -65,11 +65,9 @@ static TestData m_aTest[] = {
     LIST_TEST(connect_disconnect_and_connect_again_group),
     LIST_TEST(connect_disconnect_and_connect_again_combo),
     LIST_TEST(wrong_api_usage),
-    LIST_TEST(handling_errors_from_pubnub)
-};
+    LIST_TEST(handling_errors_from_pubnub)};
 
 #define TEST_COUNT (sizeof m_aTest / sizeof m_aTest[0])
-
 
 /// Mutex to be used with #m_cndvar
 static std::mutex m_mtx;
@@ -81,8 +79,7 @@ static std::condition_variable m_cndvar;
 /// 0, it's time for another round of tests.
 static unsigned m_running_tests;
 
-static bool is_pull_request_build(void)
-{
+static bool is_pull_request_build(void) {
 #if !defined _WIN32
     char const* tprb = getenv("TRAVIS_PULL_REQUEST");
     return (tprb != NULL) && (0 != strcmp(tprb, "false"));
@@ -91,8 +88,7 @@ static bool is_pull_request_build(void)
 #endif
 }
 
-static void srand_from_pubnub(char const* pubkey, char const* keysub)
-{
+static void srand_from_pubnub(char const* pubkey, char const* keysub) {
     pubnub_t* pbp = pubnub_alloc();
     if (pbp != NULL) {
         pubnub_init(pbp, pubkey, keysub);
@@ -104,10 +100,9 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
     }
 }
 
-static void notify(TestData &test,TestResult result)
-{
+static void notify(TestData& test, TestResult result) {
     {
-        std::lock_guard<std::mutex>  lk(m_mtx);
+        std::lock_guard<std::mutex> lk(m_mtx);
         --m_running_tests;
         test.result = result;
     }
@@ -116,15 +111,20 @@ static void notify(TestData &test,TestResult result)
 /// The "real main" function to run all the tests.  Each test will run
 /// in its own thread, so that they can run in parallel, if we want
 /// them to.
-static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_thread, std::string& pubkey, std::string& keysub, std::string& origin)
-{
+static int run_tests(
+    TestData aTest[],
+    unsigned test_count,
+    unsigned max_conc_thread,
+    std::string& pubkey,
+    std::string& keysub,
+    std::string& origin) {
     unsigned next_test = 0;
     std::vector<unsigned> failed;
     unsigned passed_count = 0;
     unsigned indete_count = 0;
     std::vector<std::thread> runners(test_count);
     bool cannot_do_chan_group;
- 
+
     cannot_do_chan_group = is_pull_request_build();
 
     std::cout << "Starting Run of " << test_count << " tests" << std::endl;
@@ -136,31 +136,33 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         }
         m_running_tests = in_this_pass;
         /// first, launch the threads, one per and for test
-        for (i = next_test; i < next_test+in_this_pass; ++i) {
-            runners[i-next_test] =
-                std::thread([i, pubkey, keysub, origin, aTest, cannot_do_chan_group] {
+        for (i = next_test; i < next_test + in_this_pass; ++i) {
+            runners[i - next_test] = std::thread(
+                [i, pubkey, keysub, origin, aTest, cannot_do_chan_group] {
                     try {
                         srand_from_pubnub(pubkey.c_str(), keysub.c_str());
-                        aTest[i].pf(pubkey.c_str(),
-                                    keysub.c_str(),
-                                    origin.c_str(),
-                                    cannot_do_chan_group);
+                        aTest[i].pf(
+                            pubkey.c_str(),
+                            keysub.c_str(),
+                            origin.c_str(),
+                            cannot_do_chan_group);
                         notify(aTest[i], TestResult::pass);
-                    }
-                    catch (std::exception &ex) {
+                    } catch (std::exception& ex) {
                         std::cout << std::endl;
                         paint_text_white_with_background_red();
-                        std::cout << " !! " << i+1 << ". test '" << aTest[i].name << "' failed!"
-                                  << std::endl << "Error description: " << ex.what();
+                        std::cout << " !! " << i + 1 << ". test '"
+                                  << aTest[i].name << "' failed!" << std::endl
+                                  << "Error description: " << ex.what();
                         reset_text_paint();
                         std::cout << std::endl << std::endl;
                         notify(aTest[i], TestResult::fail);
-                    }
-                    catch (pubnub::except_test &ex) {
+                    } catch (pubnub::except_test& ex) {
                         std::cout << std::endl;
                         paint_text_yellow();
-                        std::cout << " !! " << i+1 << ". test '" << aTest[i].name << "' indeterminate!"
-                                  << std::endl << "Description: " << ex.what();
+                        std::cout << " !! " << i + 1 << ". test '"
+                                  << aTest[i].name << "' indeterminate!"
+                                  << std::endl
+                                  << "Description: " << ex.what();
                         reset_text_paint();
                         std::cout << std::endl << std::endl;
                         notify(aTest[i], TestResult::indeterminate);
@@ -171,22 +173,22 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         /// Await for them all to finish
         {
             std::unique_lock<std::mutex> lk(m_mtx);
-             m_cndvar.wait(lk, []{ return m_running_tests == 0; });
+            m_cndvar.wait(lk, [] { return m_running_tests == 0; });
         }
         /// Now get all of their results and process them
-        for (i = next_test; i < next_test+in_this_pass; ++i) {
-            runners[i-next_test].join();
+        for (i = next_test; i < next_test + in_this_pass; ++i) {
+            runners[i - next_test].join();
             switch (aTest[i].result) {
-            case TestResult::fail:
-                failed.push_back(i);
-                break;
-            case TestResult::pass:
-                ++passed_count;
-                break;
-            case TestResult::indeterminate:
-                ++indete_count;
-                /* Should restart the test... */
-                break;
+                case TestResult::fail:
+                    failed.push_back(i);
+                    break;
+                case TestResult::pass:
+                    ++passed_count;
+                    break;
+                case TestResult::indeterminate:
+                    ++indete_count;
+                    /* Should restart the test... */
+                    break;
             }
         }
         next_test = i;
@@ -198,8 +200,7 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         std::cout << "All " << test_count << " tests passed" << std::endl;
         paint_text_white();
         return 0;
-    }
-    else {
+    } else {
         paint_text_green();
         std::cout << passed_count << " tests passed, ";
         reset_text_paint();
@@ -209,16 +210,17 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
         paint_text_white();
         std::cout << ", ";
         paint_text_yellow();
-        std::cout << indete_count << " tests indeterminate" << std::endl; 
+        std::cout << indete_count << " tests indeterminate" << std::endl;
         reset_text_paint();
         if (!failed.empty()) {
             unsigned i;
             paint_text_white_with_background_red();
             std::cout << "Failed tests:\n";
-            for (i = 0; i < failed.size() - 1 ; ++i) {
-                std::cout << failed[i]+1 << ". " << aTest[failed[i]].name << std::endl;
+            for (i = 0; i < failed.size() - 1; ++i) {
+                std::cout << failed[i] + 1 << ". " << aTest[failed[i]].name
+                          << std::endl;
             }
-            std::cout << failed[i]+1 << ". " << aTest[failed[i]].name;
+            std::cout << failed[i] + 1 << ". " << aTest[failed[i]].name;
             reset_text_paint();
             std::cout << std::endl;
         }
@@ -227,20 +229,25 @@ static int run_tests(TestData aTest[], unsigned test_count, unsigned max_conc_th
     }
 }
 
-
-std::string getenv_ex(char const *env, char const *dflt)
-{
+std::string getenv_ex(char const* env, char const* dflt) {
     char const* s = getenv(env);
     return (NULL == s) ? dflt : s;
 }
 
-
-int main(int argc, char *argv[])
-{
-    std::string pubkey = getenv_ex("PUBNUB_PUBKEY", (argc > 1) ? argv[1] : "demo");
-    std::string keysub = getenv_ex("PUBNUB_KEYSUB", (argc > 2) ? argv[2] : "demo");
-    std::string origin = getenv_ex("PUBNUB_ORIGIN", (argc > 3) ? argv[3] : "pubsub.pubnub.com");
+int main(int argc, char* argv[]) {
+    std::string pubkey =
+        getenv_ex("PUBNUB_PUBKEY", (argc > 1) ? argv[1] : "demo");
+    std::string keysub =
+        getenv_ex("PUBNUB_KEYSUB", (argc > 2) ? argv[2] : "demo");
+    std::string origin =
+        getenv_ex("PUBNUB_ORIGIN", (argc > 3) ? argv[3] : "pubsub.pubnub.com");
     unsigned max_conc_thread = (argc > 4) ? std::atoi(argv[4]) : 1;
 
-    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
+    return run_tests(
+        m_aTest,
+        TEST_COUNT,
+        max_conc_thread,
+        pubkey,
+        keysub,
+        origin);
 }

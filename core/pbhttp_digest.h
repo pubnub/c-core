@@ -1,24 +1,23 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PBHTTP_DIGEST
-#define      INC_PBHTTP_DIGEST
+    #define INC_PBHTTP_DIGEST
 
-#include "pubnub_memory_block.h"
+    #include "pubnub_memory_block.h"
 
-
-/** Maximum length of the "nonce" field used in HTTP authentication
+    /** Maximum length of the "nonce" field used in HTTP authentication
     headers. Server sets this.
 */
-#define PUBNUB_MAX_HTTP_NONCE 63
+    #define PUBNUB_MAX_HTTP_NONCE 63
 
-/** Maximum length of the "cnonce" (client nonce) field used in HTTP
+    /** Maximum length of the "cnonce" (client nonce) field used in HTTP
     authentication headers. We generate this.
 */
-#define PUBNUB_MAX_HTTP_CLIENT_NONCE 63
+    #define PUBNUB_MAX_HTTP_CLIENT_NONCE 63
 
-/** Maximum length of the "opaque" field used in HTTP authentication
+    /** Maximum length of the "opaque" field used in HTTP authentication
     headers, including the quotes, which are kept for convenience.
 */
-#define PUBNUB_MAX_HTTP_OPAQUE 63
+    #define PUBNUB_MAX_HTTP_OPAQUE 63
 
 /** HTTP Digest hashing algorithm */
 enum pbhttp_digest_algorithm {
@@ -57,7 +56,7 @@ enum pbhttp_digest_qop {
 
 /** HTTP Digest authentication header parsing result */
 enum pbhttp_digest_parse_header_rslt {
-    /** Authentication parameter(one, or more) is invalid */ 
+    /** Authentication parameter(one, or more) is invalid */
     pbhtdig_ParameterError,
     /** Realm in new 'authentication required' message is different from
         realm previously used
@@ -70,7 +69,7 @@ enum pbhttp_digest_parse_header_rslt {
     /** attribute 'realm' is not found yet in 'authentication required' message header
      */
     pbhtdig_RealmNotFound
-};    
+};
 
 /** 
  */
@@ -100,9 +99,8 @@ struct pbhttp_digest_context {
     uint32_t nc;
 };
 
-
 /** Initializes the HTTP Digest authentication context */
-void pbhttp_digest_init(struct pbhttp_digest_context *ctx);
+void pbhttp_digest_init(struct pbhttp_digest_context* ctx);
 
 /** Parse a HTTP header pertaining to HTTP digest proxy
     authentication. It expects only the "key-value" pairs, not the
@@ -118,9 +116,10 @@ void pbhttp_digest_init(struct pbhttp_digest_context *ctx);
                                                used,
     @retval pbhtdig_RealmNotFound realm is not discovered(yet) in digest 'auth-info' header line
  */
-enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx,
-                                                                char const* header,
-                                                                char* realm);
+enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(
+    struct pbhttp_digest_context* ctx,
+    char const* header,
+    char* realm);
 
 /** Sets the contents of the string buffer to send as the header
     during HTTP Digest authentication.
@@ -133,12 +132,13 @@ enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(struct pbhttp_di
     @param buf The buffer which contents to set
     @param 0: OK, -1: error
  */
-int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context *ctx,
-                                      char const* username,
-                                      char const* password,
-                                      char const* uri,
-                                      char const* realm,
-                                      pubnub_chamebl_t *buf);
+int pbhttp_digest_prep_header_to_send(
+    struct pbhttp_digest_context* ctx,
+    char const* username,
+    char const* password,
+    char const* uri,
+    char const* realm,
+    pubnub_chamebl_t* buf);
 
 /** Returns a read-only string representation of the HTTP Digest
     Quality of Protection value.
@@ -149,6 +149,5 @@ char const* pbhttp_digest_qop2str(enum pbhttp_digest_qop e);
     (Hash) algorithm value.
 */
 char const* pbhttp_digest_algorithm2str(enum pbhttp_digest_algorithm e);
-
 
 #endif /* !defined INC_PBHTTP_DIGEST */

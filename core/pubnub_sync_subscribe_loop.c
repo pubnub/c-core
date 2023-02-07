@@ -1,25 +1,22 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-
 #include "pubnub_sync_subscribe_loop.h"
 
-#include "pubnub_pubsubapi.h"
-#include "pubnub_ntf_sync.h"
 #include "pubnub_assert.h"
+#include "pubnub_internal.h"
+#include "pubnub_ntf_sync.h"
+#include "pubnub_pubsubapi.h"
 
-
-
-struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *channel)
-{
-    struct pubnub_subloop_descriptor rslt = { p, channel };
+struct pubnub_subloop_descriptor
+pubnub_subloop_define(pubnub_t* p, char const* channel) {
+    struct pubnub_subloop_descriptor rslt = {p, channel};
     rslt.options = pubnub_subscribe_defopts();
 
     return rslt;
 }
 
-
-enum pubnub_res pubnub_subloop_fetch(struct pubnub_subloop_descriptor const* pbsld, char const** message)
-{
+enum pubnub_res pubnub_subloop_fetch(
+    struct pubnub_subloop_descriptor const* pbsld,
+    char const** message) {
     enum pubnub_res pbres = PNR_OK;
 
     PUBNUB_ASSERT_OPT(NULL != pbsld);

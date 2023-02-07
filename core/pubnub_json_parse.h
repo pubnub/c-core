@@ -1,10 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_JSON_PARSE
-#define INC_PUBNUB_JSON_PARSE
+    #define INC_PUBNUB_JSON_PARSE
 
-#include <stdbool.h>
-#include <stdlib.h>
-
+    #include <stdbool.h>
+    #include <stdlib.h>
 
 /** @file pubnub_json_parse.h
 
@@ -24,7 +23,6 @@ struct pbjson_elem {
         _after_ the last character */
     char const* end;
 };
-
 
 /** Results of parsing a JSON (object) definition */
 enum pbjson_object_name_parse_result {
@@ -58,7 +56,6 @@ enum pbjson_object_name_parse_result {
     jonmpOK
 };
 
-
 /** Skips whitespace starting from @p start, until @p end.
     Interprets whitespace as JSON does - that should be
     compatible with a lot of other specifications.
@@ -67,7 +64,6 @@ enum pbjson_object_name_parse_result {
     It is == @p end if the whole input is skipped.
  */
 char const* pbjson_skip_whitespace(char const* start, char const* end);
-
 
 /** Finds the end of the string starting from @p start, until @p end.
     Interprets string as JSON does (starting and ending with
@@ -84,7 +80,6 @@ char const* pbjson_skip_whitespace(char const* start, char const* end);
 
 char const* pbjson_find_end_string(char const* start, char const* end);
 
-
 /** Finds the end of the "primitive" value starting from @p start,
     until @p end.  Interprets "primitive value" a little more broadly
     than JSON does (basically, we allow anything that is not a JSON
@@ -100,7 +95,6 @@ char const* pbjson_find_end_string(char const* start, char const* end);
  */
 char const* pbjson_find_end_primitive(char const* start, char const* end);
 
-
 /** Finds the end of the "complex" value starting from @p start, until
     @p end.  Interprets "complex value" as a JSON object or array -
     that should be compatible with a lot of other specifications.
@@ -113,7 +107,6 @@ char const* pbjson_find_end_primitive(char const* start, char const* end);
     input.
  */
 char const* pbjson_find_end_complex(char const* start, char const* end);
-
 
 /** Finds the end of the JSON element starting from @p start, until
     @p end.  Interprets element as JSON does (primitive, object or array) -
@@ -128,17 +121,15 @@ char const* pbjson_find_end_complex(char const* start, char const* end);
  */
 char const* pbjson_find_end_element(char const* start, char const* end);
 
-
 /** Gets the value from a JSON object from @p p, with the key @p name
     and puts it to @p parsed o success, returning jonmpOK. On failure,
     returns the error code and the effects on @p parsed are not
     defined.
 */
-enum pbjson_object_name_parse_result
-pbjson_get_object_value(struct pbjson_elem const* p,
-                        char const*               name,
-                        struct pbjson_elem*       parsed);
-
+enum pbjson_object_name_parse_result pbjson_get_object_value(
+    struct pbjson_elem const* p,
+    char const* name,
+    struct pbjson_elem* parsed);
 
 /** Helper function, returns whether string @p s is equal to the
     contents of the JSON element @p e.
@@ -148,9 +139,8 @@ bool pbjson_elem_equals_string(struct pbjson_elem const* e, char const* s);
 /** Helper function, returns a string describing an enum for
     the JSON (object) parse result.
  */
-char const*
-pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e);
-
+char const* pbjson_object_name_parse_result_2_string(
+    enum pbjson_object_name_parse_result e);
 
 /** Copies the element @p p to the given string @p s, allocated by the
     caller as an array of @p n elements, which thus includes the
@@ -172,7 +162,10 @@ size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n);
 
     @return bool value whether field value matched or not.
 */
-bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name, char const* value);
+bool pbjson_value_for_field_found(
+    struct pbjson_elem const* p,
+    char const* name,
+    char const* value);
 
 char* pbjson_get_status_400_message_value(struct pbjson_elem const* el);
 

@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_API_TYPES
-#define      INC_PUBNUB_API_TYPES
-
+    #define INC_PUBNUB_API_TYPES
 
 /** @file pubnub_api_types.h
 
@@ -10,7 +9,7 @@
     include it, as other headers of the API will include it for them.
   */
 
-#include "pubnub_config.h"
+    #include "pubnub_config.h"
 
 struct pubnub_;
 
@@ -18,7 +17,6 @@ struct pubnub_;
     needed for a context.
  */
 typedef struct pubnub_ pubnub_t;
-
 
 /** Result codes for Pubnub functions and transactions.  */
 enum pubnub_res {
@@ -188,11 +186,11 @@ enum pubnub_trans {
     /** Inform Pubnub that we're still working on channel and/or
         channel_group operation/transaction */
     PBTT_HEARTBEAT,
-#if PUBNUB_USE_SUBSCRIBE_V2
+    #if PUBNUB_USE_SUBSCRIBE_V2
     /** Subscribe V2 operation/transaction */
     PBTT_SUBSCRIBE_V2,
-#endif
-#if PUBNUB_USE_ADVANCED_HISTORY
+    #endif
+    #if PUBNUB_USE_ADVANCED_HISTORY
     /** Message counts(get counters of unread messages for a user, identified by USER_ID,
         for the list of channels specified) starting from given timetoken, or(exclusive or)
         list of timetokens per channel.
@@ -200,8 +198,8 @@ enum pubnub_trans {
         history counts for channels listed.
       */
     PBTT_MESSAGE_COUNTS,
-#endif
-#if PUBNUB_USE_OBJECTS_API
+    #endif
+    #if PUBNUB_USE_OBJECTS_API
     /** Objects API transaction Returns a paginated list of users associated with the
         subscription key.
       */
@@ -244,8 +242,8 @@ enum pubnub_trans {
       */
     PBTT_REMOVE_MEMBERS,
 
-#endif /* PUBNUB_USE_OBJECTS_API */
-#if PUBNUB_USE_ACTIONS_API
+    #endif /* PUBNUB_USE_OBJECTS_API */
+    #if PUBNUB_USE_ACTIONS_API
     /** Actions API transaction Adds the action to the message.
       */
     PBTT_ADD_ACTION,
@@ -258,22 +256,22 @@ enum pubnub_trans {
     /** Actions API transaction Gets the message history with actions on them.
       */
     PBTT_HISTORY_WITH_ACTIONS,
-#endif /* PUBNUB_USE_ACTIONS_API */
-#if PUBNUB_USE_GRANT_TOKEN_API
+    #endif /* PUBNUB_USE_ACTIONS_API */
+    #if PUBNUB_USE_GRANT_TOKEN_API
     /** PAMv3 Grant API transaction sets the permissions for resources and patterns.
       */
     PBTT_GRANT_TOKEN,
-#endif /* PUBNUB_USE_GRANT_TOKEN_API */
-#if PUBNUB_USE_FETCH_HISTORY
+    #endif /* PUBNUB_USE_GRANT_TOKEN_API */
+    #if PUBNUB_USE_FETCH_HISTORY
     /** History V3 (get fetch history for the channel(s) from Pubnub
      * server) operation/transaction */
     PBTT_FETCH_HISTORY,
-#endif
-#if PUBNUB_USE_REVOKE_TOKEN_API
+    #endif
+    #if PUBNUB_USE_REVOKE_TOKEN_API
     /** PAMv3 Revoke API transaction revokes the PAMv3 token .
       */
     PBTT_REVOKE_TOKEN,
-#endif /* PUBNUB_USE_REVOKE_TOKEN_API */
+    #endif /* PUBNUB_USE_REVOKE_TOKEN_API */
     /** Count the number of transaction types */
     PBTT_MAX
 };
@@ -286,11 +284,7 @@ enum pubnub_trans {
     For the rest of us, it has `true`, `false` and the third `not set`
     or `indeterminate` state.
 */
-enum pubnub_tribool {
-    pbccFalse,
-    pbccTrue,
-    pbccNotSet
-};
+enum pubnub_tribool { pbccFalse, pbccTrue, pbccNotSet };
 
 enum pubnub_method {
     pubnubSendViaGET,

@@ -1,19 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_SUBSCRIBE_WITH_STATE
-#define	INC_PUBNUB_SUBSCRIBE_WITH_STATE
+    #define INC_PUBNUB_SUBSCRIBE_WITH_STATE
 
+    #include <stdbool.h>
 
-#include "pubnub_api_types.h"
-#include "lib/pb_deprecated.h"
-
-#include <stdbool.h>
-
+    #include "lib/pb_deprecated.h"
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_subscribe_with_state.h This is the API of "subscribe
     with state" Pubnub transaction.  It is deprecated, provided as a
     workaround for existing users.
 */
-
 
 /** Starts a "subscribe with state" Pubnub transaction. There are
     various subtle differences in behavior when subscribing with state
@@ -42,8 +39,10 @@
     
     @see pubnub_subscribe
  */
-PUBNUB_DEPRECATED enum pubnub_res pubnub_subscribe_with_state(pubnub_t *p, const char *channel, const char *channel_group, char const *state);
-
-
+PUBNUB_DEPRECATED enum pubnub_res pubnub_subscribe_with_state(
+    pubnub_t* p,
+    const char* channel,
+    const char* channel_group,
+    char const* state);
 
 #endif /* defined INC_PUBNUB_SUBSCRIBE_WITH_STATE */

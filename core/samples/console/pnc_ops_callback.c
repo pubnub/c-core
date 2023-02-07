@@ -1,35 +1,33 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_callback.h"
-
-#include "core/pubnub_helper.h"
-#include "core/pubnub_mutex.h"
-#include "core/pubnub_free_with_timeout.h"
-
 #include "pnc_ops_callback.h"
 
+#include "core/pubnub_free_with_timeout.h"
+#include "core/pubnub_helper.h"
+#include "core/pubnub_mutex.h"
+#include "pubnub_callback.h"
+
 #if defined _WIN32
-#include <windows.h>
-#include <process.h>
+    #include <process.h>
+    #include <windows.h>
 #else
-#include <pthread.h>
+    #include <pthread.h>
 #endif
 
 #if defined _WIN32
-#include "windows/console_subscribe_paint.h"
+    #include "windows/console_subscribe_paint.h"
 /* FIXME: It's ugly that we have to declare these here, far, far, away
    from the macros in the above header that use them...
  */
 HANDLE m_hstdout_;
 WORD m_wOldColorAttrs_;
 #else
-#include "posix/console_subscribe_paint.h"
+    #include "posix/console_subscribe_paint.h"
 #endif
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
-
 
 struct UserData {
 #if defined _WIN32
@@ -39,12 +37,11 @@ struct UserData {
     bool triggered;
     pthread_cond_t condw;
 #endif
-    pubnub_t *pb;
+    pubnub_t* pb;
 };
 
 static struct UserData m_user_data;
 static struct UserData m_user_data_sub;
-
 
 #if defined _WIN32
 uintptr_t sub_thread;
@@ -54,10 +51,7 @@ pthread_t sub_thread;
 static pubnub_mutex_t m_loop_enabled_mutex;
 static bool m_loop_enabled = false;
 
-
-
-static void callback_signal(struct UserData *pUserData)
-{
+static void callback_signal(struct UserData* pUserData) {
 #if defined _WIN32
     SetEvent(pUserData->condw);
 #else
@@ -71,73 +65,74 @@ static void callback_signal(struct UserData *pUserData)
 static void wait_seconds(unsigned time_in_seconds) {
     clock_t start = clock();
     unsigned time_passed_in_seconds;
-    do{
-        time_passed_in_seconds=(clock() - start)/CLOCKS_PER_SEC;
-    }while(time_passed_in_seconds < time_in_seconds);
+    do {
+        time_passed_in_seconds = (clock() - start) / CLOCKS_PER_SEC;
+    } while (time_passed_in_seconds < time_in_seconds);
 }
 
-void pnc_free(pubnub_t *pb)
-{
+void pnc_free(pubnub_t* pb) {
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...
      */
     pubnub_cancel(pb);
     if (0 != pubnub_free_with_timeout(pb, 1000)) {
         puts("Failed to free the context in due time");
-    }
-    else {
+    } else {
         /* Waits until the context is released from the processing queue */
         wait_seconds(1);
     }
 }
 
-static void ops_callback(pubnub_t *pn, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
-{
-    struct UserData *pUserData = (struct UserData*)user_data;
+static void ops_callback(
+    pubnub_t* pn,
+    enum pubnub_trans trans,
+    enum pubnub_res result,
+    void* user_data) {
+    struct UserData* pUserData = (struct UserData*)user_data;
 
     puts("\n");
-    
+
     switch (trans) {
-    case PBTT_PUBLISH:
-        printf("Published, result: %d\n", result);
-        break;
-    case PBTT_LEAVE:
-        printf("Left, result: %d\n", result);
-        break;
-    case PBTT_TIME:
-        printf("Timed, result: %d\n", result);
-        break;
-    case PBTT_HISTORY:
-        printf("Historied, result: %d\n", result);
-        break;
-    default:
-        printf("None?! result: %d\n", result);
-        break;
+        case PBTT_PUBLISH:
+            printf("Published, result: %d\n", result);
+            break;
+        case PBTT_LEAVE:
+            printf("Left, result: %d\n", result);
+            break;
+        case PBTT_TIME:
+            printf("Timed, result: %d\n", result);
+            break;
+        case PBTT_HISTORY:
+            printf("Historied, result: %d\n", result);
+            break;
+        default:
+            printf("None?! result: %d\n", result);
+            break;
     }
-    
+
     pnc_ops_parse_callback(trans, result, pn);
 
     callback_signal(pUserData);
 }
 
-
-static void subscribe_callback(pubnub_t *pn_sub, enum pubnub_trans trans, enum pubnub_res result, void *user_data)
-{
-    struct UserData *pUserData = (struct UserData*)user_data;
+static void subscribe_callback(
+    pubnub_t* pn_sub,
+    enum pubnub_trans trans,
+    enum pubnub_res result,
+    void* user_data) {
+    struct UserData* pUserData = (struct UserData*)user_data;
 
     if (trans != PBTT_SUBSCRIBE) {
         printf("Non-subsribe response on subscribe instance: %d\n", result);
         return;
     }
-    
+
     pnc_ops_parse_callback(trans, result, pn_sub);
 
     callback_signal(pUserData);
 }
 
-
-static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
-{
+static void InitUserData(struct UserData* pUserData, pubnub_t* pb) {
 #if defined _WIN32
     pUserData->condw = CreateEvent(NULL, TRUE, FALSE, NULL);
 #else
@@ -147,10 +142,8 @@ static void InitUserData(struct UserData *pUserData, pubnub_t *pb)
     pUserData->pb = pb;
 }
 
-
-static void await(struct UserData *pUserData)
-{
-#if defined _WIN32	
+static void await(struct UserData* pUserData) {
+#if defined _WIN32
     ResetEvent(pUserData->condw);
     WaitForSingleObject(pUserData->condw, INFINITE);
 #else
@@ -163,32 +156,29 @@ static void await(struct UserData *pUserData)
 #endif
 }
 
-
-void pnc_ops_init(pubnub_t *pn, pubnub_t *pn_sub)
-{
+void pnc_ops_init(pubnub_t* pn, pubnub_t* pn_sub) {
     pubnub_mutex_init(m_loop_enabled_mutex);
 
     InitUserData(&m_user_data, pn);
     InitUserData(&m_user_data_sub, pn_sub);
-    
+
     pubnub_register_callback(pn, ops_callback, &m_user_data);
     pubnub_register_callback(pn_sub, subscribe_callback, &m_user_data_sub);
 }
-
 
 static
 #if defined _WIN32
     void
 #else
-    void* 
+    void*
 #endif
-pnc_ops_subscribe_thr(void *pn_sub_addr)
-{
-    pubnub_t *pn_sub = (pubnub_t *)pn_sub_addr;
+    pnc_ops_subscribe_thr(void* pn_sub_addr) {
+    pubnub_t* pn_sub = (pubnub_t*)pn_sub_addr;
     enum pubnub_res res;
-    
+
     char channels_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
-    char channel_groups_string[PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
+    char channel_groups_string
+        [PNC_SUBSCRIBE_CHANNELS_LIMIT * PNC_CHANNEL_NAME_SIZE];
 
     puts("\nSubscribe thread created");
     pubnub_mutex_lock(m_loop_enabled_mutex);
@@ -201,46 +191,51 @@ pnc_ops_subscribe_thr(void *pn_sub_addr)
         pubnub_mutex_lock(m_loop_enabled_mutex);
         loop_enabled = m_loop_enabled;
         pubnub_mutex_unlock(m_loop_enabled_mutex);
-        
+
         if (!loop_enabled) {
             break;
         }
 
-//        puts("Subscribe loop...");
-        
+        //        puts("Subscribe loop...");
+
         pnc_subscribe_list_channels(channels_string, sizeof channels_string);
-        pnc_subscribe_list_channel_groups(channel_groups_string, sizeof channel_groups_string);
-        
-        if (strlen(channels_string) == 0 && strlen(channel_groups_string) == 0) {
-            puts("You need add some channels or channel groups first. Ignoring");
+        pnc_subscribe_list_channel_groups(
+            channel_groups_string,
+            sizeof channel_groups_string);
+
+        if (strlen(channels_string) == 0
+            && strlen(channel_groups_string) == 0) {
+            puts(
+                "You need add some channels or channel groups first. Ignoring");
             break;
-        } 
-        else if (strlen(channel_groups_string) == 0) {
+        } else if (strlen(channel_groups_string) == 0) {
             res = pubnub_subscribe(pn_sub, channels_string, NULL);
-        } 
-        else if (strlen(channels_string) == 0) {
+        } else if (strlen(channels_string) == 0) {
             res = pubnub_subscribe(pn_sub, NULL, channel_groups_string);
-        } 
-        else {
-            res = pubnub_subscribe(pn_sub, channels_string, channel_groups_string);
+        } else {
+            res = pubnub_subscribe(
+                pn_sub,
+                channels_string,
+                channel_groups_string);
         }
 
         if (res != PNR_STARTED) {
-            printf("pubnub_subscribe() returned unexpected %d: %s\n", res, pubnub_res_2_string(res));
+            printf(
+                "pubnub_subscribe() returned unexpected %d: %s\n",
+                res,
+                pubnub_res_2_string(res));
             break;
         }
-        
+
         await(&m_user_data_sub);
     }
-    
+
 #if !defined _WIN32
     return NULL;
 #endif
 }
 
-
-void pnc_ops_subscribe(pubnub_t *pn_sub)
-{
+void pnc_ops_subscribe(pubnub_t* pn_sub) {
 #if defined _WIN32
     sub_thread = _beginthread(pnc_ops_subscribe_thr, 0, pn_sub);
 #else
@@ -248,54 +243,60 @@ void pnc_ops_subscribe(pubnub_t *pn_sub)
 #endif
 }
 
-
-void pnc_ops_unsubscribe(pubnub_t *pn_sub)
-{
+void pnc_ops_unsubscribe(pubnub_t* pn_sub) {
     pubnub_mutex_lock(m_loop_enabled_mutex);
     if (m_loop_enabled) {
         m_loop_enabled = false;
-        puts("Subscription loop is disabled and will be stopped after the next message received.");
-    } 
-    else {
+        puts(
+            "Subscription loop is disabled and will be stopped after the next message received.");
+    } else {
         puts("Subscription loop is already disabled.");
     }
     pubnub_mutex_unlock(m_loop_enabled_mutex);
 }
 
-
-void pnc_ops_parse_response(const char *method_name, enum pubnub_res res, pubnub_t *pn)
-{
-    struct UserData *pUserData = pubnub_get_user_data(pn);
+void pnc_ops_parse_response(
+    const char* method_name,
+    enum pubnub_res res,
+    pubnub_t* pn) {
+    struct UserData* pUserData = pubnub_get_user_data(pn);
 
     if (res != PNR_STARTED) {
-        printf("%s returned unexpected %d: %s\n", method_name, res, pubnub_res_2_string(res));
+        printf(
+            "%s returned unexpected %d: %s\n",
+            method_name,
+            res,
+            pubnub_res_2_string(res));
         return;
     }
-    
+
     await(pUserData);
 }
 
-
-void pnc_ops_parse_callback(enum pubnub_trans method_name, enum pubnub_res res, pubnub_t *pn)
-{
-    if(method_name == PBTT_SUBSCRIBE) {
+void pnc_ops_parse_callback(
+    enum pubnub_trans method_name,
+    enum pubnub_res res,
+    pubnub_t* pn) {
+    if (method_name == PBTT_SUBSCRIBE) {
         paint_text_green();
         puts("Subscribe loop...");
     }
     if (res == PNR_HTTP_ERROR) {
-        printf("%d HTTP error / code: %d\n",
-               method_name, pubnub_last_http_code(pn));
+        printf(
+            "%d HTTP error / code: %d\n",
+            method_name,
+            pubnub_last_http_code(pn));
         return;
     }
-    
+
     if (res == PNR_STARTED) {
         printf("%d returned unexpected: PNR_STARTED(%d)\n", method_name, res);
         return;
     }
-    
+
     if (PNR_OK == res) {
-        const char *msg;
-        
+        const char* msg;
+
         puts("***************************");
         printf("Result for %d: success!\n", method_name);
         puts("***************************");
@@ -307,12 +308,18 @@ void pnc_ops_parse_callback(enum pubnub_trans method_name, enum pubnub_res res, 
             puts(msg);
         }
         puts("***************************");
-    } 
-    else {
-        char const *desc = pubnub_last_publish_result(pn);
-        printf("%d failed, error code %d: %s !\n", method_name, res, pubnub_res_2_string(res));
+    } else {
+        char const* desc = pubnub_last_publish_result(pn);
+        printf(
+            "%d failed, error code %d: %s !\n",
+            method_name,
+            res,
+            pubnub_res_2_string(res));
         if (desc[0] != '\0') {
-            printf("Publish failed, with error: '%s' -> %d\n", desc, pubnub_parse_publish_result(desc));
+            printf(
+                "Publish failed, with error: '%s' -> %d\n",
+                desc,
+                pubnub_parse_publish_result(desc));
         }
     }
     reset_text_paint();

@@ -1,6 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-
 /** Revokes the token specified in @p token.
 
     @param pb The pubnub context. Can't be NULL
@@ -9,7 +8,6 @@
   */
 
 enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token);
-
 
 /** Returns the result of the revoke token operation.
 

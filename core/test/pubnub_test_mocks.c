@@ -1,25 +1,24 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "cgreen/cgreen.h"
-#include "cgreen/mocks.h"
 #include "pubnub_test_mocks.h"
 
-#include "pubnub_alloc.h"
-#include "pubnub_grant_token_api.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_internal.h"
-#include "pubnub_internal_common.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-
-#include "pbpal.h"
-#include "pubnub_version_internal.h"
-#include "pubnub_keep_alive.h"
-#include "test/pubnub_test_helper.h"
-
+#include <assert.h>
+#include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
-#include <assert.h>
+
+#include "cgreen/cgreen.h"
+#include "cgreen/mocks.h"
+#include "pbpal.h"
+#include "pubnub_alloc.h"
+#include "pubnub_assert.h"
+#include "pubnub_grant_token_api.h"
+#include "pubnub_internal.h"
+#include "pubnub_internal_common.h"
+#include "pubnub_keep_alive.h"
+#include "pubnub_log.h"
+#include "pubnub_pubsubapi.h"
+#include "pubnub_version_internal.h"
+#include "test/pubnub_test_helper.h"
 
 /* A less chatty cgreen :) */
 
@@ -54,119 +53,102 @@ static int m_j;
 uint8_t string_or_uint8block_mask[10];
 
 /* Awaits given amount of time in seconds */
-void wait_time_in_seconds(time_t time_in_seconds)
-{
+void wait_time_in_seconds(time_t time_in_seconds) {
     time_t time_start = time(NULL);
     do {
     } while ((time(NULL) - time_start) < time_in_seconds);
     return;
 }
 
-
 /* The Pubnub NTF mocks and stubs */
-void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
-{
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state) {
     pb->state = state;
     mock(pb);
 }
 
-int pbntf_got_socket(pubnub_t* pb)
-{
+int pbntf_got_socket(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
-void pbntf_lost_socket(pubnub_t* pb)
-{
+void pbntf_lost_socket(pubnub_t* pb) {
     mock(pb);
 }
 
-void pbntf_update_socket(pubnub_t* pb)
-{
+void pbntf_update_socket(pubnub_t* pb) {
     mock(pb);
 }
 
-void pbntf_start_wait_connect_timer(pubnub_t* pb)
-{
+void pbntf_start_wait_connect_timer(pubnub_t* pb) {
     /* This might be mocked at some point */
 }
 
-void pbntf_start_transaction_timer(pubnub_t* pb)
-{
+void pbntf_start_transaction_timer(pubnub_t* pb) {
     /* This might be mocked at some point */
 }
 
-int pbntf_requeue_for_processing(pubnub_t* pb)
-{
+int pbntf_requeue_for_processing(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
-int pbntf_enqueue_for_processing(pubnub_t* pb)
-{
+int pbntf_enqueue_for_processing(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
-int pbntf_watch_out_events(pubnub_t* pb)
-{
+int pbntf_watch_out_events(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
-int pbntf_watch_in_events(pubnub_t* pb)
-{
+int pbntf_watch_in_events(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
 /* The Pubnub PAL mocks and stubs */
-static void buf_setup(pubnub_t* pb)
-{
-    pb->ptr  = (uint8_t*)pb->core.http_buf;
+static void buf_setup(pubnub_t* pb) {
+    pb->ptr = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
-void pbpal_init(pubnub_t* pb)
-{
+void pbpal_init(pubnub_t* pb) {
     buf_setup(pb);
 }
 
-enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
-{
+enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb) {
     return (int)mock(pb);
 }
-enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
-{
+enum pbpal_resolv_n_connect_result
+pbpal_check_resolv_and_connect(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
 #if defined(PUBNUB_CALLBACK_API)
-#if PUBNUB_CHANGE_DNS_SERVERS
-int pbpal_dns_rotate_server(pubnub_t *pb)
-{
+    #if PUBNUB_CHANGE_DNS_SERVERS
+int pbpal_dns_rotate_server(pubnub_t* pb) {
     return (int)mock(pb);
 }
-#endif /* PUBNUB_CHANGE_DNS_SERVERS */
+    #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
-bool pbpal_connected(pubnub_t* pb)
-{
+bool pbpal_connected(pubnub_t* pb) {
     return (bool)mock(pb);
 }
 
-void pbpal_free(pubnub_t* pb)
-{
+void pbpal_free(pubnub_t* pb) {
     mock(pb);
 }
 
-enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
-{
+enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb) {
     return (int)mock(pb);
 }
 
-void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
-{
+void pbpal_report_error_from_environment(
+    pubnub_t* pb,
+    char const* file,
+    int line) {
     mock(pb);
 }
 
 #if 0
-#include <execinfo.h>
+    #include <execinfo.h>
 static void my_stack_trace(void)
 {
     void *trace[16];
@@ -193,38 +175,34 @@ static void my_stack_trace(void)
 }
 #endif
 
-
-int pbpal_send(pubnub_t* pb, void const* data, size_t n)
-{
+int pbpal_send(pubnub_t* pb, void const* data, size_t n) {
     return (int)mock(pb, data, n);
 }
 
-int pbpal_send_str(pubnub_t* pb, char const* s)
-{
+int pbpal_send_str(pubnub_t* pb, char const* s) {
     return (int)mock(pb, s);
 }
 
-
-int pbpal_send_status(pubnub_t* pb)
-{
+int pbpal_send_status(pubnub_t* pb) {
     return (bool)mock(pb);
 }
 
-int pbpal_start_read_line(pubnub_t* pb)
-{
+int pbpal_start_read_line(pubnub_t* pb) {
     unsigned distance;
 
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->unreadlen)
-                          <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->unreadlen)
+            <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    PUBNUB_ASSERT_UINT((distance + pb->left + pb->unreadlen),
-                       ==,
-                       (sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]));
+    PUBNUB_ASSERT_UINT(
+        (distance + pb->left + pb->unreadlen),
+        ==,
+        (sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]));
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -233,22 +211,19 @@ int pbpal_start_read_line(pubnub_t* pb)
     return +1;
 }
 
-int pbpal_read_len(pubnub_t* pb)
-{
+int pbpal_read_len(pubnub_t* pb) {
     return (char*)pb->ptr - pb->core.http_buf;
 }
 
-
-static int my_recv(void* p, size_t n)
-{
+static int my_recv(void* p, size_t n) {
     static short m_new = 1;
-    int          to_read;
+    int to_read;
     if (string_or_uint8block_mask[(m_i + m_j) / 8] & (1 << (m_i + m_j) % 8)) {
         if (m_new) {
             assert(m_num_string_msgs_rcvd <= sizeof m_string_msg_array);
             if (m_i < m_num_string_msgs_rcvd) {
                 m_read = m_string_msg_array[m_i];
-                m_new  = 0;
+                m_new = 0;
                 assert(m_read != NULL);
                 if (strlen(m_read) == 0) {
                     /* an empty string sent(server response simulation),
@@ -262,8 +237,7 @@ static int my_recv(void* p, size_t n)
                     m_new = 1;
                     return -1;
                 }
-            }
-            else {
+            } else {
                 /* If there is no more 'incoming' string msgs when expected
                  * virtual platform simulates 'connection closed - server
                  * side'(0 bytes received)
@@ -281,15 +255,13 @@ static int my_recv(void* p, size_t n)
             ++m_i;
             m_new = 1;
         }
-    }
-    else {
+    } else {
         if (m_new) {
             assert(m_num_uint8_data_blocks <= sizeof m_uint8_data_block_array);
             if (m_j < m_num_uint8_data_blocks) {
                 m_read = (const char*)m_uint8_data_block_array[m_j]->block;
-                m_new  = 0;
-            }
-            else {
+                m_new = 0;
+            } else {
                 /* If there is no more 'incoming' 'uint8_t' data blocks when
                  * expected virtual platform simulates 'connection closed -
                  * server side'(0 bytes received)
@@ -313,27 +285,30 @@ static int my_recv(void* p, size_t n)
     return to_read;
 }
 
-enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
-{
+enum pubnub_res pbpal_line_read_status(pubnub_t* pb) {
     uint8_t c;
 
     PUBNUB_ASSERT_OPT(STATE_READ_LINE == pb->sock_state);
 
     if (pb->unreadlen == 0) {
         int recvres;
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->left)
-                          == (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->left)
+            == (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         recvres = my_recv((char*)pb->ptr, pb->left);
         if (recvres < 0) {
             return PNR_IN_PROGRESS;
-        }
-        else if (0 == recvres) {
+        } else if (0 == recvres) {
             pb->sock_state = STATE_NONE;
             return PNR_TIMEOUT;
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
         PUBNUB_LOG_TRACE(
-            "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
+            "pb=%p have new data of length=%d: %.*s\n",
+            pb,
+            recvres,
+            recvres,
+            pb->ptr);
         pb->unreadlen = recvres;
         pb->left -= recvres;
     }
@@ -343,9 +318,10 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
         c = *pb->ptr++;
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
-                             pb,
-                             pbpal_read_len(pb));
+            PUBNUB_LOG_TRACE(
+                "pb=%p, newline found, line length: %d, ",
+                pb,
+                pbpal_read_len(pb));
             WATCH_USHORT(pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
@@ -354,7 +330,8 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
     if (pb->left == 0) {
         PUBNUB_LOG_ERROR(
-            "pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
+            "pbpal_line_read_status(pb=%p): buffer full but newline not found",
+            pb);
         pb->sock_state = STATE_NONE;
         return PNR_TX_BUFF_TOO_SMALL;
     }
@@ -362,8 +339,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     return PNR_IN_PROGRESS;
 }
 
-int pbpal_start_read(pubnub_t* pb, size_t n)
-{
+int pbpal_start_read(pubnub_t* pb, size_t n) {
     unsigned distance;
 
     PUBNUB_ASSERT_UINT_OPT(n, >, 0);
@@ -372,26 +348,27 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
     WATCH_USHORT(pb->unreadlen);
     WATCH_USHORT(pb->left);
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->unreadlen)
-                          <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->unreadlen)
+            <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
     WATCH_UINT(distance);
-    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
-                       ==,
-                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_ASSERT_UINT(
+        distance + pb->unreadlen + pb->left,
+        ==,
+        sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
     pb->sock_state = STATE_READ;
-    pb->len        = n;
+    pb->len = n;
 
     return +1;
 }
 
-enum pubnub_res pbpal_read_status(pubnub_t* pb)
-{
+enum pubnub_res pbpal_read_status(pubnub_t* pb) {
     int have_read;
 
     PUBNUB_ASSERT_OPT(STATE_READ == pb->sock_state);
@@ -405,15 +382,13 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
         have_read = my_recv((char*)pb->ptr, to_recv);
         if (have_read < 0) {
             return PNR_IN_PROGRESS;
-        }
-        else if (0 == have_read) {
+        } else if (0 == have_read) {
             pb->sock_state = STATE_NONE;
             return PNR_TIMEOUT;
         }
         PUBNUB_ASSERT_OPT(pb->left >= have_read);
         pb->left -= have_read;
-    }
-    else {
+    } else {
         have_read = (pb->unreadlen >= pb->len) ? pb->len : pb->unreadlen;
         pb->unreadlen -= have_read;
     }
@@ -429,70 +404,58 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
     return PNR_IN_PROGRESS;
 }
 
-
-bool pbpal_closed(pubnub_t* pb)
-{
+bool pbpal_closed(pubnub_t* pb) {
     return (bool)mock(pb);
 }
 
-void pbpal_forget(pubnub_t* pb)
-{
+void pbpal_forget(pubnub_t* pb) {
     mock(pb);
 }
 
-int pbpal_close(pubnub_t* pb)
-{
+int pbpal_close(pubnub_t* pb) {
     pb->sock_state = STATE_NONE;
     return mock(pb);
 }
 
-
 /* The Pubnub version stubs */
 
-char const* pubnub_sdk_name(void)
-{
+char const* pubnub_sdk_name(void) {
     return "unit-test";
 }
 
-char const* pubnub_version(void)
-{
+char const* pubnub_version(void) {
     return "0.1";
 }
 
-char const* pubnub_uname(void)
-{
+char const* pubnub_uname(void) {
     return "unit-test-0.1";
 }
 
-char const* pubnub_uagent(void)
-{
+char const* pubnub_uagent(void) {
     return "POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION;
 }
 
-
 /* Assert "catching" */
-static bool        m_expect_assert;
-static jmp_buf     m_assert_exp_jmpbuf;
+static bool m_expect_assert;
+static jmp_buf m_assert_exp_jmpbuf;
 static char const* m_expect_assert_file;
 
 int _set_expected_assert(char const* file) {
-    m_expect_assert      = true;                                           \
-    m_expect_assert_file = file;                                           \
+    m_expect_assert = true;
+    m_expect_assert_file = file;
 
-    return setjmp(m_assert_exp_jmpbuf);                    \
-} 
+    return setjmp(m_assert_exp_jmpbuf);
+}
 
 void _test_expected_assert() {
     attest(!m_expect_assert);
 }
 
-void assert_handler(char const* s, const char* file, long i)
-{
+void assert_handler(char const* s, const char* file, long i) {
     printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
 }
 
-void test_assert_handler(char const* s, const char* file, long i)
-{
+void test_assert_handler(char const* s, const char* file, long i) {
     //    mock(s, i);
     printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
 
@@ -504,8 +467,7 @@ void test_assert_handler(char const* s, const char* file, long i)
     }
 }
 
-void free_m_msgs(char** msg_array)
-{
+void free_m_msgs(char** msg_array) {
     int i;
 
     assert(m_num_string_msgs_rcvd < sizeof m_string_msg_array + 1);
@@ -517,8 +479,7 @@ void free_m_msgs(char** msg_array)
     }
 }
 
-void incoming(char const* str, struct uint8_block* p_data)
-{
+void incoming(char const* str, struct uint8_block* p_data) {
     if (str != NULL) {
         char* pmsg = malloc(sizeof(char) * (strlen(str) + 1));
 
@@ -527,7 +488,8 @@ void incoming(char const* str, struct uint8_block* p_data)
         /** Marks the bit for string to be read(received) in due time.
             If the bit is 0 uint8_data_block is expected.
          */
-        string_or_uint8block_mask[(m_num_string_msgs_rcvd + m_num_uint8_data_blocks) / 8] |=
+        string_or_uint8block_mask
+            [(m_num_string_msgs_rcvd + m_num_uint8_data_blocks) / 8] |=
             1 << (m_num_string_msgs_rcvd + m_num_uint8_data_blocks) % 8;
         strcpy(pmsg, str);
         m_string_msg_array[m_num_string_msgs_rcvd++] = pmsg;
@@ -538,20 +500,18 @@ void incoming(char const* str, struct uint8_block* p_data)
     }
 }
 
-void pubnub_setup_mocks(pubnub_t** pbp) 
-{
+void pubnub_setup_mocks(pubnub_t** pbp) {
     pubnub_assert_set_handler((pubnub_assert_handler_t)assert_handler);
-    m_read                  = NULL;
-    m_num_string_msgs_rcvd  = 0;
+    m_read = NULL;
+    m_num_string_msgs_rcvd = 0;
     m_num_uint8_data_blocks = 0;
-    m_i                     = 0;
-    m_j                     = 0;
-    *pbp                     = pubnub_alloc();
+    m_i = 0;
+    m_j = 0;
+    *pbp = pubnub_alloc();
     assert(*pbp != NULL);
 }
 
-void pubnub_cleanup_mocks(pubnub_t* pbp) 
-{
+void pubnub_cleanup_mocks(pubnub_t* pbp) {
     if (pbp->state != PBS_IDLE) {
         expect(pbpal_close, when(pb, equals(pbp)), returns(0));
         expect(pbpal_closed, when(pb, equals(pbp)), returns(true));

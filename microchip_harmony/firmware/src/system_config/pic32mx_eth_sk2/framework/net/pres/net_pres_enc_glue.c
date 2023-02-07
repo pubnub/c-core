@@ -35,13 +35,12 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 *******************************************************************************/
 
 #include "net_pres_enc_glue.h"
-#include "net/pres/net_pres_transportapi.h"
+
 #include "net/pres/net_pres_certstore.h"
+#include "net/pres/net_pres_transportapi.h"
 
-
-NET_PRES_EncProviderObject net_pres_EncProviderStreamClient0 = 
-{
-   /* .fpInit =    NET_PRES_EncProviderStreamClientInit0,
+NET_PRES_EncProviderObject net_pres_EncProviderStreamClient0 = {
+    /* .fpInit =    NET_PRES_EncProviderStreamClientInit0,
     .fpDeinit =  NET_PRES_EncProviderStreamClientDeinit0,
     .fpOpen =    NET_PRES_EncProviderStreamClientOpen0,
     .fpConnect = NET_PRES_EncProviderClientConnect0,

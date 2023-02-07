@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PB_STRNLEN_S
-#define INC_PB_STRNLEN_S
+    #define INC_PB_STRNLEN_S
 
-#include <stddef.h>
+    #include <stddef.h>
 
 /** Returns the length of the given null-terminated byte string, that is, the number
     of characters in a character array whose first element is pointed to by @p str up to
@@ -15,6 +15,6 @@
     @param str pointer to the null-terminated byte string to be examined.
     @param strsz maximum number of characters to examine.
   */
-size_t pb_strnlen_s(const char *str, size_t strsz);
+size_t pb_strnlen_s(const char* str, size_t strsz);
 
 #endif /* INC_PB_STRNLEN_S */

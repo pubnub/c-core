@@ -1,19 +1,20 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_SUBSCRIBE_V2_MESSAGE
-#define      INC_PUBNUB_SUBSCRIBE_V2_MESSAGE
+    #define INC_PUBNUB_SUBSCRIBE_V2_MESSAGE
 
-#if !PUBNUB_USE_SUBSCRIBE_V2
-#error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
-#endif
+    #if !PUBNUB_USE_SUBSCRIBE_V2
+        #error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
+    #endif
 
-#include <stdbool.h>
-#include "pubnub_memory_block.h"
+    #include <stdbool.h>
+
+    #include "pubnub_memory_block.h"
 
 /* subscribe_v2 message types */
 enum pubnub_message_type {
-    /* Indicates that message was received as a signal */ 
+    /* Indicates that message was received as a signal */
     pbsbSignal,
-    /* Indicates that message was published */ 
+    /* Indicates that message was published */
     pbsbPublished,
     /* Indicates action on published message */
     pbsbAction,
@@ -48,9 +49,8 @@ struct pubnub_v2_message {
     struct pubnub_char_mem_block payload;
     /** The message metadata, as published */
     struct pubnub_char_mem_block metadata;
-    /** Indicates the message type: a signal, published, or something else */ 
+    /** Indicates the message type: a signal, published, or something else */
     enum pubnub_message_type message_type;
 };
-
 
 #endif /* INC_PUBNUB_SUBSCRIBE_V2_MESSAGE */

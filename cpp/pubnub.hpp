@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_HPP
-#define INC_PUBNUB_HPP
-
+    #define INC_PUBNUB_HPP
 
 /** @file pubnub.hpp
  *
@@ -10,152 +9,138 @@
  * implementation.
  */
 
-#include <functional>
-#include <string>
+    #include <functional>
+    #include <string>
 
-#if PUBNUB_USE_EXTERN_C
+    #if PUBNUB_USE_EXTERN_C
 extern "C" {
-#endif
-#include "core/pubnub_api_types.h"
-#include "core/pubnub_assert.h"
-#include "core/pubnub_helper.h"
-#if PUBNUB_USE_EXTERN_C
+    #endif
+    #include "core/pubnub_api_types.h"
+    #include "core/pubnub_assert.h"
+    #include "core/pubnub_helper.h"
+    #if PUBNUB_USE_EXTERN_C
 }
-#endif
+    #endif
 
-#include "tribool.hpp"
+    #include "tribool.hpp"
 
 namespace pubnub {
 class context;
 
-#if __cplusplus < 201103L
+    #if __cplusplus < 201103L
 // See what we had to deal with? :)
 
-template <class R, class T, class A, class B>
-class mem_fun2_t : public std::binary_function<A, B, R> {
+template<class R, class T, class A, class B>
+class mem_fun2_t: public std::binary_function<A, B, R> {
     R (T::*pmem)(A, B);
     T* d_t;
 
-public:
-    explicit mem_fun2_t(R (T::*p)(A, B), T* t)
-        : pmem(p)
-        , d_t(t)
-    {
+  public:
+    explicit mem_fun2_t(R (T::*p)(A, B), T* t) : pmem(p), d_t(t) {}
+    R operator()(A a, B b) const {
+        return (d_t->*pmem)(a, b);
     }
-    R operator()(A a, B b) const { return (d_t->*pmem)(a, b); }
 };
 
-template <class R, class T, class A, class B>
-class const_mem_fun2_t : public std::binary_function<A, B, R> {
+template<class R, class T, class A, class B>
+class const_mem_fun2_t: public std::binary_function<A, B, R> {
     R (T::*pmem)(A, B) const;
     T* d_t;
 
-public:
-    explicit const_mem_fun2_t(R (T::*p)(A, B) const, T* t)
-        : pmem(p)
-        , d_t(t)
-    {
+  public:
+    explicit const_mem_fun2_t(R (T::*p)(A, B) const, T* t) : pmem(p), d_t(t) {}
+    R operator()(A a, B b) const {
+        return (d_t->*pmem)(a, b);
     }
-    R operator()(A a, B b) const { return (d_t->*pmem)(a, b); }
 };
 
-template <class R, class T, class A, class B>
-class mem_fun2_ref_t : public std::binary_function<A, B, R> {
+template<class R, class T, class A, class B>
+class mem_fun2_ref_t: public std::binary_function<A, B, R> {
     R (T::*pmem)(A, B);
     T& d_t;
 
-public:
-    explicit mem_fun2_ref_t(R (T::*p)(A, B), T& t)
-        : pmem(p)
-        , d_t(t)
-    {
+  public:
+    explicit mem_fun2_ref_t(R (T::*p)(A, B), T& t) : pmem(p), d_t(t) {}
+    R operator()(A a, B b) const {
+        return (d_t.*pmem)(a, b);
     }
-    R operator()(A a, B b) const { return (d_t.*pmem)(a, b); }
 };
 
-template <class R, class T, class A, class B>
-class const_mem_fun2_ref_t : public std::binary_function<A, B, R> {
+template<class R, class T, class A, class B>
+class const_mem_fun2_ref_t: public std::binary_function<A, B, R> {
     R (T::*pmem)(A, B) const;
     T& d_t;
 
-public:
-    explicit const_mem_fun2_ref_t(R (T::*p)(A, B) const, T& t)
-        : pmem(p)
-        , d_t(t)
-    {
+  public:
+    explicit const_mem_fun2_ref_t(R (T::*p)(A, B) const, T& t) :
+        pmem(p),
+        d_t(t) {}
+    R operator()(A a, B b) const {
+        return (d_t.*pmem)(a, b);
     }
-    R operator()(A a, B b) const { return (d_t.*pmem)(a, b); }
 };
 
-template <class R, class T, class A, class B>
-mem_fun2_t<R, T, A, B> mem_fun(R (T::*f)(A, B), T* t)
-{
+template<class R, class T, class A, class B>
+mem_fun2_t<R, T, A, B> mem_fun(R (T::*f)(A, B), T* t) {
     return mem_fun2_t<R, T, A, B>(f, t);
 }
-template <class R, class T, class A, class B>
-const_mem_fun2_t<R, T, A, B> mem_fun(R (T::*f)(A, B) const, T* t)
-{
+template<class R, class T, class A, class B>
+const_mem_fun2_t<R, T, A, B> mem_fun(R (T::*f)(A, B) const, T* t) {
     return const_mem_fun2_t<R, T, A, B>(f, t);
 }
-template <class R, class T, class A, class B>
-mem_fun2_ref_t<R, T, A, B> mem_fun_ref(R (T::*f)(A, B), T& t)
-{
+template<class R, class T, class A, class B>
+mem_fun2_ref_t<R, T, A, B> mem_fun_ref(R (T::*f)(A, B), T& t) {
     return mem_fun2_ref_t<R, T, A, B>(f, t);
 }
-template <class R, class T, class A, class B>
-const_mem_fun2_ref_t<R, T, A, B> mem_fun_ref(R (T::*f)(A, B) const, T& t)
-{
+template<class R, class T, class A, class B>
+const_mem_fun2_ref_t<R, T, A, B> mem_fun_ref(R (T::*f)(A, B) const, T& t) {
     return const_mem_fun2_ref_t<R, T, A, B>(f, t);
 }
 struct caller {
     virtual void callme(context& ctx, pubnub_res result) = 0;
     virtual ~caller() {}
 };
-template <class T> class caller_adaptor : public caller {
-public:
-    caller_adaptor(T t)
-        : d_t(t)
-    {
+template<class T>
+class caller_adaptor: public caller {
+  public:
+    caller_adaptor(T t) : d_t(t) {}
+    void callme(context& ctx, pubnub_res result) {
+        d_t(ctx, result);
     }
-    void    callme(context& ctx, pubnub_res result) { d_t(ctx, result); }
-    caller* clone() { return new caller_adaptor(d_t); }
+    caller* clone() {
+        return new caller_adaptor(d_t);
+    }
     virtual ~caller_adaptor() {}
 
-private:
+  private:
     T d_t;
 };
 class caller_keeper {
     caller* d_pcaller;
 
-public:
-    caller_keeper()
-        : d_pcaller(0)
-    {
-    }
-    caller_keeper(caller* pc)
-        : d_pcaller(pc)
-    {
+  public:
+    caller_keeper() : d_pcaller(0) {}
+    caller_keeper(caller* pc) : d_pcaller(pc) {
         PUBNUB_ASSERT_OPT(pc != 0);
     }
-    caller_keeper(caller_keeper& x)
-        : d_pcaller(x.d_pcaller)
-    {
+    caller_keeper(caller_keeper& x) : d_pcaller(x.d_pcaller) {
         x.d_pcaller = 0;
     }
-    void operator=(caller_keeper& x)
-    {
-        d_pcaller   = x.d_pcaller;
+    void operator=(caller_keeper& x) {
+        d_pcaller = x.d_pcaller;
         x.d_pcaller = 0;
     }
-    ~caller_keeper() { delete d_pcaller; }
-    void operator()(context& ctx, pubnub_res result)
-    {
+    ~caller_keeper() {
+        delete d_pcaller;
+    }
+    void operator()(context& ctx, pubnub_res result) {
         d_pcaller->callme(ctx, result);
     }
-    bool operator!() const { return 0 == d_pcaller; }
+    bool operator!() const {
+        return 0 == d_pcaller;
+    }
 };
-#endif
-
+    #endif
 
 /** A future (pending) result of a Pubnub
  * transaction/operation/request.  It is somewhat similar to the
@@ -166,7 +151,7 @@ public:
  * you just select the "back-end" during the build.
  */
 class futres {
-public:
+  public:
     /// The implementation class will be different for
     /// different platforms - C++11 being one platform
     class impl;
@@ -186,8 +171,7 @@ public:
 
     /// Awaits the end of transaction and returns its final result
     /// (outcome).
-    pubnub_res await()
-    {
+    pubnub_res await() {
         start_await();
         return end_await();
     }
@@ -195,36 +179,40 @@ public:
     // C++11 std::future<> compatible API
 
     /// Same as await()
-    pubnub_res get() { return await(); }
+    pubnub_res get() {
+        return await();
+    }
 
     /// Return whether this object is valid
     bool valid() const;
 
     /// Just wait for the transaction to end, don't get the
     /// outcome
-    void wait() /*const*/ { await(); }
+    void wait() /*const*/ {
+        await();
+    }
 
-        // C++17 (somewhat) compatbile API
+    // C++17 (somewhat) compatbile API
 
-        /// Pass a function, function object (or lambda in C++11)
-        /// which accepts a Pubnub context and pubnub_res and it will
-        /// be called when the transaction ends.
-#if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
+    /// Pass a function, function object (or lambda in C++11)
+    /// which accepts a Pubnub context and pubnub_res and it will
+    /// be called when the transaction ends.
+    #if (__cplusplus >= 201103L) || (_MSC_VER >= 1600)
     void then(std::function<void(pubnub::context&, pubnub_res)> f);
-#else
-    template <class T> void then(T f)
-    {
+    #else
+    template<class T>
+    void then(T f) {
         caller_adaptor<T> x(f);
-        caller*           p = x.clone();
-        caller_keeper     k(p);
+        caller* p = x.clone();
+        caller_keeper k(p);
         thenx(k);
     }
 
-private:
+  private:
     void thenx(caller_keeper kiper);
 
-public:
-#endif
+  public:
+    #endif
 
     /// Returns true if the transaction is over, else otherwise
     bool is_ready() const;
@@ -233,22 +221,19 @@ public:
     pubnub_publish_res parse_last_publish_result();
 
     // We can construct from a temporary
-#if __cplusplus >= 201103L
-    futres(futres&& x) :
-        d_ctx(x.d_ctx),
-        d_pimpl(x.d_pimpl)
-    {
+    #if __cplusplus >= 201103L
+    futres(futres&& x) : d_ctx(x.d_ctx), d_pimpl(x.d_pimpl) {
         x.d_pimpl = nullptr;
     }
-#else
+    #else
     futres(futres const& x);
-#endif
+    #endif
 
     /// Indicates whether we should retry the last transaction
     /// @see pubnub_should_retry()
     tribool should_retry() const;
 
-private:
+  private:
     // Pubnub future result is non-copyable
     futres(futres& x);
 
@@ -259,9 +244,9 @@ private:
     /// between the Pubnub callback and this "future result"
     impl* d_pimpl;
 
-#if __cplusplus >= 201103L
+    #if __cplusplus >= 201103L
     std::function<void(context&, pubnub_res)> d_thenf;
-#endif
+    #endif
 };
 
 /** A helper class for a subscribe loop. Supports both a
@@ -269,7 +254,7 @@ private:
     "callback-like" interface.
  */
 class subloop {
-public:
+  public:
     /** Creates a subscribe loop, ready to do the looping.  We
         assume that the @p ctx Pubnub context will be valid
         throughout the lifetime of this object.
@@ -300,19 +285,19 @@ public:
         @par Basic usage
         @snippet pubnub_subloop_sample.cpp Loop - push interface
     */
-#if __cplusplus >= 201103L
+    #if __cplusplus >= 201103L
     void loop(std::function<int(std::string, context&, pubnub_res)> f);
-#else
-    template <class T> void loop(T f)
-    {
+    #else
+    template<class T>
+    void loop(T f) {
         std::string msg;
         while (0 == f(msg, d_ctx, fetch(msg))) {
             continue;
         }
     }
-#endif
+    #endif
 
-private:
+  private:
     /// The context on which to do the subscribe loop
     context& d_ctx;
     /// Channel on which to subscribe in the loop
@@ -321,9 +306,8 @@ private:
     /// subscribe
     bool d_delivering;
 };
-} // namespace pubnub
+}  // namespace pubnub
 
-#include "pubnub_common.hpp"
+    #include "pubnub_common.hpp"
 
-
-#endif // !defined INC_PUBNUB_HPP
+#endif  // !defined INC_PUBNUB_HPP

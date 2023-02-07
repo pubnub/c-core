@@ -1,10 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CREATE
-#define	INC_PUBNUB_CREATE
+    #define INC_PUBNUB_CREATE
 
-
-#include "pubnub_api_types.h"
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_create.h 
 
@@ -16,7 +14,6 @@
  * on the returned context. If pubnub_alloc() fails, it just returns NULL.
  * @pre keysub != NULL
  */
-pubnub_t *pubnub_create(char const *pubkey, char const *keysub);
-
+pubnub_t* pubnub_create(char const* pubkey, char const* keysub);
 
 #endif /* !defined INC_PUBNUB_CREATE */

@@ -41,12 +41,11 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 // DOM-IGNORE-END
 
+#include <xc.h> /* Defines special funciton registers, CP0 regs  */
 
-#include <xc.h>                 /* Defines special funciton registers, CP0 regs  */
+#include "system/debug/sys_debug.h"
 #include "system_config.h"
 #include "system_definitions.h"
-#include "system/debug/sys_debug.h"
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -72,11 +71,10 @@ static unsigned int _excep_code;
 static unsigned int _excep_addr;
 
 /* Pointer to the string describing the cause of the exception. */
-static char *_cause_str;
+static char* _cause_str;
 
 /* Array identifying the cause (indexed by _exception_code). */
-static char *cause[] = 
-{
+static char* cause[] = {
     "Interrupt",
     "Undefined",
     "Undefined",
@@ -95,11 +93,9 @@ static char *cause[] =
     "Reserved",
     "Reserved",
     "Reserved",
-    "Reserved"
-};
+    "Reserved"};
 
 // </editor-fold>
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -121,19 +117,21 @@ static char *cause[] =
     Refer to the XC32 User's Guide for additional information.
  */
 
-void _general_exception_handler ( void )
-{
+void _general_exception_handler(void) {
     /* Mask off Mask of the ExcCode Field from the Cause Register
     Refer to the MIPs Software User's manual */
     _excep_code = (_CP0_GET_CAUSE() & 0x0000007C) >> 2;
     _excep_addr = _CP0_GET_EPC();
-    _cause_str  = cause[_excep_code];
+    _cause_str = cause[_excep_code];
 
-    SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\nGeneral Exception %s (cause=%d, addr=%x).\n", 
-                    _cause_str, _excep_code, _excep_addr);
+    SYS_DEBUG_PRINT(
+        SYS_ERROR_ERROR,
+        "\nGeneral Exception %s (cause=%d, addr=%x).\n",
+        _cause_str,
+        _excep_code,
+        _excep_addr);
 
-    while (1)
-    {
+    while (1) {
         SYS_DEBUG_BreakPoint();
     }
 }

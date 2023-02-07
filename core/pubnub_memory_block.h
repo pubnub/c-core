@@ -1,10 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_MEMORY_BLOCK
-#define	INC_PUBNUB_MEMORY_BLOCK
+    #define INC_PUBNUB_MEMORY_BLOCK
 
-#include <stdint.h>
-#include <stdlib.h>
-
+    #include <stdint.h>
+    #include <stdlib.h>
 
 /** @file pubnub_memory_block.h
 
@@ -15,12 +14,11 @@
     memory allocated (in whatever way) to said pointer.
  */
 
-
 /** A block of memory whose pointer is pointing to a
     bytes. This is most often the preferred one to use.
 */
 struct pubnub_byte_mem_block {
-    uint8_t *ptr;
+    uint8_t* ptr;
     size_t size;
 };
 
@@ -28,7 +26,7 @@ struct pubnub_byte_mem_block {
     Not nice, but useful at times.
  */
 struct pubnub_mem_block {
-    void *ptr;
+    void* ptr;
     size_t size;
 };
 
@@ -36,7 +34,7 @@ struct pubnub_mem_block {
     convenience to avoid a lot of casting when dealing with strings.
 */
 struct pubnub_char_mem_block {
-    char *ptr;
+    char* ptr;
     size_t size;
 };
 

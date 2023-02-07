@@ -1,27 +1,22 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-
-#include "core/pubnub_ntf_callback.h"
-#include "pbtimespec_elapsed_ms.h"
-#include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
-#include "core/pubnub_timer_list.h"
-#include "core/pbpal.h"
-
-#include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
-#include "core/pbpal_ntf_callback_queue.h"
-#include "core/pbpal_ntf_callback_handle_timer_list.h"
-
 #include <process.h>
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/pbpal.h"
+#include "core/pbpal_ntf_callback_handle_timer_list.h"
+#include "core/pbpal_ntf_callback_queue.h"
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_ntf_callback.h"
+#include "core/pubnub_timer_list.h"
+#include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
+#include "pbtimespec_elapsed_ms.h"
+#include "pubnub_internal.h"
 
 #if !defined _Guarded_by_
-#define _Guarded_by_(x)
+    #define _Guarded_by_(x)
 #endif
-
 
 struct SocketWatcherData {
     _Guarded_by_(mutw) struct pbpal_poll_data* poll;
@@ -29,32 +24,25 @@ struct SocketWatcherData {
     CRITICAL_SECTION mutw;
     CRITICAL_SECTION timerlock;
     CRITICAL_SECTION stoplock;
-    HANDLE           thread_handle;
-    DWORD            thread_id;
+    HANDLE thread_handle;
+    DWORD thread_id;
 #if PUBNUB_TIMERS_API
     _Guarded_by_(timerlock) pubnub_t* timer_head;
 #endif
     struct pbpal_ntf_callback_queue queue;
 };
 
-
 static struct SocketWatcherData m_watcher;
 
-
-int pbntf_watch_in_events(pubnub_t* pbp)
-{
+int pbntf_watch_in_events(pubnub_t* pbp) {
     return pbpal_ntf_watch_in_events(m_watcher.poll, pbp);
 }
 
-
-int pbntf_watch_out_events(pubnub_t* pbp)
-{
+int pbntf_watch_out_events(pubnub_t* pbp) {
     return pbpal_ntf_watch_out_events(m_watcher.poll, pbp);
 }
 
-
-void socket_watcher_thread(void* arg)
-{
+void socket_watcher_thread(void* arg) {
     FILETIME prev_time;
     GetSystemTimeAsFileTime(&prev_time);
 
@@ -62,7 +50,7 @@ void socket_watcher_thread(void* arg)
 
     for (;;) {
         const DWORD ms = 100;
-        bool        stop_thread;
+        bool stop_thread;
 
         EnterCriticalSection(&m_watcher.stoplock);
         stop_thread = m_watcher.stop_socket_watcher_thread;
@@ -79,7 +67,7 @@ void socket_watcher_thread(void* arg)
 
         if (PUBNUB_TIMERS_API) {
             FILETIME current_time;
-            int      elapsed;
+            int elapsed;
             GetSystemTimeAsFileTime(&current_time);
             elapsed = pbtimespec_elapsed_ms(prev_time, current_time);
             if (elapsed > 0) {
@@ -93,9 +81,7 @@ void socket_watcher_thread(void* arg)
     }
 }
 
-
-int pbntf_init(void)
-{
+int pbntf_init(void) {
     InitializeCriticalSection(&m_watcher.stoplock);
     InitializeCriticalSection(&m_watcher.mutw);
     InitializeCriticalSection(&m_watcher.timerlock);
@@ -108,10 +94,13 @@ int pbntf_init(void)
     pbpal_ntf_callback_queue_init(&m_watcher.queue);
 
     m_watcher.thread_handle = (HANDLE)_beginthread(
-        socket_watcher_thread, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024, NULL);
+        socket_watcher_thread,
+        PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024,
+        NULL);
     if ((HANDLE)-1L == m_watcher.thread_handle) {
-        PUBNUB_LOG_ERROR("Failed to start the polling thread, error code: %d\n",
-                         errno);
+        PUBNUB_LOG_ERROR(
+            "Failed to start the polling thread, error code: %d\n",
+            errno);
         DeleteCriticalSection(&m_watcher.mutw);
         DeleteCriticalSection(&m_watcher.timerlock);
         DeleteCriticalSection(&m_watcher.stoplock);
@@ -124,9 +113,7 @@ int pbntf_init(void)
     return 0;
 }
 
-
-void pubnub_stop(void)
-{
+void pubnub_stop(void) {
     pbauto_heartbeat_stop();
 
     EnterCriticalSection(&m_watcher.stoplock);
@@ -134,39 +121,32 @@ void pubnub_stop(void)
     LeaveCriticalSection(&m_watcher.stoplock);
 }
 
-
-int pbntf_enqueue_for_processing(pubnub_t* pb)
-{
+int pbntf_enqueue_for_processing(pubnub_t* pb) {
     return pbpal_ntf_callback_enqueue_for_processing(&m_watcher.queue, pb);
 }
 
-
-int pbntf_requeue_for_processing(pubnub_t* pb)
-{
+int pbntf_requeue_for_processing(pubnub_t* pb) {
     return pbpal_ntf_callback_requeue_for_processing(&m_watcher.queue, pb);
 }
 
-
-int pbntf_got_socket(pubnub_t* pb)
-{
+int pbntf_got_socket(pubnub_t* pb) {
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_save_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);
 
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head,
+            pb,
+            pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 
     return +1;
 }
 
-
-void pbntf_lost_socket(pubnub_t* pb)
-{
+void pbntf_lost_socket(pubnub_t* pb) {
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);
@@ -178,35 +158,31 @@ void pbntf_lost_socket(pubnub_t* pb)
     LeaveCriticalSection(&m_watcher.timerlock);
 }
 
-
-void pbntf_start_wait_connect_timer(pubnub_t* pb)
-{
+void pbntf_start_wait_connect_timer(pubnub_t* pb) {
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->wait_connect_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head,
+            pb,
+            pb->wait_connect_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 }
 
-
-void pbntf_start_transaction_timer(pubnub_t* pb)
-{
+void pbntf_start_transaction_timer(pubnub_t* pb) {
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head,
+            pb,
+            pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 }
 
-
-void pbntf_update_socket(pubnub_t* pb)
-{
+void pbntf_update_socket(pubnub_t* pb) {
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_update_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);

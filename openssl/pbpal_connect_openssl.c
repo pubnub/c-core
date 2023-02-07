@@ -2,38 +2,33 @@
 #include "core/pbpal.h"
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <Ws2tcpip.h>
+    #include <Ws2tcpip.h>
+    #include <winsock2.h>
 #else
-#include <sys/select.h>
-#define SOCKET_ERROR -1
+    #include <sys/select.h>
+    #define SOCKET_ERROR -1
 #endif
 
-#include "pbpal_add_system_certs.h"
-#include "pubnub_internal.h"
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+
 #include "core/pubnub_assert.h"
+#include "core/pubnub_dns_servers.h"
 #include "core/pubnub_log.h"
 #include "lib/sockets/pbpal_adns_sockets.h"
 #include "lib/sockets/pbpal_socket_blocking_io.h"
-#include "core/pubnub_dns_servers.h"
-
-#include <sys/types.h>
-
-#include <openssl/pem.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-
-#include <string.h>
-#include <stdlib.h>
+#include "pbpal_add_system_certs.h"
+#include "pubnub_internal.h"
 
 #define TLS_PORT 443
 
-
 PUBNUB_STATIC_ASSERT(PUBNUB_TIMERS_API, need_TIMERS_API);
 
-
-static int print_to_pubnub_log(const char* s, size_t len, void* p)
-{
+static int print_to_pubnub_log(const char* s, size_t len, void* p) {
     PUBNUB_UNUSED(len);
 
     PUBNUB_LOG_ERROR("From OpenSSL: pb=%p '%s'", p, s);
@@ -71,7 +66,6 @@ static char pubnub_cert_Starfield[] =
     "WQPJIrSPnNVeKtelttQKbfi3QBFGmh95DmK/D5fs4C8fF5Q=\n"
     "-----END CERTIFICATE-----\n";
 
-
 /* GlobalSign Root class 2 Certificate, used at the time of this
    writing (2016-11-26):
 
@@ -102,13 +96,13 @@ static char pubnub_cert_GlobalSign[] =
     "HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==\n"
     "-----END CERTIFICATE-----\n";
 
-
-static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
-{
+static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert) {
     X509* cert;
-    BIO*  mem = BIO_new(BIO_s_mem());
+    BIO* mem = BIO_new(BIO_s_mem());
     if (NULL == mem) {
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed BIO_new for PEM certificate\n", sslCtx);
+        PUBNUB_LOG_ERROR(
+            "SSL_CTX=%p: Failed BIO_new for PEM certificate\n",
+            sslCtx);
         return -1;
     }
     BIO_puts(mem, pem_cert);
@@ -116,7 +110,9 @@ static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
     BIO_free(mem);
     if (NULL == cert) {
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed to read PEM certificate\n", sslCtx);
+        PUBNUB_LOG_ERROR(
+            "SSL_CTX=%p: Failed to read PEM certificate\n",
+            sslCtx);
         return -1;
     }
 
@@ -131,16 +127,12 @@ static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
     return 0;
 }
 
-
-static int add_pubnub_cert(SSL_CTX* sslCtx)
-{
+static int add_pubnub_cert(SSL_CTX* sslCtx) {
     int rslt = add_pem_cert(sslCtx, pubnub_cert_Starfield);
     return rslt || add_pem_cert(sslCtx, pubnub_cert_GlobalSign);
 }
 
-
-static void add_certs(pubnub_t* pb)
-{
+static void add_certs(pubnub_t* pb) {
     PUBNUB_LOG_TRACE(
         "add_certs(pb=%p): pb->options.use_system_certificate_store=%d, "
         "pb->ssl_userPEMcert=%p, pb->ssl_CAfile='%s', pb->ssl_CApath='%s'.\n",
@@ -161,10 +153,11 @@ static void add_certs(pubnub_t* pb)
 
     if ((NULL == pb->ssl_CAfile) && (NULL == pb->ssl_CApath)) {
         add_pubnub_cert(pb->pal.ctx);
-    }
-    else {
+    } else {
         if (!SSL_CTX_load_verify_locations(
-                pb->pal.ctx, pb->ssl_CAfile, pb->ssl_CApath)) {
+                pb->pal.ctx,
+                pb->ssl_CAfile,
+                pb->ssl_CApath)) {
             ERR_print_errors_cb(print_to_pubnub_log, NULL);
             PUBNUB_LOG_ERROR(
                 "SSL_CTX_load_verify_locations(CAfile=%s, CApath=%s) failed",
@@ -174,8 +167,7 @@ static void add_certs(pubnub_t* pb)
     }
 }
 
-enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
-{
+enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb) {
     SSL* ssl;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -218,15 +210,14 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
    repeatedly, if necessary, until TLS/SSL platform connection is established,
    or failed to establish.
 */
-enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
-{
+enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
     SSL* ssl;
-    int  rslt;
+    int rslt;
     X509* cert;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((PBS_CONNECTED == pb->state)
-                      || (PBS_WAIT_TLS_CONNECT == pb->state));
+    PUBNUB_ASSERT_OPT(
+        (PBS_CONNECTED == pb->state) || (PBS_WAIT_TLS_CONNECT == pb->state));
     PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     ssl = pb->pal.ssl;
     PUBNUB_ASSERT(NULL != ssl);
@@ -253,23 +244,24 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 
             return pbtlsFailed;
         }
-    }
-    else {
+    } else {
         PUBNUB_LOG_WARNING(
-            "pb=%p: SSL -the peer certificate was not presented.\n", pb);
+            "pb=%p: SSL -the peer certificate was not presented.\n",
+            pb);
     }
 
     if (pb->options.reuse_SSL_session) {
-        PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n",
-                        pb,
-                        SSL_session_reused(pb->pal.ssl) ? "yes" : "no");
+        PUBNUB_LOG_INFO(
+            "pb=%p: SSL session reused: %s\n",
+            pb,
+            SSL_session_reused(pb->pal.ssl) ? "yes" : "no");
         if (pb->pal.session != NULL) {
             SSL_SESSION_free(pb->pal.session);
         }
         pb->pal.session = SSL_get1_session(pb->pal.ssl);
         if (0 == pb->pal.ip_timeout) {
             pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session)
-                                 + SSL_SESSION_get_timeout(pb->pal.session);
+                + SSL_SESSION_get_timeout(pb->pal.session);
         }
     }
 

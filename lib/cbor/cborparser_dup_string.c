@@ -23,18 +23,19 @@
 ****************************************************************************/
 
 #ifndef _BSD_SOURCE
-#define _BSD_SOURCE 1
+    #define _BSD_SOURCE 1
 #endif
 #ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE 1
+    #define _DEFAULT_SOURCE 1
 #endif
 #ifndef __STDC_LIMIT_MACROS
-#  define __STDC_LIMIT_MACROS 1
+    #define __STDC_LIMIT_MACROS 1
 #endif
+
+#include <stdlib.h>
 
 #include "cbor.h"
 #include "compilersupport_p.h"
-#include <stdlib.h>
 
 /**
  * \fn CborError cbor_value_dup_text_string(const CborValue *value, char **buffer, size_t *buflen, CborValue *next)
@@ -94,8 +95,11 @@
  *
  * \sa cbor_value_get_text_string_chunk(), cbor_value_copy_byte_string(), cbor_value_dup_text_string()
  */
-CborError _cbor_value_dup_string(const CborValue *value, void **buffer, size_t *buflen, CborValue *next)
-{
+CborError _cbor_value_dup_string(
+    const CborValue* value,
+    void** buffer,
+    size_t* buflen,
+    CborValue* next) {
     CborError err;
     cbor_assert(buffer);
     cbor_assert(buflen);

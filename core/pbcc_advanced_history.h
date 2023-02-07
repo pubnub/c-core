@@ -1,7 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if PUBNUB_USE_ADVANCED_HISTORY
-#if !defined INC_PBCC_ADVANCED_HISTORY
-#define INC_PBCC_ADVANCED_HISTORY
+    #if !defined INC_PBCC_ADVANCED_HISTORY
+        #define INC_PBCC_ADVANCED_HISTORY
 
 /** @file pbcc_advanced_history.h
 
@@ -14,7 +14,6 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
 struct pubnub_chan_msg_count;
 
 struct pbcc_context;
-
 
 /** Parses server response on 'message_counts' transaction request and prepares
     msg offset for reading the content of json object for 'channels' key containing
@@ -46,9 +45,10 @@ int pbcc_get_chan_msg_counts_size(struct pbcc_context* p);
     @retval 0 on success
     @retval -1 on error
  */
-int pbcc_get_chan_msg_counts(struct pbcc_context* p, 
-                             size_t* io_count, 
-                             struct pubnub_chan_msg_count* chan_msg_counters);
+int pbcc_get_chan_msg_counts(
+    struct pbcc_context* p,
+    size_t* io_count,
+    struct pubnub_chan_msg_count* chan_msg_counters);
 
 /** @p io_count is the array allocated by the user that has the same number of elements as
     the corresponding @p channel(s string) has channel names. The array is filled upon
@@ -59,17 +59,19 @@ int pbcc_get_chan_msg_counts(struct pbcc_context* p,
     @retval 0 on success
     @retval -1 on error
  */
-int pbcc_get_message_counts(struct pbcc_context* p, char const* channel, int* o_count);
+int pbcc_get_message_counts(
+    struct pbcc_context* p,
+    char const* channel,
+    int* o_count);
 
 /** Prepares the 'message_counts' operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
 enum pubnub_res pbcc_message_counts_prep(
-                                         enum pubnub_trans pt,
-                                         struct pbcc_context* p,
-                                         char const*          channel,
-                                         char const*          timetoken,
-                                         char const*          channel_timetokens);
-#endif /* INC_PBCC_ADVANCED_HISTORY */
+    enum pubnub_trans pt,
+    struct pbcc_context* p,
+    char const* channel,
+    char const* timetoken,
+    char const* channel_timetokens);
+    #endif /* INC_PBCC_ADVANCED_HISTORY */
 #endif /* PUBNUB_USE_ADVANCED_HISTORY */
-

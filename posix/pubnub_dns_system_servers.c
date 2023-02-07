@@ -1,19 +1,20 @@
-#include "pubnub_internal.h"
-#include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
-#include "core/pubnub_dns_servers.h"
-#include "lib/pubnub_parse_ipv4_addr.h"
-
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
-int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size_t n)
-{
+#include "core/pubnub_assert.h"
+#include "core/pubnub_dns_servers.h"
+#include "core/pubnub_log.h"
+#include "lib/pubnub_parse_ipv4_addr.h"
+#include "pubnub_internal.h"
+
+int pubnub_dns_read_system_servers_ipv4(
+    struct pubnub_ipv4_address* o_ipv4,
+    size_t n) {
     FILE* fp;
-    char  buffer[255];
-    unsigned  i = 0;
-    bool  found = false;
+    char buffer[255];
+    unsigned i = 0;
+    bool found = false;
 
     PUBNUB_ASSERT_OPT(n > 0);
     PUBNUB_ASSERT_OPT(o_ipv4 != NULL);
@@ -21,7 +22,8 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
     fp = fopen("/etc/resolv.conf", "r");
     if (NULL == fp) {
         PUBNUB_LOG_ERROR(
-            "Can't open file:'/etc/resolv.conf' for reading!-errno:%d\n", errno);
+            "Can't open file:'/etc/resolv.conf' for reading!-errno:%d\n",
+            errno);
         return -1;
     }
     while ((i < n) && !feof(fp)) {
@@ -34,16 +36,16 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
                     "- ipv4 'numbers-and-dots' notation string(%s)"
                     "read from file:'/etc/resolv.conf' is not valid!\n",
                     buffer);
-            }
-            else {
+            } else {
                 found = true;
                 ++i;
             }
         }
     }
     if (fclose(fp) != 0) {
-        PUBNUB_LOG_ERROR("Error closing file: '/etc/resolv.conf'! errno:%d\n",
-                         errno);
+        PUBNUB_LOG_ERROR(
+            "Error closing file: '/etc/resolv.conf'! errno:%d\n",
+            errno);
         return -1;
     }
     if (!found) {

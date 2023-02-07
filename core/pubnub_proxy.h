@@ -1,12 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_PROXY
-#define INC_PUBNUB_PROXY
+    #define INC_PUBNUB_PROXY
 
+    #include <stdint.h>
 
-#include "pubnub_api_types.h"
-
-#include <stdint.h>
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_proxy.h
 
@@ -28,7 +26,6 @@
     So, here we also have API for setting HTTP authentication options,
     rather than it being in some "more general place".
 */
-
 
 /** Known Internet proxies, by protocol used. C-core can be configured
     to support none, some, or all of them.
@@ -80,7 +77,6 @@ enum pubnub_proxy_type {
     pbproxyNONE
 };
 
-
 /** Known HTTP authentication schemes to be used with the HTTP proxy.
  */
 enum pubnub_http_authentication_scheme {
@@ -101,7 +97,6 @@ enum pubnub_http_authentication_scheme {
      */
     pbhtauNTLM
 };
-
 
 /** Returns the current proxy type/protocol for the context @p p. */
 enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
@@ -124,10 +119,11 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
     @return 0: OK, otherwise: error, specified protocol not supported,
     or @p ip_address_or_url too long(or invalid)
 */
-int pubnub_set_proxy_manual(pubnub_t*              p,
-                            enum pubnub_proxy_type protocol,
-                            char const*            ip_address_or_url,
-                            uint16_t               port);
+int pubnub_set_proxy_manual(
+    pubnub_t* p,
+    enum pubnub_proxy_type protocol,
+    char const* ip_address_or_url,
+    uint16_t port);
 
 /** Sets the configuration for the Internet proxy, by reading from the
     "system" configuration.
@@ -170,9 +166,10 @@ void pubnub_set_proxy_none(pubnub_t* p);
 
     @return 0: OK, otherwise: error
  */
-int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
-                                                      char const* username,
-                                                      char const* password);
+int pubnub_set_proxy_authentication_username_password(
+    pubnub_t* p,
+    char const* username,
+    char const* password);
 
 /** Set the context @p p to not use _any_ authentication scheme.  This
     is the default, so you only need to call this function if you're
@@ -185,13 +182,11 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
  */
 int pubnub_set_proxy_authentication_none(pubnub_t* p);
 
-
 /** Returns the currently set HTTP proxy authentication scheme
     for context @p p.
 */
 enum pubnub_http_authentication_scheme
 pubnub_proxy_authentication_scheme_get(pubnub_t* p);
-
 
 /** Gives the whole proxy configuration, as-is. It doesn't provide any
     assurance as to whether this configuration is correct.
@@ -212,11 +207,11 @@ pubnub_proxy_authentication_scheme_get(pubnub_t* p);
     @retval 0 OK
     @retval otherwise Some error 
 */
-int pubnub_proxy_get_config(pubnub_t*               pb,
-                            enum pubnub_proxy_type* protocol,
-                            uint16_t*               port,
-                            char*                   host,
-                            unsigned                n);
-
+int pubnub_proxy_get_config(
+    pubnub_t* pb,
+    enum pubnub_proxy_type* protocol,
+    uint16_t* port,
+    char* host,
+    unsigned n);
 
 #endif /* defined INC_PUBNUB_PROXY */

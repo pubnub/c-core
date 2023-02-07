@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_POSIX_CALLBACK
-#define	INC_PUBNUB_POSIX_CALLBACK
+    #define INC_PUBNUB_POSIX_CALLBACK
 
 /** @mainpage The OpenSSL Pubnub client library - callback interface
 
@@ -25,22 +25,21 @@
 
 /** @file pubnub_callback.h */
 
-#include "pubnub_config.h"
+    #include "pubnub_config.h"
 
 /* -- You should not change anything below this line -- */
 
-#if !defined(PUBNUB_CALLBACK_API)
-#error You have to define PUBNUB_CALLBACK_API
-#endif
+    #if !defined(PUBNUB_CALLBACK_API)
+        #error You have to define PUBNUB_CALLBACK_API
+    #endif
 
-#include "core/pubnub_alloc.h"
-#include "core/pubnub_assert.h"
-#include "core/pubnub_pubsubapi.h"
-#include "core/pubnub_coreapi.h"
-#include "core/pubnub_ntf_callback.h"
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "core/pubnub_subscribe_v2.h"
-#endif
-
+    #include "core/pubnub_alloc.h"
+    #include "core/pubnub_assert.h"
+    #include "core/pubnub_coreapi.h"
+    #include "core/pubnub_ntf_callback.h"
+    #include "core/pubnub_pubsubapi.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "core/pubnub_subscribe_v2.h"
+    #endif
 
 #endif /* !defined INC_PUBNUB_CALLBACK */

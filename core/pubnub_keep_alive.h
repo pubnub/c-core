@@ -1,19 +1,17 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_KEEP_ALIVE
-#define INC_PUBNUB_KEEP_ALIVE
+    #define INC_PUBNUB_KEEP_ALIVE
 
-
-#include "pubnub_api_types.h"
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_keep_alive.h
 
     API for setting the Keep-Alive options.
 */
 
-#if !PUBNUB_ADVANCED_KEEP_ALIVE
-#error This API is only supported if PUBNUB_ADVANCED_KEEP_ALIVE macro constant is 'true'
-#endif
+    #if !PUBNUB_ADVANCED_KEEP_ALIVE
+        #error This API is only supported if PUBNUB_ADVANCED_KEEP_ALIVE macro constant is 'true'
+    #endif
 
 /** Set Keep-Alive options, according to "HYBI" Internat draft.
 
@@ -28,6 +26,5 @@
     Setting to 1 has the effect of not using keep-alive.
  */
 void pubnub_set_keep_alive_param(pubnub_t* pb, unsigned timeout, unsigned max);
-
 
 #endif /* !defined INC_PUBNUB_KEEP_ALIVE */

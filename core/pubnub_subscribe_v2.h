@@ -1,16 +1,15 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_SUBSCRIBE_V2
-#define INC_PUBNUB_SUBSCRIBE_V2
+    #define INC_PUBNUB_SUBSCRIBE_V2
 
-#include "pubnub_config.h"
+    #include "pubnub_api_types.h"
+    #include "pubnub_config.h"
 
-#include "pubnub_api_types.h"
+    #if !PUBNUB_USE_SUBSCRIBE_V2
+        #error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
+    #endif
 
-#if !PUBNUB_USE_SUBSCRIBE_V2
-#error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
-#endif
-
-#include "pubnub_subscribe_v2_message.h"
+    #include "pubnub_subscribe_v2_message.h"
 
 /** @file pubnub_subscribe_v2.h
 
@@ -78,10 +77,10 @@ struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void);
     @param opt Subscribe V2 options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
-                                    const char*                        channel,
-                                    struct pubnub_subscribe_v2_options opts);
-
+enum pubnub_res pubnub_subscribe_v2(
+    pubnub_t* p,
+    const char* channel,
+    struct pubnub_subscribe_v2_options opts);
 
 /** Parse and return the next V2 message, if any.
 
@@ -98,8 +97,5 @@ enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
         }
  */
 struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp);
-
-
-
 
 #endif /* !defined INC_PUBNUB_SUBSCRIBE_V2 */

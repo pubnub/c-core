@@ -1,22 +1,18 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_qt.h"
-
 #include <QTextStream>
 
+#include "pubnub_qt.h"
 
-class pubnub_qt_sample : public QObject {
+class pubnub_qt_sample: public QObject {
     Q_OBJECT
-  
-public:
-    pubnub_qt_sample() 
-        : d_pb("demo", "demo")
-        , d_out(stdout)
-    {}
-    
-public slots:
+
+  public:
+    pubnub_qt_sample() : d_pb("demo", "demo"), d_out(stdout) {}
+
+  public slots:
     void execute();
-    
-private slots:
+
+  private slots:
     void onPublish(pubnub_res result);
     void onConnect(pubnub_res result);
     void onSubscribe(pubnub_res result);
@@ -26,9 +22,9 @@ private slots:
     void onWhereNow(pubnub_res result);
     void onSetState(pubnub_res result);
     void onStateGet(pubnub_res result);
-            
-private:
-    bool reconnect(char const *from, char const *to);
+
+  private:
+    bool reconnect(char const* from, char const* to);
     pubnub_qt d_pb;
     QTextStream d_out;
 };

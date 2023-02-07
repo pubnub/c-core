@@ -1,11 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CRYPTO
-#define	INC_PUBNUB_CRYPTO
+    #define INC_PUBNUB_CRYPTO
 
-
-#include "core/pubnub_api_types.h"
-#include "core/pubnub_memory_block.h"
-
+    #include "core/pubnub_api_types.h"
+    #include "core/pubnub_memory_block.h"
 
 /** @file pubnub_crypto.h 
 
@@ -17,7 +15,6 @@
     platform, one can encrypt/decrypt with or without using SSL/TLS.
 
 */
-
 
 /** Sets @p secret_key to be used with the Pubnub context @p p.
 
@@ -31,8 +28,7 @@
     use the secret key (i.e. do no encrpytion/decryption)
     @param PNR_OK or a value indicating an error
  */
-enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
-
+enum pubnub_res pubnub_set_secret_key(pubnub_t* p, char const* secret_key);
 
 /** Encrypts a message @p msg to a Base64 encoded @p base64_str, which
     is allocated by the user. The number of bytes allocated for @p base64_str
@@ -49,13 +45,22 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
     @param n The size of the string
     @return 0: OK, -1: error
 */
-int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
+int pubnub_encrypt(
+    char const* cipher_key,
+    pubnub_bymebl_t msg,
+    char* base64_str,
+    size_t* n);
 
 /** Similar to pubnub_encrypt() - but this function doesn't allocate
     memory, it uses the memory provided by @p buffer for its "working
     memory".
 */
-int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
+int pubnub_encrypt_buffered(
+    char const* cipher_key,
+    pubnub_bymebl_t msg,
+    char* base64_str,
+    size_t* n,
+    pubnub_bymebl_t buffer);
 
 /** Decrypts a message from a Base64 encoded string @p base64_str to
     user-allocated memory @p data. On input @p data->size holds the
@@ -74,12 +79,19 @@ int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *b
     @param data User allocated memory block to write the decrypted contents to
     @return 0: OK, -1: error
 */
-int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
+int pubnub_decrypt(
+    char const* cipher_key,
+    char const* base64_str,
+    pubnub_bymebl_t* data);
 
 /** Similar to pubnub_decrypt(), but never allocates memory - it uses
     the memory provided by @p buffer as its "working memory".
 */
-int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
+int pubnub_decrypt_buffered(
+    char const* cipher_key,
+    char const* base64_str,
+    pubnub_bymebl_t* data,
+    pubnub_bymebl_t* buffer);
 
 /** Similar to pubnub_decrpyt(), but this will allocate the memory to
     write the decrypted contents to and return it as the result.
@@ -89,8 +101,8 @@ int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubn
     @result Memory block (pointer and size) of the decoded and decrypted
     message. On failure, pointer will be NULL and size is undefined.
 */
-pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
-
+pubnub_bymebl_t
+pubnub_decrypt_alloc(char const* cipher_key, char const* base64_str);
 
 /** Decrypts the next message in the context @p p using the key
     @p cipher_key, puting the decrypted contents to user-allocated
@@ -114,7 +126,8 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
     point to be made is that it also does some memory management
     (allocting and deallocating).
  */
-enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
+enum pubnub_res
+pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char* s, size_t* n);
 
 /** This function is very similar to pubnub_get_decrypted(), but it
     allocates the (memory for the) decrypted string and returns it as
@@ -129,7 +142,8 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
 
     On failure, a NULL pointer is returned.
 */
-pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
+pubnub_bymebl_t
+pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key);
 
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key
@@ -140,7 +154,11 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
         opts.cipher_key = cipher_key;;
         return pubnub_publish_ex(p, channel, message, opts);
 */
-enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
+enum pubnub_res pubnub_publish_encrypted(
+    pubnub_t* p,
+    char const* channel,
+    char const* message,
+    char const* cipher_key);
 
 /** Get the buffer size required to encode an array with the given
     number of bytes.
@@ -150,7 +168,11 @@ int base64_max_size(int encode_this_many_bytes);
 /** Base64 encoding. Returns non-zero when the provided buffer is too small
     to hold the encoded string.
 */
-int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes);
+int base64encode(
+    char* result,
+    int max_size,
+    const void* b64_encode_this,
+    int encode_this_many_bytes);
 
 /** Cryptographic message signing for PAM.
 
@@ -158,6 +180,15 @@ int base64encode(char* result, int max_size, const void* b64_encode_this, int en
 */
 char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 
-enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
-enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
+enum pubnub_res pn_gen_pam_v2_sign(
+    pubnub_t* p,
+    char const* qs_to_sign,
+    char const* partial_url,
+    char* signature);
+enum pubnub_res pn_gen_pam_v3_sign(
+    pubnub_t* p,
+    char const* qs_to_sign,
+    char const* partial_url,
+    char const* msg,
+    char* signature);
 #endif /* defined INC_PUBNUB_CRYPTO */

@@ -1,10 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_ALLOC
-#define      INC_PUBNUB_ALLOC
+    #define INC_PUBNUB_ALLOC
 
-
-#include "pubnub_api_types.h"
-
+    #include "pubnub_api_types.h"
 
 /** Returns an allocated context. After successful allocation, please
     call pubnub_init() to prepare the context for regular use.
@@ -14,7 +12,7 @@
 
     @return Context pointer on success, NULL on error
  */
-pubnub_t *pubnub_alloc(void);
+pubnub_t* pubnub_alloc(void);
 
 /** Frees a previously allocated context, if it is not in a
     transaction.  If a context is in a transaction, it will cancel it
@@ -30,7 +28,6 @@ pubnub_t *pubnub_alloc(void);
     @param pb Pointer to a context which to free
     @return 0: OK, context freed; else: not freed, transaction cancel started
 */
-int pubnub_free(pubnub_t *pb);
+int pubnub_free(pubnub_t* pb);
 
-
-#endif  /* !defined INC_PUBNUB_ALLOC */
+#endif /* !defined INC_PUBNUB_ALLOC */

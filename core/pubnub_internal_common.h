@@ -1,115 +1,116 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_INTERNAL_COMMON
-#define INC_PUBNUB_INTERNAL_COMMON
+    #define INC_PUBNUB_INTERNAL_COMMON
 
-#include "pubnub_config.h"
-#include "core/pubnub_ccore_pubsub.h"
-#include "core/pubnub_netcore.h"
-#include "core/pubnub_mutex.h"
+    #include "core/pubnub_ccore_pubsub.h"
+    #include "core/pubnub_mutex.h"
+    #include "core/pubnub_netcore.h"
+    #include "pubnub_config.h"
 
-#if defined(PUBNUB_CALLBACK_API)
-#include "core/pubnub_ntf_callback.h"
-#include "core/pubnub_dns_servers.h"
-#endif
+    #if defined(PUBNUB_CALLBACK_API)
+        #include "core/pubnub_dns_servers.h"
+        #include "core/pubnub_ntf_callback.h"
+    #endif
 
-#if !defined(PUBNUB_USE_IPV6)
-#define PUBNUB_USE_IPV6 0
-#endif
+    #if !defined(PUBNUB_USE_IPV6)
+        #define PUBNUB_USE_IPV6 0
+    #endif
 
-#if !defined(PUBNUB_SET_DNS_SERVERS)
-#define PUBNUB_SET_DNS_SERVERS 0
-#endif
+    #if !defined(PUBNUB_SET_DNS_SERVERS)
+        #define PUBNUB_SET_DNS_SERVERS 0
+    #endif
 
-#if !defined(PUBNUB_USE_MULTIPLE_ADDRESSES)
-#define PUBNUB_USE_MULTIPLE_ADDRESSES 0
-#endif
+    #if !defined(PUBNUB_USE_MULTIPLE_ADDRESSES)
+        #define PUBNUB_USE_MULTIPLE_ADDRESSES 0
+    #endif
 
-#if !defined(PUBNUB_CHANGE_DNS_SERVERS)
-#define PUBNUB_CHANGE_DNS_SERVERS 0
-#endif
+    #if !defined(PUBNUB_CHANGE_DNS_SERVERS)
+        #define PUBNUB_CHANGE_DNS_SERVERS 0
+    #endif
 
-#define PUBNUB_ADNS_RETRY_AFTER_CLOSE                               \
-    (PUBNUB_CHANGE_DNS_SERVERS || PUBNUB_USE_MULTIPLE_ADDRESSES)
+    #define PUBNUB_ADNS_RETRY_AFTER_CLOSE \
+        (PUBNUB_CHANGE_DNS_SERVERS || PUBNUB_USE_MULTIPLE_ADDRESSES)
 
-#if !defined(PUBNUB_ONLY_PUBSUB_API)
-#define PUBNUB_ONLY_PUBSUB_API 0
-#endif
+    #if !defined(PUBNUB_ONLY_PUBSUB_API)
+        #define PUBNUB_ONLY_PUBSUB_API 0
+    #endif
 
-#if !defined(PUBNUB_USE_SUBSCRIBE_V2)
-#define PUBNUB_USE_SUBSCRIBE_V2 0
-#endif
+    #if !defined(PUBNUB_USE_SUBSCRIBE_V2)
+        #define PUBNUB_USE_SUBSCRIBE_V2 0
+    #endif
 
-#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
-#define PUBNUB_USE_ADVANCED_HISTORY 0
-#endif
+    #if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+        #define PUBNUB_USE_ADVANCED_HISTORY 0
+    #endif
 
-#if !defined(PUBNUB_USE_FETCH_HISTORY)
-#define PUBNUB_USE_FETCH_HISTORY 0
-#endif
+    #if !defined(PUBNUB_USE_FETCH_HISTORY)
+        #define PUBNUB_USE_FETCH_HISTORY 0
+    #endif
 
-#if !defined(PUBNUB_USE_OBJECTS_API)
-#define PUBNUB_USE_OBJECTS_API 0
-#endif
+    #if !defined(PUBNUB_USE_OBJECTS_API)
+        #define PUBNUB_USE_OBJECTS_API 0
+    #endif
 
-#if !defined(PUBNUB_USE_ACTIONS_API)
-#define PUBNUB_USE_ACTIONS_API 0
-#endif
+    #if !defined(PUBNUB_USE_ACTIONS_API)
+        #define PUBNUB_USE_ACTIONS_API 0
+    #endif
 
-#if !defined(PUBNUB_USE_GRANT_TOKEN_API)
-#define PUBNUB_USE_GRANT_TOKEN_API 0
-#endif
+    #if !defined(PUBNUB_USE_GRANT_TOKEN_API)
+        #define PUBNUB_USE_GRANT_TOKEN_API 0
+    #endif
 
-#if !defined(PUBNUB_USE_REVOKE_TOKEN_API)
-#define PUBNUB_USE_REVOKE_TOKEN_API 0
-#endif
+    #if !defined(PUBNUB_USE_REVOKE_TOKEN_API)
+        #define PUBNUB_USE_REVOKE_TOKEN_API 0
+    #endif
 
-#if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
-#define PUBNUB_USE_AUTO_HEARTBEAT 0
-#endif
-#if !defined(QT_VERSION)
-#include "core/pbauto_heartbeat.h"
-#else
-#define M_channelInfo()
-#define M_heartbeatInfo()
-#endif /* !defined(QT_VERSION_STR) */
+    #if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
+        #define PUBNUB_USE_AUTO_HEARTBEAT 0
+    #endif
+    #if !defined(QT_VERSION)
+        #include "core/pbauto_heartbeat.h"
+    #else
+        #define M_channelInfo()
+        #define M_heartbeatInfo()
+    #endif /* !defined(QT_VERSION_STR) */
 
-#if !defined(PUBNUB_PROXY_API)
-#define PUBNUB_PROXY_API 0
-#elif PUBNUB_PROXY_API
-#include "core/pubnub_proxy.h"
-#include "core/pubnub_proxy_core.h"
-#include "core/pbhttp_digest.h"
-#endif
+    #if !defined(PUBNUB_PROXY_API)
+        #define PUBNUB_PROXY_API 0
+    #elif PUBNUB_PROXY_API
+        #include "core/pbhttp_digest.h"
+        #include "core/pubnub_proxy.h"
+        #include "core/pubnub_proxy_core.h"
+    #endif
 
-#if defined(PUBNUB_CALLBACK_API)
-#define PUBNUB_NEED_RETRY_AFTER_CLOSE 1
-#else
-#define PUBNUB_NEED_RETRY_AFTER_CLOSE (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
-#endif
+    #if defined(PUBNUB_CALLBACK_API)
+        #define PUBNUB_NEED_RETRY_AFTER_CLOSE 1
+    #else
+        #define PUBNUB_NEED_RETRY_AFTER_CLOSE \
+            (PUBNUB_PROXY_API || PUBNUB_USE_SSL)
+    #endif
 
-#if !defined PUBNUB_USE_GZIP_COMPRESSION
-#define PUBNUB_USE_GZIP_COMPRESSION 0
-#elif PUBNUB_USE_GZIP_COMPRESSION
-#include "core/pbgzip_compress.h"
-#endif
+    #if !defined PUBNUB_USE_GZIP_COMPRESSION
+        #define PUBNUB_USE_GZIP_COMPRESSION 0
+    #elif PUBNUB_USE_GZIP_COMPRESSION
+        #include "core/pbgzip_compress.h"
+    #endif
 
-#if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
-#define PUBNUB_RECEIVE_GZIP_RESPONSE 0
-#elif PUBNUB_RECEIVE_GZIP_RESPONSE
-#include "core/pbgzip_decompress.h"
-#endif
+    #if !defined PUBNUB_RECEIVE_GZIP_RESPONSE
+        #define PUBNUB_RECEIVE_GZIP_RESPONSE 0
+    #elif PUBNUB_RECEIVE_GZIP_RESPONSE
+        #include "core/pbgzip_decompress.h"
+    #endif
 
-#include <stdint.h>
-#if PUBNUB_ADVANCED_KEEP_ALIVE
-#include <time.h>
-#endif
+    #include <stdint.h>
+    #if PUBNUB_ADVANCED_KEEP_ALIVE
+        #include <time.h>
+    #endif
 
-/* Maximum object length that will be sent via PATCH, or POST methods */
-#define PUBNUB_MAX_OBJECT_LENGTH 30000
+    /* Maximum object length that will be sent via PATCH, or POST methods */
+    #define PUBNUB_MAX_OBJECT_LENGTH 30000
 
-/* Default value port is initialized with in case of settable origin. Only 
+    /* Default value port is initialized with in case of settable origin. Only 
    values different than this are taken into account when making connections */
-#define INITIAL_PORT_VALUE 0
+    #define INITIAL_PORT_VALUE 0
 
 /** State of a Pubnub socket. Some states are specific to some
     PALs.
@@ -135,7 +136,6 @@ enum PBSocketState {
     STATE_SENDING_DATA = 8
 };
 
-
 /** Possible states of NTLM mini-FSM */
 enum NPBNTLM_State {
     /** Idle */
@@ -152,13 +152,13 @@ enum NPBNTLM_State {
     pbntlmDone
 };
 
-/** Maximum supported length of the NTLM token (message) */
-#define PUBNUB_NTLM_MAX_TOKEN 1024
+    /** Maximum supported length of the NTLM token (message) */
+    #define PUBNUB_NTLM_MAX_TOKEN 1024
 
-#if PUBNUB_USE_WIN_SSPI
-#define SECURITY_WIN32
-#include <sspi.h>
-#endif
+    #if PUBNUB_USE_WIN_SSPI
+        #define SECURITY_WIN32
+        #include <sspi.h>
+    #endif
 
 /** The data of the NTLM mini-FSM.
  */
@@ -173,7 +173,7 @@ struct pbntlm_context {
      * message */
     unsigned in_token_size;
 
-#if PUBNUB_USE_WIN_SSPI
+    #if PUBNUB_USE_WIN_SSPI
     /** The SSPI context handle */
     CtxtHandle hcontext;
     /** The SSPI credentials handle */
@@ -181,19 +181,19 @@ struct pbntlm_context {
     /** The authentication identity (from username and password (and
      domain), if supplied. */
     SEC_WINNT_AUTH_IDENTITY identity;
-#endif
+    #endif
 };
 
 typedef struct pbntlm_context pbntlm_ctx_t;
 
 struct pubnub_options {
-#if PUBNUB_BLOCKING_IO_SETTABLE
+    #if PUBNUB_BLOCKING_IO_SETTABLE
     /** Indicates whether to use blocking I/O. Not implemented if
         choosing between blocking and non-blocking is not supported
         on a platform.
      */
     bool use_blocking_io : 1;
-#endif
+    #endif
 
     /** Indicates whether to use HTTP keep-alive. If used,
         subsequent transactions will be faster, unless the (TCP/IP
@@ -203,11 +203,11 @@ struct pubnub_options {
      */
     bool use_http_keep_alive : 1;
 
-#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
+    #if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
     /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
     bool ipv6_connectivity : 1;
-#endif
-#if PUBNUB_USE_SSL
+    #endif
+    #if PUBNUB_USE_SSL
     /** Should the PubNub client establish the connection to
       * PubNub using SSL? */
     bool useSSL : 1;
@@ -220,30 +220,30 @@ struct pubnub_options {
     bool use_system_certificate_store : 1;
     /** Re-use SSL session on a new connection */
     bool reuse_SSL_session : 1;
-#endif
+    #endif
 };
 
 struct pubnub_flags {
-#if PUBNUB_USE_SSL
+    #if PUBNUB_USE_SSL
     /** Try to establish TLS/SSL over existing TCP/IP connection: yes/no */
     bool trySSL : 1;
-#endif
+    #endif
     /** Should close connection */
     bool should_close : 1;
-#if PUBNUB_NEED_RETRY_AFTER_CLOSE
+    #if PUBNUB_NEED_RETRY_AFTER_CLOSE
     /** Retry the same Pubnub request after closing current TCP
         connection.
       */
     bool retry_after_close : 1;
-#endif
+    #endif
     /** Indicates whether current transaction started while connection
         was kept alive(by client)(true:yes, false:no).
         Used when deciding whether closed connection detected should be
         renewed without losing transaction at hand.
      */
     bool started_while_kept_alive : 1;
-#if defined(PUBNUB_CALLBACK_API)
-#define SENT_QUERIES_SIZE_IN_BITS 3
+    #if defined(PUBNUB_CALLBACK_API)
+        #define SENT_QUERIES_SIZE_IN_BITS 3
     /** Number of DNS queries sent cosecutively in a single transaction to a single DNS
         server.
         Important when DNS server doesn't answer right away.
@@ -251,9 +251,9 @@ struct pubnub_flags {
         but, sometimes, there could be more.
         Macro constant limiting number of retries is defined in 'pubnub_config.h'
       */
-    int sent_queries : SENT_QUERIES_SIZE_IN_BITS;
-#if PUBNUB_CHANGE_DNS_SERVERS
-#define ROTATIONS_COUNT_SIZE_IN_BITS 3
+    int sent_queries: SENT_QUERIES_SIZE_IN_BITS;
+        #if PUBNUB_CHANGE_DNS_SERVERS
+            #define ROTATIONS_COUNT_SIZE_IN_BITS 3
     /** Number of full DNS servers list rotations in single transaction to a single DNS
         server.
         Important when DNS server doesn't answer and transaction timeout. List of DNS 
@@ -261,11 +261,11 @@ struct pubnub_flags {
         Macro constant limiting number of full DNS servers list rotations.
      */
     int rotations_count: ROTATIONS_COUNT_SIZE_IN_BITS;
-#endif /* PUBNUB_CHANGE_DNS_SERVERS */
-#endif
+        #endif /* PUBNUB_CHANGE_DNS_SERVERS */
+    #endif
 };
 
-#if PUBNUB_CHANGE_DNS_SERVERS
+    #if PUBNUB_CHANGE_DNS_SERVERS
 struct pbdns_servers_check {
     /* One-bit mask that shifts */
     uint8_t dns_mask;
@@ -276,11 +276,11 @@ struct pbdns_servers_check {
      */
     uint8_t dns_server_check;
 };
-#endif
+    #endif
 
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    #if PUBNUB_USE_MULTIPLE_ADDRESSES
 struct pubnub_multi_addresses {
-    time_t time_of_the_last_dns_query; 
+    time_t time_of_the_last_dns_query;
     /* Number of spare ipv4 addresses */
     int n_ipv4;
     /* ipv4 address index(from the array) currently used */
@@ -289,7 +289,7 @@ struct pubnub_multi_addresses {
     struct pubnub_ipv4_address ipv4_addresses[PUBNUB_MAX_IPV4_ADDRESSES];
     /* Time to live for each saved ipv4 address */
     uint16_t ttl_ipv4[PUBNUB_MAX_IPV4_ADDRESSES];
-#if PUBNUB_USE_IPV6
+        #if PUBNUB_USE_IPV6
     /* Number of spare ipv6 addresses */
     int n_ipv6;
     /* ipv6 address index(from the array) currently used */
@@ -298,10 +298,9 @@ struct pubnub_multi_addresses {
     struct pubnub_ipv6_address ipv6_addresses[PUBNUB_MAX_IPV6_ADDRESSES];
     /* Time to live for each saved ipv6 address */
     uint16_t ttl_ipv6[PUBNUB_MAX_IPV6_ADDRESSES];
-#endif
+        #endif
 };
-#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
-
+    #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 
 /** The Pubnub context
 
@@ -356,11 +355,11 @@ struct pubnub_ {
     /** Last received HTTP (result) code */
     uint16_t http_code;
 
-#if defined PUBNUB_ORIGIN_SETTABLE
+    #if defined PUBNUB_ORIGIN_SETTABLE
     char const* origin;
-    
+
     uint16_t port;
-#endif
+    #endif
 
     struct pubnub_pal pal;
 
@@ -373,94 +372,94 @@ struct pubnub_ {
         Takes values from enum 'pubnub_method' defined in 'pubnub_api_types.h'.
       */
     uint8_t method;
-    
-#if PUBNUB_ADVANCED_KEEP_ALIVE
+
+    #if PUBNUB_ADVANCED_KEEP_ALIVE
     struct pubnub_keep_alive_data {
-        time_t   timeout;
-        time_t   t_connect;
+        time_t timeout;
+        time_t t_connect;
         unsigned max;
         unsigned count;
     } keep_alive;
-#endif
+    #endif
 
-#if PUBNUB_RECEIVE_GZIP_RESPONSE
+    #if PUBNUB_RECEIVE_GZIP_RESPONSE
     enum pubnub_data_compressionType data_compressed;
-#endif
+    #endif
 
-#if PUBNUB_USE_SSL
+    #if PUBNUB_USE_SSL
     /** Certificate store file */
     char const* ssl_CAfile;
     /** Certificate store directory */
     char const* ssl_CApath;
     /** User-defined, in-memory, PEM certificate to use */
     char const* ssl_userPEMcert;
-#endif /* PUBNUB_USE_SSL */
+    #endif /* PUBNUB_USE_SSL */
 
-#if PUBNUB_THREADSAFE
+    #if PUBNUB_THREADSAFE
     pubnub_mutex_t monitor;
-#endif
+    #endif
 
-#if PUBNUB_TIMERS_API
+    #if PUBNUB_TIMERS_API
     /** Duration of the transaction timeout, in milliseconds */
     int transaction_timeout_ms;
 
     /** Duration of the 'wait_connect_TCP_socket' timeout, in milliseconds */
     int wait_connect_timeout_ms;
 
-#if defined(PUBNUB_CALLBACK_API)
+        #if defined(PUBNUB_CALLBACK_API)
     struct pubnub_* previous;
     struct pubnub_* next;
-    int             timeout_left_ms;
-#endif
+    int timeout_left_ms;
+        #endif
 
-#endif /* PUBNUB_TIMERS_API */
+    #endif /* PUBNUB_TIMERS_API */
 
-#if defined(PUBNUB_CALLBACK_API)
+    #if defined(PUBNUB_CALLBACK_API)
     pubnub_callback_t cb;
-    void*             user_data;
+    void* user_data;
 
-#if PUBNUB_CHANGE_DNS_SERVERS
+        #if PUBNUB_CHANGE_DNS_SERVERS
     struct pbdns_servers_check dns_check;
-#endif    
-#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        #endif
+        #if PUBNUB_USE_MULTIPLE_ADDRESSES
     struct pubnub_multi_addresses spare_addresses;
-#endif
-#endif /* defined(PUBNUB_CALLBACK_API) */
+        #endif
+    #endif /* defined(PUBNUB_CALLBACK_API) */
 
     /** Subscribed channels and channel groups saved.
         Exist when auto heartbeat support is enabled.
       */
     M_channelInfo()
-    
-    /** Pubnub context fields for heartbeat info used by the module for keeping presence.
+
+        /** Pubnub context fields for heartbeat info used by the module for keeping presence.
         Exist when auto heartbeat support is enabled.
       */
-    M_heartbeatInfo()
+        M_heartbeatInfo()
 
-#if PUBNUB_PROXY_API
+    #if PUBNUB_PROXY_API
 
-    /** The type (protocol) of the proxy to use */
-    enum pubnub_proxy_type proxy_type;
+        /** The type (protocol) of the proxy to use */
+        enum pubnub_proxy_type proxy_type;
 
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
 
-#if defined(PUBNUB_CALLBACK_API)
+        #if defined(PUBNUB_CALLBACK_API)
     /** Proxy Ipv4 address, if and when available through hostname string in
        'numbers and dots' notation. If proxy Ipv4 address is not available
        structure array is filled with zeros.
      */
     struct pubnub_ipv4_address proxy_ipv4_address;
 
-#if PUBNUB_USE_IPV6
+            #if PUBNUB_USE_IPV6
     /** Proxy Iv6 address, if and when available through hostname string in
        'numbers and colons' notation. If proxy Ipv6 address is not available
        structure array is filled with zeros.
      */
     struct pubnub_ipv6_address proxy_ipv6_address;
-#endif
-#endif /* defined(PUBNUB_CALLBACK_API) */
-    
+            #endif
+        #endif /* defined(PUBNUB_CALLBACK_API) */
+
     /** The (TCP) port to use on the proxy. */
     uint16_t proxy_port;
 
@@ -520,9 +519,8 @@ struct pubnub_ {
     /** Data about (HTTP) Digest authentication */
     struct pbhttp_digest_context digest_context;
 
-#endif /* PUBNUB_PROXY_API */
+    #endif /* PUBNUB_PROXY_API */
 };
-
 
 /** Internal function, to be called when the outcome of a REST call /
     transaction has been reached. The context @p pb will go to @p
@@ -552,7 +550,6 @@ int pbntf_requeue_for_processing(pubnub_t* pb);
 int pbntf_watch_in_events(pubnub_t* pb);
 int pbntf_watch_out_events(pubnub_t* pb);
 
-
 /** Internal function. Checks if the given pubnub context pointer
     is valid.
 */
@@ -566,6 +563,5 @@ pubnub_t* pballoc_get_ctx(unsigned idx);
 /** Internal function, the "bottom half" of pubnub_free(), which is
     done asynchronously in the callback mode. */
 void pballoc_free_at_last(pubnub_t* pb);
-
 
 #endif /* !defined INC_PUBNUB_INTERNAL_COMMON */

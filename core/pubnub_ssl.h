@@ -1,19 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_SSL
-#define	INC_PUBNUB_SSL
+    #define INC_PUBNUB_SSL
 
+    #include <stdbool.h>
 
-#include "pubnub_api_types.h"
-
-#include <stdbool.h>
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_ssl.h 
     This is the "SSL/TLS" API of the Pubnub client library.
     It has functions that pertain to using SSL/TLS to connect
     to Pubnub. It is supported on platforms that have SSL/TLS.
 */
-
 
 /** Sets the SSL options for a context. If SSL support is enabled,
     these options will get their default values in pubnub_init().
@@ -31,7 +28,10 @@
     experiences issues handshaking across local proxies, firewalls,
     etc? (default: YES)
 */
-void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool ignoreSecureConnectionRequirement);
+void pubnub_set_ssl_options(
+    pubnub_t* p,
+    bool useSSL,
+    bool ignoreSecureConnectionRequirement);
 
 /** Sets the option to reuse the SSL session on a new connection to
     @p reuse on the context @p p.
@@ -42,7 +42,7 @@ void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool ignoreSecureConnectio
     @param p The context for which to set the option for SSL session reuse
     @param reuse The value (true/false == on/off) of the option
  */
-void pubnub_set_reuse_ssl_session(pubnub_t *p, bool reuse);
+void pubnub_set_reuse_ssl_session(pubnub_t* p, bool reuse);
 
 /** Sets the location(s) of CA certificates for verification
     purposes. This is only available on targets that have a file
@@ -72,7 +72,10 @@ void pubnub_set_reuse_ssl_session(pubnub_t *p, bool reuse);
 
     @return 0: OK, -1: error (not supported, invalid location(s))
  */
-int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const* sCApath);
+int pubnub_set_ssl_verify_locations(
+    pubnub_t* p,
+    char const* sCAfile,
+    char const* sCApath);
 
 /** Instructs C-core to use system certificate store with context @p p.
     This is only available on targets that have a system certificate
@@ -91,8 +94,7 @@ int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const
     @param p The context for which to use system certificate store
     @return 0: OK, -1: error (not supported)
  */
-int pubnub_ssl_use_system_certificate_store(pubnub_t *p);
-
+int pubnub_ssl_use_system_certificate_store(pubnub_t* p);
 
 /** Instructs C-core to _not_ use system certificate store with
     context @p p, which is also the default.
@@ -105,8 +107,7 @@ int pubnub_ssl_use_system_certificate_store(pubnub_t *p);
 
     @param p The context for which to not use system certificate store
  */
-void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p);
-
+void pubnub_ssl_dont_use_system_certificate_store(pubnub_t* p);
 
 /** Sets the contents of a "user-defined", in-memory, PEM certificate
     to use for @p p context. This will be used in addition to other
@@ -129,6 +130,6 @@ void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p);
     to be valid during the lifetime of @p p. Use `NULL` if you don't
     want to use your certificate.
  */
-void pubnub_ssl_set_usrdef_pem_cert(pubnub_t *p, char const *contents);
+void pubnub_ssl_set_usrdef_pem_cert(pubnub_t* p, char const* contents);
 
 #endif /* defined INC_PUBNUB_SSL */

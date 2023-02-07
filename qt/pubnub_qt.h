@@ -1,45 +1,43 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_QT
-#define      INC_PUBNUB_QT
+    #define INC_PUBNUB_QT
 
-#include <stdexcept>
-
-#include <QUrl>
-#include <QUuid>
-#include <QNetworkAccessManager>
-#include <QTimer>
-#include <QStringList>
-#include <QDebug>
-#include <QJsonDocument>
-#include <QMutexLocker>
-#include <QMap>
-#include <QPair>
-
-#include <QtGlobal>
-#define QT_6 0x060000
+    #include <QDebug>
+    #include <QJsonDocument>
+    #include <QMap>
+    #include <QMutexLocker>
+    #include <QNetworkAccessManager>
+    #include <QPair>
+    #include <QStringList>
+    #include <QTimer>
+    #include <QUrl>
+    #include <QUuid>
+    #include <QtGlobal>
+    #include <stdexcept>
+    #define QT_6 0x060000
 
 extern "C" {
-#include "core/pubnub_server_limits.h"
-#include "core/pubnub_api_types.h"
-#include "core/pubnub_ccore_limits.h"
-#include "core/pubnub_coreapi_ex.h"
-#include "core/pubnub_helper.h"
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "core/pbcc_subscribe_v2.h"
-#endif
-#if PUBNUB_USE_ACTIONS_API
-#include "core/pbcc_actions_api.h"
-#endif
-#if PUBNUB_USE_PAM_V3
-#include "core/pbcc_grant_token_api.h"
-#endif
+    #include "core/pubnub_api_types.h"
+    #include "core/pubnub_ccore_limits.h"
+    #include "core/pubnub_coreapi_ex.h"
+    #include "core/pubnub_helper.h"
+    #include "core/pubnub_server_limits.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "core/pbcc_subscribe_v2.h"
+    #endif
+    #if PUBNUB_USE_ACTIONS_API
+        #include "core/pbcc_actions_api.h"
+    #endif
+    #if PUBNUB_USE_PAM_V3
+        #include "core/pbcc_grant_token_api.h"
+    #endif
 }
 
-#include "cpp/tribool.hpp"
-#include "lib/pb_deprecated.h"
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "cpp/pubnub_v2_message.hpp"
-#endif
+    #include "cpp/tribool.hpp"
+    #include "lib/pb_deprecated.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "cpp/pubnub_v2_message.hpp"
+    #endif
 
 QT_BEGIN_NAMESPACE
 class QNetworkReply;
@@ -57,58 +55,54 @@ class set_state_options {
     QString d_channel_group;
     QString d_user_id;
 
-public:
+  public:
     set_state_options() : d_(pubnub_set_state_options()) {}
 
-    set_state_options& channel_group(QString const& channel_group)
-    {
+    set_state_options& channel_group(QString const& channel_group) {
         d_channel_group = channel_group;
-        d_.channel_group = d_channel_group.isEmpty() ? 0 : d_channel_group.toLatin1().data();
+        d_.channel_group =
+            d_channel_group.isEmpty() ? 0 : d_channel_group.toLatin1().data();
 
         return *this;
     }
 
-    set_state_options& channel_group(QStringList const& channel_groups)
-    {
+    set_state_options& channel_group(QStringList const& channel_groups) {
         return channel_group(channel_groups.join(","));
     }
 
-    set_state_options& user_id(QString const& user_id)
-    {
+    set_state_options& user_id(QString const& user_id) {
         d_user_id = user_id;
         d_.user_id = d_user_id.isEmpty() ? 0 : d_user_id.toLatin1().data();
 
         return *this;
     }
 
-    set_state_options& heartbeat(bool heartbeat)
-    {
+    set_state_options& heartbeat(bool heartbeat) {
         d_.heartbeat = heartbeat;
 
         return *this;
     }
 
-    pubnub_set_state_options data() { return d_; }
+    pubnub_set_state_options data() {
+        return d_;
+    }
 };
 
-#if PUBNUB_USE_OBJECTS_API
-#define MAX_INCLUDE_DIMENSION 100
-#define MAX_ELEM_LENGTH 30
+    #if PUBNUB_USE_OBJECTS_API
+        #define MAX_INCLUDE_DIMENSION 100
+        #define MAX_ELEM_LENGTH 30
 /** A wrapper class for objects api managing include parameter */
 class include_options {
     char d_include_c_strings_array[MAX_INCLUDE_DIMENSION][MAX_ELEM_LENGTH + 1];
     size_t d_include_count;
-    
-public:
-    include_options()
-        : d_include_count(0)
-    {}
-    const char** include_c_strings_array()
-    {
-        return (d_include_count > 0) ? (const char**)d_include_c_strings_array : 0;
+
+  public:
+    include_options() : d_include_count(0) {}
+    const char** include_c_strings_array() {
+        return (d_include_count > 0) ? (const char**)d_include_c_strings_array
+                                     : 0;
     }
-    const char** include_to_c_strings_array(QStringList const& inc)
-    {
+    const char** include_to_c_strings_array(QStringList const& inc) {
         size_t n = inc.size();
         unsigned i;
         if (n > MAX_INCLUDE_DIMENSION) {
@@ -123,13 +117,14 @@ public:
         d_include_count = n;
         return include_c_strings_array();
     }
-    include_options(QStringList const& inc)
-    {
+    include_options(QStringList const& inc) {
         include_to_c_strings_array(inc);
     }
-    size_t include_count() { return d_include_count; }
+    size_t include_count() {
+        return d_include_count;
+    }
 };
-    
+
 /** A wrapper class for objects api options for manipulating specified requirements
     and paged response, enabling a nicer usage. Something like:
        pbp.get_users(list_options().start(last_bookmark));
@@ -145,99 +140,94 @@ class list_options {
     QString d_end;
     tribool d_count;
 
-public:
-    list_options()
-        : d_limit(0)
-        , d_count(tribool::not_set)
-    {}
-    
-    list_options& include(QString const& in)
-    {
+  public:
+    list_options() : d_limit(0), d_count(tribool::not_set) {}
+
+    list_options& include(QString const& in) {
         d_include = in;
         return *this;
     }
-    char const* include() { return d_include.isEmpty() ? 0 : d_include.toLatin1().data(); }
+    char const* include() {
+        return d_include.isEmpty() ? 0 : d_include.toLatin1().data();
+    }
 
-    list_options& limit(size_t lim)
-    {
+    list_options& limit(size_t lim) {
         d_limit = lim;
         return *this;
     }
-    size_t limit() { return d_limit; }
-    list_options& start(QString const& st)
-    {
+    size_t limit() {
+        return d_limit;
+    }
+    list_options& start(QString const& st) {
         d_start = st;
         return *this;
     }
-    char const* start() { return d_start.isEmpty() ? 0 : d_start.toLatin1().data(); }
-    list_options& end(QString const& e)
-    {
+    char const* start() {
+        return d_start.isEmpty() ? 0 : d_start.toLatin1().data();
+    }
+    list_options& end(QString const& e) {
         d_end = e;
         return *this;
     }
-    char const* end() { return d_end.isEmpty() ? 0 : d_end.toLatin1().data(); }
-    list_options& count(tribool co)
-    {
+    char const* end() {
+        return d_end.isEmpty() ? 0 : d_end.toLatin1().data();
+    }
+    list_options& count(tribool co) {
         d_count = co;
         return *this;
     }
-    pubnub_tribool count()
-    {
+    pubnub_tribool count() {
         if (false == d_count) {
             return pbccFalse;
-        }
-        else if (true == d_count) {
+        } else if (true == d_count) {
             return pbccTrue;
         }
         return pbccNotSet;
     }
 };
-#endif /* PUBNUB_USE_OBJECTS_API */
+    #endif /* PUBNUB_USE_OBJECTS_API */
 
 struct pbcc_context;
 
-
-#if PUBNUB_USE_SUBSCRIBE_V2
+    #if PUBNUB_USE_SUBSCRIBE_V2
 /** A wrapper class for subscribe_v2 options, enabling a nicer
     usage. Something like:
 
         pn.subscribe_v2(chan, subscribe_v2_options().heartbeat(412));
 */
 class subscribe_v2_options {
-    unsigned    d_heartbeat;
+    unsigned d_heartbeat;
     QString d_chgrp;
     QString d_filter_expr;
-    
-public:
+
+  public:
     subscribe_v2_options() : d_heartbeat(PUBNUB_MINIMAL_HEARTBEAT_INTERVAL) {}
-    subscribe_v2_options& channel_group(QString const& chgroup)
-    {
+    subscribe_v2_options& channel_group(QString const& chgroup) {
         d_chgrp = chgroup;
         return *this;
     }
-    subscribe_v2_options& channel_group(QStringList const& chgroup)
-    {
+    subscribe_v2_options& channel_group(QStringList const& chgroup) {
         return channel_group(chgroup.join(","));
     }
-    subscribe_v2_options& heartbeat(unsigned hb_interval)
-    {
+    subscribe_v2_options& heartbeat(unsigned hb_interval) {
         d_heartbeat = hb_interval;
         return *this;
     }
-    subscribe_v2_options& filter_expr(QString const& filter_exp)
-    {
+    subscribe_v2_options& filter_expr(QString const& filter_exp) {
         d_filter_expr = filter_exp;
         return *this;
     }
-    unsigned* get_heartbeat() { return &d_heartbeat; }
-    char const* get_chgroup() { return d_chgrp.isEmpty() ? 0 : d_chgrp.toLatin1().data(); }
-    char const* get_filter_expr()
-    {
+    unsigned* get_heartbeat() {
+        return &d_heartbeat;
+    }
+    char const* get_chgroup() {
+        return d_chgrp.isEmpty() ? 0 : d_chgrp.toLatin1().data();
+    }
+    char const* get_filter_expr() {
         return d_filter_expr.isEmpty() ? 0 : d_filter_expr.toLatin1().data();
     }
 };
-#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
-
+    #endif /* PUBNUB_USE_SUBSCRIBE_V2 */
 
 /** @mainpage Pubnub C-core for Qt
 
@@ -246,7 +236,6 @@ public:
 
     The user interface class to use is \ref pubnub_qt.
 */
-
 
 /** Pubnub client "context" for Qt.
  *
@@ -269,11 +258,10 @@ public:
  * which you can use both in Qt GUI and Qt command line
  * applications.
  */
-class pubnub_qt : public QObject
-{
+class pubnub_qt: public QObject {
     Q_OBJECT
 
-public:
+  public:
     /** Creates a Pubnub Qt context.
      * @param pubkey The publish key to use in the new context
      * @param keysub The subscribe key to use in the new context
@@ -302,11 +290,10 @@ public:
      * After construction it is empty (null), thus not used.
      * Pass an empty (or null) string to stop using it.
      */
-    void set_auth(QString const &auth);
+    void set_auth(QString const& auth);
 
     /** Returns the current auth key */
-    QString auth() const
-    {
+    QString auth() const {
         QMutexLocker lk(&d_mutex);
         return d_auth;
     }
@@ -318,14 +305,13 @@ public:
      * @deprecated this is provided as a workaround for existing users.
      * Please use `set_user_id` instead.
      */
-    PUBNUB_DEPRECATED void set_uuid(QString const &uuid);
+    PUBNUB_DEPRECATED void set_uuid(QString const& uuid);
 
     /** Set the user_id to be used in this context.
      * After construction it is empty (null), thus not used.
      * Pass an empty (or null) string to stop using it.
      */
-    void set_user_id(QString const &user_id);
-
+    void set_user_id(QString const& user_id);
 
     /** Set the user_id with a random UUID value, according to stadard
      * v4 representation.
@@ -333,8 +319,8 @@ public:
      * @deprecated random generated uuid/user_id is deprecated.
      */
     PUBNUB_DEPRECATED void set_uuid_v4_random() {
-	   QString uuid = QUuid::createUuid().toString();
-        set_user_id(uuid.mid(1, uuid.size()-2));
+        QString uuid = QUuid::createUuid().toString();
+        set_user_id(uuid.mid(1, uuid.size() - 2));
     }
     /** Returns the current user_id value (string)
      *
@@ -342,10 +328,9 @@ public:
      * Please use `user_id` instead.
      */
     PUBNUB_DEPRECATED QString uuid() const;
-   
+
     /** Returns the current user_id value (string)*/
     QString user_id() const;
-
 
     /** Sets the Pubnub origin to use, that is, the
      * protocol (http or https) and host part of the URL.
@@ -380,7 +365,7 @@ public:
     /** Returns all (remaining) messages from a context */
     QStringList get_all() const;
 
-#if PUBNUB_USE_SUBSCRIBE_V2
+    #if PUBNUB_USE_SUBSCRIBE_V2
     /** Returns the v2 message object of an arrived message. Message(s)
         arrive on finish of a subscribe_v2 operation.
         That is documented in the function that starts the operation.
@@ -399,8 +384,8 @@ public:
 
     /** Returns all (remaining) v2 messages from a context */
     QVector<v2_message> get_all_v2() const;
-#endif
-    
+    #endif
+
     /** Returns a string of a fetched subscribe operation/transaction's
         next channel. Each transaction may hold a list of channels, and
         this functions provides a way to read them.  Subsequent call to
@@ -447,7 +432,7 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res publish(QString const &channel, QString const &message);
+    pubnub_res publish(QString const& channel, QString const& message);
 
     /** Function that initiates 'publish' transaction via POST method
         @param channel The string with the channel
@@ -455,7 +440,8 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res publish_via_post(QString const &channel, QByteArray const &message);
+    pubnub_res
+    publish_via_post(QString const& channel, QByteArray const& message);
 
     /** Initiates 'publish' transaction via POST method. Function receives 'Qt Json' document.
         Helpful if you're already using Qt support for Json in your code, ensuring message
@@ -466,7 +452,8 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    inline pubnub_res publish_via_post(QString const &channel, QJsonDocument const &message) {
+    inline pubnub_res
+    publish_via_post(QString const& channel, QJsonDocument const& message) {
         return publish_via_post(channel, message.toJson());
     }
 
@@ -477,7 +464,9 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res publish_via_post_with_gzip(QString const &channel, QByteArray const &message);
+    pubnub_res publish_via_post_with_gzip(
+        QString const& channel,
+        QByteArray const& message);
 
     /** Initiates 'publish' transaction via POST method with message gzipped if convenient.
         Function receives 'Qt Json' document.
@@ -489,8 +478,9 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    inline pubnub_res publish_via_post_with_gzip(QString const &channel,
-                                                 QJsonDocument const &message) {
+    inline pubnub_res publish_via_post_with_gzip(
+        QString const& channel,
+        QJsonDocument const& message) {
         return publish_via_post_with_gzip(channel, message.toJson());
     }
 
@@ -525,8 +515,8 @@ public:
         @param message The signal message to send, expected to be in JSON format
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res signal(QString const &channel, QByteArray const &message);
-    
+    pubnub_res signal(QString const& channel, QByteArray const& message);
+
     /** Subscribe to @p channel and/or @p channel_group. This actually
         means "initiate a subscribe operation/transaction". The outcome
         will be retrieved by the "notification" API, which is different
@@ -570,16 +560,19 @@ public:
 
         @see get
         */
-    pubnub_res subscribe(QString const &channel, QString const &channel_group="");
+    pubnub_res
+    subscribe(QString const& channel, QString const& channel_group = "");
 
     /** A helper method to subscribe to several channels and or channel groups
      * by giving a (string) list of them.
      */
-    pubnub_res subscribe(QStringList const &channel, QStringList const &channel_group=QStringList()) {
+    pubnub_res subscribe(
+        QStringList const& channel,
+        QStringList const& channel_group = QStringList()) {
         return subscribe(channel.join(","), channel_group.join(","));
     }
 
-#if PUBNUB_USE_SUBSCRIBE_V2
+    #if PUBNUB_USE_SUBSCRIBE_V2
     /** The V2 subscribe. To get messages for subscribe V2, use pb.get_v2().
         - keep in mind that it can provide you with channel and channel group info.
 
@@ -602,15 +595,16 @@ public:
 
         @see get_v2
       */
-    pubnub_res subscribe_v2(QString const &channel, subscribe_v2_options opt);
+    pubnub_res subscribe_v2(QString const& channel, subscribe_v2_options opt);
 
     /** A helper method to subscribe_v2 to several channels and/or channel groups
      * by giving a (string) list of channels and passing suitable options.
      */
-    pubnub_res subscribe_v2(QStringList const &channel, subscribe_v2_options opt) {
+    pubnub_res
+    subscribe_v2(QStringList const& channel, subscribe_v2_options opt) {
         return subscribe_v2(channel.join(","), opt);
     }
-#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+    #endif /* PUBNUB_USE_SUBSCRIBE_V2 */
 
     /** Leave the @p channel. This actually means "initiate a leave
         transaction".  You should leave channel(s) when you want to
@@ -631,12 +625,14 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res leave(QString const &channel, QString const &channel_group="");
+    pubnub_res leave(QString const& channel, QString const& channel_group = "");
 
     /** A helper method to leave from several channels and or channel groups
      * by giving a (string) list of them.
      */
-    pubnub_res leave(QStringList const &channel, QStringList const &channel_group=QStringList()) {
+    pubnub_res leave(
+        QStringList const& channel,
+        QStringList const& channel_group = QStringList()) {
         return leave(channel.join(","), channel_group.join(","));
     }
 
@@ -683,7 +679,10 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res history(QString const &channel, unsigned count = 100, bool include_token = false);
+    pubnub_res history(
+        QString const& channel,
+        unsigned count = 100,
+        bool include_token = false);
 
     /** This is the "extended" history, with all the options and no
         defaults.
@@ -728,14 +727,15 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res history(QString const &channel,
-                       unsigned count,
-                       bool include_token,
-                       QString const& start,
-                       bool reverse,
-                       bool include_meta,
-                       QString const& end,
-                       bool string_token);
+    pubnub_res history(
+        QString const& channel,
+        unsigned count,
+        bool include_token,
+        QString const& start,
+        bool reverse,
+        bool include_meta,
+        QString const& end,
+        bool string_token);
 
     /* In case the server reported en error in the response,
        we'll read the error message using this function
@@ -762,7 +762,8 @@ public:
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res message_counts(QStringList const& channel, QString const& timetoken);
+    pubnub_res
+    message_counts(QStringList const& channel, QString const& timetoken);
 
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
@@ -772,8 +773,9 @@ public:
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res message_counts(QString const& channel,
-                              QStringList const& channel_timetoken);
+    pubnub_res message_counts(
+        QString const& channel,
+        QStringList const& channel_timetoken);
 
     /* Get counts of received(unread) messages for each channel from
        @p channel list starting(in time) with @p channel_timetoken(per channel) list.
@@ -783,8 +785,9 @@ public:
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res message_counts(QStringList const& channel,
-                              QStringList const& channel_timetoken);
+    pubnub_res message_counts(
+        QStringList const& channel,
+        QStringList const& channel_timetoken);
 
     /* Starts 'advanced history' pubnub_message_counts transaction
        for unread messages on @p channel_timetokens(channel, ch_timetoken pairs)
@@ -793,7 +796,8 @@ public:
        in the map of channel_name-message_counts
        @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res message_counts(QVector<QPair<QString, QString>> const& channel_timetokens);
+    pubnub_res
+    message_counts(QVector<QPair<QString, QString>> const& channel_timetokens);
 
     /* Extracts channel-message_count paired map from the response on
        'advanced history' pubnub_message_counts transaction.
@@ -834,26 +838,30 @@ public:
                             to get presence info for.
        @return #PNR_STARTED on success, an error otherwise
      */
-    pubnub_res heartbeat(QString const& channel, QString const& channel_group = "");
+    pubnub_res
+    heartbeat(QString const& channel, QString const& channel_group = "");
 
     /** A helper method for heartbeat on several channels and/or channel groups
      * by giving a (string) list of channels .
      */
-    pubnub_res heartbeat(QStringList const& channel, QString const& channel_group = "") {
+    pubnub_res
+    heartbeat(QStringList const& channel, QString const& channel_group = "") {
         return heartbeat(channel.join(","), channel_group);
     }
 
     /** A helper method for heartbeat on several channels and/or channel groups
      * by giving a (string) list of channel groups.
      */
-    pubnub_res heartbeat(QString const& channel, QStringList const& channel_group) {
+    pubnub_res
+    heartbeat(QString const& channel, QStringList const& channel_group) {
         return heartbeat(channel, channel_group.join(","));
     }
 
     /** A helper method for heartbeat on several channels and/or channel groups
      * by giving a (string) lists of them.
      */
-    pubnub_res heartbeat(QStringList const& channel, QStringList const& channel_group) {
+    pubnub_res
+    heartbeat(QStringList const& channel, QStringList const& channel_group) {
         return heartbeat(channel, channel_group.join(","));
     }
 
@@ -899,12 +907,15 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res here_now(QString const &channel, QString const &channel_group="");
+    pubnub_res
+    here_now(QString const& channel, QString const& channel_group = "");
 
     /** A helper method to get "here now" info from several channels
      * and or channel groups by giving a (string) list of them.
      */
-    pubnub_res here_now(QStringList const &channel, QStringList const &channel_group=QStringList()) {
+    pubnub_res here_now(
+        QStringList const& channel,
+        QStringList const& channel_group = QStringList()) {
         return here_now(channel.join(","), channel_group.join(","));
     }
 
@@ -948,7 +959,7 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res where_now(QString const &uuid="");
+    pubnub_res where_now(QString const& uuid = "");
 
     /** Sets some state for the @p channel and/or @channel_group for a
         user, identified by @p uuid. This actually means "initiate a set
@@ -985,13 +996,25 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res set_state(QString const &channel, QString const& channel_group, QString const &uuid, QString const &state);
+    pubnub_res set_state(
+        QString const& channel,
+        QString const& channel_group,
+        QString const& uuid,
+        QString const& state);
 
     /** A helper method to set state from several channels
      * and or channel groups by giving a (string) list of them.
      */
-    pubnub_res set_state(QStringList const &channel, QStringList const& channel_group, QString const &uuid, QString const &state) {
-        return set_state(channel.join(","), channel_group.join(","), uuid, state);
+    pubnub_res set_state(
+        QStringList const& channel,
+        QStringList const& channel_group,
+        QString const& uuid,
+        QString const& state) {
+        return set_state(
+            channel.join(","),
+            channel_group.join(","),
+            uuid,
+            state);
     }
 
     /** Sets some state for the @p channel and/or channel_group defined
@@ -1026,17 +1049,20 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res set_state(QString const &channel, QString const &state, set_state_options &options);
+    pubnub_res set_state(
+        QString const& channel,
+        QString const& state,
+        set_state_options& options);
 
     /** A helper method to set state from several channels
      * and or channel groups by giving a (string) list of them.
      */
-    pubnub_res set_state(QStringList const &channel, QString const &state, set_state_options &options) {
+    pubnub_res set_state(
+        QStringList const& channel,
+        QString const& state,
+        set_state_options& options) {
         return set_state(channel.join(","), state, options);
     }
-
-
-
 
     /** Gets some state for the @p channel and/or @channel_group for a
         user, identified by @p uuid. This actually means "initiate a get
@@ -1070,12 +1096,18 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res state_get(QString const &channel, QString const& channel_group="", QString const &uuid="");
+    pubnub_res state_get(
+        QString const& channel,
+        QString const& channel_group = "",
+        QString const& uuid = "");
 
     /** A helper method to get state from several channels
      * and or channel groups by giving a (string) list of them.
      */
-    pubnub_res state_get(QStringList const &channel, QStringList const& channel_group=QStringList(), QString const &uuid="") {
+    pubnub_res state_get(
+        QStringList const& channel,
+        QStringList const& channel_group = QStringList(),
+        QString const& uuid = "") {
         return state_get(channel.join(","), channel_group.join(","), uuid);
     }
 
@@ -1124,12 +1156,16 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res remove_channel_from_group(QString const& channel, QString const& channel_group);
+    pubnub_res remove_channel_from_group(
+        QString const& channel,
+        QString const& channel_group);
 
     /** A helper method to remove channels from channel group by
      * giving (string) lists of them.
      */
-    pubnub_res remove_channel_from_group(QStringList const& channel, QString const& channel_group) {
+    pubnub_res remove_channel_from_group(
+        QStringList const& channel,
+        QString const& channel_group) {
         return remove_channel_from_group(channel.join(","), channel_group);
     }
 
@@ -1156,12 +1192,15 @@ public:
 
         @return #PNR_STARTED on success, an error otherwise
     */
-    pubnub_res add_channel_to_group(QString const& channel, QString const& channel_group);
+    pubnub_res
+    add_channel_to_group(QString const& channel, QString const& channel_group);
 
     /** A helper method to add channels to channel group by
      * giving (string) lists of them.
      */
-    pubnub_res add_channel_to_group(QStringList const& channel, QString const& channel_group) {
+    pubnub_res add_channel_to_group(
+        QStringList const& channel,
+        QString const& channel_group) {
         return add_channel_to_group(channel.join(","), channel_group);
     }
 
@@ -1188,7 +1227,7 @@ public:
     */
     pubnub_res list_channel_group(QString const& channel_group);
 
-#if PUBNUB_USE_OBJECTS_API
+    #if PUBNUB_USE_OBJECTS_API
 
     /** Initiates transaction that returns the space memberships of the user specified
         by @p user_id, optionally including the custom data objects for...
@@ -1238,9 +1277,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res set_memberships(QString const& metadata_uuid,
-                                  QByteArray const& set_obj,
-                                  QString& include);
+    pubnub_res set_memberships(
+        QString const& metadata_uuid,
+        QByteArray const& set_obj,
+        QString& include);
 
     /** Initiates transaction that updates the space memberships for the user specified
         by @p user_id. Uses the `update` property on the @p set_obj to perform that
@@ -1279,9 +1319,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res set_memberships(QString const& user_id,
-                                  QJsonDocument const& set_obj,
-                                  QString& include) {
+    pubnub_res set_memberships(
+        QString const& user_id,
+        QJsonDocument const& set_obj,
+        QString& include) {
         return set_memberships(user_id, set_obj.toJson(), include);
     }
 
@@ -1330,9 +1371,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res add_members(QString const& space_id,
-                           QByteArray const& update_obj,
-                           QString& include);
+    pubnub_res add_members(
+        QString const& space_id,
+        QByteArray const& update_obj,
+        QString& include);
 
     /** Initiates transaction that adds the list of members to the space specified by
         @p space_id. Uses the `add` property on the @p update_obj to perform that
@@ -1368,9 +1410,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res add_members(QString const& space_id,
-                           QJsonDocument const& update_obj,
-                           QString& include) {
+    pubnub_res add_members(
+        QString const& space_id,
+        QJsonDocument const& update_obj,
+        QString& include) {
         return add_members(space_id, update_obj.toJson(), include);
     }
 
@@ -1406,9 +1449,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_members(QString const& space_id,
-                              QByteArray const& update_obj,
-                              QString& include);
+    pubnub_res update_members(
+        QString const& space_id,
+        QByteArray const& update_obj,
+        QString& include);
 
     /** Initiates transaction that updates the list of members in the space specified by
         @p space_id. Uses the `update` property on the @p update_obj to perform that
@@ -1447,9 +1491,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res update_members(QString const& space_id,
-                              QJsonDocument const& update_obj,
-                              QString& include) {
+    pubnub_res update_members(
+        QString const& space_id,
+        QJsonDocument const& update_obj,
+        QString& include) {
         return update_members(space_id, update_obj.toJson(), include);
     }
 
@@ -1482,9 +1527,10 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res remove_members(QString const& space_id,
-                              QByteArray const& update_obj,
-                              QString& include);
+    pubnub_res remove_members(
+        QString const& space_id,
+        QByteArray const& update_obj,
+        QString& include);
 
     /** Initiates transaction that removes the list of members from the space specified by
         @p space_id. Uses the `remove` property on the @p update_obj to perform that
@@ -1520,14 +1566,15 @@ public:
                        Use empty list if you don't want to retrieve additional attributes.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res remove_members(QString const& space_id,
-                              QJsonDocument const& update_obj,
-                              QString& include) {
+    pubnub_res remove_members(
+        QString const& space_id,
+        QJsonDocument const& update_obj,
+        QString& include) {
         return remove_members(space_id, update_obj.toJson(), include);
     }
-#endif /* PUBNUB_USE_OBJECTS_API */
+    #endif /* PUBNUB_USE_OBJECTS_API */
 
-#if PUBNUB_USE_ACTIONS_API
+    #if PUBNUB_USE_ACTIONS_API
     /** Adds new type of message called action as a support for user reactions on a published
         messages.
         Json string @p value is checked for its quotation marks at its ends. If any of the
@@ -1542,20 +1589,26 @@ public:
         @param value Json string describing the action that is to be added
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res add_message_action(QString const& channel,
-                                  QString const& message_timetoken,
-                                  pubnub_action_type actype,
-                                  QString const& value);
+    pubnub_res add_message_action(
+        QString const& channel,
+        QString const& message_timetoken,
+        pubnub_action_type actype,
+        QString const& value);
 
     /** Function receives 'Qt Json' document for @p value. Helpful if you're already using Qt
         support for Json in your code, ensuring that value you are passing is valid Json.
         @see add_message_action()
       */
-    pubnub_res add_message_action(QString const& channel,
-                                  QString const& message_timetoken,
-                                  pubnub_action_type actype,
-                                  QJsonDocument const& value) {
-        return add_message_action(channel, message_timetoken, actype, value.toJson());
+    pubnub_res add_message_action(
+        QString const& channel,
+        QString const& message_timetoken,
+        pubnub_action_type actype,
+        QJsonDocument const& value) {
+        return add_message_action(
+            channel,
+            message_timetoken,
+            actype,
+            value.toJson());
     }
 
     /** Searches the response, if previous transaction had been 'add_message_action' and was
@@ -1586,9 +1639,10 @@ public:
                                 marks at both ends)
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res remove_message_action(QString const& channel,
-                                     QString const& message_timetoken,
-                                     QString const& action_timetoken);
+    pubnub_res remove_message_action(
+        QString const& channel,
+        QString const& message_timetoken,
+        QString const& action_timetoken);
 
     /** Initiates transaction that returns all actions added on a given @p channel between @p start
         and @p end action timetoken.
@@ -1607,10 +1661,11 @@ public:
                      Any value greater than 100 is considered an error.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res get_message_actions(QString const& channel,
-                                   QString const& start,
-                                   QString const& end,
-                                   size_t limit=0);
+    pubnub_res get_message_actions(
+        QString const& channel,
+        QString const& start,
+        QString const& end,
+        size_t limit = 0);
 
     /** This function expects previous transaction to be the one for reading the actions and
         that it was successfully accomplished. If it is not the case, returns corresponding
@@ -1644,10 +1699,11 @@ public:
                      was 100. Any value greater than 100 is considered an error.
         @return #PNR_STARTED on success, an error otherwise
       */
-    pubnub_res history_with_message_actions(QString const& channel,
-                                            QString const& start,
-                                            QString const& end,
-                                            size_t limit=0);
+    pubnub_res history_with_message_actions(
+        QString const& channel,
+        QString const& start,
+        QString const& end,
+        size_t limit = 0);
 
     /** This function expects previous transaction to be the one for reading the history with
         actions and that it was successfully accomplished. If it is not the case, returns
@@ -1663,9 +1719,9 @@ public:
         @retval corresponding error otherwise
       */
     pubnub_res history_with_message_actions_more();
-#endif /* PUBNUB_USE_ACTIONS_API */
+    #endif /* PUBNUB_USE_ACTIONS_API */
 
-#if PUBNUB_USE_AUTO_HEARTBEAT
+    #if PUBNUB_USE_AUTO_HEARTBEAT
     /** Enables keeping presence on subscribed channels and channel groups
      * by performing heartbeat transacton periodically
      * @param period_sec auto heartbeat period in seconds. If it is shorter than minimal
@@ -1690,7 +1746,7 @@ public:
      * groups is enabled
      */
     bool is_auto_heartbeat_enabled();
-#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+    #endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
     /** Returns the HTTP code of the last transaction. If the
      *  transaction was succesfull, will return 0.
@@ -1728,10 +1784,10 @@ public:
         d_use_http_keep_alive = false;
     }
 
-#ifndef QT_NO_SSL
+    #ifndef QT_NO_SSL
     /** Set SSL options for this context */
     void set_ssl_options(ssl_opts options);
-#endif
+    #endif
 
     /** Sets the duration of the transaction timeout.
      * @param duration_ms the Duration of the transaction timeout, in milliseconds
@@ -1756,53 +1812,55 @@ public:
         t.fromMSecsSinceStartOfDay(transaction_timeout_get());
     }
 
-private slots:
+  private slots:
     void httpFinished();
     void transactionTimeout();
 
-#ifndef QT_NO_SSL
+    #ifndef QT_NO_SSL
     void sslErrors(QNetworkReply* reply, QList<QSslError> const& errors);
-#endif
-#if PUBNUB_USE_AUTO_HEARTBEAT
+    #endif
+    #if PUBNUB_USE_AUTO_HEARTBEAT
     void auto_heartbeatTimeout();
-#endif
+    #endif
 
-signals:
+  signals:
     /** This signal is sent on the outcome of the transaction/operation.
         @param result The final result (outcome)
      */
     void outcome(pubnub_res result);
 
-private:
-
+  private:
     /// Common function that starts any of the requests
     pubnub_res startRequest(pubnub_res result, pubnub_trans transaction);
 
     /// Common function which processes the data received in response
-    pubnub_res finish(QByteArray const &data, int http_code);
+    pubnub_res finish(QByteArray const& data, int http_code);
 
-#if PUBNUB_USE_AUTO_HEARTBEAT
+    #if PUBNUB_USE_AUTO_HEARTBEAT
     /// Checks whether to use saved channels and channel groups
-    bool check_if_default_channel_and_groups(QString const& channel,
-                                             QString const& channel_group,
-                                             QString& prep_channels,
-                                             QString& prep_channel_groups);
+    bool check_if_default_channel_and_groups(
+        QString const& channel,
+        QString const& channel_group,
+        QString& prep_channels,
+        QString& prep_channel_groups);
     /// Prepares channels and channel groups to be used in transaction request
-    void auto_heartbeat_prepare_channels_and_ch_groups(QString const& channel,
-                                                       QString const& channel_group,
-                                                       QString& prep_channels,
-                                                       QString& prep_channel_groups);
+    void auto_heartbeat_prepare_channels_and_ch_groups(
+        QString const& channel,
+        QString const& channel_group,
+        QString& prep_channels,
+        QString& prep_channel_groups);
     /// Removes @p channel list of channels and @p channel_group channel groups
     /// from saved(subscribed) channels and channel groups
-    void update_channels_and_ch_groups(QString const& channel,
-                                       QString const& channel_group);
+    void update_channels_and_ch_groups(
+        QString const& channel,
+        QString const& channel_group);
     /// Starts auto heartbeat timer after corresponding transactions
     void start_auto_heartbeat_timer(pubnub_res pbres);
     /// Stops auto heartbeat inconditionally
     void stop_auto_heartbeat();
     /// Stops auto heartbeat before corresponding transactions
     void stop_auto_heartbeat_before_transaction(pubnub_trans transaction);
-#endif
+    #endif
 
     /// The publish key
     QByteArray d_pubkey;
@@ -1831,10 +1889,10 @@ private:
     /// Origin (protocol and host of the URL) to use
     QString d_origin;
 
-#ifndef QT_NO_SSL
+    #ifndef QT_NO_SSL
     /// SSL options
     ssl_opts d_ssl_opts;
-#endif    
+    #endif
     /// Transaction timeout duration, in milliseconds
     int d_transaction_timeout_duration_ms;
 
@@ -1842,19 +1900,19 @@ private:
     bool d_transaction_timed_out;
 
     /// Transaction timer
-    QTimer *d_transactionTimer;
-#if PUBNUB_USE_AUTO_HEARTBEAT
+    QTimer* d_transactionTimer;
+    #if PUBNUB_USE_AUTO_HEARTBEAT
     /// Auto heartbeat is enabled and pulsing whenever subscription is not in progress
     bool d_auto_heartbeat_enabled;
     /// Auto heartbeat period in seconds
     size_t d_auto_heartbeat_period_sec;
     /// Auto heartbeat timer
-    QTimer *d_auto_heartbeatTimer;
+    QTimer* d_auto_heartbeatTimer;
     /// Subscribed channels
     QStringList d_channels;
     /// Subscribed channel groups
     QStringList d_channel_groups;
-#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+    #endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
     /// To Keep-Alive or not to Keep-Alive
     bool d_use_http_keep_alive;
@@ -1865,15 +1923,13 @@ private:
     /// Message to send via POST method
     QByteArray d_message_to_send;
 
-#if QT_VERSION >= QT_6
+    #if QT_VERSION >= QT_6
     mutable QRecursiveMutex d_mutex;
-#else
+    #else
     mutable QMutex d_mutex;
-#endif
+    #endif
 };
-
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(pubnub_qt::ssl_opts)
 
-
-#endif // !defined INC_PUBNUB_QT
+#endif  // !defined INC_PUBNUB_QT

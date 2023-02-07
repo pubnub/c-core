@@ -1,19 +1,17 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_free_with_timeout.h"
+#include "core/pubnub_helper.h"
 #include "pubnub_callback.h"
 
-#include "core/pubnub_helper.h"
-#include "core/pubnub_free_with_timeout.h"
-
 #if defined _WIN32
-#include <windows.h>
+    #include <windows.h>
 #else
-#include <pthread.h>
+    #include <pthread.h>
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-
 
 /** Data that we pass to the Pubnub context and will get back via
     callback. To signal reception of response from Pubnub, that we get
@@ -23,61 +21,62 @@
 struct UserData {
 #if defined _WIN32
     CRITICAL_SECTION mutw;
-    HANDLE           condw;
+    HANDLE condw;
 #else
     pthread_mutex_t mutw;
-    bool            triggered;
-    pthread_cond_t  condw;
+    bool triggered;
+    pthread_cond_t condw;
 #endif
     pubnub_t* pb;
 };
 
-
-static void wait_seconds(double time_in_seconds)
-{
-    time_t  start = time(NULL);
+static void wait_seconds(double time_in_seconds) {
+    time_t start = time(NULL);
     double time_passed_in_seconds;
     do {
         time_passed_in_seconds = difftime(time(NULL), start);
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
-
-static void callback_sample_free(pubnub_t* p)
-{
+static void callback_sample_free(pubnub_t* p) {
     if (pubnub_free_with_timeout(p, 1000) != 0) {
         printf("Failed to free the Pubnub context\n");
-    }
-    else {
+    } else {
         /* Waits until the context is released from the processing queue */
         wait_seconds(2);
     }
 }
 
-
-void sample_callback(pubnub_t*         pb,
-                     enum pubnub_trans trans,
-                     enum pubnub_res   result,
-                     void*             user_data)
-{
+void sample_callback(
+    pubnub_t* pb,
+    enum pubnub_trans trans,
+    enum pubnub_res result,
+    void* user_data) {
     struct UserData* pUserData = (struct UserData*)user_data;
     switch (trans) {
-    case PBTT_SUBSCRIBE:
-        /* One could do all handling here, and not signal the `condw`, or use
+        case PBTT_SUBSCRIBE:
+            /* One could do all handling here, and not signal the `condw`, or use
            some other means to inform others about this event (by, say,
            queueing into some message queue).
         */
-        printf("Subscribe callback, result: %d('%s')\n", result, pubnub_res_2_string(result));
-        break;
-    case PBTT_PUBLISH:
-        printf("Publish callback, result: %d('%s')\n", result, pubnub_res_2_string(result));
-        break;
-    default:
-        printf("Transaction %d callback: result: %d('%s')\n",
-               trans,
-               result,
-               pubnub_res_2_string(result));
-        break;
+            printf(
+                "Subscribe callback, result: %d('%s')\n",
+                result,
+                pubnub_res_2_string(result));
+            break;
+        case PBTT_PUBLISH:
+            printf(
+                "Publish callback, result: %d('%s')\n",
+                result,
+                pubnub_res_2_string(result));
+            break;
+        default:
+            printf(
+                "Transaction %d callback: result: %d('%s')\n",
+                trans,
+                result,
+                pubnub_res_2_string(result));
+            break;
     }
 #if defined _WIN32
     SetEvent(pUserData->condw);
@@ -89,9 +88,7 @@ void sample_callback(pubnub_t*         pb,
 #endif
 }
 
-
-static enum pubnub_res await(struct UserData* pUserData)
-{
+static enum pubnub_res await(struct UserData* pUserData) {
 #if defined _WIN32
     WaitForSingleObject(pUserData->condw, INFINITE);
     ResetEvent(pUserData->condw);
@@ -106,9 +103,7 @@ static enum pubnub_res await(struct UserData* pUserData)
     return pubnub_last_result(pUserData->pb);
 }
 
-
-static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
-{
+static void InitUserData(struct UserData* pUserData, pubnub_t* pb) {
 #if defined _WIN32
     InitializeCriticalSection(&pUserData->mutw);
     pUserData->condw = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -120,16 +115,14 @@ static void InitUserData(struct UserData* pUserData, pubnub_t* pb)
     pUserData->pb = pb;
 }
 
-
-int main()
-{
-    char const*     msg;
+int main() {
+    char const* msg;
     enum pubnub_res res;
     struct UserData user_data;
     struct UserData user_data_2;
-    char const*     chan  = "hello_world";
-    pubnub_t*       pbp   = pubnub_alloc();
-    pubnub_t*       pbp_2 = pubnub_alloc();
+    char const* chan = "hello_world";
+    pubnub_t* pbp = pubnub_alloc();
+    pubnub_t* pbp_2 = pubnub_alloc();
 
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
@@ -173,15 +166,20 @@ int main()
     }
     if (PNR_OK == res) {
         puts("Subscribed!");
-    }
-    else {
-        printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
+    } else {
+        printf(
+            "Subscribing failed with code: %d('%s')\n",
+            res,
+            pubnub_res_2_string(res));
     }
 
     /* The "real" subscribe, with the just acquired time token */
     res = pubnub_subscribe(pbp, chan, NULL);
     if (res != PNR_STARTED) {
-        printf("pubnub_subscribe() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        printf(
+            "pubnub_subscribe() returned unexpected: %d('%s')\n",
+            res,
+            pubnub_res_2_string(res));
         callback_sample_free(pbp);
         callback_sample_free(pbp_2);
         return -1;
@@ -195,9 +193,14 @@ int main()
        publish on it, so we use a different context to publish
     */
     res = pubnub_publish(
-        pbp_2, chan, "\"Hello world from subscribe-publish callback sample!\"");
+        pbp_2,
+        chan,
+        "\"Hello world from subscribe-publish callback sample!\"");
     if (res != PNR_STARTED) {
-        printf("pubnub_publish() returned unexpected: %d('%s')\n", res, pubnub_res_2_string(res));
+        printf(
+            "pubnub_publish() returned unexpected: %d('%s')\n",
+            res,
+            pubnub_res_2_string(res));
         callback_sample_free(pbp);
         callback_sample_free(pbp_2);
         return -1;
@@ -213,15 +216,18 @@ int main()
         return -1;
     }
     if (PNR_OK == res) {
-        printf("Published! Response from Pubnub: %s\n",
-               pubnub_last_publish_result(pbp_2));
-    }
-    else if (PNR_PUBLISH_FAILED == res) {
-        printf("Published failed on Pubnub, description: %s\n",
-               pubnub_last_publish_result(pbp_2));
-    }
-    else {
-        printf("Publishing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
+        printf(
+            "Published! Response from Pubnub: %s\n",
+            pubnub_last_publish_result(pbp_2));
+    } else if (PNR_PUBLISH_FAILED == res) {
+        printf(
+            "Published failed on Pubnub, description: %s\n",
+            pubnub_last_publish_result(pbp_2));
+    } else {
+        printf(
+            "Publishing failed with code: %d('%s')\n",
+            res,
+            pubnub_res_2_string(res));
     }
 
     /* Now we await the subscribe on `pbp` */
@@ -242,9 +248,11 @@ int main()
             }
             puts(msg);
         }
-    }
-    else {
-        printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
+    } else {
+        printf(
+            "Subscribing failed with code: %d('%s')\n",
+            res,
+            pubnub_res_2_string(res));
     }
 
     callback_sample_free(pbp_2);

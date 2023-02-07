@@ -1,9 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub.hpp"
-
-#include <iostream>
 #include <exception>
+#include <iostream>
 
+#include "pubnub.hpp"
 
 /* Please note that this sample is the same whether you use the Pubnub
    C "sync" or "callback" interface during the build.
@@ -14,21 +13,18 @@
  */
 
 #if __cplusplus < 201103L
-static int handle_msg(std::string msg, pubnub::context&, pubnub_res res) 
-{
+static int handle_msg(std::string msg, pubnub::context&, pubnub_res res) {
     if (PNR_OK != res) {
         std::cout << "Getting message failed with code: " << res;
         return -1;
     }
     std::cout << "Got message: \n" << msg << std::endl;
-    
+
     return 0;
 }
 #endif
 
-
-int main()
-{
+int main() {
     try {
         std::string chan("hello_world");
         pubnub::context pb("demo", "demo");
@@ -40,11 +36,11 @@ int main()
 #else
             10000
 #endif
-            );
+        );
 
         pubnub::subloop sublup(pb, chan);
 
-//! [Fetch - pull interface]
+        //! [Fetch - pull interface]
         std::string msg;
         for (;;) {
             enum pubnub_res res = sublup.fetch(msg);
@@ -59,30 +55,32 @@ int main()
 //! [Loop - push interface]
 #if __cplusplus >= 201103L
         sublup.loop([](std::string msg, pubnub::context&, pubnub_res res) {
-                if (PNR_OK != res) {
-                    std::cout << "Getting message failed with code: " << res;
-                    return -1;
-                }
-                std::cout << "Got message: \n" << msg << std::endl;
+            if (PNR_OK != res) {
+                std::cout << "Getting message failed with code: " << res;
+                return -1;
+            }
+            std::cout << "Got message: \n" << msg << std::endl;
 
-                return 0;
-            });
+            return 0;
+        });
 #else
         sublup.loop(handle_msg);
 #endif
-//! [Loop - push interface]
-    }
-    catch (std::exception &exc) {
+        //! [Loop - push interface]
+    } catch (std::exception& exc) {
         std::cout << "Caught exception: " << exc.what() << std::endl;
     }
 
-std::cout << "Pubnub C++ " <<
+    std::cout << "Pubnub C++ "
+              <<
 #if defined(PUBNUB_CALLBACK_API)
-    "callback" <<
+        "callback"
+              <<
 #else
-    "sync" <<
+        "sync"
+              <<
 #endif
-    " subscribe loop demo over." << std::endl;
+        " subscribe loop demo over." << std::endl;
 
     return 0;
 }

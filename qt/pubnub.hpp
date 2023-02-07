@@ -1,24 +1,22 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_COMMON_HPP
-#define      INC_PUBNUB_COMMON_HPP
+    #define INC_PUBNUB_COMMON_HPP
 
-#include "pubnub_qt.h"
-#include "lib/pb_deprecated.h"
+    #include <QMutexLocker>
+    #include <QWaitCondition>
+    #include <string>
+    #include <vector>
 
-#include <string>
-#include <vector>
-
-#include <QMutexLocker>
-#include <QWaitCondition>
+    #include "lib/pb_deprecated.h"
+    #include "pubnub_qt.h"
 
 extern "C" {
-#include "pubnub_helper.h"
+    #include "pubnub_helper.h"
 }
-
 
 namespace pubnub {
 
-    /** An algorithm to join (contatenate) the elements of the given
+/** An algorithm to join (contatenate) the elements of the given
         range [first, last) to a string-like object, separating
         elements with the @p separator.
 
@@ -42,44 +40,45 @@ namespace pubnub {
         and the separator - the initial value.
         @return The final result, after all additions (if any)
      */
-    template <typename I, typename S>
-    S join(I first, I last, S const &separator, S result) {
-        if (first == last) {
-            return result;
-        }
-        I prev = first;
-        I next = first;
-        for (++next; next != last; ++next) {
-            result += *prev;
-            result += separator;
-            prev = next;
-        }
-        result += *prev;
+template<typename I, typename S>
+S join(I first, I last, S const& separator, S result) {
+    if (first == last) {
         return result;
     }
+    I prev = first;
+    I next = first;
+    for (++next; next != last; ++next) {
+        result += *prev;
+        result += separator;
+        prev = next;
+    }
+    result += *prev;
+    return result;
+}
 
-    /** Pass a STL-like container for @p container, we'll do the join
+/** Pass a STL-like container for @p container, we'll do the join
         from container.begin() to container.end(). A helper function
         to use you know that you want to join all the elements of a
         container.
      */
-    template <typename C, typename S>
-    S join(C container, S const &separator, S result) {
-        return join(container.begin(), container.end(), separator, result);
-    }
+template<typename C, typename S>
+S join(C container, S const& separator, S result) {
+    return join(container.begin(), container.end(), separator, result);
+}
 
-    static const std::string comma = ",";
+static const std::string comma = ",";
 
-    /** We actually know we always join strings and commas, so, this
+/** We actually know we always join strings and commas, so, this
         helps simplify things.
      */
-    template <typename C> std::string join(C container) {
-        return join(container, comma, std::string());
-    }
+template<typename C>
+std::string join(C container) {
+    return join(container, comma, std::string());
+}
 
-    class context;
+class context;
 
-    /** A future (pending) result of a Pubnub
+/** A future (pending) result of a Pubnub
      * transaction/operation/request.  It is somewhat similar to the
      * std::future<> from C++11.
      *
@@ -87,143 +86,150 @@ namespace pubnub {
      * "callback" interfaces, so the C++ user code is always the same,
      * you just select the "back-end" during the build.
      */
-    class futres : public QObject {
-        Q_OBJECT
+class futres: public QObject {
+    Q_OBJECT
 
-    private slots:
-        void onOutcome(pubnub_res result) { 
-            signal(result); 
-        }
+  private slots:
+    void onOutcome(pubnub_res result) {
+        signal(result);
+    }
 
-    public:
-        futres(context &ctx, pubnub_res initial);
+  public:
+    futres(context& ctx, pubnub_res initial);
 
-        ~futres() {}
+    ~futres() {}
 
-        /// Gets the last (or latest) result of the transaction.
-        pubnub_res last_result();
+    /// Gets the last (or latest) result of the transaction.
+    pubnub_res last_result();
 
-        /// Starts the await. Only useful for the callback interface
-        void start_await();
+    /// Starts the await. Only useful for the callback interface
+    void start_await();
 
-        /// Ends the await of the transaction to end and returns the
-        /// final result (outcome)
-        pubnub_res end_await();
+    /// Ends the await of the transaction to end and returns the
+    /// final result (outcome)
+    pubnub_res end_await();
 
-        /// Awaits the end of transaction and returns its final result
-        /// (outcome).
-        pubnub_res await() {
-            start_await();
-            return end_await();
-        }
+    /// Awaits the end of transaction and returns its final result
+    /// (outcome).
+    pubnub_res await() {
+        start_await();
+        return end_await();
+    }
 
-        // C++11 std::future<> compatible API
+    // C++11 std::future<> compatible API
 
-        /// Same as await()
-        pubnub_res get() { return await(); }
+    /// Same as await()
+    pubnub_res get() {
+        return await();
+    }
 
-        /// Return whether this object is valid
-        bool valid() const { return true; }
+    /// Return whether this object is valid
+    bool valid() const {
+        return true;
+    }
 
-        /// Just wait for the transaction to end, don't get the
-        /// outcome
-        void wait() /*const*/ { await(); }
+    /// Just wait for the transaction to end, don't get the
+    /// outcome
+    void wait() /*const*/ {
+        await();
+    }
 
-        // C++17 (somewhat) compatbile API
+    // C++17 (somewhat) compatbile API
 
-        /// Pass a function, function object (or lambda in C++11)
-        /// which accepts a Pubnub context and pubnub_res and it will
-        /// be called when the transaction ends.
-        template<typename F> void then(F f) {
-            f(d_ctx, await());
-        }
+    /// Pass a function, function object (or lambda in C++11)
+    /// which accepts a Pubnub context and pubnub_res and it will
+    /// be called when the transaction ends.
+    template<typename F>
+    void then(F f) {
+        f(d_ctx, await());
+    }
 
-        /// Returns if the transaction is over
-        bool is_ready() const {
-            QMutexLocker lk(&d_mutex);
-            return d_triggered;
-        }
+    /// Returns if the transaction is over
+    bool is_ready() const {
+        QMutexLocker lk(&d_mutex);
+        return d_triggered;
+    }
 
-        /// Parses the last (or latest) result of the transaction 'publish'.
-        pubnub_publish_res parse_last_publish_result();
-        
-        // We can construct from a temporary
-#if __cplusplus >= 201103L
-        futres(futres &&x);
-        futres(futres const &x) = delete;
-#else
-        futres(futres const &x);
-#endif
+    /// Parses the last (or latest) result of the transaction 'publish'.
+    pubnub_publish_res parse_last_publish_result();
 
-    private:
-        // Pubnub future result is non-copyable
-        futres(futres &x);
+    // We can construct from a temporary
+    #if __cplusplus >= 201103L
+    futres(futres&& x);
+    futres(futres const& x) = delete;
+    #else
+    futres(futres const& x);
+    #endif
 
-        void signal(pubnub_res result) {
-            QMutexLocker lk(&d_mutex);
-            qDebug() << "signal" << result << d_triggered << this;
-            d_triggered = true;
-            d_result = result;
-        }
+  private:
+    // Pubnub future result is non-copyable
+    futres(futres& x);
 
-        /// The C++ Pubnub context of this future result
-        context &d_ctx;
+    void signal(pubnub_res result) {
+        QMutexLocker lk(&d_mutex);
+        qDebug() << "signal" << result << d_triggered << this;
+        d_triggered = true;
+        d_result = result;
+    }
 
-        /// The current result
-        pubnub_res d_result;
+    /// The C++ Pubnub context of this future result
+    context& d_ctx;
 
-        bool d_triggered;
+    /// The current result
+    pubnub_res d_result;
 
-        mutable QMutex d_mutex;
-    };
-	
-    /** Options for Publish v2. These are designed to be used as
+    bool d_triggered;
+
+    mutable QMutex d_mutex;
+};
+
+/** Options for Publish v2. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
      * (bit-and and bit-or) operators.
      */
-    enum pubv2_opt {
-        /// If not set, message will not be stored in history of the channel
-        store_in_history = 0x01,
-        /// If set, message will not be stored for delayed or repeated
-        /// retrieval or display
-        eat_after_reading = 0x02
-    };
-    inline pubv2_opt operator|(pubv2_opt l, pubv2_opt r) {
-        return static_cast<pubv2_opt>(static_cast<int>(l) | static_cast<int>(r));
-    }
-    inline pubv2_opt operator&(pubv2_opt l, pubv2_opt r) {
-        return static_cast<pubv2_opt>(static_cast<int>(l) & static_cast<int>(r));
-    }
+enum pubv2_opt {
+    /// If not set, message will not be stored in history of the channel
+    store_in_history = 0x01,
+    /// If set, message will not be stored for delayed or repeated
+    /// retrieval or display
+    eat_after_reading = 0x02
+};
+inline pubv2_opt operator|(pubv2_opt l, pubv2_opt r) {
+    return static_cast<pubv2_opt>(static_cast<int>(l) | static_cast<int>(r));
+}
+inline pubv2_opt operator&(pubv2_opt l, pubv2_opt r) {
+    return static_cast<pubv2_opt>(static_cast<int>(l) & static_cast<int>(r));
+}
 
-    /// Posible settings for (usage of) blocking I/O
-    enum blocking_io {
-        /// Use blocking I/O
-        blocking,
-        /// Use non-blocking I/O
-        non_blocking
-    };
+/// Posible settings for (usage of) blocking I/O
+enum blocking_io {
+    /// Use blocking I/O
+    blocking,
+    /// Use non-blocking I/O
+    non_blocking
+};
 
-    /** Options for SSL/TLS transport. These are designed to be used as
+/** Options for SSL/TLS transport. These are designed to be used as
      * "bit-masks", for which purpose there are overloaded `&` and `|`
      * (bit-and and bit-or) operators.
      */
-    enum ssl_opt {
-        /// Should the PubNub client establish the connection to
-        /// PubNub using SSL? (default: YES)
-        useSSL = 0x01,
-        /// When SSL is enabled, should the client fallback to a
-        /// non-SSL connection if it experiences issues handshaking
-        /// across local proxies, firewalls, etc? (default: YES)
-        ignoreSecureConnectionRequirement = 0x02
-    };
-    inline ssl_opt operator|(ssl_opt l, ssl_opt r) {
-        return static_cast<ssl_opt>(static_cast<int>(l) | static_cast<int>(r));
-    }
-    inline ssl_opt operator&(ssl_opt l, ssl_opt r) {
-        return static_cast<ssl_opt>(static_cast<int>(l) & static_cast<int>(r));
-    }
+enum ssl_opt {
+    /// Should the PubNub client establish the connection to
+    /// PubNub using SSL? (default: YES)
+    useSSL = 0x01,
+    /// When SSL is enabled, should the client fallback to a
+    /// non-SSL connection if it experiences issues handshaking
+    /// across local proxies, firewalls, etc? (default: YES)
+    ignoreSecureConnectionRequirement = 0x02
+};
+inline ssl_opt operator|(ssl_opt l, ssl_opt r) {
+    return static_cast<ssl_opt>(static_cast<int>(l) | static_cast<int>(r));
+}
+inline ssl_opt operator&(ssl_opt l, ssl_opt r) {
+    return static_cast<ssl_opt>(static_cast<int>(l) & static_cast<int>(r));
+}
 
-    /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
+/** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
      * not a "native" C++ implementation.
      *
      * One of its main design decisions is to make it safe,
@@ -244,267 +250,345 @@ namespace pubnub {
      * their general meaning. For details, refer to the Pubnub C
      * documentation, as this is just a wrapper, all of it holds.
      */
-    class context {
-        pubnub_qt d_pbqt;
-    public:
-        /** Create the context, that will use @p pubkey as its
+class context {
+    pubnub_qt d_pbqt;
+
+  public:
+    /** Create the context, that will use @p pubkey as its
             publish key and @subkey as its subscribe key for its
             lifetime. These cannot be changed, to use another
             pair, create a new context.
         */
-        context(std::string pubkey, std::string subkey);
+    context(std::string pubkey, std::string subkey);
 
-        context(std::string pubkey, std::string subkey, std::string origin) :
-            context(pubkey, subkey) {
-            set_origin(origin);
-        }
+    context(std::string pubkey, std::string subkey, std::string origin) :
+        context(pubkey, subkey) {
+        set_origin(origin);
+    }
 
-        /** Sets the origin to @p origin on this context. This may fail.
+    /** Sets the origin to @p origin on this context. This may fail.
             To reset to default, pass an empty string.
          */
-        int set_origin(std::string const &origin) {
-            d_pbqt.set_origin(QString::fromStdString(origin));
-            return 0;
-        }
-        /** Returns the current origin for this context
+    int set_origin(std::string const& origin) {
+        d_pbqt.set_origin(QString::fromStdString(origin));
+        return 0;
+    }
+    /** Returns the current origin for this context
          */
-        std::string origin() const { return d_pbqt.origin().toStdString(); }
-        
-        /** Sets the `auth` key to @p auth. If @p auth is an
+    std::string origin() const {
+        return d_pbqt.origin().toStdString();
+    }
+
+    /** Sets the `auth` key to @p auth. If @p auth is an
             empty string, `auth` will not be used.
             @see pubnub_set_auth
          */
-        void set_auth(std::string const &auth) {
-            d_pbqt.set_auth(QString::fromStdString(auth));
-        }
-        /// Returns the current `auth` key for this context
-        std::string auth() const { return d_pbqt.auth().toStdString(); }
+    void set_auth(std::string const& auth) {
+        d_pbqt.set_auth(QString::fromStdString(auth));
+    }
+    /// Returns the current `auth` key for this context
+    std::string auth() const {
+        return d_pbqt.auth().toStdString();
+    }
 
-        /** Sets the user_id to @p uuid. If @p uuid is an empty string,
+    /** Sets the user_id to @p uuid. If @p uuid is an empty string,
             user_id will not be used.
         
 	    @deprecated this is provided as a workaround for existing users.
         Please use `set_user_id` instead.
         */
-        PUBNUB_DEPRECATED void set_uuid(std::string const &uuid) {
-            set_user_id(uuid);
-        }
+    PUBNUB_DEPRECATED void set_uuid(std::string const& uuid) {
+        set_user_id(uuid);
+    }
 
-        /** Sets the user_id to @p user_id. if @p user_id is an empty string,
+    /** Sets the user_id to @p user_id. if @p user_id is an empty string,
           user_id will not be used.
           */
-        void set_user_id(std::string const& user_id)
-        {
-            d_pbqt.set_user_id(QString::fromStdString(uuid));
+    void set_user_id(std::string const& user_id) {
+        d_pbqt.set_user_id(QString::fromStdString(uuid));
+    }
+
+    /// Set the user_id with a random-generated UUID
+    ///
+    /// @deprecated random generated uuid/user_id is deprecated.
+    PUBNUB_DEPRECATED int set_uuid_v4_random() {
+        return d_pbqt.set_uuid_v4_random();
+    }
+
+    /// Returns the current user_id
+    ///
+    /// @deprecated this is provided as a workaround for existing users.
+    /// Please use `user_id` instead.
+    PUBNUB_DEPRECATED std::string uuid() const {return user_id()}
+
+    /// Returns the current user_id
+    std::string user_id() const {
+        return d_pbqt.uuid().toStdString();
+    }
+
+    /// Returns the next message from the context. If there are
+    /// none, returns an empty string.
+    std::string get() const {
+        return d_pbqt.get().toStdString();
+    }
+
+    /// Returns a vector of all messages from the context.
+    std::vector<std::string> get_all() const {
+        std::vector<std::string> result;
+        QStringList qsl = d_pbqt.get_all();
+        for (int i = 0; i < qsl.size(); ++i) {
+            result.push_back(qsl[i].toStdString());
         }
+        return result;
+    }
 
-        /// Set the user_id with a random-generated UUID
-        /// 
-        /// @deprecated random generated uuid/user_id is deprecated.
-        PUBNUB_DEPRECATED int set_uuid_v4_random() {
-            return d_pbqt.set_uuid_v4_random();	
+    /// Returns the next channel string from the context.
+    /// If there are none, returns an empty string
+    std::string get_channel() const {
+        return d_pbqt.get_channel().toStdString();
+    }
+
+    /// Returns a vector of all channel strings from the context
+    std::vector<std::string> get_all_channels() const {
+        std::vector<std::string> result;
+        QStringList qsl = d_pbqt.get_all_channels();
+        for (int i = 0; i < qsl.size(); ++i) {
+            result.push_back(qsl[i].toStdString());
+            ;
         }
+        return result;
+    }
 
-        /// Returns the current user_id
-        ///
-        /// @deprecated this is provided as a workaround for existing users.
-        /// Please use `user_id` instead.
-        PUBNUB_DEPRECATED std::string uuid() const { return user_id() }
+    /// Cancels the transaction, if any is ongoing. If none is
+    /// ongoing, it is ignored.
+    void cancel() {
+        d_pbqt.cancel();
+    }
 
-        /// Returns the current user_id
-        std::string user_id() const { return d_pbqt.uuid().toStdString(); }
-
-        /// Returns the next message from the context. If there are
-        /// none, returns an empty string.
-        std::string get() const { return d_pbqt.get().toStdString(); }
-
-        /// Returns a vector of all messages from the context.
-        std::vector<std::string> get_all() const { 
-            std::vector<std::string> result;
-            QStringList qsl = d_pbqt.get_all();
-            for (int i = 0; i < qsl.size(); ++i) {
-                result.push_back(qsl[i].toStdString());
-            }
-            return result;
-        }
-
-        /// Returns the next channel string from the context.
-        /// If there are none, returns an empty string
-        std::string get_channel() const { return d_pbqt.get_channel().toStdString(); }
-
-        /// Returns a vector of all channel strings from the context
-        std::vector<std::string> get_all_channels() const { 
-            std::vector<std::string> result;
-            QStringList qsl = d_pbqt.get_all_channels();
-            for (int i = 0; i < qsl.size(); ++i) {
-                result.push_back(qsl[i].toStdString());;
-            }
-            return result;
-        }
-        
-        /// Cancels the transaction, if any is ongoing. If none is
-        /// ongoing, it is ignored.
-        void cancel() { d_pbqt.cancel(); }
-        
-        /// Publishes a @p message on the @p channel. The @p channel
-        /// can have many channels separated by a comma
-        futres publish(std::string const &channel, std::string const &message) {
-            return doit(d_pbqt.publish(QString::fromStdString(channel), QString::fromStdString(message)));
-        }
-#if 0
+    /// Publishes a @p message on the @p channel. The @p channel
+    /// can have many channels separated by a comma
+    futres publish(std::string const& channel, std::string const& message) {
+        return doit(d_pbqt.publish(
+            QString::fromStdString(channel),
+            QString::fromStdString(message)));
+    }
+    #if 0
         /// Publishes a @p message on the @p channel using v2, with the
         /// options set in @p options.
         futres publishv2(std::string const &channel, std::string const &message,
                          pubv2_opt options) {
             return doit(d_pbqt.publishv2(QString::fromStdString(channel), QString::fromStdString(message), (options & store_in_history) != 0, (options & eat_after_reading) != 0));
         }
-#endif
-        /// Subscribes to @p channel and/or @p channel_group
-        futres subscribe(std::string const &channel, std::string const &channel_group = "") {
-            return doit(d_pbqt.subscribe(QString::fromStdString(channel), QString::fromStdString(channel_group)));
-        }
+    #endif
+    /// Subscribes to @p channel and/or @p channel_group
+    futres subscribe(
+        std::string const& channel,
+        std::string const& channel_group = "") {
+        return doit(d_pbqt.subscribe(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group)));
+    }
 
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres subscribe(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return subscribe(join(channel), join(channel_group));
-        }
+    /// Pass a vector of channels in the @p channel and a vector
+    /// of channel groups for @p channel_group and we will put
+    /// commas between them. A helper function.
+    futres subscribe(
+        std::vector<std::string> const& channel,
+        std::vector<std::string> const& channel_group) {
+        return subscribe(join(channel), join(channel_group));
+    }
 
-        /// Leaves a @p channel and/or @p channel_group
-        /// @see pubnub_leave
-        futres leave(std::string const &channel, std::string const &channel_group) {
-            return doit(d_pbqt.leave(QString::fromStdString(channel), QString::fromStdString(channel_group)));
-        }
+    /// Leaves a @p channel and/or @p channel_group
+    /// @see pubnub_leave
+    futres leave(std::string const& channel, std::string const& channel_group) {
+        return doit(d_pbqt.leave(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group)));
+    }
 
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres leave(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return leave(join(channel), join(channel_group));
-        }
+    /// Pass a vector of channels in the @p channel and a vector
+    /// of channel groups for @p channel_group and we will put
+    /// commas between them. A helper function.
+    futres leave(
+        std::vector<std::string> const& channel,
+        std::vector<std::string> const& channel_group) {
+        return leave(join(channel), join(channel_group));
+    }
 
-        /// Starts a "get time" transaction
-        futres time() {
-            return doit(d_pbqt.time());
-        }
+    /// Starts a "get time" transaction
+    futres time() {
+        return doit(d_pbqt.time());
+    }
 
-        /// Starts a transaction to get message history for @p channel
-        /// with the limit of max @p count
-        /// messages to retrieve, and optionally @p include_token to get
-        /// a time token for each message.
-        futres history(std::string const &channel, unsigned count = 100, bool include_token = false) {
-            return doit(d_pbqt.history(QString::fromStdString(channel), count, include_token));
-        }
+    /// Starts a transaction to get message history for @p channel
+    /// with the limit of max @p count
+    /// messages to retrieve, and optionally @p include_token to get
+    /// a time token for each message.
+    futres history(
+        std::string const& channel,
+        unsigned count = 100,
+        bool include_token = false) {
+        return doit(d_pbqt.history(
+            QString::fromStdString(channel),
+            count,
+            include_token));
+    }
 
-        /// Starts a transaction to get a list of currently present
-        /// user_id on a @p channel and/or @p channel_group
-        futres here_now(std::string const &channel, std::string const &channel_group = "") {
-            return doit(d_pbqt.here_now(QString::fromStdString(channel), QString::fromStdString(channel_group)));
-        }
+    /// Starts a transaction to get a list of currently present
+    /// user_id on a @p channel and/or @p channel_group
+    futres here_now(
+        std::string const& channel,
+        std::string const& channel_group = "") {
+        return doit(d_pbqt.here_now(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group)));
+    }
 
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres here_now(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group) {
-            return here_now(join(channel), join(channel_group));
-        }
+    /// Pass a vector of channels in the @p channel and a vector
+    /// of channel groups for @p channel_group and we will put
+    /// commas between them. A helper function.
+    futres here_now(
+        std::vector<std::string> const& channel,
+        std::vector<std::string> const& channel_group) {
+        return here_now(join(channel), join(channel_group));
+    }
 
-        /// Starts a transaction to get a list of currently present
-        /// user_ids on all channels
-        /// @see pubnub_global_here_now
-        futres global_here_now() {
-            return doit(d_pbqt.global_here_now());
-        }
-        
-        /// Starts a transaction to get a list of channels the @p user_id
-        /// is currently present on. If @p user_id is not given (or is an
-        /// empty string) it will 
-        /// @see pubnub_where_now
-        futres where_now(std::string const &user_id = "") {
-            return doit(d_pbqt.where_now(QString::fromStdString(user_id)));
-        }
+    /// Starts a transaction to get a list of currently present
+    /// user_ids on all channels
+    /// @see pubnub_global_here_now
+    futres global_here_now() {
+        return doit(d_pbqt.global_here_now());
+    }
 
-        /// Starts a transaction to set the @p state JSON object for the
-        /// given @p channel and/or @pchannel_group of the given @p user_id
-        /// @see pubnub_set_state
-        futres set_state(std::string const &channel, std::string const &channel_group, std::string const &uuid, std::string const &state) {
-            return doit(d_pbqt.set_state(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(user_id), QString::fromStdString(state)));
-        }
+    /// Starts a transaction to get a list of channels the @p user_id
+    /// is currently present on. If @p user_id is not given (or is an
+    /// empty string) it will
+    /// @see pubnub_where_now
+    futres where_now(std::string const& user_id = "") {
+        return doit(d_pbqt.where_now(QString::fromStdString(user_id)));
+    }
 
-        /// Pass a vector of channels in the @p channel and a vector
-        /// of channel groups for @p channel_group and we will put
-        /// commas between them. A helper function.
-        futres set_state(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &user_id, std::string const &state) {
-            return set_state(join(channel), join(channel_group), user_id, state);
-        }
+    /// Starts a transaction to set the @p state JSON object for the
+    /// given @p channel and/or @pchannel_group of the given @p user_id
+    /// @see pubnub_set_state
+    futres set_state(
+        std::string const& channel,
+        std::string const& channel_group,
+        std::string const& uuid,
+        std::string const& state) {
+        return doit(d_pbqt.set_state(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group),
+            QString::fromStdString(user_id),
+            QString::fromStdString(state)));
+    }
 
-        /// Starts a transaction to get the state JSON object for the
-        /// given @p channel and/or @pchannel_group of the given @p
-        /// user_id
-        /// @see pubnub_set_state
-        futres state_get(std::string const &channel, std::string const &channel_group = "", std::string const &user_id = "") {
-            return doit(d_pbqt.state_get(QString::fromStdString(channel), QString::fromStdString(channel_group), QString::fromStdString(user_id)));
-        }
-        futres state_get(std::vector<std::string> const &channel, std::vector<std::string> const &channel_group, std::string const &user_id = "") {
-            return state_get(join(channel), join(channel_group), user_id);
-        }
+    /// Pass a vector of channels in the @p channel and a vector
+    /// of channel groups for @p channel_group and we will put
+    /// commas between them. A helper function.
+    futres set_state(
+        std::vector<std::string> const& channel,
+        std::vector<std::string> const& channel_group,
+        std::string const& user_id,
+        std::string const& state) {
+        return set_state(join(channel), join(channel_group), user_id, state);
+    }
 
-        /// Starts a transaction to remove a @p channel_group.
-        /// @see pubnub_remove_channel_group
-        futres remove_channel_group(std::string const &channel_group) {
-            return doit(d_pbqt.remove_channel_group(QString::fromStdString(channel_group)));
-        }
+    /// Starts a transaction to get the state JSON object for the
+    /// given @p channel and/or @pchannel_group of the given @p
+    /// user_id
+    /// @see pubnub_set_state
+    futres state_get(
+        std::string const& channel,
+        std::string const& channel_group = "",
+        std::string const& user_id = "") {
+        return doit(d_pbqt.state_get(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group),
+            QString::fromStdString(user_id)));
+    }
+    futres state_get(
+        std::vector<std::string> const& channel,
+        std::vector<std::string> const& channel_group,
+        std::string const& user_id = "") {
+        return state_get(join(channel), join(channel_group), user_id);
+    }
 
-        /// Starts a transaction to remove a @p channel from a @p channel_group.
-        /// @see pubnub_remove_channel_from_group
-        futres remove_channel_from_group(std::string const &channel, std::string const &channel_group) {
-            return doit(d_pbqt.remove_channel_from_group(QString::fromStdString(channel), QString::fromStdString(channel_group)));
-        }
+    /// Starts a transaction to remove a @p channel_group.
+    /// @see pubnub_remove_channel_group
+    futres remove_channel_group(std::string const& channel_group) {
+        return doit(
+            d_pbqt.remove_channel_group(QString::fromStdString(channel_group)));
+    }
 
-        /// Pass a vector of channels in the @p channel and we will
-        /// put commas between them. A helper function.
-        futres remove_channel_from_group(std::vector<std::string> const &channel, std::string const &channel_group) {
-            return remove_channel_from_group(join(channel), channel_group);
-        }
+    /// Starts a transaction to remove a @p channel from a @p channel_group.
+    /// @see pubnub_remove_channel_from_group
+    futres remove_channel_from_group(
+        std::string const& channel,
+        std::string const& channel_group) {
+        return doit(d_pbqt.remove_channel_from_group(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group)));
+    }
 
-        /// Starts a transaction to add a @p channel to a @p channel_group.
-        /// @see pubnub_add_channel_to_group
-        futres add_channel_to_group(std::string const &channel, std::string const &channel_group) {
-            return doit(d_pbqt.add_channel_to_group(QString::fromStdString(channel), QString::fromStdString(channel_group)));
-        }
+    /// Pass a vector of channels in the @p channel and we will
+    /// put commas between them. A helper function.
+    futres remove_channel_from_group(
+        std::vector<std::string> const& channel,
+        std::string const& channel_group) {
+        return remove_channel_from_group(join(channel), channel_group);
+    }
 
-        /// Pass a vector of channels in the @p channel and we will
-        /// put commas between them. A helper function.
-        futres add_channel_to_group(std::vector<std::string> const &channel, std::string const &channel_group) {
-            return add_channel_to_group(join(channel), channel_group);
-        }
+    /// Starts a transaction to add a @p channel to a @p channel_group.
+    /// @see pubnub_add_channel_to_group
+    futres add_channel_to_group(
+        std::string const& channel,
+        std::string const& channel_group) {
+        return doit(d_pbqt.add_channel_to_group(
+            QString::fromStdString(channel),
+            QString::fromStdString(channel_group)));
+    }
 
-        /// Starts a transaction to get a list of channels belonging
-        /// to a @p channel_group.
-        futres list_channel_group(std::string const &channel_group) {
-            return doit(d_pbqt.list_channel_group(QString::fromStdString(channel_group)));
-        }
-        
-        /// Return the HTTP code (result) of the last transaction.
-        int last_http_code() const { return d_pbqt.last_http_code(); }
+    /// Pass a vector of channels in the @p channel and we will
+    /// put commas between them. A helper function.
+    futres add_channel_to_group(
+        std::vector<std::string> const& channel,
+        std::string const& channel_group) {
+        return add_channel_to_group(join(channel), channel_group);
+    }
 
-        /// Return the string of the last publish transaction.
-        std::string last_publish_result() const { 
-            return d_pbqt.last_publish_result().toStdString();
-        }
+    /// Starts a transaction to get a list of channels belonging
+    /// to a @p channel_group.
+    futres list_channel_group(std::string const& channel_group) {
+        return doit(
+            d_pbqt.list_channel_group(QString::fromStdString(channel_group)));
+    }
 
-        pubnub_publish_res parse_last_publish_result() {
-            return d_pbqt.parse_last_publish_result();
-        }
+    /// Return the HTTP code (result) of the last transaction.
+    int last_http_code() const {
+        return d_pbqt.last_http_code();
+    }
 
-        /// Return the string of the last time token.
-        std::string last_time_token() const { return d_pbqt.last_time_token().toStdString(); }
+    /// Return the string of the last publish transaction.
+    std::string last_publish_result() const {
+        return d_pbqt.last_publish_result().toStdString();
+    }
 
-        /// Sets whether to use (non-)blocking I/O according to option @p e.
-        int set_blocking_io(blocking_io /*e*/) { return -1; }
+    pubnub_publish_res parse_last_publish_result() {
+        return d_pbqt.parse_last_publish_result();
+    }
 
-#if 0
+    /// Return the string of the last time token.
+    std::string last_time_token() const {
+        return d_pbqt.last_time_token().toStdString();
+    }
+
+    /// Sets whether to use (non-)blocking I/O according to option @p e.
+    int set_blocking_io(blocking_io /*e*/) {
+        return -1;
+    }
+
+    #if 0
         /// Sets the SSL/TLS options according to @p options
         /// @see pubnub_set_ssl_options
         void set_ssl_options(ssl_opt options) {
@@ -514,28 +598,26 @@ namespace pubnub {
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
-#endif        
-        /// Frees the context and any other thing that needs to be
-        /// freed/released.
-        ~context() {}
+    #endif
+    /// Frees the context and any other thing that needs to be
+    /// freed/released.
+    ~context() {}
 
-    private:
-        // pubnub context is not copyable
-        context(context const &);
+  private:
+    // pubnub context is not copyable
+    context(context const&);
 
-        friend futres;
+    friend futres;
 
-        // internal helper function
-        futres doit(pubnub_res e) {
-            return futres(*this, e);
-        }
+    // internal helper function
+    futres doit(pubnub_res e) {
+        return futres(*this, e);
+    }
+};
 
-    };
-
-}
+}  // namespace pubnub
 
 /// Helper to put a `pubnub_res` to a standard stream
-std::ostream& operator<<(std::ostream&out, pubnub_res e);
+std::ostream& operator<<(std::ostream& out, pubnub_res e);
 
-
-#endif // !defined INC_PUBNUB_COMMON_HPP
+#endif  // !defined INC_PUBNUB_COMMON_HPP

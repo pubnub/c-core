@@ -4,9 +4,10 @@
 #include "pubnub_assert.h"
 #include "pubnub_internal.h"
 
-
-void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool ignoreSecureConnectionRequirement)
-{
+void pubnub_set_ssl_options(
+    pubnub_t* p,
+    bool useSSL,
+    bool ignoreSecureConnectionRequirement) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
     p->options.useSSL = useSSL;
@@ -14,9 +15,10 @@ void pubnub_set_ssl_options(pubnub_t *p, bool useSSL, bool ignoreSecureConnectio
 #endif
 }
 
-
-int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const* sCApath)
-{
+int pubnub_set_ssl_verify_locations(
+    pubnub_t* p,
+    char const* sCAfile,
+    char const* sCApath) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
     pubnub_mutex_lock(p->monitor);
@@ -28,9 +30,7 @@ int pubnub_set_ssl_verify_locations(pubnub_t *p, char const* sCAfile, char const
     return 0;
 }
 
-
-int pubnub_ssl_use_system_certificate_store(pubnub_t *p)
-{
+int pubnub_ssl_use_system_certificate_store(pubnub_t* p) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
     pubnub_mutex_lock(p->monitor);
@@ -41,9 +41,7 @@ int pubnub_ssl_use_system_certificate_store(pubnub_t *p)
     return 0;
 }
 
-
-void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p)
-{
+void pubnub_ssl_dont_use_system_certificate_store(pubnub_t* p) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 #if PUBNUB_USE_SSL
     pubnub_mutex_lock(p->monitor);
@@ -52,9 +50,7 @@ void pubnub_ssl_dont_use_system_certificate_store(pubnub_t *p)
 #endif
 }
 
-
-void pubnub_ssl_set_pem_cert(pubnub_t *p, char const *contents)
-{
+void pubnub_ssl_set_pem_cert(pubnub_t* p, char const* contents) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
 #if PUBNUB_USE_SSL
@@ -64,9 +60,7 @@ void pubnub_ssl_set_pem_cert(pubnub_t *p, char const *contents)
 #endif
 }
 
-
-void pubnub_set_reuse_ssl_session(pubnub_t *p, bool reuse)
-{
+void pubnub_set_reuse_ssl_session(pubnub_t* p, bool reuse) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
 #if PUBNUB_USE_SSL

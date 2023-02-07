@@ -1,24 +1,25 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_TEST_MOCKS
-#define      INC_PUBNUB_TEST_MOCKS
+    #define INC_PUBNUB_TEST_MOCKS
 
-#include "core/pubnub_api_types.h"
-#include <time.h>
+    #include <time.h>
+
+    #include "core/pubnub_api_types.h"
 
 int _set_expected_assert(char const* file);
 
 void _test_expected_assert();
 
-#define expect_assert_in(expr, file)\
-        {\
-            int val = _set_expected_assert(file);\
-            if (0 == val)\
-                expr;\
-            _test_expected_assert();\
+    #define expect_assert_in(expr, file) \
+        { \
+            int val = _set_expected_assert(file); \
+            if (0 == val) \
+                expr; \
+            _test_expected_assert(); \
         }
 
 struct uint8_block {
-    size_t   size;
+    size_t size;
     uint8_t* block;
 };
 
@@ -34,4 +35,4 @@ void pubnub_setup_mocks(pubnub_t** pbp);
 
 void pubnub_cleanup_mocks(pubnub_t* pbp);
 
-#endif // INC_PUBNUB_TEST_MOCKS
+#endif  // INC_PUBNUB_TEST_MOCKS

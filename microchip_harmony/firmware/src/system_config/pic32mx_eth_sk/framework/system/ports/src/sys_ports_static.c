@@ -48,33 +48,36 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 *******************************************************************************/
 //DOM-IGNORE-END
 
-#include "system_config.h"
-#include "peripheral/ports/plib_ports.h"
 #include "peripheral/int/plib_int.h"
+#include "peripheral/ports/plib_ports.h"
+#include "system_config.h"
 
-
-void SYS_PORTS_Initialize(void)
-{
+void SYS_PORTS_Initialize(void) {
     /* AN and CN Pins Initialization */
-    PLIB_PORTS_AnPinsModeSelect(PORTS_ID_0, SYS_PORT_AD1PCFG, PORTS_PIN_MODE_DIGITAL);
+    PLIB_PORTS_AnPinsModeSelect(
+        PORTS_ID_0,
+        SYS_PORT_AD1PCFG,
+        PORTS_PIN_MODE_DIGITAL);
     PLIB_PORTS_CnPinsPullUpEnable(PORTS_ID_0, SYS_PORT_CNPUE);
     PLIB_PORTS_CnPinsEnable(PORTS_ID_0, SYS_PORT_CNEN);
     PLIB_PORTS_ChangeNoticeEnable(PORTS_ID_0);
 
-    
-    
     /* PORT B Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_B,  SYS_PORT_B_LAT);
-	PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_B,  SYS_PORT_B_TRIS ^ 0xFFFF);
-    
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_TRIS ^ 0xFFFF);
+
     /* PORT D Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_D, SYS_PORT_D_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_D,  SYS_PORT_D_LAT);
-	PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_D,  SYS_PORT_D_TRIS ^ 0xFFFF);
-    
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_D, SYS_PORT_D_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_D,
+        SYS_PORT_D_TRIS ^ 0xFFFF);
 }
-
 
 /*******************************************************************************
  End of File

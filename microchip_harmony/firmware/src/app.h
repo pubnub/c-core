@@ -44,8 +44,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 //DOM-IGNORE-END
 
 #ifndef _APP_H
-#define _APP_H
-
+    #define _APP_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -53,12 +52,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include "system_config.h"
-#include "system_definitions.h"
+    #include <stdbool.h>
+    #include <stddef.h>
+    #include <stdint.h>
+    #include <stdlib.h>
+
+    #include "system_config.h"
+    #include "system_definitions.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -66,9 +66,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-
-#define APP_HTTP_FNV  0xc96448a5
-#define APP_HTTPS_FNV 0xdedea8e2
+    #define APP_HTTP_FNV 0xc96448a5
+    #define APP_HTTPS_FNV 0xdedea8e2
 
 // *****************************************************************************
 /* Application states
@@ -81,16 +80,14 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
     determine the behavior of the application at various times.
 */
 
-typedef enum
-{
-	/* Application's state machine's initial state. */
-	APP_STATE_INIT=0,
-        APP_TCPIP_WAIT_FOR_TCPIP_INIT,
-        APP_TCPIP_WAIT_FOR_IP,
-        APP_TCPIP_RUNNING_PUBNUB_DEMO,
-        APP_TCPIP_ERROR
+typedef enum {
+    /* Application's state machine's initial state. */
+    APP_STATE_INIT = 0,
+    APP_TCPIP_WAIT_FOR_TCPIP_INIT,
+    APP_TCPIP_WAIT_FOR_IP,
+    APP_TCPIP_RUNNING_PUBNUB_DEMO,
+    APP_TCPIP_ERROR
 } APP_STATES;
-
 
 // *****************************************************************************
 /* Application Data
@@ -105,13 +102,12 @@ typedef enum
     Application strings and buffers are be defined outside this structure.
  */
 
-typedef struct
-{
+typedef struct {
     /* The application's current state */
     APP_STATES state;
 
     /* TODO: Define any additional data used by the application. */
-#if 0
+    #if 0
     NET_PRES_SKT_HANDLE_T socket;
     TCP_PORT port;
     void* ctx;
@@ -136,9 +132,8 @@ typedef struct
     uint32_t rawBytesSent;
     uint32_t clearBytesReceived;
     uint32_t clearBytesSent;
-#endif
+    #endif
 } APP_DATA;
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -148,7 +143,6 @@ typedef struct
 /* These routines are called by drivers when certain events occur.
 */
 
-	
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -186,8 +180,7 @@ typedef struct
     This routine must be called from the SYS_Initialize function.
 */
 
-void APP_Initialize ( void );
-
+void APP_Initialize(void);
 
 /*******************************************************************************
   Function:
@@ -219,11 +212,9 @@ void APP_Initialize ( void );
     This routine must be called from SYS_Tasks() routine.
  */
 
-void APP_Tasks ( void );
-
+void APP_Tasks(void);
 
 #endif /* _APP_H */
 /*******************************************************************************
  End of File
  */
-

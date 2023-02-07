@@ -1,7 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_DNS_SERVERS
-#define INC_PUBNUB_DNS_SERVERS
-#include <stdint.h>
+    #define INC_PUBNUB_DNS_SERVERS
+    #include <stdint.h>
 /** IPv4 Address, in binary format.
  */
 struct pubnub_ipv4_address {
@@ -9,7 +9,7 @@ struct pubnub_ipv4_address {
     uint8_t ipv4[4];
 };
 
-#if PUBNUB_USE_IPV6
+    #if PUBNUB_USE_IPV6
 /** IPv6 Address, in binary format.
  */
 struct pubnub_ipv6_address {
@@ -17,15 +17,15 @@ struct pubnub_ipv6_address {
     uint8_t ipv6[16];
 };
 
-/* primary, secondary(ipv4, ipv6) and default dns server */
-#define PUBNUB_MAX_DNS_SERVERS_MASK 0x10 
-#else
-/* primary, secondary(ipv4) and default dns server */
-#define PUBNUB_MAX_DNS_SERVERS_MASK 0x04
-#endif /* PUBNUB_USE_IPV6 */
+        /* primary, secondary(ipv4, ipv6) and default dns server */
+        #define PUBNUB_MAX_DNS_SERVERS_MASK 0x10
+    #else
+        /* primary, secondary(ipv4) and default dns server */
+        #define PUBNUB_MAX_DNS_SERVERS_MASK 0x04
+    #endif /* PUBNUB_USE_IPV6 */
 
-#if PUBNUB_SET_DNS_SERVERS
-#include <stdlib.h>
+    #if PUBNUB_SET_DNS_SERVERS
+        #include <stdlib.h>
 
 /** Sets the primary DNS server IPv4 address to use when
     resolving the Pubnub origin, in binary form(network order).
@@ -123,9 +123,10 @@ int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
     @retval -1: error, can't read DNS server configuration
     @retval otherwise: number of DNS servers read
   */
-int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4,
-                                        size_t                      n);
-#if PUBNUB_USE_IPV6
+int pubnub_dns_read_system_servers_ipv4(
+    struct pubnub_ipv4_address* o_ipv4,
+    size_t n);
+        #if PUBNUB_USE_IPV6
 /** Sets the primary DNS server IPv6 address to use when
     resolving the Pubnub origin, in binary form(network order).
     Applies to all subsequent DNS queries, if successful.
@@ -203,24 +204,24 @@ int pubnub_get_dns_primary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
             the secondary Ipv6 DNS server
   */
 int pubnub_get_dns_secondary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
-#endif /* PUBNUB_USE_IPV6 */
+        #endif /* PUBNUB_USE_IPV6 */
 
-#else
+    #else
 
-#define pubnub_dns_set_primary_server_ipv4(ipv4) -1
-#define pubnub_dns_set_secondary_server_ipv4(ipv4) -1
-#define pubnub_dns_set_primary_server_ipv4_str(ipv4_str) -1
-#define pubnub_dns_set_secondary_server_ipv4_str(ipv4_str) -1
-#define pubnub_get_dns_primary_server_ipv4(o_ipv4) -1
-#define pubnub_get_dns_secondary_server_ipv4(o_ipv4) -1
-#define pubnub_dns_read_system_servers_ipv4(o_ipv4, n) -1
-#if PUBNUB_USE_IPV6
-#define pubnub_dns_set_primary_server_ipv6(ipv6) -1
-#define pubnub_dns_set_secondary_server_ipv6(ipv6) -1
-#define pubnub_dns_set_primary_server_ipv6_str(ipv6_str) -1
-#define pubnub_dns_set_secondary_server_ipv6_str(ipv6_str) -1
-#define pubnub_get_dns_primary_server_ipv6(o_ipv6) -1
-#define pubnub_get_dns_secondary_server_ipv6(o_ipv6) -1
-#endif /* PUBNUB_USE_IPV6 */
-#endif /* PUBNUB_SET_DNS_SERVERS */
+        #define pubnub_dns_set_primary_server_ipv4(ipv4) -1
+        #define pubnub_dns_set_secondary_server_ipv4(ipv4) -1
+        #define pubnub_dns_set_primary_server_ipv4_str(ipv4_str) -1
+        #define pubnub_dns_set_secondary_server_ipv4_str(ipv4_str) -1
+        #define pubnub_get_dns_primary_server_ipv4(o_ipv4) -1
+        #define pubnub_get_dns_secondary_server_ipv4(o_ipv4) -1
+        #define pubnub_dns_read_system_servers_ipv4(o_ipv4, n) -1
+        #if PUBNUB_USE_IPV6
+            #define pubnub_dns_set_primary_server_ipv6(ipv6) -1
+            #define pubnub_dns_set_secondary_server_ipv6(ipv6) -1
+            #define pubnub_dns_set_primary_server_ipv6_str(ipv6_str) -1
+            #define pubnub_dns_set_secondary_server_ipv6_str(ipv6_str) -1
+            #define pubnub_get_dns_primary_server_ipv6(o_ipv6) -1
+            #define pubnub_get_dns_secondary_server_ipv6(o_ipv6) -1
+        #endif /* PUBNUB_USE_IPV6 */
+    #endif /* PUBNUB_SET_DNS_SERVERS */
 #endif /* !defined INC_PUBNUB_DNS_SERVERS */

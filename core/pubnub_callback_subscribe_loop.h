@@ -1,17 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CALLBACK_SUBSCRIBE_LOOP
-#define INC_PUBNUB_CALLBACK_SUBSCRIBE_LOOP
+    #define INC_PUBNUB_CALLBACK_SUBSCRIBE_LOOP
 
-
-#include "pubnub_api_types.h"
-#include "pubnub_coreapi_ex.h"
-
+    #include "pubnub_api_types.h"
+    #include "pubnub_coreapi_ex.h"
 
 /** @file pubnub_callback_subscribe_loop.h 
 
     This module implements a subscribe loop for the callback interface.
 */
-
 
 /** A subscribe loop descriptor. Has data that is needed to run a
     loop. An opaque data structure.
@@ -24,7 +21,10 @@ typedef struct pubnub_subloop_descriptor pubnub_subloop_t;
 /** Prototype of a function that will be called back when a message is
     received during a subscribe loop, or on a failed subscribe.
 */
-typedef void (*pubnub_subloop_callback_t)(pubnub_t *pbp, char const* message, enum pubnub_res result);
+typedef void (*pubnub_subloop_callback_t)(
+    pubnub_t* pbp,
+    char const* message,
+    enum pubnub_res result);
 
 /** Helper to create a subscribe loop descriptor. For the values that
     are part of the descriptor, but are not provided as parameters of
@@ -42,7 +42,11 @@ typedef void (*pubnub_subloop_callback_t)(pubnub_t *pbp, char const* message, en
     @retval NULL Failed to create a descriptor
     @result The subscribe loop descriptor created 
  */
-pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb);
+pubnub_subloop_t* pubnub_subloop_define(
+    pubnub_t* p,
+    char const* channel,
+    struct pubnub_subscribe_options options,
+    pubnub_subloop_callback_t cb);
 
 /** Starts a subscribe loop.
 
@@ -84,6 +88,5 @@ void pubnub_subloop_stop(pubnub_subloop_t* pbsld);
 
 /** Undefines - releases the subscribe loop descriptor */
 void pubnub_subloop_undef(pubnub_subloop_t* pbsld);
-
 
 #endif /* !defined INC_PUBNUB_CALLBACK_SUBSCRIBE_LOOP */

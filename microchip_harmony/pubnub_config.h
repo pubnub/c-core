@@ -1,11 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CONFIG
-#define      INC_PUBNUB_CONFIG
+    #define INC_PUBNUB_CONFIG
 
+    /* -- Next few definitions can be tweaked by the user, but with care -- */
 
-/* -- Next few definitions can be tweaked by the user, but with care -- */
-
-/** Maximum number of PubNub contexts. It is used only if the
+    /** Maximum number of PubNub contexts. It is used only if the
  * contexts are statically allocated.
  * A context is used to publish messages or subscribe to (get) them.
  *
@@ -28,67 +27,65 @@
  * This isn't as bad as it sounds, but may be a source of headaches
  * (lost messages, etc).
  */
-#define PUBNUB_CTX_MAX 2
+    #define PUBNUB_CTX_MAX 2
 
-/** Maximum length of the HTTP buffer. This is a major component of
+    /** Maximum length of the HTTP buffer. This is a major component of
  * the memory size of the whole pubnub context, but it is also an
  * upper bound on URL-encoded form of published message, so if you
  * need to construct big messages, you may need to raise this.  */
-#define PUBNUB_BUF_MAXLEN 1024
+    #define PUBNUB_BUF_MAXLEN 1024
 
-/** Set to 0 to use a static buffer and then set its size via
+    /** Set to 0 to use a static buffer and then set its size via
     #PUBNUB_REPLY_MAXLEN.  Set to anything !=0 to use a dynamic
     buffer, that is, dynamically try to allocate as much memory as
     needed for the buffer.
  */
-#define PUBNUB_DYNAMIC_REPLY_BUFFER 1
+    #define PUBNUB_DYNAMIC_REPLY_BUFFER 1
 
-#if !PUBNUB_DYNAMIC_REPLY_BUFFER
+    #if !PUBNUB_DYNAMIC_REPLY_BUFFER
 
-/** Maximum length of the HTTP reply when using a static buffer. The
+        /** Maximum length of the HTTP reply when using a static buffer. The
  * other major component of the memory size of the PubNub context,
  * beside #PUBNUB_BUF_MAXLEN.  Replies of API calls longer than this
  * will be discarded and an error will be reported. Specifically, this
  * may cause lost messages returned by subscribe if too many too large
  * messages got queued on the Pubnub server. */
-#define PUBNUB_REPLY_MAXLEN 2048
+        #define PUBNUB_REPLY_MAXLEN 2048
 
-#endif
+    #endif
 
-/** This is the URL of the Pubnub server. Change only for testing
+    /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN  "pubsub.pubnub.com"
+    #define PUBNUB_ORIGIN "pubsub.pubnub.com"
 
-/** Set to 0 to disable changing the origin from the default
+    /** Set to 0 to disable changing the origin from the default
     #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
     origin (per context).
  */
-#define PUBNUB_ORIGIN_SETTABLE 1
+    #define PUBNUB_ORIGIN_SETTABLE 1
 
-/** Duration of the transaction timeout set during context initialization,
+    /** Duration of the transaction timeout set during context initialization,
     in milliseconds. Timeout dration in the context can be changed by the 
     user after initialization.
     */
-#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+    #define PUBNUB_DEFAULT_TRANSACTION_TIMER 310000
 
-
-/** Mininmal duration of the transaction timer, in milliseconds. You
+    /** Mininmal duration of the transaction timer, in milliseconds. You
  * can't set less than this.
  */
-#define PUBNUB_MIN_TRANSACTION_TIMER 10000
+    #define PUBNUB_MIN_TRANSACTION_TIMER 10000
 
-#define PUBNUB_HAVE_MD5 0
-#define PUBNUB_HAVE_SHA1 0
+    #define PUBNUB_HAVE_MD5 0
+    #define PUBNUB_HAVE_SHA1 0
 
-#if !defined PUBNUB_USE_MDNS
-/** If `1`, the MDNS module will be used to handle the DNS
+    #if !defined PUBNUB_USE_MDNS
+        /** If `1`, the MDNS module will be used to handle the DNS
         resolving. If `0` the "resolv" module will be used.
         This is a temporary solution, it is expected that ConTiki
         will unify those two modules.
 */
-#define PUBNUB_USE_MDNS 1
-#endif
-
+        #define PUBNUB_USE_MDNS 1
+    #endif
 
 #endif /* !defined INC_PUBNUB_CONFIG */

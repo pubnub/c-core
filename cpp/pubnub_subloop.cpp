@@ -1,25 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub.hpp"
 
-
 using namespace pubnub;
 
+subloop::subloop(context& ctx, std::string channel) :
+    d_ctx(ctx),
+    d_channel(channel),
+    d_delivering(false) {}
 
-subloop::subloop(context &ctx, std::string channel) 
-    : d_ctx(ctx)
-    , d_channel(channel)
-    , d_delivering(false)
-{
-}
+subloop::~subloop() {}
 
-
-subloop::~subloop()
-{
-}
-
-
-pubnub_res subloop::fetch(std::string &o_msg)
-{
+pubnub_res subloop::fetch(std::string& o_msg) {
     if (d_delivering) {
         o_msg = d_ctx.get();
         d_delivering = !o_msg.empty();
@@ -36,11 +27,9 @@ pubnub_res subloop::fetch(std::string &o_msg)
     return pbres;
 }
 
-
 #if __cplusplus >= 201103L
 
-void subloop::loop(std::function<int(std::string, context&, pubnub_res)> f)
-{
+void subloop::loop(std::function<int(std::string, context&, pubnub_res)> f) {
     std::string msg;
     while (0 == f(msg, d_ctx, fetch(msg))) {
         continue;

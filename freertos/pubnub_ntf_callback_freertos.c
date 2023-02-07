@@ -1,47 +1,42 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_ntf_callback.h"
-
-#include "pubnub_internal.h"
-#include "pubnub_assert.h"
-#include "pubnub_log.h"
-#include "pbntf_trans_outcome_common.h"
-#include "pubnub_timer_list.h"
-
-#include "pbpal.h"
-
-#include "semphr.h"
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "pbntf_trans_outcome_common.h"
+#include "pbpal.h"
+#include "pubnub_assert.h"
+#include "pubnub_internal.h"
+#include "pubnub_log.h"
+#include "pubnub_ntf_callback.h"
+#include "pubnub_timer_list.h"
+#include "semphr.h"
+
 struct SocketWatcherData {
-    pubnub_t **apb;
+    pubnub_t** apb;
     size_t apb_size;
     size_t apb_cap;
     xSocketSet_t xFD_set;
-    SemaphoreHandle_t  mutw;
+    SemaphoreHandle_t mutw;
     TaskHandle_t task;
 #if PUBNUB_TIMERS_API
-    pubnub_t *timer_head;
+    pubnub_t* timer_head;
 #endif
     SemaphoreHandle_t queue_lock;
     size_t queue_size;
     size_t queue_head;
     size_t queue_tail;
-    pubnub_t *queue_apb[128];
+    pubnub_t* queue_apb[128];
 };
 
 static struct SocketWatcherData m_watcher;
 
-
 #define TICKS_TO_WAIT pdMS_TO_TICKS(200)
 
-
-static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
-{
+static void save_socket(struct SocketWatcherData* watcher, pubnub_t* pb) {
     if (watcher->apb_size == watcher->apb_cap) {
         size_t newcap = watcher->apb_cap + 2;
-        pubnub_t **npapb = (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
+        pubnub_t** npapb =
+            (pubnub_t**)realloc(watcher->apb, sizeof watcher->apb[0] * newcap);
         if (NULL == npapb) {
             return;
         }
@@ -55,16 +50,17 @@ static void save_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     ++watcher->apb_size;
 }
 
-
-static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
-{
+static void remove_socket(struct SocketWatcherData* watcher, pubnub_t* pb) {
     size_t i;
     for (i = 0; i < watcher->apb_size; ++i) {
         if (watcher->apb[i] == pb) {
             size_t to_move = watcher->apb_size - i - 1;
             FreeRTOS_FD_CLR(pb->pal.socket, watcher->xFD_set, eSELECT_ALL);
             if (to_move > 0) {
-                memmove(watcher->apb + i, watcher->apb + i + 1, sizeof watcher->apb[0] * to_move);
+                memmove(
+                    watcher->apb + i,
+                    watcher->apb + i + 1,
+                    sizeof watcher->apb[0] * to_move);
             }
             --watcher->apb_size;
             break;
@@ -72,44 +68,37 @@ static void remove_socket(struct SocketWatcherData *watcher, pubnub_t *pb)
     }
 }
 
-static int elapsed_ms(TickType_t prev, TickType_t now)
-{
+static int elapsed_ms(TickType_t prev, TickType_t now) {
     return (now - prev);
 }
 
-
-int pbntf_watch_in_events(pubnub_t *pbp)
-{
+int pbntf_watch_in_events(pubnub_t* pbp) {
     /* not supported under FreeRTOS+TCP for now, though we could
         try with eSELECT_ALL/eSELECT_READ/eSELECT_WRITE
     */
     return 0;
 }
 
-
-int pbntf_watch_out_events(pubnub_t *pbp)
-{
+int pbntf_watch_out_events(pubnub_t* pbp) {
     /* not supported under FreeRTOS+TCP for now, though we could
         try with eSELECT_ALL/eSELECT_READ/eSELECT_WRITE
     */
     return 0;
 }
 
-
-void socket_watcher_task(void *arg)
-{
+void socket_watcher_task(void* arg) {
     TickType_t xTimePrev = xTaskGetTickCount();
-    struct SocketWatcherData *pWatcher = (struct SocketWatcherData *)arg;
+    struct SocketWatcherData* pWatcher = (struct SocketWatcherData*)arg;
 
     for (;;) {
-
         ulTaskNotifyTake(pdTRUE, TICKS_TO_WAIT);
 
-        if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
+        if (pdFALSE
+            == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
             continue;
         }
         while (m_watcher.queue_head != m_watcher.queue_tail) {
-            pubnub_t *pbp = m_watcher.queue_apb[m_watcher.queue_tail++];
+            pubnub_t* pbp = m_watcher.queue_apb[m_watcher.queue_tail++];
             if (m_watcher.queue_tail == m_watcher.queue_size) {
                 m_watcher.queue_tail = 0;
             }
@@ -119,13 +108,15 @@ void socket_watcher_task(void *arg)
                 if (pbp->state == PBS_NULL) {
                     pubnub_mutex_unlock(pbp->monitor);
                     pballoc_free_at_last(pbp);
-                }
-                else {
+                } else {
                     pbnc_fsm(pbp);
                     pubnub_mutex_unlock(pbp->monitor);
                 }
             }
-            if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
+            if (pdFALSE
+                == xSemaphoreTakeRecursive(
+                    m_watcher.queue_lock,
+                    TICKS_TO_WAIT)) {
                 break;
             }
             if (m_watcher.queue_tail == m_watcher.queue_size) {
@@ -133,16 +124,20 @@ void socket_watcher_task(void *arg)
             }
         }
         xSemaphoreGiveRecursive(m_watcher.queue_lock);
- 
+
         if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
             continue;
         }
 
         if (pWatcher->apb_size > 0) {
             if (FreeRTOS_select(pWatcher->xFD_set, TICKS_TO_WAIT) != 0) {
-                pubnub_t **ppbp;
-                for (ppbp = pWatcher->apb; ppbp < pWatcher->apb + pWatcher->apb_size; ++ppbp) {
-                    if (FreeRTOS_FD_ISSET((*ppbp)->pal.socket, pWatcher->xFD_set)) {
+                pubnub_t** ppbp;
+                for (ppbp = pWatcher->apb;
+                     ppbp < pWatcher->apb + pWatcher->apb_size;
+                     ++ppbp) {
+                    if (FreeRTOS_FD_ISSET(
+                            (*ppbp)->pal.socket,
+                            pWatcher->xFD_set)) {
                         pbntf_requeue_for_processing(*ppbp);
                     }
                 }
@@ -153,16 +148,18 @@ void socket_watcher_task(void *arg)
             TickType_t xTimeNow = xTaskGetTickCount();
             int elapsed = elapsed_ms(xTimePrev, xTimeNow);
             if (elapsed > 0) {
-                pubnub_t *expired = pubnub_timer_list_as_time_goes_by(&m_watcher.timer_head, elapsed);
+                pubnub_t* expired = pubnub_timer_list_as_time_goes_by(
+                    &m_watcher.timer_head,
+                    elapsed);
                 while (expired != NULL) {
-                    pubnub_t *next;
-                    
+                    pubnub_t* next;
+
                     pubnub_mutex_lock(expired->monitor);
 
                     next = expired->next;
 
                     pbnc_stop(expired, PNR_TIMEOUT);
-                    
+
                     expired->previous = NULL;
                     expired->next = NULL;
                     pubnub_mutex_lock(expired->monitor);
@@ -177,19 +174,17 @@ void socket_watcher_task(void *arg)
     }
 }
 
-
 #define SOCKET_WATCHER_STACK_DEPTH 512
 #define PUBNUB_TASK_PRIORITY 2
 
-
-int pbntf_init(void)
-{
+int pbntf_init(void) {
     m_watcher.mutw = xSemaphoreCreateRecursiveMutex();
     if (NULL == m_watcher.mutw) {
         return -1;
     }
-    
-    m_watcher.queue_size = sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
+
+    m_watcher.queue_size =
+        sizeof m_watcher.queue_apb / sizeof m_watcher.queue_apb[0];
     m_watcher.queue_head = m_watcher.queue_tail = 0;
 
     m_watcher.queue_lock = xSemaphoreCreateRecursiveMutex();
@@ -197,21 +192,21 @@ int pbntf_init(void)
         vSemaphoreDelete(m_watcher.mutw);
         return -1;
     }
-        
+
     m_watcher.xFD_set = FreeRTOS_CreateSocketSet();
     if (NULL == m_watcher.xFD_set) {
         vSemaphoreDelete(m_watcher.queue_lock);
         vSemaphoreDelete(m_watcher.mutw);
         return -1;
     }
-    if (pdPASS != xTaskCreate(
-        socket_watcher_task, 
-        "Pubnub socket watcher", 
-        SOCKET_WATCHER_STACK_DEPTH, 
-        &m_watcher, 
-        PUBNUB_TASK_PRIORITY, 
-        &m_watcher.task
-        )) {
+    if (pdPASS
+        != xTaskCreate(
+            socket_watcher_task,
+            "Pubnub socket watcher",
+            SOCKET_WATCHER_STACK_DEPTH,
+            &m_watcher,
+            PUBNUB_TASK_PRIORITY,
+            &m_watcher.task)) {
         vSemaphoreDelete(m_watcher.mutw);
         vSemaphoreDelete(m_watcher.queue_lock);
         FreeRTOS_DeleteSocketSet(m_watcher.xFD_set);
@@ -220,19 +215,17 @@ int pbntf_init(void)
     return 0;
 }
 
-
-int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
-{
+int pbntf_got_socket(pubnub_t* pb, pb_socket_t socket) {
     PUBNUB_UNUSED(socket);
     if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
         return -1;
     }
-     
+
     save_socket(&m_watcher, pb);
     if (PUBNUB_TIMERS_API) {
         m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head, pb);
     }
-    
+
     xSemaphoreGiveRecursive(m_watcher.mutw);
 
     xTaskNotifyGive(m_watcher.task);
@@ -240,22 +233,20 @@ int pbntf_got_socket(pubnub_t *pb, pb_socket_t socket)
     return +1;
 }
 
-
-static void remove_timer_safe(pubnub_t *to_remove)
-{
+static void remove_timer_safe(pubnub_t* to_remove) {
     if (PUBNUB_TIMERS_API) {
-        if ((to_remove->previous != NULL) || (to_remove->next != NULL) 
+        if ((to_remove->previous != NULL) || (to_remove->next != NULL)
             || (to_remove == m_watcher.timer_head)) {
-            m_watcher.timer_head = pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
+            m_watcher.timer_head =
+                pubnub_timer_list_remove(m_watcher.timer_head, to_remove);
         }
     }
 }
 
-void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
-{
+void pbntf_lost_socket(pubnub_t* pb, pb_socket_t socket) {
     PUBNUB_UNUSED(socket);
     if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
-        return ;
+        return;
     }
     remove_socket(&m_watcher, pb);
     remove_timer_safe(pb);
@@ -264,13 +255,11 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
     xTaskNotifyGive(m_watcher.task);
 }
 
-
-void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
-{
+void pbntf_update_socket(pubnub_t* pb, pb_socket_t socket) {
     PUBNUB_UNUSED(socket);
 
     if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.mutw, TICKS_TO_WAIT)) {
-        return ;
+        return;
     }
 
     /* TODO: Actually, this is not fully correct. We should also remove the old
@@ -286,25 +275,21 @@ void pbntf_update_socket(pubnub_t *pb, pb_socket_t socket)
     xTaskNotifyGive(m_watcher.task);
 }
 
-
-
-void pbntf_trans_outcome(pubnub_t *pb)
-{
+void pbntf_trans_outcome(pubnub_t* pb) {
     PBNTF_TRANS_OUTCOME_COMMON(pb);
     if (pb->cb != NULL) {
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }
 
-
-int pbntf_enqueue_for_processing(pubnub_t *pb)
-{
+int pbntf_enqueue_for_processing(pubnub_t* pb) {
     int result;
     size_t next_head;
 
     PUBNUB_ASSERT_OPT(pb != NULL);
 
-    if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
+    if (pdFALSE
+        == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
         return -1;
     }
     next_head = m_watcher.queue_head + 1;
@@ -315,8 +300,7 @@ int pbntf_enqueue_for_processing(pubnub_t *pb)
         m_watcher.queue_apb[m_watcher.queue_head] = pb;
         m_watcher.queue_head = next_head;
         result = +1;
-    }
-    else {
+    } else {
         result = -1;
     }
     xSemaphoreGiveRecursive(m_watcher.mutw);
@@ -325,18 +309,18 @@ int pbntf_enqueue_for_processing(pubnub_t *pb)
     return result;
 }
 
-
-int pbntf_requeue_for_processing(pubnub_t *pb)
-{
+int pbntf_requeue_for_processing(pubnub_t* pb) {
     bool found = false;
     size_t i;
 
     PUBNUB_ASSERT_OPT(pb != NULL);
 
-    if (pdFALSE == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
+    if (pdFALSE
+        == xSemaphoreTakeRecursive(m_watcher.queue_lock, TICKS_TO_WAIT)) {
         return -1;
     }
-    for (i = m_watcher.queue_tail; i != m_watcher.queue_head; i = (((i + 1) == m_watcher.queue_size) ? 0 : i + 1)) {
+    for (i = m_watcher.queue_tail; i != m_watcher.queue_head;
+         i = (((i + 1) == m_watcher.queue_size) ? 0 : i + 1)) {
         if (m_watcher.queue_apb[i] == pb) {
             found = true;
             break;
@@ -348,23 +332,20 @@ int pbntf_requeue_for_processing(pubnub_t *pb)
     return !found ? pbntf_enqueue_for_processing(pb) : 0;
 }
 
-
-enum pubnub_res pubnub_last_result(pubnub_t *pb)
-{
+enum pubnub_res pubnub_last_result(pubnub_t* pb) {
     enum pubnub_res rslt;
-    
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    
+
     pubnub_mutex_lock(pb->monitor);
     rslt = pb->core.last_result;
     pubnub_mutex_unlock(pb->monitor);
-    
+
     return rslt;
 }
 
-
-enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data)
-{
+enum pubnub_res
+pubnub_register_callback(pubnub_t* pb, pubnub_callback_t cb, void* user_data) {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
     pb->cb = cb;
@@ -373,10 +354,8 @@ enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, voi
     return PNR_OK;
 }
 
-
-void *pubnub_get_user_data(pubnub_t *pb)
-{
-    void *result;
+void* pubnub_get_user_data(pubnub_t* pb) {
+    void* result;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
@@ -387,9 +366,7 @@ void *pubnub_get_user_data(pubnub_t *pb)
     return result;
 }
 
-
-pubnub_callback_t pubnub_get_callback(pubnub_t *pb)
-{
+pubnub_callback_t pubnub_get_callback(pubnub_t* pb) {
     pubnub_callback_t result;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));

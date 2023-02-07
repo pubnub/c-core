@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_FREERTOS_CALLBACK
-#define	INC_PUBNUB_FREERTOS_CALLBACK
+    #define INC_PUBNUB_FREERTOS_CALLBACK
 
 /** @mainpage The FreeRTOS Pubnub client library - callback interface
 
@@ -32,23 +32,22 @@
 
 /** @file pubnub_callback.h */
 
-#include "pubnub_config.h"
+    #include "pubnub_config.h"
 
 /* -- You should not change anything below this line -- */
 
-#if !defined(PUBNUB_CALLBACK_API)
-#error You have to define PUBNUB_CALLBACK_API
-#endif
+    #if !defined(PUBNUB_CALLBACK_API)
+        #error You have to define PUBNUB_CALLBACK_API
+    #endif
 
-#include "pubnub_alloc.h"
-#include "pubnub_assert.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_callback.h"
-#include "pubnub_generate_uuid.h"
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "core/pubnub_subscribe_v2.h"
-#endif
-
+    #include "pubnub_alloc.h"
+    #include "pubnub_assert.h"
+    #include "pubnub_coreapi.h"
+    #include "pubnub_generate_uuid.h"
+    #include "pubnub_ntf_callback.h"
+    #include "pubnub_pubsubapi.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "core/pubnub_subscribe_v2.h"
+    #endif
 
 #endif /* !defined INC_PUBNUB_FREERTOS_CALLBACK */

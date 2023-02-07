@@ -1,21 +1,19 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_sync.h"
-
-#include "core/pubnub_helper.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
+#include "core/pubnub_helper.h"
+#include "pubnub_sync.h"
 
-static void sync_sample_free(pubnub_t* p)
-{
+static void sync_sample_free(pubnub_t* p) {
     if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
         enum pubnub_res pnru = pubnub_await(p);
         if (pnru != PNR_OK) {
-            printf("Awaiting cancel failed: %d('%s')\n",
-                   pnru,
-                   pubnub_res_2_string(pnru));
+            printf(
+                "Awaiting cancel failed: %d('%s')\n",
+                pnru,
+                pubnub_res_2_string(pnru));
         }
     }
     if (pubnub_free(p) != 0) {
@@ -23,15 +21,13 @@ static void sync_sample_free(pubnub_t* p)
     }
 }
 
-
-int main()
-{
+int main() {
     bool done = false;
     /* This is a widely use channel, something should happen there
        from time to time
     */
     char const* chan = "hello_world";
-    pubnub_t*   pbp  = pubnub_alloc();
+    pubnub_t* pbp = pubnub_alloc();
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
         return -1;
@@ -52,9 +48,9 @@ int main()
     puts("--------------------------");
 
     while (!done) {
-        time_t          t    = time(NULL);
-        bool            stop = false;
-        enum pubnub_res res  = pubnub_subscribe(pbp, chan, NULL);
+        time_t t = time(NULL);
+        bool stop = false;
+        enum pubnub_res res = pubnub_subscribe(pbp, chan, NULL);
 
         /* Don't await here, 'cause it will loop until done */
         while (!stop) {
@@ -67,10 +63,9 @@ int main()
                 */
                 if (time(NULL) != t) {
                     stop = (rand() % 25) == 3;
-                    t    = time(NULL);
+                    t = time(NULL);
                 }
-            }
-            else {
+            } else {
                 if (PNR_OK == res) {
                     puts("Subscribed! Got messages:");
                     for (;;) {
@@ -80,13 +75,15 @@ int main()
                         }
                         puts(msg);
                     }
-                }
-                else {
-                    printf("Subscribing failed with code: %d('%s')\n", res, pubnub_res_2_string(res));
+                } else {
+                    printf(
+                        "Subscribing failed with code: %d('%s')\n",
+                        res,
+                        pubnub_res_2_string(res));
                 }
                 if (time(NULL) != t) {
                     done = (rand() % 25) == 19;
-                    t    = time(NULL);
+                    t = time(NULL);
                 }
                 break;
             }

@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_OPENSSL_SYNC
-#define	INC_PUBNUB_OPENSSL_SYNC
+    #define INC_PUBNUB_OPENSSL_SYNC
 
 /** @mainpage The OpenSSL Pubnub client library - sync interface
 
@@ -24,20 +24,19 @@
 
 /** @file pubnub_sync.h */
 
-#include "pubnub_config.h"
+    #include "pubnub_config.h"
 
 /* -- You should not change anything below this line -- */
 
-#include "core/pubnub_alloc.h"
-#include "core/pubnub_assert.h"
-#include "core/pubnub_pubsubapi.h"
-#include "core/pubnub_coreapi.h"
-#include "core/pubnub_ntf_sync.h"
-#include "core/pubnub_generate_uuid.h"
-#include "core/pubnub_blocking_io.h"
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "core/pubnub_subscribe_v2.h"
-#endif
-
+    #include "core/pubnub_alloc.h"
+    #include "core/pubnub_assert.h"
+    #include "core/pubnub_blocking_io.h"
+    #include "core/pubnub_coreapi.h"
+    #include "core/pubnub_generate_uuid.h"
+    #include "core/pubnub_ntf_sync.h"
+    #include "core/pubnub_pubsubapi.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "core/pubnub_subscribe_v2.h"
+    #endif
 
 #endif /* !defined INC_OPENSSL_SYNC */

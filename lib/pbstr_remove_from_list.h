@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PBSTR_REMOVE_FROM_LIST
-#define INC_PBSTR_REMOVE_FROM_LIST
+    #define INC_PBSTR_REMOVE_FROM_LIST
 
 /** Removes members of comma separated @p leave_list from comma separated @p list.
   */

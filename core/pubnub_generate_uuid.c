@@ -1,17 +1,16 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_config.h"
-#include "pubnub_internal.h"
 #include "pubnub_generate_uuid.h"
 
-#include "pubnub_assert.h"
-
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "pubnub_assert.h"
+#include "pubnub_config.h"
+#include "pubnub_internal.h"
 
 #if PUBNUB_HAVE_SHA1
-#include "sha1.h"
+    #include "sha1.h"
 #endif
-
 
 /** Here we provide functions that are not dependent on the platform */
 
@@ -24,16 +23,13 @@ struct Pubnub_UUID_decomposed {
     uint8_t node[6];
 };
 
-
 int pubnub_generate_uuid_v1_time(
-	struct Pubnub_UUID *o_uuid,
-	uint16_t *io_clock_seq,
-	uint8_t const i_timestamp[8],
-	uint8_t const i_node[6]
-	)
-{
+    struct Pubnub_UUID* o_uuid,
+    uint16_t* io_clock_seq,
+    uint8_t const i_timestamp[8],
+    uint8_t const i_node[6]) {
     static uint8_t s_timestamp[8];
-    struct Pubnub_UUID_decomposed *ud = (struct Pubnub_UUID_decomposed *)o_uuid;
+    struct Pubnub_UUID_decomposed* ud = (struct Pubnub_UUID_decomposed*)o_uuid;
 
     if (0 < memcmp(i_timestamp, s_timestamp, sizeof s_timestamp)) {
         (*io_clock_seq)++;
@@ -53,17 +49,14 @@ int pubnub_generate_uuid_v1_time(
     return 0;
 }
 
-
 int pubnub_generate_uuid_v5_name_sha1(
-	struct Pubnub_UUID *uuid,
-	struct Pubnub_UUID *nsid,
-	void *name,
-	unsigned namelen
-    )
-{
+    struct Pubnub_UUID* uuid,
+    struct Pubnub_UUID* nsid,
+    void* name,
+    unsigned namelen) {
 #if PUBNUB_HAVE_SHA1
     SHA1Context ctx;
-    
+
     SHA1Reset(&ctx);
     SHAInput(&ctx, nsid, sizeof *nsid);
     SHA1Input(&ctx, name, namelen);
@@ -71,41 +64,50 @@ int pubnub_generate_uuid_v5_name_sha1(
         return -1;
     }
     memcpy(uuid->uuid, ctx.Message_Digest, sizeof uuid->uuid);
-    
+
     uuid->uuid[6] &= 0x0F;
     uuid->uuid[6] |= 0x50;
     uuid->uuid[8] &= 0x3F;
     uuid->uuid[8] |= 0x80;
-    
+
     return 0;
 #else
-	PUBNUB_UNUSED(uuid);
-	PUBNUB_UNUSED(nsid);
-	PUBNUB_UNUSED(name);
-	PUBNUB_UNUSED(namelen);
+    PUBNUB_UNUSED(uuid);
+    PUBNUB_UNUSED(nsid);
+    PUBNUB_UNUSED(name);
+    PUBNUB_UNUSED(namelen);
     return -1;
 #endif
 }
 
-
-struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const *uuid)
-{
+struct Pubnub_UUID_String
+pubnub_uuid_to_string(struct Pubnub_UUID const* uuid) {
     struct Pubnub_UUID_String rslt;
-    struct Pubnub_UUID_decomposed const*u = (struct Pubnub_UUID_decomposed const*)uuid;
-    
-    snprintf(rslt.uuid, sizeof rslt.uuid, 
-             "%8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x", 
-             u->time_low, u->time_mid, u->time_hi_and_version, 
-             u->clock_seq_hi_and_reserved, u->clock_seq_low,
-             u->node[0], u->node[1], u->node[2], u->node[3], u->node[4], u->node[5]
-        );
-    
+    struct Pubnub_UUID_decomposed const* u =
+        (struct Pubnub_UUID_decomposed const*)uuid;
+
+    snprintf(
+        rslt.uuid,
+        sizeof rslt.uuid,
+        "%8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
+        u->time_low,
+        u->time_mid,
+        u->time_hi_and_version,
+        u->clock_seq_hi_and_reserved,
+        u->clock_seq_low,
+        u->node[0],
+        u->node[1],
+        u->node[2],
+        u->node[3],
+        u->node[4],
+        u->node[5]);
+
     return rslt;
 }
 
-
-int pubnub_uuid_compare(struct Pubnub_UUID const *left, struct Pubnub_UUID const *right)
-{
+int pubnub_uuid_compare(
+    struct Pubnub_UUID const* left,
+    struct Pubnub_UUID const* right) {
     /* maybe this is not really the greatest way to compare, but it works...*/
     return memcmp(left, right, sizeof *left);
 }

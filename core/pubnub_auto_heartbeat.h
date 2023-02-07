@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_AUTO_HEARTBEAT
-#define INC_PUBNUB_AUTO_HEARTBEAT
+    #define INC_PUBNUB_AUTO_HEARTBEAT
 
-#if PUBNUB_USE_AUTO_HEARTBEAT
+    #if PUBNUB_USE_AUTO_HEARTBEAT
 /** Enables periodical heartbeats that keep presence on subscribed channels and channel
     groups for user id provided in @p pb context and sets chosen heartbeat period.
     Initially auto heartbeat on @p pb context is disabled.
@@ -41,12 +41,12 @@ bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb);
 /** Releases all allocated heartbeat thumpers.
   */
 void pubnub_heartbeat_free_thumpers(void);
-#else
-#define pubnub_enable_auto_heartbeat(pb, period_sec) -1
-#define pubnub_set_heartbeat_period(pb, period_sec) -1
-#define pubnub_disable_auto_heartbeat(pb)
-#define pubnub_is_auto_heartbeat_enabled(pb) false
-#define pubnub_heartbeat_free_thumpers()
-#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+    #else
+        #define pubnub_enable_auto_heartbeat(pb, period_sec) -1
+        #define pubnub_set_heartbeat_period(pb, period_sec) -1
+        #define pubnub_disable_auto_heartbeat(pb)
+        #define pubnub_is_auto_heartbeat_enabled(pb) false
+        #define pubnub_heartbeat_free_thumpers()
+    #endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 
 #endif /* !defined INC_PUBNUB_AUTO_HEARTBEAT */

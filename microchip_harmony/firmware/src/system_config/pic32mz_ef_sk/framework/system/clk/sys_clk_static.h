@@ -52,14 +52,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
 
-    extern "C" {
+extern "C" {
 
 #endif
-// DOM-IGNORE-END 
-
+// DOM-IGNORE-END
 
 #ifndef _SYS_CLK_STATIC_H
-#define _SYS_CLK_STATIC_H
+    #define _SYS_CLK_STATIC_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -67,14 +66,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-#endif // #ifndef _SYS_CLK_STATIC_H
+#endif  // #ifndef _SYS_CLK_STATIC_H
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
-
 
 /*******************************************************************************
  End of File

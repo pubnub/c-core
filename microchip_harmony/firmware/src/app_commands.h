@@ -37,16 +37,15 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 //DOM-IGNORE-END
 
 #ifndef APP_COMMANDS_H
-#define	APP_COMMANDS_H
+#define APP_COMMANDS_H
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 bool APP_Commands_Init();
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* APP_COMMANDS_H */
-
+#endif /* APP_COMMANDS_H */

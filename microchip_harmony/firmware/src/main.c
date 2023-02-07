@@ -48,18 +48,17 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 // DOM-IGNORE-END
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
 
-#include <stddef.h>                     // Defines NULL
-#include <stdbool.h>                    // Defines true
-#include <stdlib.h>                     // Defines EXIT_FAILURE
-#include "system/common/sys_module.h"   // SYS function prototypes
+#include <stdbool.h>  // Defines true
+#include <stddef.h>  // Defines NULL
+#include <stdlib.h>  // Defines EXIT_FAILURE
 
+#include "system/common/sys_module.h"  // SYS function prototypes
 
 // *****************************************************************************
 // *****************************************************************************
@@ -67,25 +66,20 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-int main ( void )
-{
+int main(void) {
     /* Initialize all MPLAB Harmony modules, including application(s). */
-    SYS_Initialize ( NULL );
+    SYS_Initialize(NULL);
 
-    while ( true )
-    {
+    while (true) {
         /* Maintain state machines of all polled MPLAB Harmony modules. */
-        SYS_Tasks ( );
-
+        SYS_Tasks();
     }
 
     /* Execution should not come here during normal operation */
 
-    return ( EXIT_FAILURE );
+    return (EXIT_FAILURE);
 }
-
 
 /*******************************************************************************
  End of File
 */
-

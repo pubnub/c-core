@@ -1,12 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_assert.h"
-#include "core/pubnub_dns_servers.h"
-
 #include <stdio.h>
 #include <string.h>
 
-int pubnub_parse_ipv4_addr(char const* addr, struct pubnub_ipv4_address* p)
-{
+#include "core/pubnub_assert.h"
+#include "core/pubnub_dns_servers.h"
+
+int pubnub_parse_ipv4_addr(char const* addr, struct pubnub_ipv4_address* p) {
     int a[4];
     int rslt;
 

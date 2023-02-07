@@ -1,10 +1,9 @@
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #if (_MSC_VER < 1900) && !defined(__GNUC__)
 
-int snprintf(char *buffer, size_t n, const char *format, ...)
-{
+int snprintf(char* buffer, size_t n, const char* format, ...) {
     va_list argp;
     int ret;
     va_start(argp, format);
@@ -13,4 +12,4 @@ int snprintf(char *buffer, size_t n, const char *format, ...)
     return ret;
 }
 
-#endif  /* _MSC_VER < 1900 */
+#endif /* _MSC_VER < 1900 */

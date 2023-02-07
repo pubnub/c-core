@@ -1,14 +1,13 @@
 #include "srand_from_pubnub_time.h"
 
-#include "pubnub_internal.h"
-#include "pubnub_pubsubapi.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_sync.h"
-#include "pubnub_assert.h"
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "pubnub_assert.h"
+#include "pubnub_coreapi.h"
+#include "pubnub_internal.h"
+#include "pubnub_ntf_sync.h"
+#include "pubnub_pubsubapi.h"
 
 /** This is not completely accurate, but is good enough:
     max unsinged int for most common sizes of unsigned integer:
@@ -25,10 +24,8 @@
  */
 #define MAX_UINT_NUM_OF_DIGITS ((5 * sizeof(unsigned)) / 2)
 
-
-int srand_from_pubnub_time(pubnub_t* pbp)
-{
-    char const*     pbtime;
+int srand_from_pubnub_time(pubnub_t* pbp) {
+    char const* pbtime;
     enum pubnub_res rslt;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pbp));
@@ -42,10 +39,10 @@ int srand_from_pubnub_time(pubnub_t* pbp)
     }
     pbtime = pubnub_get(pbp);
     if (pbtime != NULL) {
-        size_t      length_of_time = strlen(pbtime);
-        char const* s              = pbtime + length_of_time - 1;
-        unsigned    val_for_srand  = 0;
-        unsigned    i;
+        size_t length_of_time = strlen(pbtime);
+        char const* s = pbtime + length_of_time - 1;
+        unsigned val_for_srand = 0;
+        unsigned i;
         if (0 == length_of_time) {
             return -1;
         }

@@ -1,16 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-
 #include "lib/sockets/pbpal_ntf_callback_poller_select.h"
-
-#include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
 
 #include <stdlib.h>
 
+#include "core/pubnub_assert.h"
+#include "core/pubnub_log.h"
+#include "pubnub_internal.h"
 
-struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void)
-{
+struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void) {
     struct pbpal_poll_data* rslt;
 
     rslt = (struct pbpal_poll_data*)malloc(sizeof *rslt);
@@ -25,9 +22,8 @@ struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void)
     return rslt;
 }
 
-
-static bool we_ve_got_ya(struct pbpal_poll_data const* data, pubnub_t const* pb)
-{
+static bool
+we_ve_got_ya(struct pbpal_poll_data const* data, pubnub_t const* pb) {
     size_t i;
     for (i = 0; i < data->size; ++i) {
         if (data->apb[i] == pb) {
@@ -37,9 +33,9 @@ static bool we_ve_got_ya(struct pbpal_poll_data const* data, pubnub_t const* pb)
     return false;
 }
 
-
-void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
-{
+void pbpal_ntf_callback_save_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t* pb) {
     pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
 
     PUBNUB_ASSERT_OPT(data != NULL);
@@ -57,17 +53,17 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
     }
     FD_SET(sockt, &data->exceptfds);
     FD_SET(sockt, &data->writefds);
-    data->apb[data->size]     = pb;
+    data->apb[data->size] = pb;
     data->asocket[data->size] = sockt;
     ++data->size;
 }
 
-
-void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb)
-{
-    size_t                i;
-    int                   new_nfds = 0;
-    pbpal_native_socket_t sockt    = pubnub_get_native_socket(pb);
+void pbpal_ntf_callback_remove_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t* pb) {
+    size_t i;
+    int new_nfds = 0;
+    pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
 
     PUBNUB_ASSERT_OPT(data != NULL);
 
@@ -79,17 +75,22 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
 
     for (i = 0; i < data->size; ++i) {
         pbpal_native_socket_t i_sckt = data->asocket[i];
-        PUBNUB_ASSERT(pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
+        PUBNUB_ASSERT(
+            pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
         if ((int)i_sckt > new_nfds) {
             new_nfds = i_sckt;
         }
         if (data->apb[i] == pb) {
             size_t to_move = data->size - i - 1;
             if (to_move > 0) {
-                memmove(data->apb + i, data->apb + i + 1, sizeof data->apb[0] * to_move);
-                memmove(data->asocket + i,
-                        data->asocket + i + 1,
-                        sizeof data->asocket[0] * to_move);
+                memmove(
+                    data->apb + i,
+                    data->apb + i + 1,
+                    sizeof data->apb[0] * to_move);
+                memmove(
+                    data->asocket + i,
+                    data->asocket + i + 1,
+                    sizeof data->asocket[0] * to_move);
             }
             --data->size;
             break;
@@ -102,7 +103,8 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
 
     for (; i < data->size; ++i) {
         pbpal_native_socket_t i_sckt = data->asocket[i];
-        PUBNUB_ASSERT(pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
+        PUBNUB_ASSERT(
+            pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
         if ((int)i_sckt > new_nfds) {
             new_nfds = i_sckt;
         }
@@ -110,9 +112,9 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
     data->nfds = new_nfds;
 }
 
-
-void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb)
-{
+void pbpal_ntf_callback_update_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t* pb) {
     size_t i;
 
     PUBNUB_ASSERT_OPT(data != NULL);
@@ -134,9 +136,7 @@ void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb
     }
 }
 
-
-int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
-{
+int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp) {
     pbpal_native_socket_t scket = pubnub_get_native_socket(pbp);
 
     PUBNUB_ASSERT_OPT(data != NULL);
@@ -150,9 +150,7 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
     return 0;
 }
 
-
-int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
-{
+int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp) {
     pbpal_native_socket_t scket = pubnub_get_native_socket(pbp);
 
     PUBNUB_ASSERT_OPT(data != NULL);
@@ -166,21 +164,19 @@ int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
     return 0;
 }
 
-
-int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
-{
-    int            i;
-    int            rslt;
-    fd_set         readfds;
-    fd_set         writefds;
-    fd_set         exceptfds;
+int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms) {
+    int i;
+    int rslt;
+    fd_set readfds;
+    fd_set writefds;
+    fd_set exceptfds;
     struct timeval timeout;
 
     if (0 == data->size) {
         return 0;
     }
 
-    timeout.tv_sec  = ms / 1000;
+    timeout.tv_sec = ms / 1000;
     timeout.tv_usec = (ms % 1000) * 1000;
 
     memcpy(&readfds, &data->readfds, sizeof readfds);
@@ -197,7 +193,9 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
             ;
         /* error? what to do about it? */
         PUBNUB_LOG_WARNING(
-            "poll size = %u, error = %d\n", (unsigned)data->size, last_err);
+            "poll size = %u, error = %d\n",
+            (unsigned)data->size,
+            last_err);
         return -1;
     }
     for (i = 0; (i < (int)data->size) && (rslt > 0); ++i) {
@@ -225,9 +223,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
     return rslt;
 }
 
-
-void pbpal_ntf_callback_poller_deinit(struct pbpal_poll_data** data)
-{
+void pbpal_ntf_callback_poller_deinit(struct pbpal_poll_data** data) {
     PUBNUB_ASSERT_OPT(data != NULL);
     PUBNUB_ASSERT_OPT(*data != NULL);
 

@@ -36,21 +36,19 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 // DOM-IGNORE-END
 
-#include "tcpip/tcpip.h"
 #include "app_commands.h"
+
 #include "app.h"
 #include "config.h"
+#include "tcpip/tcpip.h"
 //#include <cyassl/ssl.h>
 
 #if defined(TCPIP_STACK_COMMAND_ENABLE)
 
 extern APP_DATA appData;
 
-
-bool APP_Commands_Init()
-{
+bool APP_Commands_Init() {
     return true;
 }
-
 
 #endif

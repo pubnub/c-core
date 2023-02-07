@@ -1,9 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#include "lib/msstopwatch/msstopwatch.h"
-
 #include "core/pubnub_assert.h"
-
+#include "lib/msstopwatch/msstopwatch.h"
 
 /** This uses GetTickCount64(), which is very fast, but innacurate -
     typical resolution is ~16 ms, could be better or worse, but
@@ -11,27 +9,20 @@
     module.
 */
 
-pbmsref_t pbms_start(void)
-{
-    pbmsref_t rslt = { GetTickCount64() + 1 };
+pbmsref_t pbms_start(void) {
+    pbmsref_t rslt = {GetTickCount64() + 1};
     return rslt;
 }
 
-
-void pbms_stop(pbmsref_t* psw)
-{
+void pbms_stop(pbmsref_t* psw) {
     psw->t_ref = 0;
 }
 
-
-bool pbms_active(pbmsref_t stopwatch)
-{
+bool pbms_active(pbmsref_t stopwatch) {
     return stopwatch.t_ref > 0;
 }
 
-
-pbms_t pbms_elapsed(pbmsref_t since)
-{
+pbms_t pbms_elapsed(pbmsref_t since) {
     PUBNUB_ASSERT(pbms_active(since));
     return (pbms_t)(GetTickCount64() + 1 - since.t_ref);
 }

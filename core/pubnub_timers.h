@@ -1,13 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_TIMERS_IO
-#define INC_PUBNUB_TIMERS_IO
+    #define INC_PUBNUB_TIMERS_IO
 
+    #include "pubnub_api_types.h"
+    #include "pubnub_ccore_limits.h"
 
-#include "pubnub_api_types.h"
-#include "pubnub_ccore_limits.h"
-
-
-/** @file pubnub_timers.h
+    /** @file pubnub_timers.h
     This is the "Timer" API of the Pubnub client library, pertaining
     to transaction timeout(s), that is the time limit on how long
     we allow a transaction to last before it finishes.
@@ -22,14 +20,12 @@
     actually be more.
 */
 
+    /** The Pubnub default timeout for subscribe transaction, in milliseconds */
+    #define PUBNUB_DEFAULT_SUBSCRIBE_TIMEOUT PUBNUB_DEFAULT_TRANSACTION_TIMER
 
-/** The Pubnub default timeout for subscribe transaction, in milliseconds */
-#define PUBNUB_DEFAULT_SUBSCRIBE_TIMEOUT PUBNUB_DEFAULT_TRANSACTION_TIMER
-
-/** The Pubnub default timeout for non-subscribe transactions, in milliseconds
+    /** The Pubnub default timeout for non-subscribe transactions, in milliseconds
  */
-#define PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT PUBNUB_MIN_TRANSACTION_TIMER
-
+    #define PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT PUBNUB_MIN_TRANSACTION_TIMER
 
 /** Sets the transaction timeout for the context. This will be used
     for all subsequent transactions. If a transactions is ongoing and
@@ -63,7 +59,6 @@ int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms);
 */
 int pubnub_transaction_timeout_get(pubnub_t* p);
 
-
 /** Sets the 'wait_connect_TCP_socket' timeout for the context.
     This will be used for all subsequent transactions. If a transaction
     is ongoing and its 'wait_connect' timeout can be changed, it will be
@@ -92,6 +87,5 @@ int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms);
     always be > 0)
 */
 int pubnub_wait_connect_timeout_get(pubnub_t* p);
-
 
 #endif /* defined INC_PUBNUB_TIMERS_IO */

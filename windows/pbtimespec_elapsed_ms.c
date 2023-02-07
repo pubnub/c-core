@@ -7,14 +7,13 @@
 */
 #define MSEC_IN_FILETIME_INTERVALS (10 * 1000)
 
-
-int pbtimespec_elapsed_ms(FILETIME prev_timspec, FILETIME timspec)
-{
+int pbtimespec_elapsed_ms(FILETIME prev_timspec, FILETIME timspec) {
     ULARGE_INTEGER prev;
     ULARGE_INTEGER current;
-    prev.LowPart     = prev_timspec.dwLowDateTime;
-    prev.HighPart    = prev_timspec.dwHighDateTime;
-    current.LowPart  = timspec.dwLowDateTime;
+    prev.LowPart = prev_timspec.dwLowDateTime;
+    prev.HighPart = prev_timspec.dwHighDateTime;
+    current.LowPart = timspec.dwLowDateTime;
     current.HighPart = timspec.dwHighDateTime;
-    return (int)((current.QuadPart - prev.QuadPart) / MSEC_IN_FILETIME_INTERVALS);
+    return (
+        int)((current.QuadPart - prev.QuadPart) / MSEC_IN_FILETIME_INTERVALS);
 }

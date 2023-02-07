@@ -1,13 +1,12 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CCORE
-#define INC_PUBNUB_CCORE
+    #define INC_PUBNUB_CCORE
 
-#include "pubnub_api_types.h"
+    #include <stdbool.h>
 
-#include <stdbool.h>
+    #include "pubnub_api_types.h"
 
 typedef struct pubnub_char_mem_block pubnub_chamebl_t;
-
 
 /** @file pubnub_ccore.h
 
@@ -16,9 +15,7 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
     the publish and subscribe - which have a separate module;
 */
 
-
 struct pbcc_context;
-
 
 /** Parses the string received as a response for a time operation
     (transaction). This checks if the response is valid, and, if it
@@ -69,9 +66,10 @@ enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context* p);
 /** Prepares the Leave operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_leave_prep(struct pbcc_context* p,
-                                const char*          channel,
-                                const char*          channel_group);
+enum pubnub_res pbcc_leave_prep(
+    struct pbcc_context* p,
+    const char* channel,
+    const char* channel_group);
 
 /** Prepares the Time operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -81,31 +79,34 @@ enum pubnub_res pbcc_time_prep(struct pbcc_context* p);
 /** Prepares the History v2 operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_history_prep(struct pbcc_context* p,
-                                  const char*          channel,
-                                  unsigned             count,
-                                  bool                 include_token,
-                                  enum pubnub_tribool  string_token,
-                                  enum pubnub_tribool  reverse,
-                                  enum pubnub_tribool  include_meta,
-                                  char const*          start,
-                                  char const*          end);
+enum pubnub_res pbcc_history_prep(
+    struct pbcc_context* p,
+    const char* channel,
+    unsigned count,
+    bool include_token,
+    enum pubnub_tribool string_token,
+    enum pubnub_tribool reverse,
+    enum pubnub_tribool include_meta,
+    char const* start,
+    char const* end);
 
 /** Prepares the Heartbeat operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* p,
-                                    const char*          channel,
-                                    const char*          channel_group);
+enum pubnub_res pbcc_heartbeat_prep(
+    struct pbcc_context* p,
+    const char* channel,
+    const char* channel_group);
 
 /** Prepares the Here-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_here_now_prep(struct pbcc_context* p,
-                                   const char*          channel,
-                                   const char*          channel_group,
-                                   enum pubnub_tribool  disable_uuids,
-                                   enum pubnub_tribool  state);
+enum pubnub_res pbcc_here_now_prep(
+    struct pbcc_context* p,
+    const char* channel,
+    const char* channel_group,
+    enum pubnub_tribool disable_uuids,
+    enum pubnub_tribool state);
 
 /** Prepares the Where-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -115,32 +116,36 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context* p, const char* uuid);
 /** Prepares the Set state operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_set_state_prep(struct pbcc_context* p,
-                                    char const*          channel,
-                                    char const*          channel_group,
-                                    const char*          uuid,
-                                    char const*          state);
+enum pubnub_res pbcc_set_state_prep(
+    struct pbcc_context* p,
+    char const* channel,
+    char const* channel_group,
+    const char* uuid,
+    char const* state);
 
 /** Prepares the Get state operation (transaction), mostly by
     formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_state_get_prep(struct pbcc_context* p,
-                                    char const*          channel,
-                                    char const*          channel_group,
-                                    const char*          uuid);
+enum pubnub_res pbcc_state_get_prep(
+    struct pbcc_context* p,
+    char const* channel,
+    char const* channel_group,
+    const char* uuid);
 
 /** Preparse the Remove channel group operation (transaction) , mostly by
     formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* p,
-                                               char const* channel_group);
+enum pubnub_res pbcc_remove_channel_group_prep(
+    struct pbcc_context* p,
+    char const* channel_group);
 
 /** Preparse an operation (transaction) against the channel registry,
     mostly by formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* p,
-                                           char const*          channel_group,
-                                           char const*          param,
-                                           char const*          channel);
+enum pubnub_res pbcc_channel_registry_prep(
+    struct pbcc_context* p,
+    char const* channel_group,
+    char const* param,
+    char const* channel);
 
 #endif /* !defined INC_PUBNUB_CCORE */

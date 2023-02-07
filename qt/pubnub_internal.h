@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_INTERNAL
-#define      INC_PUBNUB_INTERNAL
+    #define INC_PUBNUB_INTERNAL
 
-#include <QtGlobal>
+    #include <QtGlobal>
 
 typedef int pb_socket_t;
 
@@ -15,11 +15,9 @@ struct pubnub_pal {
     pb_socket_t fake;
 };
 
-/** The way we use Qt, blocking I/O is not applicable */
-#define PUBNUB_BLOCKING_IO_SETTABLE 0
+    /** The way we use Qt, blocking I/O is not applicable */
+    #define PUBNUB_BLOCKING_IO_SETTABLE 0
 
-#include "core/pubnub_internal_common.h"
-
-
+    #include "core/pubnub_internal_common.h"
 
 #endif /* !defined INC_PUBNUB_INTERNAL */

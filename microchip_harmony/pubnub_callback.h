@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_FREERTOS_CALLBACK
-#define	INC_PUBNUB_FREERTOS_CALLBACK
+    #define INC_PUBNUB_FREERTOS_CALLBACK
 
 /** @mainpage The MPLAB Harmony Pubnub client library - callback interface
 
@@ -31,25 +31,24 @@
 
 /** @file pubnub_callback.h */
 
-#include "pubnub_config.h"
+    #include "pubnub_config.h"
 
 /* -- You should not change anything below this line -- */
 
-#if !defined(PUBNUB_CALLBACK_API)
-#error You have to define PUBNUB_CALLBACK_API
-#endif
+    #if !defined(PUBNUB_CALLBACK_API)
+        #error You have to define PUBNUB_CALLBACK_API
+    #endif
 
-#include "pubnub_alloc.h"
-#include "pubnub_assert.h"
-#include "pubnub_coreapi.h"
-#include "pubnub_ntf_callback.h"
-#include "pubnub_generate_uuid.h"
+    #include "pubnub_alloc.h"
+    #include "pubnub_assert.h"
+    #include "pubnub_coreapi.h"
+    #include "pubnub_generate_uuid.h"
+    #include "pubnub_ntf_callback.h"
 
 /* The Pubnub task to be called from the main loop of the application */
 void pubnub_task(void);
 
-/** For logging, we use the Harmony Console module */
-#define PUBNUB_LOG_PRINTF   SYS_CONSOLE_PRINT
-
+    /** For logging, we use the Harmony Console module */
+    #define PUBNUB_LOG_PRINTF SYS_CONSOLE_PRINT
 
 #endif /* !defined INC_PUBNUB_FREERTOS_CALLBACK */

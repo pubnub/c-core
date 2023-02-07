@@ -1,10 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_NTF_SYNC
-#define	INC_PUBNUB_NTF_SYNC
+    #define INC_PUBNUB_NTF_SYNC
 
-
-#include "pubnub_api_types.h"
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_ntf_sync.h 
     This is the "sync" notification interface.
@@ -30,14 +28,12 @@
     in a loop for the transaction to finish.
 */
 
-
 /** Waits, in a loop, for the current transaction to finish on context
     @p p.  If Timers API is available, will observe the transaction
     timeout.
 
     @return The outcome of the transaction
 */
-enum pubnub_res pubnub_await(pubnub_t *p);
+enum pubnub_res pubnub_await(pubnub_t* p);
 
-
-#endif        /* defined INC_PUBNUB_NTF_CONTIKI */
+#endif /* defined INC_PUBNUB_NTF_CONTIKI */

@@ -1,12 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub.hpp"
-
-
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 
-#include <ctime>
-#include <cstdlib>
-
+#include "pubnub.hpp"
 
 /** This example, while using the C++ API which is "generic" will
     surely work only with the Pubnub C sync "back-end" (notification
@@ -14,8 +11,7 @@
     on a particular implementation of that interface.
  */
 
-int main()
-{
+int main() {
     try {
         /* This is a widely use channel, something should happen there
            from time to time
@@ -34,9 +30,9 @@ int main()
         */
         pb.set_blocking_io(pubnub::non_blocking);
 
-        std::cout << "--------------------------" << std::endl <<
-            "Subscribe loop starting..." << std::endl <<
-            "--------------------------" << std::endl;
+        std::cout << "--------------------------" << std::endl
+                  << "Subscribe loop starting..." << std::endl
+                  << "--------------------------" << std::endl;
 
         for (;;) {
             time_t t = time(NULL);
@@ -56,8 +52,7 @@ int main()
                         stop = (rand() % 25) == 3;
                         t = time(NULL);
                     }
-                }
-                else {
+                } else {
                     if (PNR_OK == res) {
                         std::cout << "Subscribed! Got messages:" << std::endl;
                         std::string msg;
@@ -65,17 +60,17 @@ int main()
                             msg = pb.get();
                             std::cout << msg << std::endl;
                         } while (!msg.empty());
-                    }
-                    else {
-                        std::cout << "Subscribing failed with code: " << res << std::endl;
+                    } else {
+                        std::cout << "Subscribing failed with code: " << res
+                                  << std::endl;
                     }
                     break;
                 }
             }
             if (stop) {
-                std::cout << "---------------------------" << std::endl <<
-                    "Cancelling the Subscribe..." << std::endl <<
-                    "---------------------------" << std::endl;
+                std::cout << "---------------------------" << std::endl
+                          << "Cancelling the Subscribe..." << std::endl
+                          << "---------------------------" << std::endl;
                 pb.cancel();
                 /* Now it's OK to await, since we don't have anything else
                    to do
@@ -84,8 +79,7 @@ int main()
                 break;
             }
         }
-    }
-    catch (std::exception &exc) {
+    } catch (std::exception& exc) {
         std::cout << "Caught exception: " << exc.what() << std::endl;
     }
 

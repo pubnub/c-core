@@ -54,7 +54,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "system_config.h"
 #include "system_definitions.h"
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: System "Tasks" Routine
@@ -69,14 +68,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
     See prototype in system/common/sys_module.h.
 */
 
-void SYS_Tasks ( void )
-{
+void SYS_Tasks(void) {
     /* Maintain system services */
-    /* SYS_COMMAND layer tasks routine */ 
+    /* SYS_COMMAND layer tasks routine */
     SYS_CMD_Tasks();
     SYS_CONSOLE_Tasks(sysObj.sysConsole0);
     SYS_DEVCON_Tasks(sysObj.sysDevcon);
-    /* SYS_TMR Device layer tasks routine */ 
+    /* SYS_TMR Device layer tasks routine */
     SYS_TMR_Tasks(sysObj.sysTmr);
 
     /* Maintain Device Drivers */
@@ -86,20 +84,16 @@ void SYS_Tasks ( void )
     /* Maintain the TCP/IP Stack*/
     TCPIP_STACK_Task(sysObj.tcpip);
 
- 
-    /* USB HS Driver Task Routine */ 
-     DRV_USBHS_Tasks(sysObj.drvUSBObject);
-     
-    /* USB Device layer tasks routine */ 
+    /* USB HS Driver Task Routine */
+    DRV_USBHS_Tasks(sysObj.drvUSBObject);
+
+    /* USB Device layer tasks routine */
     USB_DEVICE_Tasks(sysObj.usbDevObject0);
- 
 
     /* Maintain the application's state machine. */
     APP_Tasks();
 }
 
-
 /*******************************************************************************
  End of File
  */
-

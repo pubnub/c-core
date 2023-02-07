@@ -1,13 +1,12 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PBCC_GRANT_TOKEN_API
-#define INC_PBCC_GRANT_TOKEN_API
+    #define INC_PBCC_GRANT_TOKEN_API
 
-#include "pubnub_api_types.h"
-#include "pubnub_json_parse.h"
-#include "pubnub_memory_block.h"
+    #include "pubnub_api_types.h"
+    #include "pubnub_json_parse.h"
+    #include "pubnub_memory_block.h"
 
 struct pbcc_context;
-
 
 /** @file pbcc_grant_token_api.h
 
@@ -18,9 +17,10 @@ struct pbcc_context;
 /** Prepares the 'grant_token_prep' transaction, mostly by
     formatting the URI of the HTTP request.
   */
-enum pubnub_res pbcc_grant_token_prep(struct pbcc_context* pb,
-                                      const char* perm_obj,
-                                      enum pubnub_trans pt);
+enum pubnub_res pbcc_grant_token_prep(
+    struct pbcc_context* pb,
+    const char* perm_obj,
+    enum pubnub_trans pt);
 
 /** Parses server response simply on any 'Grant Token API' transaction request.
     If transaction is successful, the response(a JSON object) will have key

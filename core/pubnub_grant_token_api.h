@@ -1,15 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_GRANT_TOKEN_API
-#define INC_PUBNUB_GRANT_TOKEN_API
+    #define INC_PUBNUB_GRANT_TOKEN_API
 
+    #include <stdbool.h>
 
-#include "pubnub_api_types.h"
-#include "pubnub_memory_block.h"
+    #include "lib/cbor/cbor.h"
+    #include "pubnub_api_types.h"
+    #include "pubnub_memory_block.h"
 
-#include <stdbool.h>
-#include "lib/cbor/cbor.h"
-
-struct pam_permission{
+struct pam_permission {
     bool read;
     bool write;
     bool manage;
@@ -21,7 +20,6 @@ struct pam_permission{
 };
 
 int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
-
 
 /** Returns the token for a set of permissions specified in @p perm_obj.
     An example for @perm_obj:

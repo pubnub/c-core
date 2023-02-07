@@ -1,15 +1,15 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
+#include <string.h>
 
 #include "core/pbpal.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "pubnub_internal.h"
 
-#include <string.h>
-
-
-void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
-{
+void pbpal_report_error_from_environment(
+    pubnub_t* pb,
+    char const* file,
+    int line) {
     char const* err_str;
 
 #if HAVE_STRERROR_R
@@ -31,31 +31,32 @@ void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int lin
         errno,
         err_str);
     if (pb != NULL) {
-        PUBNUB_LOG_DEBUG(" use_blocking_io=%d\n", (int)pb->options.use_blocking_io);
-    }
-    else {
+        PUBNUB_LOG_DEBUG(
+            " use_blocking_io=%d\n",
+            (int)pb->options.use_blocking_io);
+    } else {
         PUBNUB_LOG_DEBUG("\n");
     }
 #if defined(_WIN32)
-    PUBNUB_LOG_DEBUG("%s:%d: pbpal_report_error_from_environment(pb=%p): errno=%d('%s') "
-                     "GetLastError()=%lu "
-                     "WSAGetLastError()=%d\n",
-                     file,
-                     line,
-                     pb,
-                     errno,
-                     err_str,
-                     GetLastError(),
-                     WSAGetLastError());
+    PUBNUB_LOG_DEBUG(
+        "%s:%d: pbpal_report_error_from_environment(pb=%p): errno=%d('%s') "
+        "GetLastError()=%lu "
+        "WSAGetLastError()=%d\n",
+        file,
+        line,
+        pb,
+        errno,
+        err_str,
+        GetLastError(),
+        WSAGetLastError());
 #endif
 }
 
-
-enum pubnub_res pbpal_handle_socket_error(int socket_result,
-                                          pubnub_t* pb,
-                                          char const* file,
-                                          int line)
-{
+enum pubnub_res pbpal_handle_socket_error(
+    int socket_result,
+    pubnub_t* pb,
+    char const* file,
+    int line) {
     PUBNUB_ASSERT_INT_OPT(socket_result, <=, 0);
     if (socket_result < 0) {
         if (socket_would_block()) {
@@ -64,14 +65,12 @@ enum pubnub_res pbpal_handle_socket_error(int socket_result,
                 return PNR_TIMEOUT;
             }
             return PNR_IN_PROGRESS;
-        }
-        else {
+        } else {
             pb->sock_state = STATE_NONE;
             pbpal_report_error_from_environment(pb, file, line);
             return socket_timed_out() ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
         }
-    }
-    else if (0 == socket_result) {
+    } else if (0 == socket_result) {
         pb->sock_state = STATE_NONE;
         return PNR_TIMEOUT;
     }

@@ -1,12 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_BLOCKING_IO
-#define	INC_PUBNUB_BLOCKING_IO
+    #define INC_PUBNUB_BLOCKING_IO
 
+    #include <stdbool.h>
 
-#include "pubnub_api_types.h"
-
-#include <stdbool.h>
-
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_blocking_io.h 
     This is the "Blocking I/O" API of the Pubnub client library.
@@ -18,7 +16,6 @@
     most of these functions provide more of a hint, rather than
     a command.
 */
-
 
 /** Sets the usage of non-blocking I/O for a context. If non-blocking
     I/O is supported by a platform, it will be used, unless some other
@@ -50,8 +47,7 @@
     @return 0: OK, otherwise: error, non-blocking I/O not supported
     
 */
-int pubnub_set_non_blocking_io(pubnub_t *p);
-
+int pubnub_set_non_blocking_io(pubnub_t* p);
 
 /** Sets the usage of blocking I/O for a context. If blocking
     I/O is supported by a platform, it will be used, unless some other
@@ -83,8 +79,6 @@ int pubnub_set_non_blocking_io(pubnub_t *p);
     @return 0: OK, otherwise: error, blocking I/O not supported
     
 */
-int  pubnub_set_blocking_io(pubnub_t *p);
-
-
+int pubnub_set_blocking_io(pubnub_t* p);
 
 #endif /* defined INC_PUBNUB_BLOCKING_IO */

@@ -1,14 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
-#include "core/pubnub_log.h"
-
 #include <pthread.h>
 
-static int create_heartbeat_watcher_thread(struct HeartbeatWatcherData* m_watcher)
-{
+#include "core/pubnub_log.h"
+#include "pubnub_internal.h"
+
+static int
+create_heartbeat_watcher_thread(struct HeartbeatWatcherData* m_watcher) {
     int rslt;
 
-#if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB)                              \
+#if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB) \
     && (PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB > 0)
     {
         pthread_attr_t thread_attr;
@@ -22,7 +22,8 @@ static int create_heartbeat_watcher_thread(struct HeartbeatWatcherData* m_watche
             return -1;
         }
         rslt = pthread_attr_setstacksize(
-            &thread_attr, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024);
+            &thread_attr,
+            PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024);
         if (rslt != 0) {
             PUBNUB_LOG_ERROR(
                 "create_heartbeat_watcher_thread() - "
@@ -33,22 +34,32 @@ static int create_heartbeat_watcher_thread(struct HeartbeatWatcherData* m_watche
             return -1;
         }
         rslt = pthread_create(
-            &m_watcher->thread_id, &thread_attr, pbauto_heartbeat_watcher_thread, NULL);
+            &m_watcher->thread_id,
+            &thread_attr,
+            pbauto_heartbeat_watcher_thread,
+            NULL);
         if (rslt != 0) {
-            PUBNUB_LOG_ERROR("create_heartbeat_watcher_thread() - "
-                             "Failed to create the auto heartbeat watcher "
-                             "thread, error code: %d\n",
-                             rslt);
+            PUBNUB_LOG_ERROR(
+                "create_heartbeat_watcher_thread() - "
+                "Failed to create the auto heartbeat watcher "
+                "thread, error code: %d\n",
+                rslt);
             pthread_attr_destroy(&thread_attr);
             return -1;
         }
     }
 #else
-    rslt = pthread_create(&m_watcher->thread_id, NULL, pbauto_heartbeat_watcher_thread,
-NULL); if (rslt != 0) { PUBNUB_LOG_ERROR("create_heartbeat_watcher_thread() - "
-                         "Failed to create the auto heartbeat watcher thread, "
-                         "error code: %d\n",
-                         rslt);
+    rslt = pthread_create(
+        &m_watcher->thread_id,
+        NULL,
+        pbauto_heartbeat_watcher_thread,
+        NULL);
+    if (rslt != 0) {
+        PUBNUB_LOG_ERROR(
+            "create_heartbeat_watcher_thread() - "
+            "Failed to create the auto heartbeat watcher thread, "
+            "error code: %d\n",
+            rslt);
         return -1;
     }
 #endif
@@ -56,50 +67,53 @@ NULL); if (rslt != 0) { PUBNUB_LOG_ERROR("create_heartbeat_watcher_thread() - "
     return 0;
 }
 
-
-int pbauto_heartbeat_init(struct HeartbeatWatcherData* m_watcher)
-{
-    int                 rslt;
+int pbauto_heartbeat_init(struct HeartbeatWatcherData* m_watcher) {
+    int rslt;
     pthread_mutexattr_t attr;
 
     rslt = pthread_mutexattr_init(&attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("pbauto_heartbeat_init() - Failed to initialize mutex "
-                         "attributes, error code: %d\n",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            "pbauto_heartbeat_init() - Failed to initialize mutex "
+            "attributes, error code: %d\n",
+            rslt);
         return -1;
     }
     rslt = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("pbauto_heartbeat_init() - Failed to set mutex "
-                         "attribute type, error code: %d\n",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            "pbauto_heartbeat_init() - Failed to set mutex "
+            "attribute type, error code: %d\n",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher->stoplock, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("pbauto_heartbeat_init() - Failed to initialize "
-                         "'stoplock' mutex, error code: %d\n",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            "pbauto_heartbeat_init() - Failed to initialize "
+            "'stoplock' mutex, error code: %d\n",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher->mutw, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("pbauto_heartbeat_init() - Failed to initialize mutex, "
-                         "error code: %d\n",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            "pbauto_heartbeat_init() - Failed to initialize mutex, "
+            "error code: %d\n",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         pubnub_mutex_destroy(m_watcher->stoplock);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher->timerlock, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("pbauto_heartbeat_init() - Failed to initialize mutex "
-                         "for heartbeat timers, "
-                         "error code: %d\n",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            "pbauto_heartbeat_init() - Failed to initialize mutex "
+            "for heartbeat timers, "
+            "error code: %d\n",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         pubnub_mutex_destroy(m_watcher->mutw);
         pubnub_mutex_destroy(m_watcher->stoplock);

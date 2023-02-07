@@ -1,10 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
 #if !defined(INC_MSSTOPWATCH)
-#define INC_MSSTOPWATCH
+    #define INC_MSSTOPWATCH
 
-
-/** @file msstopwatch.h
+    /** @file msstopwatch.h
 
     A milisecond stopwatch. It's not milisecond accurate, it's just
     the resolution. It might be as bad as 100ms accurate, but, we
@@ -24,11 +23,10 @@
     measures.
 
 */
-#include "msstopwatch_pal.h"
+    #include <stdbool.h>
+    #include <stdint.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-
+    #include "msstopwatch_pal.h"
 
 typedef int32_t pbms_t;
 
@@ -58,6 +56,5 @@ bool pbms_active(pbmsref_t stopwatch);
     @precondition pbms_active(since)
 */
 pbms_t pbms_elapsed(pbmsref_t since);
-
 
 #endif /* !defined(INC_MSSTOPWATCH) */

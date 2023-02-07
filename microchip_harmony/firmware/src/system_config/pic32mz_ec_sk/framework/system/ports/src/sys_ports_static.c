@@ -48,62 +48,119 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 *******************************************************************************/
 //DOM-IGNORE-END
 
-#include "system_config.h"
-#include "peripheral/ports/plib_ports.h"
 #include "peripheral/int/plib_int.h"
+#include "peripheral/ports/plib_ports.h"
+#include "system_config.h"
 
-
-void SYS_PORTS_Initialize(void)
-{
-    
+void SYS_PORTS_Initialize(void) {
     /* PORT B Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_B,  SYS_PORT_B_LAT);
-    PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_B,  SYS_PORT_B_TRIS ^ 0xFFFF);
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_TRIS ^ 0xFFFF);
     PLIB_PORTS_ChangeNoticePerPortTurnOn(PORTS_ID_0, PORT_CHANNEL_B);
-    PLIB_PORTS_ChannelModeSelect(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_ANSEL ^ 0xFFFF, PORTS_PIN_MODE_DIGITAL);
-    PLIB_PORTS_ChannelChangeNoticeEnable(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_CNEN);
-    PLIB_PORTS_ChannelChangeNoticePullUpEnable(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_CNPU);
-    PLIB_PORTS_ChannelChangeNoticePullDownEnable(PORTS_ID_0, PORT_CHANNEL_B, SYS_PORT_B_CNPD);
-    
+    PLIB_PORTS_ChannelModeSelect(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_ANSEL ^ 0xFFFF,
+        PORTS_PIN_MODE_DIGITAL);
+    PLIB_PORTS_ChannelChangeNoticeEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_CNEN);
+    PLIB_PORTS_ChannelChangeNoticePullUpEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_CNPU);
+    PLIB_PORTS_ChannelChangeNoticePullDownEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_B,
+        SYS_PORT_B_CNPD);
+
     /* PORT C Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_C,  SYS_PORT_C_LAT);
-    PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_C,  SYS_PORT_C_TRIS ^ 0xFFFF);
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_C,
+        SYS_PORT_C_TRIS ^ 0xFFFF);
     PLIB_PORTS_ChangeNoticePerPortTurnOn(PORTS_ID_0, PORT_CHANNEL_C);
-    PLIB_PORTS_ChannelModeSelect(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_ANSEL ^ 0xFFFF, PORTS_PIN_MODE_DIGITAL);
-    PLIB_PORTS_ChannelChangeNoticeEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_CNEN);
-    PLIB_PORTS_ChannelChangeNoticePullUpEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_CNPU);
-    PLIB_PORTS_ChannelChangeNoticePullDownEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_CNPD);
-    
+    PLIB_PORTS_ChannelModeSelect(
+        PORTS_ID_0,
+        PORT_CHANNEL_C,
+        SYS_PORT_C_ANSEL ^ 0xFFFF,
+        PORTS_PIN_MODE_DIGITAL);
+    PLIB_PORTS_ChannelChangeNoticeEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_C,
+        SYS_PORT_C_CNEN);
+    PLIB_PORTS_ChannelChangeNoticePullUpEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_C,
+        SYS_PORT_C_CNPU);
+    PLIB_PORTS_ChannelChangeNoticePullDownEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_C,
+        SYS_PORT_C_CNPD);
+
     /* PORT H Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_H,  SYS_PORT_H_LAT);
-    PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_H,  SYS_PORT_H_TRIS ^ 0xFFFF);
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_H,
+        SYS_PORT_H_TRIS ^ 0xFFFF);
     PLIB_PORTS_ChangeNoticePerPortTurnOn(PORTS_ID_0, PORT_CHANNEL_H);
-    PLIB_PORTS_ChannelModeSelect(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_ANSEL ^ 0xFFFF, PORTS_PIN_MODE_DIGITAL);
-    PLIB_PORTS_ChannelChangeNoticeEnable(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_CNEN);
-    PLIB_PORTS_ChannelChangeNoticePullUpEnable(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_CNPU);
-    PLIB_PORTS_ChannelChangeNoticePullDownEnable(PORTS_ID_0, PORT_CHANNEL_H, SYS_PORT_H_CNPD);
-    
+    PLIB_PORTS_ChannelModeSelect(
+        PORTS_ID_0,
+        PORT_CHANNEL_H,
+        SYS_PORT_H_ANSEL ^ 0xFFFF,
+        PORTS_PIN_MODE_DIGITAL);
+    PLIB_PORTS_ChannelChangeNoticeEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_H,
+        SYS_PORT_H_CNEN);
+    PLIB_PORTS_ChannelChangeNoticePullUpEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_H,
+        SYS_PORT_H_CNPU);
+    PLIB_PORTS_ChannelChangeNoticePullDownEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_H,
+        SYS_PORT_H_CNPD);
+
     /* PORT J Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_ODC);
-    PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_J,  SYS_PORT_J_LAT);
-    PLIB_PORTS_DirectionOutputSet( PORTS_ID_0, PORT_CHANNEL_J,  SYS_PORT_J_TRIS ^ 0xFFFF);
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_LAT);
+    PLIB_PORTS_DirectionOutputSet(
+        PORTS_ID_0,
+        PORT_CHANNEL_J,
+        SYS_PORT_J_TRIS ^ 0xFFFF);
     PLIB_PORTS_ChangeNoticePerPortTurnOn(PORTS_ID_0, PORT_CHANNEL_J);
-    PLIB_PORTS_ChannelModeSelect(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_ANSEL ^ 0xFFFF, PORTS_PIN_MODE_DIGITAL);
-    PLIB_PORTS_ChannelChangeNoticeEnable(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_CNEN);
-    PLIB_PORTS_ChannelChangeNoticePullUpEnable(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_CNPU);
-    PLIB_PORTS_ChannelChangeNoticePullDownEnable(PORTS_ID_0, PORT_CHANNEL_J, SYS_PORT_J_CNPD);
-
+    PLIB_PORTS_ChannelModeSelect(
+        PORTS_ID_0,
+        PORT_CHANNEL_J,
+        SYS_PORT_J_ANSEL ^ 0xFFFF,
+        PORTS_PIN_MODE_DIGITAL);
+    PLIB_PORTS_ChannelChangeNoticeEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_J,
+        SYS_PORT_J_CNEN);
+    PLIB_PORTS_ChannelChangeNoticePullUpEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_J,
+        SYS_PORT_J_CNPU);
+    PLIB_PORTS_ChannelChangeNoticePullDownEnable(
+        PORTS_ID_0,
+        PORT_CHANNEL_J,
+        SYS_PORT_J_CNPD);
 
     /* PPS Input Remapping */
 
     /* PPS Output Remapping */
-
-    
 }
-
 
 /*******************************************************************************
  End of File

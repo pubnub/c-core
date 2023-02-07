@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_ADVANCED_HISTORY
-#define INC_PUBNUB_ADVANCED_HISTORY
+    #define INC_PUBNUB_ADVANCED_HISTORY
 
-#include "pbcc_advanced_history.h"
+    #include "pbcc_advanced_history.h"
 
 /** Structure containing channel name as char memory block and field with
     message count for messages received on the channel since given point in time
@@ -15,7 +15,6 @@ struct pubnub_chan_msg_count {
     /* Message count for the corresponding channel since given point in time */
     size_t message_count;
 };
-
 
 /** If successful returns number of members(key:value pairs) of JSON object
     'channels', or -1 on error(transaction still in progress, or so)
@@ -31,9 +30,8 @@ int pubnub_get_chan_msg_counts_size(pubnub_t* pb);
                             in progress(hasn't finished yet)
     @retval otherwise a result with the same meaning as for any other transaction
  */
-enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
-                                      char const* channel, 
-                                      char const* timetoken);
+enum pubnub_res
+pubnub_message_counts(pubnub_t* pb, char const* channel, char const* timetoken);
 
 /** On input, @p io_count is the number of allocated "counters per channel"(array
     dimension of @p chan_msg_counters). On output(@p io_count), number of counters per
@@ -42,9 +40,10 @@ enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
     @retval 0 on success
     @retval -1 on error(transaction in progress, or format error)
  */
-int pubnub_get_chan_msg_counts(pubnub_t* pb, 
-                               size_t* io_count, 
-                               struct pubnub_chan_msg_count* chan_msg_counters);
+int pubnub_get_chan_msg_counts(
+    pubnub_t* pb,
+    size_t* io_count,
+    struct pubnub_chan_msg_count* chan_msg_counters);
 
 /** Array dimension for @p o_count is the number of channels from channel list
     @p channel and it('o_count' array) has to be provided by the user.
@@ -57,7 +56,6 @@ int pubnub_get_chan_msg_counts(pubnub_t* pb,
     @retval 0 on success
     @retval -1 on error(transaction in progress, or format error)
   */
-int pubnub_get_message_counts(pubnub_t* pb, char const*channel, int* o_count);
-
+int pubnub_get_message_counts(pubnub_t* pb, char const* channel, int* o_count);
 
 #endif /* !defined INC_PUBNUB_ADVANCED_HISTORY */

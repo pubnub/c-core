@@ -1,11 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_HELPER
-#define	INC_PUBNUB_HELPER
+    #define INC_PUBNUB_HELPER
 
-
-#include "pubnub_api_types.h"
-#include "pbpal.h"
-
+    #include "pbpal.h"
+    #include "pubnub_api_types.h"
 
 /** @file pubnub_helper.h 
 
@@ -13,7 +11,6 @@
     You don't need this to work with Pubnub client, but they may come
     in handy.
 */
-
 
 /** Possible (known) publish results (outcomes) in the description
     received from Pubnub.
@@ -44,7 +41,7 @@ enum pubnub_publish_res {
 /** Parses the given publish @p result. You usually obtain this with
     pubnub_last_publish_result().
  */
-enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
+enum pubnub_publish_res pubnub_parse_publish_result(char const* result);
 
 /** Returns a string (in English) describing a Pubnub result enum value 
     @p e.
@@ -54,15 +51,16 @@ char const* pubnub_res_2_string(enum pubnub_res e);
 /** Returns a string literal describing enum value @p e
     Used for debugging.
  */
-char const* pbpal_resolv_n_connect_res_2_string(enum pbpal_resolv_n_connect_result e);
+char const*
+pbpal_resolv_n_connect_res_2_string(enum pbpal_resolv_n_connect_result e);
 
-#if PUBNUB_USE_SUBSCRIBE_V2
-#include "pubnub_subscribe_v2_message.h"
+    #if PUBNUB_USE_SUBSCRIBE_V2
+        #include "pubnub_subscribe_v2_message.h"
 /** Returns a string literal describing enum value @p type
     Used when looking at pubnub V2 message received by pubnub_subscribe_v2().
  */
 char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
-#endif
+    #endif
 
 /** Returns whether retrying a Pubnub transaction makes sense.  This
     is mostly interesting for publishing, but is useful in general. It
