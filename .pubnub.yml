@@ -1,8 +1,19 @@
 name: c-core
 schema: 1
-version: "4.1.0"
+version: "4.2.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-02-07
+    version: v4.2.0
+    changes:
+      - type: feature
+        text: "Updated QT to version `6.*`."
+      - type: bug
+        text: "Fixed not building QT module."
+      - type: bug
+        text: "Align QT module with current SDK state."
+      - type: improvement
+        text: "Removed some states, classes and structs that aren't currently used."
   - date: 2023-01-16
     version: v4.1.0
     changes:
@@ -697,7 +708,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -763,7 +774,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -829,7 +840,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -891,7 +902,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -952,7 +963,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -1008,7 +1019,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
@@ -1061,7 +1072,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.0
             requires:
               -
                 name: "miniz"
