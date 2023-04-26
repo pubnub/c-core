@@ -17,7 +17,7 @@
 */
 
 #include <openssl/sha.h>
-
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 /** The SHA-256 "context". It's an "opaque" value type - that is, it's
     to be used as data, not a pointer, but "don't look inside".
 */
@@ -53,6 +53,7 @@
     @return 0: success, -1: error
 */
 #define pbsha256_final(x, d) SHA256_Final((d), (x))
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 
 /** This helper macro will calculate the SHA-256 on the message
     in @p m, having the length @p l and store it in @p d.
@@ -69,11 +70,20 @@
         EVP_MD_CTX_destroy(ctx);                            \
     } while(0);
 #else
+
+
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 #define pbsha256_digest(m, l, d) do { SHA256_CTX M_ctx_;   \
         SHA256_Init(&M_ctx_);                              \
         SHA256_Update(&M_ctx_, (m), (l));                  \
         SHA256_Final((d), &M_ctx);                         \
     } while (0)
+#else
+#define pbsha256_digest(m, l, d) do                        \
+    {                                                      \
+        SHA256((unsigned char *)m, l, d);                  \
+    } while (0)
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 #endif
 
 /** This helper macro will calculate the SHA-256 on the message in @p str,
@@ -92,11 +102,18 @@
         EVP_MD_CTX_destroy(ctx);                            \
     } while(0);
 #else
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 #define pbsha256_digest_str(str, d) do { SHA256_CTX M_ctx_;   \
         SHA256_Init(&M_ctx_);                                 \
         SHA256_Update(&M_ctx_, (str), strlen(str));           \
         SHA256_Final((d), &M_ctx_);                           \
     } while (0)
+#else
+#define pbsha256_digest_str(str, d) do                        \
+    {                                                         \
+        SHA256((unsigned char *)str, strlen(str), d);     \
+    } while (0)
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 #endif
 
 #endif /* !defined INC_PBSHA256 */
