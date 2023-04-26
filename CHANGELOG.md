@@ -1,3 +1,9 @@
+## v4.2.1
+April 26 2023
+
+#### Modified
+- Conditionally use `sha256` when build is linked with OpenSSL 3+ version.
+
 ## v4.2.0
 February 07 2023
 
