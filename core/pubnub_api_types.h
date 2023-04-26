@@ -225,9 +225,6 @@ enum pubnub_trans {
     /** Objects API transaction Returns the space memberships of the user specified with user_id.
       */
     PBTT_GET_MEMBERSHIPS,
-    /** Objects API transaction Adds the users space memberships specified with user_id.
-      */
-    PBTT_JOIN_SPACES,
     /** Objects API transaction Updates the users space memberships specified with user_id.
       */
     PBTT_SET_MEMBERSHIPS,
@@ -246,6 +243,7 @@ enum pubnub_trans {
     /** Objects API transaction Removes the list of members of the space specified with space_id.
       */
     PBTT_REMOVE_MEMBERS,
+
 #endif /* PUBNUB_USE_OBJECTS_API */
 #if PUBNUB_USE_ACTIONS_API
     /** Actions API transaction Adds the action to the message.

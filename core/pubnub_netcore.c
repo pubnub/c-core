@@ -306,7 +306,6 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
     , pbcc_parse_objects_api_response /* PBTT_GET_SPACE */
     , pbcc_parse_objects_api_response /* PBTT_DELETE_SPACE */
     , pbcc_parse_objects_api_response /* PBTT_GET_MEMBERSHIPS */
-    , pbcc_parse_objects_api_response /* PBTT_JOIN_SPACES */
     , pbcc_parse_objects_api_response /* PBTT_UPDATE_MEMBERSHIPS */
     , pbcc_parse_objects_api_response /* PBTT_LEAVE_SPACES */
     , pbcc_parse_objects_api_response /* PBTT_GET_MEMBERS */

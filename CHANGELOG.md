@@ -1,3 +1,26 @@
+## v4.2.0
+February 07 2023
+
+#### Added
+- Updated QT to version `6.*`.
+
+#### Fixed
+- Fixed not building QT module.
+- Align QT module with current SDK state.
+
+#### Modified
+- Removed some states, classes and structs that aren't currently used.
+
+## v4.1.0
+January 16 2023
+
+#### Added
+- Added pubnub_set_state_ex to support heartbeat.
+
+#### Fixed
+- Removed state param from subscribe request.
+- Added state param to hearbeat request.
+
 ## v4.0.6
 December 14 2022
 

@@ -1,7 +1,7 @@
 # Pubnub C-core for Qt
 
 This is a part of C-core for the Qt. It is tested to work only with
-Qt5. It builds on Qt4, too, but there are some run-time issues, i.e.
+Qt5 and Qt6. It builds on Qt4, too, but there are some run-time issues, i.e.
 publishing some JSON object fails.
 
 Unlike the C++ wrapper, which wraps a "full featured" C-core
@@ -21,8 +21,8 @@ To build the samples, run `qmake pubnub.pro` or `qmake
 pubnub_gui.pro`, and then `make` or, on Windows if using MSVC, `nmake`
 or `jom`.
 
-If you have both Qt5 and Qt4 on your machine, be sure to use
-the Qt5 tools, for which purpose you may utilize the `qtchooser`
+If you have many Qt versions on your machine, be sure to use
+the Qt5 or Qt6 (whereas QT6 is unix tested only) tools, for which purpose you may utilize the `qtchooser`
 app. For example, do:
 
 	qtchooser -run-tool=qmake -qt=5 pubnub.pro

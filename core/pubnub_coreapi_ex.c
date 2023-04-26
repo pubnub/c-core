@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pbcc_set_state.h"
+#include "core/pubnub_api_types.h"
+#include "core/pubnub_coreapi.h"
 #include "pubnub_internal.h"
 
 #include "pubnub_ccore.h"
@@ -241,3 +244,60 @@ enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
     pubnub_mutex_unlock(pb->monitor);
     return rslt;
 }
+
+struct pubnub_set_state_options pubnub_set_state_defopts(void)
+{
+    struct pubnub_set_state_options options;
+
+    options.user_id = NULL;
+    options.channel_group = NULL;
+    options.heartbeat = false;
+
+    return options;
+}
+
+static enum pubnub_res heartbeat_with_state(pubnub_t *pb,
+        const char *channel,
+        const char *state,
+        struct pubnub_set_state_options opts)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+
+    rslt = pbauto_heartbeat_prepare_channels_and_ch_groups(pb, &channel, &opts.channel_group);
+    if (rslt != PNR_OK) {
+        return rslt;
+    }
+    
+    pbcc_adjust_state(&pb->core, channel, opts.channel_group, state);
+
+    rslt = pbcc_heartbeat_prep(&pb->core, channel, opts.channel_group);
+    if (PNR_STARTED == rslt) {
+        pb->trans            = PBTT_HEARTBEAT;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+   }
+
+    pubnub_mutex_unlock(pb->monitor);
+    return rslt;
+}
+
+
+enum pubnub_res pubnub_set_state_ex(pubnub_t *p,
+        const char *channel,
+        const char *state,
+        struct pubnub_set_state_options opts)
+{
+    return opts.heartbeat 
+        ? heartbeat_with_state(p, channel, state, opts)
+        : pubnub_set_state(p, channel, opts.channel_group, opts.user_id, state);
+}
+
