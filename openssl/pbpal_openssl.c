@@ -26,10 +26,6 @@
 #define HTTP_PORT 80
 
 
-/** Locks used by OpenSSL */
-static pbpal_mutex_t* m_locks;
-
-
 PUBNUB_STATIC_ASSERT(PUBNUB_TIMERS_API, need_TIMERS_API);
 
 
@@ -43,6 +39,10 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
 }
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+/** Locks used by OpenSSL */
+static pbpal_mutex_t* m_locks;
+
 static void locking_callback(int mode, int type, const char* file, int line)
 {
     PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n",
