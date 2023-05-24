@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.2.1"
+version: "4.2.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-05-24
+    version: v4.2.2
+    changes:
+      - type: bug
+        text: "Conditionally use of using newest openssl API Ipv4 parsing is needed for working with proxy. Include object file with that function for proxy builds."
+      - type: improvement
+        text: "Use newest openssl API."
   - date: 2023-04-26
     version: v4.2.1
     changes:
@@ -713,7 +720,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -779,7 +786,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -845,7 +852,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -907,7 +914,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -968,7 +975,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -1024,7 +1031,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"
@@ -1077,7 +1084,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.2.2
             requires:
               -
                 name: "miniz"

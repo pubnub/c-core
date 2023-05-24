@@ -21,10 +21,6 @@
 #define HTTP_PORT 80
 
 
-/** Locks used by OpenSSL */
-static pbpal_mutex_t* m_locks;
-
-
 PUBNUB_STATIC_ASSERT(PUBNUB_TIMERS_API, need_TIMERS_API);
 
 
@@ -37,8 +33,11 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
     return 0;
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 
-#if OPENSSL_API_COMPAT < 0x10100000L
+/** Locks used by OpenSSL */
+static pbpal_mutex_t* m_locks;
+
 static void locking_callback(int mode, int type, const char* file, int line)
 {
     PUBNUB_LOG_TRACE("thread=%4lu mode=%s lock=%s %s:%d\n",
@@ -54,7 +53,6 @@ static void locking_callback(int mode, int type, const char* file, int line)
         pbpal_mutex_unlock(m_locks[type]);
     }
 }
-#endif
 
 
 #if !defined(_WIN32) && (OPENSSL_API_COMPAT < 0x10000000L)
@@ -75,15 +73,14 @@ static int locks_setup(void)
     for (i = 0; i < CRYPTO_num_locks(); ++i) {
         pbpal_mutex_init_std(m_locks[i]);
     }
-#if !defined(_WIN32) && (OPENSSL_API_COMPAT < 0x10000000L)
+    #if !defined(_WIN32) && (OPENSSL_API_COMPAT < 0x10000000L)
     // On Windows, OpenSSL has a suitable default
     CRYPTO_set_id_callback(thread_id);
-#endif
-#if OPENSSL_API_COMPAT < 0x10100000L
+    #endif
     CRYPTO_set_locking_callback(locking_callback);
-#endif
     return 0;
 }
+#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
 
 
 static void buf_setup(pubnub_t* pb)
@@ -100,6 +97,8 @@ static int pal_init(void)
         #if !defined(__UWP__) && (OPENSSL_VERSION_MAJOR < 3)
         ERR_load_BIO_strings(); //Per OpenSSL 3.0 this is deprecated. Allowing this stmt for non-UWP as it exists.
         #endif
+
+        #if OPENSSL_VERSION_NUMBER < 0x10100000L
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
@@ -111,6 +110,8 @@ static int pal_init(void)
         if (locks_setup()) {
             return -1;
         }
+        #endif // OPENSSL_VERSION_NUMBER >= 0x10100000L
+
         if (0 != socket_platform_init()) {
             return -1;
         }

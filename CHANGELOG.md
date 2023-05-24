@@ -1,3 +1,12 @@
+## v4.2.2
+May 24 2023
+
+#### Fixed
+- Conditionally use of using newest openssl API Ipv4 parsing is needed for working with proxy. Include object file with that function for proxy builds.
+
+#### Modified
+- Use newest openssl API.
+
 ## v4.2.1
 April 26 2023
 

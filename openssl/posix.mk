@@ -152,6 +152,9 @@ endif
 ifeq ($(USE_DNS_SERVERS), 1)
 CALLBACK_INTF_SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c ../lib/pubnub_parse_ipv4_addr.c
 CALLBACK_INTF_OBJFILES += pubnub_dns_servers.o pubnub_dns_system_servers.o pubnub_parse_ipv4_addr.o
+else ifeq ($(USE_PROXY), 1)
+CALLBACK_INTF_SOURCEFILES += ../lib/pubnub_parse_ipv4_addr.c
+CALLBACK_INTF_OBJFILES += pubnub_parse_ipv4_addr.o
 endif
 
 ifeq ($(USE_IPV6), 1)
