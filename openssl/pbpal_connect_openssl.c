@@ -242,7 +242,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     #if OPENSSL_VERSION_NUMBER < 0x30000000L
     cert = SSL_get_peer_certificate(ssl);
     #else
-    cert = SSL_get0_peer_certificate(ssl);
+    cert = SSL_get1_peer_certificate(ssl);
     #endif
     if (cert != NULL) {
         rslt = SSL_get_verify_result(ssl);
