@@ -17,11 +17,6 @@
 #include <string.h>
 
 #include <openssl/opensslv.h>
-#include <openssl/crypto.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-#include <openssl/ssl.h>
-#endif
 
 #define HTTP_PORT 80
 
