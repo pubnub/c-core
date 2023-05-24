@@ -167,6 +167,8 @@ endif
 
 ifeq ($(USE_DNS_SERVERS), 1)
 CALLBACK_INTF_SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c ../lib/pubnub_parse_ipv4_addr.c
+else ifeq ($(USE_PROXY), 1)
+CALLBACK_INTF_SOURCEFILES += ../lib/pubnub_parse_ipv4_addr.c
 endif
 
 ifeq ($(USE_IPV6), 1)
