@@ -115,12 +115,6 @@ static int pal_init(void)
         if (locks_setup()) {
             return -1;
         }
-        #else // OPENSSL_VERSION_NUMBER >= 0x10100000L
-        OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
-        OPENSSL_init_crypto(
-                OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS,
-                NULL
-        );
         #endif // OPENSSL_VERSION_NUMBER >= 0x10100000L
 
         if (0 != socket_platform_init()) {
