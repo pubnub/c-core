@@ -19,9 +19,10 @@
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 
-// TODO: find good definition
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
+#endif
 
 #define HTTP_PORT 80
 
