@@ -16,9 +16,11 @@ extern "C" {
 void pubnub_qt_gui_sample::resetPubnub()
 {
     d_pb_publish.reset(new pubnub_qt(d_pubkey->text(), d_keysub->text()));
+    d_pb_publish->set_uuid(d_userId->text());
     connect(d_pb_publish.data(), SIGNAL(outcome(pubnub_res)), this, SLOT(onPublish(pubnub_res)));
 
     d_pb_subscribe.reset(new pubnub_qt(d_pubkey->text(), d_keysub->text()));
+    d_pb_subscribe->set_uuid(d_userId->text());
     connect(d_pb_subscribe.data(), SIGNAL(outcome(pubnub_res)), this, SLOT(onSubscribe(pubnub_res)));
     d_pb_subscribe->subscribe(d_channel->text());
 }
@@ -32,6 +34,9 @@ pubnub_qt_gui_sample::pubnub_qt_gui_sample()
     connect(d_keysub, SIGNAL(returnPressed()), this, SLOT(keysubChanged()));
     d_channel = new QLineEdit("hello_world");
     connect(d_channel, SIGNAL(returnPressed()), this, SLOT(channelChanged()));
+
+    d_userId = new QLineEdit("user_id");
+    connect(d_userId, SIGNAL(returnPressed()), this, SLOT(userIdChanged()));
 
     d_message = new QLineEdit("{\"text\": \"Pubnub-Qt\"}");
     connect(d_message, SIGNAL(returnPressed()), this, SLOT(messageChanged()));
@@ -105,6 +110,11 @@ void pubnub_qt_gui_sample::keysubChanged()
     resetPubnub();
 }
 
+void pubnub_qt_gui_sample::userIdChanged()
+{
+    qDebug() << "userIdChanged()";
+    resetPubnub();
+}
 
 void pubnub_qt_gui_sample::channelChanged()
 {

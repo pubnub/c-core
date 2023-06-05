@@ -23,6 +23,7 @@ private slots:
 
     void pubkeyChanged();
     void keysubChanged();;
+    void userIdChanged();
     void messageChanged();
     void channelChanged();
             
@@ -30,6 +31,7 @@ private:
     QLineEdit *d_channel;
     QLineEdit *d_pubkey;
     QLineEdit *d_keysub;
+    QLineEdit *d_userId;
 
     QLineEdit *d_message;
     QTextEdit *d_console;
