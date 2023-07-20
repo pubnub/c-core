@@ -36,8 +36,6 @@ AfterEach(subscribe_v2) {
     pubnub_cleanup_mocks(pbp);
 }
 
-
-
 void assert_char_mem_block(struct pubnub_char_mem_block block, char const* expected) {
     char* str = malloc(block.size + 1);
     memcpy((void*)str, block.ptr, block.size);
