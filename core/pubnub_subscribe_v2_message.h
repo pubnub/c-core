@@ -50,6 +50,8 @@ struct pubnub_v2_message {
     struct pubnub_char_mem_block metadata;
     /** Indicates the message type: a signal, published, or something else */ 
     enum pubnub_message_type message_type;
+    /** The message information about publisher */
+    struct pubnub_char_mem_block publisher;
 };
 
 

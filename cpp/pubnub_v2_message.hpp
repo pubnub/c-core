@@ -26,6 +26,7 @@ public:
     } 
     std::string payload() const { return std::string(d_.payload.ptr, d_.payload.size); } 
     std::string metadata() const { return std::string(d_.metadata.ptr, d_.metadata.size); } 
+    std::string publisher() const { return std::string(d_.publisher.ptr, d_.publisher.size); }
     pubnub_message_type message_type() const { return d_.message_type; }
     /** Message structure is considered empty if there is no timetoken info(whose
         existence is obligatory for any valid v2 message)

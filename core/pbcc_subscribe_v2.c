@@ -92,6 +92,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
     }
 #endif
     PUBNUB_LOG_DEBUG("pbcc_subscribe_v2_prep. REQUEST =%s\n", p->http_buf);
+
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -310,6 +311,18 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
         rslt.metadata.ptr  = (char*)found.start;
         rslt.metadata.size = found.end - found.start;
     }
+
+    if (jonmpOK == pbjson_get_object_value(&el, "i", &found)) {
+        rslt.publisher.ptr  = (char*)found.start + 1;
+        rslt.publisher.size = found.end - found.start - 2;
+    }
+
+    if (jonmpOK == pbjson_get_object_value(&el, "f", &found)) {
+            rslt.flags = strtol(found.start, NULL, 0);
+    }
+
+    rslt.region = p->region;
+
 
     return rslt;
 }
