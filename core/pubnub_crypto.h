@@ -79,6 +79,20 @@ struct pubnub_encrypted_data {
     struct pubnub_char_mem_block metadata;
 };
 
+/** Cryptor header version 1.
+    
+    This is the struct containing the information about the 
+    cryptor header version 1. It contains the identifier of the 
+    algorithm and the encrypted data length.
+ */
+struct pubnub_cryptor_header_v1 {
+    /** Cryptor algorithm identifier. */
+    uint8_t identifier[4];
+
+    /** Encrypted data length. */
+    uint32_t data_length;
+};
+
 /** Sets @p secret_key to be used with the Pubnub context @p p.
 
     The @p secret_key is kept by pointer, so, user needs to make sure
