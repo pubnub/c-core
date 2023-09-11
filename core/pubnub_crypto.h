@@ -18,6 +18,66 @@
 
 */
 
+/** Cryptor algorithm type.
+    
+    This is the struct containing the information about the 
+    cryptor algorithm type. It contains the identifier of the 
+    algorithm and the function pointers to the algorithm implementation.
+ */
+typedef struct pubnub_cryptor_t {
+    /** Identifier of the algorithm.
+        
+        Identifier will be encoded into crypto data header and passed along 
+        with encrypted data.
+
+        @note Identifier **must** be 4 bytes long.
+     */
+    uint8_t identifier[4];
+
+    // TODO: return type - int or enum?
+    /** Function pointer to the encrypt function.
+        
+        @param cryptor Pointer to the cryptor structure.
+        @param msg Memory block (pointer and size) of the data to encrypt.
+        @param base64_str String (allocated by the user) to write encrypted and
+        base64 encoded string.
+        @param n The size of the string.
+
+        @return 0: OK, -1: error
+      */
+    int (*encrypt)(struct pubnub_cryptor_t const *cryptor, pubnub_bymebl_t msg, char *base64_str, size_t n);
+
+    // TODO: return type - int or enum?
+    /** Function pointer to the decrypt function.
+        
+        @param cryptor Pointer to the cryptor structure.
+        @param base64_str String to Base64 decode and decrypt.
+        @param data User allocated memory block to write the decrypted contents to.
+
+        @return 0: OK, -1: error
+     */
+    int (*decrypt)(struct pubnub_cryptor_t const *cryptor, char const *base64_str, size_t n, pubnub_bymebl_t *data);
+} pubnub_cryptor;
+
+/**
+   Encrypted data structure.
+ */
+struct pubnub_encrypted_data {
+    /** Encrypted data. */
+    struct pubnub_char_mem_block data;
+
+    /** Metadata. 
+        
+        Cryptor may provide here any information which will be usefull when data 
+        should be decrypted.
+
+        For example `metadata` may contain:
+        - initialization vector
+        - cipher key Identifier
+        - encrypted *data* length
+     */
+    struct pubnub_char_mem_block metadata;
+};
 
 /** Sets @p secret_key to be used with the Pubnub context @p p.
 
