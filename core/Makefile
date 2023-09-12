@@ -1,7 +1,7 @@
 PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c
 # TODO: move coreapi_ex to new module
 
-all: pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
+all: pubnub_crypto_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
 
 OS := $(shell uname)
 # Coverage doesn't seem to work on MacOS for some reason, but, since
@@ -78,11 +78,22 @@ GRANT_TOKEN_SOURCEFILES +=  ../lib/cbor/cborparser.c ../lib/cbor/cborparser_dup_
 
 pubnub_grant_token_api_unittest: $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) pubnub_grant_token_api_unit_tests.c
 	gcc -o pubnub_grant_token_api_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_USE_GRANT_TOKEN_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) test/pubnub_test_mocks.c pubnub_grant_token_api_unit_tests.c -lcgreen -lm
-#	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
+#	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_grant_token_api_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_grant_token_api_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 
+CRYPTO_INCLUDES += -I ../openssl/. 
+CRYPTO_LIBS += -lssl -lcrypto
+CRYPTO_SOURCEFILES += pubnub_crypto.c ../openssl/pbaes256.c
+
+pubnub_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pubnub_crypto_unit_tests.c
+	gcc -o pubnub_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c -lcgreen -lm
+#	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_crypto_unit_tests.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pubnub_crypto_unit_test.so
+	#$(GCOVR) -r . --html --html-details -o coverage.html
+
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
 	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf
+
