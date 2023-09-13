@@ -2,149 +2,9 @@
 #if !defined INC_PUBNUB_CRYPTO
 #define	INC_PUBNUB_CRYPTO
 
-
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_memory_block.h"
-
-
-/** @file pubnub_crypto.h 
-
-    This is the "Crypto" API of the Pubnub client library.  It enables
-    encryptyng and decrypting messages being sent/received (published/
-    subscribed) to/from Pubnub.
-
-    This is independent from using SSL/TLS - if supported on a
-    platform, one can encrypt/decrypt with or without using SSL/TLS.
-
-*/
-
-/**
-   Encrypted data structure.
- */
-struct pubnub_encrypted_data {
-    /** Encrypted data. */
-    struct pubnub_char_mem_block data;
-
-    /** Metadata. 
-        
-        Cryptor may provide here any information which will be usefull when data 
-        should be decrypted.
-
-        For example `metadata` may contain:
-        - initialization vector
-        - cipher key Identifier
-        - encrypted *data* length
-     */
-    struct pubnub_char_mem_block metadata;
-};
-
-
-/** Cryptor header version 1.
-    
-    This is the struct containing the information about the 
-    cryptor header version 1. It contains the identifier of the 
-    algorithm and the encrypted data length.
- */
-struct pubnub_cryptor_header_v1 {
-    /** Cryptor algorithm identifier. */
-    uint8_t identifier[4];
-
-    /** Encrypted data length. */
-    uint32_t data_length;
-};
-
-
-/** Crypto algorithm type.
-    
-    This is the struct containing the information about the 
-    cryptor algorithm type. It contains the identifier of the 
-    algorithm and the function pointers to the algorithm implementation.
- */
-typedef struct pubnub_crypto_algorithm_t {
-    /** Identifier of the algorithm.
-        
-        Identifier will be encoded into crypto data header and passed along 
-        with encrypted data.
-
-        @note Identifier **must** be 4 bytes long.
-     */
-    uint8_t identifier[4];
-
-    // TODO: return type - int or enum?
-    /** Function pointer to the encrypt function.
-        
-        @param cryptor Pointer to the cryptor structure.
-        @param msg Memory block (pointer and size) of the data to encrypt.
-        @param base64_str String (allocated by the user) to write encrypted and
-                base64 encoded string.
-        @param n The size of the string.
-
-        @return 0: OK, -1: error
-      */
-    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data msg, char *base64_str, size_t n);
-
-    // TODO: return type - int or enum?
-    /** Function pointer to the decrypt function.
-        
-        @param cryptor Pointer to the cryptor structure.
-        @param base64_str String to Base64 decode and decrypt.
-        @param data User allocated memory block to write the decrypted contents to.
-
-        @return 0: OK, -1: error
-     */
-    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, char const *base64_str, size_t n, struct pubnub_encrypted_data *data);
-
-    /** Pointer to the user data needed for the algorithm. */
-    void *user_data;
-
-} pubnub_crypto_algorithm_t;
-
-
-/** Crypto algorithm wrapper
-    
-    This is the struct containing the information about the 
-    abstract cryptor algorithm. It wraps the algorithm implementation
-    and provides the interface to the Pubnub client library.
- */
-typedef struct pubnub_cryptor_t {
-    /** Cryptor algorithm for data encription / decryption. */
-    struct pubnub_crypto_algorithm_t algorithm;
-
-} pubnub_cryptor;
-
-
-/** Retrieves the cryptor algorithm identifier.
-    
-    @param cryptor Pointer to the cryptor structure.
-
-    @return Pointer to the cryptor algorithm identifier.
- */
-uint8_t const *pubnub_cryptor_identifier(pubnub_cryptor const *cryptor);
-
-
-// TODO: return type - int or enum?
-/** Encrypt provided data.
-
-    @param cryptor Pointer to the cryptor structure.
-    @param msg The memory block (pointer and size) of the data to encrypt.
-    @param base64_block The char block (pointer and size) to write encrypted and
-            base64 encoded string.
-
-    @return 0: OK, -1: error
- */
-int pubnub_cryptor_encrypt(pubnub_cryptor const *cryptor, pubnub_bymebl_t const *msg, pubnub_chamebl_t base64_block);
-
-
-// TODO: return type - int or enum?
-/** Decrypt provided data.
-
-    @param cryptor Pointer to the cryptor structure.
-    @param base64_block The char block (pointer and size) to Base64 decode and decrypt.
-    @param data User allocated memory block to write the decrypted contents to.
-
-    @return 0: OK, -1: error
- */
-int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const *base64_block, pubnub_bymebl_t *data);
+#include "core/pbcc_crypto.h"
 
 
 /** Cryptor module for data processing. */
@@ -181,6 +41,15 @@ int pubnub_crypto_module_encrypt(pubnub_crypto_module const *module, pubnub_byme
     @return 0: OK, -1: error
  */
 int pubnub_crypto_module_decrypt(pubnub_crypto_module const *module, pubnub_chamebl_t const *base64_block, pubnub_bymebl_t *data);
+
+/**
+    Set cipher key to be used with the Pubnub context 
+
+    @param p The Pubnub context to set cipher key for.
+
+    @return PNR_OK on success, otherwise an error code.
+ */
+enum pubnub_res pubnub_set_cipher_key(pubnub_t *p, char const *cipher_key);
 
 
 /** Sets @p secret_key to be used with the Pubnub context @p p.
