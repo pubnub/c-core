@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
+//#ifdef PUBNUB_CRYPTO_API
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
 
@@ -10,7 +11,7 @@
     and some abstract functions that mey be need to be implemented by the user.
 */
 
-#include "core/pubnub_memory_block.h"
+#include "pubnub_memory_block.h"
 
 /** @file pubnub_crypto.h 
 
@@ -86,7 +87,7 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return 0: OK, -1: error
       */
-    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data msg, char *base64_str, size_t n);
+    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *msg, const char *base64_str, size_t n);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
@@ -95,9 +96,9 @@ typedef struct pubnub_crypto_algorithm_t {
         @param base64_str String to Base64 decode and decrypt.
         @param data User allocated memory block to write the decrypted contents to.
 
-        @return 0: OK, -1: error
+        @return >=0: OK (size of the data), -1: error
      */
-    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, char const *base64_str, size_t n, struct pubnub_encrypted_data *data);
+    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, char const *base64_str, struct pubnub_encrypted_data *data);
 
     /** Pointer to the user data needed for the algorithm. */
     void *user_data;
@@ -152,9 +153,6 @@ int pubnub_cryptor_encrypt(pubnub_cryptor const *cryptor, pubnub_bymebl_t const 
 int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const *base64_block, pubnub_bymebl_t *data);
 
 
-
-#define PUBNUB_AES_IDENTIFIER "CRIV"
-
 /**
     Prepare the AES CBC algorithm for use.
     It is intended to be used with pubnub crypto module.
@@ -166,3 +164,4 @@ int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const
 struct pubnub_crypto_algorithm_t *pubnub_aes_cbc_init(const char* cipher_key);
 
 #endif /* PBCC_CRYPTO_H */
+//#endif /* PUBNUB_CRYPTO_API */
