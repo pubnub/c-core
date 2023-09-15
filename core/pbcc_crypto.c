@@ -13,15 +13,14 @@
 
 static int aes_encrypt(
         struct pubnub_crypto_algorithm_t const *algo,
-        struct pubnub_encrypted_data *msg,
-        char *base64_str,
-        size_t n
+        struct pubnub_encrypted_data *result,
+        pubnub_bymebl_t to_encrypt
 );
 
 static int aes_decrypt(
         struct pubnub_crypto_algorithm_t const *algo,
-        char const *base64_str,
-        struct pubnub_encrypted_data *msg
+        pubnub_bymebl_t* result,
+        struct pubnub_encrypted_data to_decrypt
 );
 
 struct aes_context {
@@ -69,63 +68,62 @@ static void generate_init_vector(char *iv) {
 
 static int aes_encrypt(
         struct pubnub_crypto_algorithm_t const *algo,
-        struct pubnub_encrypted_data *msg,
-        char *base64_str,
-        size_t n
+        struct pubnub_encrypted_data *result,
+        pubnub_bymebl_t to_encrypt
 ) {
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
-    size_t enc_buffer_size = estimated_enc_buffer_size(n);
+    size_t enc_buffer_size = estimated_enc_buffer_size(to_encrypt.size);
 
-    msg->data.ptr = (uint8_t *)malloc(enc_buffer_size);
-    if (msg->data.ptr == NULL) {
+    result->data.ptr = (char *)malloc(enc_buffer_size);
+    if (result->data.ptr == NULL) {
         return -1;
     }
 
-    msg->data.size = enc_buffer_size;
+    result->data.size = enc_buffer_size;
 
     char iv[AES_IV_SIZE];
     generate_init_vector(iv);
 
     // TODO: use proper function to fulfill the data.ptr
     
-    msg->metadata.ptr = (char *)malloc(AES_IV_SIZE);
-    if (msg->metadata.ptr == NULL) {
-        free(msg->data.ptr);
+    result->metadata.ptr = (char *)malloc(AES_IV_SIZE);
+    if (result->metadata.ptr == NULL) {
+        free(result->data.ptr);
         return -1;
     }
 
     // TODO: resize the data.ptr to the actual size
 
-    memcpy(msg->metadata.ptr, iv, AES_IV_SIZE);
-    msg->metadata.size = AES_IV_SIZE;
+    memcpy(result->metadata.ptr, iv, AES_IV_SIZE);
+    result->metadata.size = AES_IV_SIZE;
 
     return 0;
 }
 
 static int aes_decrypt(
         struct pubnub_crypto_algorithm_t const *algo,
-        char const *base64_str,
-        struct pubnub_encrypted_data *msg
+        pubnub_bymebl_t* result,
+        struct pubnub_encrypted_data to_decrypt
 ) {
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
-    if (msg->metadata.ptr == NULL || msg->metadata.size != AES_IV_SIZE) {
+    if (to_decrypt.metadata.ptr == NULL || to_decrypt.metadata.size != AES_IV_SIZE) {
         return -1;
     }
 
-    size_t dec_buffer_size = estimated_dec_buffer_size(msg->data.size);
+    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size);
 
-    msg->data.ptr = (uint8_t *)malloc(dec_buffer_size);
-    if (msg->data.ptr == NULL) {
+    result->ptr = (uint8_t *)malloc(dec_buffer_size);
+    if (result->ptr == NULL) {
         return -1;
     }
 
-    msg->data.size = dec_buffer_size;
+    result->size = dec_buffer_size;
 
     // TODO: use proper function to fulfill base64_str
 
-    return strlen(base64_str);
+    return 0;
 }
 
 

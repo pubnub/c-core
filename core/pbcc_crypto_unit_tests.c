@@ -64,14 +64,19 @@ AfterEach(crypto) {
 
 void assert_that_cryptor_works_as_expected(pubnub_crypto_algorithm_t *sut) {
     for (size_t i = 0; i < AMOUNT_OF_TEST_CASES; i++) {
-        struct pubnub_encrypted_data* encrypted = NULL;
-        int enc_res = sut->encrypt(sut, encrypted, test_cases[i], strlen((char*)test_cases[i]));
+        pubnub_bymebl_t to_encrypt;
+        to_encrypt.ptr = test_cases[i];
+        to_encrypt.size = strlen((char*)test_cases[i]);
+
+        struct pubnub_encrypted_data *encrypted = NULL;
+
+        int enc_res = sut->encrypt(sut, encrypted, to_encrypt);
         assert_that(enc_res, is_not_equal_to(-1));
 
-        char* decrypted = NULL;
-        int dec_res = sut->decrypt(sut, decrypted, encrypted);
+        pubnub_bymebl_t* decrypted = NULL;
+        int dec_res = sut->decrypt(sut, decrypted, *encrypted);
         assert_that(dec_res, is_not_equal_to(-1));
-
+ 
         assert_that(decrypted, is_equal_to_string(test_cases[i]));
 
         free(encrypted);
@@ -103,8 +108,9 @@ Ensure(crypto, should_properly_legacy_encrypt_and_decrypt_data) {
 #if 0
 int main(int argc, char *argv[]) {
     TestSuite *suite = create_test_suite();
-    add_test_with_context(suite, token_parsing);
+    add_test_with_context(suite, crypto);
     run_test_suite(suite, create_text_reporter());
 }
 #endif // 0
 //#endif // PUBNUB_CRYPTO_API
+

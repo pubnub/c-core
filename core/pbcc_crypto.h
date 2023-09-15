@@ -29,7 +29,7 @@
  */
 struct pubnub_encrypted_data {
     /** Encrypted data. */
-    struct pubnub_byte_mem_block data;
+    struct pubnub_char_mem_block data;
 
     /** Metadata. 
         
@@ -87,7 +87,7 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return 0: OK, -1: error
       */
-    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *msg, char *base64_str, size_t n);
+    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
@@ -98,7 +98,7 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return >=0: OK (size of the data), -1: error
      */
-    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, char const *base64_str, struct pubnub_encrypted_data *data);
+    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, pubnub_bymebl_t* result, struct pubnub_encrypted_data to_decrypt);
 
     /** Pointer to the user data needed for the algorithm. */
     void *user_data;
