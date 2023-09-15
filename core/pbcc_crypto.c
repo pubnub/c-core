@@ -3,17 +3,18 @@
 //#ifdef PUBNUB_CRYPTO_API
 
 #include "pbcc_crypto.h"
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
-#define AES_IDENTIFIER "CRIV"
+#define AES_IDENTIFIER "ACHE"
 #define AES_BLOCK_SIZE 16
 #define AES_IV_SIZE 16
 
 static int aes_encrypt(
         struct pubnub_crypto_algorithm_t const *algo,
         struct pubnub_encrypted_data *msg,
-        const char *base64_str,
+        char *base64_str,
         size_t n
 );
 
@@ -27,7 +28,7 @@ struct aes_context {
     const char* cipher_key;
 };
 
-struct pubnub_crypto_algorithm_t *pubnub_aes_cbc_init(const char* cipher_key) {
+struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const char* cipher_key) {
     struct pubnub_crypto_algorithm_t *algo = 
         (struct pubnub_crypto_algorithm_t *)malloc(sizeof(struct pubnub_crypto_algorithm_t));
     if (algo == NULL) {
@@ -69,14 +70,14 @@ static void generate_init_vector(char *iv) {
 static int aes_encrypt(
         struct pubnub_crypto_algorithm_t const *algo,
         struct pubnub_encrypted_data *msg,
-        const char *base64_str,
+        char *base64_str,
         size_t n
 ) {
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
     size_t enc_buffer_size = estimated_enc_buffer_size(n);
 
-    msg->data.ptr = (char *)malloc(enc_buffer_size);
+    msg->data.ptr = (uint8_t *)malloc(enc_buffer_size);
     if (msg->data.ptr == NULL) {
         return -1;
     }
@@ -115,7 +116,7 @@ static int aes_decrypt(
 
     size_t dec_buffer_size = estimated_dec_buffer_size(msg->data.size);
 
-    msg->data.ptr = (char *)malloc(dec_buffer_size);
+    msg->data.ptr = (uint8_t *)malloc(dec_buffer_size);
     if (msg->data.ptr == NULL) {
         return -1;
     }

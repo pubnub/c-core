@@ -29,7 +29,7 @@
  */
 struct pubnub_encrypted_data {
     /** Encrypted data. */
-    struct pubnub_char_mem_block data;
+    struct pubnub_byte_mem_block data;
 
     /** Metadata. 
         
@@ -87,7 +87,7 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return 0: OK, -1: error
       */
-    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *msg, const char *base64_str, size_t n);
+    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *msg, char *base64_str, size_t n);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
@@ -161,7 +161,19 @@ int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const
 
     @return Pointer to the AES CBC algorithm structure.
 */
-struct pubnub_crypto_algorithm_t *pubnub_aes_cbc_init(const char* cipher_key);
+struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const char* cipher_key);
+
+
+/**
+    Prepare the legacy algorithm for use.
+    It is intended to be used with pubnub crypto module.
+
+    @param cipher_key The cipher key to use.
+
+    @return Pointer to the legacy algorithm structure.
+*/
+struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const char* cipher_key);
+
 
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */
