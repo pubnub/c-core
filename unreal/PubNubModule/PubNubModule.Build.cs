@@ -10,14 +10,15 @@ public class PubNubModule : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+        PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
-		PublicAdditionalLibraries.Add(Path.Combine(new string[] { ModuleDirectory, "..", "ThirdParty", "c-core", "posix", "pubnub_sync.a" }));
-        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "ThirdParty", "c-core" }));
-        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "ThirdParty", "c-core", "core" }));
-        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "ThirdParty", "c-core", "lib" }));
-        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "ThirdParty", "c-core", "posix" }));
+		PublicAdditionalLibraries.Add(Path.Combine(new string[] { ModuleDirectory, "..", "..", "posix", "pubnub_sync.a" }));
+        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", ".." }));
+        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "..", "core" }));
+        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "..", "lib" }));
+        PrivateIncludePaths.Add(Path.Combine(new string[] { ModuleDirectory, "..", "..", "posix" }));
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
