@@ -10,15 +10,16 @@ It is **not** fully functional plugin but can be easly integrated into your proj
 First of all you have to clone this repository inside the `<UnrealProject>/Source/` directory. 
 We recommend to place it inside the `ThirdParty` one (create it if no present). 
 
-After that you have to compile desired option of the SDK. You can simple do it as follow:
+After that you have to compile [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK.
+You can simple do it as follow:
 ```sh
 make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
 ```
 
-for example:
+For example:
 
 ```sh
-make -C posix -f posix.mk pubnub_sync.a
+make -C openssl -f posix.mk pubnub_sync.a
 ```
 
 After that you have to adjust `PubNubModule/PubNubModule.Build.cs` with selected options. 
@@ -28,9 +29,9 @@ Just change `option`, `architecture` and `implementation` with the same values y
 
 for example:
 ```cs 
-static string option = "posix";
-static string architecture = "posix";
-static string option = "sync";
+static string Option = "posix";
+static string Architecture = "posix";
+static string Implementation = "sync";
 ```
 
 In the end you have to import module into your project as follow:
