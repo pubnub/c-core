@@ -17,12 +17,12 @@ static string Implementation = "sync";
 
 public class PubNubModule : ModuleRules
 {
-	public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+    public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+        PrivateDependencyModuleNames.AddRange(new string[] {  });
 
         if (Option == "openssl") {
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
@@ -31,7 +31,7 @@ public class PubNubModule : ModuleRules
         var path = Path.Combine(new string[] { ModuleDirectory, "..", ".." });
         var extention = Architecture == "posix" ? "a" : "lib";
 
-		PublicAdditionalLibraries.Add(Path.Combine(path, Option, $"pubnub_{Implementation}.{extention}"));
+        PublicAdditionalLibraries.Add(Path.Combine(path, Option, $"pubnub_{Implementation}.{extention}"));
         PrivateIncludePaths.AddRange(
             new string[] {
                 path,
@@ -41,12 +41,12 @@ public class PubNubModule : ModuleRules
             }
         );
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        // Uncomment if you are using Slate UI
+        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-	}
+        // Uncomment if you are using online features
+        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }
