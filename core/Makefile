@@ -1,7 +1,7 @@
 PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c
 # TODO: move coreapi_ex to new module
 
-all: pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
+all: pubnub_subscribe_v2_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest 
 
 OS := $(shell uname)
 # Coverage doesn't seem to work on MacOS for some reason, but, since
@@ -80,6 +80,14 @@ pubnub_grant_token_api_unittest: $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILE
 	gcc -o pubnub_grant_token_api_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_USE_GRANT_TOKEN_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) test/pubnub_test_mocks.c pubnub_grant_token_api_unit_tests.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_grant_token_api_unit_test.so
+	#$(GCOVR) -r . --html --html-details -o coverage.html
+
+
+SUBSCRIBE_V2_SOURCEFILES += pubnub_subscribe_v2.c pbcc_subscribe_v2.c 
+
+pubnub_subscribe_v2_unittest: $(PROJECT_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) pubnub_subscribe_v2_unit_test.c
+	gcc -o pubnub_subscribe_v2_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_ORIGIN_SETTABLE=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_subscribe_v2_unit_test.c -lcgreen -lm 
+	$(CGREEN_RUNNER) ./pubnub_subscribe_v2_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 

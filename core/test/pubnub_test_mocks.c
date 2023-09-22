@@ -562,3 +562,35 @@ void pubnub_cleanup_mocks(pubnub_t* pbp)
     attest(pubnub_free(pbp), equals(0));
     free_m_msgs(m_string_msg_array);
 }
+
+
+void expect_have_dns_for_pubnub_origin_on_ctx(pubnub_t* pbp)
+{
+    expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
+    expect(pbpal_resolv_and_connect,
+           when(pb, equals(pbp)),
+           returns(pbpal_connect_success));
+    expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
+}
+
+
+void expect_outgoing_with_url_on_ctx(pubnub_t* pbp, char const* url)
+{
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str, when(s, streqs(url)), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send, when(data, streqs(" HTTP/1.1\r\nHost: ")), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str, when(s, streqs(PUBNUB_ORIGIN)), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str,
+           when(s,
+                streqs("\r\nUser-Agent: POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION
+                       "\r\n" ACCEPT_ENCODING "\r\n")),
+           returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
+}
+
+

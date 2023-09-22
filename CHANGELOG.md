@@ -1,3 +1,12 @@
+## v4.3.0
+July 24 2023
+
+#### Added
+- Add `publisher` field into `pubnub_v2_message`.
+
+#### Fixed
+- Fixed `flags` and `region` values that always equaled `0`.
+
 ## v4.2.2
 May 24 2023
 
