@@ -64,3 +64,15 @@ public class <UnrealProject>[Editor]Target : TargetRules
 ```
 
 Now generate the project files using your IDE and you're ready to go!
+
+## How to use it 
+
+Now you can import `PubNub.h` header into your files as follow:
+```cpp
+#include "PubNub.h" 
+```
+
+> Note that you don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
+
+Good luck with your project!
+
