@@ -22,6 +22,8 @@ For example:
 make -C openssl -f posix.mk pubnub_sync.a
 ```
 
+> :warning: if you choose `openssl` option make sure that your openssl library headers match the Unreal ones! :warning:
+
 After that you have to adjust `PubNubModule/PubNubModule.Build.cs` with selected options. 
 Just change `option`, `architecture` and `implementation` with the same values you used in compilation. 
 
@@ -74,6 +76,7 @@ Now you can import `PubNub.h` header into your files as follow:
 ```
 
 > Note that you don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
+
 
 Good luck with your project!
 
