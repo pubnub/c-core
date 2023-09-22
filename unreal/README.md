@@ -26,6 +26,13 @@ Just change `option`, `architecture` and `implementation` with the same values y
 
 > Note that this step is temporary until we enchant our build system that is quite obsolete and need maintenance. We are aware of it.
 
+for example:
+```cs 
+static string option = "posix";
+static string architecture = "posix";
+static string option = "sync";
+```
+
 In the end you have to import module in your your project as follow:
 
 - `<UnrealProject>.Target.cs` and `<UnrealProject>Editor.Target.cs`
