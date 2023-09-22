@@ -11,7 +11,7 @@ First of all you have to clone this repository inside the `<UnrealProject>/Sourc
 We recommend to place it inside the `ThirdParty` one (create it if no present). 
 
 After that you have to compile [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK.
-You can simple do it as follow:
+You can simple do it in the SDK directory as follow:
 ```sh
 make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
 ```
