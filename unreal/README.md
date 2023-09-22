@@ -30,7 +30,7 @@ Just change `option`, `architecture` and `implementation` with the same values y
 > Note that this step is temporary until we enchant our build system that is quite obsolete and need maintenance. We are aware of it.
 
 for example:
-```cs 
+```csharp 
 static string Option = "openssl";
 static string Architecture = "posix";
 static string Implementation = "sync";
@@ -39,7 +39,7 @@ static string Implementation = "sync";
 In the end you have to import module into your project as follow:
 
 - `<UnrealProject>.Target.cs` and `<UnrealProject>Editor.Target.cs`
-```cs
+```csharp
 public class <UnrealProject>[Editor]Target : TargetRules
 {
   public <UnrealProject>[Editor]Target (TargetInfo Target) : base(Target)
@@ -69,6 +69,18 @@ public class <UnrealProject>[Editor]Target : TargetRules
 Now generate the project files using your IDE and you're ready to go!
 
 ## How to use it 
+
+Make it discoverable in module that you want to use it in `<Module>.Build.cs` file:
+```csharp
+public class <Module> : ModuleRules
+{
+  public <Module>(ReadOnlyTargetRules Target) : base(Target)
+  {
+    //...
+    PrivateDependencyModuleNames.Add("PubNubModule");
+  }
+}
+```
 
 Now you can import `PubNub.h` header into your files as follow:
 ```cpp
