@@ -33,7 +33,7 @@ static string architecture = "posix";
 static string option = "sync";
 ```
 
-In the end you have to import module in your your project as follow:
+In the end you have to import module into your project as follow:
 
 - `<UnrealProject>.Target.cs` and `<UnrealProject>Editor.Target.cs`
 ```cs
