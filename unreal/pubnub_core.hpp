@@ -2,9 +2,7 @@
 #if !defined INC_PUBNUB_CORE
 #define INC_PUBNUB_CORE
 
-//#if PUBNUB_USE_EXTERN_C
 extern "C" {
-//#endif
 
 #include "../core/pubnub_api_types.h"
 #include "../core/pubnub_assert.h"
@@ -55,8 +53,6 @@ extern "C" {
 #endif
 #include "../core/pubnub_auto_heartbeat.h"
 
-//#if PUBNUB_USE_EXTERN_C
 }
-//#endif
 
 #endif // !defined INC_PUBNUB_CORE
