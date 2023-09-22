@@ -70,7 +70,7 @@ Now generate the project files using your IDE and you're ready to go!
 
 ## How to use it 
 
-Make it discoverable in module that you want to use it in `<Module>.Build.cs` file:
+Make it discoverable in module that you want to use it by `<Module>.Build.cs` file:
 ```csharp
 public class <Module> : ModuleRules
 {
