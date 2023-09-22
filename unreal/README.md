@@ -29,7 +29,7 @@ Just change `option`, `architecture` and `implementation` with the same values y
 
 for example:
 ```cs 
-static string Option = "posix";
+static string Option = "openssl";
 static string Architecture = "posix";
 static string Implementation = "sync";
 ```
