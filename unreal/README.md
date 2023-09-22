@@ -31,9 +31,9 @@ Just change `option`, `architecture` and `implementation` with the same values y
 
 for example:
 ```csharp 
-static string Option = "openssl";
-static string Architecture = "posix";
-static string Implementation = "sync";
+private readonly string Option = "openssl";
+private readonly string Architecture = "posix";
+private readonly string string Implementation = "sync";
 ```
 
 In the end you have to import module into your project as follow:
