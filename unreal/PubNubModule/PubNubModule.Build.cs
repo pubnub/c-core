@@ -3,20 +3,21 @@
 using System.IO;
 using UnrealBuildTool;
 
-// select desired module type
-
-// `posix`, `openssl`, `windows`
-static string Option = "posix";
-
-// `posix`, `windows`
-static string Architecture = "posix";
-
-// `sync`, `callback`
-static string Implementation = "sync";
 
 
 public class PubNubModule : ModuleRules
 {
+    // select desired module type
+    
+    // `posix`, `openssl`, `windows`
+    private readonly string Option = "posix";
+    
+    // `posix`, `windows`
+    private readonly string Architecture = "posix";
+    
+    // `sync`, `callback`
+    private readonly string Implementation = "sync";
+
     public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -32,7 +33,7 @@ public class PubNubModule : ModuleRules
         var extention = Architecture == "posix" ? "a" : "lib";
 
         PublicAdditionalLibraries.Add(Path.Combine(path, Option, $"pubnub_{Implementation}.{extention}"));
-        PrivateIncludePaths.AddRange(
+        PublicIncludePaths.AddRange(
             new string[] {
                 path,
                 Path.Combine(path, "core"),
@@ -40,6 +41,8 @@ public class PubNubModule : ModuleRules
                 Path.Combine(path, Option)
             }
         );
+
+        PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
 
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
