@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define AES_IDENTIFIER "ACHE"
+#define AES_IDENTIFIER "ACRH"
 #define AES_BLOCK_SIZE 16
 #define AES_IV_SIZE 16
 
