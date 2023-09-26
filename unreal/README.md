@@ -1,8 +1,11 @@
 # Unreal Engine integration
 
-Our can use the PubNub C-Core SDK with [Unreal Engine](https://www.unrealengine.com/en-US). It's **not** a fully functional plugin yet, but you can easily integrate it into your project as an Unreal module.
+## Overview
 
-## Setup
+Our C-core SDK can be used together with [Unreal Engine](https://www.unrealengine.com/en-US). It's **not** a fully functional plugin yet, 
+but it can easily be integrated into your project as a [Unreal Engine Module](https://docs.unrealengine.com/5.3/en-US/unreal-engine-modules/).
+
+## How to setup PubNub C-Core SDK as a Unreal Engine Module
 
 1. Clone this repository to the `<UnrealProject>/Source/` directory. We recommend that you place it inside the `ThirdParty` folder (create it, if necessary). 
 
@@ -18,7 +21,7 @@ Our can use the PubNub C-Core SDK with [Unreal Engine](https://www.unrealengine.
   make -C openssl -f posix.mk pubnub_sync.a
   ```
   
-  > :warning: If you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
+  > :warning: if you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
 
 3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `option`, `architecture` and `implementation` with the same values you used for compilation. 
 
@@ -64,7 +67,7 @@ Our can use the PubNub C-Core SDK with [Unreal Engine](https://www.unrealengine.
     }
     ```
 
-Now, generate the project files using your IDE and you're ready to go!
+Generate the project files using your IDE of choice and you are ready to go!
 
 ## Usage 
 
@@ -87,8 +90,7 @@ Now, generate the project files using your IDE and you're ready to go!
   #include "PubNub.h" 
   ```
 
-  > :warning: You don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
-
+  > Note that you don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
 
 Good luck with your project!
 
