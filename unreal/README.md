@@ -1,93 +1,93 @@
 # Unreal Engine integration
 
-## Overview
+Our can use the PubNub C-Core SDK with [Unreal Engine](https://www.unrealengine.com/en-US). It's **not** a fully functional plugin yet, but you can easily integrate it into your project as an Unreal module.
 
-Our SDK can be used together with [UnrealEngine](https://www.unrealengine.com/en-US). 
-It is **not** fully functional plugin but can be easly integrated into your project as a unreal module.
+## Setup
 
-## How to setup
+1. Clone this repository to the `<UnrealProject>/Source/` directory. We recommend that you place it inside the `ThirdParty` folder (create it, if necessary). 
 
-First of all you have to clone this repository inside the `<UnrealProject>/Source/` directory. 
-We recommend to place it inside the `ThirdParty` one (create it if no present). 
+2. Compile the [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK. You can do it in the SDK directory like so:
+  
+  ```sh
+  make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
+  ```
+  
+  For example:
+  
+  ```sh
+  make -C openssl -f posix.mk pubnub_sync.a
+  ```
+  
+  > :warning: If you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
 
-After that you have to compile [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK.
-You can simple do it in the SDK directory as follow:
-```sh
-make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
-```
+3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `option`, `architecture` and `implementation` with the same values you used for compilation. 
 
-For example:
+  > This is a temporary solution. We are aware that out build system needs some love.
 
-```sh
-make -C openssl -f posix.mk pubnub_sync.a
-```
+  For example:
+  
+  ```csharp 
+  private readonly string Option = "openssl";
+  private readonly string Architecture = "posix";
+  private readonly string string Implementation = "sync";
+  ```
 
-> :warning: if you choose `openssl` option make sure that your openssl library headers match the Unreal ones! :warning:
+4. Finally, import the module into your project as follows:
 
-After that you have to adjust `PubNubModule/PubNubModule.Build.cs` with selected options. 
-Just change `option`, `architecture` and `implementation` with the same values you used in compilation. 
-
-> Note that this step is temporary until we enchant our build system that is quite obsolete and need maintenance. We are aware of it.
-
-for example:
-```csharp 
-private readonly string Option = "openssl";
-private readonly string Architecture = "posix";
-private readonly string string Implementation = "sync";
-```
-
-In the end you have to import module into your project as follow:
-
-- `<UnrealProject>.Target.cs` and `<UnrealProject>Editor.Target.cs`
-```csharp
-public class <UnrealProject>[Editor]Target : TargetRules
-{
-  public <UnrealProject>[Editor]Target (TargetInfo Target) : base(Target)
-  {
-    //...
-    ExtraModuleNames.Add("PubNubModule");
-  }
-}
-```
-
-- `<UnrealProject>.uproject`
-```json5
-{
-  //...
-  "Modules": [
-    //...
+  - `<UnrealProject>.Target.cs` and `<UnrealProject>Editor.Target.cs`
+  
+    ```csharp
+    public class <UnrealProject>[Editor]Target : TargetRules
     {
-      "Name": "PubNubModule",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
+      public <UnrealProject>[Editor]Target (TargetInfo Target) : base(Target)
+      {
+        //...
+        ExtraModuleNames.Add("PubNubModule");
+      }
     }
-  ],
-  //...
-}
-```
+    ```
+  
+  - `<UnrealProject>.uproject`
+  
+    ```json5
+    {
+      //...
+      "Modules": [
+        //...
+        {
+          "Name": "PubNubModule",
+          "Type": "Runtime",
+          "LoadingPhase": "Default"
+        }
+      ],
+      //...
+    }
+    ```
 
-Now generate the project files using your IDE and you're ready to go!
+Now, generate the project files using your IDE and you're ready to go!
 
-## How to use it 
+## Usage 
 
-Make it discoverable in module that you want to use it by `<Module>.Build.cs` file:
-```csharp
-public class <Module> : ModuleRules
-{
-  public <Module>(ReadOnlyTargetRules Target) : base(Target)
+1. Make PubNub discoverable in the module you want to use PubNub in by modifying the `<Module>.Build.cs` file:
+
+  ```csharp
+  public class <Module> : ModuleRules
   {
-    //...
-    PrivateDependencyModuleNames.Add("PubNubModule");
+    public <Module>(ReadOnlyTargetRules Target) : base(Target)
+    {
+      //...
+      PrivateDependencyModuleNames.Add("PubNubModule");
+    }
   }
-}
-```
+  ```
 
-Now you can import `PubNub.h` header into your files as follow:
-```cpp
-#include "PubNub.h" 
-```
+2. Import the `PubNub.h` header into your files as follows:
+  
+  ```cpp
+  #include "PubNub.h" 
+  ```
 
-> Note that you don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
+  > :warning: You don't have to wrap it with `THIRD_PARTY_INCLUDES_START` and `THIRD_PARTY_INCLUDES_END` because we've done that for you.
 
 
 Good luck with your project!
