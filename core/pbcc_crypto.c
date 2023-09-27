@@ -3,6 +3,8 @@
 //#ifdef PUBNUB_CRYPTO_API
 
 #include "pbcc_crypto.h"
+#include "pbaes256.h"
+#include "pubnub_memory_block.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,10 +26,10 @@ static int aes_decrypt(
 );
 
 struct aes_context {
-    const char* cipher_key;
+    const uint8_t* cipher_key;
 };
 
-struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const char* cipher_key) {
+struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key) {
     struct pubnub_crypto_algorithm_t *algo = 
         (struct pubnub_crypto_algorithm_t *)malloc(sizeof(struct pubnub_crypto_algorithm_t));
     if (algo == NULL) {
@@ -60,7 +62,7 @@ static size_t estimated_dec_buffer_size(size_t n) {
     return n;
 }
 
-static void generate_init_vector(char *iv) {
+static void generate_init_vector(uint8_t *iv) {
     for (int i = 0; i < AES_IV_SIZE; i++) {
         iv[i] = rand() % 256;
     }
@@ -75,25 +77,28 @@ static int aes_encrypt(
 
     size_t enc_buffer_size = estimated_enc_buffer_size(to_encrypt.size);
 
-    result->data.ptr = (char *)malloc(enc_buffer_size);
+    result->data.ptr = (uint8_t *)malloc(enc_buffer_size);
     if (result->data.ptr == NULL) {
         return -1;
     }
 
     result->data.size = enc_buffer_size;
 
-    char iv[AES_IV_SIZE];
+    uint8_t iv[AES_IV_SIZE];
     generate_init_vector(iv);
 
-    // TODO: use proper function to fulfill the data.ptr
-    
-    result->metadata.ptr = (char *)malloc(AES_IV_SIZE);
+    pbaes256_encrypt(
+            to_encrypt,
+            ctx->cipher_key,
+            iv,
+            &result->data
+    );
+
+    result->metadata.ptr = (uint8_t *)malloc(AES_IV_SIZE);
     if (result->metadata.ptr == NULL) {
         free(result->data.ptr);
         return -1;
     }
-
-    // TODO: resize the data.ptr to the actual size
 
     memcpy(result->metadata.ptr, iv, AES_IV_SIZE);
     result->metadata.size = AES_IV_SIZE;
@@ -120,6 +125,13 @@ static int aes_decrypt(
     }
 
     result->size = dec_buffer_size;
+
+    pbaes256_decrypt(
+            to_decrypt.data,
+            ctx->cipher_key,
+            to_decrypt.metadata.ptr,
+            result
+    );
 
     // TODO: use proper function to fulfill base64_str
 

@@ -24,10 +24,10 @@ static int legacy_decrypt(
 );
 
 struct legacy_context {
-    const char* cipher_key;
+    const uint8_t* cipher_key;
 };
 
-struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const char* cipher_key) {
+struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key) {
     struct pubnub_crypto_algorithm_t *algo = 
         (struct pubnub_crypto_algorithm_t *)malloc(sizeof(struct pubnub_crypto_algorithm_t));
     if (algo == NULL) {
@@ -68,13 +68,13 @@ static int legacy_encrypt(
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
 
     size_t estimated_size = base64_max_size(estimated_enc_buffer_size(to_encrypt.size));
-    result->data.ptr = (char*)malloc(estimated_size);
+    result->data.ptr = (uint8_t*)malloc(estimated_size);
     if (NULL == result->data.ptr) {
         return -1;
     }
     result->data.size = estimated_size;
 
-    int res = pubnub_encrypt(ctx->cipher_key, to_encrypt, result->data.ptr, &result->data.size);
+    int res = pubnub_encrypt((char*)ctx->cipher_key, to_encrypt, (char*)result->data.ptr, &result->data.size);
     if (0 != res) {
         return res;
     }
@@ -99,7 +99,7 @@ static int legacy_decrypt(
     }
     result->size = estimated_size;
 
-int res = pubnub_decrypt(ctx->cipher_key, to_decrypt.data.ptr, result);
+    int res = pubnub_decrypt((char*)ctx->cipher_key, (char*)to_decrypt.data.ptr, result);
     if (0 != res) {
         return res;
     }

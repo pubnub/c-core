@@ -29,7 +29,7 @@
  */
 struct pubnub_encrypted_data {
     /** Encrypted data. */
-    struct pubnub_char_mem_block data;
+    struct pubnub_byte_mem_block data;
 
     /** Metadata. 
         
@@ -41,7 +41,7 @@ struct pubnub_encrypted_data {
         - cipher key Identifier
         - encrypted *data* length
      */
-    struct pubnub_char_mem_block metadata;
+    struct pubnub_byte_mem_block metadata;
 };
 
 
@@ -161,7 +161,7 @@ int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const
 
     @return Pointer to the AES CBC algorithm structure.
 */
-struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const char* cipher_key);
+struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key);
 
 
 /**
@@ -172,7 +172,7 @@ struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const char* cipher_key);
 
     @return Pointer to the legacy algorithm structure.
 */
-struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const char* cipher_key);
+struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key);
 
 
 #endif /* PBCC_CRYPTO_H */
