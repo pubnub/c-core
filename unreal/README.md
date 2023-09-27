@@ -29,6 +29,12 @@ but it can easily be integrated into your project as a [Unreal Engine Module](ht
     ```sh
     nmake -f windows.mk
     ```
+
+    or for Windows Universal Platform:
+
+    ```sh
+    nmake -f windows/uwp.mk
+    ```
   
   > :warning: if you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
 
