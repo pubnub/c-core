@@ -11,28 +11,37 @@ but it can easily be integrated into your project as a [Unreal Engine Module](ht
 
 2. Compile the [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK. You can do it in the SDK directory like so:
   
-  ```sh
-  make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
-  ```
+  - posix:
+    ```sh
+    make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
+    ```
   
-  For example:
+    For example:
   
-  ```sh
-  make -C openssl -f posix.mk pubnub_sync.a
-  ```
+    ```sh
+    make -C openssl -f posix.mk pubnub_sync.a
+    ```
+
+  - windows:
+
+    > note that windows builds everything at once - We are aware that our build system needs some love.
+
+    ```sh
+    nmake -f windows.mk
+    ```
   
   > :warning: if you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
 
 3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `option`, `architecture` and `implementation` with the same values you used for compilation. 
 
-  > This is a temporary solution. We are aware that out build system needs some love.
+  > This is a temporary solution. We are aware that our build system needs some love.
 
   For example:
   
   ```csharp 
-  private readonly string Option = "openssl";
-  private readonly string Architecture = "posix";
-  private readonly string string Implementation = "sync";
+  private readonly string Option = "openssl"; // posix, windows, openssl
+  private readonly string Architecture = "posix"; // posix, windows
+  private readonly string string Implementation = "sync"; // sync, callback
   ```
 
 4. Finally, import the module into your project as follows:
