@@ -21,7 +21,7 @@
 
 #define AMOUNT_OF_TEST_CASES 100
 static uint8_t* test_cases[AMOUNT_OF_TEST_CASES];
-static char* cipher_key;
+static uint8_t* cipher_key;
 
 Describe(crypto);
 
@@ -39,7 +39,7 @@ uint8_t *generate_random_bytes(size_t max_amount) {
 }
 
 void generate_random_cipher_key() {
-    cipher_key = (char*)generate_random_bytes(32);
+    cipher_key = generate_random_bytes(32);
 }
 
 void prepare_test_cases() {
@@ -93,15 +93,15 @@ void assert_that_cryptor_works_as_expected(pubnub_crypto_algorithm_t *sut) {
     }
 }
 
-//Ensure(crypto, should_properly_aes_encrypt_and_decrypt_data) {
-//    pubnub_crypto_algorithm_t *sut = pbcc_aes_cbc_init(cipher_key);
-//
-//    assert_that(sut, is_not_equal_to(NULL));
-//    assert_that(sut->identifier, is_equal_to_string("ACHE"));
-//    assert_that_cryptor_works_as_expected(sut);
-//
-//    free(sut);
-//}
+Ensure(crypto, should_properly_aes_encrypt_and_decrypt_data) {
+    pubnub_crypto_algorithm_t *sut = pbcc_aes_cbc_init(cipher_key);
+
+    assert_that(sut, is_not_equal_to(NULL));
+    assert_that(sut->identifier, is_equal_to_string("ACRH"));
+    assert_that_cryptor_works_as_expected(sut);
+
+    free(sut);
+}
 
 Ensure(crypto, should_properly_legacy_encrypt_and_decrypt_data) {
     pubnub_crypto_algorithm_t *sut = pbcc_legacy_crypto_init(cipher_key);

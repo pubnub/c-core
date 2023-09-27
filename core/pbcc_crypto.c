@@ -113,11 +113,7 @@ static int aes_decrypt(
 ) {
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
-    if (to_decrypt.metadata.ptr == NULL || to_decrypt.metadata.size != AES_IV_SIZE) {
-        return -1;
-    }
-
-    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size);
+    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size) + 256; // TODO: Why do I need additional space?
 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);
     if (result->ptr == NULL) {
@@ -132,8 +128,6 @@ static int aes_decrypt(
             to_decrypt.metadata.ptr,
             result
     );
-
-    // TODO: use proper function to fulfill base64_str
 
     return 0;
 }
