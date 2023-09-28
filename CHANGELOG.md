@@ -1,3 +1,9 @@
+## v4.4.0
+September 28 2023
+
+#### Added
+- Provide module files to integrate SDK with Unreal Enigne.
+
 ## v4.3.0
 July 24 2023
 
