@@ -1,9 +1,6 @@
 # Unreal Engine integration
 
-## Overview
-
-Our C-core SDK can be used together with [Unreal Engine](https://www.unrealengine.com/en-US). It's **not** a fully functional plugin yet, 
-but it can easily be integrated into your project as a [Unreal Engine Module](https://docs.unrealengine.com/5.3/en-US/unreal-engine-modules/).
+Our C-core SDK can be used together with [Unreal Engine](https://www.unrealengine.com/en-US). It's **not** a fully functional plugin yet, but can easily be integrated into your project as a [Unreal Engine Module](https://docs.unrealengine.com/5.3/en-US/unreal-engine-modules/).
 
 ## How to setup PubNub C-Core SDK as a Unreal Engine Module
 
@@ -11,33 +8,34 @@ but it can easily be integrated into your project as a [Unreal Engine Module](ht
 
 2. Compile the [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK. You can do it in the SDK directory like so:
   
-  - posix:
+  - POSIX:
+
     ```sh
     make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
     ```
-  
-    For example:
-  
-    ```sh
-    make -C openssl -f posix.mk pubnub_sync.a
-    ```
-
-  - windows:
-
-    > note that windows builds everything at once - We are aware that our build system needs some love.
+    
+  - Windows:
 
     ```sh
     nmake -f windows.mk
     ```
 
-    or for Windows Universal Platform:
+  - Windows Universal Platform:
 
     ```sh
     nmake -f windows/uwp.mk
     ```
-  
-  > :warning: if you choose the `openssl` option, ensure that your openssl library headers match the Unreal ones!
 
+    Windows builds everything at once. We are aware that our build system needs some love.
+
+    For example, to build the OpenSSL option, run the following script:
+  
+    ```sh
+    make -C openssl -f posix.mk pubnub_sync.a
+    ```
+    
+    :warning: If you choose `openssl`, ensure that your OpenSSL library headers match the Unreal ones!
+  
 3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `option`, `architecture` and `implementation` with the same values you used for compilation. 
 
   > This is a temporary solution. We are aware that our build system needs some love.
@@ -67,7 +65,7 @@ but it can easily be integrated into your project as a [Unreal Engine Module](ht
   
   - `<UnrealProject>.uproject`
   
-    ```json5
+    ```json
     {
       //...
       "Modules": [
