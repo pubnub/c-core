@@ -35,6 +35,8 @@ The directories of the library repository are:
 
 - `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
 
+- `unreal` : Unreal Engine integration module
+
   
 ## Files
 
