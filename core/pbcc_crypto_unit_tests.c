@@ -78,6 +78,8 @@ void assert_that_cryptor_works_as_expected(pubnub_crypto_algorithm_t *sut) {
         int encryption_result = sut->encrypt(sut, &encrypted, to_encrypt);
         assert_that(encryption_result, is_equal_to(0));
 
+        printf("Encrypted data: %s\n", encrypted.data.ptr);
+
         pubnub_bymebl_t decrypted;
         decrypted.ptr = NULL;
         decrypted.size = 0;

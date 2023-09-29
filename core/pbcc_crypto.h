@@ -174,6 +174,17 @@ struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key);
 */
 struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key);
 
+/**
+    Prepare the cipher key hash algorithm for use.
+    It is intended to be used with pubnub crypto module.
+
+    @param cipher_key The cipher key to hash.
+    @param hash The hash of the cipher key returned from function.
+
+    @return 0: OK, -1: error
+*/
+int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash);
+
 
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */
