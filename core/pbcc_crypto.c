@@ -160,14 +160,14 @@ static int aes_decrypt(
 
     pubnub_bymebl_t decoded = pbbase64_decode_alloc_std((char*)to_decrypt.data.ptr, to_decrypt.data.size);
     if (decoded.ptr == NULL) {
-        return -2;
+        return -1;
     }
 
     size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size) + 5000; // TODO: Why do I need additional space?
 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);
     if (result->ptr == NULL) {
-        return -3;
+        return -1;
     }
 
     result->size = dec_buffer_size;
@@ -180,7 +180,7 @@ static int aes_decrypt(
     )) {
         free(result->ptr);
         free(decoded.ptr);
-        return -4;
+        return -1;
     }
 
     return 0;
