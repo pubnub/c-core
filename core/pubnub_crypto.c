@@ -2,6 +2,7 @@
 #include "core/pubnub_crypto.h"
 
 #include "core/pubnub_assert.h"
+#include "pbcc_crypto.h"
 #include "pubnub_internal.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi_ex.h"
@@ -658,5 +659,59 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
     }
     free(part_sign);
     return sign_status;
+}
+
+
+struct crypto_module {
+    struct pubnub_crypto_algorithm_t *default_algorithm;
+
+    struct pubnub_crypto_algorithm_t *algorithms;
+    size_t algorithms_count;
+};
+
+
+static int provider_encrypt(struct pubnub_crypto_provider_t const* provider, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
+static int provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t *result, struct pubnub_encrypted_data to_decrypt);
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t algorithms_count) {
+    struct pubnub_crypto_provider_t *crypto = (struct pubnub_crypto_provider_t *)malloc(sizeof(struct pubnub_crypto_provider_t));
+    if (crypto == NULL) {
+        return NULL;
+    }
+
+    struct crypto_module *module = (struct crypto_module *)malloc(sizeof(struct crypto_module));
+    if (module == NULL) {
+        free(crypto);
+        return NULL;
+    }
+
+    module->default_algorithm = default_algorithm;
+    module->algorithms = algorithms;
+    module->algorithms_count = algorithms_count;
+
+    crypto->user_data = (void*)module;
+    crypto->encrypt = provider_encrypt;
+    crypto->decrypt = provider_decrypt;
+
+    return crypto;
+}
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key) {
+    return pubnub_crypto_module_init(
+            pbcc_aes_cbc_init(cipher_key),
+            pbcc_legacy_crypto_init(cipher_key),
+            1
+    );
+}
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key) {
+    return pubnub_crypto_module_init(
+            pbcc_legacy_crypto_init(cipher_key),
+            pbcc_aes_cbc_init(cipher_key),
+            1
+    );
 }
 

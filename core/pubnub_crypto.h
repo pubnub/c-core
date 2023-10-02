@@ -7,41 +7,6 @@
 #include "core/pbcc_crypto.h"
 
 
-/** Cryptor module for data processing. */
-typedef struct pubnub_crypto_module_t {
-    /** Array of the cryptor algorithms. */
-    struct pubnub_crypto_algorithm_t *algorithms;
-
-    /** Number of the cryptor algorithms. */
-    size_t algorithms_n;
-
-} pubnub_crypto_module;
-
-
-// TODO: return type - int or enum?
-/** Encrypt provided data.
-
-    @param module crypto module Pointer to the cryptor module structure.
-    @param msg The memory block (pointer and size) of the data to encrypt.
-    @param base64_block The char block (pointer and size) to write encrypted and
-            base64 encoded string.
-
-    @return 0: OK, -1: error
- */
-int pubnub_crypto_module_encrypt(pubnub_crypto_module const *module, pubnub_bymebl_t const *msg, pubnub_chamebl_t base64_block);
-
-
-// TODO: return type - int or enum?
-/** Decrypt provided data.
-
-    @param module crypto module Pointer to the cryptor module structure.
-    @param base64_block The char block (pointer and size) to Base64 decode and decrypt.
-    @param data User allocated memory block to write the decrypted contents to.
-
-    @return 0: OK, -1: error
- */
-int pubnub_crypto_module_decrypt(pubnub_crypto_module const *module, pubnub_chamebl_t const *base64_block, pubnub_bymebl_t *data);
-
 /**
     Set cipher key to be used with the Pubnub context 
 
@@ -193,4 +158,51 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
 enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
+
+/** 
+   Prepare the aes cbc crypto module for use.
+   
+   This module contains the aes cbc algorithm and the legacy one
+   to be used with the pubnub crypto provider.
+
+   It is recommended to use this module instead of the legacy one 
+   if you are not using the legacy algorithm yet.
+
+   @param cipher_key The cipher key to use.
+
+   @return Pointer to the aes cbc crypto module structure.
+
+*/
+struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+
+
+/** 
+   Prepare the legacy crypto module for use.
+   
+   This module contains the legacy algorithm and the aes cbc one
+   to be used with the pubnub crypto provider.
+
+   @param cipher_key The cipher key to use.
+
+   @return Pointer to the aes cbc crypto module structure.
+
+*/
+struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+
+
+/**
+   Prepare the crypto module for use.
+
+   Rhis module contains the alhorithms provided by the user to be used 
+   with the pubnub crypto provider.
+
+   @param default Pointer to the default crypto algorithm to use.
+   @param algorithms Pointer to the array of crypto algorithms to use.
+   @param n_algorithms Number of crypto algorithms in the array.
+
+   @return Pointer to the crypto module structure.
+*/
+struct pubnub_crypto_provider_t *pbcc_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t n_algorithms);
+   
+
 #endif /* defined INC_PUBNUB_CRYPTO */

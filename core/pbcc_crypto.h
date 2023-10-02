@@ -211,34 +211,5 @@ struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_
 */
 int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash);
 
-/** 
-   Prepare the aes cbc crypto module for use.
-   
-   This module contains the aes cbc algorithm and the legacy one
-   to be used with the pubnub crypto provider.
-
-   It is recommended to use this module instead of the legacy one 
-   if you are not using the legacy algorithm yet.
-
-   @param cipher_key The cipher key to use.
-
-   @return Pointer to the aes cbc crypto module structure.
-
-*/
-struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
-
-/** 
-   Prepare the legacy crypto module for use.
-   
-   This module contains the legacy algorithm and the aes cbc one
-   to be used with the pubnub crypto provider.
-
-   @param cipher_key The cipher key to use.
-
-   @return Pointer to the aes cbc crypto module structure.
-
-*/
-struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
-
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */
