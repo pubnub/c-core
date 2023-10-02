@@ -4,11 +4,9 @@
 
 #include <stdio.h>
 #include "pbcc_crypto.h"
+#include "pbsha256.h"
 #include "pubnub_crypto.h"
-#include "pubnub_memory_block.h"
-#include <stdint.h>
 #include <string.h>
-#include <stdlib.h>
 
 int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
     uint8_t digest[32];
