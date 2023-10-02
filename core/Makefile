@@ -85,7 +85,7 @@ pubnub_grant_token_api_unittest: $(PROJECT_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILE
 
 CRYPTO_INCLUDES += -I ../openssl/. 
 CRYPTO_LIBS += -lssl -lcrypto
-CRYPTO_SOURCEFILES += pubnub_crypto.c pbcc_crypto.c pbcc_crypto_legacy.c ../openssl/pbaes256.c
+CRYPTO_SOURCEFILES += pubnub_crypto.c pbcc_crypto.c pbcc_crypto_aes_cbc.c pbcc_crypto_legacy.c ../openssl/pbaes256.c
 
 pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_unit_tests.c
 	gcc -o pbcc_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c -lcgreen -lm
