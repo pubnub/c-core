@@ -187,7 +187,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t
    @return Pointer to the aes cbc crypto module structure.
 
 */
-struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key);
 
 
 /**

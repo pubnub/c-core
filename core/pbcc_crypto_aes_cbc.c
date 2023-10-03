@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "pbcc_crypto.h"
 #include "pbaes256.h"
-#include "pbsha256.h"
 #include "pbbase64.h"
 #include "pubnub_crypto.h"
 #include "pubnub_memory_block.h"
