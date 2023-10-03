@@ -119,25 +119,21 @@ typedef struct pubnub_crypto_provider_t {
     /** Function pointer to the encrypt function.
         
         @param provider Pointer to the provider structure.
-        @param msg Memory block (pointer and size) of the data to encrypt.
-        @param base64_str String (allocated by the user) to write encrypted and
-                base64 encoded string.
-        @param n The size of the string.
+        @param to_encrypt Memory block (pointer and size) of the data to encrypt.
 
-        @return 0: OK, -1: error
+        @return Encrypted data block.
       */
-    int (*encrypt)(struct pubnub_crypto_provider_t const *provider, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
+    pubnub_bymebl_t* (*encrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_encrypt);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
         
         @param cryptor Pointer to the cryptor structure.
-        @param base64_str String to Base64 decode and decrypt.
-        @param data User allocated memory block to write the decrypted contents to.
+        @param to_decrypt Memory block (pointer and size) of the data to decrypt.
 
-        @return >=0: OK (size of the data), -1: error
+        @return Decrypted data block.
      */
-    int (*decrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t* result, struct pubnub_encrypted_data to_decrypt);
+    pubnub_bymebl_t* (*decrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_decrypt);
 
 
     /** Pointer to the user data needed for the provider. */

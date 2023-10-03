@@ -672,7 +672,7 @@ struct crypto_module {
 
 
 static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt);
-static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider,  struct pubnub_bymebl_t to_decrypt);
+static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt);
 
 
 struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t algorithms_count) {
@@ -772,7 +772,7 @@ static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* 
     return payload;
 }
 
-static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t *result, struct pubnub_bymebl_t to_decrypt) {
+static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
 }
 
