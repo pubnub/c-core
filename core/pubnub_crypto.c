@@ -766,6 +766,8 @@ static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* 
         memcpy(payload->ptr + header_size - result->metadata.size, result->metadata.ptr, result->metadata.size);
     }
 
+    memcpy(payload->ptr + header_size, result->data.ptr, result->data.size);
+
     free(header_block->ptr);
     free(header_block);
 
