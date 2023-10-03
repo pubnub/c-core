@@ -173,7 +173,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
    @return Pointer to the aes cbc crypto module structure.
 
 */
-struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
 
 
 /** 
@@ -187,7 +187,7 @@ struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* 
    @return Pointer to the aes cbc crypto module structure.
 
 */
-struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
 
 
 /**
@@ -202,7 +202,7 @@ struct pubnub_crypto_provider_t *pbcc_crypto_aes_cbc_module_init(const uint8_t* 
 
    @return Pointer to the crypto module structure.
 */
-struct pubnub_crypto_provider_t *pbcc_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t n_algorithms);
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t n_algorithms);
    
 
 #endif /* defined INC_PUBNUB_CRYPTO */

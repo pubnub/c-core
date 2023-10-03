@@ -211,5 +211,34 @@ struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_
 */
 int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash);
 
+/**
+    Prepare the data header v1 for crypto identification. 
+
+    @param identifier The identifier of the algorithm.
+    @param metadata The metadata of the algorithm.
+
+    @return The data header v1.
+*/
+struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifier[4], struct pubnub_byte_mem_block metadata);
+
+/**
+    Size of the data header v1 in bytes.
+
+    @param cryptor_header The data header v1.
+
+    @return The number of bytes needed to include the data header v1.
+*/
+size_t pbcc_cryptor_header_v1_size(struct pubnub_cryptor_header_v1 *cryptor_header);
+
+/**
+    Transform the data header v1 to the byte memory block.
+
+    @param cryptor_header The data header v1.
+
+    @return The byte memory block containing the data header v1. 
+*/
+struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnub_cryptor_header_v1 *cryptor_header); 
+    
+
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */

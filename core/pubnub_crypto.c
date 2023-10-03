@@ -12,6 +12,7 @@
 #include "pbaes256.h"
 #include "lib/base64/pbbase64.h"
 #include "pubnub_log.h"
+#include "pubnub_memory_block.h"
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
@@ -670,8 +671,8 @@ struct crypto_module {
 };
 
 
-static int provider_encrypt(struct pubnub_crypto_provider_t const* provider, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
-static int provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t *result, struct pubnub_encrypted_data to_decrypt);
+static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt);
+static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider,  struct pubnub_bymebl_t to_decrypt);
 
 
 struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t algorithms_count) {
@@ -713,5 +714,65 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
             pbcc_aes_cbc_init(cipher_key),
             1
     );
+}
+
+static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt) {
+    struct crypto_module *module = (struct crypto_module *)provider->user_data;
+    struct pubnub_crypto_algorithm_t *algorithm = module->default_algorithm;
+
+    struct pubnub_encrypted_data *result = (struct pubnub_encrypted_data *)malloc(sizeof(struct pubnub_encrypted_data));
+
+    if (0 != algorithm->encrypt(algorithm, result, to_encrypt)) {
+        return NULL;
+    };
+
+    struct pubnub_cryptor_header_v1 header = pbcc_prepare_cryptor_header_v1(algorithm->identifier, result->metadata);
+
+    struct pubnub_byte_mem_block *payload = (struct pubnub_byte_mem_block *)malloc(sizeof(struct pubnub_byte_mem_block));
+    if (NULL == payload) {
+        return NULL;
+    }
+
+    size_t header_size = pbcc_cryptor_header_v1_size(&header);
+    size_t whole_size = header_size + result->data.size;
+
+    payload->ptr = (uint8_t *)malloc(whole_size);
+    if (payload->ptr == NULL) {
+        free(payload);
+        return NULL;
+    }
+
+    payload->size = whole_size;
+
+    struct pubnub_byte_mem_block *header_block = pbcc_cryptor_header_v1_to_alloc_block(&header);
+
+    if (NULL == header_block) {
+        free(payload->ptr);
+        free(payload);
+        return NULL;
+    }
+
+    if (header_block->size != header_size) {
+        free(header_block->ptr);
+        free(header_block);
+        free(payload->ptr);
+        free(payload);
+        return NULL;
+    }
+
+    memcpy(payload->ptr, header_block->ptr, header_size);
+
+    if (result->metadata.size > 0 && result->metadata.ptr != NULL) {
+        memcpy(payload->ptr + header_size - result->metadata.size, result->metadata.ptr, result->metadata.size);
+    }
+
+    free(header_block->ptr);
+    free(header_block);
+
+    return payload;
+}
+
+static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t *result, struct pubnub_bymebl_t to_decrypt) {
+    struct crypto_module *module = (struct crypto_module *)provider->user_data;
 }
 
