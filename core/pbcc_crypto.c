@@ -103,4 +103,55 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
 
     return result;
 }
+
+struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub_byte_mem_block *cryptor_header) {
+    if (NULL == cryptor_header || NULL == cryptor_header->ptr || 0 == cryptor_header->size) {
+        return NULL;
+    }
+
+    if (cryptor_header->size < strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH + 1) {
+        return NULL;
+    }
+
+    struct pubnub_cryptor_header_v1* result = (struct pubnub_cryptor_header_v1*)malloc(sizeof(struct pubnub_cryptor_header_v1));
+    if (NULL == result) {
+        return NULL;
+    }
+
+    size_t offset = 0;
+
+    if (0 != memcmp(cryptor_header->ptr + offset, SENTINEL, strlen(SENTINEL))) {
+        free(result);
+        return NULL;
+    }
+    offset += strlen(SENTINEL);
+
+    uint8_t version = 1;
+    memcpy(&version, cryptor_header->ptr + offset, 1);
+    offset += 1;
+
+    memcpy(result->identifier, cryptor_header->ptr + offset, IDENTIFIER_LENGTH);
+    offset += IDENTIFIER_LENGTH;
+
+    uint8_t data_length = 0;
+    memcpy(&data_length, cryptor_header->ptr + offset, 1);
+    offset += 1;
+
+    if (data_length == 255) {
+        uint8_t header_size_high = 0;
+        memcpy(&header_size_high, cryptor_header->ptr + offset, 1);
+        offset += 1;
+
+        uint8_t header_size_low = 0;
+        memcpy(&header_size_low, cryptor_header->ptr + offset, 1);
+        offset += 1;
+
+        result->data_length = (header_size_high << 8) + header_size_low;
+    } else {
+        result->data_length = data_length;
+    }
+
+    return result;
+}
+
 //#endif // PUBNUB_CRYPTO_API

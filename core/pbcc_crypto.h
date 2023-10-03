@@ -141,40 +141,6 @@ typedef struct pubnub_crypto_provider_t {
 } pubnub_crypto_provider_t;
 
 
-///** Retrieves the cryptor algorithm identifier.
-//    
-//    @param cryptor Pointer to the cryptor structure.
-//
-//    @return Pointer to the cryptor algorithm identifier.
-// */
-//uint8_t const *pubnub_cryptor_identifier(pubnub_cryptor const *cryptor);
-//
-//
-//// TODO: return type - int or enum?
-///** Encrypt provided data.
-//
-//    @param cryptor Pointer to the cryptor structure.
-//    @param msg The memory block (pointer and size) of the data to encrypt.
-//    @param base64_block The char block (pointer and size) to write encrypted and
-//            base64 encoded string.
-//
-//    @return 0: OK, -1: error
-// */
-//int pubnub_cryptor_encrypt(pubnub_cryptor const *cryptor, pubnub_bymebl_t const *msg, pubnub_chamebl_t base64_block);
-//
-//
-//// TODO: return type - int or enum?
-///** Decrypt provided data.
-//
-//    @param cryptor Pointer to the cryptor structure.
-//    @param base64_block The char block (pointer and size) to Base64 decode and decrypt.
-//    @param data User allocated memory block to write the decrypted contents to.
-//
-//    @return 0: OK, -1: error
-// */
-//int pubnub_cryptor_decrypt(pubnub_cryptor const *cryptor, pubnub_chamebl_t const *base64_block, pubnub_bymebl_t *data);
-
-
 /**
     Prepare the AES CBC algorithm for use.
     It is intended to be used with pubnub crypto module.
@@ -234,6 +200,15 @@ size_t pbcc_cryptor_header_v1_size(struct pubnub_cryptor_header_v1 *cryptor_head
     @return The byte memory block containing the data header v1. 
 */
 struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnub_cryptor_header_v1 *cryptor_header); 
+
+/** 
+    Transform the byte memory block to the data header v1.
+
+    @param cryptor_header The byte memory block containing the data header v1.
+
+    @return The data header v1.
+*/
+struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub_byte_mem_block *cryptor_header);
     
 
 #endif /* PBCC_CRYPTO_H */

@@ -772,7 +772,59 @@ static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* 
     return payload;
 }
 
+static pubnub_crypto_algorithm_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
+    if (NULL == header) {
+        return module->default_algorithm;
+    }
+
+    if (0 == strcmp((char*)module->default_algorithm->identifier, (char*)header->identifier)) {
+        return module->default_algorithm;
+    }
+
+    for (size_t i = 0; i < module->algorithms_count; i++) {
+        if (0 == strcmp((char*)module->algorithms[i].identifier, (char*)header->identifier)) {
+            return &module->algorithms[i];
+        }
+    }
+
+    return NULL;
+}
+
 static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
+    if (NULL == to_decrypt.ptr || to_decrypt.size == 0) {
+        return NULL;
+    }
+
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
+
+    struct pubnub_cryptor_header_v1 *header = pbcc_cryptor_header_v1_from_block(&to_decrypt);
+
+    struct pubnub_crypto_algorithm_t *algorithm = cryptor_with_identifier(module, header);
+
+    if (NULL == algorithm) {
+        // TODO: add message with id!
+        return NULL;
+    }
+
+    pubnub_bymebl_t *result = (pubnub_bymebl_t *)malloc(sizeof(pubnub_bymebl_t));
+    if (NULL == result) {
+        return NULL;
+    }
+
+    size_t header_size = pbcc_cryptor_header_v1_size(header);
+    size_t offset = header_size - header->data_length; 
+
+    struct pubnub_encrypted_data data;
+    data.data.ptr = to_decrypt.ptr + offset;
+    data.data.size = to_decrypt.size - offset;
+    data.metadata.ptr = to_decrypt.ptr + header_size;
+    data.metadata.size = header->data_length;
+
+    if (0 != algorithm->decrypt(algorithm, result, data)) {
+        free(result);
+        return NULL;
+    }
+
+    return result;
 }
 
