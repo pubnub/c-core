@@ -6,6 +6,7 @@
 #include "pbcc_crypto.h"
 #include "pbsha256.h"
 #include "pubnub_crypto.h"
+#include "pubnub_log.h"
 #include <string.h>
 
 int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
@@ -106,29 +107,39 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
 
 struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub_byte_mem_block *cryptor_header) {
     if (NULL == cryptor_header || NULL == cryptor_header->ptr || 0 == cryptor_header->size) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: invalid argument\n");
         return NULL;
     }
 
     if (cryptor_header->size < strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH + 1) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: invalid header size\n");
         return NULL;
     }
 
     struct pubnub_cryptor_header_v1* result = (struct pubnub_cryptor_header_v1*)malloc(sizeof(struct pubnub_cryptor_header_v1));
     if (NULL == result) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: failed to allocate memory\n");
         return NULL;
     }
 
     size_t offset = 0;
 
     if (0 != memcmp(cryptor_header->ptr + offset, SENTINEL, strlen(SENTINEL))) {
+        PUBNUB_LOG_WARNING("pbcc_cryptor_header_v1_from_block: invalid header sentinel - assuming legacy crypto\n");
         free(result);
         return NULL;
     }
     offset += strlen(SENTINEL);
 
-    uint8_t version = 1;
+    uint8_t version = 0;
     memcpy(&version, cryptor_header->ptr + offset, 1);
     offset += 1;
+
+    if (version == 0 || version > PUBNUB_MAXIMUM_HEADER_VERSION) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: unknown header version\n");
+        free(result);
+        return NULL;
+    }
 
     memcpy(result->identifier, cryptor_header->ptr + offset, IDENTIFIER_LENGTH);
     offset += IDENTIFIER_LENGTH;

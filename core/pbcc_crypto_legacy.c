@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define LEGACY_IDENTIFIER (char[4]){ 0 }
+#define LEGACY_IDENTIFIER (char[4]) { 0 }
 #define AES_BLOCK_SIZE 16
 
 static int legacy_encrypt(
@@ -92,7 +92,7 @@ static int legacy_decrypt(
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
 
-    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size);
+    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size) + 50000;
     result->ptr = (uint8_t*)malloc(estimated_size);
     if (NULL == result->ptr) {
         return -1;

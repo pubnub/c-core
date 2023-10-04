@@ -4,6 +4,7 @@
 #include "pbbase64.h"
 #include "pubnub_crypto.h"
 #include "pubnub_memory_block.h"
+#include "pubnub_log.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -136,11 +137,13 @@ static int aes_decrypt(
 
     uint8_t key_hash[33];
     if (0 != pbcc_cipher_key_hash(ctx->cipher_key, key_hash)) {
+        PUBNUB_LOG_ERROR("Failed to generate key hash\n");
         return -1;
     }
 
     pubnub_bymebl_t decoded = pbbase64_decode_alloc_std((char*)to_decrypt.data.ptr, to_decrypt.data.size);
     if (decoded.ptr == NULL) {
+        PUBNUB_LOG_ERROR("Failed to decode base64\n");
         return -1;
     }
 
@@ -148,6 +151,7 @@ static int aes_decrypt(
 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);
     if (result->ptr == NULL) {
+        PUBNUB_LOG_ERROR("Failed to allocate memory for decrypted data\n");
         return -1;
     }
 
@@ -159,6 +163,7 @@ static int aes_decrypt(
             to_decrypt.metadata.ptr,
             result
     )) {
+        PUBNUB_LOG_ERROR("Failed to decrypt data\n");
         free(result->ptr);
         free(decoded.ptr);
         return -1;

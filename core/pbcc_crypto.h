@@ -45,6 +45,7 @@ struct pubnub_encrypted_data {
 };
 
 #define PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE 4
+#define PUBNUB_MAXIMUM_HEADER_VERSION 1
 
 /** Cryptor header version 1.
     

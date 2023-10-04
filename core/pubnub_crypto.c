@@ -837,9 +837,9 @@ static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* 
     size_t offset = header_size - header->data_length; 
 
     struct pubnub_encrypted_data data;
-    data.data.ptr = to_decrypt.ptr + offset;
-    data.data.size = to_decrypt.size - offset;
-    data.metadata.ptr = to_decrypt.ptr + header_size;
+    data.data.ptr = to_decrypt.ptr + header_size;
+    data.data.size = to_decrypt.size - header_size;
+    data.metadata.ptr = to_decrypt.ptr + offset;
     data.metadata.size = header->data_length;
 
     if (0 != algorithm->decrypt(algorithm, result, data)) {
