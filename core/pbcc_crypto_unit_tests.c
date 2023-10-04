@@ -108,7 +108,8 @@ Ensure(crypto, should_properly_legacy_encrypt_and_decrypt_data) {
     pubnub_crypto_algorithm_t *sut = pbcc_legacy_crypto_init(cipher_key);
 
     assert_that(sut, is_not_equal_to(NULL));
-    assert_that(sut->identifier, is_equal_to_string("0000"));
+    char* expected_identifier[4] = {0};
+    assert_that(sut->identifier, is_equal_to_contents_of(expected_identifier, 4));
     assert_that_cryptor_works_as_expected(sut);
 
     free(sut);
