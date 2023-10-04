@@ -18,6 +18,7 @@
 #include "pubnub_crypto.h"
 #include "pbcc_crypto.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 #define AMOUNT_OF_TEST_CASES 100
 static uint8_t* test_cases[AMOUNT_OF_TEST_CASES];

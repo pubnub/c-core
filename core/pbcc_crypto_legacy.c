@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define LEGACY_IDENTIFIER "0000"
+#define LEGACY_IDENTIFIER (char[4]){ 0 }
 #define AES_BLOCK_SIZE 16
 
 static int legacy_encrypt(

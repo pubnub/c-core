@@ -44,6 +44,7 @@ struct pubnub_encrypted_data {
     struct pubnub_byte_mem_block metadata;
 };
 
+#define PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE 4
 
 /** Cryptor header version 1.
     
@@ -53,7 +54,7 @@ struct pubnub_encrypted_data {
  */
 struct pubnub_cryptor_header_v1 {
     /** Cryptor algorithm identifier. */
-    uint8_t identifier[4];
+    uint8_t identifier[PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE];
 
     /** Encrypted data length. */
     uint32_t data_length;
