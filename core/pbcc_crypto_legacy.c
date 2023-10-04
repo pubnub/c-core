@@ -12,13 +12,13 @@
 #define AES_BLOCK_SIZE 16
 
 static int legacy_encrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
         pubnub_bymebl_t to_encrypt
 );
 
 static int legacy_decrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         pubnub_bymebl_t* result,
         struct pubnub_encrypted_data to_decrypt
 );
@@ -27,9 +27,9 @@ struct legacy_context {
     const uint8_t* cipher_key;
 };
 
-struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key) {
-    struct pubnub_crypto_algorithm_t *algo = 
-        (struct pubnub_crypto_algorithm_t *)malloc(sizeof(struct pubnub_crypto_algorithm_t));
+struct pubnub_cryptor_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key) {
+    struct pubnub_cryptor_t *algo = 
+        (struct pubnub_cryptor_t *)malloc(sizeof(struct pubnub_cryptor_t));
     if (algo == NULL) {
         return NULL;
     }
@@ -61,7 +61,7 @@ static size_t estimated_dec_buffer_size(size_t n) {
 }
 
 static int legacy_encrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
         pubnub_bymebl_t to_encrypt
 ) {
@@ -86,7 +86,7 @@ static int legacy_encrypt(
 }
 
 static int legacy_decrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         pubnub_bymebl_t *result,
         struct pubnub_encrypted_data to_decrypt
 ) {

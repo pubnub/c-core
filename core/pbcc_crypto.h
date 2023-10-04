@@ -68,7 +68,7 @@ struct pubnub_cryptor_header_v1 {
     cryptor algorithm type. It contains the identifier of the 
     algorithm and the function pointers to the algorithm implementation.
  */
-typedef struct pubnub_crypto_algorithm_t {
+typedef struct pubnub_cryptor_t {
     /** Identifier of the algorithm.
         
         Identifier will be encoded into crypto data header and passed along 
@@ -89,7 +89,7 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return 0: OK, -1: error
       */
-    int (*encrypt)(struct pubnub_crypto_algorithm_t const *cryptor, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
+    int (*encrypt)(struct pubnub_cryptor_t const *cryptor, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
@@ -100,12 +100,12 @@ typedef struct pubnub_crypto_algorithm_t {
 
         @return >=0: OK (size of the data), -1: error
      */
-    int (*decrypt)(struct pubnub_crypto_algorithm_t const *cryptor, pubnub_bymebl_t* result, struct pubnub_encrypted_data to_decrypt);
+    int (*decrypt)(struct pubnub_cryptor_t const *cryptor, pubnub_bymebl_t* result, struct pubnub_encrypted_data to_decrypt);
 
     /** Pointer to the user data needed for the algorithm. */
     void *user_data;
 
-} pubnub_crypto_algorithm_t;
+} pubnub_cryptor_t;
 
 
 /** Crypto Provider.
@@ -113,7 +113,7 @@ typedef struct pubnub_crypto_algorithm_t {
     This is the struct containing the information about the 
     cryptor provider. 
 
-    It should use the `pubnub_crypto_algorithm_t` struct to provide 
+    It should use the `pubnub_cryptor_t` struct to provide 
     the algorithm implementation and select which one to use.
 */
 typedef struct pubnub_crypto_provider_t {
@@ -151,7 +151,7 @@ typedef struct pubnub_crypto_provider_t {
 
     @return Pointer to the AES CBC algorithm structure.
 */
-struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key);
+struct pubnub_cryptor_t *pbcc_aes_cbc_init(const uint8_t* cipher_key);
 
 
 /**
@@ -162,7 +162,7 @@ struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key);
 
     @return Pointer to the legacy algorithm structure.
 */
-struct pubnub_crypto_algorithm_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key);
+struct pubnub_cryptor_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key);
 
 /**
     Prepare the cipher key hash algorithm for use.

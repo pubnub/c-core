@@ -664,9 +664,9 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
 
 
 struct crypto_module {
-    struct pubnub_crypto_algorithm_t *default_algorithm;
+    struct pubnub_cryptor_t *default_algorithm;
 
-    struct pubnub_crypto_algorithm_t *algorithms;
+    struct pubnub_cryptor_t *algorithms;
     size_t algorithms_count;
 };
 
@@ -675,7 +675,7 @@ static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* 
 static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt);
 
 
-struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t algorithms_count) {
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t algorithms_count) {
     struct pubnub_crypto_provider_t *crypto = (struct pubnub_crypto_provider_t *)malloc(sizeof(struct pubnub_crypto_provider_t));
     if (crypto == NULL) {
         return NULL;
@@ -718,7 +718,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
 
 static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt) {
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
-    struct pubnub_crypto_algorithm_t *algorithm = module->default_algorithm;
+    struct pubnub_cryptor_t *algorithm = module->default_algorithm;
 
     struct pubnub_encrypted_data *result = (struct pubnub_encrypted_data *)malloc(sizeof(struct pubnub_encrypted_data));
 
@@ -775,7 +775,7 @@ static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* 
     return payload;
 }
 
-static pubnub_crypto_algorithm_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
+static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
     if (NULL == header) {
         PUBNUB_LOG_DEBUG("Cryptor is NULL - asuming legacy crypto\n");
         return module->default_algorithm;
@@ -814,7 +814,7 @@ static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* 
 
     struct pubnub_cryptor_header_v1 *header = pbcc_cryptor_header_v1_from_block(&to_decrypt);
 
-    struct pubnub_crypto_algorithm_t *algorithm = cryptor_with_identifier(module, header);
+    struct pubnub_cryptor_t *algorithm = cryptor_with_identifier(module, header);
 
     if (NULL == algorithm) {
         // Assuming identifier length is 4!

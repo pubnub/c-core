@@ -202,7 +202,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
 
    @return Pointer to the crypto module structure.
 */
-struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_crypto_algorithm_t *default_algorithm, struct pubnub_crypto_algorithm_t *algorithms, size_t n_algorithms);
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t n_algorithms);
    
 
 #endif /* defined INC_PUBNUB_CRYPTO */

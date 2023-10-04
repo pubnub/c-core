@@ -15,13 +15,13 @@
 #define AES_IV_SIZE 16
 
 static int aes_encrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
         pubnub_bymebl_t to_encrypt
 );
 
 static int aes_decrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         pubnub_bymebl_t* result,
         struct pubnub_encrypted_data to_decrypt
 );
@@ -30,9 +30,9 @@ struct aes_context {
     const uint8_t* cipher_key;
 };
 
-struct pubnub_crypto_algorithm_t *pbcc_aes_cbc_init(const uint8_t* cipher_key) {
-    struct pubnub_crypto_algorithm_t *algo = 
-        (struct pubnub_crypto_algorithm_t *)malloc(sizeof(struct pubnub_crypto_algorithm_t));
+struct pubnub_cryptor_t *pbcc_aes_cbc_init(const uint8_t* cipher_key) {
+    struct pubnub_cryptor_t *algo = 
+        (struct pubnub_cryptor_t *)malloc(sizeof(struct pubnub_cryptor_t));
     if (algo == NULL) {
         return NULL;
     }
@@ -70,7 +70,7 @@ static void generate_init_vector(uint8_t *iv) {
 }
 
 static int aes_encrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
         pubnub_bymebl_t to_encrypt
 ) {
@@ -129,7 +129,7 @@ static int aes_encrypt(
 }
 
 static int aes_decrypt(
-        struct pubnub_crypto_algorithm_t const *algo,
+        struct pubnub_cryptor_t const *algo,
         pubnub_bymebl_t* result,
         struct pubnub_encrypted_data to_decrypt
 ) {

@@ -64,7 +64,7 @@ AfterEach(crypto) {
     cleanup_test_cases();
 }
 
-void assert_that_cryptor_works_as_expected(pubnub_crypto_algorithm_t *sut) {
+void assert_that_cryptor_works_as_expected(pubnub_cryptor_t *sut) {
     for (size_t i = 0; i < AMOUNT_OF_TEST_CASES; i++) {
         pubnub_bymebl_t to_encrypt;
         to_encrypt.ptr = test_cases[i];
@@ -95,9 +95,7 @@ void assert_that_cryptor_works_as_expected(pubnub_crypto_algorithm_t *sut) {
 }
 
 Ensure(crypto, should_properly_aes_encrypt_and_decrypt_data) {
-    pubnub_crypto_algorithm_t *sut = pbcc_aes_cbc_init(cipher_key);
-
-    assert_that(sut, is_not_equal_to(NULL));
+    pubnub_cryptor_t *sut = pbcc_aes_cbc_init(cipher_key);
     assert_that(sut->identifier, is_equal_to_string("ACRH"));
     assert_that_cryptor_works_as_expected(sut);
 
@@ -105,7 +103,7 @@ Ensure(crypto, should_properly_aes_encrypt_and_decrypt_data) {
 }
 
 Ensure(crypto, should_properly_legacy_encrypt_and_decrypt_data) {
-    pubnub_crypto_algorithm_t *sut = pbcc_legacy_crypto_init(cipher_key);
+    pubnub_cryptor_t *sut = pbcc_legacy_crypto_init(cipher_key);
 
     assert_that(sut, is_not_equal_to(NULL));
     char* expected_identifier[4] = {0};
