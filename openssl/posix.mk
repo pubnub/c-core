@@ -50,6 +50,10 @@ ifndef USE_FETCH_HISTORY
 USE_FETCH_HISTORY = 1
 endif
 
+ifndef USE_CRYPTO_API
+USE_CRYPTO_API = 0
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
@@ -123,7 +127,13 @@ LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 
 
-INCLUDES=-I .. -I .
+INCLUDES=-I .. -I . 
+
+
+ifeq ($(USE_CRYPTO_API), 1)
+INCLUDES+= -I ../lib/base64/ -I ../core/
+endif
+
 
 all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_sync_revoke_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_fetch_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop
 
