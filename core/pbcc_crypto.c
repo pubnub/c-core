@@ -1,7 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-//#ifdef PUBNUB_CRYPTO_API
-
 #include <stdint.h>
 #include <stdio.h>
 #include "pbbase64.h"
@@ -282,6 +280,3 @@ pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
     return pbbase64_decode_alloc_std_str(buffer);
 }
 
-
-
-//#endif // PUBNUB_CRYPTO_API

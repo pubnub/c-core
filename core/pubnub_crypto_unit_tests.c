@@ -94,9 +94,9 @@ Ensure(crypto_api, module_should_properly_select_algorythm_for_decryption) {
 Ensure(crypto_api, client_should_use_cryptors_for_publish) {
     pubnub_set_crypto_module(pbp, pubnub_crypto_module_init(&x_cryptor, &y_cryptor, 1));
 
-    expect_have_dns_for_pubnub_origin(pbp);
+    expect_have_dns_for_pubnub_origin_on(pbp);
 
-    expect_outgoing_with_url_no_params(pbp,
+    expect_outgoing_with_url_no_params_on(pbp,
         "/publish/pub_key/sub_key/0/jarak/0/UE5FRAF4eHh4BG1ldGF4eHh4");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "30\r\n\r\n[1,\"Sent\",\"14178940800777403\"]",
@@ -113,8 +113,8 @@ Ensure(crypto_api, client_should_use_cryptors_for_subscribe) {
     pubnub_set_crypto_module(pbp, pubnub_crypto_module_init(&x_cryptor, &y_cryptor, 1));
 
     assert_that(pubnub_last_time_token(pbp), is_equal_to_string("0"));
-    expect_have_dns_for_pubnub_origin(pbp);
-    expect_outgoing_with_url_no_params(pbp,
+    expect_have_dns_for_pubnub_origin_on(pbp);
+    expect_outgoing_with_url_no_params_on(pbp,
         "/subscribe/sub_key/health/0/0");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n[[],\"1516014978925123457\"]",
@@ -131,7 +131,7 @@ Ensure(crypto_api, client_should_use_cryptors_for_subscribe) {
 
     expect(pbntf_enqueue_for_processing, when(pb, is_equal_to(pbp)), will_return(0));
     expect(pbntf_got_socket, when(pb, is_equal_to(pbp)), will_return(0));
-    expect_outgoing_with_url_no_params(pbp, "/subscribe/sub_key/health/0/"
+    expect_outgoing_with_url_no_params_on(pbp, "/subscribe/sub_key/health/0/"
                              "1516014978925123457");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "50\r\n\r\n[[UE5FRAF4eHh4BG1ldGF4eHh4],"
@@ -151,9 +151,9 @@ Ensure(crypto_api, client_should_use_cryptors_for_subscribe) {
 Ensure(crypto_api, client_should_use_cryptors_for_history) {
     pubnub_set_crypto_module(pbp, pubnub_crypto_module_init(&x_cryptor, &y_cryptor, 1));
 
-    expect_have_dns_for_pubnub_origin(pbp);
+    expect_have_dns_for_pubnub_origin_on(pbp);
 
-    expect_outgoing_with_url_no_params(pbp, "/v2/history/sub-key/sub_key/channel/"
+    expect_outgoing_with_url_no_params_on(pbp, "/v2/history/sub-key/sub_key/channel/"
                              "ch");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "26\r\n\r\n[UE5FRAF4eHh4BG1ldGF4eHh4]",

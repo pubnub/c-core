@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-//#ifdef PUBNUB_CRYPTO_API
+#ifdef PUBNUB_CRYPTO_API
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
 
@@ -274,4 +274,4 @@ const char* pbcc_base64_encode(pubnub_bymebl_t buffer);
 pubnub_bymebl_t pbcc_base64_decode(const char* buffer);
     
 #endif /* PBCC_CRYPTO_H */
-//#endif /* PUBNUB_CRYPTO_API */
+#endif /* PUBNUB_CRYPTO_API */

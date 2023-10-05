@@ -66,10 +66,12 @@ void pbcc_deinit(struct pbcc_context* p)
     }
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
+#if PUBNUB_CRYPTO_API
     if (NULL != p->crypto_module) {
         free(p->crypto_module);
         p->crypto_module = NULL;   
     }
+#endif /* PUBNUB_CRYPTO_API */
 }
 
 
@@ -113,6 +115,7 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
+#if PUBNUB_CRYPTO_API
             if (NULL != pb->crypto_module) {
                 pubnub_bymebl_t encrypted = pbcc_base64_decode(rslt);
 
@@ -130,6 +133,7 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
 
                 rslt = (char*)rslt_block.ptr;
             }
+#endif // PUBNUB_CRYPTO_API 
 
             return rslt;
         }
@@ -528,6 +532,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0");
 
+#if PUBNUB_CRYPTO_API
     if (NULL != pb->crypto_module) {
         pubnub_bymebl_t message_block = { .ptr = (uint8_t*)message, .size = strlen(message) };
         pubnub_bymebl_t encrypted = pb->crypto_module->encrypt(pb->crypto_module, message_block);
@@ -548,6 +553,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
             return PNR_INTERNAL_ERROR;
         }
     }
+#endif // PUBNUB_CRYPTO_API
 
     if (pubnubSendViaGET == method) {
         pb->http_buf[pb->http_buf_len++] = '/';
