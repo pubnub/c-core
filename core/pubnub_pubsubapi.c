@@ -85,6 +85,8 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
     p->data_compressed = compressionNONE;
 #endif
+    p->core.crypto_module = NULL;
+
     pubnub_mutex_unlock(p->monitor);
 
     return p;

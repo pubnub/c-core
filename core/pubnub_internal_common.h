@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pbcc_crypto.h"
 #if !defined INC_PUBNUB_INTERNAL_COMMON
 #define INC_PUBNUB_INTERNAL_COMMON
 
@@ -103,6 +104,8 @@
 #if PUBNUB_ADVANCED_KEEP_ALIVE
 #include <time.h>
 #endif
+
+#include "core/pubnub_crypto.h"
 
 /* Maximum object length that will be sent via PATCH, or POST methods */
 #define PUBNUB_MAX_OBJECT_LENGTH 30000
@@ -521,6 +524,8 @@ struct pubnub_ {
     struct pbhttp_digest_context digest_context;
 
 #endif /* PUBNUB_PROXY_API */
+    /** Crypto module for encryption and decryption */
+    struct pubnub_crypto_provider_t *crypto_module;
 };
 
 

@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pbcc_crypto.h"
 #include "pubnub_internal.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
@@ -65,6 +66,10 @@ void pbcc_deinit(struct pbcc_context* p)
     }
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
+    if (NULL != p->crypto_module) {
+        free(p->crypto_module);
+        p->crypto_module = NULL;   
+    }
 }
 
 
@@ -108,6 +113,24 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
+            if (NULL != pb->crypto_module) {
+                pubnub_bymebl_t encrypted = pbcc_base64_decode(rslt);
+
+                if (NULL == encrypted.ptr) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
+                free(encrypted.ptr);
+                if (NULL == rslt_block.ptr) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - decryption failed. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                rslt = (char*)rslt_block.ptr;
+            }
+
             return rslt;
         }
     }
@@ -504,6 +527,28 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0");
+
+    if (NULL != pb->crypto_module) {
+        pubnub_bymebl_t message_block = { .ptr = (uint8_t*)message, .size = strlen(message) };
+        pubnub_bymebl_t encrypted = pb->crypto_module->encrypt(pb->crypto_module, message_block);
+
+        if (NULL == encrypted.ptr) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - encryption failed\n", pb);
+            free(message_block.ptr);
+            // TODO: add a specific error code for this
+            //        left as todo because of breaking the API
+            return PNR_INTERNAL_ERROR;
+        }
+
+        message = pbcc_base64_encode(encrypted);
+        if (NULL == message) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
+            free(message_block.ptr);
+            free(encrypted.ptr);
+            return PNR_INTERNAL_ERROR;
+        }
+    }
+
     if (pubnubSendViaGET == method) {
         pb->http_buf[pb->http_buf_len++] = '/';
         APPEND_URL_ENCODED_M(pb, message);

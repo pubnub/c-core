@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include "pbbase64.h"
 #include "pbcc_crypto.h"
 #include "pbsha256.h"
 #include "pbaes256.h"
@@ -257,6 +258,28 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
     }
 
     return -1;
+}
+
+const char* pbcc_base64_encode(pubnub_bymebl_t buffer) {
+    int max_size = base64_max_size(buffer.size);
+
+    char* result = (char*)malloc(max_size);
+    if (result == NULL) {
+        PUBNUB_LOG_ERROR("pbcc_base64_encode: failed to allocate memory for result\n");
+        return NULL;
+    }
+
+    if (base64encode(result, max_size, buffer.ptr, buffer.size) != 0) {
+        PUBNUB_LOG_ERROR("pbcc_base64_encode: failed to encode %zu bytes\n", buffer.size);
+        free(result);
+        return NULL;
+    }
+
+    return result;
+}
+
+pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
+    return pbbase64_decode_alloc_std_str(buffer);
 }
 
 

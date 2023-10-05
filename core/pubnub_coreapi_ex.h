@@ -44,6 +44,8 @@ struct pubnub_publish_options {
         smaller (than un-encrypted). Another point to be made is that
         it also does some memory management (allocting and
         deallocating).
+
+        @deprecated Use `pubnub_set_crypto_module()` instead.
     */
     char const* cipher_key;
     /** If `true`, the message is replicated, thus will be received by

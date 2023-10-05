@@ -126,7 +126,7 @@ typedef struct pubnub_crypto_provider_t {
 
         @return Encrypted data block.
       */
-    pubnub_bymebl_t* (*encrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_encrypt);
+    pubnub_bymebl_t (*encrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_encrypt);
 
     // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
@@ -136,7 +136,7 @@ typedef struct pubnub_crypto_provider_t {
 
         @return Decrypted data block.
      */
-    pubnub_bymebl_t* (*decrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_decrypt);
+    pubnub_bymebl_t (*decrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_decrypt);
 
 
     /** Pointer to the user data needed for the provider. */
@@ -252,21 +252,26 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
 /**
     Encodes the encrypted data to base64.
 
-    This function behaves the same as an old second part of the 
-    `pubnub_encrypt` function. It takes allocated encrypted data and
-    encodes it to base64. 
-    It is meant to be used within pubnub crypto module.
+    This function encodes the encrypted data to base64. It allocates the memory for the 
+    encoded data and returns it to the user.
 
-    @pre str != NULL
+    @param buffer The encrypted data to encode 
 
-    @param buffer The memory block (pointer and size) of the data to encode.
-    @param base64_str String (allocated by the user) to write encoded data,
-    @param n The size of the string,
-    @param iv The initialization vector.
-
-    @return 0: OK, -1: error
+    @return The encoded string or NULL on error
 */
-//static int pbcc_memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* iv, size_t* n);
+const char* pbcc_base64_encode(pubnub_bymebl_t buffer);
+
+/** 
+    Decodes the encrypted data from base64.
+
+    This function decodes the encrypted data from base64. It allocates the memory for the 
+    decoded data and returns it to the user.
+
+    @param buffer The encrypted data to decode 
+
+    @return The decoded string or NULL on error
+*/
+pubnub_bymebl_t pbcc_base64_decode(const char* buffer);
     
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */

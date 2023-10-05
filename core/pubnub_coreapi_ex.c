@@ -3,6 +3,7 @@
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_coreapi.h"
 #include "pubnub_internal.h"
+#include "pubnub_log.h"
 
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
@@ -46,7 +47,9 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
         return PNR_IN_PROGRESS;
     }
 #if PUBNUB_CRYPTO_API
-    if (NULL != opts.cipher_key) {
+    if (NULL != pb->core.crypto_module && NULL != opts.cipher_key) {
+        PUBNUB_LOG_WARNING("pubnub_publish_ex(pb=%p).cipher_key called while client crypto module is set! Using crypto module instead!\n", pb);
+    } else if (NULL != opts.cipher_key) {
         pubnub_bymebl_t to_encrypt;
         char* encrypted_msg = pb->core.encrypted_msg_buf;
         size_t          n  = sizeof pb->core.encrypted_msg_buf - sizeof("\"\"");

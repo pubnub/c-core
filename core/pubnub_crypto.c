@@ -17,6 +17,7 @@
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
+#include "pubnub_internal_common.h"
 
 #ifdef _MSC_VER
 #define strdup(p) _strdup(p)
@@ -671,8 +672,8 @@ struct crypto_module {
 };
 
 
-static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt);
-static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt);
+static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt);
+static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt);
 
 
 struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t algorithms_count) {
@@ -716,63 +717,57 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
     );
 }
 
-static pubnub_bymebl_t *provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt) {
+static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt) {
+    pubnub_bymebl_t result = { NULL, 0 };
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
     struct pubnub_cryptor_t *algorithm = module->default_algorithm;
 
-    struct pubnub_encrypted_data *result = (struct pubnub_encrypted_data *)malloc(sizeof(struct pubnub_encrypted_data));
+    struct pubnub_encrypted_data *encrypted_data = (struct pubnub_encrypted_data *)malloc(sizeof(struct pubnub_encrypted_data));
 
-    if (0 != algorithm->encrypt(algorithm, result, to_encrypt)) {
+    if (0 != algorithm->encrypt(algorithm, encrypted_data, to_encrypt)) {
         PUBNUB_LOG_ERROR("Encryption failed!\n");
-        return NULL;
+        return result;
     };
 
-    struct pubnub_cryptor_header_v1 header = pbcc_prepare_cryptor_header_v1(algorithm->identifier, result->metadata);
-
-    struct pubnub_byte_mem_block *payload = (struct pubnub_byte_mem_block *)malloc(sizeof(struct pubnub_byte_mem_block));
-    if (NULL == payload) {
-        return NULL;
-    }
+    struct pubnub_cryptor_header_v1 header = pbcc_prepare_cryptor_header_v1(algorithm->identifier, encrypted_data->metadata);
 
     size_t header_size = pbcc_cryptor_header_v1_size(&header);
-    size_t whole_size = header_size + result->data.size;
+    size_t whole_size = header_size + encrypted_data->data.size;
 
-    payload->ptr = (uint8_t *)malloc(whole_size);
-    if (payload->ptr == NULL) {
-        free(payload);
-        return NULL;
+    result.ptr = (uint8_t *)malloc(whole_size);
+    if (result.ptr == NULL) {
+        PUBNUB_LOG_ERROR("Failed to allocate memory for encrypted data!\n");
+        return result;
     }
 
-    payload->size = whole_size;
+    result.size = whole_size;
 
     struct pubnub_byte_mem_block *header_block = pbcc_cryptor_header_v1_to_alloc_block(&header);
 
     if (NULL == header_block) {
-        free(payload->ptr);
-        free(payload);
-        return NULL;
+        free(result.ptr);
+        return result;
     }
 
     if (header_block->size != header_size) {
         free(header_block->ptr);
         free(header_block);
-        free(payload->ptr);
-        free(payload);
-        return NULL;
+        free(result.ptr);
+        return result;
     }
 
-    memcpy(payload->ptr, header_block->ptr, header_size);
+    memcpy(result.ptr, header_block->ptr, header_size);
 
-    if (result->metadata.size > 0 && result->metadata.ptr != NULL) {
-        memcpy(payload->ptr + header_size - result->metadata.size, result->metadata.ptr, result->metadata.size);
+    if (encrypted_data->metadata.size > 0 && encrypted_data->metadata.ptr != NULL) {
+        memcpy(result.ptr + header_size - encrypted_data->metadata.size, encrypted_data->metadata.ptr, encrypted_data->metadata.size);
     }
 
-    memcpy(payload->ptr + header_size, result->data.ptr, result->data.size);
+    memcpy(result.ptr + header_size, encrypted_data->data.ptr, encrypted_data->data.size);
 
     free(header_block->ptr);
     free(header_block);
 
-    return payload;
+    return result;
 }
 
 static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
@@ -804,10 +799,12 @@ static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, s
     return NULL;
 }
 
-static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
+static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
+    pubnub_bymebl_t result = { NULL, 0 };
+
     if (NULL == to_decrypt.ptr || to_decrypt.size == 0) {
         PUBNUB_LOG_ERROR("Trying to decrypt empty data\n");
-        return NULL;
+        return result;
     }
 
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
@@ -824,13 +821,7 @@ static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* 
         }
         PUBNUB_LOG_ERROR(" or update SDK\n");
         
-        return NULL;
-    }
-
-    pubnub_bymebl_t *result = (pubnub_bymebl_t *)malloc(sizeof(pubnub_bymebl_t));
-    if (NULL == result) {
-        PUBNUB_LOG_ERROR("Failed to allocate memory for decrypted data\n");
-        return NULL;
+        return result;
     }
 
     size_t header_size = pbcc_cryptor_header_v1_size(header);
@@ -842,16 +833,16 @@ static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* 
     data.metadata.ptr = to_decrypt.ptr + offset;
     data.metadata.size = header->data_length;
 
-    if (0 != algorithm->decrypt(algorithm, result, data)) {
+    if (0 != algorithm->decrypt(algorithm, &result, data)) {
         PUBNUB_LOG_ERROR("Failed to decrypt data!\n");
-        free(result);
-        return NULL;
+        result = (pubnub_bymebl_t){ NULL, 0 };
+        return result;
     }
 
     return result;
 }
 
 void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider) {
-
+    pubnub->core.crypto_module = crypto_provider;
 }
 

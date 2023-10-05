@@ -116,6 +116,8 @@ struct pbcc_context {
     /** Secret key to use for encryption/decryption */
     char const* secret_key;
 #endif
+    /** Crypto module for encryption and decryption */
+    struct pubnub_crypto_provider_t *crypto_module;
 };
 
 

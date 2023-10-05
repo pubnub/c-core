@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "lib/pb_deprecated.h"
 #if !defined INC_PUBNUB_CRYPTO
 #define	INC_PUBNUB_CRYPTO
 
@@ -132,13 +133,15 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key
 
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
+
     The effect of this function is similar to:
    
         struct pubnub_publish_options opts =  pubnub_publish_defopts();
         opts.cipher_key = cipher_key;;
         return pubnub_publish_ex(p, channel, message, opts);
 */
-enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
 
 /** Get the buffer size required to encode an array with the given
     number of bytes.

@@ -38,4 +38,6 @@ void expect_have_dns_for_pubnub_origin(pubnub_t* pbp);
 
 void expect_outgoing_with_url(pubnub_t* pbp, char const* url);
 
+void expect_outgoing_with_url_no_params(pubnub_t* pbp, char const* url);
+
 #endif // INC_PUBNUB_TEST_MOCKS
