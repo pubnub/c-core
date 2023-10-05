@@ -178,6 +178,8 @@ pubnub_bymebl_t pbaes256_decrypt_alloc(pubnub_bymebl_t data, uint8_t const* key,
         PUBNUB_LOG_ERROR("Failed AES-256 decryption\n");
         free(result.ptr);
         result.ptr = NULL;
+        result.size = 0;
+        return result;
     }
     result.ptr[result.size] = '\0';
     return result;
