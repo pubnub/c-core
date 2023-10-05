@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include "pbbase64.h"
 #include "pbcc_crypto.h"
+#if PUBNUB_CRYPTO_API
 #include "pbsha256.h"
+#endif
 #include "pbaes256.h"
 #include "pubnub_crypto.h"
 #include "pubnub_log.h"
