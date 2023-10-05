@@ -1849,6 +1849,18 @@ public:
 #endif
     }
 
+#if PUBNUB_CRYPTO_API
+    /// Set the crypto module to be sued byt the context
+    ///
+    /// This function sets the crypto module to be used by the context
+    /// for encryption and decryption of messages.
+    /// @see pubnub_set_crypto_module()
+    void set_crypto_module(pubnub_crypto* crypto)
+    {
+        pubnub_set_crypto_module(d_pb, crypto);
+    }
+#endif /* PUBNUB_CRYPTO_API */
+
     ~context()
     {
         if (d_pb) {

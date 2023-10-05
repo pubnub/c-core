@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
+#include "pubnub_ccore_pubsub.h"
 #ifdef PUBNUB_CRYPTO_API
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
@@ -272,6 +273,18 @@ const char* pbcc_base64_encode(pubnub_bymebl_t buffer);
     @return The decoded string or NULL on error
 */
 pubnub_bymebl_t pbcc_base64_decode(const char* buffer);
+
+
+/**
+   Set the crypto module to be used by the pubnub context.
+
+   This function sets the crypto module to be used by the pubnub context
+   for the encryption and decryption of the messages.
+
+   @param pubnub Pointer to the pubnub context.
+   @param crypto_provider Pointer to the crypto provider to use.
+*/
+void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider);
     
 #endif /* PBCC_CRYPTO_H */
 #endif /* PUBNUB_CRYPTO_API */

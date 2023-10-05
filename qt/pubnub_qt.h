@@ -1756,6 +1756,21 @@ public:
         t.fromMSecsSinceStartOfDay(transaction_timeout_get());
     }
 
+#if PUBNUB_CRYPTO_API
+    /**
+       Set the crypto module to be used by the pubnub.
+    
+       This function sets the crypto module to be used by the pubnub context
+       for the encryption and decryption of the messages.
+
+       @see pubnub_set_crypto_module()
+    */
+    void set_crypto_module(pubnub_bymeblow_crypto* crypto) {
+        pbcc_set_crypto_module(crypto);
+    }
+#endif /* PUBNUB_CRYPTO_API */
+
+
 private slots:
     void httpFinished();
     void transactionTimeout();

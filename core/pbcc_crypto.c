@@ -280,3 +280,6 @@ pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
     return pbbase64_decode_alloc_std_str(buffer);
 }
 
+void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider) {
+    ctx->crypto_module = crypto_provider;
+}
