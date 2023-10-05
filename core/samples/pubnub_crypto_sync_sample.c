@@ -1,6 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbcc_crypto.h"
-#include "pubnub_memory_block.h"
 #include "pubnub_sync.h"
 
 #include "core/pubnub_helper.h"
@@ -10,10 +8,8 @@
 #include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_crypto.h"
 
-#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include <string.h>
 
 
 /** This is a sample for Pubnub Crypto API. It is only usable if the
@@ -54,50 +50,13 @@ static void sync_sample_free(pubnub_t* p)
     }
 }
 
-static void print_encrypted_message(const char* display, pubnub_bymebl_t *encrypted_message)
-{
-    printf("%s: ", display);
-
-    for (int i = 0; i < encrypted_message->size; i++) {
-        printf("%c", encrypted_message->ptr[i]);
-    }
-    printf("\n");
-
-    for (int i = 0; i < encrypted_message->size; i++) {
-        printf("%d, ", encrypted_message->ptr[i]);
-    }
-    printf("\n\n");
-}
 
 int main()
 {
-    char const *msg = "Hello world";
-    char const *cipher_key = "enigma";
-
-    printf("message to be encrypted: %s\n\n", msg);
-
-    pubnub_bymebl_t block;
-    block.ptr = (uint8_t*)msg;
-    block.size = strlen(msg);
-
-    struct pubnub_crypto_provider_t *legacy_crypto_module = pubnub_crypto_legacy_module_init((uint8_t*) cipher_key);
-    pubnub_bymebl_t *legacy_encrypt_result = legacy_crypto_module->encrypt(legacy_crypto_module, block);
-
-    print_encrypted_message("encrypt with legacy AES-CBC result", legacy_encrypt_result);
-
-    struct pubnub_crypto_provider_t *crypto_module = pubnub_crypto_aes_cbc_module_init((uint8_t*)cipher_key);
-    pubnub_bymebl_t *encrypt_result = crypto_module->encrypt(crypto_module, block);
-
-    print_encrypted_message("encrypt with enhanced AES-CBC result", encrypt_result);
-
-    pubnub_bymebl_t *legacy_decrypt_result = crypto_module->decrypt(crypto_module, *legacy_encrypt_result);
-    printf("decrypt with legacy AES-CBC result: %s\n", legacy_decrypt_result->ptr);
-
-    pubnub_bymebl_t *decrypt_result = legacy_crypto_module->decrypt(legacy_crypto_module, *encrypt_result);
-    printf("decrypt with enhanced AES-CBC result: %s\n", decrypt_result->ptr);
-    
-    return 0;
-
+    time_t t0;
+    enum pubnub_res res;
+    char const *chan = "hello_world";
+    char const *cipher_key = "4443443";
     pubnub_t *pbp = pubnub_alloc();
 
     if (NULL == pbp) {
@@ -116,8 +75,65 @@ int main()
 
     generate_user_id(pbp);
 
-//    pubnub_set_auth(pbp, "danaske");
+    pubnub_set_auth(pbp, "danaske");
 
+
+    puts("Subscribing...");
+    time(&t0);
+    res = pubnub_subscribe(pbp, chan, NULL);
+    if (res == PNR_STARTED) {
+        res = pubnub_await(pbp);
+    }
+    printf("Subscribe/connect lasted %lf seconds.\n", difftime(time(NULL), t0));
+    if (PNR_OK == res) {
+        puts("Subscribed!");
+    }
+    else {
+        printf("Subscribing failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+
+    puts("Publishing...");
+    time(&t0);
+    res = pubnub_publish_encrypted(pbp, chan, "\"Hello world from crypto sync!\"", cipher_key);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    printf("Publish lasted %lf seconds.\n", difftime(time(NULL), t0));
+    if (PNR_OK == res) {
+        printf("Published! Response from Pubnub: %s\n", pubnub_last_publish_result(pbp));
+    }
+    else if (PNR_PUBLISH_FAILED == res) {
+        printf("Published failed on Pubnub, description: %s\n", pubnub_last_publish_result(pbp));
+    }
+    else {
+        printf("Publishing failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+
+    puts("Second subscribe");
+
+    res = pubnub_subscribe(pbp, chan, NULL);
+    if (res == PNR_STARTED) {
+        res = pubnub_await(pbp);
+    }
+    if (PNR_OK == res) {
+        puts("Subscribed! Got messages:");
+        for (;;) {
+            pubnub_bymebl_t mebl = pubnub_get_decrypted_alloc(pbp, cipher_key);
+            if (NULL == mebl.ptr) {
+                break;
+            }
+            puts((char*)mebl.ptr);
+            free(mebl.ptr);
+        }
+    }
+    else {
+        printf("Subscribing failed with code %d('%s')\n", res, pubnub_res_2_string(res));
+    }
+	
     /* We're done, but, if keep-alive is on, we can't free,
        we need to cancel first...
      */
