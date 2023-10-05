@@ -40,6 +40,10 @@ USE_GRANT_TOKEN = 1
 USE_FETCH_HISTORY = 1
 !endif
 
+!ifndef USE_CRYPTO_API 
+USE_CRYPTO_API = 1 
+!endif 
+
 !if $(USE_REVOKE_TOKEN)
 REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke_token_api.c
 REVOKE_TOKEN_OBJFILES = pubnub_revoke_token_api.obj pbcc_revoke_token_api.obj
@@ -63,6 +67,12 @@ CFLAGS = -Yu"pch.h" -Zi -Y- -MP -W3  -Gy -Zc:wchar_t $(UDEFINES) $(DEFINES) -Gm-
 # /analyze To run the static analyzer (not compatible w/clang-cl)
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include
+
+
+!if $(USE_CRYPTO_API)
+INCLUDES+= -I ../lib/base64/ -I ../core/
+!endif
+
 
 all: pubnub_sync.lib pubnub_callback.lib
 
