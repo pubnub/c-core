@@ -317,6 +317,14 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char*
         return PNR_INTERNAL_ERROR;
     }
     msg_len = strlen(msg);
+
+    if (NULL != pb->core.crypto_module) {
+        PUBNUB_LOG_WARNING("pubnub_get_decrypted() called, but crypto module is already set! Used module instead of given key!\n");
+        s = msg;
+        *n = msg_len;
+        return PNR_OK;
+    }
+
     if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return PNR_FORMAT_ERROR;
     }
@@ -349,6 +357,12 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
         return result;
     }
     msg_len = strlen(msg);
+
+    if (NULL != pb->core.crypto_module) {
+        PUBNUB_LOG_WARNING("pubnub_get_decrypted() called, but crypto module is already set! Used module instead of given key!\n");
+        return (pubnub_bymebl_t){ (uint8_t*)msg, msg_len };
+    }
+
     if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return result;
     }

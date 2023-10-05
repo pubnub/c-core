@@ -95,6 +95,8 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
     @p cipher_key, puting the decrypted contents to user-allocated
     @p s having size @p n.
 
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
+
     The effect of this functions is similar to calling pubnub_get()
     and then pubnub_decrypt().
 
@@ -113,12 +115,14 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
     point to be made is that it also does some memory management
     (allocting and deallocating).
  */
-enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
 
 /** This function is very similar to pubnub_get_decrypted(), but it
     allocates the (memory for the) decrypted string and returns it as
     its result. It is the caller's responsibility to free() thus
     allocated string.
+
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
 
     Thus, usage of this function can be simpler, as the user doesn't
     have to "guess" the size of the message. But, keep in mind that
@@ -128,7 +132,7 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
 
     On failure, a NULL pointer is returned.
 */
-pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
+PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
 
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key
