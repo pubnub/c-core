@@ -12,6 +12,7 @@
 */
 
 #include "pubnub_memory_block.h"
+#include <stdint.h>
 
 /** @file pubnub_crypto.h 
 
@@ -212,6 +213,60 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
 */
 struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub_byte_mem_block *cryptor_header);
     
+/**
+    Encrypts data with legacy algorithm without encoding it to base64.
 
+    This function behaves the same as a old `pubnub_encrypt` function, but it doesn't
+    encode the encrypted data to base64. It allocates the memory for the encrypted data 
+    and returns it to the user. 
+    It is meant to be used within pubnub crypto module.
+
+    @pre cipher_key != NULL
+
+    @param cipher_key The key to use when encrypting
+    @param msg The memory block (pointer and size) of the data to encrypt
+    @param str String (allocated by the user) to write encrypted 
+    @param n The size of the string
+
+    @return encrypted data block
+*/
+pubnub_bymebl_t pbcc_legacy_encrypt(uint8_t const* cipher_key, pubnub_bymebl_t msg);
+
+/**
+    Decrypts data with legacy algorithm without decoding it from base64.
+
+    This function behaves the same as a old `pubnub_decrypt` function, but it doesn't
+    decode the encrypted data from base64. It allocates the memory for the decrypted data
+    and returns it to the user.
+    It is meant to be used within pubnub crypto module.
+
+    @pre cipher_key != NULL
+
+    @param cipher_key The key to use when decrypting
+    @param to_decrypt The memory block (pointer and size) of the data to decrypt
+    
+    @return decrypted data block
+*/
+int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubnub_bymebl_t to_decrypt);
+
+/**
+    Encodes the encrypted data to base64.
+
+    This function behaves the same as an old second part of the 
+    `pubnub_encrypt` function. It takes allocated encrypted data and
+    encodes it to base64. 
+    It is meant to be used within pubnub crypto module.
+
+    @pre str != NULL
+
+    @param buffer The memory block (pointer and size) of the data to encode.
+    @param base64_str String (allocated by the user) to write encoded data,
+    @param n The size of the string,
+    @param iv The initialization vector.
+
+    @return 0: OK, -1: error
+*/
+//static int pbcc_memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* iv, size_t* n);
+    
 #endif /* PBCC_CRYPTO_H */
 //#endif /* PUBNUB_CRYPTO_API */

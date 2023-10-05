@@ -198,11 +198,23 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
 
    @param default Pointer to the default crypto algorithm to use.
    @param algorithms Pointer to the array of crypto algorithms to use.
-   @param n_algorithms Number of crypto algorithms in the array.
+   @param n_algorithms Number of crypto algorithms in the array. (omit the default one)
 
    @return Pointer to the crypto module structure.
 */
 struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t n_algorithms);
+
+
+/**
+   Set the crypto module to be used by the pubnub context.
+
+   This function sets the crypto module to be used by the pubnub context
+   for the encryption and decryption of the messages.
+
+   @param pubnub Pointer to the pubnub context.
+   @param crypto_provider Pointer to the crypto provider to use.
+*/
+void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
    
 
 #endif /* defined INC_PUBNUB_CRYPTO */

@@ -851,3 +851,7 @@ static pubnub_bymebl_t *provider_decrypt(struct pubnub_crypto_provider_t const* 
     return result;
 }
 
+void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider) {
+
+}
+

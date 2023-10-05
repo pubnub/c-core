@@ -2,12 +2,17 @@
 
 //#ifdef PUBNUB_CRYPTO_API
 
+#include <stdint.h>
 #include <stdio.h>
 #include "pbcc_crypto.h"
 #include "pbsha256.h"
+#include "pbaes256.h"
 #include "pubnub_crypto.h"
 #include "pubnub_log.h"
+#include "pubnub_memory_block.h"
+#include "pubnub_assert.h"
 #include <string.h>
+#include <openssl/rand.h>
 
 int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
     uint8_t digest[32];
@@ -53,6 +58,7 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
     uint8_t version = 1;
     struct pubnub_byte_mem_block* result = (struct pubnub_byte_mem_block*)malloc(sizeof(struct pubnub_byte_mem_block));
     if (NULL == result) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_to_alloc_block: failed to allocate memory\n");
         return NULL;
     }
 
@@ -67,6 +73,7 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
 
     result->ptr = (uint8_t*)malloc(header_size);
     if (NULL == result->ptr) {
+        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_to_alloc_block: failed to allocate memory\n");
         free(result);
         return NULL;
     }
@@ -164,5 +171,94 @@ struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub
 
     return result;
 }
+
+pubnub_bymebl_t pbcc_legacy_encrypt(uint8_t const* cipher_key, pubnub_bymebl_t msg)
+{
+    uint8_t key[33];
+    unsigned char iv[17] = "0123456789012345";
+#if PUBNUB_RAND_INIT_VECTOR
+    int rand_status = RAND_bytes(iv, 16);
+    PUBNUB_ASSERT_OPT(rand_status == 1);
+#endif
+
+    pbcc_cipher_key_hash((uint8_t*)cipher_key, key);
+    pubnub_bymebl_t result = pbaes256_encrypt_alloc(msg, key, iv);
+
+    #if PUBNUB_RAND_INIT_VECTOR
+        memmove(result.ptr + 16, result.ptr, result.size);
+        memcpy(result.ptr, iv, 16);
+        result.size += 16;
+        result.ptr[result.size] = '\0';
+    #endif
+
+    return result;
+}
+
+int pbcc_memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* iv, size_t* n) 
+{
+#if PUBNUB_RAND_INIT_VECTOR
+    memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
+    memcpy(buffer.ptr, iv, 16);
+    buffer.size += 16;
+    buffer.ptr[buffer.size] = '\0';
+#endif
+
+#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
+    for (int i = 0; i < (int)buffer.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+#endif
+
+    int max_size = base64_max_size(buffer.size);
+    if (*n + 1 < (size_t)max_size) {
+        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
+        return -1;
+    }
+    char* base64_output = (char*)malloc(max_size);
+    if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
+        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
+        free(base64_output);
+        return -1;
+    }
+    int result = snprintf(base64_str, *n, "%s", base64_output);
+    *n = (size_t)strlen(base64_str);
+
+    free(base64_output);
+
+    return result >= 0 ? 0 : -1; 
+} 
+
+int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubnub_bymebl_t to_decrypt) {
+    unsigned char iv[17] = "0123456789012345";
+    uint8_t key[33];
+
+    pbcc_cipher_key_hash(cipher_key, key);
+
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes to decrypt = [");
+    for (size_t i = 0; i < to_decrypt.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", to_decrypt.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    if (to_decrypt.ptr != NULL) {
+
+#if PUBNUB_RAND_INIT_VECTOR
+        memcpy(iv, to_decrypt.ptr, 16);
+        memmove(to_decrypt.ptr, to_decrypt.ptr + 16, to_decrypt.size - 16);
+        to_decrypt.size = to_decrypt.size - 16;
+#endif
+        to_decrypt.ptr[to_decrypt.size] = '\0';
+
+        return pbaes256_decrypt(to_decrypt, key, iv, result);
+    }
+
+    return -1;
+}
+
+
 
 //#endif // PUBNUB_CRYPTO_API

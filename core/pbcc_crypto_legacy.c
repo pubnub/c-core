@@ -5,6 +5,7 @@
 #include "pbcc_crypto.h"
 #include "pubnub_crypto.h"
 #include "pubnub_memory_block.h"
+#include "pubnub_log.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -67,16 +68,18 @@ static int legacy_encrypt(
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
 
-    size_t estimated_size = base64_max_size(estimated_enc_buffer_size(to_encrypt.size));
+    size_t estimated_size = estimated_enc_buffer_size(to_encrypt.size);
     result->data.ptr = (uint8_t*)malloc(estimated_size);
+    memset(result->data.ptr, 0, estimated_size);
     if (NULL == result->data.ptr) {
         return -1;
     }
     result->data.size = estimated_size;
 
-    int res = pubnub_encrypt((char*)ctx->cipher_key, to_encrypt, (char*)result->data.ptr, &result->data.size);
-    if (0 != res) {
-        return res;
+    result->data = pbcc_legacy_encrypt(ctx->cipher_key, to_encrypt);
+    if (NULL == result->data.ptr) {
+        PUBNUB_LOG_ERROR("pbcc_legacy_encrypt() failed\n");
+        return -1;
     }
 
     result->metadata.ptr = NULL;
@@ -92,17 +95,22 @@ static int legacy_decrypt(
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
 
-    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size) + 50000;
+    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size) + 100000; // TODO: WHY!?!?!?
     result->ptr = (uint8_t*)malloc(estimated_size);
+    memset(result->ptr, 0, estimated_size);
     if (NULL == result->ptr) {
         return -1;
     }
     result->size = estimated_size;
 
-    int res = pubnub_decrypt((char*)ctx->cipher_key, (char*)to_decrypt.data.ptr, result);
-    if (0 != res) {
-        return res;
+    pbcc_legacy_decrypt(ctx->cipher_key, result, to_decrypt.data);
+    if (NULL == result->ptr) {
+        PUBNUB_LOG_ERROR("pubnub_decrypt() failed\n");
+        free(result->ptr);
+        return -1;
     }
+
+    result->size = strlen((char*)result->ptr);
 
     return 0;
 }
