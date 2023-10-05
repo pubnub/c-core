@@ -148,25 +148,24 @@ Ensure(crypto_api, client_should_use_cryptors_for_subscribe) {
     assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
 }
 
-//Ensure(crypto_api, client_should_use_cryptors_for_history) {
-//    expect_have_dns_for_pubnub_origin(pbp);
-//
-//    expect_outgoing_with_url(pbp, "/v2/history/sub-key/sub_key/channel/"
-//                             "ch?pnsdk=unit-test-0.1&uuid=test_id&count=22&include_token="
-//                             "false");
-//    incoming("HTTP/1.1 200\r\nContent-Length: "
-//             "45\r\n\r\n[[1,2,3],14370854953886727,14370864554607266]",
-//             NULL);
-//    expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
-//    expect(pbntf_trans_outcome, when(pb, is_equal_to(pbp)));
-//    assert_that(pubnub_history(pbp, "ch", 22, false), is_equal_to(PNR_OK));
-//
-//    assert_that(pubnub_get(pbp), is_equal_to_string("[1,2,3]"));
-//    assert_that(pubnub_get(pbp), is_equal_to_string("14370854953886727"));
-//    assert_that(pubnub_get(pbp), is_equal_to_string("14370864554607266"));
-//    assert_that(pubnub_get(pbp), is_equal_to(NULL));
-//    assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
-//}
+Ensure(crypto_api, client_should_use_cryptors_for_history) {
+    pubnub_set_crypto_module(pbp, pubnub_crypto_module_init(&x_cryptor, &y_cryptor, 1));
+
+    expect_have_dns_for_pubnub_origin(pbp);
+
+    expect_outgoing_with_url_no_params(pbp, "/v2/history/sub-key/sub_key/channel/"
+                             "ch");
+    incoming("HTTP/1.1 200\r\nContent-Length: "
+             "26\r\n\r\n[UE5FRAF4eHh4BG1ldGF4eHh4]",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
+    expect(pbntf_trans_outcome, when(pb, is_equal_to(pbp)));
+    assert_that(pubnub_history(pbp, "ch", 22, false), is_equal_to(PNR_OK));
+
+    assert_that(pubnub_get(pbp), is_equal_to_string(X));
+    assert_that(pubnub_get(pbp), is_equal_to(NULL));
+    assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
+}
 
 int x_encrypt(pubnub_cryptor_t const* _c, struct pubnub_encrypted_data *result, pubnub_bymebl_t _d) {
     result->data.ptr = (uint8_t*)X;
