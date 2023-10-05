@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-//#ifdef PUBNUB_CRYPTO_API
+#ifdef PUBNUB_CRYPTO_API
 
 #include "pbcc_crypto.h"
 #include "pubnub_crypto.h"
@@ -116,4 +116,4 @@ static int legacy_decrypt(
 }
 
 
-//#endif // PUBNUB_CRYPTO_API
+#endif // PUBNUB_CRYPTO_API

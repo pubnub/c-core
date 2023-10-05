@@ -1,9 +1,11 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_CRYPTO_API
+
 #include <stdio.h>
 #include "pbcc_crypto.h"
 #include "pbaes256.h"
-#if PUBNUB_CRYPTO_API
 #include "pbbase64.h"
-#endif
 #include "pubnub_crypto.h"
 #include "pubnub_memory_block.h"
 #include "pubnub_log.h"
@@ -149,4 +151,5 @@ static int aes_decrypt(
     return 0;
 }
 
+#endif /* PUBNUB_CRYPTO_API */
 
