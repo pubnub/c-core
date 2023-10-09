@@ -16,59 +16,9 @@
 #include <time.h>
 #include <string.h>
 
-
-/** This is a sample for Pubnub Crypto API. It is only usable if the
-    platform has support for cryptography - like the OpenSSL
-    "library/platform".
- */
-
-
-static void generate_user_id(pubnub_t *pbp)
-{
-    char const *user_id_default = "zeka-peka-iz-jendeka";
-    struct Pubnub_UUID uuid;
-    static struct Pubnub_UUID_String str_uuid;
-
-    if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
-        pubnub_set_user_id(pbp, user_id_default);
-    }
-    else {
-        str_uuid = pubnub_uuid_to_string(&uuid);
-        pubnub_set_user_id(pbp, str_uuid.uuid);
-        printf("Generated UUID: %s\n", str_uuid.uuid);
-    }
-}
-
-
-static void sync_sample_free(pubnub_t* p)
-{
-    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
-        enum pubnub_res pnru = pubnub_await(p);
-        if (pnru != PNR_OK) {
-            printf("Awaiting cancel failed: %d('%s')\n",
-                   pnru,
-                   pubnub_res_2_string(pnru));
-        }
-    }
-    if (pubnub_free(p) != 0) {
-        printf("Failed to free the Pubnub context\n");
-    }
-}
-
-static void print_encrypted_message(const char* display, pubnub_bymebl_t encrypted_message)
-{
-    printf("%s: ", display);
-
-    for (int i = 0; i < encrypted_message.size; i++) {
-        printf("%c", encrypted_message.ptr[i]);
-    }
-    printf("\n");
-
-    for (int i = 0; i < encrypted_message.size; i++) {
-        printf("%d, ", encrypted_message.ptr[i]);
-    }
-    printf("\n\n");
-}
+static void generate_user_id(pubnub_t *pbp);
+static void sync_sample_free(pubnub_t* p);
+static void print_encrypted_message(const char* display, pubnub_bymebl_t encrypted_message);
 
 int main()
 {
@@ -205,3 +155,52 @@ int main()
 
     return 0;
 }
+
+static void generate_user_id(pubnub_t *pbp)
+{
+    char const *user_id_default = "zeka-peka-iz-jendeka";
+    struct Pubnub_UUID uuid;
+    static struct Pubnub_UUID_String str_uuid;
+
+    if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
+        pubnub_set_user_id(pbp, user_id_default);
+    }
+    else {
+        str_uuid = pubnub_uuid_to_string(&uuid);
+        pubnub_set_user_id(pbp, str_uuid.uuid);
+        printf("Generated UUID: %s\n", str_uuid.uuid);
+    }
+}
+
+
+static void sync_sample_free(pubnub_t* p)
+{
+    if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
+        enum pubnub_res pnru = pubnub_await(p);
+        if (pnru != PNR_OK) {
+            printf("Awaiting cancel failed: %d('%s')\n",
+                   pnru,
+                   pubnub_res_2_string(pnru));
+        }
+    }
+    if (pubnub_free(p) != 0) {
+        printf("Failed to free the Pubnub context\n");
+    }
+}
+
+static void print_encrypted_message(const char* display, pubnub_bymebl_t encrypted_message)
+{
+    printf("%s: ", display);
+
+    for (int i = 0; i < encrypted_message.size; i++) {
+        printf("%c", encrypted_message.ptr[i]);
+    }
+    printf("\n");
+
+    for (int i = 0; i < encrypted_message.size; i++) {
+        printf("%d, ", encrypted_message.ptr[i]);
+    }
+    printf("\n\n");
+}
+
+
