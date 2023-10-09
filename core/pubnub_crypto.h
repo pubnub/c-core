@@ -48,13 +48,13 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
     @param n The size of the string
     @return 0: OK, -1: error
 */
-int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
+PUBNUB_DEPRECATED int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
 
 /** Similar to pubnub_encrypt() - but this function doesn't allocate
     memory, it uses the memory provided by @p buffer for its "working
     memory".
 */
-int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
+PUBNUB_DEPRECATED int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
 
 /** Decrypts a message from a Base64 encoded string @p base64_str to
     user-allocated memory @p data. On input @p data->size holds the
@@ -73,12 +73,12 @@ int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *b
     @param data User allocated memory block to write the decrypted contents to
     @return 0: OK, -1: error
 */
-int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
+PUBNUB_DEPRECATED int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
 
 /** Similar to pubnub_decrypt(), but never allocates memory - it uses
     the memory provided by @p buffer as its "working memory".
 */
-int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
+PUBNUB_DEPRECATED int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
 
 /** Similar to pubnub_decrpyt(), but this will allocate the memory to
     write the decrypted contents to and return it as the result.
@@ -88,7 +88,7 @@ int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubn
     @result Memory block (pointer and size) of the decoded and decrypted
     message. On failure, pointer will be NULL and size is undefined.
 */
-pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
+PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
 
 
 /** Decrypts the next message in the context @p p using the key
