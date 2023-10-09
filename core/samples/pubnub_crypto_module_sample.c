@@ -84,8 +84,6 @@ int main()
     struct pubnub_crypto_provider_t *legacy_crypto_module = pubnub_crypto_legacy_module_init((uint8_t*) cipher_key);
     pubnub_bymebl_t legacy_encrypt_result = legacy_crypto_module->encrypt(legacy_crypto_module, block);
 
-    pubnub_bymebl_t kekw = legacy_crypto_module->decrypt(legacy_crypto_module, (pubnub_bymebl_t){.ptr = "½Àî–îˆùEß‡E®6uPÂ", .size = 30});
-
     if (NULL == legacy_encrypt_result.ptr) {
         printf("encrypt with legacy AES-CBC failed\n");
         return -1;
@@ -145,7 +143,7 @@ int main()
 
     generate_user_id(pbp);
 
-    pubnub_set_cipher_key(pbp, cipher_key);
+    pubnub_set_crypto_module(pbp, pubnub_crypto_aes_cbc_module_init((uint8_t*)cipher_key));
 
     enum pubnub_res result;
 
