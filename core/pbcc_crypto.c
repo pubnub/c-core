@@ -284,3 +284,6 @@ void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provi
     ctx->crypto_module = crypto_provider;
 }
 
+pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx) {
+    return ctx->crypto_module;
+}

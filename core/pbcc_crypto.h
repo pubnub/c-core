@@ -280,5 +280,18 @@ pubnub_bymebl_t pbcc_base64_decode(const char* buffer);
    @param crypto_provider Pointer to the crypto provider to use.
 */
 void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider);
+
+/**
+   Get the crypto module used by the pubnub context.
+
+   This function gets the crypto module used by the pubnub context 
+   for the encryption and decryption of the messages directly.
+
+   @param pubnub Pointer to the pubnub context.
+
+   @return Pointer to the crypto provider used by the pubnub context.
+*/
+pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx);
+   
     
 #endif /* PBCC_CRYPTO_H */

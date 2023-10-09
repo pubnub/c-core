@@ -223,4 +223,16 @@ struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor
 */
 void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
 
+/**
+   Get the crypto module used by the pubnub context.
+
+   This function gets the crypto module used by the pubnub context
+   for give a possibility to the user to use the crypto module directly.
+
+   @param pubnub Pointer to the pubnub context.
+
+   @return Pointer to the crypto provider used by the pubnub context.
+*/
+pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub);
+
 #endif /* defined INC_PUBNUB_CRYPTO */

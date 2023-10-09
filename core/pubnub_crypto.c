@@ -860,3 +860,7 @@ void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t 
     pbcc_set_crypto_module(&pubnub->core, crypto_provider);
 }
 
+pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub) {
+    return pbcc_get_crypto_module(&pubnub->core);
+}
+
