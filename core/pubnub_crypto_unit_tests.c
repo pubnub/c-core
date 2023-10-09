@@ -134,7 +134,7 @@ Ensure(crypto_api, client_should_use_cryptors_for_subscribe) {
     expect_outgoing_with_url_no_params_on(pbp, "/subscribe/sub_key/health/0/"
                              "1516014978925123457");
     incoming("HTTP/1.1 200\r\nContent-Length: "
-             "50\r\n\r\n[[UE5FRAF4eHh4BG1ldGF4eHh4],"
+             "52\r\n\r\n[[\"UE5FRAF4eHh4BG1ldGF4eHh4\"],"
              "\"1516714978925123457\"]",
              NULL);
     expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
@@ -156,7 +156,7 @@ Ensure(crypto_api, client_should_use_cryptors_for_history) {
     expect_outgoing_with_url_no_params_on(pbp, "/v2/history/sub-key/sub_key/channel/"
                              "ch");
     incoming("HTTP/1.1 200\r\nContent-Length: "
-             "26\r\n\r\n[UE5FRAF4eHh4BG1ldGF4eHh4]",
+             "28\r\n\r\n[\"UE5FRAF4eHh4BG1ldGF4eHh4\"]",
              NULL);
     expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
     expect(pbntf_trans_outcome, when(pb, is_equal_to(pbp)));

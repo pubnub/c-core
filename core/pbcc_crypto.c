@@ -277,6 +277,7 @@ const char* pbcc_base64_encode(pubnub_bymebl_t buffer) {
 }
 
 pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
+    PUBNUB_LOG_ERROR("pbcc_base64_decode: buffer = %s\n", buffer);
     return pbbase64_decode_alloc_std_str(buffer);
 }
 
