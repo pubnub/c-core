@@ -73,7 +73,7 @@ static void print_encrypted_message(const char* display, pubnub_bymebl_t encrypt
 int main()
 {
     char const *msg = "Hello world";
-    char const *cipher_key = "enigma";
+    uint8_t const *cipher_key = (uint8_t*)"enigma";
 
     printf("message to be encrypted: %s\n\n", msg);
 
@@ -81,7 +81,7 @@ int main()
     block.ptr = (uint8_t*)msg;
     block.size = strlen(msg);
 
-    struct pubnub_crypto_provider_t *legacy_crypto_module = pubnub_crypto_legacy_module_init((uint8_t*) cipher_key);
+    struct pubnub_crypto_provider_t *legacy_crypto_module = pubnub_crypto_legacy_module_init(cipher_key);
     pubnub_bymebl_t legacy_encrypt_result = legacy_crypto_module->encrypt(legacy_crypto_module, block);
 
     if (NULL == legacy_encrypt_result.ptr) {
@@ -91,7 +91,7 @@ int main()
 
     print_encrypted_message("encrypt with legacy AES-CBC result", legacy_encrypt_result);
 
-    struct pubnub_crypto_provider_t *crypto_module = pubnub_crypto_aes_cbc_module_init((uint8_t*)cipher_key);
+    struct pubnub_crypto_provider_t *crypto_module = pubnub_crypto_aes_cbc_module_init(cipher_key);
     pubnub_bymebl_t encrypt_result = crypto_module->encrypt(crypto_module, block);
     
     if (NULL == encrypt_result.ptr) {
@@ -133,19 +133,18 @@ int main()
     }
     pubnub_init(pbp, "demo", "demo");
 
-    pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
-
     /* Leave this commented out to use the default - which is
        blocking I/O on most platforms. Uncomment to use non-
        blocking I/O.
     */
     pubnub_set_non_blocking_io(pbp);
-
     generate_user_id(pbp);
 
-    pubnub_set_crypto_module(pbp, pubnub_crypto_aes_cbc_module_init((uint8_t*)cipher_key));
+    pubnub_set_crypto_module(pbp, pubnub_crypto_aes_cbc_module_init(cipher_key));
 
     enum pubnub_res result;
+
+    printf("Subscribing to PubNub infrastructure...\n");
 
     result = pubnub_subscribe(pbp, "hello_world", NULL);
     if (PNR_STARTED == result) {
@@ -159,6 +158,8 @@ int main()
         sync_sample_free(pbp);
         return -1;
     }
+
+    printf("Publishing a message...\n");
 
     result = pubnub_publish(pbp, "hello_world", "\"Hello world from Pubnub C core API!\"");
     if (PNR_STARTED == result) {
@@ -173,6 +174,8 @@ int main()
         return -1;
     }
 
+    printf("Fetching messages...\n");
+
     result = pubnub_subscribe(pbp, "hello_world", NULL);
     if (PNR_STARTED == result) {
         result = pubnub_await(pbp);
@@ -186,8 +189,9 @@ int main()
         return -1;
     }
 
+    printf("Here are the messages:\n");
     for (const char* msg = pubnub_get(pbp); msg != NULL; msg = pubnub_get(pbp)) {
-        printf("Received message: %s\n", msg);
+        printf("> %s\n", msg);
     }
 
     puts("Pubnub crypto module demo over.");
