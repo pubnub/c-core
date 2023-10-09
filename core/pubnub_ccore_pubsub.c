@@ -9,6 +9,7 @@
 #include "lib/pb_strnlen_s.h"
 #include "pubnub_ccore_pubsub.h"
 #include "pubnub_api_types.h"
+#include <string.h>
 
 #if PUBNUB_CRYPTO_API
 #include "pubnub_crypto.h"
@@ -117,7 +118,17 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
         if (pb->msg_ofs++ <= pb->msg_end) {
 #if PUBNUB_CRYPTO_API
             if (NULL != pb->crypto_module) {
-                pubnub_bymebl_t encrypted = pbcc_base64_decode(rslt);
+                char* trimmed = (char*)malloc(strlen(rslt) + 1); // same length as rslt
+                if (NULL == trimmed) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Dropping message!\n", pb);
+                    return NULL;
+                }
+                sprintf(trimmed, "%s", rslt);
+                
+                trimmed[strlen(trimmed) - 1] = '\0';
+
+                pubnub_bymebl_t encrypted = pbcc_base64_decode(trimmed + 1);
+                free(trimmed);
 
                 if (NULL == encrypted.ptr) {
                     PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Dropping message!\n", pb);
