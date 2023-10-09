@@ -1,7 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
 #include "pubnub_ccore_pubsub.h"
-#ifdef PUBNUB_CRYPTO_API
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
 
@@ -80,7 +79,6 @@ typedef struct pubnub_cryptor_t {
      */
     uint8_t identifier[4];
 
-    // TODO: return type - int or enum?
     /** Function pointer to the encrypt function.
         
         @param cryptor Pointer to the cryptor structure.
@@ -93,7 +91,6 @@ typedef struct pubnub_cryptor_t {
       */
     int (*encrypt)(struct pubnub_cryptor_t const *cryptor, struct pubnub_encrypted_data *result, pubnub_bymebl_t to_encrypt);
 
-    // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
         
         @param cryptor Pointer to the cryptor structure.
@@ -119,7 +116,6 @@ typedef struct pubnub_cryptor_t {
     the algorithm implementation and select which one to use.
 */
 typedef struct pubnub_crypto_provider_t {
-    // TODO: return type - int or enum?
     /** Function pointer to the encrypt function.
         
         @param provider Pointer to the provider structure.
@@ -129,7 +125,6 @@ typedef struct pubnub_crypto_provider_t {
       */
     pubnub_bymebl_t (*encrypt)(struct pubnub_crypto_provider_t const *provider, pubnub_bymebl_t to_encrypt);
 
-    // TODO: return type - int or enum?
     /** Function pointer to the decrypt function.
         
         @param cryptor Pointer to the cryptor structure.
@@ -287,4 +282,3 @@ pubnub_bymebl_t pbcc_base64_decode(const char* buffer);
 void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider);
     
 #endif /* PBCC_CRYPTO_H */
-#endif /* PUBNUB_CRYPTO_API */

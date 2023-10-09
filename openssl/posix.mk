@@ -127,12 +127,7 @@ LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
 
 
-INCLUDES=-I .. -I . 
-
-
-ifeq ($(USE_CRYPTO_API), 1)
-INCLUDES+= -I ../lib/base64/ -I ../core/
-endif
+INCLUDES=-I .. -I . -I ../lib/base64/
 
 
 all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_sync_revoke_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_fetch_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop

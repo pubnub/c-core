@@ -1,7 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#if PUBNUB_CRYPTO_API
-
 #include <stdint.h>
 #include <stdio.h>
 #include "pbbase64.h"
@@ -285,6 +283,4 @@ pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
 void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider) {
     ctx->crypto_module = crypto_provider;
 }
-
-#endif
 
