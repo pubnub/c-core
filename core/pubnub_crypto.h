@@ -166,7 +166,6 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
 enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
 
-#if PUBNUB_CRYPTO_API
 /** 
    Prepare the aes cbc crypto module for use.
    
@@ -223,7 +222,5 @@ struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor
    @param crypto_provider Pointer to the crypto provider to use.
 */
 void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
-#endif /* PUBNUB_CRYPTO_API */
-   
 
 #endif /* defined INC_PUBNUB_CRYPTO */
