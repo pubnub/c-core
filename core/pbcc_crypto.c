@@ -32,7 +32,7 @@ int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
 #define IDENTIFIER_LENGTH 4
 
 #define SENTINEL "PNED"
-#define LEGACY_IDENTIFIER (char[IDENTIFIER_LENGTH]){ 0 } 
+char LEGACY_IDENTIFIER[IDENTIFIER_LENGTH];
 
 struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifier[4], struct pubnub_byte_mem_block metadata) {
     struct pubnub_cryptor_header_v1 header;
