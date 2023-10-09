@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pbcc_crypto.h"
 #if !defined INC_PUBNUB_COMMON_HPP
 #define INC_PUBNUB_COMMON_HPP
 
@@ -1855,7 +1856,7 @@ public:
     /// This function sets the crypto module to be used by the context
     /// for encryption and decryption of messages.
     /// @see pubnub_set_crypto_module()
-    void set_crypto_module(pubnub_crypto* crypto)
+    void set_crypto_module(pubnub_crypto_provider_t* crypto)
     {
         pubnub_set_crypto_module(d_pb, crypto);
     }
