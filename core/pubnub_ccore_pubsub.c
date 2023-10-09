@@ -546,12 +546,24 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         }
 
         message = pbcc_base64_encode(encrypted);
+
+        free(encrypted.ptr);
+ 
         if (NULL == message) {
             PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
-            free(message_block.ptr);
-            free(encrypted.ptr);
             return PNR_INTERNAL_ERROR;
         }
+
+        char* quoted_message = (char*)malloc(strlen(message) + 3); // quotes + null-terminator
+        if (NULL == quoted_message) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - failed to allocate memory for quoted message\n", pb);
+            free((void*)message);
+            return PNR_OUT_OF_MEMORY;
+        }
+
+        snprintf(quoted_message, strlen(message) + 3, "\"%s\"", message);
+        free((void*)message);
+        message = quoted_message;
     }
 #endif // PUBNUB_CRYPTO_API
 
@@ -589,6 +601,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
     PUBNUB_LOG_DEBUG("pbcc_publish_prep. REQUEST =%s\n", pb->http_buf);
+    free((void*) message);
+
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
