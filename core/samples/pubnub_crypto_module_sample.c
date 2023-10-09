@@ -72,7 +72,7 @@ static void print_encrypted_message(const char* display, pubnub_bymebl_t encrypt
 
 int main()
 {
-    char const *msg = "Hello world";
+    char const *msg = "\"Hello world from Pubnub C core API!\"";
     uint8_t const *cipher_key = (uint8_t*)"enigma";
 
     printf("message to be encrypted: %s\n\n", msg);
@@ -131,6 +131,11 @@ int main()
         printf("Failed to allocate Pubnub context!\n");
         return -1;
     }
+
+    char* my_env_publish_key = getenv("PUBNUB_PUBLISH_KEY");
+    if (NULL == my_env_publish_key) { my_env_publish_key = "demo"; }
+    char* my_env_subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
+    if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "demo"; }
     pubnub_init(pbp, "demo", "demo");
 
     /* Leave this commented out to use the default - which is
@@ -161,7 +166,7 @@ int main()
 
     printf("Publishing a message...\n");
 
-    result = pubnub_publish(pbp, "hello_world", "\"Hello world from Pubnub C core API!\"");
+    result = pubnub_publish(pbp, "hello_world", msg);
     if (PNR_STARTED == result) {
         result = pubnub_await(pbp);
     }
