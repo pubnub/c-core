@@ -97,7 +97,7 @@ Ensure(crypto_api, client_should_use_cryptors_for_publish) {
     expect_have_dns_for_pubnub_origin_on(pbp);
 
     expect_outgoing_with_url_no_params_on(pbp,
-        "/publish/pub_key/sub_key/0/jarak/0/UE5FRAF4eHh4BG1ldGF4eHh4");
+        "/publish/pub_key/sub_key/0/jarak/0/%22UE5FRAF4eHh4BG1ldGF4eHh4%22");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "30\r\n\r\n[1,\"Sent\",\"14178940800777403\"]",
              NULL);
