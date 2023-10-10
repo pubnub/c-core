@@ -66,7 +66,7 @@ CFLAGS = -Yu"pch.h" -Zi -Y- -MP -W3  -Gy -Zc:wchar_t $(UDEFINES) $(DEFINES) -Gm-
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
 
-INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include ..\lib\base64\ 
+INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include -I ..\lib\base64\ 
 
 
 all: pubnub_sync.lib pubnub_callback.lib
