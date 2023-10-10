@@ -51,7 +51,7 @@ GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_to
 !endif
 
 
-INCLUDES=-I .. -I . -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include
+INCLUDES=-I .. -I . -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include -I ..\lib\base64 
 
 CFLAGS = /EHsc /Zi /MP /TP /W3 $(INCLUDES) /D PUBNUB_THREADSAFE /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D _CRT_SECURE_NO_WARNINGS /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb 

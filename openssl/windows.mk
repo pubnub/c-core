@@ -69,7 +69,7 @@ CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNI
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
 
-INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include ../lib/base64/
+INCLUDES=-I .. -I . -I ..\core\c99 -I $(OPENSSLPATH)\include ..\lib\base64\
 
 
 all: pubnub_sync_sample.exe pubnub_sync_grant_token_sample.exe pubnub_sync_revoke_token_sample.exe pubnub_encrypt_decrypt_static_iv_sample.exe pubnub_encrypt_decrypt_dynamic_iv_sample.exe metadata.exe pubnub_crypto_sync_sample.exe cancel_subscribe_sync_sample.exe pubnub_publish_via_post_sample.exe pubnub_publish_via_post_secretkey_sample.exe subscribe_publish_callback_sample.exe subscribe_publish_callback_secretkey_sample.exe pubnub_callback_sample.exe pubnub_fntest.exe pubnub_console_sync.exe pubnub_advanced_history_sample.exe pubnub_fetch_history_sample.exe pubnub_console_callback.exe subscribe_publish_from_callback.exe publish_callback_subloop_sample.exe publish_queue_callback_subloop.exe pubnub_objects_secretkey_sample.exe
