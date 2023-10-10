@@ -50,8 +50,6 @@ REVOKE_TOKEN_SOURCEFILES = ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke
 GRANT_TOKEN_SOURCEFILES = ..\core\pbcc_grant_token_api.c ..\core\pubnub_grant_token_api.c ..\lib\cbor\cborparser.c ..\lib\cbor\cborerrorstrings.c ..\lib\cbor\cborparser_dup_string.c ..\core\pubnub_revoke_token_api.c ..\core\pbcc_revoke_token_api.c
 !endif
 
-!ifeq (1, $(filter 1, USE_REVOKE_TOKEN USE_GRANT_TOKEN))
-
 
 INCLUDES=-I .. -I . -I ..\core\c99 -I ..\openssl -I $(OPENSSLPATH)\include -I ..\lib\base64 
 
