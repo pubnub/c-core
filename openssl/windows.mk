@@ -157,7 +157,7 @@ pubnub_fntest.exe: ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_b
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c ..\windows\fntest\pubnub_fntest_windows.c ..\windows\fntest\pubnub_fntest_runner.c pubnub_sync.lib $(LIBS)
 
 pubnub_crypto_module_sample.exe: ..\core\samples\pubnub_crypto_module_sample.c pubnub_sync.lib
-	$(CC) -o $@ -D PUBNUB_CRYPTO_API $(CFLAGS) $(INCLUDES) -I ..\core ..\core\samples\pubnub_crypto_module_sample.c pubnub_sync.lib $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) -I ..\core ..\core\samples\pubnub_crypto_module_sample.c pubnub_sync.lib $(LIBS)
 
 
 CONSOLE_SOURCEFILES=..\core\samples\console\pubnub_console.c ..\core\samples\console\pnc_helpers.c ..\core\samples\console\pnc_readers.c ..\core\samples\console\pnc_subscriptions.c
