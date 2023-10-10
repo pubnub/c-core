@@ -23,6 +23,14 @@
 #define strdup(p) _strdup(p)
 #endif
 
+static pubnub_bymebl_t null_block() {
+    pubnub_bymebl_t result;
+    result.ptr = NULL;
+    result.size = 0;
+
+    return result;
+}
+
 int pbcrypto_signature(struct pbcc_context* pbcc, char const* channel, char const* msg, char* signature, size_t n)
 {
 #if !PUBNUB_CRYPTO_API
@@ -347,7 +355,7 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
 {
     char* msg;
     size_t msg_len;
-    pubnub_bymebl_t result = { NULL, 0 };
+    pubnub_bymebl_t result = null_block();
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(cipher_key != NULL);
@@ -360,7 +368,11 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
 
     if (NULL != pb->core.crypto_module) {
         PUBNUB_LOG_WARNING("pubnub_get_decrypted() called, but crypto module is already set! Used module instead of given key!\n");
-        return (pubnub_bymebl_t){ (uint8_t*)msg, msg_len };
+        pubnub_bymebl_t result;
+        result.ptr = (uint8_t*)msg;
+        result.size = msg_len;
+
+        return result;
     }
 
     if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
@@ -813,13 +825,6 @@ static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, s
     return NULL;
 }
 
-static pubnub_bymebl_t null_block() {
-    pubnub_bymebl_t result;
-    result.ptr = NULL;
-    result.size = 0;
-
-    return result;
-}
 
 static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
     pubnub_bymebl_t result = null_block();
