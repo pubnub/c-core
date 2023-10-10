@@ -615,7 +615,12 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
     PUBNUB_LOG_DEBUG("pbcc_publish_prep. REQUEST =%s\n", pb->http_buf);
-    free((void*) message);
+#if PUBNUB_CRYPTO_API
+    if (NULL != pb->crypto_module)
+    {
+        free((void*) message);
+    }
+#endif
 
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
