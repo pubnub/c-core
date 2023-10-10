@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-char LEGACY_IDENTIFIER[4];
 #define AES_BLOCK_SIZE 16
 
 static int legacy_encrypt(
@@ -33,7 +32,7 @@ struct pubnub_cryptor_t *pbcc_legacy_crypto_init(const uint8_t* cipher_key) {
         return NULL;
     }
 
-    memcpy(algo->identifier, LEGACY_IDENTIFIER, 4);
+    memcpy(algo->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, 4);
 
     algo->encrypt = &legacy_encrypt;
     algo->decrypt = &legacy_decrypt;
@@ -92,11 +91,13 @@ static int legacy_decrypt(
         struct pubnub_encrypted_data to_decrypt
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
+    PUBNUB_LOG_ERROR("legacy_decrypt: to_decrypt.data.size = %d\n", to_decrypt.data.size);
 
     size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size) + 500000; // TODO: WHY!?!?!?
     result->ptr = (uint8_t*)malloc(estimated_size);
     memset(result->ptr, 0, estimated_size);
     if (NULL == result->ptr) {
+        PUBNUB_LOG_ERROR("legacy_decrypt: failed to allocate bytes for decryption");
         return -1;
     }
     result->size = estimated_size;

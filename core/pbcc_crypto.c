@@ -32,7 +32,6 @@ int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
 #define IDENTIFIER_LENGTH 4
 
 #define SENTINEL "PNED"
-char CRYPTO_LEGACY_IDENTIFIER[4];
 
 struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifier[4], struct pubnub_byte_mem_block metadata) {
     struct pubnub_cryptor_header_v1 header;
@@ -46,7 +45,7 @@ struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifie
 }
 
 size_t pbcc_cryptor_header_v1_size(struct pubnub_cryptor_header_v1 *cryptor_header) {
-    return NULL == cryptor_header 
+    return NULL == cryptor_header || memcmp(cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, 4) == 0
         ? 0 
         : (strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH 
             + (cryptor_header->data_length < 255 ? 1 : 3) 
@@ -54,6 +53,15 @@ size_t pbcc_cryptor_header_v1_size(struct pubnub_cryptor_header_v1 *cryptor_head
 }
 
 struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnub_cryptor_header_v1 *cryptor_header) {
+    if (0 == memcmp((char*)cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, IDENTIFIER_LENGTH)) {
+        PUBNUB_LOG_WARNING("pbcc_cryptor_header_v1_to_alloc_block: Legacy encryption. No header created!\n");
+        pubnub_bymebl_t* result = (pubnub_bymebl_t*)malloc(sizeof(pubnub_bymebl_t));
+        result->ptr = NULL;
+        result->size = 0;
+
+        return result;
+    }
+
     uint8_t version = 1;
     struct pubnub_byte_mem_block* result = (struct pubnub_byte_mem_block*)malloc(sizeof(struct pubnub_byte_mem_block));
     if (NULL == result) {
@@ -77,6 +85,7 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
         return NULL;
     }
 
+
     result->size = header_size;
 
     size_t offset = 0;
@@ -87,7 +96,7 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
     memcpy(result->ptr + offset, &version, 1);
     offset += 1;
 
-    if (0 != memcmp((char*)cryptor_header->identifier, CRYPTO_LEGACY_IDENTIFIER, IDENTIFIER_LENGTH)) {
+    if (0 != memcmp((char*)cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, IDENTIFIER_LENGTH)) {
         memcpy(result->ptr + offset, cryptor_header->identifier, IDENTIFIER_LENGTH);
         offset += IDENTIFIER_LENGTH;
     }
@@ -244,6 +253,7 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
     #endif
 
     if (to_decrypt.ptr != NULL) {
+        PUBNUB_LOG_DEBUG("pbcc_legacy_decrypt: Decrypting data with size size = %zu\n", to_decrypt.size);
 
 #if PUBNUB_RAND_INIT_VECTOR
         memcpy(iv, to_decrypt.ptr, 16);

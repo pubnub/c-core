@@ -771,18 +771,24 @@ static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* p
     struct pubnub_byte_mem_block *header_block = pbcc_cryptor_header_v1_to_alloc_block(&header);
 
     if (NULL == header_block) {
+        PUBNUB_LOG_ERROR("Failed to created the header!\n");
         free(result.ptr);
+        result.ptr = NULL;
+        result.size = 0;
         return result;
     }
 
-    if (header_block->size != header_size) {
-        free(header_block->ptr);
-        free(header_block);
-        free(result.ptr);
-        return result;
+    if (NULL != header_block->ptr) {
+        if (header_block->size != header_size) {
+            PUBNUB_LOG_ERROR("Header size mismatch!\n");
+            free(header_block->ptr);
+            free(header_block);
+            free(result.ptr);
+            return result;
+        }
+    
+        memcpy(result.ptr, header_block->ptr, header_size);
     }
-
-    memcpy(result.ptr, header_block->ptr, header_size);
 
     if (encrypted_data->metadata.size > 0 && encrypted_data->metadata.ptr != NULL) {
         memcpy(result.ptr + header_size - encrypted_data->metadata.size, encrypted_data->metadata.ptr, encrypted_data->metadata.size);
@@ -797,12 +803,13 @@ static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* p
 }
 
 static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
+    char* identifier = (char*)header->identifier;
     if (NULL == header) {
-        PUBNUB_LOG_DEBUG("Cryptor is NULL - asuming legacy crypto\n");
-        return module->default_algorithm;
+        PUBNUB_LOG_DEBUG("Header is NULL - asuming legacy crypto\n");
+        identifier = PUBNUB_LEGACY_CRYPTO_IDENTIFIER;
     }
 
-    if (0 == memcmp((char*)module->default_algorithm->identifier, (char*)header->identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
+    if (0 == memcmp((char*)module->default_algorithm->identifier, identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
         return module->default_algorithm;
     }
 
@@ -812,12 +819,12 @@ static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, s
                     "Crypto ID - comparing %d [%c] with %d [%c]\n",
                     module->algorithms[i].identifier[j],
                     module->algorithms[i].identifier[j],
-                    header->identifier[j],
-                    header->identifier[j]
+                    identifier[j],
+                    identifier[j]
             );
         }
-        if (0 == memcmp((char*)module->algorithms[i].identifier, (char*)header->identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
-            PUBNUB_LOG_DEBUG("Cryptor with identifier %s found\n", header->identifier);
+        if (0 == memcmp((char*)module->algorithms[i].identifier, identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
+            PUBNUB_LOG_DEBUG("Cryptor with identifier %s found\n", identifier);
             return &module->algorithms[i];
         }
     }
@@ -830,7 +837,7 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
     pubnub_bymebl_t result = null_block();
 
     if (NULL == to_decrypt.ptr || to_decrypt.size == 0) {
-        PUBNUB_LOG_ERROR("Trying to decrypt empty data\n");
+        PUBNUB_LOG_ERROR("provider_decrypt: Trying to decrypt empty data\n");
         return result;
     }
 
@@ -842,7 +849,7 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
 
     if (NULL == algorithm) {
         // Assuming identifier length is 4!
-        PUBNUB_LOG_ERROR("Decrypting data created by unknown cryptor. Please make sure to register ");
+        PUBNUB_LOG_ERROR("provider_decrypt: Decrypting data created by unknown cryptor. Please make sure to register ");
         for (size_t i = 0; i < PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE; i++) {
             PUBNUB_LOG_ERROR("%d", header->identifier[i]);
         }
@@ -852,16 +859,19 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
     }
 
     size_t header_size = pbcc_cryptor_header_v1_size(header);
-    size_t offset = header_size - header->data_length; 
+    size_t offset = 0 != header_size ? header_size - header->data_length : 0; 
+
 
     struct pubnub_encrypted_data data;
     data.data.ptr = to_decrypt.ptr + header_size;
     data.data.size = to_decrypt.size - header_size;
-    data.metadata.ptr = to_decrypt.ptr + offset;
-    data.metadata.size = header->data_length;
+    data.metadata.ptr = NULL != header ? to_decrypt.ptr + offset : 0;
+    data.metadata.size = NULL != header ? header->data_length : 0;
 
+    printf("provider_decrypt: Decrypting data with algorithm %s\n", algorithm->identifier);
+    fflush(stdout);
     if (0 != algorithm->decrypt(algorithm, &result, data)) {
-        PUBNUB_LOG_ERROR("Failed to decrypt data!\n");
+        PUBNUB_LOG_ERROR("provider_decrypt: Failed to decrypt data!\n");
         result = null_block();
         return result;
     }
