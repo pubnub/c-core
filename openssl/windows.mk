@@ -156,6 +156,11 @@ publish_queue_callback_subloop.exe: ..\core\samples\publish_queue_callback_sublo
 pubnub_fntest.exe: ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c  ..\windows\fntest\pubnub_fntest_windows.c ..\windows\fntest\pubnub_fntest_runner.c pubnub_sync.lib
 	$(CC) $(CFLAGS) $(INCLUDES) ..\core\fntest\pubnub_fntest.c ..\core\fntest\pubnub_fntest_basic.c ..\core\fntest\pubnub_fntest_medium.c ..\windows\fntest\pubnub_fntest_windows.c ..\windows\fntest\pubnub_fntest_runner.c pubnub_sync.lib $(LIBS)
 
+pubnub_crypto_module_sample: ..\core\samples\pubnub_crypto_module_sample.c pubnub_sync.a
+	$(CC) -o $@ -D PUBNUB_CRYPTO_API $(CFLAGS) $(INCLUDES) -I ..\core ..\core\samples\pubnub_crypto_module_sample.c pubnub_sync.a $(LIBS)
+
+
+
 CONSOLE_SOURCEFILES=..\core\samples\console\pubnub_console.c ..\core\samples\console\pnc_helpers.c ..\core\samples\console\pnc_readers.c ..\core\samples\console\pnc_subscriptions.c
 
 pubnub_console_sync.exe: $(CONSOLE_SOURCEFILES) ..\core\samples\console\pnc_ops_sync.c  pubnub_sync.lib
