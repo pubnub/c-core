@@ -813,8 +813,16 @@ static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, s
     return NULL;
 }
 
+static pubnub_bymebl_t null_block() {
+    pubnub_bymebl_t result;
+    result.ptr = NULL;
+    result.size = 0;
+
+    return result;
+}
+
 static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
-    pubnub_bymebl_t result = { NULL, 0 };
+    pubnub_bymebl_t result = null_block();
 
     if (NULL == to_decrypt.ptr || to_decrypt.size == 0) {
         PUBNUB_LOG_ERROR("Trying to decrypt empty data\n");
@@ -849,7 +857,7 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
 
     if (0 != algorithm->decrypt(algorithm, &result, data)) {
         PUBNUB_LOG_ERROR("Failed to decrypt data!\n");
-        result = (pubnub_bymebl_t){ NULL, 0 };
+        result = null_block();
         return result;
     }
 

@@ -545,7 +545,10 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 
 #if PUBNUB_CRYPTO_API
     if (NULL != pb->crypto_module) {
-        pubnub_bymebl_t message_block = { .ptr = (uint8_t*)message, .size = strlen(message) };
+        pubnub_bymebl_t message_block;
+        message_block.ptr = (uint8_t*)message;
+        message_block.size = strlen(message);
+
         pubnub_bymebl_t encrypted = pb->crypto_module->encrypt(pb->crypto_module, message_block);
 
         if (NULL == encrypted.ptr) {
