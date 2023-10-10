@@ -260,7 +260,6 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
         memmove(to_decrypt.ptr, to_decrypt.ptr + 16, to_decrypt.size - 16);
         to_decrypt.size = to_decrypt.size - 16;
 #endif
-        to_decrypt.ptr[to_decrypt.size] = '\0';
 
         return pbaes256_decrypt(to_decrypt, key, iv, result);
     }
