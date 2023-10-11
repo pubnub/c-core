@@ -1,5 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_memory_block.h"
 #include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
@@ -55,7 +54,8 @@ extern "C" {
 #include "core/pubnub_revoke_token_api.h"
 #endif
 #include "core/pubnub_auto_heartbeat.h"
-#include "core/pbcc_crypto.h"
+#include "core/pubnub_crypto.h"
+#include "core/pubnub_memory_block.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif
