@@ -55,7 +55,7 @@ static size_t estimated_enc_buffer_size(size_t n) {
 }
 
 static size_t estimated_dec_buffer_size(size_t n) {
-    return n;
+    return n + 1; // for the terminating array
 }
 
 static int legacy_encrypt(
@@ -91,9 +91,8 @@ static int legacy_decrypt(
         struct pubnub_encrypted_data to_decrypt
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
-    PUBNUB_LOG_ERROR("legacy_decrypt: to_decrypt.data.size = %d\n", to_decrypt.data.size);
 
-    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size) + 500000; // TODO: WHY!?!?!?
+    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size); // TODO: WHY!?!?!?
     result->ptr = (uint8_t*)malloc(estimated_size);
     memset(result->ptr, 0, estimated_size);
     if (NULL == result->ptr) {

@@ -62,7 +62,7 @@ static size_t estimated_enc_buffer_size(size_t n) {
 }
 
 static size_t estimated_dec_buffer_size(size_t n) {
-    return n;
+    return n + AES_BLOCK_SIZE + 1; // for the terminating array;
 }
 
 static void generate_init_vector(uint8_t *iv) {
@@ -125,7 +125,7 @@ static int aes_decrypt(
         return -1;
     }
 
-    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size) + 5000; // TODO: Why do I need additional space?
+    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size); // TODO: Why do I need additional space?
 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);
     if (result->ptr == NULL) {
