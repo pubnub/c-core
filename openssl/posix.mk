@@ -237,7 +237,7 @@ publish_queue_callback_subloop: ../core/samples/publish_queue_callback_subloop.c
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/publish_queue_callback_subloop.c pubnub_callback.a $(LDLIBS)
 
 pubnub_crypto_module_sample: ../core/samples/pubnub_crypto_module_sample.c pubnub_sync.a
-	$(CC) -o $@  $(CFLAGS) $(INCLUDES) -I ../core/ ../core/samples/pubnub_crypto_module_sample.c pubnub_sync.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) -I ../core/ ../core/samples/pubnub_crypto_module_sample.c pubnub_sync.a $(LDLIBS)
 
 
 pubnub_fntest: ../core/fntest/pubnub_fntest.c ../core/fntest/pubnub_fntest_basic.c ../core/fntest/pubnub_fntest_medium.c ../posix/fntest/pubnub_fntest_posix.c ../posix/fntest/pubnub_fntest_runner.c pubnub_sync.a
@@ -249,7 +249,7 @@ pubnub_console_sync: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_sync.c  pubnub_sync.a $(LDLIBS)
 
 pubnub_console_callback: $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a
-	$(CC) -o $@ $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) $(CONSOLE_SOURCEFILES) ../core/samples/console/pnc_ops_callback.c pubnub_callback.a $(LDLIBS)
 
 
 clean:
