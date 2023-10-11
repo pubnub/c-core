@@ -33,6 +33,7 @@ extern "C" {
 #if PUBNUB_USE_PAM_V3
 #include "core/pbcc_grant_token_api.h"
 #endif
+#include "core/pubnub_crypto.h"
 }
 
 #include "cpp/tribool.hpp"
@@ -238,6 +239,169 @@ public:
 };
 #endif /* PUBNUB_USE_SUBSCRIBE_V2 */
 
+/** Interface for a cryptor. It is an algorithm class that
+ * provides encryption and decryption of arrays of bytes.
+ *
+ * It is used by the C++ Pubnub context to encrypt and decrypt messages 
+ * sent and received from Pubnub.
+ *
+ * Note that name comes from Rust, where it is used to convert from type to type.
+ * The pointer returned by `into_cryptor_ptr()` should be allocated with `new`.
+ *
+ * @see pubnub_cryptor 
+*/
+class into_cryptor_ptr {
+public:
+    ~into_cryptor_ptr() { }
+
+    virtual pubnub_cryptor_t* into_cryptor() = 0;
+};
+
+
+/** Interface for a crypto provider. It is used to encrypt and decrypt 
+ * messages sent and received from Pubnub. It makes a conversion from 
+ * your cryptographic module to the C interface used by the C++ Pubnub context.
+ *
+ * It is used by the C++ Pubnub context to encrypt and decrypt messages 
+ * sent and received from Pubnub.
+ *
+ * Note that name comes from Rust, where it is used to convert from type to type.
+ * The pointer returned by `into_provider_ptr()` should be allocated with `new`.
+ *
+ * @see pubnub_crypto_provider_t
+*/
+class into_crypto_provider_ptr {
+public:
+    ~into_crypto_provider_ptr() { }
+
+    virtual pubnub_crypto_provider_t* into_provider() = 0;
+};
+
+
+/** Default implementation of the `crypto_provider` interface.
+ *
+ * It is used by the C++ Pubnub context to encrypt and decrypt messages 
+ * sent and received from Pubnub.
+ *
+ * It is designed to behave like the default PubNub crypto module 
+ * returned by `pubnub_crypto_aes_cbc_module_init()`,
+ * `pubnub_crypto_legacy_module_init()` and `pubnub_crypto_module_init()` functions.
+ *
+ * @see crypto_provider
+ * @see pubnub_crypto_aes_cbc_module_init
+ * @see pubnub_crypto_legacy_module_init
+ * @see pubnub_crypto_module_init
+*/
+class crypto_module: public into_crypto_provider_ptr {
+public:
+    /* Wrapping constructor for the `pubnub_crypto_provider_t` structure.
+     *
+     * Note that this function takes ownership of the `crypto_module` pointer.
+     * It will be freed when the PubNub `context` object is destroyed.
+     *
+     * @param crypto_module The `pubnub_crypto_provider_t` structure to wrap.
+     */
+    crypto_module(pubnub_crypto_provider_t* crypto_module) : d_module(crypto_module) {}
+
+    /* Constructor that translates C++ data into the `pubnub_crypto_provider_init` function.
+     *
+     * Note that this function takes vector of `into_cryptor_ptr` data, that transletes
+     * into the `pubnub_cryptor_t` structure.
+     * It copies the data from the vector into the `additional_cryptors` vector and
+     * allocates the new C array of `pubnub_cryptor_t` structures.
+     *
+     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     */
+    crypto_module(into_cryptor_ptr &default_cryptor, QVector<into_cryptor_ptr*> &additional_cryptors)
+    {
+        size_t size = additional_cryptors.size();
+        pubnub_cryptor_t* cryptors = new pubnub_cryptor_t[sizeof(pubnub_cryptor_t*) * size];
+
+        for (size_t i = 0; i < size; ++i) {
+            pubnub_cryptor_t* cryptor = additional_cryptors[i]->into_cryptor();
+            cryptors[i] = *cryptor;
+        }
+
+        this->d_module = pubnub_crypto_module_init(default_cryptor.into_cryptor(), cryptors, size);
+    }
+
+    /* Constructor that creates C++ `crypto_module` object that mimics
+     * the `pubnub_crypto_aes_cbc_module_init` function. 
+     *
+     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     *
+     * @return The `crypto_module` object
+     *
+     * @see pubnub_crypto_aes_cbc_module_init
+     */
+    static crypto_module aes_cbc(QString cipher_key)
+    {
+        return crypto_module(pubnub_crypto_aes_cbc_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
+    }
+
+    /* Constructor that creates C++ `crypto_module` object that mimics
+     * the `pubnub_crypto_legacy_module_init` function. 
+     *
+     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     *
+     * @return The `crypto_module` object
+     *
+     * @see pubnub_crypto_legacy_module_init
+     */
+    static crypto_module legacy(QString cipher_key)
+    {
+        return crypto_module(pubnub_crypto_legacy_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
+    }
+
+    /* Encrypts the @p to_encrypt buffer and returns the encrypted
+     * buffer.
+     *
+     * @param to_encrypt The buffer to encrypt
+     *
+     * @return The encrypted buffer
+     */
+    std::vector<std::uint8_t> encrypt(QVector<std::uint8_t>& to_encrypt) {
+        pubnub_bymebl_t to_encrypt_c;
+        to_encrypt_c.ptr = to_encrypt.data();
+        to_encrypt_c.size = to_encrypt.size();
+
+        pubnub_bymebl_t result = this->d_module->encrypt(this->d_module, to_encrypt_c);
+
+        if (result.ptr == nullptr) {
+            throw std::runtime_error("crypto_module::encrypt: Encryption failed!");
+        }
+
+        return std::vector<std::uint8_t>(result.ptr, result.ptr + result.size);
+    }
+
+    /* Decrypts the @p to_decrypt buffer and returns the decrypted
+     * buffer.
+     *
+     * @param to_decrypt The buffer to decrypt
+     *
+     * @return The decrypted buffer
+     */
+    std::vector<std::uint8_t> decrypt(QVector<std::uint8_t>& to_decrypt) {
+        pubnub_bymebl_t to_decrypt_c;
+        to_decrypt_c.ptr = to_decrypt.data();
+        to_decrypt_c.size = to_decrypt.size();
+
+        pubnub_bymebl_t result = this->d_module->decrypt(this->d_module, to_decrypt_c);
+
+        if (result.ptr == nullptr) {
+            throw std::runtime_error("crypto_module::decrypt: Decryption failed!");
+        }
+
+        return std::vector<std::uint8_t>(result.ptr, result.ptr + result.size);
+    }
+
+    pubnub_crypto_provider_t* into_provider() {
+        return this->d_module;
+    }
+
+private:
+    pubnub_crypto_provider_t* d_module;
+};
 
 /** @mainpage Pubnub C-core for Qt
 
@@ -1757,16 +1921,24 @@ public:
     }
 
 #if PUBNUB_CRYPTO_API
-    /**
-       Set the crypto module to be used by the pubnub.
-    
-       This function sets the crypto module to be used by the pubnub context
-       for the encryption and decryption of the messages.
+    /// Set the crypto module to be set by the context
+    ///
+    /// This function sets the crypto module to be used by the context
+    /// for encryption and decryption of messages.
+    /// @see pubnub_set_crypto_module()
+    void set_crypto_module(into_crypto_provider_ptr &crypto)
+    {
+        pubnub_set_crypto_module(d_pb, crypto.into_provider());
+    }
 
-       @see pubnub_set_crypto_module()
-    */
-    void set_crypto_module(pubnub_bymeblow_crypto* crypto) {
-        pbcc_set_crypto_module(crypto);
+    /// Get the crypto module used by the context
+    ///
+    /// This function gets the crypto module used by the context
+    /// for encryption and decryption of messages.
+    /// @see pubnub_get_crypto_module()
+    pubnub_crypto_provider_t *get_crypto_module()
+    {
+        return pubnub_get_crypto_module(d_pb);
     }
 #endif /* PUBNUB_CRYPTO_API */
 

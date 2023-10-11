@@ -613,13 +613,13 @@ public:
      *
      * @param cryptor The `pubnub_cryptor_t` structure to wrap.
      */
-    crypto_module(into_cryptor_ptr &default_cryptor, std::vector<into_cryptor_ptr> &additional_cryptors)
+    crypto_module(into_cryptor_ptr &default_cryptor, std::vector<into_cryptor_ptr*> &additional_cryptors)
     {
         size_t size = additional_cryptors.size();
         pubnub_cryptor_t* cryptors = new pubnub_cryptor_t[sizeof(pubnub_cryptor_t*) * size];
 
         for (size_t i = 0; i < size; ++i) {
-            pubnub_cryptor_t* cryptor = additional_cryptors[i].into_cryptor();
+            pubnub_cryptor_t* cryptor = additional_cryptors[i]->into_cryptor();
             cryptors[i] = *cryptor;
         }
 
@@ -2027,6 +2027,16 @@ public:
     void set_crypto_module(into_crypto_provider_ptr &crypto)
     {
         pubnub_set_crypto_module(d_pb, crypto.into_provider());
+    }
+
+    /// Get the crypto module used by the context
+    ///
+    /// This function gets the crypto module used by the context
+    /// for encryption and decryption of messages.
+    /// @see pubnub_get_crypto_module()
+    pubnub_crypto_provider_t *get_crypto_module()
+    {
+        return pubnub_get_crypto_module(d_pb);
     }
 #endif /* PUBNUB_CRYPTO_API */
 
