@@ -78,6 +78,9 @@ openssl\cancel_subscribe_sync_sample.exe: samples\cancel_subscribe_sync_sample.c
 openssl\futres_nesting_sync.exe: samples\futres_nesting.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) /Fe$@ $(CFLAGS) samples\futres_nesting.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
 
+openssl\pubnub_crypto_module_sample.exe: samples\pubnub_crypto_module_sample.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
+	$(CXX) /Fe$@ $(CFLAGS) samples\pubnub_crypto_module_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
+
 openssl\fntest_runner.exe: fntest\pubnub_fntest_runner.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest\pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp
 	$(CXX) /Fe$@ $(CFLAGS) fntest\pubnub_fntest_runner.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest\pubnub_fntest_basic.cpp fntest\pubnub_fntest_medium.cpp $(SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS) 
 

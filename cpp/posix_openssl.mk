@@ -144,6 +144,9 @@ openssl/cancel_subscribe_sync_sample: samples/cancel_subscribe_sync_sample.cpp $
 openssl/futres_nesting_sync: samples/futres_nesting.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
 	$(CXX) -o $@ $(CFLAGS) -x c++ samples/futres_nesting.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
 
+openssl/pubnub_crypto_module_sample: samples/pubnub_crypto_module_sample.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp
+	$(CXX) -o $@ $(CFLAGS) -x c++ samples/pubnub_crypto_module_sample.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp $(SOURCEFILES) $(LDLIBS)
+
 openssl/fntest_runner: fntest/pubnub_fntest_runner.cpp $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp
 	$(CXX) -o $@ --std=c++11 $(CFLAGS) -x c++ fntest/pubnub_fntest_runner.cpp $(SYNC_INTF_SOURCEFILES) pubnub_futres_sync.cpp fntest/pubnub_fntest.cpp fntest/pubnub_fntest_basic.cpp fntest/pubnub_fntest_medium.cpp $(SOURCEFILES) $(LDLIBS) 
 
