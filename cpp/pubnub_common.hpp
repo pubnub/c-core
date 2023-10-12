@@ -637,7 +637,7 @@ public:
      *
      * @see pubnub_crypto_aes_cbc_module_init
      */
-    static crypto_module aes_cbc(std::string cipher_key)
+    static crypto_module aes_cbc(std::string& cipher_key)
     {
         return crypto_module(pubnub_crypto_aes_cbc_module_init((uint8_t*)(cipher_key.c_str())));
     }
@@ -651,7 +651,7 @@ public:
      *
      * @see pubnub_crypto_legacy_module_init
      */
-    static crypto_module legacy(std::string cipher_key)
+    static crypto_module legacy(std::string& cipher_key)
     {
         return crypto_module(pubnub_crypto_legacy_module_init((uint8_t*)(cipher_key.c_str())));
     }
@@ -690,7 +690,7 @@ public:
         to_decrypt.push_back('\0');
         pubnub_bymebl_t to_decrypt_c;
         to_decrypt_c.ptr = to_decrypt.data();
-        to_decrypt_c.size = to_decrypt.size() - 1;
+        to_decrypt_c.size = to_decrypt.size();
 
         pubnub_bymebl_t result = this->d_module->decrypt(this->d_module, to_decrypt_c);
         to_decrypt.pop_back();
