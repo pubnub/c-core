@@ -841,6 +841,14 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
         return result;
     }
 
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes to decrypt = [");
+    for (size_t i = 0; i < to_decrypt.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", to_decrypt.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
     struct crypto_module *module = (struct crypto_module *)provider->user_data;
 
     struct pubnub_cryptor_header_v1 *header = pbcc_cryptor_header_v1_from_block(&to_decrypt);

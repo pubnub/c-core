@@ -244,14 +244,6 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
 
     pbcc_cipher_key_hash(cipher_key, key);
 
-    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes to decrypt = [");
-    for (size_t i = 0; i < to_decrypt.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", to_decrypt.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-    #endif
-
     if (to_decrypt.ptr != NULL) {
         PUBNUB_LOG_DEBUG("pbcc_legacy_decrypt: Decrypting data with size size = %zu\n", to_decrypt.size);
 
