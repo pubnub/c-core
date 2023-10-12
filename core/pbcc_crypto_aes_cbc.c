@@ -4,6 +4,7 @@
 #include "pbcc_crypto.h"
 #include "pbaes256.h"
 #include "pbbase64.h"
+#include "pbsha256.h"
 #include "pubnub_crypto.h"
 #include "pubnub_memory_block.h"
 #include "pubnub_log.h"
@@ -69,9 +70,9 @@ static void generate_init_vector(uint8_t *iv) {
     for (int i = 0; i < AES_IV_SIZE; i++) {
         iv[i] = rand() % 256;
     }
+    iv[AES_IV_SIZE] = '\0';
 }
 
-#include "pbsha256.h"
 static int aes_encrypt(
         struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
@@ -92,7 +93,7 @@ static int aes_encrypt(
     }
     result->data.size = enc_buffer_size;
 
-    uint8_t iv[AES_IV_SIZE];
+    uint8_t iv[AES_IV_SIZE + 1]; // +1 for the terminating array
     generate_init_vector(iv);
 
     if (0 != pbaes256_encrypt(to_encrypt, key_hash, iv, &result->data)) {
