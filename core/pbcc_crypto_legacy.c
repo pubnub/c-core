@@ -92,7 +92,7 @@ static int legacy_decrypt(
 ) {
     struct legacy_context *ctx = (struct legacy_context *)algo->user_data;
 
-    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size); // TODO: WHY!?!?!?
+    size_t estimated_size = estimated_dec_buffer_size(to_decrypt.data.size);
     result->ptr = (uint8_t*)malloc(estimated_size);
     memset(result->ptr, 0, estimated_size);
     if (NULL == result->ptr) {
