@@ -579,7 +579,9 @@ public:
 };
 
 
-/** Default implementation of the `crypto_provider` interface.
+/** Default implementation of the cryptoprovider.
+ *
+ * It implements the "into_crypto_provider_ptr" interface. 
  *
  * It is used by the C++ Pubnub context to encrypt and decrypt messages 
  * sent and received from Pubnub.
