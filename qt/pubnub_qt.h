@@ -1928,7 +1928,7 @@ public:
     /// @see pubnub_set_crypto_module()
     void set_crypto_module(into_crypto_provider_ptr &crypto)
     {
-        pubnub_set_crypto_module(d_pb, crypto.into_provider());
+        pbcc_set_crypto_module(&*d_context, crypto.into_provider());
     }
 
     /// Get the crypto module used by the context
@@ -1938,7 +1938,7 @@ public:
     /// @see pubnub_get_crypto_module()
     pubnub_crypto_provider_t *get_crypto_module()
     {
-        return pubnub_get_crypto_module(d_pb);
+        return pbcc_get_crypto_module(&*d_context);
     }
 #endif /* PUBNUB_CRYPTO_API */
 
