@@ -687,13 +687,13 @@ public:
      * @return The decrypted buffer
      */
     std::vector<std::uint8_t> decrypt(std::vector<std::uint8_t>& to_decrypt) {
-        to_encrypt.push_back('\0');
+        to_decrypt.push_back('\0');
         pubnub_bymebl_t to_decrypt_c;
         to_decrypt_c.ptr = to_decrypt.data();
         to_decrypt_c.size = to_decrypt.size();
 
         pubnub_bymebl_t result = this->d_module->decrypt(this->d_module, to_decrypt_c);
-        to_encrypt.pop_back();
+        to_decrypt.pop_back();
 
         if (result.ptr == nullptr) {
             throw std::runtime_error("crypto_module::decrypt: Decryption failed!");
