@@ -666,7 +666,7 @@ public:
     std::vector<std::uint8_t> encrypt(std::vector<std::uint8_t>& to_encrypt) {
         pubnub_bymebl_t to_encrypt_c;
         to_encrypt_c.ptr = to_encrypt.data();
-        to_encrypt_c.size = to_encrypt.size() - 1;
+        to_encrypt_c.size = to_encrypt.size();
 
         pubnub_bymebl_t result = this->d_module->encrypt(this->d_module, to_encrypt_c);
 
