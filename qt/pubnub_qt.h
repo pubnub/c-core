@@ -334,7 +334,7 @@ public:
      *
      * @see pubnub_crypto_aes_cbc_module_init
      */
-    static crypto_module aes_cbc(QString cipher_key)
+    static crypto_module aes_cbc(QString &cipher_key)
     {
         return crypto_module(pubnub_crypto_aes_cbc_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
     }
@@ -348,7 +348,7 @@ public:
      *
      * @see pubnub_crypto_legacy_module_init
      */
-    static crypto_module legacy(QString cipher_key)
+    static crypto_module legacy(QString &cipher_key)
     {
         return crypto_module(pubnub_crypto_legacy_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
     }
