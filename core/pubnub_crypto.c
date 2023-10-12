@@ -307,6 +307,7 @@ char* pubnub_json_string_unescape_slash(char* json_string)
 }
 
 
+#ifndef PUBNUB_QT
 enum pubnub_res pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char* s, size_t* n)
 {
     char* msg;
@@ -398,6 +399,7 @@ enum pubnub_res pubnub_publish_encrypted(pubnub_t* p, char const* channel, char 
     opts.cipher_key = cipher_key;
     return pubnub_publish_ex(p, channel, message, opts);
 }
+#endif /* PUBNUB_QT */
 
 
 enum pubnub_res pubnub_set_secret_key(pubnub_t* p, char const* secret_key)
