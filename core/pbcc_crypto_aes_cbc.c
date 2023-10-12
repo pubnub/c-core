@@ -71,6 +71,7 @@ static void generate_init_vector(uint8_t *iv) {
     }
 }
 
+#include "pbsha256.h"
 static int aes_encrypt(
         struct pubnub_cryptor_t const *algo,
         struct pubnub_encrypted_data *result,
@@ -79,14 +80,13 @@ static int aes_encrypt(
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
     uint8_t key_hash[33];
-    if (0 != pbcc_cipher_key_hash(ctx->cipher_key, key_hash)) {
-        return -1;
-    }
+    pbsha256_digest_str((char*)ctx->cipher_key, key_hash);
 
     size_t enc_buffer_size = estimated_enc_buffer_size(to_encrypt.size);
 
     result->data.ptr = (uint8_t *)malloc(enc_buffer_size);
     if (result->data.ptr == NULL) {
+        PUBNUB_LOG_ERROR("aes_encrypt: Failed to allocate memory for encrypted data\n");
         return -1;
     }
     result->data.size = enc_buffer_size;
@@ -95,13 +95,14 @@ static int aes_encrypt(
     generate_init_vector(iv);
 
     if (0 != pbaes256_encrypt(to_encrypt, key_hash, iv, &result->data)) {
+        PUBNUB_LOG_ERROR("aes_encrypt: Failed to encrypt data\n");
         free(result->data.ptr);
         return -1;
     };
 
     result->metadata.ptr = (uint8_t *)malloc(AES_IV_SIZE);
     if (result->metadata.ptr == NULL) {
-        free(result->data.ptr);
+        PUBNUB_LOG_ERROR("aes_encrypt: Failed to allocate memory for metadata\n");
         free(result->data.ptr);
         return -1;
     }
@@ -120,13 +121,9 @@ static int aes_decrypt(
     struct aes_context *ctx = (struct aes_context *)algo->user_data;
 
     uint8_t key_hash[33];
-    if (0 != pbcc_cipher_key_hash(ctx->cipher_key, key_hash)) {
-        PUBNUB_LOG_ERROR("Failed to generate key hash\n");
-        return -1;
-    }
+    pbsha256_digest_str((char*)ctx->cipher_key, key_hash);
 
-    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size); // TODO: Why do I need additional space?
-
+    size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size); 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);
     if (result->ptr == NULL) {
         PUBNUB_LOG_ERROR("Failed to allocate memory for decrypted data\n");
