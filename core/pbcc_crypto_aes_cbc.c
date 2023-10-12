@@ -81,6 +81,7 @@ static int aes_encrypt(
 
     uint8_t key_hash[33];
     pbsha256_digest_str((char*)ctx->cipher_key, key_hash);
+    key_hash[32] = '\0';
 
     size_t enc_buffer_size = estimated_enc_buffer_size(to_encrypt.size);
 
@@ -122,6 +123,7 @@ static int aes_decrypt(
 
     uint8_t key_hash[33];
     pbsha256_digest_str((char*)ctx->cipher_key, key_hash);
+    key_hash[32] = '\0';
 
     size_t dec_buffer_size = estimated_dec_buffer_size(to_decrypt.data.size); 
     result->ptr = (uint8_t *)malloc(dec_buffer_size);

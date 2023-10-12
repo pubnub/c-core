@@ -1,6 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#include "pubnub_ccore_pubsub.h"
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
 
@@ -11,6 +10,7 @@
     and some abstract functions that mey be need to be implemented by the user.
 */
 
+#include "pubnub_ccore_pubsub.h"
 #include "pubnub_memory_block.h"
 #include <stdint.h>
 
@@ -47,7 +47,7 @@ struct pubnub_encrypted_data {
 
 #define PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE 4
 #define PUBNUB_MAXIMUM_HEADER_VERSION 1
-const char PUBNUB_LEGACY_CRYPTO_IDENTIFIER[4] = { 0, 0, 0, 0 };
+static char PUBNUB_LEGACY_CRYPTO_IDENTIFIER[4] = { 0, 0, 0, 0 };
 
 /** Cryptor header version 1.
     
