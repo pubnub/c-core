@@ -631,7 +631,7 @@ public:
     /* Constructor that creates C++ `crypto_module` object that mimics
      * the `pubnub_crypto_aes_cbc_module_init` function. 
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     * @param cryptor The `pubnub_cryptor_t` structure to wrap.(it doesn't own the key - keep it alive)
      *
      * @return The `crypto_module` object
      *
@@ -645,7 +645,7 @@ public:
     /* Constructor that creates C++ `crypto_module` object that mimics
      * the `pubnub_crypto_legacy_module_init` function. 
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     * @param cryptor The `pubnub_cryptor_t` structure to wrap. (it doesn't own the key - keep it alive)
      *
      * @return The `crypto_module` object
      *
