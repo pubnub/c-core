@@ -667,7 +667,7 @@ public:
         to_encrypt.push_back('\0');
         pubnub_bymebl_t to_encrypt_c;
         to_encrypt_c.ptr = to_encrypt.data();
-        to_encrypt_c.size = to_encrypt.size();
+        to_encrypt_c.size = to_encrypt.size() - 1;
 
         pubnub_bymebl_t result = this->d_module->encrypt(this->d_module, to_encrypt_c);
         to_encrypt.pop_back();
@@ -690,7 +690,7 @@ public:
         to_decrypt.push_back('\0');
         pubnub_bymebl_t to_decrypt_c;
         to_decrypt_c.ptr = to_decrypt.data();
-        to_decrypt_c.size = to_decrypt.size();
+        to_decrypt_c.size = to_decrypt.size() - 1;
 
         pubnub_bymebl_t result = this->d_module->decrypt(this->d_module, to_decrypt_c);
         to_decrypt.pop_back();
