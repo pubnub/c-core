@@ -888,8 +888,6 @@ static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* p
     data.metadata.ptr = NULL != header ? to_decrypt.ptr + offset : 0;
     data.metadata.size = NULL != header ? header->data_length : 0;
 
-    printf("provider_decrypt: Decrypting data with algorithm %s\n", algorithm->identifier);
-    fflush(stdout);
     if (0 != algorithm->decrypt(algorithm, &result, data)) {
         PUBNUB_LOG_ERROR("provider_decrypt: Failed to decrypt data!\n");
         result = null_block();
