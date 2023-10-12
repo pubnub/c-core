@@ -803,7 +803,7 @@ static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* p
 }
 
 static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
-    char* identifier = (char*)header->identifier;
+    const char* identifier = (char*)header->identifier;
     if (NULL == header) {
         PUBNUB_LOG_DEBUG("Header is NULL - asuming legacy crypto\n");
         identifier = PUBNUB_LEGACY_CRYPTO_IDENTIFIER;
