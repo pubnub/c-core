@@ -796,6 +796,14 @@ static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* p
 
     memcpy(result.ptr + header_size, encrypted_data->data.ptr, encrypted_data->data.size);
 
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes to decrypt = [");
+    for (size_t i = 0; i < result.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", result.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
     free(header_block->ptr);
     free(header_block);
 

@@ -88,8 +88,6 @@ int main()
             return -1;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(10));
-
         if (PNR_OK == pb.subscribe(chan).await()) {
             auto messages = pb.get_all();
             for (auto const& m : messages) {
