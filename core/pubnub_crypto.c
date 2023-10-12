@@ -832,7 +832,11 @@ static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, s
             );
         }
         if (0 == memcmp((char*)module->algorithms[i].identifier, identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
-            PUBNUB_LOG_DEBUG("Cryptor with identifier %s found\n", identifier);
+            PUBNUB_LOG_DEBUG("Cryptor with identifier ");
+            for (size_t j = 0; j < PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE; j++) {
+                PUBNUB_LOG_DEBUG("%c", module->algorithms[i].identifier[j]);
+            }
+            PUBNUB_LOG_DEBUG(" found\n");
             return &module->algorithms[i];
         }
     }
