@@ -554,8 +554,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         if (NULL == encrypted.ptr) {
             PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - encryption failed\n", pb);
             free(message_block.ptr);
-            // TODO: add a specific error code for this
-            //        left as todo because of breaking the API
+
             return PNR_INTERNAL_ERROR;
         }
 
