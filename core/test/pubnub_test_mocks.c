@@ -564,7 +564,7 @@ void pubnub_cleanup_mocks(pubnub_t* pbp)
     free_m_msgs(m_string_msg_array);
 }
 
-void expect_have_dns_for_pubnub_origin_on(pubnub_t* pbp)
+void expect_have_dns_for_pubnub_origin_on_ctx(pubnub_t* pbp)
 {
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbpal_resolv_and_connect,
@@ -573,7 +573,7 @@ void expect_have_dns_for_pubnub_origin_on(pubnub_t* pbp)
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
 }
 
-void expect_outgoing_with_url_on(pubnub_t* pbp, char const* url)
+void expect_outgoing_with_url_on_ctx(pubnub_t* pbp, char const* url)
 {
     expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
@@ -592,7 +592,7 @@ void expect_outgoing_with_url_on(pubnub_t* pbp, char const* url)
     expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
 }
 
-void expect_outgoing_with_url_no_params_on(pubnub_t* pbp, char const* url)
+void expect_outgoing_with_url_no_params_on_ctx(pubnub_t* pbp, char const* url)
 {
     expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));

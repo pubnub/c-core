@@ -58,6 +58,8 @@ static int printout_subscribe_v2_outcome(pubnub_t* pbp, enum pubnub_res res)
         printf("  Metadata   = '%.*s'\n", (int)msg.metadata.size, msg.metadata.ptr);
         printf("  Payload    = '%.*s'\n", (int)msg.payload.size, msg.payload.ptr);
         printf("  MessageType= '%s'\n", pubnub_msg_type_to_str(msg.message_type));
+        printf("  Publisher  = '%.*s'\n", (int)msg.publisher.size, msg.publisher.ptr);
+        printf("  Region     = '%d'\n", msg.region);
     }
     return 0;
 }
