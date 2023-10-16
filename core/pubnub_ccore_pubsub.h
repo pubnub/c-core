@@ -18,9 +18,12 @@
     responses for publish and subscribe transactions.
 */
 
+#if PUBNUB_CRYPTO_API
+
 // assuming 50 bytes per message
 #define PUBNUB_MAX_DECRYPTED_MESSAGES (PUBNUB_BUF_MAXLEN / 50) 
 
+#endif // PUBNUB_CRYPTO_API
 
 /** The Pubnub "(C) core" context, contains context data
     that is shared among all Pubnub C clients.
