@@ -740,7 +740,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
 
-#ifdef PUBNUB_CRYPTO_API
+#if PUBNUB_CRYPTO_API
     for (size_t i = 0; i < p->decrypted_message_count; i++) {
         free(p->decrypted_messages[i]);
     }

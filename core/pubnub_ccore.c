@@ -231,7 +231,7 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* pb,
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
 
-#ifdef PUBNUB_CRYPTO_API
+#if PUBNUB_CRYPTO_API
     for (size_t i = 0; i < pb->decrypted_message_count; i++) {
         free(pb->decrypted_messages[i]);
     }
