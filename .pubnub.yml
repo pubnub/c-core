@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.4.0"
+version: "4.5.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-10-16
+    version: v4.5.0
+    changes:
+      - type: feature
+        text: "Update the crypto module structure and add enhanced AES-CBC cryptor."
+      - type: bug
+        text: "Improved security of crypto implementation by increasing the cipher key entropy by a factor of two."
+      - type: bug
+        text: "Fixed missing return from failed `pbaes256_decrypt_alloc()` function."
   - date: 2023-09-28
     version: v4.4.0
     changes:
@@ -732,7 +741,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -798,7 +807,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -864,7 +873,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -926,7 +935,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -987,7 +996,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -1043,7 +1052,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"
@@ -1096,7 +1105,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
             requires:
               -
                 name: "miniz"

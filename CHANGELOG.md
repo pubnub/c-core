@@ -1,3 +1,13 @@
+## v4.5.0
+October 16 2023
+
+#### Added
+- Update the crypto module structure and add enhanced AES-CBC cryptor.
+
+#### Fixed
+- Improved security of crypto implementation by increasing the cipher key entropy by a factor of two.
+- Fixed missing return from failed `pbaes256_decrypt_alloc()` function.
+
 ## v4.4.0
 September 28 2023
 
