@@ -48,6 +48,8 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 #endif
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
+    p->crypto_module = NULL;
+    p->decrypted_message_count = 0;
 #endif
 }
 
@@ -141,6 +143,14 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
                     PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - decryption failed. Dropping message!\n", pb);
                     return NULL;
                 }
+
+                if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                pb->decrypted_messages[pb->decrypted_message_count] = rslt_block.ptr;
+                pb->decrypted_message_count++;
 
                 rslt = (char*)rslt_block.ptr;
             }
@@ -729,6 +739,13 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
 
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
+
+#ifdef PUBNUB_CRYPTO_API
+    for (size_t i = 0; i < p->decrypted_message_count; i++) {
+        free(p->decrypted_messages[i]);
+    }
+    p->decrypted_message_count = 0;
+#endif
 
     p->http_buf_len = snprintf(
         p->http_buf, sizeof p->http_buf, "/subscribe/%s/", p->subscribe_key);

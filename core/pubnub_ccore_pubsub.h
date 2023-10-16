@@ -18,6 +18,9 @@
     responses for publish and subscribe transactions.
 */
 
+// assuming 50 bytes per message
+#define PUBNUB_MAX_DECRYPTED_MESSAGES (PUBNUB_BUF_MAXLEN / 50) 
+
 
 /** The Pubnub "(C) core" context, contains context data
     that is shared among all Pubnub C clients.
@@ -119,6 +122,13 @@ struct pbcc_context {
 
     /** Crypto module for encryption and decryption */
     struct pubnub_crypto_provider_t *crypto_module;
+
+    /** Holds decrypted messages */
+    uint8_t* decrypted_messages[PUBNUB_MAX_DECRYPTED_MESSAGES]; 
+
+    /** The length of decrypted messages */
+    size_t decrypted_message_count;
+
 #endif // PUBNUB_CRYPTO_API
 };
 
