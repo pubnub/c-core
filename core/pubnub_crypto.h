@@ -1,22 +1,21 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "lib/pb_deprecated.h"
 #if !defined INC_PUBNUB_CRYPTO
 #define	INC_PUBNUB_CRYPTO
 
-
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_memory_block.h"
+#include "core/pbcc_crypto.h"
 
 
-/** @file pubnub_crypto.h 
+/**
+    Set cipher key to be used with the Pubnub context 
 
-    This is the "Crypto" API of the Pubnub client library.  It enables
-    encryptyng and decrypting messages being sent/received (published/
-    subscribed) to/from Pubnub.
+    @param p The Pubnub context to set cipher key for.
 
-    This is independent from using SSL/TLS - if supported on a
-    platform, one can encrypt/decrypt with or without using SSL/TLS.
-
-*/
+    @return PNR_OK on success, otherwise an error code.
+ */
+enum pubnub_res pubnub_set_cipher_key(pubnub_t *p, char const *cipher_key);
 
 
 /** Sets @p secret_key to be used with the Pubnub context @p p.
@@ -49,13 +48,13 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
     @param n The size of the string
     @return 0: OK, -1: error
 */
-int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
+PUBNUB_DEPRECATED int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
 
 /** Similar to pubnub_encrypt() - but this function doesn't allocate
     memory, it uses the memory provided by @p buffer for its "working
     memory".
 */
-int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
+PUBNUB_DEPRECATED int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
 
 /** Decrypts a message from a Base64 encoded string @p base64_str to
     user-allocated memory @p data. On input @p data->size holds the
@@ -74,12 +73,12 @@ int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *b
     @param data User allocated memory block to write the decrypted contents to
     @return 0: OK, -1: error
 */
-int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
+PUBNUB_DEPRECATED int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
 
 /** Similar to pubnub_decrypt(), but never allocates memory - it uses
     the memory provided by @p buffer as its "working memory".
 */
-int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
+PUBNUB_DEPRECATED int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
 
 /** Similar to pubnub_decrpyt(), but this will allocate the memory to
     write the decrypted contents to and return it as the result.
@@ -89,12 +88,14 @@ int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubn
     @result Memory block (pointer and size) of the decoded and decrypted
     message. On failure, pointer will be NULL and size is undefined.
 */
-pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
+PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
 
 
 /** Decrypts the next message in the context @p p using the key
     @p cipher_key, puting the decrypted contents to user-allocated
     @p s having size @p n.
+
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
 
     The effect of this functions is similar to calling pubnub_get()
     and then pubnub_decrypt().
@@ -114,12 +115,14 @@ pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_
     point to be made is that it also does some memory management
     (allocting and deallocating).
  */
-enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
 
 /** This function is very similar to pubnub_get_decrypted(), but it
     allocates the (memory for the) decrypted string and returns it as
     its result. It is the caller's responsibility to free() thus
     allocated string.
+
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
 
     Thus, usage of this function can be simpler, as the user doesn't
     have to "guess" the size of the message. But, keep in mind that
@@ -129,10 +132,12 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char 
 
     On failure, a NULL pointer is returned.
 */
-pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
+PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
 
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key
+
+    @deprecated it has been deprecated, use `pubnub_set_crypto_module` instead
 
     The effect of this function is similar to:
    
@@ -140,7 +145,7 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key)
         opts.cipher_key = cipher_key;;
         return pubnub_publish_ex(p, channel, message, opts);
 */
-enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
+PUBNUB_DEPRECATED enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
 
 /** Get the buffer size required to encode an array with the given
     number of bytes.
@@ -160,4 +165,74 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
 enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
+
+/** 
+   Prepare the aes cbc crypto module for use.
+   
+   This module contains the aes cbc algorithm and the legacy one
+   to be used with the pubnub crypto provider.
+
+   It is recommended to use this module instead of the legacy one 
+   if you are not using the legacy algorithm yet.
+
+   @param cipher_key The cipher key to use.
+
+   @return Pointer to the aes cbc crypto module structure.
+
+*/
+struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+
+
+/** 
+   Prepare the legacy crypto module for use.
+   
+   This module contains the legacy algorithm and the aes cbc one
+   to be used with the pubnub crypto provider.
+
+   @param cipher_key The cipher key to use.
+
+   @return Pointer to the aes cbc crypto module structure.
+
+*/
+struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key);
+
+
+/**
+   Prepare the crypto module for use.
+
+   Rhis module contains the alhorithms provided by the user to be used 
+   with the pubnub crypto provider.
+
+   @param default Pointer to the default crypto algorithm to use.
+   @param algorithms Pointer to the array of crypto algorithms to use.
+   @param n_algorithms Number of crypto algorithms in the array. (omit the default one)
+
+   @return Pointer to the crypto module structure.
+*/
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t n_algorithms);
+
+
+/**
+   Set the crypto module to be used by the pubnub context.
+
+   This function sets the crypto module to be used by the pubnub context
+   for the encryption and decryption of the messages.
+
+   @param pubnub Pointer to the pubnub context.
+   @param crypto_provider Pointer to the crypto provider to use.
+*/
+void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
+
+/**
+   Get the crypto module used by the pubnub context.
+
+   This function gets the crypto module used by the pubnub context
+   for give a possibility to the user to use the crypto module directly.
+
+   @param pubnub Pointer to the pubnub context.
+
+   @return Pointer to the crypto provider used by the pubnub context.
+*/
+pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub);
+
 #endif /* defined INC_PUBNUB_CRYPTO */

@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "cgreen/cgreen.h"
+#include "cgreen/constraint_syntax_helpers.h"
 #include "cgreen/mocks.h"
 #include "pubnub_test_mocks.h"
 
@@ -16,6 +17,7 @@
 #include "pubnub_keep_alive.h"
 #include "test/pubnub_test_helper.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -203,7 +205,6 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 {
     return (int)mock(pb, s);
 }
-
 
 int pbpal_send_status(pubnub_t* pb)
 {
@@ -563,7 +564,6 @@ void pubnub_cleanup_mocks(pubnub_t* pbp)
     free_m_msgs(m_string_msg_array);
 }
 
-
 void expect_have_dns_for_pubnub_origin_on_ctx(pubnub_t* pbp)
 {
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
@@ -573,12 +573,30 @@ void expect_have_dns_for_pubnub_origin_on_ctx(pubnub_t* pbp)
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
 }
 
-
 void expect_outgoing_with_url_on_ctx(pubnub_t* pbp, char const* url)
 {
     expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send_str, when(s, streqs(url)), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send, when(data, streqs(" HTTP/1.1\r\nHost: ")), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str, when(s, streqs(PUBNUB_ORIGIN)), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str,
+           when(s,
+                streqs("\r\nUser-Agent: POSIX-PubNub-C-core/" PUBNUB_SDK_VERSION
+                       "\r\n" ACCEPT_ENCODING "\r\n")),
+           returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbntf_watch_in_events, when(pb, equals(pbp)), returns(0));
+}
+
+void expect_outgoing_with_url_no_params_on_ctx(pubnub_t* pbp, char const* url)
+{
+    expect(pbpal_send_str, when(s, streqs("GET ")), returns(0));
+    expect(pbpal_send_status, returns(0));
+    expect(pbpal_send_str, when(s, contains_string(url)), returns(0));
     expect(pbpal_send_status, returns(0));
     expect(pbpal_send, when(data, streqs(" HTTP/1.1\r\nHost: ")), returns(0));
     expect(pbpal_send_status, returns(0));

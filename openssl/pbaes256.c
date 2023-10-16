@@ -9,6 +9,7 @@
 #include <openssl/err.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
@@ -102,7 +103,11 @@ pubnub_bymebl_t pbaes256_encrypt_alloc(pubnub_bymebl_t msg, uint8_t const* key, 
 static int do_decrypt(EVP_CIPHER_CTX* aes256, pubnub_bymebl_t data, uint8_t const* key, uint8_t const* iv, pubnub_bymebl_t* msg)
 {
     int len = 0;
-    if (!EVP_DecryptInit_ex(aes256, EVP_aes_256_cbc(), NULL, key, iv)) {
+    uint8_t terminated_iv[17];
+    memcpy(terminated_iv, iv, 16);
+    terminated_iv[16] = '\0';
+
+    if (!EVP_DecryptInit_ex(aes256, EVP_aes_256_cbc(), NULL, key, terminated_iv)) {
         ERR_print_errors_cb(print_to_pubnub_log, NULL);
         PUBNUB_LOG_ERROR("Failed to initialize AES-256 decryption\n");
         return -1;
@@ -178,6 +183,8 @@ pubnub_bymebl_t pbaes256_decrypt_alloc(pubnub_bymebl_t data, uint8_t const* key,
         PUBNUB_LOG_ERROR("Failed AES-256 decryption\n");
         free(result.ptr);
         result.ptr = NULL;
+        result.size = 0;
+        return result;
     }
     result.ptr[result.size] = '\0';
     return result;

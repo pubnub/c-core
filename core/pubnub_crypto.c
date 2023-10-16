@@ -2,6 +2,7 @@
 #include "core/pubnub_crypto.h"
 
 #include "core/pubnub_assert.h"
+#include "pbcc_crypto.h"
 #include "pubnub_internal.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_coreapi_ex.h"
@@ -11,14 +12,24 @@
 #include "pbaes256.h"
 #include "lib/base64/pbbase64.h"
 #include "pubnub_log.h"
+#include "pubnub_memory_block.h"
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
+#include "pubnub_internal_common.h"
 
 #ifdef _MSC_VER
 #define strdup(p) _strdup(p)
 #endif
+
+static pubnub_bymebl_t null_block() {
+    pubnub_bymebl_t result;
+    result.ptr = NULL;
+    result.size = 0;
+
+    return result;
+}
 
 int pbcrypto_signature(struct pbcc_context* pbcc, char const* channel, char const* msg, char* signature, size_t n)
 {
@@ -296,6 +307,7 @@ char* pubnub_json_string_unescape_slash(char* json_string)
 }
 
 
+#ifndef PUBNUB_QT
 enum pubnub_res pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char* s, size_t* n)
 {
     char* msg;
@@ -314,6 +326,14 @@ enum pubnub_res pubnub_get_decrypted(pubnub_t* pb, char const* cipher_key, char*
         return PNR_INTERNAL_ERROR;
     }
     msg_len = strlen(msg);
+
+    if (NULL != pb->core.crypto_module) {
+        PUBNUB_LOG_WARNING("pubnub_get_decrypted() called, but crypto module is already set! Used module instead of given key!\n");
+        s = msg;
+        *n = msg_len;
+        return PNR_OK;
+    }
+
     if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return PNR_FORMAT_ERROR;
     }
@@ -336,7 +356,7 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
 {
     char* msg;
     size_t msg_len;
-    pubnub_bymebl_t result = { NULL, 0 };
+    pubnub_bymebl_t result = null_block();
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(cipher_key != NULL);
@@ -346,6 +366,16 @@ pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t* pb, char const* cipher_key)
         return result;
     }
     msg_len = strlen(msg);
+
+    if (NULL != pb->core.crypto_module) {
+        PUBNUB_LOG_WARNING("pubnub_get_decrypted() called, but crypto module is already set! Used module instead of given key!\n");
+        pubnub_bymebl_t result;
+        result.ptr = (uint8_t*)msg;
+        result.size = msg_len;
+
+        return result;
+    }
+
     if ((msg[0] != '"') || (msg[msg_len - 1] != '"')) {
         return result;
     }
@@ -369,6 +399,7 @@ enum pubnub_res pubnub_publish_encrypted(pubnub_t* p, char const* channel, char 
     opts.cipher_key = cipher_key;
     return pubnub_publish_ex(p, channel, message, opts);
 }
+#endif /* PUBNUB_QT */
 
 
 enum pubnub_res pubnub_set_secret_key(pubnub_t* p, char const* secret_key)
@@ -658,5 +689,221 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
     }
     free(part_sign);
     return sign_status;
+}
+
+
+struct crypto_module {
+    struct pubnub_cryptor_t *default_algorithm;
+
+    struct pubnub_cryptor_t *algorithms;
+    size_t algorithms_count;
+};
+
+
+static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt);
+static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt);
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t algorithms_count) {
+    struct pubnub_crypto_provider_t *crypto = (struct pubnub_crypto_provider_t *)malloc(sizeof(struct pubnub_crypto_provider_t));
+    if (crypto == NULL) {
+        return NULL;
+    }
+
+    struct crypto_module *module = (struct crypto_module *)malloc(sizeof(struct crypto_module));
+    if (module == NULL) {
+        free(crypto);
+        return NULL;
+    }
+
+    module->default_algorithm = default_algorithm;
+    module->algorithms = algorithms;
+    module->algorithms_count = algorithms_count;
+
+    crypto->user_data = (void*)module;
+    crypto->encrypt = provider_encrypt;
+    crypto->decrypt = provider_decrypt;
+
+    return crypto;
+}
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key) {
+    return pubnub_crypto_module_init(
+            pbcc_aes_cbc_init(cipher_key),
+            pbcc_legacy_crypto_init(cipher_key),
+            1
+    );
+}
+
+
+struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key) {
+    return pubnub_crypto_module_init(
+            pbcc_legacy_crypto_init(cipher_key),
+            pbcc_aes_cbc_init(cipher_key),
+            1
+    );
+}
+
+static pubnub_bymebl_t provider_encrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_encrypt) {
+    pubnub_bymebl_t result = { NULL, 0 };
+    struct crypto_module *module = (struct crypto_module *)provider->user_data;
+    struct pubnub_cryptor_t *algorithm = module->default_algorithm;
+
+    struct pubnub_encrypted_data *encrypted_data = (struct pubnub_encrypted_data *)malloc(sizeof(struct pubnub_encrypted_data));
+
+    if (0 != algorithm->encrypt(algorithm, encrypted_data, to_encrypt)) {
+        PUBNUB_LOG_ERROR("Encryption failed!\n");
+        return result;
+    };
+
+    struct pubnub_cryptor_header_v1 header = pbcc_prepare_cryptor_header_v1(algorithm->identifier, encrypted_data->metadata);
+
+    size_t header_size = pbcc_cryptor_header_v1_size(&header);
+    size_t whole_size = header_size + encrypted_data->data.size;
+
+    result.ptr = (uint8_t *)malloc(whole_size);
+    if (result.ptr == NULL) {
+        PUBNUB_LOG_ERROR("Failed to allocate memory for encrypted data!\n");
+        return result;
+    }
+
+    result.size = whole_size;
+
+    struct pubnub_byte_mem_block *header_block = pbcc_cryptor_header_v1_to_alloc_block(&header);
+
+    if (NULL == header_block) {
+        PUBNUB_LOG_ERROR("Failed to created the header!\n");
+        free(result.ptr);
+        result.ptr = NULL;
+        result.size = 0;
+        return result;
+    }
+
+    if (NULL != header_block->ptr) {
+        if (header_block->size != header_size) {
+            PUBNUB_LOG_ERROR("Header size mismatch!\n");
+            free(header_block->ptr);
+            free(header_block);
+            free(result.ptr);
+            return result;
+        }
+    
+        memcpy(result.ptr, header_block->ptr, header_size);
+    }
+
+    if (encrypted_data->metadata.size > 0 && encrypted_data->metadata.ptr != NULL) {
+        memcpy(result.ptr + header_size - encrypted_data->metadata.size, encrypted_data->metadata.ptr, encrypted_data->metadata.size);
+    }
+
+    memcpy(result.ptr + header_size, encrypted_data->data.ptr, encrypted_data->data.size);
+
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes encrypted = [");
+    for (size_t i = 0; i < result.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", result.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    free(header_block->ptr);
+    free(header_block);
+
+    return result;
+}
+
+static pubnub_cryptor_t *cryptor_with_identifier(struct crypto_module *module, struct pubnub_cryptor_header_v1 *header) {
+    const char* identifier = (char*)header->identifier;
+    if (NULL == header) {
+        PUBNUB_LOG_DEBUG("Header is NULL - asuming legacy crypto\n");
+        identifier = PUBNUB_LEGACY_CRYPTO_IDENTIFIER;
+    }
+
+    if (0 == memcmp((char*)module->default_algorithm->identifier, identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
+        return module->default_algorithm;
+    }
+
+    for (size_t i = 0; i < module->algorithms_count; i++) {
+        for (size_t j = 0; j < PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE; j++) {
+            PUBNUB_LOG_TRACE(
+                    "Crypto ID - comparing %d [%c] with %d [%c]\n",
+                    module->algorithms[i].identifier[j],
+                    module->algorithms[i].identifier[j],
+                    identifier[j],
+                    identifier[j]
+            );
+        }
+        if (0 == memcmp((char*)module->algorithms[i].identifier, identifier, PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE)) {
+            PUBNUB_LOG_DEBUG("Cryptor with identifier ");
+            for (size_t j = 0; j < PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE; j++) {
+                PUBNUB_LOG_DEBUG("%c", module->algorithms[i].identifier[j]);
+            }
+            PUBNUB_LOG_DEBUG(" found\n");
+            return &module->algorithms[i];
+        }
+    }
+
+    return NULL;
+}
+
+
+static pubnub_bymebl_t provider_decrypt(struct pubnub_crypto_provider_t const* provider, pubnub_bymebl_t to_decrypt) {
+    pubnub_bymebl_t result = null_block();
+
+    if (NULL == to_decrypt.ptr || to_decrypt.size == 0) {
+        PUBNUB_LOG_ERROR("provider_decrypt: Trying to decrypt empty data\n");
+        return result;
+    }
+
+    #if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
+    PUBNUB_LOG_DEBUG("\nbytes to decrypt = [");
+    for (size_t i = 0; i < to_decrypt.size; i++) {
+        PUBNUB_LOG_DEBUG("%d ", to_decrypt.ptr[i]);
+    }
+    PUBNUB_LOG_DEBUG("]\n");
+    #endif
+
+    struct crypto_module *module = (struct crypto_module *)provider->user_data;
+
+    struct pubnub_cryptor_header_v1 *header = pbcc_cryptor_header_v1_from_block(&to_decrypt);
+
+    struct pubnub_cryptor_t *algorithm = cryptor_with_identifier(module, header);
+
+    if (NULL == algorithm) {
+        // Assuming identifier length is 4!
+        PUBNUB_LOG_ERROR("provider_decrypt: Decrypting data created by unknown cryptor. Please make sure to register ");
+        for (size_t i = 0; i < PUBNUB_CRYPTOR_HEADER_IDENTIFIER_SIZE; i++) {
+            PUBNUB_LOG_ERROR("%d", header->identifier[i]);
+        }
+        PUBNUB_LOG_ERROR(" or update SDK\n");
+        
+        return result;
+    }
+
+    size_t header_size = pbcc_cryptor_header_v1_size(header);
+    size_t offset = 0 != header_size ? header_size - header->data_length : 0; 
+
+
+    struct pubnub_encrypted_data data;
+    data.data.ptr = to_decrypt.ptr + header_size;
+    data.data.size = to_decrypt.size - header_size;
+    data.metadata.ptr = NULL != header ? to_decrypt.ptr + offset : 0;
+    data.metadata.size = NULL != header ? header->data_length : 0;
+
+    if (0 != algorithm->decrypt(algorithm, &result, data)) {
+        PUBNUB_LOG_ERROR("provider_decrypt: Failed to decrypt data!\n");
+        result = null_block();
+        return result;
+    }
+
+    return result;
+}
+
+void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider) {
+    pbcc_set_crypto_module(&pubnub->core, crypto_provider);
+}
+
+pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub) {
+    return pbcc_get_crypto_module(&pubnub->core);
 }
 

@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 
 /** @file pubnub_ccore_pubsub.h
@@ -17,6 +18,12 @@
     responses for publish and subscribe transactions.
 */
 
+#if PUBNUB_CRYPTO_API
+
+// assuming 50 bytes per message
+#define PUBNUB_MAX_DECRYPTED_MESSAGES (PUBNUB_BUF_MAXLEN / 50) 
+
+#endif // PUBNUB_CRYPTO_API
 
 /** The Pubnub "(C) core" context, contains context data
     that is shared among all Pubnub C clients.
@@ -115,7 +122,17 @@ struct pbcc_context {
 #if PUBNUB_CRYPTO_API
     /** Secret key to use for encryption/decryption */
     char const* secret_key;
-#endif
+
+    /** Crypto module for encryption and decryption */
+    struct pubnub_crypto_provider_t *crypto_module;
+
+    /** Holds decrypted messages */
+    uint8_t* decrypted_messages[PUBNUB_MAX_DECRYPTED_MESSAGES]; 
+
+    /** The length of decrypted messages */
+    size_t decrypted_message_count;
+
+#endif // PUBNUB_CRYPTO_API
 };
 
 

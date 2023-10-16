@@ -34,6 +34,8 @@ void pubnub_setup_mocks(pubnub_t** pbp);
 
 void pubnub_cleanup_mocks(pubnub_t* pbp);
 
+void expect_outgoing_with_url_no_params_on_ctx(pubnub_t* pbp, char const* url);
+
 void expect_have_dns_for_pubnub_origin_on_ctx(pubnub_t* pbp);
 
 void expect_outgoing_with_url_on_ctx(pubnub_t* pbp, char const* url);

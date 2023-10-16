@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "pbcc_crypto.h"
 #include "pubnub_internal.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
@@ -8,6 +9,7 @@
 #include "lib/pb_strnlen_s.h"
 #include "pubnub_ccore_pubsub.h"
 #include "pubnub_api_types.h"
+#include <string.h>
 
 #if PUBNUB_CRYPTO_API
 #include "pubnub_crypto.h"
@@ -46,6 +48,8 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 #endif
 #if PUBNUB_CRYPTO_API
     p->secret_key = NULL;
+    p->crypto_module = NULL;
+    p->decrypted_message_count = 0;
 #endif
 }
 
@@ -65,6 +69,12 @@ void pbcc_deinit(struct pbcc_context* p)
     }
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
+#if PUBNUB_CRYPTO_API
+    if (NULL != p->crypto_module) {
+        free(p->crypto_module);
+        p->crypto_module = NULL;   
+    }
+#endif /* PUBNUB_CRYPTO_API */
 }
 
 
@@ -108,6 +118,44 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
+#if PUBNUB_CRYPTO_API
+            if (NULL != pb->crypto_module) {
+                char* trimmed = (char*)malloc(strlen(rslt) + 1); // same length as rslt
+                if (NULL == trimmed) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Dropping message!\n", pb);
+                    return NULL;
+                }
+                sprintf(trimmed, "%s", rslt);
+                
+                trimmed[strlen(trimmed) - 1] = '\0';
+
+                pubnub_bymebl_t encrypted = pbcc_base64_decode(trimmed + 1);
+                free(trimmed);
+
+                if (NULL == encrypted.ptr) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
+                free(encrypted.ptr);
+                if (NULL == rslt_block.ptr) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - decryption failed. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
+                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Dropping message!\n", pb);
+                    return NULL;
+                }
+
+                pb->decrypted_messages[pb->decrypted_message_count] = rslt_block.ptr;
+                pb->decrypted_message_count++;
+
+                rslt = (char*)rslt_block.ptr;
+            }
+#endif // PUBNUB_CRYPTO_API 
+
             return rslt;
         }
     }
@@ -504,6 +552,44 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                 pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0");
+
+#if PUBNUB_CRYPTO_API
+    if (NULL != pb->crypto_module) {
+        pubnub_bymebl_t message_block;
+        message_block.ptr = (uint8_t*)message;
+        message_block.size = strlen(message);
+
+        pubnub_bymebl_t encrypted = pb->crypto_module->encrypt(pb->crypto_module, message_block);
+
+        if (NULL == encrypted.ptr) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - encryption failed\n", pb);
+            free(message_block.ptr);
+
+            return PNR_INTERNAL_ERROR;
+        }
+
+        message = pbcc_base64_encode(encrypted);
+
+        free(encrypted.ptr);
+ 
+        if (NULL == message) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
+            return PNR_INTERNAL_ERROR;
+        }
+
+        char* quoted_message = (char*)malloc(strlen(message) + 3); // quotes + null-terminator
+        if (NULL == quoted_message) {
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - failed to allocate memory for quoted message\n", pb);
+            free((void*)message);
+            return PNR_OUT_OF_MEMORY;
+        }
+
+        snprintf(quoted_message, strlen(message) + 3, "\"%s\"", message);
+        free((void*)message);
+        message = quoted_message;
+    }
+#endif // PUBNUB_CRYPTO_API
+
     if (pubnubSendViaGET == method) {
         pb->http_buf[pb->http_buf_len++] = '/';
         APPEND_URL_ENCODED_M(pb, message);
@@ -538,6 +624,13 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
     PUBNUB_LOG_DEBUG("pbcc_publish_prep. REQUEST =%s\n", pb->http_buf);
+#if PUBNUB_CRYPTO_API
+    if (NULL != pb->crypto_module)
+    {
+        free((void*) message);
+    }
+#endif
+
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
@@ -646,6 +739,13 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
 
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
+
+#if PUBNUB_CRYPTO_API
+    for (size_t i = 0; i < p->decrypted_message_count; i++) {
+        free(p->decrypted_messages[i]);
+    }
+    p->decrypted_message_count = 0;
+#endif
 
     p->http_buf_len = snprintf(
         p->http_buf, sizeof p->http_buf, "/subscribe/%s/", p->subscribe_key);
