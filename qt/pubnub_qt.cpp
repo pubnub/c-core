@@ -72,16 +72,16 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_mutex(QMutex::Recursive)
 #endif
 {
+#ifdef PUBNUB_QT_MOVE_TO_THREAD
+    this->moveToThread(QApplication::instance()->thread());
+#endif
+
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam,
             SIGNAL(sslErrors(QNetworkReply*, QList<QSslError>)),
             this,
             SLOT(sslErrors(QNetworkReply*, QList<QSslError>)));
     connect(d_transactionTimer, SIGNAL(timeout()), this, SLOT(transactionTimeout()));
-
-#ifdef PUBNUB_QT_MOVE_TO_THREAD
-    this->moveToThread(QApplication::instance()->thread());
-#endif
 }
 
 
