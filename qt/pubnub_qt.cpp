@@ -22,6 +22,9 @@ extern "C" {
 }
 
 #include <QtNetwork>
+#ifdef PUBNUB_QT_MOVE_TO_THREAD
+#include <QApplication>
+#endif
 
 /* Minimal acceptable message length difference, between unpacked and packed message, in percents */
 #define PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO 10
@@ -75,6 +78,10 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
             this,
             SLOT(sslErrors(QNetworkReply*, QList<QSslError>)));
     connect(d_transactionTimer, SIGNAL(timeout()), this, SLOT(transactionTimeout()));
+
+#ifdef PUBNUB_QT_MOVE_TO_THREAD
+    this->moveToThread(QApplication::instance()->thread());
+#endif
 }
 
 
