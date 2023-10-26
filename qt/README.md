@@ -37,6 +37,7 @@ With PubNub QT SDK we provided some additional defines that changes the behaviou
 depending if they're enabled or not:
 
 |Flag|Status|Description|
+|---|---|---|
 |`PUBNUB_QT`|required|Enables and disables some C-core code to fit QT requirements|
 |`PUBNUB_QT_MOVE_TO_THREAD`|optional, enabled by default|Uses [`moveToThread()`](https://doc.qt.io/qt-6/qobject.html#moveToThread) function to organize SDK timers|
 
