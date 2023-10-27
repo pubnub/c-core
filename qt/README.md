@@ -33,7 +33,7 @@ Of course, you may also use the provided Qt projects in Qt Creator.
 
 ## Additional defines
 
-With PubNub QT SDK we provided some additional defines that changes the behaviour of the SDK 
+With PubNub QT SDK, we provided some additional defines that change the behaviour of the SDK 
 depending if they're enabled or not:
 
 |Flag|Status|Description|
