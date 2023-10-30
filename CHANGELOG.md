@@ -1,3 +1,12 @@
+## v4.6.0
+October 30 2023
+
+#### Added
+- Add the `PUBNUB_QT_MOVE_TO_THREAD` flag as default to give users the opportunity to manage threads by themselves.
+
+#### Fixed
+- Move `pubnub_qt` into QT main thread by default to be sure that timers will be run in it.
+
 ## v4.5.0
 October 16 2023
 
