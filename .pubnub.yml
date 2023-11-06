@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.5.0"
+version: "4.6.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-10-30
+    version: v4.6.0
+    changes:
+      - type: feature
+        text: "Add the `PUBNUB_QT_MOVE_TO_THREAD` flag as default to give users the opportunity to manage threads by themselves."
+      - type: bug
+        text: "Move `pubnub_qt` into QT main thread by default to be sure that timers will be run in it."
   - date: 2023-10-16
     version: v4.5.0
     changes:
@@ -741,7 +748,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -807,7 +814,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -873,7 +880,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -935,7 +942,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -996,7 +1003,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -1052,7 +1059,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"
@@ -1105,7 +1112,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.5.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
             requires:
               -
                 name: "miniz"

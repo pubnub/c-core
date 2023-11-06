@@ -22,6 +22,9 @@ extern "C" {
 }
 
 #include <QtNetwork>
+#ifdef PUBNUB_QT_MOVE_TO_THREAD
+#include <QApplication>
+#endif
 
 /* Minimal acceptable message length difference, between unpacked and packed message, in percents */
 #define PUBNUB_MINIMAL_ACCEPTABLE_COMPRESSION_RATIO 10
@@ -69,6 +72,10 @@ pubnub_qt::pubnub_qt(QString pubkey, QString keysub)
     , d_mutex(QMutex::Recursive)
 #endif
 {
+#ifdef PUBNUB_QT_MOVE_TO_THREAD
+    this->moveToThread(QApplication::instance()->thread());
+#endif
+
     pbcc_init(d_context.data(), d_pubkey.data(), d_keysub.data());
     connect(&d_qnam,
             SIGNAL(sslErrors(QNetworkReply*, QList<QSslError>)),
