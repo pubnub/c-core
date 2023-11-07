@@ -534,13 +534,15 @@ pubnub_res pubnub_qt::publish(QString const& channel, QString const& message, pu
 {
     QMutexLocker lk(&d_mutex);
     d_method = pubnubSendViaGET;
+    pubnub_publish_options opt_data = opt.data();
+
     return startRequest(pbcc_publish_prep(d_context.data(),
                                           channel.toLatin1().data(),
                                           message.toLatin1().data(),
-                                          opt.data().store,
-                                          !opt.data().replicate,
-                                          opt.data().meta,
-                                          opt.data().method),
+                                          opt_data.store,
+                                          !opt_data.replicate,
+                                          opt_data.meta,
+                                          opt_data.method),
                         PBTT_PUBLISH);
 }
 
