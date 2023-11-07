@@ -47,6 +47,65 @@ class QNetworkReply;
 class QSslError;
 QT_END_NAMESPACE
 
+/** A wrapper class for publish options, enabling a nicer
+    usage. Something like:
+
+        pn.publish(chan, msg, publish_options().store(true).ttl(22));
+*/
+class publish_options {
+    pubnub_publish_options d_;
+    QString d_meta;
+
+public:
+
+    publish_options() : d_(pubnub_publish_defopts()) {}
+
+    /** If true, the message is stored in history. If false,
+        the message is _not_ stored in history.
+    */
+    publish_options& store(bool store)
+    {
+        d_.store = store;
+
+        return *this;
+    }    
+
+    /** If `true`, the message is replicated, thus will be received by
+        all subscribers. If `false`, the message is _not_ replicated
+        and will be only delivered to BLOCK event handlers. Setting
+        `false` here and `false` on store is sometimes referred to as
+        a "fire" (instead of a "publish").
+    */
+    publish_options& replicate(bool replicate)
+    {
+        d_.replicate = replicate;
+
+        return *this;
+    }
+
+    /** An optional JSON object, used to send additional ("meta") data
+        about the message, which can be used for stream filtering.
+     */
+    publish_options& meta(QString const& meta)
+    {
+        d_meta = meta;
+        d_.meta = d_meta.isEmpty() ? 0 : d_meta.toLatin1().data();
+
+        return *this;
+    }
+
+    /** Defines the method by which publish transaction will be performed */
+    publish_options& method(pubnub_method method)
+    {
+        d_.method = method;
+
+        return *this;
+    }
+
+    pubnub_publish_options data() { return d_; }
+};
+
+
 /** A wrapper class for set_state options, enabling a nicer
     usage. Something like:
 
@@ -612,6 +671,18 @@ public:
         @return #PNR_STARTED on success, an error otherwise
      */
     pubnub_res publish(QString const &channel, QString const &message);
+
+    /** Publish the @p message (in JSON format) on @p p channel, using the
+        @p p context. This actually means "initiate a publish
+        transaction".
+
+        This function is similar to casual publish, but it allows you to
+        specify additional options for the publish operation.
+
+        See @publish and @p publish_options for more details.
+    */
+    pubnub_res publish(QString const &channel, QString const &message, publish_options& opt);
+
 
     /** Function that initiates 'publish' transaction via POST method
         @param channel The string with the channel

@@ -530,6 +530,21 @@ pubnub_res pubnub_qt::publish(QString const& channel, QString const& message)
 }
 
 
+pubnub_res pubnub_qt::publish(QString const& channel, QString const& message, publish_options& opt)
+{
+    QMutexLocker lk(&d_mutex);
+    d_method = pubnubSendViaGET;
+    return startRequest(pbcc_publish_prep(d_context.data(),
+                                          channel.toLatin1().data(),
+                                          message.toLatin1().data(),
+                                          opt.data().store,
+                                          !opt.data().replicate,
+                                          opt.data().meta,
+                                          opt.data().method),
+                        PBTT_PUBLISH);
+}
+
+
 pubnub_res pubnub_qt::publish_via_post(QString const&    channel,
                                        QByteArray const& message)
 {
