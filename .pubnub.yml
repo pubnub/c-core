@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.6.0"
+version: "4.6.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-11-08
+    version: v4.6.1
+    changes:
+      - type: bug
+        text: "Provide missing `publish()` function overload for QT wrapper that allows set publish related options."
   - date: 2023-10-30
     version: v4.6.0
     changes:
@@ -748,7 +753,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -814,7 +819,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -880,7 +885,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -942,7 +947,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -1003,7 +1008,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -1059,7 +1064,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"
@@ -1112,7 +1117,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.6.1
             requires:
               -
                 name: "miniz"

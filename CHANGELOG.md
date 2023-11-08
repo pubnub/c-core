@@ -1,3 +1,9 @@
+## v4.6.1
+November 08 2023
+
+#### Fixed
+- Provide missing `publish()` function overload for QT wrapper that allows set publish related options.
+
 ## v4.6.0
 October 30 2023
 
