@@ -1,14 +1,18 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#ifndef PUBNUB_QT
 #include "core/pbcc_set_state.h"
-#include "core/pubnub_api_types.h"
 #include "core/pubnub_coreapi.h"
+#endif
+#include "core/pubnub_api_types.h"
 #include "pubnub_internal.h"
 #include "pubnub_log.h"
 
+#ifndef PUBNUB_QT
 #include "pubnub_ccore.h"
 #include "pubnub_netcore.h"
-#include "pubnub_assert.h"
 #include "pubnub_timers.h"
+#endif
+#include "pubnub_assert.h"
 #include "pubnub_crypto.h"
 #include "pubnub_server_limits.h"
 #include "pubnub_coreapi_ex.h"
@@ -30,6 +34,8 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.method     = pubnubSendViaGET;
     return result;
 }
+
+#ifndef PUBNUB_QT
 
 enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
                                   const char*                   channel,
@@ -303,4 +309,6 @@ enum pubnub_res pubnub_set_state_ex(pubnub_t *p,
         ? heartbeat_with_state(p, channel, state, opts)
         : pubnub_set_state(p, channel, opts.channel_group, opts.user_id, state);
 }
+
+#endif PUBNUB_QT
 
