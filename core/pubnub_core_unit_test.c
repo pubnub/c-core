@@ -4547,6 +4547,10 @@ Ensure(single_context_pubnub, gzip_bad_compression_format)
            equals(PNR_BAD_COMPRESSION_FORMAT));
 }
 
+Ensure(single_context_pubnub, wont_fail_on_freed) {
+    // Do nothing, just let alloc and free happen
+}
+
 /* Verify ASSERT gets fired */
 Ensure(single_context_pubnub, illegal_context_fires_assert)
 {
@@ -4634,6 +4638,7 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_get_message_counts(pbp, "ch", NULL), "pubnub_advanced_history.c");
 #endif /* -- ADVANCED HISTORY message_counts -- */
 }
+
 
 #if 0
 int main(int argc, char *argv[])
