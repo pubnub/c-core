@@ -4639,7 +4639,6 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
 #endif /* -- ADVANCED HISTORY message_counts -- */
 }
 
-
 #if 0
 int main(int argc, char *argv[])
 {
