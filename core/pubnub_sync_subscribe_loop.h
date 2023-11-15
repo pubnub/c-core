@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 #include "pubnub_coreapi_ex.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_sync_subscribe_loop.h 
@@ -38,7 +39,7 @@ struct pubnub_subloop_descriptor {
 
     @result The subscribe loop descriptor made 
  */
-struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *channel);
+PUBNUB_EXTERN struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *channel);
 
 /** Designed to be called once in every iteration of a subscribe loop.
     Fetches the next message on the given @p channel and/or @p
@@ -60,7 +61,7 @@ struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *
     @retval PNR_OK Success
     @retval other Indicates the reason for failure 
  */
-enum pubnub_res pubnub_subloop_fetch(struct pubnub_subloop_descriptor const* pbsld, char const** message);
+PUBNUB_EXTERN enum pubnub_res pubnub_subloop_fetch(struct pubnub_subloop_descriptor const* pbsld, char const** message);
 
 
 #endif /* !defined INC_PUBNUB_SYNC_SUBSCRIBE_LOOP */

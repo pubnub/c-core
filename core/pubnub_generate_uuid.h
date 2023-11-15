@@ -3,6 +3,7 @@
 #define      INC_PUBNUB_GENERATE_UUID
 
 #include <stdint.h>
+#include "lib/pb_extern.h"
 
 #define UUID_STRING_LENGTH 36
 #define UUID_SIZE (UUID_STRING_LENGTH + 1)
@@ -107,7 +108,7 @@ struct Pubnub_UUID_String {
     
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
+PUBNUB_EXTERN int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
 				 uint16_t *io_clock_seq,
 				 uint8_t const i_timestamp[8],
 				 uint8_t const i_node[6]
@@ -127,7 +128,7 @@ int pubnub_generate_uuid_v1_time(struct Pubnub_UUID *o_uuid,
     @param namelen The length of the @p name data
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
+PUBNUB_EXTERN int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
 				     struct Pubnub_UUID *nsid,
 				     void *name,
 				     unsigned namelen
@@ -142,7 +143,7 @@ int pubnub_generate_uuid_v3_name_md5(struct Pubnub_UUID *uuid,
     @return 0: OK (generated), otherwise: error, random number generator
     not available
 */
-int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid);
+PUBNUB_EXTERN int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid);
 
 /** The name based algorithms (this - v5 and the other - v3) don't
     need any other state but the arguments they declare.
@@ -158,7 +159,7 @@ int pubnub_generate_uuid_v4_random(struct Pubnub_UUID *uuid);
     @param namelen The length of the @p name data
     @return 0: OK (generated), otherwise: error, algorithm not available
  */
-int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
+PUBNUB_EXTERN int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
 				     struct Pubnub_UUID *nsid,
 				     void *name,
 				     unsigned namelen
@@ -166,14 +167,14 @@ int pubnub_generate_uuid_v5_name_sha1(struct Pubnub_UUID *uuid,
 
 
 /** Returns UUID as a standard HEX-based representation */
-struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const *uuid);
+PUBNUB_EXTERN struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const *uuid);
 
 /** Compares two UUIDs (@p left and @p right) and returns:
     - 0: equal
     - <0: left < right
     - >0: left > right
 */
-int pubnub_uuid_compare(struct Pubnub_UUID const *left, struct Pubnub_UUID const *right);
+PUBNUB_EXTERN int pubnub_uuid_compare(struct Pubnub_UUID const *left, struct Pubnub_UUID const *right);
 
 
 #endif /* !defined INC_PUBNUB_GENERATE_UUID */

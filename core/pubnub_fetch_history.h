@@ -3,6 +3,7 @@
 #define INC_PUBNUB_FETCH_HISTORY
 
 #include "pbcc_fetch_history.h"
+#include "lib/pb_extern.h"
 
 /** Options for fetch history. */
 struct pubnub_fetch_history_options {
@@ -59,7 +60,7 @@ struct pubnub_fetch_history_options {
     It's best to always call it to initialize the
     #pubnub_fetch_history_options, since it has several parameters.
  */
-struct pubnub_fetch_history_options pubnub_fetch_history_defopts(void);
+PUBNUB_EXTERN struct pubnub_fetch_history_options pubnub_fetch_history_defopts(void);
 
 
 /** The fetch history. It is basically the same as the
@@ -77,10 +78,10 @@ struct pubnub_fetch_history_options pubnub_fetch_history_defopts(void);
     @param opt Options for this fetch history transaction
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_fetch_history(pubnub_t*                     pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_fetch_history(pubnub_t*                     pb,
                                   char const*                   channel,
                                   struct pubnub_fetch_history_options opt);
 
-pubnub_chamebl_t pubnub_get_fetch_history(pubnub_t* pb);
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_fetch_history(pubnub_t* pb);
 
 #endif /* !defined INC_PUBNUB_FETCH_HISTORY */

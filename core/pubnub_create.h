@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_create.h 
@@ -16,7 +17,7 @@
  * on the returned context. If pubnub_alloc() fails, it just returns NULL.
  * @pre keysub != NULL
  */
-pubnub_t *pubnub_create(char const *pubkey, char const *keysub);
+PUBNUB_EXTERN pubnub_t *pubnub_create(char const *pubkey, char const *keysub);
 
 
 #endif /* !defined INC_PUBNUB_CREATE */

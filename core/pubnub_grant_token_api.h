@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include "lib/cbor/cbor.h"
+#include "lib/pb_extern.h"
 
 struct pam_permission{
     bool read;
@@ -20,7 +21,7 @@ struct pam_permission{
     bool join;
 };
 
-int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
+PUBNUB_EXTERN int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
 
 
 /** Returns the token for a set of permissions specified in @p perm_obj.
@@ -50,15 +51,15 @@ int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
     @param perm_obj The JSON string with the permissions for resources and patterns.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_grant_token(pubnub_t* pb, char const* perm_obj);
+PUBNUB_EXTERN enum pubnub_res pubnub_grant_token(pubnub_t* pb, char const* perm_obj);
 
-pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb);
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_grant_token(pubnub_t* pb);
 
 /** Parses the @p token and returns the json string.
    
     @see pubnub_grant_token
     @return malloc allocated char pointer (must be passed to `free` to avoid a memory leak)
 */
-char* pubnub_parse_token(pubnub_t* pb, char const* token);
+PUBNUB_EXTERN char* pubnub_parse_token(pubnub_t* pb, char const* token);
 
 #endif /* !defined INC_PUBNUB_GRANT_TOKEN_API */

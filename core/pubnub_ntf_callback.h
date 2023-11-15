@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_ntf_callback.h 
@@ -55,15 +56,15 @@ typedef void (*pubnub_callback_t)(pubnub_t *pb, enum pubnub_trans trans, enum pu
 
     @return PNR_OK on success, a value indicating the error otherwise
 */
-enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data);
+PUBNUB_EXTERN enum pubnub_res pubnub_register_callback(pubnub_t *pb, pubnub_callback_t cb, void *user_data);
 
 /** Returns the user data set with pubnub_register_callback().
  */
-void *pubnub_get_user_data(pubnub_t *pb);
+PUBNUB_EXTERN void *pubnub_get_user_data(pubnub_t *pb);
 
 /** Returns the callback set with pubnub_register_callback().
  */
-pubnub_callback_t pubnub_get_callback(pubnub_t *pb);
+PUBNUB_EXTERN pubnub_callback_t pubnub_get_callback(pubnub_t *pb);
 
 /** Enables safe exit from the main() by disabling platform watcher thread.
     It exists and is used in callback environment only.
@@ -76,7 +77,7 @@ pubnub_callback_t pubnub_get_callback(pubnub_t *pb);
     inside the code(You can register your termination function: pubnub_stop()
     anywhere you like, but it will be called at the time of the program termination).
  */
-void pubnub_stop(void);
+PUBNUB_EXTERN void pubnub_stop(void);
 
 #endif /* !defined INC_PUBNUB_NTF_CALLBACK */
 

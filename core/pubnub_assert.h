@@ -3,6 +3,7 @@
 #define INC_PUBNUB_ASSERT
 
 #include <stdbool.h>
+#include "lib/pb_extern.h"
 
 
 /** The Pubnub ASSERT macros. There are several layers:
@@ -204,7 +205,7 @@
 /** This will invoke the installed assert handler.  The default
     behavior is pubnub_assert_handler_abort().
  */
-void PUBNUB_NORETURN pubnub_assert_failed(char const* s, char const* file, long line);
+PUBNUB_EXTERN void PUBNUB_NORETURN pubnub_assert_failed(char const* s, char const* file, long line);
 
 /** Prototype of a Pubnub assertion failure handler. There are several
     standard handlers, but you can also provide your own.
@@ -222,19 +223,19 @@ typedef void PUBNUB_NORETURN (*pubnub_assert_handler_t)(char const* s,
     @param handler The handler to install. If NULL, will install
     pubnub_assert_handler_abort()
  */
-void pubnub_assert_set_handler(pubnub_assert_handler_t handler);
+PUBNUB_EXTERN void pubnub_assert_set_handler(pubnub_assert_handler_t handler);
 
 /** This handler will print a message formed from the parameters and
     then go to infinite loop. Useful for debugging.
 */
-void PUBNUB_NORETURN pubnub_assert_handler_loop(char const* s,
+PUBNUB_EXTERN void PUBNUB_NORETURN pubnub_assert_handler_loop(char const* s,
                                                 char const* file,
                                                 long        line);
 
 /** This handler will print a message  formed from the parameters and
     then abort (exit, end) the process. Useful for testing.
  */
-void PUBNUB_NORETURN pubnub_assert_handler_abort(char const* s,
+PUBNUB_EXTERN void PUBNUB_NORETURN pubnub_assert_handler_abort(char const* s,
                                                  char const* file,
                                                  long        line);
 
@@ -250,7 +251,7 @@ void PUBNUB_NORETURN pubnub_assert_handler_abort(char const* s,
     "noreturn" attribute (and we know that and use it), you'll get a
     warning or error and will need to ignore or disable it.
  */
-void pubnub_assert_handler_printf(char const* s, char const* file, long line);
+PUBNUB_EXTERN void pubnub_assert_handler_printf(char const* s, char const* file, long line);
 
 
 #define PUBNUB_CTASRT2(pre, post, lex) pre##post##lex

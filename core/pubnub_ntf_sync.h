@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_ntf_sync.h 
@@ -37,7 +38,7 @@
 
     @return The outcome of the transaction
 */
-enum pubnub_res pubnub_await(pubnub_t *p);
+PUBNUB_EXTERN enum pubnub_res pubnub_await(pubnub_t *p);
 
 
 #endif        /* defined INC_PUBNUB_NTF_CONTIKI */

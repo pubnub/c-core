@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 #include <stdbool.h>
 
@@ -24,7 +25,7 @@
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_getall_uuidmetadata(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_getall_uuidmetadata(pubnub_t* pb,
                                  char const* include, 
                                  size_t limit,
                                  char const* start,
@@ -43,7 +44,7 @@ enum pubnub_res pubnub_getall_uuidmetadata(pubnub_t* pb,
                     Object to create.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_set_uuidmetadata(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_set_uuidmetadata(pubnub_t* pb, 
     char const* uuid_metadataid,
     char const* include,
     char const* uuid_metadata_obj);
@@ -58,7 +59,7 @@ enum pubnub_res pubnub_set_uuidmetadata(pubnub_t* pb,
                    Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_uuidmetadata(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_get_uuidmetadata(pubnub_t* pb,
                                 char const* include, 
                                 char const* uuid_metadataid);
 
@@ -69,7 +70,7 @@ enum pubnub_res pubnub_get_uuidmetadata(pubnub_t* pb,
     @param uuid_metadataid The UUID Metatdata ID. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_remove_uuidmetadata(pubnub_t* pb, char const* uuid_metadataid);
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_uuidmetadata(pubnub_t* pb, char const* uuid_metadataid);
 
 
 /** Returns the spaces associated with the subscriber key of the context @p pbp, optionally
@@ -88,7 +89,7 @@ enum pubnub_res pubnub_remove_uuidmetadata(pubnub_t* pb, char const* uuid_metada
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_getall_channelmetadata(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_getall_channelmetadata(pubnub_t* pb, 
                                   char const* include, 
                                   size_t limit,
                                   char const* start,
@@ -105,7 +106,7 @@ enum pubnub_res pubnub_getall_channelmetadata(pubnub_t* pb,
     @param channel_metadata_obj The JSON string with the definition of the channel metadata Object to create.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
                                     char const* channel_metadataid,
                                     char const* include, 
                                     char const* channel_metadata_obj);
@@ -119,7 +120,7 @@ enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
     @param channel_metadataid The Channel ID for which to retrieve the channel metadata object. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_channelmetadata(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_get_channelmetadata(pubnub_t* pb,
                                  char const* include, 
                                  char const* channel_metadataid);
 
@@ -130,7 +131,7 @@ enum pubnub_res pubnub_get_channelmetadata(pubnub_t* pb,
     @param channel_metadataid The Channel ID. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_remove_channelmetadata(pubnub_t* pb, char const* channel_metadataid);
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_channelmetadata(pubnub_t* pb, char const* channel_metadataid);
 
 
 /** Returns the channel memberships of the user specified by @p uuid_metadataid, optionally including
@@ -152,7 +153,7 @@ enum pubnub_res pubnub_remove_channelmetadata(pubnub_t* pb, char const* channel_
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_memberships(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_get_memberships(pubnub_t* pb,
                                        char const* uuid_metadataid,
                                        char const* include,
                                        size_t limit,
@@ -188,7 +189,7 @@ enum pubnub_res pubnub_get_memberships(pubnub_t* pb,
                       Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_set_memberships(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_set_memberships(pubnub_t* pb, 
                                           char const* uuid_metadataid,
                                           char const* include,
                                           char const* set_obj);
@@ -215,7 +216,7 @@ enum pubnub_res pubnub_set_memberships(pubnub_t* pb,
                       Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_remove_memberships(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_memberships(pubnub_t* pb, 
                                     char const* uuid_metadataid,
                                     char const* include,
                                     char const* remove_obj);
@@ -239,7 +240,7 @@ enum pubnub_res pubnub_remove_memberships(pubnub_t* pb,
                  is omitted.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_members(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_get_members(pubnub_t* pb,
                                    char const* channel_metadataid,
                                    char const* include,
                                    size_t limit,
@@ -267,7 +268,7 @@ enum pubnub_res pubnub_get_members(pubnub_t* pb,
     @param add_obj The JSON object that defines the add to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_add_members(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_add_members(pubnub_t* pb, 
                                    char const* channel_metadataid,
                                    char const* include,
                                    char const* add_obj);
@@ -298,7 +299,7 @@ enum pubnub_res pubnub_add_members(pubnub_t* pb,
     @param set_obj The JSON object that defines the add/update to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_set_members(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_set_members(pubnub_t* pb, 
                                       char const* channel_metadataid,
                                       char const* include,
                                       char const* set_obj);
@@ -326,7 +327,7 @@ enum pubnub_res pubnub_set_members(pubnub_t* pb,
     @param remove_obj The JSON object that defines the remove to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_remove_members(pubnub_t* pb, 
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_members(pubnub_t* pb, 
                                       char const* channel_metadataid,
                                       char const* include,
                                       char const* remove_obj);

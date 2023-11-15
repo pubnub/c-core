@@ -5,11 +5,7 @@
 /// Users still can override this, if they want to, by defining
 /// `PUBNUB_EXTERN` before including any Pubnub header.
 
-#ifdef PUBNUB_EXTERN_API
-
 #ifndef PUBNUB_EXTERN
 #define PUBNUB_EXTERN extern
 #endif /* PUBNUB_EXTERN */
-
-#endif /* PUBNUB_EXTERN_API */
 

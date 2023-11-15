@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 #include "lib/pb_deprecated.h"
+#include "lib/pb_extern.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -37,7 +38,7 @@
     to messages
     @return Returns the @p p context
 */
-pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
+PUBNUB_EXTERN pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscribe_key);
 
 /** Set the user identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.
@@ -47,7 +48,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 
     @see pubnub_set_user_id
 */
-PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
+PUBNUB_EXTERN PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid);
 
 /** Get the user identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
@@ -58,7 +59,7 @@ PUBNUB_DEPRECATED enum pubnub_res pubnub_set_uuid(pubnub_t* p, const char* uuid)
 
     @see pubnub_user_id_get
 */
-PUBNUB_DEPRECATED char const* pubnub_uuid_get(pubnub_t* p);
+PUBNUB_EXTERN PUBNUB_DEPRECATED char const* pubnub_uuid_get(pubnub_t* p);
 
 /** Set the user identification of PubNub client context @p p to @p
     uuid. Pass NULL to unset.
@@ -69,13 +70,13 @@ PUBNUB_DEPRECATED char const* pubnub_uuid_get(pubnub_t* p);
     the whole software/ firmware stops working). So, the contents of
     the @p user_id string is not copied to the Pubnub context @p p.  
 */
-enum pubnub_res pubnub_set_user_id(pubnub_t* p, const char* user_id);
+PUBNUB_EXTERN enum pubnub_res pubnub_set_user_id(pubnub_t* p, const char* user_id);
 
 /** Get the user identification of PubNub client context @p p.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_user_id().
 */
-char const* pubnub_user_id_get(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_user_id_get(pubnub_t* p);
 
 /** Set the authentication information of PubNub client context @p
     p. Pass NULL to unset.
@@ -85,14 +86,14 @@ char const* pubnub_user_id_get(pubnub_t* p);
     pubnub_done() on @p p, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the auth string is not copied to the Pubnub context @p p.  */
-void pubnub_set_auth(pubnub_t* p, const char* auth);
+PUBNUB_EXTERN void pubnub_set_auth(pubnub_t* p, const char* auth);
 
 /** Returns the current authentication information for the
     context @p p.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_auth().
 */
-char const* pubnub_auth_get(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_auth_get(pubnub_t* p);
 
 /** Cancels an ongoing API transaction. This will, once it is done,
     close the (TCP/IP) connection to Pubnub (if it was open).  The
@@ -119,16 +120,16 @@ char const* pubnub_auth_get(pubnub_t* p);
     pubnub_done() on @p pb, or the otherwise stop using it (like when
     the whole software/ firmware stops working). So, the contents of
     the auth string is not copied to the Pubnub context @p pb.  */
-void pubnub_set_auth_token(pubnub_t* pb, const char* token);
+PUBNUB_EXTERN void pubnub_set_auth_token(pubnub_t* pb, const char* token);
 
 /** Returns the current auth token information for the
     context @p pb.
     After pubnub_init(), it will return `NULL` until you change it
     to non-`NULL` via pubnub_set_auth_token().
 */
-char const* pubnub_auth_token_get(pubnub_t* pb);
+PUBNUB_EXTERN char const* pubnub_auth_token_get(pubnub_t* pb);
 
-enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
+PUBNUB_EXTERN enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
 
 /** Publish the @p message (in JSON format) on @p p channel, using the
     @p p context. This actually means "initiate a publish
@@ -156,7 +157,7 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
 
     @return #PNR_STARTED or #PNR_OK on success, an error otherwise
  */
-enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
+PUBNUB_EXTERN enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* message);
 
 /** Sends a signal @p message (in JSON format) on @p channel, using @p pb context.
     This actually means "initiate a signal transaction".
@@ -192,7 +193,7 @@ enum pubnub_res pubnub_publish(pubnub_t* p, const char* channel, const char* mes
 
     @return #PNR_STARTED or #PNR_OK on success, an error otherwise
  */
-enum pubnub_res pubnub_signal(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_signal(pubnub_t* pb,
                               const char* channel,
                               const char* message);
 
@@ -216,7 +217,7 @@ enum pubnub_res pubnub_signal(pubnub_t* pb,
     @return Pointer to the message, NULL on error
     @see pubnub_subscribe
  */
-char const* pubnub_get(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_get(pubnub_t* p);
 
 /** Returns a pointer to an fetched subscribe operation/transaction's
     next channel.  Each transaction may hold a list of channels, and
@@ -232,7 +233,7 @@ char const* pubnub_get(pubnub_t* p);
     @see pubnub_subscribe
     @see pubnub_get
  */
-char const* pubnub_get_channel(pubnub_t* pb);
+PUBNUB_EXTERN char const* pubnub_get_channel(pubnub_t* pb);
 
 /** Subscribe to @p channel and/or @p channel_group. This actually
     means "initiate a subscribe operation/transaction". The outcome
@@ -278,7 +279,7 @@ char const* pubnub_get_channel(pubnub_t* pb);
 
     @see pubnub_get
  */
-enum pubnub_res pubnub_subscribe(pubnub_t*   p,
+PUBNUB_EXTERN enum pubnub_res pubnub_subscribe(pubnub_t*   p,
                                  const char* channel,
                                  const char* channel_group);
 
@@ -289,11 +290,11 @@ enum pubnub_res pubnub_subscribe(pubnub_t*   p,
     @see pubnub_set_blocking_io
     @see pubnub_set_non_blocking_io
 */
-enum pubnub_res pubnub_last_result(pubnub_t* p);
+PUBNUB_EXTERN enum pubnub_res pubnub_last_result(pubnub_t* p);
 
 /** Returns the HTTP reply code of the last transaction in the @p p
  * context. */
-int pubnub_last_http_code(pubnub_t* p);
+PUBNUB_EXTERN int pubnub_last_http_code(pubnub_t* p);
 
 /** Returns the string of the result of the last `publish` transaction,
     as returned from Pubnub. If the last transaction is not a publish,
@@ -301,14 +302,14 @@ int pubnub_last_http_code(pubnub_t* p);
     was successfull, it will return "Sent", otherwise a description
     of the error.
  */
-char const* pubnub_last_publish_result(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_last_publish_result(pubnub_t* p);
 
 /** Returns the string of the last received time token on the
     @c p context. After pubnub_init() this should be "0".
     @param p Pubnub context to get the last received time token from
     @return A read only string of the last received time token
  */
-char const* pubnub_last_time_token(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_last_time_token(pubnub_t* p);
 
 /** Gets the origin to be used for the context @p p.
     If setting of the origin is not enabled, this will return
@@ -316,7 +317,7 @@ char const* pubnub_last_time_token(pubnub_t* p);
     @param p Pubnub context to get the origin from
     @return A read only string of origin used for context @p p
  */
-char const* pubnub_get_origin(pubnub_t* p);
+PUBNUB_EXTERN char const* pubnub_get_origin(pubnub_t* p);
 
 /** Sets the origin to be used for the context @p p.  If setting of
     the origin is not enabled, this will fail.  It may also fail if it
@@ -330,7 +331,7 @@ char const* pubnub_get_origin(pubnub_t* p);
     @retval +1 origin set will be applied with new connection,
     @retval -1 setting origin not enabled
 */
-int pubnub_origin_set(pubnub_t* p, char const* origin);
+PUBNUB_EXTERN int pubnub_origin_set(pubnub_t* p, char const* origin);
 
 /** Sets the port to be used for the context @p p.  If setting of
     the port is not enabled, this will fail.  It may also fail if it
@@ -342,7 +343,7 @@ int pubnub_origin_set(pubnub_t* p, char const* origin);
     @retval +1 port set will be applied with new connection,
     @retval -1 setting port not enabled
 */
-int pubnub_port_set(pubnub_t* p, uint16_t port);
+PUBNUB_EXTERN int pubnub_port_set(pubnub_t* p, uint16_t port);
 
 /** Enables the use of HTTP Keep-Alive ("persistent connections")
     on the context @p p.
@@ -369,7 +370,7 @@ int pubnub_port_set(pubnub_t* p, uint16_t port);
       sockets, relative to Pubnub contexts, this may be an
       issue.
  */
-void pubnub_use_http_keep_alive(pubnub_t* p);
+PUBNUB_EXTERN void pubnub_use_http_keep_alive(pubnub_t* p);
 
 /** Disables the use of HTTP Keep-Alive ("persistent connections")
     on the context @p p.
@@ -377,7 +378,7 @@ void pubnub_use_http_keep_alive(pubnub_t* p);
     The default is to _use_ the HTTP Keep-Alive, but, you might
     want to turn that off - see pubnub_use_http_keep_alive().
 */
-void pubnub_dont_use_http_keep_alive(pubnub_t* p);
+PUBNUB_EXTERN void pubnub_dont_use_http_keep_alive(pubnub_t* p);
 
 
 #endif /* !defined INC_PUBNUB_PUBSUBAPI */

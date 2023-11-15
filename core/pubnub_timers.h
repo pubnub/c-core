@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 #include "pubnub_ccore_limits.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_timers.h
@@ -52,7 +53,7 @@
     @retval 0 OK
     @retval -1 timers not supported
 */
-int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms);
+PUBNUB_EXTERN int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms);
 
 /** Returns the current transaction timeout for the context.
 
@@ -61,7 +62,7 @@ int pubnub_set_transaction_timeout(pubnub_t* p, int duration_ms);
     @return Current transaction timeout, in milliseconds (should
     always be > 0)
 */
-int pubnub_transaction_timeout_get(pubnub_t* p);
+PUBNUB_EXTERN int pubnub_transaction_timeout_get(pubnub_t* p);
 
 
 /** Sets the 'wait_connect_TCP_socket' timeout for the context.
@@ -82,7 +83,7 @@ int pubnub_transaction_timeout_get(pubnub_t* p);
     @retval 0 OK
     @retval -1 timers not supported
 */
-int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms);
+PUBNUB_EXTERN int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms);
 
 /** Returns the current 'wait_connect_TCP_socket' timeout for the context.
 
@@ -91,7 +92,7 @@ int pubnub_set_wait_connect_timeout(pubnub_t* p, int duration_ms);
     @return Current transaction timeout, in milliseconds (should
     always be > 0)
 */
-int pubnub_wait_connect_timeout_get(pubnub_t* p);
+PUBNUB_EXTERN int pubnub_wait_connect_timeout_get(pubnub_t* p);
 
 
 #endif /* defined INC_PUBNUB_TIMERS_IO */

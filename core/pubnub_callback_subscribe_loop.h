@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 #include "pubnub_coreapi_ex.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_callback_subscribe_loop.h 
@@ -42,7 +43,7 @@ typedef void (*pubnub_subloop_callback_t)(pubnub_t *pbp, char const* message, en
     @retval NULL Failed to create a descriptor
     @result The subscribe loop descriptor created 
  */
-pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb);
+PUBNUB_EXTERN pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb);
 
 /** Starts a subscribe loop.
 
@@ -67,7 +68,7 @@ pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct
     @retval PNR_OK Success
     @retval other Indicates the reason for failure 
  */
-enum pubnub_res pubnub_subloop_start(pubnub_subloop_t* pbsld);
+PUBNUB_EXTERN enum pubnub_res pubnub_subloop_start(pubnub_subloop_t* pbsld);
 
 /** Stops a subscribe loop. If loop is calling the callback
     ("delivering message(s)"), stop will be done once that is
@@ -80,10 +81,10 @@ enum pubnub_res pubnub_subloop_start(pubnub_subloop_t* pbsld);
     @param[in] pbsld The subscribe loop descriptor 
     
  */
-void pubnub_subloop_stop(pubnub_subloop_t* pbsld);
+PUBNUB_EXTERN void pubnub_subloop_stop(pubnub_subloop_t* pbsld);
 
 /** Undefines - releases the subscribe loop descriptor */
-void pubnub_subloop_undef(pubnub_subloop_t* pbsld);
+PUBNUB_EXTERN void pubnub_subloop_undef(pubnub_subloop_t* pbsld);
 
 
 #endif /* !defined INC_PUBNUB_CALLBACK_SUBSCRIBE_LOOP */

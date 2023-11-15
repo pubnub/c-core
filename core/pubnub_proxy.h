@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 #include <stdint.h>
 
@@ -104,7 +105,7 @@ enum pubnub_http_authentication_scheme {
 
 
 /** Returns the current proxy type/protocol for the context @p p. */
-enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
+PUBNUB_EXTERN enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
 
 /** Sets the configuration for the Internet proxy, by explicitly
     specifying the protocol to use and the proxy server.
@@ -124,7 +125,7 @@ enum pubnub_proxy_type pubnub_proxy_protocol_get(pubnub_t* p);
     @return 0: OK, otherwise: error, specified protocol not supported,
     or @p ip_address_or_url too long(or invalid)
 */
-int pubnub_set_proxy_manual(pubnub_t*              p,
+PUBNUB_EXTERN int pubnub_set_proxy_manual(pubnub_t*              p,
                             enum pubnub_proxy_type protocol,
                             char const*            ip_address_or_url,
                             uint16_t               port);
@@ -146,12 +147,12 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
 
     @return 0: OK, otherwise: error, reading system configuration failed
 */
-int pubnub_set_proxy_from_system(pubnub_t* p, enum pubnub_proxy_type protocol);
+PUBNUB_EXTERN int pubnub_set_proxy_from_system(pubnub_t* p, enum pubnub_proxy_type protocol);
 
 /** Sets all proxy parameters to 'zero' and proxy protocol to 'pbproxyNONE'
     @param p The Context to 'clean' off proxy configuration for(Set to "no proxy").
  */
-void pubnub_set_proxy_none(pubnub_t* p);
+PUBNUB_EXTERN void pubnub_set_proxy_none(pubnub_t* p);
 
 /** Sets the authentication password and scheme to be used for Proxy
     authentication.
@@ -170,7 +171,7 @@ void pubnub_set_proxy_none(pubnub_t* p);
 
     @return 0: OK, otherwise: error
  */
-int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
+PUBNUB_EXTERN int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
                                                       char const* username,
                                                       char const* password);
 
@@ -183,13 +184,13 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
     @param p The Context to set proxy authentication for
     @return 0: OK, otherwise: error, scheme not supported
  */
-int pubnub_set_proxy_authentication_none(pubnub_t* p);
+PUBNUB_EXTERN int pubnub_set_proxy_authentication_none(pubnub_t* p);
 
 
 /** Returns the currently set HTTP proxy authentication scheme
     for context @p p.
 */
-enum pubnub_http_authentication_scheme
+PUBNUB_EXTERN enum pubnub_http_authentication_scheme
 pubnub_proxy_authentication_scheme_get(pubnub_t* p);
 
 
@@ -212,7 +213,7 @@ pubnub_proxy_authentication_scheme_get(pubnub_t* p);
     @retval 0 OK
     @retval otherwise Some error 
 */
-int pubnub_proxy_get_config(pubnub_t*               pb,
+PUBNUB_EXTERN int pubnub_proxy_get_config(pubnub_t*               pb,
                             enum pubnub_proxy_type* protocol,
                             uint16_t*               port,
                             char*                   host,

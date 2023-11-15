@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 #include <stdbool.h>
@@ -67,7 +68,7 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *channel_group);
 
 /** Get the current Pubnub time token . This actually means "initiate
     a time transaction". Since time token is in the response to most
@@ -85,7 +86,7 @@ enum pubnub_res pubnub_leave(pubnub_t *p, const char *channel, const char *chann
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_time(pubnub_t *p);
+PUBNUB_EXTERN enum pubnub_res pubnub_time(pubnub_t *p);
 
 /** Get the message history for the @p channel. This actually
     means "initiate a history transaction/operation".
@@ -115,7 +116,7 @@ enum pubnub_res pubnub_time(pubnub_t *p);
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count, bool include_token);
+PUBNUB_EXTERN enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count, bool include_token);
 
 /** Inform Pubnub that we're still working on @p channel and/or @p
     channel_group.  This actually means "initiate a heartbeat
@@ -151,7 +152,7 @@ enum pubnub_res pubnub_history(pubnub_t *p, const char *channel, unsigned count,
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_heartbeat(pubnub_t *p, const char* channel, const char* channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_heartbeat(pubnub_t *p, const char* channel, const char* channel_group);
 
 /** Get the currently present users on a @p channel and/or @p
     channel_group. This actually means "initiate a here_now
@@ -196,7 +197,7 @@ enum pubnub_res pubnub_heartbeat(pubnub_t *p, const char* channel, const char* c
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_here_now(pubnub_t *p, const char *channel, const char *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_here_now(pubnub_t *p, const char *channel, const char *channel_group);
 
 
 /** Get the currently present users on all channel. This actually
@@ -214,7 +215,7 @@ enum pubnub_res pubnub_here_now(pubnub_t *p, const char *channel, const char *ch
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_global_here_now(pubnub_t *p);
+PUBNUB_EXTERN enum pubnub_res pubnub_global_here_now(pubnub_t *p);
 
 /** Get the currently present users on a @p channel and/or @p
     channel_group. This actually means "initiate a here_now
@@ -239,7 +240,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t *p);
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_where_now(pubnub_t *p, const char *user_id);
+PUBNUB_EXTERN enum pubnub_res pubnub_where_now(pubnub_t *p, const char *user_id);
 
 /** Sets some state for the @p channel and/or @channel_group for a
     user, identified by @p uuid. This actually means "initiate a set
@@ -277,7 +278,7 @@ enum pubnub_res pubnub_where_now(pubnub_t *p, const char *user_id);
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id, char const *state);
+PUBNUB_EXTERN enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id, char const *state);
 
 
 /** Gets some state for the @p channel and/or @p channel_group for a
@@ -313,7 +314,7 @@ enum pubnub_res pubnub_set_state(pubnub_t *p, char const *channel, char const *c
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id);
+PUBNUB_EXTERN enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *channel_group, const char *user_id);
 
 /** Removes a @p channel_group and all its channels. This actually
     means "initiate a remove_channel_group transaction". It can be
@@ -335,7 +336,7 @@ enum pubnub_res pubnub_state_get(pubnub_t *p, char const *channel, char const *c
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_remove_channel_group(pubnub_t *p, char const *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_channel_group(pubnub_t *p, char const *channel_group);
 
 /** Removes a @p channel from the @p channel_group . This actually
     means "initiate a remove_channel_from_channel_group
@@ -362,7 +363,7 @@ enum pubnub_res pubnub_remove_channel_group(pubnub_t *p, char const *channel_gro
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channel, char const *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channel, char const *channel_group);
 
 /** Adds a @p channel to the @p channel_group . This actually means
     "initiate a add_channel_to_channel_group transaction". It can be
@@ -388,7 +389,7 @@ enum pubnub_res pubnub_remove_channel_from_group(pubnub_t *p, char const *channe
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, char const *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, char const *channel_group);
 
 /** Lists all channels of a @p channel_group. This actually
     means "initiate a list_channel_group transaction". It can be
@@ -412,7 +413,7 @@ enum pubnub_res pubnub_add_channel_to_group(pubnub_t *p, char const *channel, ch
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group);
+PUBNUB_EXTERN enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group);
 
 /** Checks if a transaction can be started on @p pb context. In other
     words, checks if previous transaction is finished.
@@ -420,7 +421,7 @@ enum pubnub_res pubnub_list_channel_group(pubnub_t *p, char const *channel_group
     @retval true can start new transaction
     @retval false otherwise (cannot start a new transaction)
  */
-bool pubnub_can_start_transaction(pubnub_t* pb);
+PUBNUB_EXTERN bool pubnub_can_start_transaction(pubnub_t* pb);
 
 /** Extracts 'error_message' attribute value from the transaction response on the
     context @p pb into @p o_msg.
@@ -429,13 +430,13 @@ bool pubnub_can_start_transaction(pubnub_t* pb);
     @retval 0 error message successfully picked up
     @retval -1 on error(not found, or transaction still in progress on the context)
  */
-int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg);
+PUBNUB_EXTERN int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
 /** Returns body from the transaction response on the context @p pb into @p o_msg.
     Can be called for any response
     @retval 0 in case of transaction is not in progress
     @retval -1 if transaction is still in progress on the context
  */
-int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg);
+PUBNUB_EXTERN int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
 #endif /* defined INC_PUBNUB_COREAPI */

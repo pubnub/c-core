@@ -5,6 +5,7 @@
 #include "pubnub_config.h"
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 #if !PUBNUB_USE_SUBSCRIBE_V2
 #error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
@@ -55,7 +56,7 @@ struct pubnub_subscribe_v2_options {
     Will set `channel_group = NULL`, `heartbeat` to default heartbeat
     value and `filter_expr = NULL`.
  */
-struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void);
+PUBNUB_EXTERN struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void);
 
 /** The V2 subscribe. To get messages for subscribe V2, use
     pubnub_get_v2() - keep in mind that it can provide you with
@@ -78,7 +79,7 @@ struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void);
     @param opt Subscribe V2 options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
+PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
                                     const char*                        channel,
                                     struct pubnub_subscribe_v2_options opts);
 
@@ -97,9 +98,7 @@ enum pubnub_res pubnub_subscribe_v2(pubnub_t*                          p,
             puts("No more messages");
         }
  */
-struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp);
-
-
+PUBNUB_EXTERN struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp);
 
 
 #endif /* !defined INC_PUBNUB_SUBSCRIBE_V2 */

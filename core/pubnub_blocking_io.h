@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 #include <stdbool.h>
 
@@ -50,7 +51,7 @@
     @return 0: OK, otherwise: error, non-blocking I/O not supported
     
 */
-int pubnub_set_non_blocking_io(pubnub_t *p);
+PUBNUB_EXTERN int pubnub_set_non_blocking_io(pubnub_t *p);
 
 
 /** Sets the usage of blocking I/O for a context. If blocking
@@ -83,8 +84,7 @@ int pubnub_set_non_blocking_io(pubnub_t *p);
     @return 0: OK, otherwise: error, blocking I/O not supported
     
 */
-int  pubnub_set_blocking_io(pubnub_t *p);
-
+PUBNUB_EXTERN int pubnub_set_blocking_io(pubnub_t *p);
 
 
 #endif /* defined INC_PUBNUB_BLOCKING_IO */

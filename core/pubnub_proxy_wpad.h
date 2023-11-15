@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_proxy_wpad.h 
@@ -47,7 +48,7 @@
     a Pubnub transaction, for all intents and purposes, you should
     treat it as one.
 */
-enum pubnub_res pubnub_proxy_set_configuration_via_wpad(pubnub_t *p);
+PUBNUB_EXTERN enum pubnub_res pubnub_proxy_set_configuration_via_wpad(pubnub_t *p);
 
 
 /** This starts a transaction to set the proxy configuration on the
@@ -55,7 +56,7 @@ enum pubnub_res pubnub_proxy_set_configuration_via_wpad(pubnub_t *p);
     not really a Pubnub transaction, for all intents and purposes, you
     should treat it as one.
 */
-enum pubnub_res pubnub_proxy_set_configuration_via_pac(pubnub_t *p, char const *url);
+PUBNUB_EXTERN enum pubnub_res pubnub_proxy_set_configuration_via_pac(pubnub_t *p, char const *url);
 
 
 #endif /* defined INC_PUBNUB_PROXY_WPAD */

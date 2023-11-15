@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <lib/pb_extern.h>
 
 
 /** @file pubnub_memory_block.h
@@ -54,6 +55,6 @@ typedef struct pubnub_char_mem_block pubnub_chamebl_t;
     Result 'ptr' field is equal to @p str and 'size' to its length.
     In case @p str is NULL, the 'size' field becomes 0.
   */
-pubnub_chamebl_t pubnub_str_2_chamebl_t(char* str);
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_str_2_chamebl_t(char* str);
 
 #endif /* !defined INC_PUBNUB_MEMORY_BLOCK */
