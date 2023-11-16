@@ -1,3 +1,9 @@
+## v4.6.2
+November 14 2023
+
+#### Fixed
+- Fix `pubnub_free()` function on not initialised PubNub that can cause exceptions/undefined behaviours.
+
 ## v4.6.1
 November 08 2023
 

@@ -135,11 +135,17 @@ void pballoc_free_at_last(pubnub_t* pb)
 
 int pubnub_free(pubnub_t* pb)
 {
-    int result = -1;
-
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
+
+    if (pb->state == PBS_NULL) {
+        PUBNUB_LOG_TRACE("pubnub_free(%p) not initialized - freeing...\n", pb);
+        remove_allocated(pb);
+        free(pb);
+
+        return 0;
+    }
 
     pubnub_mutex_lock(pb->monitor);
     pbnc_stop(pb, PNR_CANCELLED);
@@ -156,12 +162,11 @@ int pubnub_free(pubnub_t* pb)
         pballoc_free_at_last(pb);
 #endif
 
-        result = 0;
-    }
-    else {
-        PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
-        pubnub_mutex_unlock(pb->monitor);
+        return 0;
     }
 
-    return result;
+    PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
+    pubnub_mutex_unlock(pb->monitor);
+
+    return -1;
 }
