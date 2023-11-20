@@ -4,6 +4,7 @@
 
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_keep_alive.h
@@ -27,7 +28,7 @@
     sent on this connection before closing it. If 0, it is ignored.
     Setting to 1 has the effect of not using keep-alive.
  */
-void pubnub_set_keep_alive_param(pubnub_t* pb, unsigned timeout, unsigned max);
+PUBNUB_EXTERN void pubnub_set_keep_alive_param(pubnub_t* pb, unsigned timeout, unsigned max);
 
 
 #endif /* !defined INC_PUBNUB_KEEP_ALIVE */

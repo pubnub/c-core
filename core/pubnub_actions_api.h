@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_ACTIONS_API
 #define INC_PUBNUB_ACTIONS_API
 
+#include "lib/pb_extern.h"
 #include "pbcc_actions_api.h"
 
 #include <stdbool.h>
@@ -22,7 +23,7 @@
     @param value Json string describing the action that is to be added
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
                                           char const* channel,
                                           char const* message_timetoken,
                                           enum pubnub_action_type actype,
@@ -39,7 +40,7 @@ enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
     @return Structured pointer to memory block containing message timetoken value(including
             its quotation marks) within the context response buffer
   */
-pubnub_chamebl_t pubnub_get_message_timetoken(pubnub_t* pb);
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_message_timetoken(pubnub_t* pb);
 
 
 /** Searches the response(if previous transaction on the @p pb context had been
@@ -51,7 +52,7 @@ pubnub_chamebl_t pubnub_get_message_timetoken(pubnub_t* pb);
     @return Structured pointer to memory block containing action timetoken value(including
             its quotation marks) within the context response buffer
   */
-pubnub_chamebl_t pubnub_get_message_action_timetoken(pubnub_t* pb);
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_message_action_timetoken(pubnub_t* pb);
 
 
 /** Initiates transaction that deletes(removes) previously added action on a published message.
@@ -67,7 +68,7 @@ pubnub_chamebl_t pubnub_get_message_action_timetoken(pubnub_t* pb);
                             marks at both ends)
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
                                              char const* channel,
                                              pubnub_chamebl_t message_timetoken,
                                              pubnub_chamebl_t action_timetoken);
@@ -91,7 +92,7 @@ enum pubnub_res pubnub_remove_message_action(pubnub_t* pb,
                  Any value greater than 100 is considered an error.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_get_message_actions(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_get_message_actions(pubnub_t* pb,
                                            char const* channel,
                                            char const* start,
                                            char const* end,
@@ -112,7 +113,7 @@ enum pubnub_res pubnub_get_message_actions(pubnub_t* pb,
     @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
     @retval corresponding error otherwise
   */
-enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb);
+PUBNUB_EXTERN enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb);
 
 
 /** Initiates transaction that returns all actions added on a given @p channel between @p start
@@ -133,7 +134,7 @@ enum pubnub_res pubnub_get_message_actions_more(pubnub_t* pb);
                  was 100. Any value greater than 100 is considered an error.
     @return #PNR_STARTED on success, an error otherwise
   */
-enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
                                                     char const* channel,
                                                     char const* start,
                                                     char const* end,
@@ -155,7 +156,7 @@ enum pubnub_res pubnub_history_with_message_actions(pubnub_t* pb,
     @retval PNR_GOT_ALL_ACTIONS transaction successfully finished.
     @retval corresponding error otherwise
   */
-enum pubnub_res pubnub_history_with_message_actions_more(pubnub_t* pb);
+PUBNUB_EXTERN enum pubnub_res pubnub_history_with_message_actions_more(pubnub_t* pb);
 
 
 #endif /* !defined INC_PUBNUB_ACTIONS_API */

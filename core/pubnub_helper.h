@@ -5,6 +5,7 @@
 
 #include "pubnub_api_types.h"
 #include "pbpal.h"
+#include "lib/pb_extern.h"
 
 
 /** @file pubnub_helper.h 
@@ -44,24 +45,24 @@ enum pubnub_publish_res {
 /** Parses the given publish @p result. You usually obtain this with
     pubnub_last_publish_result().
  */
-enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
+PUBNUB_EXTERN enum pubnub_publish_res pubnub_parse_publish_result(char const *result);
 
 /** Returns a string (in English) describing a Pubnub result enum value 
     @p e.
  */
-char const* pubnub_res_2_string(enum pubnub_res e);
+PUBNUB_EXTERN char const* pubnub_res_2_string(enum pubnub_res e);
 
 /** Returns a string literal describing enum value @p e
     Used for debugging.
  */
-char const* pbpal_resolv_n_connect_res_2_string(enum pbpal_resolv_n_connect_result e);
+PUBNUB_EXTERN char const* pbpal_resolv_n_connect_res_2_string(enum pbpal_resolv_n_connect_result e);
 
 #if PUBNUB_USE_SUBSCRIBE_V2
 #include "pubnub_subscribe_v2_message.h"
 /** Returns a string literal describing enum value @p type
     Used when looking at pubnub V2 message received by pubnub_subscribe_v2().
  */
-char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
+PUBNUB_EXTERN char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
 #endif
 
 /** Returns whether retrying a Pubnub transaction makes sense.  This
@@ -89,7 +90,7 @@ char const* pubnub_msg_type_to_str(enum pubnub_message_type type);
     timeout.  In that case, retrying would send the same message
     again, duplicating it.
  */
-enum pubnub_tribool pubnub_should_retry(enum pubnub_res e);
+PUBNUB_EXTERN enum pubnub_tribool pubnub_should_retry(enum pubnub_res e);
 
 /** Replace specified char in string.
  *
@@ -98,6 +99,6 @@ enum pubnub_tribool pubnub_should_retry(enum pubnub_res e);
  * @param replace What should be used instead of searched needle.
  * @return Updated string.
  */
-char* replace_char(char* str, char find, char replace);
+PUBNUB_EXTERN char* replace_char(char* str, char find, char replace);
 
 #endif /* defined INC_PUBNUB_HELPER */

@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_ADVANCED_HISTORY
 #define INC_PUBNUB_ADVANCED_HISTORY
 
+#include "lib/pb_extern.h"
 #include "pbcc_advanced_history.h"
 
 /** Structure containing channel name as char memory block and field with
@@ -20,7 +21,7 @@ struct pubnub_chan_msg_count {
 /** If successful returns number of members(key:value pairs) of JSON object
     'channels', or -1 on error(transaction still in progress, or so)
  */
-int pubnub_get_chan_msg_counts_size(pubnub_t* pb);
+PUBNUB_EXTERN int pubnub_get_chan_msg_counts_size(pubnub_t* pb);
 
 /** Starts the transaction 'pubnub_message_counts' on the context @p pb for the
     list of channels @p channel for unread messages counts starting from @p timeoken
@@ -31,7 +32,7 @@ int pubnub_get_chan_msg_counts_size(pubnub_t* pb);
                             in progress(hasn't finished yet)
     @retval otherwise a result with the same meaning as for any other transaction
  */
-enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
                                       char const* channel, 
                                       char const* timetoken);
 
@@ -42,7 +43,7 @@ enum pubnub_res pubnub_message_counts(pubnub_t*   pb,
     @retval 0 on success
     @retval -1 on error(transaction in progress, or format error)
  */
-int pubnub_get_chan_msg_counts(pubnub_t* pb, 
+PUBNUB_EXTERN int pubnub_get_chan_msg_counts(pubnub_t* pb, 
                                size_t* io_count, 
                                struct pubnub_chan_msg_count* chan_msg_counters);
 
@@ -57,7 +58,7 @@ int pubnub_get_chan_msg_counts(pubnub_t* pb,
     @retval 0 on success
     @retval -1 on error(transaction in progress, or format error)
   */
-int pubnub_get_message_counts(pubnub_t* pb, char const*channel, int* o_count);
+PUBNUB_EXTERN int pubnub_get_message_counts(pubnub_t* pb, char const*channel, int* o_count);
 
 
 #endif /* !defined INC_PUBNUB_ADVANCED_HISTORY */

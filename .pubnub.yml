@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.6.2"
+version: "4.7.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-11-20
+    version: v4.7.0
+    changes:
+      - type: feature
+        text: "Provided `PUBNUB_EXTERN` macro to extern C functions."
   - date: 2023-11-14
     version: v4.6.2
     changes:
@@ -758,7 +763,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -824,7 +829,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -890,7 +895,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -952,7 +957,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -1013,7 +1018,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -1069,7 +1074,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"
@@ -1122,7 +1127,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.6.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
             requires:
               -
                 name: "miniz"

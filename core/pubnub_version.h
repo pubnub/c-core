@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_VERSION
 #define	INC_PUBNUB_VERSION
 
+#include "lib/pb_extern.h"
 
 /** @file pubnub_version.h 
     This is the name / version API of the Pubnub client library.
@@ -13,22 +14,22 @@
 /** Returns a string with the name of the Pubnub SDK client you
     are using.
 */
-char const *pubnub_sdk_name(void);
+PUBNUB_EXTERN char const *pubnub_sdk_name(void);
 
 /** Returns a string with the version of the Pubnub SDK client you are
     using.
 */
-char const *pubnub_version(void);
+PUBNUB_EXTERN char const *pubnub_version(void);
 
 /** Returns an URL encoded string with the full identification of the
     SDK - name, version, possible something more.
 */
-char const *pubnub_uname(void);
+PUBNUB_EXTERN char const *pubnub_uname(void);
 
 /** Returns the full identification of the SDK - name, version, etc.
     (without Url encoding).
  */
-char const *pubnub_uagent(void);
+PUBNUB_EXTERN char const *pubnub_uagent(void);
 
 
 

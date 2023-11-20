@@ -1,7 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_DNS_SERVERS
 #define INC_PUBNUB_DNS_SERVERS
+
 #include <stdint.h>
+
 /** IPv4 Address, in binary format.
  */
 struct pubnub_ipv4_address {
@@ -26,6 +28,7 @@ struct pubnub_ipv6_address {
 
 #if PUBNUB_SET_DNS_SERVERS
 #include <stdlib.h>
+#include "lib/pb_extern.h"
 
 /** Sets the primary DNS server IPv4 address to use when
     resolving the Pubnub origin, in binary form(network order).
@@ -38,7 +41,7 @@ struct pubnub_ipv6_address {
     @retval -1 error: Pubnub DNS module not used and can't set
                the primary Ipv4 DNS server
   */
-int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4);
+PUBNUB_EXTERN int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4);
 
 /** Sets the secondary DNS server IPv4 address to use
     when resolving the Pubnub origin, in binary form(network order).
@@ -54,7 +57,7 @@ int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4);
     @retval -1 error: Pubnub DNS module not used and can't set
                the secondary Ipv4 DNS server
   */
-int pubnub_dns_set_secondary_server_ipv4(struct pubnub_ipv4_address ipv4);
+PUBNUB_EXTERN int pubnub_dns_set_secondary_server_ipv4(struct pubnub_ipv4_address ipv4);
 
 /** Sets the primary DNS server IPv4 address from the corresponding
     'numbers-and-dots' notation string to use when resolving the Pubnub origin.
@@ -67,7 +70,7 @@ int pubnub_dns_set_secondary_server_ipv4(struct pubnub_ipv4_address ipv4);
     @retval -1 error: Pubnub DNS module not used, or can't set
                the primary Ipv4 DNS server
   */
-int pubnub_dns_set_primary_server_ipv4_str(char const* ipv4_str);
+PUBNUB_EXTERN int pubnub_dns_set_primary_server_ipv4_str(char const* ipv4_str);
 
 /** Sets the secondary DNS server IPv4 address from the corresponding
     'numbers-and-dots' notation string to use when resolving the Pubnub origin.
@@ -83,7 +86,7 @@ int pubnub_dns_set_primary_server_ipv4_str(char const* ipv4_str);
     @retval -1 error: Pubnub DNS module not used, or can't set the
                secondary Ipv4 DNS server
   */
-int pubnub_dns_set_secondary_server_ipv4_str(char const* ipv4_str);
+PUBNUB_EXTERN int pubnub_dns_set_secondary_server_ipv4_str(char const* ipv4_str);
 
 /** Reads the currently set primary DNS server's IPv4 address,
     in binary form(network order).
@@ -93,7 +96,7 @@ int pubnub_dns_set_secondary_server_ipv4_str(char const* ipv4_str);
     @retval -1 error: Pubnub DNS module not used and can't read
             the primary Ipv4 DNS server
   */
-int pubnub_get_dns_primary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
+PUBNUB_EXTERN int pubnub_get_dns_primary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
 
 /** Reads the currently set secondary DNS server's IPv4 address,
     in binary form(network order).
@@ -103,7 +106,7 @@ int pubnub_get_dns_primary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
     @retval -1 error: Pubnub DNS module not used and can't read
             the secondary Ipv4 DNS server
   */
-int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
+PUBNUB_EXTERN int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
 
 /** Reads the DNS servers in the system configuration. Will read
     at most @p n servers, even if more are configured. Keep in
@@ -123,7 +126,7 @@ int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4);
     @retval -1: error, can't read DNS server configuration
     @retval otherwise: number of DNS servers read
   */
-int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4,
+PUBNUB_EXTERN int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4,
                                         size_t                      n);
 #if PUBNUB_USE_IPV6
 /** Sets the primary DNS server IPv6 address to use when
@@ -137,7 +140,7 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4,
     @retval -1 error: Pubnub DNS module not used and can't set
                the primary Ipv6 DNS server
   */
-int pubnub_dns_set_primary_server_ipv6(struct pubnub_ipv6_address ipv6);
+PUBNUB_EXTERN int pubnub_dns_set_primary_server_ipv6(struct pubnub_ipv6_address ipv6);
 
 /** Sets the secondary DNS server IPv6 address to use
     when resolving the Pubnub origin, in binary form(network order).
@@ -153,7 +156,7 @@ int pubnub_dns_set_primary_server_ipv6(struct pubnub_ipv6_address ipv6);
     @retval -1 error: Pubnub DNS module not used and can't set
             the secondary Ipv6 DNS server
   */
-int pubnub_dns_set_secondary_server_ipv6(struct pubnub_ipv6_address ipv6);
+PUBNUB_EXTERN int pubnub_dns_set_secondary_server_ipv6(struct pubnub_ipv6_address ipv6);
 
 /** Sets the primary DNS server IPv6 address from the corresponding
     'numbers-and-colons' notation string to use when resolving the Pubnub origin.
@@ -166,7 +169,7 @@ int pubnub_dns_set_secondary_server_ipv6(struct pubnub_ipv6_address ipv6);
     @retval -1 error: Pubnub DNS module not used, or can't set
                the primary Ipv6 DNS server
   */
-int pubnub_dns_set_primary_server_ipv6_str(char const* ipv6_str);
+PUBNUB_EXTERN int pubnub_dns_set_primary_server_ipv6_str(char const* ipv6_str);
 
 /** Sets the secondary DNS server IPv6 address from the corresponding
     'numbers-and-colons' notation string to use when resolving the Pubnub origin.
@@ -182,7 +185,7 @@ int pubnub_dns_set_primary_server_ipv6_str(char const* ipv6_str);
     @retval -1 error: Pubnub DNS module not used and can't set the
             secondary Ipv6 DNS server
   */
-int pubnub_dns_set_secondary_server_ipv6_str(char const* ipv6_str);
+PUBNUB_EXTERN int pubnub_dns_set_secondary_server_ipv6_str(char const* ipv6_str);
 
 /** Reads the currently set primary DNS server's IPv6 address,
     in binary form(network order).
@@ -192,7 +195,7 @@ int pubnub_dns_set_secondary_server_ipv6_str(char const* ipv6_str);
     @retval -1 error: Pubnub DNS module not used and can't read
             the primary Ipv6 DNS server
   */
-int pubnub_get_dns_primary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
+PUBNUB_EXTERN int pubnub_get_dns_primary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
 
 /** Reads the currently set secondary DNS server's IPv6 address,
     in binary form(network order).
@@ -202,7 +205,7 @@ int pubnub_get_dns_primary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
     @retval -1 error: Pubnub DNS module not used and can't read
             the secondary Ipv6 DNS server
   */
-int pubnub_get_dns_secondary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
+PUBNUB_EXTERN int pubnub_get_dns_secondary_server_ipv6(struct pubnub_ipv6_address* o_ipv6);
 #endif /* PUBNUB_USE_IPV6 */
 
 #else

@@ -4,7 +4,7 @@
 
 
 #include "pubnub_api_types.h"
-#include "pubnub_memory_block.h"
+#include "lib/pb_extern.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -67,7 +67,7 @@ struct pubnub_publish_options {
     Will set `store = true`, `cipher_key = NULL`, `replicate = true`,
     `meta = NULL` and `method = pubnubPublishViaGet`
  */
-struct pubnub_publish_options pubnub_publish_defopts(void);
+PUBNUB_EXTERN struct pubnub_publish_options pubnub_publish_defopts(void);
 
 /** The extended publish V1. Basically the same as pubnub_publish(),
     but with added optional parameters in @p opts.
@@ -84,7 +84,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void);
     @param opt Publish V1 options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_publish_ex(pubnub_t*                     p,
+PUBNUB_EXTERN enum pubnub_res pubnub_publish_ex(pubnub_t*                     p,
                                   const char*                   channel,
                                   const char*                   message,
                                   struct pubnub_publish_options opts);
@@ -107,7 +107,7 @@ struct pubnub_subscribe_options {
     set `channel_group = NULL`, `heartbeat` to default heartbeat
     value.
  */
-struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
+PUBNUB_EXTERN struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
 
 /** The extended subscribe. Basically the same as pubnub_subscribe()
     but with options (except @p channel) given in @p opts.
@@ -129,7 +129,7 @@ struct pubnub_subscribe_options pubnub_subscribe_defopts(void);
     @param opt Subscribe options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
+PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_ex(pubnub_t*                       p,
                                     const char*                     channel,
                                     struct pubnub_subscribe_options opts);
 
@@ -151,7 +151,7 @@ struct pubnub_here_now_options {
     set `channel_group = NULL`, `disable_uuids=true` and `state =
     false`.
  */
-struct pubnub_here_now_options pubnub_here_now_defopts(void);
+PUBNUB_EXTERN struct pubnub_here_now_options pubnub_here_now_defopts(void);
 
 /** The extended "here now". It is basically the same as the
     pubnub_here_now(), just adding a few options that will be sent.
@@ -171,7 +171,7 @@ struct pubnub_here_now_options pubnub_here_now_defopts(void);
     @param opt Here-now options for this here-now
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_here_now_ex(pubnub_t*                      p,
+PUBNUB_EXTERN enum pubnub_res pubnub_here_now_ex(pubnub_t*                      p,
                                    const char*                    channel,
                                    struct pubnub_here_now_options opt);
 
@@ -184,7 +184,7 @@ enum pubnub_res pubnub_here_now_ex(pubnub_t*                      p,
 
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      p,
+PUBNUB_EXTERN enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      p,
                                           struct pubnub_here_now_options opt);
 
 
@@ -237,7 +237,7 @@ struct pubnub_history_options {
     It's best to always call it to initialize the
     #pubnub_history_options, since it has several parameters.
  */
-struct pubnub_history_options pubnub_history_defopts(void);
+PUBNUB_EXTERN struct pubnub_history_options pubnub_history_defopts(void);
 
 /** The extended "history". It is basically the same as the
     pubnub_history(), just adding a few options that will be sent.
@@ -254,7 +254,7 @@ struct pubnub_history_options pubnub_history_defopts(void);
     @param opt Options for this history transaction
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
+PUBNUB_EXTERN enum pubnub_res pubnub_history_ex(pubnub_t*                     pb,
                                   char const*                   channel,
                                   struct pubnub_history_options opt);
 
@@ -280,7 +280,7 @@ struct pubnub_set_state_options {
 /** This returns the default options for set_state transactions.  Will
     set `channel_group = NULL`, `user_id = NULL` and `heartbeat to false`
  */
-struct pubnub_set_state_options pubnub_set_state_defopts(void);
+PUBNUB_EXTERN struct pubnub_set_state_options pubnub_set_state_defopts(void);
 
 /** The extended set_state. Basically the same as pubnub_set_state()
     but with options (except @p channel) given in @p opts.
@@ -302,7 +302,7 @@ struct pubnub_set_state_options pubnub_set_state_defopts(void);
     @param opt Subscribe options
     @return #PNR_STARTED on success, an error otherwise
 */
-enum pubnub_res pubnub_set_state_ex(pubnub_t*                       p,
+PUBNUB_EXTERN enum pubnub_res pubnub_set_state_ex(pubnub_t*                       p,
                                     const char*                     channel,
                                     const char*                     state,
                                     struct pubnub_set_state_options opts);

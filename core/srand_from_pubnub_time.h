@@ -3,6 +3,7 @@
  
  
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
  
  
 /** This helper function will call the C standard srand() function with the seed
@@ -19,7 +20,7 @@
     @param pbp The Pubnub context to use to get time
     @return 0: OK, -1: error (srand() was not called)
 */
-int srand_from_pubnub_time(pubnub_t *pbp);
+PUBNUB_EXTERN int srand_from_pubnub_time(pubnub_t *pbp);
  
  
 #endif /* !defined INC_SRAND_FROM_PUBNUB_TIME */

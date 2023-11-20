@@ -310,5 +310,5 @@ enum pubnub_res pubnub_set_state_ex(pubnub_t *p,
         : pubnub_set_state(p, channel, opts.channel_group, opts.user_id, state);
 }
 
-#endif PUBNUB_QT
+#endif /* PUBNUB_QT */
 

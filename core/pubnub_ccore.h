@@ -3,6 +3,7 @@
 #define INC_PUBNUB_CCORE
 
 #include "pubnub_api_types.h"
+#include "lib/pb_extern.h"
 
 #include <stdbool.h>
 
@@ -28,7 +29,7 @@ struct pbcc_context;
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-enum pubnub_res pbcc_parse_time_response(struct pbcc_context* p);
+PUBNUB_EXTERN enum pubnub_res pbcc_parse_time_response(struct pbcc_context* p);
 
 /** Parses the string received as a response for a history v2
     operation (transaction). This checks if the response is valid,
@@ -38,7 +39,7 @@ enum pubnub_res pbcc_parse_time_response(struct pbcc_context* p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p);
+PUBNUB_EXTERN enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p);
 
 /** Parses the string received as a response for a presence query
     operation (transaction). Presence query is done on several
@@ -50,7 +51,7 @@ enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p);
     @param p The Pubnub C core context to parse the response "in"
     @return 0: OK, -1: error (invalid response)
 */
-enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p);
+PUBNUB_EXTERN enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p);
 
 /** Parses the string received as a response for a channel-registry
     operation (transaction). It is done on several user requests
@@ -64,24 +65,24 @@ enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p);
     @return The result of the parsing, expressed as the "Pubnub
     result" enum
 */
-enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context* p);
+PUBNUB_EXTERN enum pubnub_res pbcc_parse_channel_registry_response(struct pbcc_context* p);
 
 /** Prepares the Leave operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_leave_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_leave_prep(struct pbcc_context* p,
                                 const char*          channel,
                                 const char*          channel_group);
 
 /** Prepares the Time operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_time_prep(struct pbcc_context* p);
+PUBNUB_EXTERN enum pubnub_res pbcc_time_prep(struct pbcc_context* p);
 
 /** Prepares the History v2 operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_history_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_history_prep(struct pbcc_context* p,
                                   const char*          channel,
                                   unsigned             count,
                                   bool                 include_token,
@@ -94,14 +95,14 @@ enum pubnub_res pbcc_history_prep(struct pbcc_context* p,
 /** Prepares the Heartbeat operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_heartbeat_prep(struct pbcc_context* p,
                                     const char*          channel,
                                     const char*          channel_group);
 
 /** Prepares the Here-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_here_now_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_here_now_prep(struct pbcc_context* p,
                                    const char*          channel,
                                    const char*          channel_group,
                                    enum pubnub_tribool  disable_uuids,
@@ -110,12 +111,12 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* p,
 /** Prepares the Where-now operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_where_now_prep(struct pbcc_context* p, const char* uuid);
+PUBNUB_EXTERN enum pubnub_res pbcc_where_now_prep(struct pbcc_context* p, const char* uuid);
 
 /** Prepares the Set state operation (transaction), mostly by
     formatting the URI of the HTTP request.
  */
-enum pubnub_res pbcc_set_state_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_set_state_prep(struct pbcc_context* p,
                                     char const*          channel,
                                     char const*          channel_group,
                                     const char*          uuid,
@@ -124,7 +125,7 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* p,
 /** Prepares the Get state operation (transaction), mostly by
     formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_state_get_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_state_get_prep(struct pbcc_context* p,
                                     char const*          channel,
                                     char const*          channel_group,
                                     const char*          uuid);
@@ -132,13 +133,13 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* p,
 /** Preparse the Remove channel group operation (transaction) , mostly by
     formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* p,
                                                char const* channel_group);
 
 /** Preparse an operation (transaction) against the channel registry,
     mostly by formatting the URI of the HTTP request.
 */
-enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* p,
+PUBNUB_EXTERN enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* p,
                                            char const*          channel_group,
                                            char const*          param,
                                            char const*          channel);

@@ -6,6 +6,7 @@
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_memory_block.h"
 #include "core/pbcc_crypto.h"
+#include "lib/pb_extern.h"
 
 
 /**
@@ -15,7 +16,7 @@
 
     @return PNR_OK on success, otherwise an error code.
  */
-enum pubnub_res pubnub_set_cipher_key(pubnub_t *p, char const *cipher_key);
+PUBNUB_EXTERN enum pubnub_res pubnub_set_cipher_key(pubnub_t *p, char const *cipher_key);
 
 
 /** Sets @p secret_key to be used with the Pubnub context @p p.
@@ -30,7 +31,7 @@ enum pubnub_res pubnub_set_cipher_key(pubnub_t *p, char const *cipher_key);
     use the secret key (i.e. do no encrpytion/decryption)
     @param PNR_OK or a value indicating an error
  */
-enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
+PUBNUB_EXTERN enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
 
 
 /** Encrypts a message @p msg to a Base64 encoded @p base64_str, which
@@ -48,13 +49,13 @@ enum pubnub_res pubnub_set_secret_key(pubnub_t *p, char const* secret_key);
     @param n The size of the string
     @return 0: OK, -1: error
 */
-PUBNUB_DEPRECATED int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
+PUBNUB_EXTERN PUBNUB_DEPRECATED int pubnub_encrypt(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n);
 
 /** Similar to pubnub_encrypt() - but this function doesn't allocate
     memory, it uses the memory provided by @p buffer for its "working
     memory".
 */
-PUBNUB_DEPRECATED int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
+PUBNUB_EXTERN PUBNUB_DEPRECATED int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bymebl_t msg, char *base64_str, size_t *n, pubnub_bymebl_t buffer);
 
 /** Decrypts a message from a Base64 encoded string @p base64_str to
     user-allocated memory @p data. On input @p data->size holds the
@@ -73,12 +74,12 @@ PUBNUB_DEPRECATED int pubnub_encrypt_buffered(char const *cipher_key, pubnub_bym
     @param data User allocated memory block to write the decrypted contents to
     @return 0: OK, -1: error
 */
-PUBNUB_DEPRECATED int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
+PUBNUB_EXTERN PUBNUB_DEPRECATED int pubnub_decrypt(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data);
 
 /** Similar to pubnub_decrypt(), but never allocates memory - it uses
     the memory provided by @p buffer as its "working memory".
 */
-PUBNUB_DEPRECATED int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
+PUBNUB_EXTERN PUBNUB_DEPRECATED int pubnub_decrypt_buffered(char const *cipher_key, char const *base64_str, pubnub_bymebl_t *data, pubnub_bymebl_t *buffer);
 
 /** Similar to pubnub_decrpyt(), but this will allocate the memory to
     write the decrypted contents to and return it as the result.
@@ -88,7 +89,7 @@ PUBNUB_DEPRECATED int pubnub_decrypt_buffered(char const *cipher_key, char const
     @result Memory block (pointer and size) of the decoded and decrypted
     message. On failure, pointer will be NULL and size is undefined.
 */
-PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
+PUBNUB_EXTERN PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, char const *base64_str);
 
 
 /** Decrypts the next message in the context @p p using the key
@@ -115,7 +116,7 @@ PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_decrypt_alloc(char const *cipher_key, c
     point to be made is that it also does some memory management
     (allocting and deallocating).
  */
-PUBNUB_DEPRECATED enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
+PUBNUB_EXTERN PUBNUB_DEPRECATED enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const* cipher_key, char *s, size_t *n);
 
 /** This function is very similar to pubnub_get_decrypted(), but it
     allocates the (memory for the) decrypted string and returns it as
@@ -132,7 +133,7 @@ PUBNUB_DEPRECATED enum pubnub_res pubnub_get_decrypted(pubnub_t *pb, char const*
 
     On failure, a NULL pointer is returned.
 */
-PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
+PUBNUB_EXTERN PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char const* cipher_key);
 
 /** Publishes the @p message on @p channel in the context @p p
     encrypted with the key @p cipher_key
@@ -145,26 +146,26 @@ PUBNUB_DEPRECATED pubnub_bymebl_t pubnub_get_decrypted_alloc(pubnub_t *pb, char 
         opts.cipher_key = cipher_key;;
         return pubnub_publish_ex(p, channel, message, opts);
 */
-PUBNUB_DEPRECATED enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
+PUBNUB_EXTERN PUBNUB_DEPRECATED enum pubnub_res pubnub_publish_encrypted(pubnub_t *p, char const* channel, char const* message, char const* cipher_key);
 
 /** Get the buffer size required to encode an array with the given
     number of bytes.
 */
-int base64_max_size(int encode_this_many_bytes);
+PUBNUB_EXTERN int base64_max_size(int encode_this_many_bytes);
 
 /** Base64 encoding. Returns non-zero when the provided buffer is too small
     to hold the encoded string.
 */
-int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes);
+PUBNUB_EXTERN int base64encode(char* result, int max_size, const void* b64_encode_this, int encode_this_many_bytes);
 
 /** Cryptographic message signing for PAM.
 
     The caller is responsible for freeing the returned pointer.
 */
-char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
+PUBNUB_EXTERN char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 
-enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
-enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
+PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
+PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
 
 /** 
    Prepare the aes cbc crypto module for use.
@@ -180,7 +181,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
    @return Pointer to the aes cbc crypto module structure.
 
 */
-struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
+PUBNUB_EXTERN struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t* cipher_key);
 
 
 /** 
@@ -194,7 +195,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_aes_cbc_module_init(const uint8_t
    @return Pointer to the aes cbc crypto module structure.
 
 */
-struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key);
+PUBNUB_EXTERN struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t* cipher_key);
 
 
 /**
@@ -209,7 +210,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_legacy_module_init(const uint8_t*
 
    @return Pointer to the crypto module structure.
 */
-struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t n_algorithms);
+PUBNUB_EXTERN struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor_t *default_algorithm, struct pubnub_cryptor_t *algorithms, size_t n_algorithms);
 
 
 /**
@@ -221,7 +222,7 @@ struct pubnub_crypto_provider_t *pubnub_crypto_module_init(struct pubnub_cryptor
    @param pubnub Pointer to the pubnub context.
    @param crypto_provider Pointer to the crypto provider to use.
 */
-void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
+PUBNUB_EXTERN void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t *crypto_provider);
 
 /**
    Get the crypto module used by the pubnub context.
@@ -233,6 +234,6 @@ void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_crypto_provider_t 
 
    @return Pointer to the crypto provider used by the pubnub context.
 */
-pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub);
+PUBNUB_EXTERN pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub);
 
 #endif /* defined INC_PUBNUB_CRYPTO */
