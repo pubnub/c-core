@@ -1,3 +1,9 @@
+## v4.7.0
+November 20 2023
+
+#### Added
+- Provided `PUBNUB_EXTERN` macro to extern C functions.
+
 ## v4.6.2
 November 14 2023
 
