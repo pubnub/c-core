@@ -122,7 +122,7 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
             if (NULL != pb->crypto_module) {
                 char* trimmed = (char*)malloc(strlen(rslt) + 1); // same length as rslt
                 if (NULL == trimmed) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);
+                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);
                     return rslt;
                 }
                 sprintf(trimmed, "%s", rslt);
@@ -133,19 +133,19 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
                 free(trimmed);
 
                 if (NULL == encrypted.ptr) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Returning original message!\n", pb);
+                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Returning original message!\n", pb);
                     return rslt;
                 }
 
                 pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
                 free(encrypted.ptr);
                 if (NULL == rslt_block.ptr) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - decryption failed. Returning original message!\n", pb);
+                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - decryption failed. Returning original message!\n", pb);
                     return rslt;
                 }
 
                 if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Returning original message!\n", pb);
+                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Returning original message!\n", pb);
                     return rslt;
                 }
 
