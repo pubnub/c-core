@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #include "pubnub_internal.h"
 
 #include "core/pubnub_proxy_core.h"
@@ -319,3 +322,5 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context* ctx,
 
     return 0;
 }
+
+#endif /* PUBNUB_PROXY_API */

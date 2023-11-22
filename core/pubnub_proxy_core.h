@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #if !defined INC_PUBNUB_PROXY_CORE
 #define      INC_PUBNUB_PROXY_CORE
 
@@ -81,3 +84,5 @@ enum pbproxyFinInstruction pbproxy_handle_finish(pubnub_t *pb);
 
 
 #endif /* !defined INC_PUBNUB_PROXY_CORE */
+#endif /* PUBNUB_PROXY_API */
+

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #include "pubnub_internal.h"
 
 #include "pubnub_proxy.h"
@@ -144,3 +147,5 @@ int pubnub_set_proxy_authentication_username_password(pubnub_t*   p,
 
     return 0;
 }
+
+#endif /* PUBNUB_PROXY_API */

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #if !defined INC_PBNTLM_CORE
 #define      INC_PBNTLM_CORE
 
@@ -16,3 +19,4 @@ int pbntlm_core_prep_msg_to_send(pubnub_t *pb, pubnub_bymebl_t* data);
 
 
 #endif /* !defined INC_PBNTLM_CORE */
+#endif /* PUBNUB_PROXY_API */
