@@ -1,3 +1,9 @@
+## v4.7.1
+November 23 2023
+
+#### Fixed
+- Handle unencrypted message while getting messages with crypto.
+
 ## v4.7.0
 November 20 2023
 
