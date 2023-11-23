@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.7.0"
+version: "4.7.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-11-23
+    version: v4.7.1
+    changes:
+      - type: bug
+        text: "Handle unencrypted message while getting messages with crypto."
   - date: 2023-11-20
     version: v4.7.0
     changes:
@@ -763,7 +768,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -829,7 +834,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -895,7 +900,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -957,7 +962,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -1018,7 +1023,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -1074,7 +1079,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
@@ -1127,7 +1132,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
             requires:
               -
                 name: "miniz"
