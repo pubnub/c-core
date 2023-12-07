@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+
 #include "pubnub_internal.h"
 
 #include "pubnub_version.h"
@@ -326,3 +329,6 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
 
     return rslt;
 }
+
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+
