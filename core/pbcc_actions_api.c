@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_ACTIONS_API
+
 #include "pubnub_internal.h"
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
@@ -624,3 +627,5 @@ enum pubnub_res pbcc_parse_history_with_actions_response(struct pbcc_context* pb
 
     return PNR_OK;
 }
+
+#endif /* PUBNUB_USE_ACTIONS_API */
