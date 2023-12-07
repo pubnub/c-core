@@ -1,7 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#if PUBNUB_PROXY_API
-
 #include "core/pubnub_proxy_core.h"
 
 #include "core/pubnub_assert.h"
@@ -382,4 +380,3 @@ enum pbproxyFinInstruction pbproxy_handle_finish(pubnub_t* pb)
     return pbproxyFinGoOn;
 }
 
-#endif /* PUBNUB_PROXY_API */
