@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+
 #if !defined INC_PBCC_SUBSCRIBE_V2
 #define INC_PBCC_SUBSCRIBE_V2
 
@@ -35,3 +38,6 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p);
 
 
 #endif /* !defined INC_PBCC_SUBSCRIBE_V2 */
+
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+

@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.7.1"
+version: "4.8.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2023-12-07
+    version: v4.8.0
+    changes:
+      - type: feature
+        text: "Add `#if` switches into files that are related to PubNub features to not rely only on makefiles. [Be careful when update. It's not a breaking change at all but might fail build for custom makefiles!]."
   - date: 2023-11-23
     version: v4.7.1
     changes:
@@ -768,7 +773,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -834,7 +839,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -900,7 +905,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -962,7 +967,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -1023,7 +1028,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -1079,7 +1084,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"
@@ -1132,7 +1137,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.7.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
             requires:
               -
                 name: "miniz"

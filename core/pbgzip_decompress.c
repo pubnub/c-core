@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+
 #include "pubnub_internal.h"
 
 #include "core/pubnub_assert.h"
@@ -164,3 +167,6 @@ enum pubnub_res pbgzip_decompress(pubnub_t* pb)
     return inflate_total(
         pb, data + GZIP_HEADER_LENGTH_BYTES, size, (size_t)unpacked_size);
 }
+
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+
 #include "lib/pb_strnlen_s.h"
 #include "core/pubnub_assert.h"
 
@@ -77,3 +80,6 @@ void pbstr_free_if_empty(char** list)
         *list = NULL;
     }
 }
+
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+

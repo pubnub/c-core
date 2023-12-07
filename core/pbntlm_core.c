@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #include "core/pbntlm_core.h"
 
 #include "core/pbntlm_packer.h"
@@ -80,4 +83,6 @@ int pbntlm_core_prep_msg_to_send(pubnub_t *pb, pubnub_bymebl_t* data)
         return -1;
     }
 }
+
+#endif /* PUBNUB_PROXY_API */
 

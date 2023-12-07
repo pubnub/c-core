@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #if !defined INC_PUBNUB_PROXY
 #define INC_PUBNUB_PROXY
 
@@ -221,3 +224,5 @@ PUBNUB_EXTERN int pubnub_proxy_get_config(pubnub_t*               pb,
 
 
 #endif /* defined INC_PUBNUB_PROXY */
+
+#endif /* PUBNUB_PROXY_API */

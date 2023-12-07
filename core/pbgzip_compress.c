@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #include "pubnub_internal.h"
 
 #include "core/pubnub_assert.h"
@@ -129,3 +132,5 @@ enum pubnub_res pbgzip_compress(pubnub_t* pb, char const* message)
 
     return deflate_total_to_context_buffer(pb, message, size);
 }
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */

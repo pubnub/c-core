@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #if !defined INC_PBHTTP_DIGEST
 #define      INC_PBHTTP_DIGEST
 
@@ -152,3 +155,5 @@ char const* pbhttp_digest_algorithm2str(enum pbhttp_digest_algorithm e);
 
 
 #endif /* !defined INC_PBHTTP_DIGEST */
+#endif /* PUBNUB_PROXY_API */
+

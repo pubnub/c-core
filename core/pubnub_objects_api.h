@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_OBJECTS_API
+
 #if !defined INC_PUBNUB_OBJECTS_API
 #define INC_PUBNUB_OBJECTS_API
 
@@ -334,3 +337,6 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_members(pubnub_t* pb,
 
 
 #endif /* !defined INC_PUBNUB_OBJECTS_API */
+
+#endif /* PUBNUB_USE_OBJECTS_API */
+

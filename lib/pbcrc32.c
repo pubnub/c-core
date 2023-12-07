@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #include "lib/pbcrc32.h"
 #include "core/pubnub_assert.h"
 
@@ -32,3 +35,6 @@ uint32_t pbcrc32(const void *data, size_t n_bytes)
     }
     return crc;
 }
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */
+

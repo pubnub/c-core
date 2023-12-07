@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_ACTIONS_API
+
 #include "pubnub_internal.h"
 
 #include "core/pubnub_ccore.h"
@@ -267,3 +270,6 @@ enum pubnub_res pubnub_history_with_message_actions_more(pubnub_t* pb)
 
     return rslt;
 }
+
+#endif /* PUBNUB_USE_ACTIONS_API */
+

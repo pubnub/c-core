@@ -1,3 +1,9 @@
+## v4.8.0
+December 07 2023
+
+#### Added
+- Add `#if` switches into files that are related to PubNub features to not rely only on makefiles. [Be careful when update. It's not a breaking change at all but might fail build for custom makefiles!].
+
 ## v4.7.1
 November 23 2023
 

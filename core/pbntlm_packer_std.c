@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #include "pbntlm_packer.h"
 
 #include "pubnub_log.h"
@@ -51,3 +54,5 @@ void pbntlm_packer_deinit(pbntlm_ctx_t *pb)
 {
     PUBNUB_UNUSED(pb);
 }
+
+#endif /* PUBNUB_PROXY_API */
