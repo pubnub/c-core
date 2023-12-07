@@ -1,3 +1,5 @@
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+
 #pragma once
 #include "lib/miniz/miniz_common.h"
 /* ------------------- Low-level Decompression API Definitions */
@@ -142,3 +144,5 @@ struct tinfl_decompressor_tag
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */

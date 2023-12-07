@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+
 #if !defined INC_PUBNUB_DECOMPRESSION
 #define INC_PUBNUB_DECOMPRESSION
 
@@ -19,3 +22,6 @@ enum pubnub_data_compressionType{
 enum pubnub_res pbgzip_decompress(pubnub_t *pb);
 
 #endif /* INC_PUBNUB_DECOMPRESSION */
+
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+
