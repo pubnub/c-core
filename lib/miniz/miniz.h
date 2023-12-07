@@ -111,6 +111,9 @@
      uses the 64-bit variants: fopen64(), stat64(), etc. Otherwise you won't be able to process large files
      (i.e. 32-bit stat() fails for me on files > 0x7FFFFFFF bytes).
 */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #pragma once
 
 #include "miniz_common.h"
@@ -468,3 +471,5 @@ typedef void *const voidpc;
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */

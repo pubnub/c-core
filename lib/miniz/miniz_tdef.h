@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #pragma once
 #include "miniz_common.h"
 
@@ -187,3 +190,5 @@ void tdefl_compressor_free(tdefl_compressor *pComp);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */

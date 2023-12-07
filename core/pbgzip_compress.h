@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #if !defined INC_PUBNUB_COMPRESSION
 #define INC_PUBNUB_COMPRESSION
 
@@ -12,3 +15,5 @@
 enum pubnub_res pbgzip_compress(pubnub_t *pb, char const* message);
 
 #endif /* INC_PUBNUB_COMPRESSION */
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */
