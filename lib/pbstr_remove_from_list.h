@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+
 #if !defined INC_PBSTR_REMOVE_FROM_LIST
 #define INC_PBSTR_REMOVE_FROM_LIST
 
@@ -12,3 +15,6 @@ void pbstr_remove_from_list(char* list, const char* leave_list);
 void pbstr_free_if_empty(char** list);
 
 #endif /* !defined INC_PBSTR_REMOVE_FROM_LIST */
+
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+
