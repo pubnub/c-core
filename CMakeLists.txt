@@ -29,7 +29,9 @@ num_option(USE_ACTIONS_API "Use actions API" ON)
 num_option(USE_REVOKE_TOKEN_API "Use revoke token API" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
+num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 
+option(OPENSSL "Use OpenSSL" ON)
 option(EXAMPLES "Build all examples" OFF)
 option(UNIT_TEST "Build and run unit tests" OFF)
 
@@ -49,9 +51,9 @@ message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
 set(CORE_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_set_state.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_pubsubapi.c core/pubnub_coreapi.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_coreapi_ex.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore_pubsub.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_netcore.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_blocking_io.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timers.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_json_parse.c  ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c  ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c )
 
-set(LIB_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c ${CMAKE_CURRENT_LIST_DIR}/lib/md5/md5.c ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c  )
+set(LIB_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c ${CMAKE_CURRENT_LIST_DIR}/lib/md5/md5.c ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c  )
 
-set(POSIX_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c  ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
+set(POSIX_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c  ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
 
 # if MACOS
 set(POSIX_SOURCEFILES ${POSIX_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
@@ -100,7 +102,10 @@ if(${USE_ACTIONS_API})
 endif()
 
 if(${USE_AUTO_HEARTBEAT})
-    set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat.c ${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c ${CMAKE_CURRENT_LIST_DIR}/lib/pbstr_remove_from_list.c)
+    set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat.c ${CMAKE_CURRENT_LIST_DIR}/lib/pbstr_remove_from_list.c)
+    if(NOT ${OPENSSL})
+        set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat_init_posix.c)
+    endif()
 endif()
 
 if(${USE_FETCH_HISTORY})
@@ -115,14 +120,32 @@ if(${USE_REVOKE_TOKEN_API})
     set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_revoke_token_api.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif()
 
+set(OPENSSL_LINK_LIBRARIES)
+if(${OPENSSL})
+    message(STATUS "Using OpenSSL")
+
+    find_package(OpenSSL REQUIRED)
+    set(FEATURE_SOURCEFILES ${OPENSSL_LIBRARIES} ${FEATURE_SOURCEFILES})
+    include_directories(${OPENSSL_INCLUDE_DIR})
+
+    set(LIB_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c ${LIB_SOURCEFILES})
+    set(FEATURE_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c  ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_legacy.c ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c ${FEATURE_SOURCEFILES})
+    set(FEATURE_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/openssl/pbauto_heartbeat_init_posix.c ${FEATURE_SOURCEFILES})
+
+    set(LDLIBS  ${LDLIBS})
+    set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
 set(SOURCEFILES ${CORE_SOURCEFILES} ${LIB_SOURCEFILES} ${POSIX_SOURCEFILES} ${FEATURE_SOURCEFILES} ${INTF_SOURCEFILES})
 
-include_directories(${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/lib ${CMAKE_CURRENT_LIST_DIR}/posix)
-
-# original
-#set(SOURCEFILES "core/pbcc_set_state.c core/pubnub_pubsubapi.c core/pubnub_coreapi.c ../core/pubnub_coreapi_ex.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c  ../lib/sockets/pbpal_sockets.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../lib/sockets/pbpal_handle_socket_error.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../lib/md5/md5.c ../lib/base64/pbbase64.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../core/pubnub_helper.c pubnub_version_posix.c pubnub_generate_uuid_posix.c pbpal_posix_blocking_io.c ../core/pubnub_generate_uuid_v3_md5.c  ../core/pubnub_free_with_timeout_std.c msstopwatch_monotonic_clock.c pbtimespec_elapsed_ms.c ../core/pubnub_url_encode.c ../core/pubnub_memory_block.c ../posix/pb_sleep_ms.c")
-
-#add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/core)
+include_directories(${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/lib )
+if(${OPENSSL})
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/openssl/ ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+else()
+    set(LIB_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c ${LIB_SOURCEFILES})
+    set(POSIX_SOURCEFILES ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c ${POSIX_SOURCEFILES})
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/posix)
+endif()
 
 if(${SHARED_LIB})
     message(STATUS "Building shared library")
@@ -134,7 +157,7 @@ endif()
 
 add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
-target_link_libraries(pubnub ${LDLIBS})
+target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
 add_executable(pubnub_sync_sample ${CMAKE_CURRENT_LIST_DIR}/core/samples/pubnub_sync_sample.c)
 
