@@ -40,7 +40,6 @@ option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 
 # Flags configuration
 
-set(LDLIBS "-lpthread")
 
 set(CMAKE_C_FLAGS "\
     -g \
@@ -90,29 +89,37 @@ set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c)
 
-set(POSIX_SOURCEFILES
-    ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
-    ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
-    ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c
-    ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c
-    ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
-    ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
+set(LDLIBS)
+set(OS_SOURCEFILES)
 
+if(UNIX)
+    set(LDLIBS "-lpthread")
+    set(OS_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
+        ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c
+        ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c
+        ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
+        ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
+
+    if(APPLE)
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
+    else()
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
+    endif()
+elseif(WIN32 || WIN64 || MSVC)
 # TODO: add windows support
-set(WINDOWS_SOURCEFILES
-    ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pbtimespec_elapsed_ms.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
-    ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
-
-#if MACOS
-set(POSIX_SOURCEFILES ${POSIX_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
-# else
-#set(POSIX_SOURCEFILES ${POSIX_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
+    set(LDLIBS "ws2_32.lib IPHlpAPI.lib rpcrt4.lib")
+    set(OS_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pbtimespec_elapsed_ms.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+endif()
 
 set(INTF_SOURCEFILES)
 
@@ -270,7 +277,7 @@ endif()
 set(SOURCEFILES 
     ${CORE_SOURCEFILES} 
     ${LIB_SOURCEFILES} 
-    ${POSIX_SOURCEFILES} 
+    ${OS_SOURCEFILES} 
     ${FEATURE_SOURCEFILES} 
     ${INTF_SOURCEFILES})
 
@@ -287,10 +294,17 @@ else()
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
         ${LIB_SOURCEFILES})
-    set(POSIX_SOURCEFILES 
-        ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
-        ${POSIX_SOURCEFILES})
-    include_directories(${CMAKE_CURRENT_LIST_DIR}/posix)
+    if(UNIX)
+        set(LIB_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
+            ${LIB_SOURCEFILES})
+        include_directories(${CMAKE_CURRENT_LIST_DIR}/posix)
+    elseif(WIN32 || WIN64 || MSVC)
+        set(LIB_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
+            ${LIB_SOURCEFILES})
+        include_directories(${CMAKE_CURRENT_LIST_DIR}/windows)
+    endif()
 endif()
 
 if(${SHARED_LIB})
