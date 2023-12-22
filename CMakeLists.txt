@@ -98,6 +98,17 @@ set(POSIX_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
     ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
 
+# TODO: add windows support
+set(WINDOWS_SOURCEFILES
+    ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pbtimespec_elapsed_ms.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
+    ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+
 #if MACOS
 set(POSIX_SOURCEFILES ${POSIX_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
 # else
