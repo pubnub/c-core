@@ -23,7 +23,7 @@ cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Eng
   For example:
   
   ```csharp 
-    private bool OpenSsl = false;
+    private bool OpenSsl = true;
     private bool StaticLink = false;
   ```
 
