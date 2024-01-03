@@ -3,20 +3,12 @@
 using System.IO;
 using UnrealBuildTool;
 
-
-
 public class PubNubModule : ModuleRules
 {
-    // select desired module type
-    
-    // `posix`, `openssl`, `windows`
-    private readonly string Option = "posix";
-    
-    // `posix`, `windows`
-    private readonly string Architecture = "posix";
-    
-    // `sync`, `callback`
-    private readonly string Implementation = "sync";
+    private bool OpenSsl = false;
+    private bool StaticLink = false;
+
+    private string LibPath = "build";
 
     public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -25,31 +17,34 @@ public class PubNubModule : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
         PrivateDependencyModuleNames.AddRange(new string[] {  });
 
-        if (Option == "openssl") {
+
+#if PLATFORM_WINDOWS
+        string extention = StaticLink ? "lib" : "dll";
+        string includeLib = OpenSsl ? "openssl" : "windows";
+#elif PLATFORM_MAC
+        string extention = StaticLink ? "a" : "dylib";
+        string includeLib = OpenSsl ? "openssl" : "posix";
+#else 
+        string extention = StaticLink ? "a" : "so";
+        string includeLib = OpenSsl ? "openssl" : "posix";
+#endif
+
+        if (OpenSsl) {
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
         }
 
-        var path = Path.Combine(new string[] { ModuleDirectory, "..", ".." });
-        var extention = Architecture == "posix" ? "a" : "lib";
+        var path = Path.Combine(new string[] { ModuleDirectory, LibPath });
 
-        PublicAdditionalLibraries.Add(Path.Combine(path, Option, $"pubnub_{Implementation}.{extention}"));
+        PublicAdditionalLibraries.Add(Path.Combine(path, $"libpubnub.{extention}"));
         PublicIncludePaths.AddRange(
             new string[] {
                 path,
                 Path.Combine(path, "core"),
                 Path.Combine(path, "lib"),
-                Path.Combine(path, Option)
+                Path.Combine(path, includeLib)
             }
         );
 
         PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
-
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
-        // Uncomment if you are using online features
-        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
-
-        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
     }
 }
