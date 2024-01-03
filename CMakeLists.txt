@@ -298,6 +298,14 @@ set(SOURCEFILES
     ${FEATURE_SOURCEFILES} 
     ${INTF_SOURCEFILES})
 
+if(${SHARED_LIB})
+    message(STATUS "Building shared library")
+    set(LIBTYPE SHARED)
+else()
+    message(STATUS "Building static library")
+    set(LIBYTPE STATIC)
+endif()
+
 add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
 target_include_directories(pubnub PUBLIC
@@ -319,14 +327,6 @@ else()
             ${CMAKE_CURRENT_LIST_DIR}/windows
             ${CMAKE_CURRENT_LIST_DIR}/core/c99)
     endif()
-endif()
-
-if(${SHARED_LIB})
-    message(STATUS "Building shared library")
-    set(LIBTYPE SHARED)
-else()
-    message(STATUS "Building static library")
-    set(LIBYTPE STATIC)
 endif()
 
 target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
