@@ -108,7 +108,6 @@ if(UNIX)
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
     endif()
 elseif(WIN32 || WIN64 || MSVC)
-# TODO: add windows support
     set(LDLIBS "ws2_32.lib IPHlpAPI.lib rpcrt4.lib")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
@@ -303,7 +302,9 @@ else()
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
             ${LIB_SOURCEFILES})
-        include_directories(${CMAKE_CURRENT_LIST_DIR}/windows)
+        include_directories(
+            ${CMAKE_CURRENT_LIST_DIR}/windows
+            ${CMAKE_CURRENT_LIST_DIR}/core/c99)
     endif()
 endif()
 
