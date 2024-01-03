@@ -240,15 +240,6 @@ if(${USE_REVOKE_TOKEN_API})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif()
 
-set(SOURCEFILES 
-    ${CORE_SOURCEFILES} 
-    ${LIB_SOURCEFILES} 
-    ${OS_SOURCEFILES} 
-    ${FEATURE_SOURCEFILES} 
-    ${INTF_SOURCEFILES})
-
-add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
-
 set(OPENSSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
@@ -262,7 +253,6 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${OPENSSL_LIBRARIES} 
         ${FEATURE_SOURCEFILES})
-    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
 
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c 
@@ -286,7 +276,29 @@ if(${OPENSSL})
 
     set(LDLIBS  ${LDLIBS})
     set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+else()
+    set(LIB_SOURCEFILES 
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
+        ${LIB_SOURCEFILES})
+    if(UNIX)
+        set(LIB_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
+            ${LIB_SOURCEFILES})
+    elseif(WIN32 || WIN64 || MSVC)
+        set(LIB_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
+            ${LIB_SOURCEFILES})
+    endif()
 endif()
+
+set(SOURCEFILES 
+    ${CORE_SOURCEFILES} 
+    ${LIB_SOURCEFILES} 
+    ${OS_SOURCEFILES} 
+    ${FEATURE_SOURCEFILES} 
+    ${INTF_SOURCEFILES})
+
+add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
 target_include_directories(pubnub PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
@@ -298,19 +310,11 @@ if(${OPENSSL})
     target_include_directories(pubnub PUBLIC 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
 else()
-    set(LIB_SOURCEFILES 
-        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
-        ${LIB_SOURCEFILES})
     if(UNIX)
-        set(LIB_SOURCEFILES 
-            ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
-            ${LIB_SOURCEFILES})
         target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
     elseif(WIN32 || WIN64 || MSVC)
-        set(LIB_SOURCEFILES 
-            ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
-            ${LIB_SOURCEFILES})
         target_include_directories(pubnub PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/windows
             ${CMAKE_CURRENT_LIST_DIR}/core/c99)
