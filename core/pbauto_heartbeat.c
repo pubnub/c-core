@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+
 #include "pubnub_internal.h"
 
 #if !defined _WIN32
@@ -756,3 +759,5 @@ void pbauto_heartbeat_stop(void)
     m_watcher.stop_heartbeat_watcher_thread = true;
     pubnub_mutex_unlock(m_watcher.stoplock);
 }
+
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */

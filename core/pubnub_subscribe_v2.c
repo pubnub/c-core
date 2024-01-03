@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+
 #include "pubnub_internal.h"
 
 #include "pubnub_server_limits.h"
@@ -67,3 +70,6 @@ struct pubnub_v2_message pubnub_get_v2(pubnub_t* pb)
 
     return result;
 }
+
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+

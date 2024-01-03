@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_OBJECTS_API
+
 #include "pubnub_internal.h"
 
 #include "core/pubnub_ccore.h"
@@ -563,3 +566,6 @@ enum pubnub_res pubnub_remove_members(pubnub_t* pb,
 
     return rslt;
 }
+
+#endif /* PUBNUB_USE_OBJECTS_API */
+

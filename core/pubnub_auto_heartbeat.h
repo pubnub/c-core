@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
 #if !defined INC_PUBNUB_AUTO_HEARTBEAT
 #define INC_PUBNUB_AUTO_HEARTBEAT
 

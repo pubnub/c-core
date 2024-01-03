@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #if !defined INC_PB_CRC32
 #define INC_PB_CRC32
 
@@ -12,4 +15,6 @@
 uint32_t pbcrc32(const void *data, size_t n_bytes);
 
 #endif /* INC_PB_CRC32 */
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */
 

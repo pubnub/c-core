@@ -25,6 +25,8 @@
  *
  **************************************************************************/
 
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #include "miniz.h"
 
 typedef unsigned char mz_validate_uint16[sizeof(mz_uint16) == 2 ? 1 : -1];
@@ -601,3 +603,5 @@ const char *mz_error(int err)
 
   For more information, please refer to <http://unlicense.org/>
 */
+
+#endif /* PUBNUB_USE_GZIP_COMPRESSION */

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_AUTO_HEARTBEAT
+
 #include "pubnub_internal.h"
 #include "core/pubnub_log.h"
 
@@ -30,3 +33,6 @@ int pbauto_heartbeat_init(struct HeartbeatWatcherData* m_watcher)
 
     return 0;
 }
+
+#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+

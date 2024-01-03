@@ -24,6 +24,8 @@
  *
  **************************************************************************/
 
+#if PUBNUB_RECEIVE_GZIP_RESPONSE
+
 #include "lib/miniz/miniz_tinfl.h"
 #include "core/pubnub_log.h"
 
@@ -734,3 +736,6 @@ void tinfl_decompressor_free(tinfl_decompressor *pDecomp)
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
+

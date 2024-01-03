@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_ACTIONS_API
+
 #if !defined INC_PUBNUB_ACTIONS_API
 #define INC_PUBNUB_ACTIONS_API
 
@@ -160,3 +163,6 @@ PUBNUB_EXTERN enum pubnub_res pubnub_history_with_message_actions_more(pubnub_t*
 
 
 #endif /* !defined INC_PUBNUB_ACTIONS_API */
+
+#endif /* PUBNUB_USE_ACTIONS_API */
+

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_ACTIONS_API
+
 #if !defined INC_PBCC_ACTIONS_API
 #define INC_PBCC_ACTIONS_API
 
@@ -105,5 +108,5 @@ enum pubnub_res pbcc_parse_history_with_actions_response(struct pbcc_context* pb
 
 #endif /* !defined INC_PBCC_ACTIONS_API */
 
-
+#endif /* PUBNUB_USE_ACTIONS_API */
 

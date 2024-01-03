@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_ADVANCED_HISTORY
+
 #if !defined INC_PUBNUB_ADVANCED_HISTORY
 #define INC_PUBNUB_ADVANCED_HISTORY
 
@@ -62,3 +65,6 @@ PUBNUB_EXTERN int pubnub_get_message_counts(pubnub_t* pb, char const*channel, in
 
 
 #endif /* !defined INC_PUBNUB_ADVANCED_HISTORY */
+
+#endif /* PUBNUB_USE_ADVANCED_HISTORY */
+

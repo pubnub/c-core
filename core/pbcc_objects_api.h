@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_OBJECTS_API
+
 #if !defined INC_PBCC_OBJECTS_API
 #define INC_PBCC_OBJECTS_API
 
@@ -154,3 +157,6 @@ enum pubnub_res pbcc_parse_objects_api_response(struct pbcc_context* pb);
 
 
 #endif /* !defined INC_PBCC_OBJECTS_API */
+
+#endif /* PUBNUB_USE_OBJECTS_API */
+

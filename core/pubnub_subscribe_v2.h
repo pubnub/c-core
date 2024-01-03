@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_USE_SUBSCRIBE_V2
+
 #if !defined INC_PUBNUB_SUBSCRIBE_V2
 #define INC_PUBNUB_SUBSCRIBE_V2
 
@@ -102,3 +105,6 @@ PUBNUB_EXTERN struct pubnub_v2_message pubnub_get_v2(pubnub_t* pbp);
 
 
 #endif /* !defined INC_PUBNUB_SUBSCRIBE_V2 */
+
+#endif /* PUBNUB_USE_SUBSCRIBE_V2 */
+

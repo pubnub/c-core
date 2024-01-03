@@ -1,4 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if PUBNUB_USE_FETCH_HISTORY
+
 #if !defined INC_PUBNUB_FETCH_HISTORY
 #define INC_PUBNUB_FETCH_HISTORY
 
@@ -85,3 +87,6 @@ PUBNUB_EXTERN enum pubnub_res pubnub_fetch_history(pubnub_t*                    
 PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_fetch_history(pubnub_t* pb);
 
 #endif /* !defined INC_PUBNUB_FETCH_HISTORY */
+
+#endif /* PUBNUB_USE_FETCH_HISTORY */
+

@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#if PUBNUB_PROXY_API
+
 #if !defined INC_PBNTLM_PACKER
 #define      INC_PBNTLM_PACKER
 
@@ -19,3 +22,5 @@ void pbntlm_packer_deinit(pbntlm_ctx_t *pb);
 
 
 #endif /* !defined INC_PBNTLM_PACKER */
+#endif /* PUBNUB_PROXY_API */
+

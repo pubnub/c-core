@@ -25,6 +25,8 @@
  *
  **************************************************************************/
 
+#if PUBNUB_USE_GZIP_COMPRESSION
+
 #include "miniz_tdef.h"
 #include "miniz.h"
 
@@ -1562,3 +1564,5 @@ void tdefl_compressor_free(tdefl_compressor *pComp)
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* MINIZ_NO_ZLIB_APIS */
