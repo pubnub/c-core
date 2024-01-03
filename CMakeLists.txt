@@ -32,6 +32,7 @@ num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 
 option(OPENSSL "Use OpenSSL" ON)
+set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory")
 option(EXAMPLES "Build all examples" OFF)
 set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 option(UNIT_TEST "Build and run unit tests" OFF)
@@ -243,7 +244,12 @@ set(OPENSSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
 
-    find_package(OpenSSL REQUIRED)
+    if(${OPENSSL_ROOT_DIR} STREQUAL "")
+        find_package(OpenSSL REQUIRED)
+    else()
+        find_package(OpenSSL REQUIRED PATHS ${OPENSSL_ROOT_DIR})
+    endif()
+
     set(FEATURE_SOURCEFILES 
         ${OPENSSL_LIBRARIES} 
         ${FEATURE_SOURCEFILES})
