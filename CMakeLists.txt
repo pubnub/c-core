@@ -240,6 +240,15 @@ if(${USE_REVOKE_TOKEN_API})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif()
 
+set(SOURCEFILES 
+    ${CORE_SOURCEFILES} 
+    ${LIB_SOURCEFILES} 
+    ${OS_SOURCEFILES} 
+    ${FEATURE_SOURCEFILES} 
+    ${INTF_SOURCEFILES})
+
+add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+
 set(OPENSSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
@@ -253,7 +262,7 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${OPENSSL_LIBRARIES} 
         ${FEATURE_SOURCEFILES})
-    include_directories(${OPENSSL_INCLUDE_DIR})
+    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
 
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c 
@@ -279,20 +288,14 @@ if(${OPENSSL})
     set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 endif()
 
-set(SOURCEFILES 
-    ${CORE_SOURCEFILES} 
-    ${LIB_SOURCEFILES} 
-    ${OS_SOURCEFILES} 
-    ${FEATURE_SOURCEFILES} 
-    ${INTF_SOURCEFILES})
-
-include_directories(
-    ${CMAKE_CURRENT_LIST_DIR} 
+target_include_directories(pubnub PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/cpp
     ${CMAKE_CURRENT_LIST_DIR}/core 
     ${CMAKE_CURRENT_LIST_DIR}/lib)
 
 if(${OPENSSL})
-    include_directories(
+    target_include_directories(pubnub PUBLIC 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
 else()
@@ -303,12 +306,12 @@ else()
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
             ${LIB_SOURCEFILES})
-        include_directories(${CMAKE_CURRENT_LIST_DIR}/posix)
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
     elseif(WIN32 || WIN64 || MSVC)
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
             ${LIB_SOURCEFILES})
-        include_directories(
+        target_include_directories(pubnub PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/windows
             ${CMAKE_CURRENT_LIST_DIR}/core/c99)
     endif()
@@ -321,8 +324,6 @@ else()
     message(STATUS "Building static library")
     set(LIBYTPE STATIC)
 endif()
-
-add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
 target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
