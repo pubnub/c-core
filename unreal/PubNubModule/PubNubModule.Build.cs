@@ -8,8 +8,6 @@ public class PubNubModule : ModuleRules
     private bool OpenSsl = false;
     private bool StaticLink = false;
 
-    private string LibPath = "build";
-
     public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -33,9 +31,8 @@ public class PubNubModule : ModuleRules
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
         }
 
-        var path = Path.Combine(new string[] { ModuleDirectory, LibPath });
 
-        PublicAdditionalLibraries.Add(Path.Combine(path, $"libpubnub.{extention}"));
+        PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"libpubnub.{extention}"));
         PublicIncludePaths.AddRange(
             new string[] {
                 path,

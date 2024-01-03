@@ -25,7 +25,6 @@ cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Eng
   ```csharp 
     private bool OpenSsl = false;
     private bool StaticLink = false;
-    private string LibPath = "";
   ```
 
 4. Finally, import the module into your project as follows:
