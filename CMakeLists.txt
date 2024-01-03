@@ -244,7 +244,7 @@ set(OPENSSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
 
-    if(${OPENSSL_ROOT_DIR} STREQUAL "")
+    if("${OPENSSL_ROOT_DIR}" STREQUAL "")
         find_package(OpenSSL REQUIRED)
     else()
         find_package(OpenSSL REQUIRED PATHS ${OPENSSL_ROOT_DIR})
