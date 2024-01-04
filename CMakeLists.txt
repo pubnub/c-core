@@ -50,6 +50,8 @@ num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
+num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
+num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 
 # Flags configuration
 
@@ -73,8 +75,8 @@ set(FLAGS "\
 if (${USE_CALLBACK_API})
     set(FLAGS "\
         ${FLAGS} \
-        -D PUBNUB_SET_DNS_SERVERS=${USE_CALLBACK_API} \
-        -D PUBNUB_USE_IPV6=${USE_CALLBACK_API} \
+        -D PUBNUB_SET_DNS_SERVERS=${USE_SET_DNS_SERVERS} \
+        -D PUBNUB_USE_IPV6=${USE_IPV6} \
         -D PUBNUB_CALLBACK_API")
 endif()
 
