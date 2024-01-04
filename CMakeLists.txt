@@ -253,7 +253,6 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${OPENSSL_LIBRARIES} 
         ${FEATURE_SOURCEFILES})
-    include_directories(${OPENSSL_INCLUDE_DIR})
 
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c 
@@ -277,24 +276,6 @@ if(${OPENSSL})
 
     set(LDLIBS  ${LDLIBS})
     set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
-endif()
-
-set(SOURCEFILES 
-    ${CORE_SOURCEFILES} 
-    ${LIB_SOURCEFILES} 
-    ${OS_SOURCEFILES} 
-    ${FEATURE_SOURCEFILES} 
-    ${INTF_SOURCEFILES})
-
-include_directories(
-    ${CMAKE_CURRENT_LIST_DIR} 
-    ${CMAKE_CURRENT_LIST_DIR}/core 
-    ${CMAKE_CURRENT_LIST_DIR}/lib)
-
-if(${OPENSSL})
-    include_directories(
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/
-        ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
 else()
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
@@ -303,16 +284,19 @@ else()
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
             ${LIB_SOURCEFILES})
-        include_directories(${CMAKE_CURRENT_LIST_DIR}/posix)
     elseif(WIN32 || WIN64 || MSVC)
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
             ${LIB_SOURCEFILES})
-        include_directories(
-            ${CMAKE_CURRENT_LIST_DIR}/windows
-            ${CMAKE_CURRENT_LIST_DIR}/core/c99)
     endif()
 endif()
+
+set(SOURCEFILES 
+    ${CORE_SOURCEFILES} 
+    ${LIB_SOURCEFILES} 
+    ${OS_SOURCEFILES} 
+    ${FEATURE_SOURCEFILES} 
+    ${INTF_SOURCEFILES})
 
 if(${SHARED_LIB})
     message(STATUS "Building shared library")
@@ -323,6 +307,27 @@ else()
 endif()
 
 add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+
+target_include_directories(pubnub PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/cpp
+    ${CMAKE_CURRENT_LIST_DIR}/core 
+    ${CMAKE_CURRENT_LIST_DIR}/lib)
+
+if(${OPENSSL})
+    target_include_directories(pubnub PUBLIC 
+        ${CMAKE_CURRENT_LIST_DIR}/openssl/
+        ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
+else()
+    if(UNIX)
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
+    elseif(WIN32 || WIN64 || MSVC)
+        target_include_directories(pubnub PUBLIC
+            ${CMAKE_CURRENT_LIST_DIR}/windows
+            ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+    endif()
+endif()
 
 target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
