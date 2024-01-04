@@ -26,6 +26,7 @@ set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for 
 option(UNIT_TEST "Build and run unit tests" OFF)
 option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 option(WITH_CPP "Build the CPP headers" OFF)
+option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
@@ -84,6 +85,12 @@ if(${WITH_CPP})
     set(CMAKE_CXX_FLAGS "\
         ${FLAGS} \
         ${CMAKE_CXX_FLAGS}")
+
+    if(${USE_CPP11})
+        set(CMAKE_CXX_FLAGS "\
+            ${CMAKE_CXX_FLAGS} \
+            -std=c++11")
+    endif()
 endif()
 
 set(CORE_SOURCEFILES 
@@ -379,21 +386,37 @@ if (WITH_CPP)
 
     set(CPP_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_subloop.cpp)
-
-        # ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_cpp11.cpp
         
     if (UNIX)
         set(CPP_SOURCE
             ${CPP_SOURCE}
-            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_posix.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_posix.cpp)
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_posix.cpp)
+
+        if(${USE_CPP11})
+            set(CPP_SOURCE
+                ${CPP_SOURCE}
+                ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_cpp11.cpp)
+        else()
+                set(CPP_SOURCE
+                    ${CPP_SOURCE}
+                    ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_posix.cpp)
+        endif()
     endif()
 
     if (WIN32)
         set(CPP_SOURCE
             ${CPP_SOURCE}
-            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_windows.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_windows.cpp)
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_windows.cpp)
+
+        if(${USE_CPP11})
+            set(CPP_SOURCE
+                ${CPP_SOURCE}
+                ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_cpp11.cpp)
+        else()
+            set(CPP_SOURCE
+                ${CPP_SOURCE}
+                ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_windows.cpp)
+        endif()
     endif()
     
     add_library(pubnub-cpp ${LIBTYPE} ${CPP_SOURCE})
@@ -429,7 +452,6 @@ if(${EXAMPLES})
                         ${CPP_EXAMPLE_LIST})
                 endif()
         endif()
-
 
         if(${USE_CALLBACK_API})
             message(STATUS "Building callback examples")
