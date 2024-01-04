@@ -6,6 +6,10 @@
 /// `PUBNUB_EXTERN` before including any Pubnub header.
 
 #ifndef PUBNUB_EXTERN
+#ifdef __cplusplus
+#define PUBNUB_EXTERN extern "C"
+#else
 #define PUBNUB_EXTERN extern
+#endif
 #endif /* PUBNUB_EXTERN */
 

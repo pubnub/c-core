@@ -9,13 +9,31 @@ message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
 function(num_option name description default)
     option(${name} ${description} ${default})
     if(${name})
+        message(STATUS "[*] ${name}")
         set(${name} 1 PARENT_SCOPE)
     else()
+        message(STATUS "[ ] ${name}")
         set(${name} 0 PARENT_SCOPE)
     endif()
 endfunction()
 
 # All the options that can be set on the command line to control
+
+option(OPENSSL "Use OpenSSL" ON)
+set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory")
+option(EXAMPLES "Build all examples" OFF)
+set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
+option(UNIT_TEST "Build and run unit tests" OFF)
+option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
+option(WITH_CPP "Build the CPP headers" ON)
+
+if (WITH_CPP)
+    set(DEFAULT_USE_CALLBACK_API ON)
+else()
+    set(DEFAULT_USE_CALLBACK_API OFF)
+endif()
+
+message(STATUS "Options (Enabled *):")
 
 num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
@@ -30,17 +48,9 @@ num_option(USE_REVOKE_TOKEN_API "Use revoke token API" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
-
-option(OPENSSL "Use OpenSSL" ON)
-set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory")
-option(EXAMPLES "Build all examples" OFF)
-set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
-option(UNIT_TEST "Build and run unit tests" OFF)
-option(CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" OFF)
-option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
+num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
 
 # Flags configuration
-
 
 set(CMAKE_C_FLAGS "\
     -g \
@@ -60,7 +70,12 @@ set(CMAKE_C_FLAGS "\
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
     ${CMAKE_C_FLAGS}")
 
-message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+if (${USE_CALLBACK_API})
+    set(CMAKE_C_FLAGS "\
+        ${CMAKE_C_FLAGS} \
+        -D PUBNUB_SET_DNS_SERVERS=${USE_CALLBACK_API} \
+        -D PUBNUB_CALLBACK_API=${USE_CALLBACK_API}")
+endif()
 
 set(CORE_SOURCEFILES 
     ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_set_state.c
@@ -79,8 +94,7 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c) 
+    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c) 
 
 set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c
@@ -88,7 +102,9 @@ set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/md5/md5.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
-    ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c)
+    ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
+    ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
+    ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
 
 set(LDLIBS)
 set(OS_SOURCEFILES)
@@ -123,24 +139,32 @@ endif()
 
 set(INTF_SOURCEFILES)
 
-if(${CALLBACK_API})
+if(${USE_CALLBACK_API})
     message(STATUS "Using callback API")
+
+    set(CORE_SOURCEFILES
+        ${CORE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_dns_servers.c)
 
     set(INTF_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timer_list.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_parse_ipv4_addr.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_parse_ipv6_addr.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_ntf_callback_poller_poll.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_queue.c
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_admin.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_handle_timer_list.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_callback_subscribe_loop.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_admin.c
         ${INTF_SOURCEFILES})
 
-    set(INTF_SOURCEFILES
-        ${INTF_SOURCEFILES}
-        ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
-        ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
+    if (UNIX)
+        set(INTF_SOURCEFILES
+            ${INTF_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
+    endif()
 else()
     message(STATUS "Using sync API")
 
@@ -331,12 +355,68 @@ endif()
 
 target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
+if (WITH_CPP)
+    # TODO: Tests
+    # fntest/pubnub_fntest_medium.cpp
+    # fntest/pubnub_fntest_runner.cpp
+    # fntest/pubnub_fntest_basic.cpp
+    # fntest/pubnub_fntest.cpp
+
+    set(CPP_SOURCE
+        ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_subloop.cpp)
+
+        # ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_cpp11.cpp
+        
+    if (UNIX)
+        set(CPP_SOURCE
+            ${CPP_SOURCE}
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_posix.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_posix.cpp)
+    endif()
+
+    if (WIN32)
+        set(CPP_SOURCE
+            ${CPP_SOURCE}
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_windows.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_futres_windows.cpp)
+    endif()
+    
+    add_library(pubnub-cpp ${LIBTYPE} ${CPP_SOURCE})
+    target_link_libraries(pubnub-cpp PUBLIC pubnub)
+    target_include_directories(pubnub-cpp PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
+endif()
+
 if(${EXAMPLES})
     message(STATUS "Building all examples")
     set(EXAMPLE_LIST)
+    set(CPP_EXAMPLE_LIST)
+
 
     if(${EXAMPLE} STREQUAL "all")
-        if(${CALLBACK_API})
+        if (WITH_CPP)
+            set(CPP_EXAMPLE_LIST
+                pubnub_subloop_sample
+                pubnub_sample
+                pubnub_crypto_module_sample
+                cancel_subscribe_sync_sample
+                futres_nesting
+                ${CPP_EXAMPLE_LIST})
+
+                if (${USE_GRANT_TOKEN_API})
+                    set(CPP_EXAMPLE_LIST
+                        pubnub_sample_grant_token
+                        ${CPP_EXAMPLE_LIST})
+                endif()
+
+                if (${USE_REVOKE_TOKEN_API})
+                    set(CPP_EXAMPLE_LIST
+                        pubnub_sample_revoke_token
+                        ${CPP_EXAMPLE_LIST})
+                endif()
+        endif()
+
+
+        if(${USE_CALLBACK_API})
             message(STATUS "Building callback examples")
             set(EXAMPLE_LIST
                 pubnub_callback_sample
@@ -345,6 +425,11 @@ if(${EXAMPLES})
                 subscribe_publish_from_callback
                 publish_callback_subloop_sample
                 publish_queue_callback_subloop)
+            if (WITH_CPP)
+                set(CPP_EXAMPLE_LIST
+                    subscribe_publish_callback_sample # Only supports callback!
+                    ${CPP_EXAMPLE_LIST})
+            endif()
         else()
             message(STATUS "Building sync examples")
             set(EXAMPLE_LIST
@@ -364,6 +449,11 @@ if(${EXAMPLES})
     foreach(EXAMPLE ${EXAMPLE_LIST})
         add_executable(${EXAMPLE} ${CMAKE_CURRENT_LIST_DIR}/core/samples/${EXAMPLE}.c)
         target_link_libraries(${EXAMPLE} pubnub ${LDLIBS})
+    endforeach()
+
+    foreach(EXAMPLE ${CPP_EXAMPLE_LIST})
+        add_executable(${EXAMPLE}-cpp ${CMAKE_CURRENT_LIST_DIR}/cpp/samples/${EXAMPLE}.cpp)
+        target_link_libraries(${EXAMPLE}-cpp pubnub-cpp ${LDLIBS})
     endforeach()
 endif()
 
