@@ -52,7 +52,7 @@ num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_
 
 # Flags configuration
 
-set(CMAKE_C_FLAGS "\
+set(FLAGS "\
     -g \
     -Wall \
     -D PUBNUB_THREADSAFE \
@@ -67,14 +67,23 @@ set(CMAKE_C_FLAGS "\
     -D PUBNUB_USE_AUTO_HEARTBEAT=${USE_AUTO_HEARTBEAT} \
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
-    -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
-    ${CMAKE_C_FLAGS}")
+    -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY}")
 
 if (${USE_CALLBACK_API})
-    set(CMAKE_C_FLAGS "\
-        ${CMAKE_C_FLAGS} \
+    set(FLAGS "\
+        ${FLAGS} \
         -D PUBNUB_SET_DNS_SERVERS=${USE_CALLBACK_API} \
         -D PUBNUB_CALLBACK_API=${USE_CALLBACK_API}")
+endif()
+
+set(CMAKE_C_FLAGS "\
+    ${FLAGS} \
+    ${CMAKE_C_FLAGS}")
+
+if(${WITH_CPP})
+    set(CMAKE_CXX_FLAGS "\
+        ${FLAGS} \
+        ${CMAKE_CXX_FLAGS}")
 endif()
 
 set(CORE_SOURCEFILES 
