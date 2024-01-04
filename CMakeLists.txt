@@ -52,6 +52,7 @@ num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
+num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 
 # Flags configuration
 
@@ -87,6 +88,7 @@ set(CMAKE_C_FLAGS "\
 if(${WITH_CPP})
     set(CMAKE_CXX_FLAGS "\
         ${FLAGS} \
+        -D PUBNUB_USE_EXTERN_C=${USE_EXTERN_API} \
         ${CMAKE_CXX_FLAGS}")
 
     if(${USE_CPP11})
@@ -465,7 +467,7 @@ if(${EXAMPLES})
                 futres_nesting
                 ${CPP_EXAMPLE_LIST})
 
-                if(${USE_CPP11})
+            if(${OPENSSL} AND ${USE_CPP11})
                     # TODO: Fix this example to be 98 compatible
                     set(CPP_EXAMPLE_LIST 
                         pubnub_crypto_module_sample
