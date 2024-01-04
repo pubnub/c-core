@@ -74,7 +74,8 @@ if (${USE_CALLBACK_API})
     set(FLAGS "\
         ${FLAGS} \
         -D PUBNUB_SET_DNS_SERVERS=${USE_CALLBACK_API} \
-        -D PUBNUB_CALLBACK_API=${USE_CALLBACK_API}")
+        -D PUBNUB_USE_IPV6=${USE_CALLBACK_API} \
+        -D PUBNUB_CALLBACK_API")
 endif()
 
 set(CMAKE_C_FLAGS "\
@@ -140,7 +141,7 @@ if(UNIX)
     else()
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
     endif()
-elseif(WIN32 || WIN64 || MSVC)
+elseif(WIN32 OR WIN64 OR MSVC)
     set(LDLIBS "ws2_32.lib IPHlpAPI.lib rpcrt4.lib")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
@@ -172,6 +173,7 @@ if(${USE_CALLBACK_API})
         ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_handle_timer_list.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_callback_subscribe_loop.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_admin.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
         ${INTF_SOURCEFILES})
 
     if (UNIX)
@@ -180,6 +182,20 @@ if(${USE_CALLBACK_API})
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
+    elseif(WIN32 OR WIN64 OR MSVC)
+        if (${OPENSSL})
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_dns_system_servers.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c)
+        else()
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
+        endif()
     endif()
 else()
     message(STATUS "Using sync API")
@@ -257,7 +273,7 @@ if(${USE_AUTO_HEARTBEAT})
             set(FEATURE_SOURCEFILES 
                 ${FEATURE_SOURCEFILES} 
                 ${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c)
-        elseif(WIN32 || WIN64 || MSVC)
+        elseif(WIN32 OR WIN64 OR MSVC)
             set(FEATURE_SOURCEFILES 
                 ${FEATURE_SOURCEFILES} 
                 ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
@@ -307,7 +323,6 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c  
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c 
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c 
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c 
@@ -322,6 +337,12 @@ if(${OPENSSL})
 
     set(LDLIBS  ${LDLIBS})
     set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+
+    if(UNIX)
+        set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c)
+    elseif(WIN32 OR WIN64 OR MSVC)
+        set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_windows.c)
+    endif()
 else()
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
@@ -330,7 +351,7 @@ else()
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbpal_posix_blocking_io.c 
             ${LIB_SOURCEFILES})
-    elseif(WIN32 || WIN64 || MSVC)
+    elseif(WIN32 OR WIN64 OR MSVC)
         set(LIB_SOURCEFILES 
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c 
             ${LIB_SOURCEFILES})
@@ -356,9 +377,12 @@ add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
 target_include_directories(pubnub PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/cpp
     ${CMAKE_CURRENT_LIST_DIR}/core 
     ${CMAKE_CURRENT_LIST_DIR}/lib)
+
+if(${WITH_CPP})
+    target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
+endif()
 
 if(${OPENSSL})
     target_include_directories(pubnub PUBLIC 
@@ -368,7 +392,7 @@ if(${OPENSSL})
 else()
     if(UNIX)
         target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
-    elseif(WIN32 || WIN64 || MSVC)
+    elseif(WIN32 OR WIN64 OR MSVC)
         target_include_directories(pubnub PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/windows
             ${CMAKE_CURRENT_LIST_DIR}/core/c99)
@@ -403,7 +427,7 @@ if (WITH_CPP)
         endif()
     endif()
 
-    if (WIN32)
+    if (WIN32 OR WIN64 OR MSVC)
         set(CPP_SOURCE
             ${CPP_SOURCE}
             ${CMAKE_CURRENT_LIST_DIR}/cpp/pubnub_version_windows.cpp)
@@ -435,10 +459,16 @@ if(${EXAMPLES})
             set(CPP_EXAMPLE_LIST
                 pubnub_subloop_sample
                 pubnub_sample
-                pubnub_crypto_module_sample
                 cancel_subscribe_sync_sample
                 futres_nesting
                 ${CPP_EXAMPLE_LIST})
+
+                if(${USE_CPP11})
+                    # TODO: Fix this example to be 98 compatible
+                    set(CPP_EXAMPLE_LIST 
+                        pubnub_crypto_module_sample
+                        ${CPP_EXAMPLE_LIST})
+                endif()
 
                 if (${USE_GRANT_TOKEN_API})
                     set(CPP_EXAMPLE_LIST
