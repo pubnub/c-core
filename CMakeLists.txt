@@ -25,7 +25,7 @@ option(EXAMPLES "Build all examples" OFF)
 set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 option(UNIT_TEST "Build and run unit tests" OFF)
 option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
-option(WITH_CPP "Build the CPP headers" ON)
+option(WITH_CPP "Build the CPP headers" OFF)
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
@@ -237,9 +237,15 @@ if(${USE_AUTO_HEARTBEAT})
         ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat.c 
         ${CMAKE_CURRENT_LIST_DIR}/lib/pbstr_remove_from_list.c)
     if(NOT ${OPENSSL})
-        set(FEATURE_SOURCEFILES 
-            ${FEATURE_SOURCEFILES} 
-            ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat_init_posix.c)
+        if(UNIX)
+            set(FEATURE_SOURCEFILES 
+                ${FEATURE_SOURCEFILES} 
+                ${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c)
+        elseif(WIN32 || WIN64 || MSVC)
+            set(FEATURE_SOURCEFILES 
+                ${FEATURE_SOURCEFILES} 
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+        endif()
     endif()
 endif()
 
