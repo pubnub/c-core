@@ -17,17 +17,30 @@ function(num_option name description default)
     endif()
 endfunction()
 
+# Function to log a option and its value
+function(log_option name description default)
+    option(${name} ${description} ${default})
+    if(${value})
+        message(STATUS "[*] ${name}")
+    else()
+        message(STATUS "[ ] ${name}")
+    endif()
+endfunction()
+
+# Function to log a set and its value
+function(log_set name default description)
+    set(${name} ${default} CACHE STRING ${description})
+    message(STATUS "${name}:${${name}}")
+endfunction()
+
 # All the options that can be set on the command line to control
 
-option(OPENSSL "Use OpenSSL" OFF)
-set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
-option(EXAMPLES "Build all examples" OFF)
-set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
-option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
-option(WITH_CPP "Build the CPP headers" OFF)
-option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
-option(UNIT_TEST "Build and run unit tests" OFF)
-set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" CACHE STRING "CGreen root directory [UNIT_TEST=ON needed]")
+message(STATUS "Options (Enabled *):")
+
+log_option(OPENSSL "Use OpenSSL" OFF)
+log_option(EXAMPLES "Build all examples" OFF)
+log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
+log_option(WITH_CPP "Build the CPP headers" OFF)
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
@@ -35,8 +48,8 @@ else()
     set(DEFAULT_USE_CALLBACK_API OFF)
 endif()
 
-message(STATUS "Options (Enabled *):")
-
+log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
+log_option(UNIT_TEST "Build and run unit tests" OFF)
 num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
@@ -54,6 +67,10 @@ num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_
 num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
+log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
+log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
+log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
+log_set(LOG_LEVEL "WARNING" "Log level [TRACE/WARNING/INFO/ERROR/FATAL]")
 
 # Flags configuration
 
@@ -61,7 +78,7 @@ set(FLAGS "\
     -g \
     -Wall \
     -D PUBNUB_THREADSAFE \
-    -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING \
+    -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_${LOG_LEVEL} \
     -D PUBNUB_ONLY_PUBSUB_API=${ONLY_PUBSUB_API} \
     -D PUBNUB_PROXY_API=${USE_PROXY} \
     -D PUBNUB_USE_GZIP_COMPRESSION=${USE_GZIP_COMPRESSION} \
