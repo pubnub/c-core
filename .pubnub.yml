@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.8.0"
+version: "4.9.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-01-08
+    version: v4.9.0
+    changes:
+      - type: feature
+        text: "Provide CMake support."
+      - type: feature
+        text: "Adjust `build.cs` unreal engine file for CMake build."
   - date: 2023-12-07
     version: v4.8.0
     changes:
@@ -773,7 +780,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -839,7 +846,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -905,7 +912,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -967,7 +974,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -1028,7 +1035,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -1084,7 +1091,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
@@ -1137,7 +1144,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.8.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.9.0
             requires:
               -
                 name: "miniz"
