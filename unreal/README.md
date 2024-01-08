@@ -7,45 +7,24 @@ Our C-core SDK can be used together with [Unreal Engine](https://www.unrealengin
 1. Clone this repository to the `<UnrealProject>/Source/` directory. We recommend that you place it inside the `ThirdParty` folder (create it, if necessary). 
 
 2. Compile the [desired option](https://www.pubnub.com/docs/sdks/c-core#hello-world) of the SDK. You can do it in the SDK directory like so:
+
+```sh
+cmake . && make
+```
+
+C-core offers some customization flags (e.g. shared library or using openssl). You can configure that as follow:
+
+```sh 
+cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Engine/Source/ThirdParty/openssl/1.1.1/
+```
   
-  - POSIX:
-
-    ```sh
-    make -C <option> -f <architecture>.mk pubnub_<implementation>.a 
-    ```
-    
-  - Windows:
-
-    ```sh
-    nmake -f windows.mk
-    ```
-
-  - Windows Universal Platform:
-
-    ```sh
-    nmake -f windows/uwp.mk
-    ```
-
-    Windows builds everything at once. We are aware that our build system needs some love.
-
-    For example, to build the OpenSSL option, run the following script:
-  
-    ```sh
-    make -C openssl -f posix.mk pubnub_sync.a
-    ```
-    
-    :warning: If you choose `openssl`, ensure that your OpenSSL library headers match the Unreal ones!
-  
-3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `option`, `architecture` and `implementation` with the same values you used for compilation. 
-
-  > This is a temporary solution. We are aware that our build system needs some love.
+3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `OpenSsl`, `StaticLink` and `LibPath` with the same values you used for compilation. 
 
   For example:
   
   ```csharp 
-  private readonly string Option = "openssl"; // posix, windows, openssl
-  private readonly string Architecture = "posix"; // posix, windows
-  private readonly string string Implementation = "sync"; // sync, callback
+    private bool OpenSsl = true;
+    private bool StaticLink = false;
   ```
 
 4. Finally, import the module into your project as follows:

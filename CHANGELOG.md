@@ -1,3 +1,10 @@
+## v4.9.0
+January 08 2024
+
+#### Added
+- Provide CMake support.
+- Adjust `build.cs` unreal engine file for CMake build.
+
 ## v4.8.0
 December 07 2023
 
