@@ -19,14 +19,15 @@ endfunction()
 
 # All the options that can be set on the command line to control
 
-option(OPENSSL "Use OpenSSL" ON)
-set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory")
+option(OPENSSL "Use OpenSSL" OFF)
+set(OPENSSL_ROOT_DIR "" CACHE STRING "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
 option(EXAMPLES "Build all examples" OFF)
 set(EXAMPLE "all" CACHE STRING "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
-option(UNIT_TEST "Build and run unit tests" OFF)
 option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 option(WITH_CPP "Build the CPP headers" OFF)
 option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
+option(UNIT_TEST "Build and run unit tests" OFF)
+set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" CACHE STRING "CGreen root directory [UNIT_TEST=ON needed]")
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
@@ -530,11 +531,41 @@ endif()
 
 if(${UNIT_TEST})
     message(STATUS "Building unit tests")
+    message(STATUS "UNIT TESTS ARE NOT FINISHED YET!")
 
-    set(CMAKE_C_FLAGS " \
-        ${CMAKE_C_FLAGS} \
-        -D PUBNUB_ADVANCED_KEEP_ALIVE=1 \
-        -D PUBNUB_DYNAMIC_REPLY_BUFFER=1") 
+#    set(CMAKE_C_FLAGS " \
+#        ${CMAKE_C_FLAGS} \
+#        -D PUBNUB_ADVANCED_KEEP_ALIVE=1 \
+#        -D PUBNUB_DYNAMIC_REPLY_BUFFER=1 \
+#        -D PUBNUB_ORIGIN_SETTABLE=1")
+#
+#    add_library(pubnub-unit-test SHARED core/pubnub_core_unit_test.c core/test/pubnub_test_mocks.c ${SOURCEFILES})
+#    target_include_directories(pubnub-unit-test PUBLIC 
+#        ${CGREEN_ROOT_DIR}/include
+#        ${CMAKE_CURRENT_LIST_DIR}/core
+#        ${CMAKE_CURRENT_LIST_DIR}/core/test
+#        ${CMAKE_CURRENT_LIST_DIR}/lib
+#        ${CMAKE_CURRENT_LIST_DIR})
+#
+#    if(${OPENSSL})
+#        target_include_directories(pubnub-unit-test PUBLIC 
+#            ${CMAKE_CURRENT_LIST_DIR}/openssl/
+#            ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+#        target_include_directories(pubnub-unit-test PUBLIC ${OPENSSL_INCLUDE_DIR})
+#    else()
+#        if(UNIX)
+#            target_include_directories(pubnub-unit-test PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
+#        elseif(WIN32 OR WIN64 OR MSVC)
+#            target_include_directories(pubnub-unit-test PUBLIC
+#                ${CMAKE_CURRENT_LIST_DIR}/windows
+#                ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+#        endif()
+#    endif()
+#
+#    target_link_libraries(pubnub-unit-test ${LDLIBS} pubnub ${CGREEN_ROOT_DIR}/build/src/libcgreen.a)
+#
+#    add_custom_target(RunUnitTests
+#        COMMAND ${CGREEN_ROOT_DIR/build/tools/cgreen-runner} pubnub-unit-test)
 
     # TODO: finish unit tests
 endif()
