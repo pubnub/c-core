@@ -12,6 +12,38 @@ https://www.pubnub.com/docs/posix-c/pubnub-c-sdk
 
 ## Please direct all Support Questions and Concerns to Support@PubNub.com
 
+## Build 
+
+Our repository can be build via two different approaches:
+
+### CMake (new but recommended)
+
+You can build repository using CMake using our [CMakeLists.txt file](CMakeLists.txt). 
+
+```sh
+mkdir build && cd build
+cmake ..
+[n]make
+```
+
+There are several options to be selected via switches (using GUI) or by using command line.
+```sh 
+cmake .. -DOPENSSL=ON -DEXAMPLES=ON <etc...>
+```
+
+Check the [CMakeLists file](CMakeLists.txt) for more info.
+
+### Makefiles (legacy)
+
+You can build our SDK using standard tooling depending on OS you're using. 
+For more info check those links:
+
+- [posix](posix/README.md),
+- [windows](windows/README.md),
+- [openssl](openssl/),
+
+depending on what fits you best. 
+
 ## Directory Organization
 
 The directories of the library repository are:
