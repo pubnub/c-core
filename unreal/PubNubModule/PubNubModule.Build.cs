@@ -36,9 +36,9 @@ public class PubNubModule : ModuleRules
 #else
         PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"libpubnub.{extention}"));
 #endif
+        var path = Path.Combine(new string[] { ModuleDirectory, "..", ".." });
         PublicIncludePaths.AddRange(
             new string[] {
-                path,
                 Path.Combine(path, "core"),
                 Path.Combine(path, "lib"),
                 Path.Combine(path, includeLib)
