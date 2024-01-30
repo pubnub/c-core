@@ -7,6 +7,7 @@ public class PubNubModule : ModuleRules
 {
     private bool OpenSsl = false;
     private bool StaticLink = false;
+    private string BuildLocation = "";
 
     public PubNubModule(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -31,11 +32,15 @@ public class PubNubModule : ModuleRules
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
         }
 
-
-        PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"libpubnub.{extention}"));
+        var path = Path.Combine(new string[] { ModuleDirectory, "..", ".." });
+#if PLATFORM_WINDOWS
+        var binary = pubnub.{extention};
+#else
+        var binary = libpubnub.{extention};
+#endif
+        PublicAdditionalLibraries.Add(Path.Combine(path, BuildLocation, binary));
         PublicIncludePaths.AddRange(
             new string[] {
-                path,
                 Path.Combine(path, "core"),
                 Path.Combine(path, "lib"),
                 Path.Combine(path, includeLib)
