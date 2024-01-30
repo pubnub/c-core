@@ -18,13 +18,14 @@ C-core offers some customization flags (e.g. shared library or using openssl). Y
 cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Engine/Source/ThirdParty/openssl/1.1.1/
 ```
   
-3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `OpenSsl`, `StaticLink` and `LibPath` with the same values you used for compilation. 
+3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `OpenSsl`, `StaticLink` and `BuildLocation` with the same values you used for compilation. 
 
   For example:
   
   ```csharp 
     private bool OpenSsl = true;
     private bool StaticLink = false;
+    private string BuildLocation = "build/";
   ```
 
 4. Finally, import the module into your project as follows:
