@@ -27,7 +27,7 @@ cmake ..
 make
 ```
 
-- Windows:
+- Windows (MSVS tools required):
 ```sh 
 mkdir build && cd build
 cmake .. -G "NMake Makefiles"
