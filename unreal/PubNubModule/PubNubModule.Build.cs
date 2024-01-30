@@ -31,8 +31,11 @@ public class PubNubModule : ModuleRules
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
         }
 
-
+#if PLATFORM_WINDOWS
+        PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"pubnub.{extention}"));
+#else
         PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"libpubnub.{extention}"));
+#endif
         PublicIncludePaths.AddRange(
             new string[] {
                 path,
