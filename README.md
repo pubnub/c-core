@@ -20,10 +20,18 @@ Our repository can be build via two different approaches:
 
 You can build repository using CMake using our [CMakeLists.txt file](CMakeLists.txt). 
 
+- Unix:
 ```sh
 mkdir build && cd build
 cmake ..
-[n]make
+make
+```
+
+- Windows:
+```sh 
+mkdir build && cd build
+cmake .. -G "NMake Makefiles"
+nmake 
 ```
 
 There are several options to be selected via switches (using GUI) or by using command line.
