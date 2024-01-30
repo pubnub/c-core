@@ -31,12 +31,12 @@ public class PubNubModule : ModuleRules
             PublicDependencyModuleNames.AddRange(new string[] { "OpenSSL" });
         }
 
-#if PLATFORM_WINDOWS
-        PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"pubnub.{extention}"));
-#else
-        PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, $"libpubnub.{extention}"));
-#endif
         var path = Path.Combine(new string[] { ModuleDirectory, "..", ".." });
+#if PLATFORM_WINDOWS
+        PublicAdditionalLibraries.Add(Path.Combine(path, $"pubnub.{extention}"));
+#else
+        PublicAdditionalLibraries.Add(Path.Combine(path, $"libpubnub.{extention}"));
+#endif
         PublicIncludePaths.AddRange(
             new string[] {
                 Path.Combine(path, "core"),
