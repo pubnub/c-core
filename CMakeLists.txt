@@ -20,7 +20,7 @@ endfunction()
 # Function to log a option and its value
 function(log_option name description default)
     option(${name} ${description} ${default})
-    if(${value})
+    if(${name})
         message(STATUS "[*] ${name}")
     else()
         message(STATUS "[ ] ${name}")
@@ -41,6 +41,7 @@ log_option(OPENSSL "Use OpenSSL" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 log_option(WITH_CPP "Build the CPP headers" OFF)
+log_option(ASAN "Use Address sanitizer" OFF)
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
@@ -90,6 +91,9 @@ set(FLAGS "\
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY}")
+    
+set(LDLIBS)
+set(OS_SOURCEFILES)
 
 if (${USE_CALLBACK_API})
     set(FLAGS "\
@@ -97,6 +101,15 @@ if (${USE_CALLBACK_API})
         -D PUBNUB_SET_DNS_SERVERS=${USE_SET_DNS_SERVERS} \
         -D PUBNUB_USE_IPV6=${USE_IPV6} \
         -D PUBNUB_CALLBACK_API")
+endif()
+
+if (${ASAN})
+    set(FLAGS "\
+        ${FLAGS} \
+        -fsanitize=address")
+    set(LDLIBS "\
+        ${LDLIBS} \
+        -fsanitize=address")
 endif()
 
 set(CMAKE_C_FLAGS "\
@@ -145,11 +158,8 @@ set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
 
-set(LDLIBS)
-set(OS_SOURCEFILES)
-
 if(UNIX)
-    set(LDLIBS "-lpthread")
+    set(LDLIBS "-lpthread ${LDLIBS}")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
         ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
@@ -529,6 +539,11 @@ if(${EXAMPLES})
                 pubnub_advanced_history_sample
                 pubnub_fetch_history_sample
                 cancel_subscribe_sync_sample)
+            if (OPENSSL)
+                set(EXAMPLE_LIST
+                    pubnub_crypto_module_sample
+                    ${EXAMPLE_LIST})
+            endif()
         endif()
     else()
         message(STATUS "Building example ${EXAMPLE}")
