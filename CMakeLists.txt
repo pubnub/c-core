@@ -68,6 +68,7 @@ num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_
 num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
+num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
@@ -90,7 +91,8 @@ set(FLAGS "\
     -D PUBNUB_USE_AUTO_HEARTBEAT=${USE_AUTO_HEARTBEAT} \
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
-    -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY}")
+    -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
+    -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV}")
     
 set(LDLIBS)
 set(OS_SOURCEFILES)
