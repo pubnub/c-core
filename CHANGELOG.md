@@ -1,3 +1,12 @@
+## v4.9.1
+March 26 2024
+
+#### Fixed
+- Fix too small amount of memory allocated for aes cbc algorithm in some cases.
+
+#### Modified
+- Add possibility to include address sanitizer in build via CMake.
+
 ## v4.9.0
 January 08 2024
 
