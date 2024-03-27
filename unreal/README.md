@@ -15,8 +15,10 @@ cmake . && make
 C-core offers some customization flags (e.g. shared library or using openssl). You can configure that as follow:
 
 ```sh 
-cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Engine/Source/ThirdParty/openssl/1.1.1/
+cmake . -DSHARED=ON -DOPENSSL=ON -DOPENSSL_ROOT_DIR={unreal engine location}/Engine/Source/ThirdParty/openssl/1.1.1x/ -DCUSTOM_OPENSSL_LIB_DIR=lib/XXX/ -DCUSTOM_OPENSSL_INCLUDE_DIR=include/XXX/
 ```
+
+where x is UE's version and XXX is your desired architecture. 
   
 3. Adjust `PubNubModule/PubNubModule.Build.cs` with selected options by changing `OpenSsl`, `StaticLink` and `BuildLocation` with the same values you used for compilation. 
 
