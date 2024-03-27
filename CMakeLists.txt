@@ -69,7 +69,7 @@ num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
-log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
+log_set(OPENSSL_ROOT_DIR "/Users/Shared/Epic\ Games/UE_5.2/Engine/Source/ThirdParty/OpenSSL/1.1.1n/" "OpenSSL root directory (leave empty for find_package function)[OPENSSL=ON needed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
 log_set(LOG_LEVEL "WARNING" "Log level [TRACE/WARNING/INFO/ERROR/FATAL]")
@@ -153,7 +153,7 @@ set(CORE_SOURCEFILES
 set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
-    ${CMAKE_CURRENT_LIST_DIR}/lib/md5/md5.c
+    #    ${CMAKE_CURRENT_LIST_DIR}/lib/md5/md5.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
@@ -342,8 +342,24 @@ if(${OPENSSL})
 
     if("${OPENSSL_ROOT_DIR}" STREQUAL "")
         find_package(OpenSSL REQUIRED)
+        set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
     else()
-        find_package(OpenSSL REQUIRED PATHS ${OPENSSL_ROOT_DIR})
+        find_package(OpenSSL PATHS ${OPENSSL_ROOT_DIR})
+        if(OpenSSl_FOUND)
+            set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+        else()
+            message(STATUS "Searching for custom OPENSSL library")
+
+            find_library(OpenSSL REQUIRED NAMES ssl PATHS ${OPENSSL_ROOT_DIR}/lib/Mac/ NO_DEFAULT_PATH)
+            find_library(Crypto REQUIRED NAMES crypto PATHS ${OPENSSL_ROOT_DIR}/lib/Mac/ NO_DEFAULT_PATH)
+
+            message(STATUS "FOUND PATHS:")
+            message(STATUS "-> ${OpenSSL}")
+            message(STATUS "-> ${Crypto}")
+
+            set(OPENSSL_LINK_LIBRARIES ${OpenSSL} ${Crypto})
+            include_directories(${OPENSSL_ROOT_DIR}/include/Mac/)
+        endif()
     endif()
 
     set(FEATURE_SOURCEFILES 
@@ -370,7 +386,6 @@ if(${OPENSSL})
         ${FEATURE_SOURCEFILES})
 
     set(LDLIBS  ${LDLIBS})
-    set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 
     if(UNIX)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c)
