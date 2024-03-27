@@ -3,6 +3,13 @@ schema: 1
 version: "4.9.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-03-26
+    version: v4.9.1
+    changes:
+      - type: bug
+        text: "Fix too small amount of memory allocated for aes cbc algorithm in some cases."
+      - type: improvement
+        text: "Add possibility to include address sanitizer in build via CMake."
   - date: 2024-01-08
     version: v4.9.0
     changes:
