@@ -191,8 +191,7 @@ elseif(WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
-        ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
-        ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+        ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c)
 endif()
 
 set(INTF_SOURCEFILES)
@@ -309,17 +308,16 @@ if(${USE_AUTO_HEARTBEAT})
         ${FEATURE_SOURCEFILES} 
         ${CMAKE_CURRENT_LIST_DIR}/core/pbauto_heartbeat.c 
         ${CMAKE_CURRENT_LIST_DIR}/lib/pbstr_remove_from_list.c)
-    if(NOT ${OPENSSL})
-        if(UNIX)
-            set(FEATURE_SOURCEFILES 
-                ${FEATURE_SOURCEFILES} 
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c)
-        elseif(WIN32 OR WIN64 OR MSVC)
-            set(FEATURE_SOURCEFILES 
-                ${FEATURE_SOURCEFILES} 
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
-        endif()
-    endif()
+
+	if(UNIX)
+		set(OS_SOURCEFILES 
+			${OS_SOURCEFILES} 
+			${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c)
+	elseif(WIN32 OR WIN64 OR MSVC)
+		set(OS_SOURCEFILES 
+			${OS_SOURCEFILES} 
+			${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+	endif()
 endif()
 
 if(${USE_FETCH_HISTORY})
@@ -396,12 +394,6 @@ if(${OPENSSL})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c 
         ${FEATURE_SOURCEFILES})
-
-    set(FEATURE_SOURCEFILES 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbauto_heartbeat_init_posix.c 
-        ${FEATURE_SOURCEFILES})
-
-    set(LDLIBS  ${LDLIBS})
 
     if(UNIX)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c)
