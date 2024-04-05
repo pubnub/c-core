@@ -104,5 +104,22 @@
 #define PUBNUB_ONLY_PUBSUB_API 0
 #endif
 
+// TODO: UNDER COMMENT IS ADDED BY ME ~XAVRAX
+#if !defined(PUBNUB_MAX_URL_PARAMS)
+/** The maximum number of URL parameters that can be saved in the Pubnub
+    context.
+*/
+#define PUBNUB_MAX_URL_PARAMS 10 
+#endif
+
+#if !defined(PUBNUB_MIN_WAIT_CONNECT_TIMER)
+/** The minimum duration of the wait connect timer, in milliseconds. */
+#define PUBNUB_MIN_WAIT_CONNECT_TIMER 5000 
+#endif
+
+#if !defined(PUBNUB_DEFAULT_WAIT_CONNECT_TIMER)
+/** The default duration of the wait connect timer, in milliseconds. */
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER 10000
+#endif
 
 #endif /* !defined INC_PUBNUB_CONFIG */

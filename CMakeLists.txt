@@ -1,6 +1,7 @@
 # CMakeLists.txt for the C-core library of Pubnub.
 cmake_minimum_required(VERSION 3.12)
 
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(c-core VERSION 4.8.0)
 
 message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
@@ -51,32 +52,56 @@ endif()
 
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
 log_option(UNIT_TEST "Build and run unit tests" OFF)
-num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
-num_option(USE_PROXY "Use proxy" ON)
-num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
-num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
-num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
-num_option(USE_OBJECTS_API "Use objects API" ON)
-num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
-num_option(USE_ACTIONS_API "Use actions API" ON)
+num_option(ONLY_PUBSUB_API "Only pubsub API" ON)
+num_option(USE_PROXY "Use proxy" OFF)
+num_option(USE_GZIP_COMPRESSION "Use gzip compression" OFF)
+num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" OFF)
+num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" OFF)
+num_option(USE_ADVANCED_HISTORY "Use advanced history" OFF)
+num_option(USE_OBJECTS_API "Use objects API" OFF)
+num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" OFF)
+num_option(USE_ACTIONS_API "Use actions API" OFF)
 num_option(USE_REVOKE_TOKEN_API "Use revoke token API" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
-num_option(USE_FETCH_HISTORY "Use fetch history" ON)
+num_option(USE_FETCH_HISTORY "Use fetch history" OFF)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
-num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
+num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" OFF)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
-log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
-log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
-log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
+log_set(OPENSSL_ROOT_DIR "/Users/Shared/Epic\ Games/UE_5.2/Engine/Source/ThirdParty/OpenSSl/1.1.1n" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
+log_set(CUSTOM_OPENSSL_LIB_DIR "lib/Mac" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
+log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include/Mac" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
 log_set(LOG_LEVEL "WARNING" "Log level [TRACE/WARNING/INFO/ERROR/FATAL]")
+#log_set(RTOS_PATH "~/Downloads/FreeRTOSv202212.01/FreeRTOS/Source/" "Path to the RTOS SDK")
+log_set(RTOS_INCLUDE_PATH "~/repos/esp/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos" "Path to the RTOS SDK include")
+log_set(RTOS_PORTABLE_MACRO_PATH "~/repos/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/include/freertos" "Path to the RTOS SDK portable macros")
+log_set(RTOS_CONFIG_CORE_PATH "~/repos/esp/esp-idf/components/xtensa/esp32/include" "Path to the RTOS SDK core config")
+log_set(RTOS_SOC_PATH "~/repos/esp/esp-idf/components/soc/esp32/include" "Path to the RTOS SDK SOC")
+log_set(RTOS_NEWLIB_PATH "~/repos/esp/esp-idf/components/newlib/platform_include" "Path to the RTOS SDK SOC")
+log_set(RTOS_COMPONENTS_PATH "~/repos/esp/esp-idf/components" "Path to the RTOS SDK SOC")
+log_set(RTOS_IP "~/Downloads/FreeRTOSv202212.01/FreeRTOS-Plus/Source/FreeRTOS-Plus-TCP/source/include" "Path to the RTOS SDK")
+log_set(RTOS_COMPILER "~/Downloads/FreeRTOSv202212.01/FreeRTOS-Plus/Source/FreeRTOS-Plus-TCP/source/portable/Compiler/GCC" "Path to the RTOS compiler")
 
 # Flags configuration
+
+include_directories(${RTOS_INCLUDE_PATH})
+include_directories(${RTOS_PORTABLE_MACRO_PATH})
+include_directories(${RTOS_CONFIG_CORE_PATH})
+include_directories(${RTOS_SOC_PATH})
+include_directories(${RTOS_NEWLIB_PATH})
+include_directories(${RTOS_COMPONENTS_PATH}/esp_common/include)
+include_directories(${RTOS_COMPONENTS_PATH}/esp_system/include)
+include_directories(${RTOS_COMPONENTS_PATH}/heap/include)
+include_directories(${RTOS_COMPONENTS_PATH}/xtensa/include)
+include_directories(${RTOS_COMPONENTS_PATH}/esp_hw_support/include)
+include_directories(${RTOS_COMPONENTS_PATH}/esp_rom/include)
+include_directories(${RTOS_IP})
+include_directories(${RTOS_COMPILER})
+include_directories("build/config/")
 
 set(FLAGS "\
     -g \
@@ -168,7 +193,7 @@ if(NOT ${OPENSSL})
 endif()
 
 if(UNIX)
-    set(LDLIBS "-lpthread ${LDLIBS}")
+    set(LDLIBS "-lpthread${LDLIBS}")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
         ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
@@ -193,6 +218,14 @@ elseif(WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+else()
+    message(STATUS "Using FreeRTOS")
+    set(OS_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_freertos_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_resolv_and_connect_freertos_tcp.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_assert_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_generate_uuid_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_version_freertos.c)
 endif()
 
 set(INTF_SOURCEFILES)
@@ -461,6 +494,9 @@ else()
         target_include_directories(pubnub PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/windows
             ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+    else()
+        message(STATUS "Using FreeRTOS")
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/freertos)
     endif()
 endif()
 
