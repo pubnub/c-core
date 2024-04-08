@@ -99,6 +99,11 @@ include_directories(${RTOS_COMPONENTS_PATH}/heap/include)
 include_directories(${RTOS_COMPONENTS_PATH}/xtensa/include)
 include_directories(${RTOS_COMPONENTS_PATH}/esp_hw_support/include)
 include_directories(${RTOS_COMPONENTS_PATH}/esp_rom/include)
+include_directories(${RTOS_COMPONENTS_PATH}/lwip/port/include)
+include_directories(${RTOS_COMPONENTS_PATH}/lwip/lwip/src/include)
+include_directories(${RTOS_COMPONENTS_PATH}/lwip/port/freertos/include/)
+include_directories(${RTOS_COMPONENTS_PATH}/lwip/port/esp32xx/include/)
+include_directories(${RTOS_COMPONENTS_PATH}/freertos/Freertos-Kernel/include)
 include_directories(${RTOS_IP})
 include_directories(${RTOS_COMPILER})
 include_directories("build/config/")
@@ -366,7 +371,11 @@ if(${USE_GRANT_TOKEN_API})
     set(FEATURE_SOURCEFILES 
         ${FEATURE_SOURCEFILES} 
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_grant_token_api.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_grant_token_api.c)
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_grant_token_api.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborerrorstring.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser_dup_string.c)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/lib/cbor)
 endif()
 
 if(${USE_REVOKE_TOKEN_API})

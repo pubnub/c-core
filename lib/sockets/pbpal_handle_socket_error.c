@@ -7,6 +7,8 @@
 
 #include <string.h>
 
+#include <errno.h>
+
 
 void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
 {
@@ -31,7 +33,9 @@ void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int lin
         errno,
         err_str);
     if (pb != NULL) {
+#if PUBNUB_BLOCKING_IO_SETTABLE
         PUBNUB_LOG_DEBUG(" use_blocking_io=%d\n", (int)pb->options.use_blocking_io);
+#endif
     }
     else {
         PUBNUB_LOG_DEBUG("\n");
@@ -59,10 +63,11 @@ enum pubnub_res pbpal_handle_socket_error(int socket_result,
     PUBNUB_ASSERT_INT_OPT(socket_result, <=, 0);
     if (socket_result < 0) {
         if (socket_would_block()) {
-            if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
-                pb->sock_state = STATE_NONE;
-                return PNR_TIMEOUT;
-            }
+            // TODO: dafuq is this?
+            //if (PUBNUB_BLOCKING_IO_SETTABLE && pb->options.use_blocking_io) {
+            //    pb->sock_state = STATE_NONE;
+            //    return PNR_TIMEOUT;
+            //}
             return PNR_IN_PROGRESS;
         }
         else {

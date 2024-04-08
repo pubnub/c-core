@@ -16,6 +16,12 @@
 #include "posix/pubnub_get_native_socket.h"
 #endif
 
+// TODO: added for AddrInfo struct 
+#include "lwip/inet.h"
+#include "lwip/netdb.h"
+
+
+
 #define HTTP_PORT 80
 
 #define TLS_PORT 443

@@ -13,6 +13,10 @@
 #define CAST (int*)
 #endif
 
+// TODO: added for AddrInfo struct 
+#include "lwip/inet.h"
+#include "lwip/netdb.h"
+
 #include <stdint.h>
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
 #include <time.h>
