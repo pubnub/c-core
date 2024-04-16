@@ -1,7 +1,9 @@
 # CMakeLists.txt for the C-core library of Pubnub.
 cmake_minimum_required(VERSION 3.12)
 
-project(c-core VERSION 4.8.0)
+if(NOT ESP_PLATFORM)
+    project(pubnub VERSION 4.8.0)
+endif()
 
 message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
 
@@ -52,17 +54,17 @@ endif()
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
 log_option(UNIT_TEST "Build and run unit tests" OFF)
 num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
-num_option(USE_PROXY "Use proxy" ON)
-num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
-num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
-num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
-num_option(USE_OBJECTS_API "Use objects API" ON)
-num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
-num_option(USE_ACTIONS_API "Use actions API" ON)
+num_option(USE_PROXY "Use proxy" OFF)
+num_option(USE_GZIP_COMPRESSION "Use gzip compression" OFF)
+num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" OFF)
+num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" OFF)
+num_option(USE_ADVANCED_HISTORY "Use advanced history" OFF)
+num_option(USE_OBJECTS_API "Use objects API" OFF)
+num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" OFF)
+num_option(USE_ACTIONS_API "Use actions API" OFF)
 num_option(USE_REVOKE_TOKEN_API "Use revoke token API" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
-num_option(USE_FETCH_HISTORY "Use fetch history" ON)
+num_option(USE_FETCH_HISTORY "Use fetch history" OFF)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
@@ -141,9 +143,6 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore_pubsub.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_netcore.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_blocking_io.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timers.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_json_parse.c
@@ -152,14 +151,29 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c) 
 
+# TODO: check if this is needed
 set(LIB_SOURCEFILES
-    ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
-    ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
+
+if(UNIX OR WIN32 OR WIN64 OR MSVC)
+    set(CORE_SOURCEFILES
+        ${CORE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c)
+
+    set(LIB_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c)
+else()
+    set(CORE_SOURCEFILES
+        ${CORE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_static.c)
+endif()
 
 if(NOT ${OPENSSL})
     set(LIB_SOURCEFILES
@@ -193,6 +207,17 @@ elseif(WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+else()
+    message(STATUS "Using FreeRTOS")
+    set(OS_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_freertos_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_resolv_and_connect_freertos_tcp.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_assert_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_generate_uuid_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_version_freertos.c)
+    if(ESP_PLATFORM)
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/freertos/msstopwatch_esp32.c)
+    endif()
 endif()
 
 set(INTF_SOURCEFILES)
@@ -438,35 +463,53 @@ else()
     set(LIBYTPE STATIC)
 endif()
 
-add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+if(NOT ESP_PLATFORM)
+    add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
-target_include_directories(pubnub PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/core 
-    ${CMAKE_CURRENT_LIST_DIR}/lib)
-
-if(${WITH_CPP})
-    target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
-endif()
-
-if(${OPENSSL})
-    target_include_directories(pubnub PUBLIC 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/
-        ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
-    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
-else()
-    if(UNIX)
-        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
-    elseif(WIN32 OR WIN64 OR MSVC)
-        target_include_directories(pubnub PUBLIC
-            ${CMAKE_CURRENT_LIST_DIR}/windows
-            ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+    target_include_directories(pubnub PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/core 
+        ${CMAKE_CURRENT_LIST_DIR}/lib)
+    
+    if(${WITH_CPP})
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
     endif()
+    
+    if(${OPENSSL})
+        target_include_directories(pubnub PUBLIC 
+            ${CMAKE_CURRENT_LIST_DIR}/openssl/
+            ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+        target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
+    else()
+        if(UNIX)
+            target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
+        elseif(WIN32 OR WIN64 OR MSVC)
+            target_include_directories(pubnub PUBLIC
+                ${CMAKE_CURRENT_LIST_DIR}/windows
+                ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+        else()
+            target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/freertos)
+        endif()
+    endif()
+    
+    target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
+else()
+    set(EXTRA_CFLAGS ${EXTRA_CFLAGS} ${FLAGS})
+
+    idf_component_register(SRCS ${SOURCEFILES}
+        INCLUDE_DIRS 
+            ${CMAKE_CURRENT_LIST_DIR}
+            ${CMAKE_CURRENT_LIST_DIR}/core
+            ${CMAKE_CURRENT_LIST_DIR}/lib
+            ${CMAKE_CURRENT_LIST_DIR}/freertos
+            $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
+        REQUIRES 
+            freertos
+            lwip)
 endif()
 
-target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
-
-if (WITH_CPP)
+# TODO: Check if CPP is supported on ESP32
+if (WITH_CPP AND NOT ESP_PLATFORM)
     # TODO: Tests
     # fntest/pubnub_fntest_medium.cpp
     # fntest/pubnub_fntest_runner.cpp

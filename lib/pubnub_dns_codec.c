@@ -456,12 +456,21 @@ static int skip_questions(uint8_t const** o_reader,
         size_t  to_skip;
 
         if (reader + QUESTION_DATA_SIZE > end) {
+#ifndef ESP_PLATFORM
             PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
                              "reader=%p + QUESTION_DATA_SIZE=%d > buf=%p + msg_size=%ld\n",
                              reader,
                              QUESTION_DATA_SIZE,
                              buf,
                              end - buf + 1);
+#else
+            PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
+                             "reader=%p + QUESTION_DATA_SIZE=%d > buf=%p + msg_size=%d\n",
+                             reader,
+                             QUESTION_DATA_SIZE,
+                             buf,
+                             end - buf + 1);
+#endif
             return -1;
         }
         /* Even if label decoding reports an error(having offsets messed up, maybe, or buffer too
@@ -627,6 +636,7 @@ static int find_the_answer(uint8_t const* reader,
         }
         reader += to_skip + RESOURCE_DATA_SIZE;
         if (reader > end) {
+#ifndef ESP_PLATFORM
             PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
                              "reader=%p > buf=%p + msg_size=%ld :\n"
                              "to_skip=%zu, RESOURCE_DATA_SIZE=%d\n",
@@ -635,6 +645,16 @@ static int find_the_answer(uint8_t const* reader,
                              end - buf + 1,
                              to_skip,
                              RESOURCE_DATA_SIZE);
+#else
+            PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
+                             "reader=%p > buf=%p + msg_size=%d :\n"
+                             "to_skip=%zu, RESOURCE_DATA_SIZE=%d\n",
+                             reader,
+                             buf,
+                             end - buf + 1,
+                             to_skip,
+                             RESOURCE_DATA_SIZE);
+#endif
             return -1;
         }
         /* Resource record data offsets are negative.
@@ -643,12 +663,21 @@ static int find_the_answer(uint8_t const* reader,
         r_data_len = reader[RESOURCE_DATA_DATA_LEN_OFFSET] * 256
                      + reader[RESOURCE_DATA_DATA_LEN_OFFSET + 1];
         if ((reader + r_data_len) > end) {
+#ifndef ESP_PLATFORM
             PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
                              "reader=%p + r_data_len=%zu > buf=%p + msg_size=%ld\n",
                              reader,
                              r_data_len,
                              buf,
                              end - buf + 1);
+#else
+            PUBNUB_LOG_ERROR("Error: DNS response erroneous, or incomplete:\n"
+                             "reader=%p + r_data_len=%zu > buf=%p + msg_size=%d\n",
+                             reader,
+                             r_data_len,
+                             buf,
+                             end - buf + 1);
+#endif
             return -1;
         }
         r_data_type = reader[RESOURCE_DATA_TYPE_OFFSET] * 256

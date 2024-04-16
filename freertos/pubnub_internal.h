@@ -7,13 +7,52 @@
 
 #include "task.h"
 
+#ifndef ESP_PLATFORM
+
 #include "FreeRTOS_IP.h"
 #include "FreeRTOS_Sockets.h"
-
 
 #define socket_close(socket) FreeRTOS_closesocket(socket)
 #define socket_send(socket, buf, len) FreeRTOS_send((socket), (buf), (len), 0)
 #define socket_recv(socket, buf, len, flags) FreeRTOS_recv((socket), (buf), (len), (flags))
+#define htons(port) FreeRTOS_htons(port)
+#define gethostbyname(name) FreeRTOS_gethostbyname(name)
+#define getnameinfo(addr, addrlen, host, hostlen, serv, servlen, flags) FreeRTOS_getnameinfo((addr), (addrlen), (host), (hostlen), (serv), (servlen), (flags))
+#define socket(family, type, protocol) FreeRTOS_socket((family), (type), (protocol))
+#define socket_connect(socket, addr, addrlen) FreeRTOS_connect((socket), (addr), (addrlen))
+#define socket_setsockopt(socket, level, optname, optval, optlen) FreeRTOS_setsockopt((socket), (level), (optname), (optval), (optlen))
+#define AF_INET FREERTOS_AF_INET
+#define SOCK_STREAM FREERTOS_SOCK_STREAM
+#define IPPROTO_TCP FREERTOS_IPPROTO_TCP
+#define SO_RCVTIMEO FREERTOS_SO_RCVTIMEO
+#define sockaddr freertos_sockaddr
+
+typedef Socket_t pb_socket_t;
+
+#define SOCKET_INVALID FREERTOS_INVALID_SOCKET
+
+#else 
+
+#include "lwip/netdb.h"
+#include "lwip/inet.h"
+#include "lwip/ip_addr.h"
+
+#define socket_close(socket) closesocket(socket)
+#define socket_send(socket, buf, len) send((socket), (buf), (len), 0)
+#define socket_recv(socket, buf, len, flags) recv((socket), (buf), (len), (flags))
+#define gethostbyname(name) lwip_gethostbyname(name)
+#define getnameinfo(addr, addrlen, host, hostlen, serv, servlen, flags) lwip_getnameinfo((addr), (addrlen), (host), (hostlen), (serv), (servlen), (flags))
+#define socket(family, type, protocol) lwip_socket((family), (type), (protocol))
+#define socket_connect(socket, addr, addrlen) lwip_connect((socket), (addr), (addrlen))
+#define socket_setsockopt(socket, level, optname, optval, optlen) lwip_setsockopt((socket), (level), (optname), (optval), (optlen))
+#define sockaddr sockaddr_in
+
+typedef int pb_socket_t;
+
+#define SOCKET_INVALID ENETDOWN
+
+#endif
+
 
 /** FreeRTOS+TCP always blocks, so checking "if it would block"
     doesn't make sense */
@@ -34,14 +73,12 @@
 
 #define socket_is_connected(socket) (pdTRUE == FreeRTOS_issocketconnected(socket))
 
-#define SOCKET_INVALID FREERTOS_INVALID_SOCKET
 
 
 /* FreeRTOS+TCP never raises SIGPIPE, so, we're good. */
 #define socket_disable_SIGPIPE(socket)
 
 
-typedef Socket_t pb_socket_t;
 
 /** The Pubnub FreeRTOS context */
 struct pubnub_pal {
