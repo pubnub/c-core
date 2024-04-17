@@ -48,7 +48,8 @@ For more info check those links:
 
 - [posix](posix/README.md),
 - [windows](windows/README.md),
-- [openssl](openssl/),
+- [openssl](openssl/README.md),
+- [freertos](freertos/README.md),
 
 depending on what fits you best. 
 
@@ -66,6 +67,8 @@ The directories of the library repository are:
 - `posix` : Modules and Makefile for POSIX OSes (tested mostly on Linux)
 
 - `openssl`: Modules and Makefile(s) for OpenSSL (on POSIX and Windows)
+
+- `mbedtls`: Modules for MBedTLS
 
 - `cpp`: Modules, Makefile(s) and examples for the C++ wrapper
 

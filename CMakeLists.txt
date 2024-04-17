@@ -42,7 +42,7 @@ endfunction()
 message(STATUS "Options (Enabled *):")
 
 log_option(OPENSSL "Use OpenSSL" OFF)
-log_option(MBEDTLS "Use mbedTLS" OFF)
+num_option(MBEDTLS "Use mbedTLS" ON)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 log_option(WITH_CPP "Build the CPP headers" OFF)
@@ -103,7 +103,8 @@ set(FLAGS "\
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
-    -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV}")
+    -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
+    -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
 set(LDLIBS)
 set(OS_SOURCEFILES)
@@ -379,17 +380,17 @@ if(${USE_REVOKE_TOKEN_API})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif()
 
-set(OPENSSL_LINK_LIBRARIES)
+set(SSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
 
     if("${OPENSSL_ROOT_DIR}" STREQUAL "")
         find_package(OpenSSL REQUIRED)
-        set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+        set(SSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
     else()
         find_package(OpenSSL PATHS ${OPENSSL_ROOT_DIR})
         if(OpenSSl_FOUND)
-            set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+            set(SSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
         else()
             message(STATUS "Searching for custom OpenSSL library")
             if(WIN32 OR WIN64 OR MSVC)
@@ -404,7 +405,7 @@ if(${OPENSSL})
             message(STATUS "-> ${OpenSSL}")
             message(STATUS "-> ${Crypto}")
 
-            set(OPENSSL_LINK_LIBRARIES ${OpenSSL} ${Crypto})
+            set(SSL_LINK_LIBRARIES ${OpenSSL} ${Crypto})
             include_directories(${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_INCLUDE_DIR})
 
             message(STATUS "Used headers:")
@@ -444,6 +445,16 @@ if(${OPENSSL})
     elseif(WIN32 OR WIN64 OR MSVC)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_windows.c)
     endif()
+elseif(${MBEDTLS})
+    message(STATUS "Using mbedTLS")
+
+    if(NOT ESP_PLATFORM)
+        # TODO: Add mbedTLS support for generic builds
+    endif()
+
+    set(SSL_LINK_LIBRARIES 
+        ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_mbedtls.c
+        ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_connect_mbedtls.c)
 else()
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
@@ -491,6 +502,8 @@ if(NOT ESP_PLATFORM)
             ${CMAKE_CURRENT_LIST_DIR}/openssl/
             ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
         target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
+    elseif(${MBEDTLS})
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/mbedtls)
     else()
         if(UNIX)
             target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
@@ -503,22 +516,40 @@ if(NOT ESP_PLATFORM)
         endif()
     endif()
     
-    target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
+    target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
 else()
     message(STATUS "Building ESP32 IDF component")
 
     set(EXTRA_CFLAGS ${EXTRA_CFLAGS} ${FLAGS})
 
-    idf_component_register(SRCS ${SOURCEFILES}
-        INCLUDE_DIRS 
-            ${CMAKE_CURRENT_LIST_DIR}
-            ${CMAKE_CURRENT_LIST_DIR}/core
-            ${CMAKE_CURRENT_LIST_DIR}/lib
-            ${CMAKE_CURRENT_LIST_DIR}/freertos
-            $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
-        REQUIRES 
-            freertos
-            lwip)
+    if (${MBEDTLS})
+       idf_component_register(SRCS ${SOURCEFILES}
+           INCLUDE_DIRS 
+               ${CMAKE_CURRENT_LIST_DIR}
+               ${CMAKE_CURRENT_LIST_DIR}/core
+               ${CMAKE_CURRENT_LIST_DIR}/lib
+               ${CMAKE_CURRENT_LIST_DIR}/freertos
+               ${CMAKE_CURRENT_LIST_DIR}/mbedtls
+               $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
+               $ENV{IDF_PATH}/components/mbedtls/mbedtls/include
+           REQUIRES 
+               freertos
+               lwip
+               mbedtls)
+    else()
+        idf_component_register(SRCS ${SOURCEFILES}
+            INCLUDE_DIRS 
+                ${CMAKE_CURRENT_LIST_DIR}
+                ${CMAKE_CURRENT_LIST_DIR}/core
+                ${CMAKE_CURRENT_LIST_DIR}/lib
+                ${CMAKE_CURRENT_LIST_DIR}/freertos
+                $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
+            REQUIRES 
+                freertos
+                lwip)
+    endif()
+
+
 endif()
 
 # TODO: Check if CPP is supported on ESP32

@@ -79,11 +79,23 @@ typedef int pb_socket_t;
 #define socket_disable_SIGPIPE(socket)
 
 
+#ifndef PUBNUB_MBEDTLS
+/** Flag to indicate that we are using MBEDTLS library support */
+#define PUBNUB_MBEDTLS 1
+#endif
 
+// TODO: move pubnub_pal to other header to avoid multiple definitions
+// of the same struct
+// Maybe modularization of the Pubnub library is needed sooner than
+// later in this SDK
+#if !PUBNUB_MBEDTLS
 /** The Pubnub FreeRTOS context */
 struct pubnub_pal {
     pb_socket_t socket;
 };
+#else
+#include "mbedtls/pubnub_pal.h"
+#endif
 
 /** The sockets interface of FreeRTOS+TCP, doesn't provide a
     non-blocking blocking I/O. Another implementation may be

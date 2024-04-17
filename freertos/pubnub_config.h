@@ -104,5 +104,12 @@
 #define PUBNUB_ONLY_PUBSUB_API 0
 #endif
 
+#ifndef PUBNUB_USE_SSL
+/** If true (!=0), will enable SSL/TLS support.  If false (==0), will
+    disable SSL/TLS support.  If not defined, will enable SSL/TLS
+    support. */
+#define PUBNUB_USE_SSL 1
+#endif
+
 
 #endif /* !defined INC_PUBNUB_CONFIG */
