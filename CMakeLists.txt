@@ -1,6 +1,8 @@
 # CMakeLists.txt for the C-core library of Pubnub.
 cmake_minimum_required(VERSION 3.12)
 
+# Project name and version for casual builds
+# For ESP32 builds it is considered as a IDF component
 if(NOT ESP_PLATFORM)
     project(pubnub VERSION 4.8.0)
 endif()
@@ -40,6 +42,7 @@ endfunction()
 message(STATUS "Options (Enabled *):")
 
 log_option(OPENSSL "Use OpenSSL" OFF)
+log_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 log_option(WITH_CPP "Build the CPP headers" OFF)
@@ -76,7 +79,11 @@ log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "WARNING" "Log level [TRACE/WARNING/INFO/ERROR/FATAL]")
+log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+
+if (${OPENSSL} AND ${MBEDTLS})
+    message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
+endif()
 
 # Flags configuration
 
@@ -151,7 +158,6 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c) 
 
-# TODO: check if this is needed
 set(LIB_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
@@ -182,6 +188,8 @@ if(NOT ${OPENSSL})
 endif()
 
 if(UNIX)
+    message(STATUS "Using POSIX setup")
+
     set(LDLIBS "-lpthread ${LDLIBS}")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
@@ -197,6 +205,8 @@ if(UNIX)
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
     endif()
 elseif(WIN32 OR WIN64 OR MSVC)
+    message(STATUS "Using Windows setup")
+
     set(LDLIBS "ws2_32.lib IPHlpAPI.lib rpcrt4.lib")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
@@ -208,7 +218,8 @@ elseif(WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
 else()
-    message(STATUS "Using FreeRTOS")
+    message(STATUS "Using FreeRTOS setup")
+
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_freertos_blocking_io.c
         ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_resolv_and_connect_freertos_tcp.c
@@ -455,15 +466,15 @@ set(SOURCEFILES
     ${FEATURE_SOURCEFILES} 
     ${INTF_SOURCEFILES})
 
-if(${SHARED_LIB})
-    message(STATUS "Building shared library")
-    set(LIBTYPE SHARED)
-else()
-    message(STATUS "Building static library")
-    set(LIBYTPE STATIC)
-endif()
-
 if(NOT ESP_PLATFORM)
+    if(${SHARED_LIB})
+        message(STATUS "Building shared library")
+        set(LIBTYPE SHARED)
+    else()
+        message(STATUS "Building static library")
+        set(LIBYTPE STATIC)
+    endif()
+
     add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
 
     target_include_directories(pubnub PUBLIC
@@ -494,6 +505,8 @@ if(NOT ESP_PLATFORM)
     
     target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 else()
+    message(STATUS "Building ESP32 IDF component")
+
     set(EXTRA_CFLAGS ${EXTRA_CFLAGS} ${FLAGS})
 
     idf_component_register(SRCS ${SOURCEFILES}
