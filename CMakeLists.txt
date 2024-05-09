@@ -464,6 +464,7 @@ else()
     endif()
 endif()
 
+string(STRIP ${LDLIBS} LDLIBS)
 target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
 if (WITH_CPP)
