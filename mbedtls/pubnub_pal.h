@@ -11,6 +11,7 @@ struct pubnub_pal {
     mbedtls_ssl_config* ssl_config;
     mbedtls_x509_crt* ca_certificates;
     mbedtls_net_context* net;
+    mbedtls_net_context* server_fd;
 };
 
 #endif /* PUBNUB_PAL_H */

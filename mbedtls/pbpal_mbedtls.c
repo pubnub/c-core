@@ -1,3 +1,4 @@
+#include "msstopwatch/msstopwatch.h"
 #include "pubnub_internal.h"
 #include "pubnub_log.h"
 
@@ -46,7 +47,39 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 
 enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
 {
-    return 0;
+    if (pb->pal.ssl == NULL) {
+        // TODO: use pbpal_handle_socket_error() here
+        return -1;
+    }
+
+    PUBNUB_ASSERT(pb->options.useSSL);
+
+    switch(result) {
+        case 0: // success
+            break;
+        case MBEDTLS_ERR_SSL_WANT_READ:
+        case MBEDTLS_ERR_SSL_WANT_WRITE:
+            if (pbms_active(pb->pal.tryconn) // no field tryconn!?!?
+                || (pbms_elapsed(pb->pal.tryconn) < pb->transaction_timeout_ms)) {
+                PUBNUB_LOG_TRACE("pb=%p TLS/SSL_I/O operation should retry\n", pb);
+                return PNR_IN_PROGRESS;
+            }
+
+            pb->pal.ip_timeout = 0; // it seems like a clue to the tryconn field
+
+            // TODO: session if in pbpal_openssl.c
+            
+            PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
+
+            return PNR_TIMEOUT;
+        default:
+            // TODO: error handling
+            PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_IO_ERROR\n", pb);
+            return PNR_IO_ERROR;
+    }
+
+    PUBNUB_LOG_TRACE("pb=%p TLS/SSL_I/O operation successful\n", pb);
+    return PNR_OK;
 }
 
 

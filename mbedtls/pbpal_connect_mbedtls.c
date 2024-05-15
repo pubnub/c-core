@@ -3,6 +3,7 @@
 #if PUBNUB_USE_SSL
 
 #include "pbpal.h"
+#include "pubnub_netcore.h"
 #include "pubnub_pal.h"
 #include "pubnub_api_types.h"
 #include "pubnub_internal_common.h"
@@ -75,19 +76,36 @@ static char pubnub_cert_GlobalSign[] =
     "HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==\n"
     "-----END CERTIFICATE-----\n";
 
+static const char* get_origin(pubnub_t* pb)
+{
+#ifdef PUBNUB_ORIGIN_SETTABLE
+    return pb->origin;
+#else
+    PUBNUB_UNUSED(pb);
+    return PUBNUB_ORIGIN;
+#endif
+}
 
+#define PUBNUB_PORT "443"
 
 // TODO: https://github.com/espressif/esp-idf/blob/v5.2.1/examples/protocols/https_mbedtls/main/https_mbedtls_example_main.c 
 // reference for mbedtls usage
 enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 {
     struct pubnub_pal* pal = &pb->pal;
+    int net_result;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
+    PUBNUB_LOG_TRACE("pbpal_start_tls(pb=%p)\n", pb);
+// TODO: Think about pubnub_config.h and where or which to use
+//    PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
 
     mbedtls_ssl_init(pal->ssl);
     mbedtls_ssl_config_init(pal->ssl_config);
 
 #ifndef ESP_PLATFORM
-    // TODO: not implemented yet
+#error "MBedTLS has been implemented only for ESP32 platform. Contact PubNub support for an implementation on the other ones."
 #else
     if(esp_crt_bundle_attach(pal->ssl_config) != 0) {
         PUBNUB_LOG_ERROR("Failed to attach CRT bundle\n");
@@ -95,11 +113,7 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     }
 #endif
 
-#ifdef PUBNUB_ORIGIN_SETTABLE
-    if (mbedtls_ssl_set_hostname(pal->ssl, pb->origin) != 0) {
-#else
-    if (mbedtls_ssl_set_hostname(pal->ssl, PUBNUB_ORIGIN) != 0) {
-#endif
+    if (mbedtls_ssl_set_hostname(pal->ssl, get_origin(pb)) != 0) {
         PUBNUB_LOG_ERROR("Failed to set hostname\n");
         return pbtlsFailed;
     }
@@ -122,7 +136,31 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         return pbtlsFailed;
     }
 
-    return pbtlsStarted;
+    mbedtls_net_init(pb->pal.net);
+
+    PUBNUB_LOG_DEBUG("Connecting to %s:%s...\n", get_origin(pb), PUBNUB_PORT);
+    if (0 != mbedtls_net_connect(pb->pal.net, get_origin(pb), PUBNUB_PORT, MBEDTLS_NET_PROTO_TCP)) {
+        PUBNUB_LOG_ERROR("Failed to connect to %s:%s\n", get_origin(pb), PUBNUB_PORT);
+        return pbtlsFailed;
+    }
+
+    // TODO: HOW TO SET PEM CERTS?
+    mbedtls_ssl_set_bio(pal->ssl, pb->pal.net, mbedtls_net_send, mbedtls_net_recv, NULL);
+
+    return pbpal_check_tls(pb);
+}
+
+enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
+    int result;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
+    PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p)\n", pb);
+
+    result = mbedtls_ssl_handshake(pb->pal.ssl);
+    result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
+
+    return pbtlsEstablished;
 }
 
 
