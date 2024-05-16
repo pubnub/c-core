@@ -93,8 +93,6 @@ int pbpal_start_read_line(pubnub_t* pb)
 {
     return 0;
 }
-
-
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
     return PNR_OK;

@@ -144,6 +144,8 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         return pbtlsFailed;
     }
 
+    PUBNUB_LOG_DEBUG("Connected to %s:%s\n", get_origin(pb), PUBNUB_PORT);
+
     // TODO: HOW TO SET PEM CERTS?
     mbedtls_ssl_set_bio(pal->ssl, pb->pal.net, mbedtls_net_send, mbedtls_net_recv, NULL);
 
@@ -153,7 +155,7 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
     int result;
     int tls_flags;
-    char error_buf[512];
+    char error_buf[512]; // 512 bytes according to mbedtls example
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
@@ -161,8 +163,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
 
     result = mbedtls_ssl_handshake(pb->pal.ssl);
 
-    result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
-    if (PNR_OK != result) {
+    if (PNR_OK != (result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__))) {
         PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p) result = %d\n", pb, result);
         return (result == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
     }
