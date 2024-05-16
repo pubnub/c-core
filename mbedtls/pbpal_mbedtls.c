@@ -195,6 +195,15 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
 
 enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
+    int have_read;
+
+    PUBNUB_ASSERT(STATE_READ == pb->sock_state);
+
+    if (NULL == pb->pal.ssl) {
+        PUBNUB_LOG_ERROR("pbpal_read_status(pb=%p) called with NULL SSL context\n", pb);
+        return PNR_INTERNAL_ERROR;
+    }
+
 }
 
 
