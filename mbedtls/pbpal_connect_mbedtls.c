@@ -152,13 +152,32 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
     int result;
+    int tls_flags;
+    char error_buf[512];
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
     PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p)\n", pb);
 
     result = mbedtls_ssl_handshake(pb->pal.ssl);
+
     result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
+    if (PNR_OK != result) {
+        PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p) result = %d\n", pb, result);
+        return (result == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
+    }
+
+    PUBNUB_LOG_DEBUG("TLS connection established\n");
+
+    if ((0 != (tls_flags = mbedtls_ssl_get_verify_result(pb->pal.ssl)))) {
+        mbedtls_x509_crt_verify_info(error_buf, sizeof error_buf, "  ! ", tls_flags);
+        PUBNUB_LOG_ERROR("Certificate verification failed: %s\n", error_buf);
+
+        return pbtlsFailed;
+    }
+
+    PUBNUB_LOG_INFO("TLS Certificate verification passed\n");
+    PUBNUB_LOG_DEBUG("Cipher suite is %s\n", mbedtls_ssl_get_ciphersuite(pb->pal.ssl));
 
     return pbtlsEstablished;
 }
