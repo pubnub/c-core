@@ -35,7 +35,14 @@ void pbpal_init(pubnub_t* pb)
 
 int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
-    return 0;
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    pb->ptr = (uint8_t*)data;
+    pb->left = n;
+    pb->sock_state = STATE_SENDING_DATA;
+    pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
+
+    return pbpal_send_status(pb);
 }
 
 
@@ -85,16 +92,68 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
 
 int pbpal_send_status(pubnub_t* pb)
 {
-    return 0;
+    int result = 0;
+
+    if (0 == pb->len) {
+        PUBNUB_LOG_TRACE("pb=%p pb->len=0, nothing to send\n", pb);
+        return 0;
+    }
+
+    PUBNUB_ASSERT(pb->sock_state == STATE_SENDING_DATA);
+
+    if (NULL == pb->pal.ssl) {
+        PUBNUB_LOG_ERROR("pbpal_send_status(pb=%p) called with NULL SSL context\n", pb);
+        return -1;
+    }
+    
+    if (0 >= (result = mbedtls_ssl_write(pb->pal.ssl, pb->ptr, pb->len))) {
+        result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
+    } else {
+        PUBNUB_ASSERT_OPT((unsigned)result <= pb->len);
+        pb->ptr += result;
+        pb->len -= result;
+        result = (0 == pb->len) ? 0 : +1;
+    }
+
+    if (0 >= result) {
+        pb->sock_state = STATE_NONE;
+        pb->unreadlen = 0;
+        pb->ptr = (uint8_t*)pb->core.http_buf;
+    }
+ 
+    return result;
 }
 
 
 int pbpal_start_read_line(pubnub_t* pb)
 {
-    return 0;
+    unsigned distance;
+
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    if (pb->unreadlen > 0) {
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
+    }
+    distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+    PUBNUB_ASSERT_UINT(distance + pb->left + pb->unreadlen,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    pb->ptr -= distance;
+    pb->left += distance;
+
+    pb->sock_state = STATE_READ_LINE;
+
+    return +1;
 }
+
+
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
+    // TODO: implement this
+    PUBNUB_ASSERT(STATE_READ_LINE == pb->sock_state);
+
     return PNR_OK;
 }
 
@@ -107,7 +166,30 @@ int pbpal_read_len(pubnub_t* pb)
 
 int pbpal_start_read(pubnub_t* pb, size_t n)
 {
-    return 0;
+    unsigned distance;
+
+    PUBNUB_ASSERT_UINT_OPT(n, >, 0);
+    PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+
+    WATCH_USHORT(pb->unreadlen);
+    WATCH_USHORT(pb->left);
+    if (pb->unreadlen > 0) {
+        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
+                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
+    }
+    distance = pb->ptr - (uint8_t*)pb->core.http_buf;
+    WATCH_UINT(distance);
+    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
+                       ==,
+                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    pb->ptr -= distance;
+    pb->left += distance;
+
+    pb->sock_state = STATE_READ;
+    pb->len        = n;
+
+    return +1;
 }
 
 
@@ -124,18 +206,50 @@ bool pbpal_closed(pubnub_t* pb)
 
 void pbpal_forget(pubnub_t* pb)
 {
-    /* a no-op under OpenSSL */
+    /* a no-op under MBedTLS */
 }
 
 
 int pbpal_close(pubnub_t* pb)
 {
+    pb->unreadlen = 0;
+
+    if (pb->pal.ssl != NULL) {
+        mbedtls_ssl_close_notify(pb->pal.ssl);
+        mbedtls_ssl_session_reset(pb->pal.ssl);
+        mbedtls_ssl_free(pb->pal.ssl);
+        pb->pal.ssl = NULL;
+    }
+
+    PUBNUB_LOG_TRACE("pb=%p: pbpal_close() returning 0\n", pb);
+
     return 0;
 }
 
 
 void pbpal_free(pubnub_t* pb)
 {
+    if (NULL != pb->pal.ssl) {
+        mbedtls_ssl_free(pb->pal.ssl);
+        pb->pal.ssl = NULL;
+    }
+
+    if (NULL != pb->pal.ssl_config) {
+        mbedtls_ssl_config_free(pb->pal.ssl_config);
+        pb->pal.ssl_config = NULL;
+    }
+
+    if (NULL != pb->pal.net) {
+        mbedtls_net_free(pb->pal.net);
+        pb->pal.net = NULL;
+    }
+
+    if (NULL != pb->pal.ca_certificates) {
+        mbedtls_x509_crt_free(pb->pal.ca_certificates);
+        pb->pal.ca_certificates = NULL;
+    }
+
+    pb->sock_state = STATE_NONE;
 }
 
 static void pbntf_setup(void)
