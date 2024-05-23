@@ -13,11 +13,19 @@ defaults:
 jobs:
   tests:
     name: Integration and Unit tests
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: ${{ matrix.runner.group }}
+      labels: ${{ matrix.runner.labels }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-13]
+        runner:
+          - os: ubuntu-latest
+            group: Default Larger Runners
+            labels: ubuntu-latest-m
+          - os: macos-13
+            group: Default
+            labels: macos-latest
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -31,7 +39,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
       - name: Identify target test runner OS
-        run: echo "test_runner_os=$(echo "${{ matrix.os }}" | cut -d"-" -f1)" >> $GITHUB_ENV
+        run: echo "test_runner_os=$(echo "${{ matrix.runner.os }}" | cut -d"-" -f1)" >> $GITHUB_ENV
       - name: Build and run tests
         uses: ./.github/workflows/composite/unit-integration-test-runner
         with:
