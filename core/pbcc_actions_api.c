@@ -52,6 +52,12 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
     case pbactypCustom:
         type_literal = "custom";
         break;
+    case pbactypEdited:
+        type_literal = "edited";
+        break;
+    case pbactypDeleted:
+        type_literal = "deleted";
+        break;
     default:
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
                          "unknown action type = %d\n",

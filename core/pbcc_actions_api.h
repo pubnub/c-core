@@ -21,7 +21,9 @@ struct pbcc_context;
 enum pubnub_action_type {
     pbactypReaction,
     pbactypReceipt,
-    pbactypCustom
+    pbactypCustom,
+    pbactypEdited,
+    pbactypDeleted
 };
 
 /** Forms the action object to be sent in 'pubnub_add_action' request body.
