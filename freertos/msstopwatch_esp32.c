@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
 #include "lib/msstopwatch/msstopwatch.h"
-
-// TODO: whole file is a stub!
+#include "freertos/pbtimespec_elapsed_ms_esp32.h"
+#include "pubnub_assert.h"
 
 /** This uses our helper module that provides a monotonic
     clock like POSIX clock_gettime(CLOCK_MONOTONIC,...);
@@ -10,13 +10,17 @@
 
 static struct timespec msclock(void)
 {
-    return *(struct timespec*)0;
+    struct timespec ts;
+    gettimeofday(&ts, NULL);
+    
+    return ts;
 }
 
 
 pbmsref_t pbms_start(void)
 {
-    return *(pbmsref_t*)0;
+    pbmsref_t result = { msclock() };
+    return result;
 }
 
 
@@ -34,5 +38,6 @@ bool pbms_active(pbmsref_t stopwatch)
 
 pbms_t pbms_elapsed(pbmsref_t since)
 {
-    return 0;
+    PUBNUB_ASSERT(pbms_active(since));
+    return pbtimespec_elapsed_ms(since.t_ref, msclock());
 }
