@@ -79,6 +79,12 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
             PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
 
             return PNR_TIMEOUT;
+        case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
+            PUBNUB_LOG_INFO("pb=%p TLS/SSL_I/O peer closed connection\n", pb);
+            mbedtls_ssl_close_notify(pb->pal.ssl);
+            pb->unreadlen = 0;
+
+            return PNR_OK;
         default:
             // TODO: error handling
             PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_IO_ERROR\n", pb);
@@ -154,7 +160,49 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     // TODO: implement this
     PUBNUB_ASSERT(STATE_READ_LINE == pb->sock_state);
 
-    return PNR_OK;
+    for (;;) {
+        if (pb->unreadlen == 0) {
+            PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
+                              <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+
+            int result = mbedtls_ssl_read(pb->pal.ssl, pb->ptr, pb->left);
+
+            if (result == MBEDTLS_ERR_SSL_WANT_READ || result == MBEDTLS_ERR_SSL_WANT_WRITE) {
+                continue;
+            }
+
+            if (result <= 0) {
+                return pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
+            }
+
+            pb->unreadlen = result;
+        }
+
+        while (pb->unreadlen > 0) {
+            char c = *pb->ptr++;
+            --pb->unreadlen;
+            if (c == '\n') {
+                WATCH_USHORT(pb->unreadlen);
+                pb->sock_state = STATE_NONE;
+
+                return PNR_OK;
+            }
+        }
+
+        if (pb->left == 0) {
+            PUBNUB_LOG_ERROR("pbpal_line_read_status(pb=%p): buffer full\n", pb);
+            pb->sock_state = STATE_NONE;
+
+            return PNR_RX_BUFF_NOT_EMPTY;
+        }
+
+        if (NULL == pb->pal.ssl) {
+            PUBNUB_LOG_ERROR("pbpal_line_read_status(pb=%p) called with NULL SSL context\n", pb);
+            return PNR_INTERNAL_ERROR;
+        }
+    }
+
+    return PNR_IN_PROGRESS;
 }
 
 
