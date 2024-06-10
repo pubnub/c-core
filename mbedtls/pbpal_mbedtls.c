@@ -1,4 +1,5 @@
 #include "msstopwatch/msstopwatch.h"
+#include "pbpal.h"
 #include "pubnub_internal.h"
 #include "pubnub_log.h"
 
@@ -54,9 +55,10 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 
 enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
 {
+    char const* reason[100] = {0};
+
     if (pb->pal.ssl == NULL) {
-        // TODO: use pbpal_handle_socket_error() here
-        return -1;
+        return pbpal_handle_socket_error(result, pb, file, line);
     }
 
     PUBNUB_ASSERT(pb->options.useSSL);
@@ -66,28 +68,36 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
             break;
         case MBEDTLS_ERR_SSL_WANT_READ:
         case MBEDTLS_ERR_SSL_WANT_WRITE:
-            if (pbms_active(pb->pal.tryconn) // no field tryconn!?!?
-                || (pbms_elapsed(pb->pal.tryconn) < pb->transaction_timeout_ms)) {
+            if (pbms_active(pb->pal.connection_timer) 
+                || (pbms_elapsed(pb->pal.connection_timer) < pb->transaction_timeout_ms)) {
                 PUBNUB_LOG_TRACE("pb=%p TLS/SSL_I/O operation should retry\n", pb);
                 return PNR_IN_PROGRESS;
             }
 
-            pb->pal.ip_timeout = 0; // it seems like a clue to the tryconn field
+            mbedtls_ssl_close_notify(pb->pal.ssl);
+            mbedtls_ssl_session_reset(pb->pal.ssl);
+            mbedtls_net_free(pb->pal.server_fd);
 
-            // TODO: session if in pbpal_openssl.c
-            
             PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
 
             return PNR_TIMEOUT;
         case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
             PUBNUB_LOG_INFO("pb=%p TLS/SSL_I/O peer closed connection\n", pb);
             mbedtls_ssl_close_notify(pb->pal.ssl);
+            mbedtls_ssl_session_reset(pb->pal.ssl);
+            mbedtls_net_free(pb->pal.server_fd);
+
             pb->unreadlen = 0;
 
             return PNR_OK;
         default:
-            // TODO: error handling
-            PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_IO_ERROR\n", pb);
+            mbedtls_ssl_session_reset(pb->pal.ssl);
+            mbedtls_net_free(pb->pal.server_fd);
+
+            mbedtls_strerror(result, reason, sizeof reason);
+
+            PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_IO_ERROR: %s\n", pb, reason);
+
             return PNR_IO_ERROR;
     }
 
