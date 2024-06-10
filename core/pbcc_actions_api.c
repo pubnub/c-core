@@ -17,6 +17,7 @@
 
 /* Maximum number of actions to return in response */
 #define MAX_ACTIONS_LIMIT 100
+#define MAX_ACTION_VALUE_LENGTH 15
 
 
 enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
@@ -71,7 +72,7 @@ enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
     }
 
     if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
-                             pb_strnlen_s(action_type, sizeof "reaction") +
+                             pb_strnlen_s(action_type, MAX_ACTION_VALUE_LENGTH) +
                              pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                              pb->user_id_len) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
@@ -81,7 +82,7 @@ enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
                          pb,
                          (unsigned long)buffer_size,
                          (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
-                                         pb_strnlen_s(action_type, sizeof "reaction") +
+                                         pb_strnlen_s(action_type, MAX_ACTION_VALUE_LENGTH) +
                                          pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                                          pb->user_id_len));
         return PNR_TX_BUFF_TOO_SMALL;
