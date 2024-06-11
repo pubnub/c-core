@@ -2,12 +2,17 @@
 
 #if PUBNUB_USE_SSL
 
+#ifndef ESP_PLATFORM
+#error "MBEDTLS is supported only on ESP32 platform. Contact PubNub support for other platforms."
+#endif
+
 #include "pbpal.h"
 #include "pubnub_netcore.h"
 #include "pubnub_pal.h"
 #include "pubnub_api_types.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_log.h"
+#include "pubnub_assert.h"
 
 #ifdef ESP_PLATFORM
 #include "esp_crt_bundle.h"

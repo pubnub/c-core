@@ -1,10 +1,14 @@
-#include "msstopwatch/msstopwatch.h"
-#include "pbpal.h"
 #include "pubnub_internal.h"
-#include "pubnub_log.h"
 
 #if PUBNUB_USE_SSL
 
+#ifndef ESP_PLATFORM
+#error "MBEDTLS is supported only on ESP32 platform. Contact PubNub support for other platforms."
+#endif
+
+#include "pbpal.h"
+#include "pubnub_log.h"
+#include "msstopwatch/msstopwatch.h"
 #include "pubnub_api_types.h"
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
@@ -13,6 +17,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <mbedtls/error.h>
 
 #ifdef ESP_PLATFORM
 #include "esp_crt_bundle.h"
@@ -55,7 +60,7 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 
 enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
 {
-    char const* reason[100] = {0};
+    char reason[100] = {0};
 
     if (pb->pal.ssl == NULL) {
         return pbpal_handle_socket_error(result, pb, file, line);
@@ -167,7 +172,6 @@ int pbpal_start_read_line(pubnub_t* pb)
 
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
-    // TODO: implement this
     PUBNUB_ASSERT(STATE_READ_LINE == pb->sock_state);
 
     for (;;) {
@@ -262,6 +266,35 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
         return PNR_INTERNAL_ERROR;
     }
 
+    for (;;) {
+        have_read = mbedtls_ssl_read(pb->pal.ssl, pb->ptr, pb->len);
+
+        if (have_read == MBEDTLS_ERR_SSL_WANT_READ || have_read == MBEDTLS_ERR_SSL_WANT_WRITE) {
+            continue;
+        }
+
+        if (have_read <= 0) {
+            return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__);
+        }
+
+        pb->ptr += have_read;
+        pb->len -= have_read;
+
+        if (0 == pb->len) {
+            pb->sock_state = STATE_NONE;
+
+            return PNR_OK;
+        }
+
+        if (pb->left == 0) {
+            PUBNUB_LOG_ERROR("pbpal_read_status(pb=%p): buffer full\n", pb);
+            pb->sock_state = STATE_NONE;
+
+            return PNR_RX_BUFF_NOT_EMPTY;
+        }
+    }
+
+    return PNR_IN_PROGRESS;
 }
 
 

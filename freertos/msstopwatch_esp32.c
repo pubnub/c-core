@@ -3,6 +3,7 @@
 #include "lib/msstopwatch/msstopwatch.h"
 #include "freertos/pbtimespec_elapsed_ms_esp32.h"
 #include "pubnub_assert.h"
+#include <sys/time.h>
 
 /** This uses our helper module that provides a monotonic
     clock like POSIX clock_gettime(CLOCK_MONOTONIC,...);
@@ -11,7 +12,7 @@
 static struct timespec msclock(void)
 {
     struct timespec ts;
-    gettimeofday(&ts, NULL);
+    gettimeofday((struct timeval*)&ts, NULL);
     
     return ts;
 }

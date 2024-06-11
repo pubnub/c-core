@@ -14,6 +14,9 @@ struct pubnub_pal {
     mbedtls_net_context* net;
     mbedtls_net_context* server_fd;
     pbmsref_t connection_timer;
+
+    //TODO: is this socket needed?
+    int socket;
 };
 
 #endif /* PUBNUB_PAL_H */

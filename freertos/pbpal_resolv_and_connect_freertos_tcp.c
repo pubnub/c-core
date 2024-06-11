@@ -21,7 +21,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 //    if (addr.sin_addr == 0) {
 //        return pbpal_resolv_failed_processing;
 //    }
-
+//
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
         return pbpal_connect_resource_failure;
