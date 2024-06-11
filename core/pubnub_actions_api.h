@@ -7,7 +7,7 @@
 
 #include "lib/pb_extern.h"
 #include "pbcc_actions_api.h"
-#include "pb_deprecated.h"
+#include "lib/pb_deprecated.h"
 
 #include <stdbool.h>
 
