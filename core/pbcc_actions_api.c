@@ -17,7 +17,7 @@
 
 /* Maximum number of actions to return in response */
 #define MAX_ACTIONS_LIMIT 100
-#define MAX_ACTION_VALUE_LENGTH 15
+#define MAX_ACTION_TYPE_LENGTH 15
 
 
 enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
