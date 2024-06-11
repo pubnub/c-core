@@ -7,7 +7,7 @@
 
 #include "pubnub_api_types.h"
 #include "pubnub_memory_block.h"
-#include "pb_deprecated.h"
+#include "lib/pb_deprecated.h"
 
 struct pbcc_context;
 
