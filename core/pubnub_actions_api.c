@@ -26,13 +26,13 @@ enum pubnub_res pubnub_add_message_action(pubnub_t *pb,
 
     switch(actype) {
     case pbactypReaction:
-        type_literal = "reaction";
+        type_literal = "\"reaction\"";
         break;
     case pbactypReceipt:
-        type_literal = "receipt";
+        type_literal = "\"receipt\"";
         break;
     case pbactypCustom:
-        type_literal = "custom";
+        type_literal = "\"custom\"";
         break;
     default:
         PUBNUB_LOG_ERROR("pubnub_add_message_action(pbcc=%p) - "

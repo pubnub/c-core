@@ -29,13 +29,13 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
 
     switch(actype) {
     case pbactypReaction:
-        type_literal = "reaction";
+        type_literal = "\"reaction\"";
         break;
     case pbactypReceipt:
-        type_literal = "receipt";
+        type_literal = "\"receipt\"";
         break;
     case pbactypCustom:
-        type_literal = "custom";
+        type_literal = "\"custom\"";
         break;
     default:
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
@@ -89,7 +89,7 @@ enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
     }
     snprintf(obj_buffer,
              buffer_size,
-             "{\"type\":\"%s\",\"value\":%s,\"user_id\":\"%s\"}",
+             "{\"type\":%s,\"value\":%s,\"user_id\":\"%s\"}",
              action_type,
              *val,
              user_id);

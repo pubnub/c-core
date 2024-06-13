@@ -55,7 +55,7 @@ PUBNUB_EXTERN PUBNUB_DEPRECATED enum pubnub_res pubnub_add_message_action(pubnub
     @param channel The channel on which action is referring to.
     @param message_timetoken The timetoken(unquoted) of a published message action is
                              applying to
-    @param action_type String describing the action type (Max 15 characters without whitespaces)
+    @param action_type Jsoned string describing the action type (Max 15 characters without whitespaces)
     @param value Json string describing the action that is to be added
     @return #PNR_STARTED on success, an error otherwise
   */
