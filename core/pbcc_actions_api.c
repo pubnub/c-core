@@ -70,6 +70,14 @@ enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
                          *val);
         return PNR_INVALID_PARAMETERS;
     }
+    if (('\"' != *action_type) || ('\"' != *(action_type + pb_strnlen_s(action_type, PUBNUB_MAX_OBJECT_LENGTH) - 1))) {
+        PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
+                         "quotation marks on value ends are missing: "
+                         "action_type = %s\n",
+                         pb,
+                         action_type);
+        return PNR_INVALID_PARAMETERS;
+    }
 
     if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
                              pb_strnlen_s(action_type, MAX_ACTION_TYPE_LENGTH) +
