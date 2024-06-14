@@ -1,7 +1,7 @@
 # CMakeLists.txt for the C-core library of Pubnub.
 cmake_minimum_required(VERSION 3.12)
 
-project(c-core VERSION 4.8.0)
+project(c-core VERSION 4.10.0)
 
 message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
 
