@@ -9,7 +9,8 @@ changelog:
       - type: feature
         text: "Added possibility to use strings in actions API."
       - type: improvement
-        text: "`pubnub_action_type` enum has been deprecated."  - date: 2024-03-26
+        text: "`pubnub_action_type` enum has been deprecated."
+  - date: 2024-03-26
     version: v4.9.1
     changes:
       - type: bug
