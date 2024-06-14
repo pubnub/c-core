@@ -7,6 +7,7 @@
 
 #include "lib/pb_extern.h"
 #include "pbcc_actions_api.h"
+#include "lib/pb_deprecated.h"
 
 #include <stdbool.h>
 
@@ -18,6 +19,12 @@
     If the transaction is finished successfully response will have 'data' field with
     added action data. If there is no data, nor error description in the response,
     response parsing function returns format error.
+    
+    @deprecated This function is deprecated. Use pubnub_add_message_action_str() instead.
+                The present declaration will be changed to the string version in the future.
+    @see pubnub_add_message_action_str()
+    @see pbcc_action_type_to_str
+
     @param pb The pubnub context. Can't be NULL
     @param channel The channel on which action is referring to.
     @param message_timetoken The timetoken(unquoted) of a published message action is
@@ -26,10 +33,36 @@
     @param value Json string describing the action that is to be added
     @return #PNR_STARTED on success, an error otherwise
   */
-PUBNUB_EXTERN enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
+PUBNUB_EXTERN PUBNUB_DEPRECATED enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
                                           char const* channel,
                                           char const* message_timetoken,
                                           enum pubnub_action_type actype,
+                                          char const* value);
+
+
+/** Adds new type of message called action as a support for user reactions on a published
+    messages.
+    Json string @p value is checked for its quotation marks at its ends. If any of the
+    quotation marks is missing function returns parameter error.
+    If the transaction is finished successfully response will have 'data' field with
+    added action data. If there is no data, nor error description in the response,
+    response parsing function returns format error.
+    
+    @deprecated This function is deprecated. Use pubnub_add_message_action_str() instead.
+    @see pubnub_add_message_action_str()
+
+    @param pb The pubnub context. Can't be NULL
+    @param channel The channel on which action is referring to.
+    @param message_timetoken The timetoken(unquoted) of a published message action is
+                             applying to
+    @param action_type Jsoned string describing the action type (Max 15 characters without whitespaces)
+    @param value Json string describing the action that is to be added
+    @return #PNR_STARTED on success, an error otherwise
+  */
+PUBNUB_EXTERN enum pubnub_res pubnub_add_message_action_str(pubnub_t* pb,
+                                          char const* channel,
+                                          char const* message_timetoken,
+                                          char const* action_type,
                                           char const* value);
 
 
