@@ -3,6 +3,13 @@ schema: 1
 version: "4.9.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-06-14
+    version: v4.10.0
+    changes:
+      - type: feature
+        text: "Added possibility to use strings in actions API."
+      - type: improvement
+        text: "`pubnub_action_type` enum has been deprecated."
   - date: 2024-03-26
     version: v4.9.1
     changes:
