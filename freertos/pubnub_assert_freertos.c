@@ -4,6 +4,7 @@
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <FreeRTOS.h>
+#include "pubnub_log.h"
 #include "task.h"
 #ifndef ESP_PLATFORM
 #include "FreeRTOS_IP.h"
@@ -33,9 +34,10 @@ void pubnub_assert_failed(char const *s, char const *file, long line)
 
 static void report(char const *s, char const *file, long line)
 {
-    // TODO: find esp logging
 #ifndef ESP_PLATFORM
     FreeRTOS_printf(("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, line));
+#else
+    PUBNUB_LOG_ERROR("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, line);
 #endif
 }
 

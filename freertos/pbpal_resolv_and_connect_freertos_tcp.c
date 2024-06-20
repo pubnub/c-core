@@ -1,8 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "lwip/dns.h"
+#include "lwip/inet.h"
+#include "lwip/ip_addr.h"
+#include "lwip/netdb.h"
 #include "pbpal.h"
 
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
+#include "pubnub_log.h"
 
 
 #define HTTP_PORT 80
@@ -17,11 +22,26 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     
     addr.sin_port = htons(HTTP_PORT);
     // TODO: how to do this on ESP?
-//    addr.sin_addr = gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
-//    if (addr.sin_addr == 0) {
-//        return pbpal_resolv_failed_processing;
-//    }
-//
+#if ESP_PLATFORM
+    PUBNUB_LOG_TRACE("pbpal_resolv_and_connect: gethostbyname(%s)\n",
+            PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
+
+    struct hostent *host = gethostbyname("www.wp.pl");
+    if (host == NULL) {
+        PUBNUB_LOG_ERROR("pbpal_resolv_and_connect: getting host failed!\n");
+        return pbpal_resolv_failed_processing;
+    }
+    addr.sin_addr = *((struct in_addr *)host->h_addr_list[0]);
+    if (addr.sin_addr.s_addr == 0) {
+        PUBNUB_LOG_ERROR("pbpal_resolv_and_connect: no address found!\n");
+        return pbpal_resolv_failed_processing;
+    }
+#else
+    addr.sin_addr = gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
+    if (addr.sin_addr == 0) {
+        return pbpal_resolv_failed_processing;
+    }
+#endif
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
         return pbpal_connect_resource_failure;
