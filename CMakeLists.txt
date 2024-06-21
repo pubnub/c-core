@@ -79,7 +79,7 @@ log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(LOG_LEVEL "TRACE" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
 
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
@@ -179,7 +179,7 @@ if(UNIX OR WIN32 OR WIN64 OR MSVC)
 else()
     set(CORE_SOURCEFILES
         ${CORE_SOURCEFILES}
-        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_static.c)
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c)
 endif()
 
 if(NOT ${OPENSSL})
@@ -228,7 +228,9 @@ else()
         ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_generate_uuid_freertos.c
         ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_version_freertos.c)
     if(ESP_PLATFORM)
-        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/freertos/msstopwatch_esp32.c)
+        set(OS_SOURCEFILES ${OS_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/freertos/msstopwatch_esp32.c
+            ${CMAKE_CURRENT_LIST_DIR}/freertos/pbtimespec_elapsed_ms_esp32.c)
     endif()
 endif()
 
@@ -452,7 +454,7 @@ elseif(${MBEDTLS})
         # TODO: Add mbedTLS support for generic builds
     endif()
 
-    set(SSL_LINK_LIBRARIES 
+    set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES}
         ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_mbedtls.c
         ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_connect_mbedtls.c)
 else()
