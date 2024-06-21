@@ -1,3 +1,5 @@
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/ssl.h"
 #include "pubnub_internal.h"
 
 #if PUBNUB_USE_SSL
@@ -31,6 +33,7 @@ static void buffer_setup(pubnub_t* pb);
 
 void pbpal_init(pubnub_t* pb)
 {
+    PUBNUB_LOG_DEBUG("pbpal_init()\n");
     memset(&pb->pal, 0, sizeof pb->pal);
 
     pbntf_setup();
@@ -42,6 +45,7 @@ void pbpal_init(pubnub_t* pb)
 int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
+    PUBNUB_LOG_DEBUG("pbpal_send(pb=%p, data=%p, n=%zu)\n", pb, data, n);
 
     pb->ptr = (uint8_t*)data;
     pb->left = n;
@@ -61,6 +65,8 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
 {
     char reason[100] = {0};
+
+    PUBNUB_LOG_TRACE("pbpal_handle_socket_condition(pb=%p, result=%d, file=%s, line=%d)\n", pb, result, file, line);
 
     if (pb->pal.ssl == NULL) {
         return pbpal_handle_socket_error(result, pb, file, line);
@@ -115,6 +121,8 @@ int pbpal_send_status(pubnub_t* pb)
 {
     int result = 0;
 
+    PUBNUB_LOG_TRACE("pbpal_send_status(pb=%p)\n", pb);
+
     if (0 == pb->len) {
         PUBNUB_LOG_TRACE("pb=%p pb->len=0, nothing to send\n", pb);
         return 0;
@@ -149,6 +157,7 @@ int pbpal_send_status(pubnub_t* pb)
 int pbpal_start_read_line(pubnub_t* pb)
 {
     unsigned distance;
+    PUBNUB_LOG_TRACE("pbpal_start_read_line(pb=%p)\n", pb);
 
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
@@ -172,6 +181,7 @@ int pbpal_start_read_line(pubnub_t* pb)
 
 enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
+    PUBNUB_LOG_TRACE("pbpal_line_read_status(pb=%p)\n", pb);
     PUBNUB_ASSERT(STATE_READ_LINE == pb->sock_state);
 
     for (;;) {
@@ -229,6 +239,7 @@ int pbpal_read_len(pubnub_t* pb)
 int pbpal_start_read(pubnub_t* pb, size_t n)
 {
     unsigned distance;
+    PUBNUB_LOG_TRACE("pbpal_start_read(pb=%p, n=%zu)\n", pb, n);
 
     PUBNUB_ASSERT_UINT_OPT(n, >, 0);
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
@@ -258,6 +269,7 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
 enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
     int have_read;
+    PUBNUB_LOG_TRACE("pbpal_read_status(pb=%p)\n", pb);
 
     PUBNUB_ASSERT(STATE_READ == pb->sock_state);
 
@@ -312,6 +324,7 @@ void pbpal_forget(pubnub_t* pb)
 
 int pbpal_close(pubnub_t* pb)
 {
+    PUBNUB_LOG_TRACE("pbpal_close(pb=%p)\n", pb);
     pb->unreadlen = 0;
 
     if (pb->pal.ssl != NULL) {
@@ -319,6 +332,18 @@ int pbpal_close(pubnub_t* pb)
         mbedtls_ssl_session_reset(pb->pal.ssl);
         mbedtls_ssl_free(pb->pal.ssl);
         pb->pal.ssl = NULL;
+
+        mbedtls_ssl_config_free(pb->pal.ssl_config);
+        pb->pal.ssl_config = NULL;
+
+        mbedtls_net_free(pb->pal.server_fd);
+        pb->pal.server_fd = NULL;
+
+        mbedtls_net_free(pb->pal.net);
+        pb->pal.net = NULL;
+
+        mbedtls_x509_crt_free(pb->pal.ca_certificates);
+        pb->pal.ca_certificates = NULL;
     }
 
     PUBNUB_LOG_TRACE("pb=%p: pbpal_close() returning 0\n", pb);
@@ -329,6 +354,7 @@ int pbpal_close(pubnub_t* pb)
 
 void pbpal_free(pubnub_t* pb)
 {
+    PUBNUB_LOG_TRACE("pbpal_free(pb=%p)\n", pb);
     if (NULL != pb->pal.ssl) {
         mbedtls_ssl_free(pb->pal.ssl);
         pb->pal.ssl = NULL;
@@ -355,8 +381,10 @@ void pbpal_free(pubnub_t* pb)
 static void pbntf_setup(void)
 {
     static bool init_done = false;
+    PUBNUB_LOG_TRACE("pbntf_setup()\n");
 
     if (init_done) {
+        PUBNUB_LOG_TRACE("pbntf_setup() already done\n");
         return;
     }
 
