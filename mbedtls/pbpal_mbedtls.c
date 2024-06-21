@@ -157,7 +157,6 @@ int pbpal_send_status(pubnub_t* pb)
 int pbpal_start_read_line(pubnub_t* pb)
 {
     unsigned distance;
-    PUBNUB_LOG_TRACE("pbpal_start_read_line(pb=%p)\n", pb);
 
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
@@ -187,24 +186,31 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
     for (;;) {
         if (pb->unreadlen == 0) {
             PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
-                              <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+                              == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
 
             int result = mbedtls_ssl_read(pb->pal.ssl, pb->ptr, pb->left);
-
-            if (result == MBEDTLS_ERR_SSL_WANT_READ || result == MBEDTLS_ERR_SSL_WANT_WRITE) {
-                continue;
-            }
 
             if (result <= 0) {
                 return pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
             }
 
+            PUBNUB_ASSERT_OPT(result <= pb->left);
+            PUBNUB_LOG_TRACE("pb=%p have new data of length=%d: %.*s\n",
+                             pb,
+                             result,
+                             result,
+                             pb->ptr);
+
             pb->unreadlen = result;
+            pb->left -= result;
         }
 
         while (pb->unreadlen > 0) {
-            char c = *pb->ptr++;
+            char c;
+
             --pb->unreadlen;
+
+            c = *pb->ptr++;
             if (c == '\n') {
                 WATCH_USHORT(pb->unreadlen);
                 pb->sock_state = STATE_NONE;
@@ -279,30 +285,33 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
     }
 
     for (;;) {
-        have_read = mbedtls_ssl_read(pb->pal.ssl, pb->ptr, pb->len);
+        if (0 == pb->unreadlen) {
+            unsigned to_read = pb->len ;
+            if (to_read > pb->left) {
+                to_read = pb->left;
+            }
+            PUBNUB_ASSERT_OPT(to_read > 0);
 
-        if (have_read == MBEDTLS_ERR_SSL_WANT_READ || have_read == MBEDTLS_ERR_SSL_WANT_WRITE) {
-            continue;
+            have_read = mbedtls_ssl_read(pb->pal.ssl, pb->ptr, to_read);
+
+            if (have_read <= 0) {
+                return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__);
+            }
+
+            PUBNUB_ASSERT_OPT(pb->left >= have_read);
+            pb->left -= have_read;
+        } else {
+            have_read = (pb->unreadlen > pb->len) ? pb->len : pb->unreadlen;
+            pb->unreadlen -= have_read;
         }
 
-        if (have_read <= 0) {
-            return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__);
-        }
-
-        pb->ptr += have_read;
         pb->len -= have_read;
+        pb->ptr += have_read;
 
-        if (0 == pb->len) {
+        if ((0 == pb->len) || (0 == pb->left)) {
             pb->sock_state = STATE_NONE;
 
             return PNR_OK;
-        }
-
-        if (pb->left == 0) {
-            PUBNUB_LOG_ERROR("pbpal_read_status(pb=%p): buffer full\n", pb);
-            pb->sock_state = STATE_NONE;
-
-            return PNR_RX_BUFF_NOT_EMPTY;
         }
     }
 
@@ -312,7 +321,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
 
 bool pbpal_closed(pubnub_t* pb)
 {
-    return (pb->pal.ssl == NULL);
+    return (pb->pal.ssl == NULL) && (pb->pal.socket == SOCKET_INVALID);
 }
 
 
