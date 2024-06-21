@@ -108,13 +108,27 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     alloc_setup(pb);
 
 // TODO: Think about pubnub_config.h and where or which to use
-//    PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
+    PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     PUBNUB_LOG_TRACE("pbpal_start_tls(pb=%p) socket=%d\n", pb, pb->pal.socket);
 
     mbedtls_ssl_init(pal->ssl);
-    PUBNUB_LOG_TRACE("mbedtls_ssl_init() returned\n");
     mbedtls_ssl_config_init(pal->ssl_config);
-    PUBNUB_LOG_TRACE("mbedtls_ssl_config_init() returned\n");
+    mbedtls_entropy_init(pal->entropy);
+    mbedtls_ctr_drbg_init(pal->ctr_drbg);
+    mbedtls_x509_crt_init(pal->ca_certificates);
+    mbedtls_net_init(pal->net);
+
+    // TODO: settable seed
+    if (0 != mbedtls_ctr_drbg_seed(pal->ctr_drbg, mbedtls_entropy_func, pal->entropy, (const unsigned char*) "pubnub", 6)) {
+        PUBNUB_LOG_ERROR("Failed to seed random number generator\n");
+        return pbtlsFailed;
+    }
+
+    if (0 != mbedtls_x509_crt_parse(pal->ca_certificates, (const unsigned char*)pubnub_cert_Starfield, sizeof(pubnub_cert_Starfield))
+            && 0 != mbedtls_x509_crt_parse(pal->ca_certificates, (const unsigned char*)pubnub_cert_GlobalSign, sizeof(pubnub_cert_GlobalSign))) {
+        PUBNUB_LOG_ERROR("Failed to parse CA certificate\n");
+        return pbtlsFailed;
+    }
 
 #ifndef ESP_PLATFORM
 #error "MBedTLS has been implemented only for ESP32 platform. Contact PubNub support for an implementation on the other ones."
@@ -123,14 +137,12 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         PUBNUB_LOG_ERROR("Failed to attach CRT bundle\n");
         return pbtlsFailed;
     }
-    PUBNUB_LOG_TRACE("esp_crt_bundle_attach() returned\n");
 #endif
 
     if (mbedtls_ssl_set_hostname(pal->ssl, get_origin(pb)) != 0) {
         PUBNUB_LOG_ERROR("Failed to set hostname\n");
         return pbtlsFailed;
     }
-    PUBNUB_LOG_TRACE("mbedtls_ssl_set_hostname() returned\n");
 
     if (mbedtls_ssl_config_defaults(
                 pal->ssl_config,
@@ -141,20 +153,17 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         PUBNUB_LOG_ERROR("Failed to set SSL config defaults\n");
         return pbtlsFailed;
     }
-    PUBNUB_LOG_TRACE("mbedtls_ssl_config_defaults() returned\n");
 
     mbedtls_ssl_conf_authmode(pal->ssl_config, MBEDTLS_SSL_VERIFY_REQUIRED);
-    PUBNUB_LOG_TRACE("mbedtls_ssl_conf_authmode() returned\n");
     mbedtls_ssl_conf_ca_chain(pal->ssl_config, pal->ca_certificates, NULL);
-    PUBNUB_LOG_TRACE("mbedtls_ssl_conf_ca_chain() returned\n");
+
+    mbedtls_ssl_conf_rng(pal->ssl_config, mbedtls_ctr_drbg_random, pal->ctr_drbg );
+    mbedtls_ssl_conf_dbg(pal->ssl_config, NULL, NULL);
 
     if (mbedtls_ssl_setup(pal->ssl, pal->ssl_config) != 0) {
         PUBNUB_LOG_ERROR("Failed to setup SSL\n");
         return pbtlsFailed;
     }
-    PUBNUB_LOG_TRACE("mbedtls_ssl_setup() returned\n");
-
-    mbedtls_net_init(pb->pal.net);
 
     PUBNUB_LOG_DEBUG("Connecting to %s:%s...\n", get_origin(pb), PUBNUB_PORT);
     if (0 != mbedtls_net_connect(pb->pal.net, get_origin(pb), PUBNUB_PORT, MBEDTLS_NET_PROTO_TCP)) {
@@ -164,7 +173,6 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 
     PUBNUB_LOG_DEBUG("Connected to %s:%s\n", get_origin(pb), PUBNUB_PORT);
 
-    // TODO: HOW TO SET PEM CERTS?
     mbedtls_ssl_set_bio(pal->ssl, pb->pal.net, mbedtls_net_send, mbedtls_net_recv, NULL);
 
     return pbpal_check_tls(pb);
@@ -230,6 +238,18 @@ static void alloc_setup(pubnub_t* pb)
     pb->pal.server_fd = (mbedtls_net_context*)malloc(sizeof(mbedtls_net_context));
     if (pb->pal.server_fd == NULL) {
         PUBNUB_LOG_ERROR("Failed to allocate memory for mbedtls_net_context\n");
+        return;
+    }
+
+    pb->pal.entropy = (mbedtls_entropy_context*)malloc(sizeof(mbedtls_entropy_context));
+    if (pb->pal.entropy == NULL) {
+        PUBNUB_LOG_ERROR("Failed to allocate memory for mbedtls_entropy_context\n");
+        return;
+    }
+
+    pb->pal.ctr_drbg = (mbedtls_ctr_drbg_context*)malloc(sizeof(mbedtls_ctr_drbg_context));
+    if (pb->pal.ctr_drbg == NULL) {
+        PUBNUB_LOG_ERROR("Failed to allocate memory for mbedtls_ctr_drbg_context\n");
         return;
     }
 }

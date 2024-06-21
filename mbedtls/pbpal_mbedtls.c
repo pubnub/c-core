@@ -48,7 +48,7 @@ int pbpal_send(pubnub_t* pb, void const* data, size_t n)
     PUBNUB_LOG_DEBUG("pbpal_send(pb=%p, data=%p, n=%zu)\n", pb, data, n);
 
     pb->ptr = (uint8_t*)data;
-    pb->left = n;
+    pb->len = n;
     pb->sock_state = STATE_SENDING_DATA;
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 
@@ -344,6 +344,12 @@ int pbpal_close(pubnub_t* pb)
 
         mbedtls_x509_crt_free(pb->pal.ca_certificates);
         pb->pal.ca_certificates = NULL;
+
+        mbedtls_entropy_free(pb->pal.entropy);
+        pb->pal.entropy = NULL;
+
+        mbedtls_ctr_drbg_free(pb->pal.ctr_drbg);
+        pb->pal.ctr_drbg = NULL;
     }
 
     PUBNUB_LOG_TRACE("pb=%p: pbpal_close() returning 0\n", pb);
