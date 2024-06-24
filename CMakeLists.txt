@@ -554,8 +554,10 @@ else()
 
 endif()
 
-string(STRIP ${LDLIBS} LDLIBS)
-target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
+if (NOT ESP_PLATFORM)
+    string(STRIP ${LDLIBS} LDLIBS)
+    target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
+endif()
 
 # TODO: C++ support for ESP32 platform
 if (WITH_CPP AND ESP_PLATFORM)
