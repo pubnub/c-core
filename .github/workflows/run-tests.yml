@@ -13,11 +13,16 @@ defaults:
 jobs:
   tests:
     name: Integration and Unit tests
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: ${{ matrix.runner.group }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        runner:
+          - os: ubuntu-latest
+            group: Default
+          - os: macos-13
+            group: macos-gh
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -31,7 +36,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
       - name: Identify target test runner OS
-        run: echo "test_runner_os=$(echo "${{ matrix.os }}" | cut -d"-" -f1)" >> $GITHUB_ENV
+        run: echo "test_runner_os=$(echo "${{ matrix.runner.os }}" | cut -d"-" -f1)" >> $GITHUB_ENV
       - name: Build and run tests
         uses: ./.github/workflows/composite/unit-integration-test-runner
         with:
@@ -44,7 +49,8 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   acceptance-tests:
     name: Acceptance tests
-    runs-on: ubuntu-latest
+    runs-on:
+      group: Default
     steps:
       - name: Setup environment
         shell: bash
@@ -52,11 +58,11 @@ jobs:
           sudo apt-get install -y ninja-build libboost-all-dev libssl-dev
           sudo gem install cucumber
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout mock-server action
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
@@ -68,7 +74,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - name: Pull Cucumber cache
         id: cucumber-cpp
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             cucumber-cpp
@@ -77,7 +83,7 @@ jobs:
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cucumber/cucumber-cpp
           ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961
@@ -115,7 +121,7 @@ jobs:
           ls -la results
       - name: Expose acceptance tests reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: acceptance-test-reports
           path: ./results/**
@@ -125,8 +131,9 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
-    runs-on: ubuntu-latest
     needs: [tests, acceptance-tests]
+    runs-on:
+      group: Default
     steps:
       - name: Tests summary
         run: echo -e "\033[38;2;95;215;0m\033[1mAll test successfully passed"

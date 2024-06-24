@@ -17,12 +17,40 @@
 #include <string.h>
 
 
-enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
+enum pubnub_res pubnub_add_message_action(pubnub_t *pb,
+                                  const char *channel,
+                                  const char *message_timetoken,
+                                  enum pubnub_action_type actype,
+                                  const char *value) {
+    char const* type_literal;
+
+    switch(actype) {
+    case pbactypReaction:
+        type_literal = "\"reaction\"";
+        break;
+    case pbactypReceipt:
+        type_literal = "\"receipt\"";
+        break;
+    case pbactypCustom:
+        type_literal = "\"custom\"";
+        break;
+    default:
+        PUBNUB_LOG_ERROR("pubnub_add_message_action(pbcc=%p) - "
+                         "unknown action type = %d\n",
+                         pb,
+                         actype);
+        return PNR_INVALID_PARAMETERS;
+    }
+
+    return pubnub_add_message_action_str(pb, channel, message_timetoken, type_literal, value);
+}
+
+
+enum pubnub_res pubnub_add_message_action_str(pubnub_t* pb,
                                   char const* channel,
                                   char const* message_timetoken,
-                                  enum pubnub_action_type actype,
-                                  char const* value)
-{
+                                  char const* actype,
+                                  char const* value) {
     enum pubnub_res rslt;
     char obj_buffer[PUBNUB_BUF_MAXLEN];
 
@@ -34,7 +62,7 @@ enum pubnub_res pubnub_add_message_action(pubnub_t* pb,
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
-    rslt = pbcc_form_the_action_object(&pb->core,
+    rslt = pbcc_form_the_action_object_str(&pb->core,
                                        obj_buffer,
                                        sizeof obj_buffer,
                                        actype,

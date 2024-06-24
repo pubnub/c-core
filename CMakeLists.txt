@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 # Project name and version for casual builds
 # For ESP32 builds it is considered as a IDF component
 if(NOT ESP_PLATFORM)
-    project(pubnub VERSION 4.8.0)
+    project(pubnub VERSION 4.10.0)
 endif()
 
 message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
@@ -553,6 +553,9 @@ else()
 
 
 endif()
+
+string(STRIP ${LDLIBS} LDLIBS)
+target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
 
 # TODO: C++ support for ESP32 platform
 if (WITH_CPP AND ESP_PLATFORM)

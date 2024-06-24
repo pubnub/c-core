@@ -7,6 +7,7 @@
 
 #include "pubnub_api_types.h"
 #include "pubnub_memory_block.h"
+#include "lib/pb_deprecated.h"
 
 struct pbcc_context;
 
@@ -25,13 +26,29 @@ enum pubnub_action_type {
 };
 
 /** Forms the action object to be sent in 'pubnub_add_action' request body.
+    
+    @deprecated This function is deprecated. Use pbcc_form_the_action_object_str() instead.
+                The present declaration will be changed to the string version in the future.
+    @see pbcc_form_the_action_object_str
+
     @return #PNR_OK on success, an error otherwise
   */
-enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
+PUBNUB_DEPRECATED enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                                             char* obj_buffer,
                                             size_t buffer_size,
                                             enum pubnub_action_type actype,
                                             char const** json);
+
+
+/** Forms the action object to be sent in 'pubnub_add_action' request body.
+    @return #PNR_OK on success, an error otherwise
+  */
+enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
+                                            char* obj_buffer,
+                                            size_t buffer_size,
+                                            const char* action_type,
+                                            char const** json);
+
 
 /** Prepares the 'add_action' transaction, mostly by
     formatting the URI of the HTTP request.

@@ -7,6 +7,6 @@
     { "pattern": "#define PUBNUB_SDK_VERSION \"(.+)\"$", "cleared": true }
   ],
   "CMakeLists.txt": [
-    { "pattern": "project(c-core VERSION ((.+))$", "cleared": true }
+    { "pattern": "project\\(c-core VERSION (.+)\\)$", "cleared": true }
   ]
 }

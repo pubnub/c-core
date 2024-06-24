@@ -1,3 +1,14 @@
+## v4.10.0
+June 14 2024
+
+#### Added
+- Added possibility to use strings in actions API.
+
+#### Modified
+- `pubnub_action_type` enum has been deprecated.
+
+
+
 ## v4.9.1
 March 26 2024
 

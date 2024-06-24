@@ -17,16 +17,44 @@
 
 /* Maximum number of actions to return in response */
 #define MAX_ACTIONS_LIMIT 100
+#define MAX_ACTION_TYPE_LENGTH 15
 
 
 enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                                             char* obj_buffer,
                                             size_t buffer_size,
                                             enum pubnub_action_type actype,
-                                            char const** val)
-{
-    char const* user_id = pbcc_user_id_get(pb);
+                                            char const** val) {
     char const* type_literal;
+
+    switch(actype) {
+    case pbactypReaction:
+        type_literal = "\"reaction\"";
+        break;
+    case pbactypReceipt:
+        type_literal = "\"receipt\"";
+        break;
+    case pbactypCustom:
+        type_literal = "\"custom\"";
+        break;
+    default:
+        PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
+                         "unknown action type = %d\n",
+                         pb,
+                         actype);
+        return PNR_INVALID_PARAMETERS;
+    }
+
+    return pbcc_form_the_action_object_str(pb, obj_buffer, buffer_size, type_literal, val);
+}
+
+
+enum pubnub_res pbcc_form_the_action_object_str(struct pbcc_context* pb,
+                                            char* obj_buffer,
+                                            size_t buffer_size,
+                                            char const* action_type,
+                                            char const** val) {
+    char const* user_id = pbcc_user_id_get(pb);
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
 
@@ -42,25 +70,17 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                          *val);
         return PNR_INVALID_PARAMETERS;
     }
-    switch(actype) {
-    case pbactypReaction:
-        type_literal = "reaction";
-        break;
-    case pbactypReceipt:
-        type_literal = "receipt";
-        break;
-    case pbactypCustom:
-        type_literal = "custom";
-        break;
-    default:
+    if (('\"' != *action_type) || ('\"' != *(action_type + pb_strnlen_s(action_type, MAX_ACTION_TYPE_LENGTH) - 1))) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
-                         "unknown action type = %d\n",
+                         "quotation marks on action type ends are missing: "
+                         "action_type = %s\n",
                          pb,
-                         actype);
+                         action_type);
         return PNR_INVALID_PARAMETERS;
     }
+
     if (buffer_size < sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
-                             pb_strnlen_s(type_literal, sizeof "reaction") +
+                             pb_strnlen_s(action_type, MAX_ACTION_TYPE_LENGTH) +
                              pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                              pb->user_id_len) {
         PUBNUB_LOG_ERROR("pbcc_form_the_action_object(pbcc=%p) - "
@@ -70,15 +90,15 @@ enum pubnub_res pbcc_form_the_action_object(struct pbcc_context* pb,
                          pb,
                          (unsigned long)buffer_size,
                          (unsigned long)(sizeof("{\"type\":\"\",\"value\":,\"user_id\":\"\"}") +
-                                         pb_strnlen_s(type_literal, sizeof "reaction") +
+                                         pb_strnlen_s(action_type, MAX_ACTION_TYPE_LENGTH) +
                                          pb_strnlen_s(*val, PUBNUB_MAX_OBJECT_LENGTH) +
                                          pb->user_id_len));
         return PNR_TX_BUFF_TOO_SMALL;
     }
     snprintf(obj_buffer,
              buffer_size,
-             "{\"type\":\"%s\",\"value\":%s,\"user_id\":\"%s\"}",
-             type_literal,
+             "{\"type\":%s,\"value\":%s,\"user_id\":\"%s\"}",
+             action_type,
              *val,
              user_id);
     *val = obj_buffer;
