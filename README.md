@@ -74,7 +74,7 @@ The directories of the library repository are:
 
 - `qt`: Modules, Qt projects and examples for Qt
 
-- `freertos` : Modules and Makefile for the FreeRTOS
+- `freertos` : Modules and Makefile for the FreeRTOS and ESP32 platforms
 
 - `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
 
