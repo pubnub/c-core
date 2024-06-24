@@ -80,7 +80,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
 #endif
 
     if (filter_expr) { ADD_URL_PARAM(qparam, filter-expr, filter_expr); }
-    if (heartbeat) { ADD_URL_PARAM_SIZET(qparam, heartbeat, (unsigned long)*heartbeat); }
+    if (heartbeat) { ADD_URL_PARAM_SIZET(qparam, heartbeat, (size_t)*heartbeat); }
     
 #if PUBNUB_CRYPTO_API
   SORT_URL_PARAMETERS(qparam);

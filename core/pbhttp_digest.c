@@ -267,7 +267,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context* ctx,
     if (pbhtdigqopNone != ctx->qop) {
         char const* qop_str = pbhttp_digest_qop2str(ctx->qop);
         char        nonce_count_str[9];
-        snprintf(nonce_count_str, sizeof nonce_count_str, "%08x", ctx->nc);
+        snprintf(nonce_count_str, sizeof nonce_count_str, "%08lx", (long unsigned int)ctx->nc);
         pbmd5_update(&md5, ":", 1);
         pbmd5_update(&md5, nonce_count_str, sizeof nonce_count_str - 1);
         pbmd5_update(&md5, ":", 1);
@@ -302,7 +302,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context* ctx,
             snprintf(buf->ptr,
                      buf->size,
                      "username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", "
-                     "cnonce=\"%s\", nc=\"%08x\", qop=\"%s\", response=\"%s\""
+                     "cnonce=\"%s\", nc=\"%08lx\", qop=\"%s\", response=\"%s\""
                      "%s%s"
                      "%s%s",
                      username,
@@ -310,7 +310,7 @@ int pbhttp_digest_prep_header_to_send(struct pbhttp_digest_context* ctx,
                      ctx->nonce,
                      uri,
                      ctx->client_nonce,
-                     ctx->nc,
+                     (long unsigned int)ctx->nc,
                      pbhttp_digest_qop2str(ctx->qop),
                      response,
                      (ctx->opaque[0] == '\0' ? "" : ", opaque="),

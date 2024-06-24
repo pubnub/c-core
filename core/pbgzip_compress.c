@@ -128,7 +128,7 @@ enum pubnub_res pbgzip_compress(pubnub_t* pb, char const* message)
     /* flags: no file_name, no f_extras, no f_comment, no f_hcrc */
     memset(data + 3, '\0', 7);
     size = strlen(message);
-    PUBNUB_LOG_TRACE("pbgzip_compress(pb=%p) - Length before compression:%lu bytes\n", pb, size);
+    PUBNUB_LOG_TRACE("pbgzip_compress(pb=%p) - Length before compression:%lu bytes\n", pb, (long unsigned int)size);
 
     return deflate_total_to_context_buffer(pb, message, size);
 }
