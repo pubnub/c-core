@@ -18,8 +18,6 @@ struct pubnub_pal {
     mbedtls_entropy_context* entropy;
     mbedtls_ctr_drbg_context* ctr_drbg;
     pbmsref_t connection_timer;
-
-    //TODO: is this socket needed?
     int socket;
 };
 

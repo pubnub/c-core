@@ -161,7 +161,6 @@
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
 
-
 #ifndef PUBNUB_USE_SSL
 /** If true (!=0), will enable SSL/TLS support.  If false (==0), will
     disable SSL/TLS support.  If not defined, will enable SSL/TLS

@@ -22,7 +22,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND)  || (pb->state == PBS_WAIT_DNS_RCV));
     
     addr.sin_port = htons(HTTP_PORT);
-    // TODO: how to do this on ESP?
+
 #if ESP_PLATFORM
     PUBNUB_LOG_TRACE("pbpal_resolv_and_connect: gethostbyname(%s)\n",
             PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
@@ -45,6 +45,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         return pbpal_resolv_failed_processing;
     }
 #endif
+
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
         return pbpal_connect_resource_failure;

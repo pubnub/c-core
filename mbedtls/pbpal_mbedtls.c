@@ -128,13 +128,18 @@ int pbpal_send_status(pubnub_t* pb)
         return 0;
     }
 
+    PUBNUB_LOG_TRACE("STATE = %d\n", pb->sock_state);
+    PUBNUB_LOG_TRACE("is sending %d\n", pb->sock_state == STATE_SENDING_DATA);
     PUBNUB_ASSERT(pb->sock_state == STATE_SENDING_DATA);
 
+    PUBNUB_LOG_TRACE("check for null");
     if (NULL == pb->pal.ssl) {
         PUBNUB_LOG_ERROR("pbpal_send_status(pb=%p) called with NULL SSL context\n", pb);
         return -1;
     }
+    PUBNUB_LOG_TRACE("not a null");
     
+    PUBNUB_LOG_TRACE("will write...");
     if (0 >= (result = mbedtls_ssl_write(pb->pal.ssl, pb->ptr, pb->len))) {
         result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__);
     } else {
@@ -143,12 +148,14 @@ int pbpal_send_status(pubnub_t* pb)
         pb->len -= result;
         result = (0 == pb->len) ? 0 : +1;
     }
+    PUBNUB_LOG_TRACE("written");
 
     if (0 >= result) {
         pb->sock_state = STATE_NONE;
         pb->unreadlen = 0;
         pb->ptr = (uint8_t*)pb->core.http_buf;
     }
+    PUBNUB_LOG_TRACE("sent");
  
     return result;
 }
@@ -338,27 +345,36 @@ int pbpal_close(pubnub_t* pb)
 
     if (pb->pal.ssl != NULL) {
         mbedtls_ssl_close_notify(pb->pal.ssl);
+        PUBNUB_LOG_TRACE("pb=%p: SSL session closed\n", pb);
         mbedtls_ssl_session_reset(pb->pal.ssl);
+        PUBNUB_LOG_TRACE("pb=%p: SSL reset\n", pb);
         mbedtls_ssl_free(pb->pal.ssl);
         pb->pal.ssl = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: SSL context freed\n", pb);
 
         mbedtls_ssl_config_free(pb->pal.ssl_config);
         pb->pal.ssl_config = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: SSL config freed\n", pb);
 
         mbedtls_net_free(pb->pal.server_fd);
         pb->pal.server_fd = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: server_fd freed\n", pb);
 
         mbedtls_net_free(pb->pal.net);
         pb->pal.net = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: net freed\n", pb);
 
         mbedtls_x509_crt_free(pb->pal.ca_certificates);
         pb->pal.ca_certificates = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: ca_certificates freed\n", pb);
 
         mbedtls_entropy_free(pb->pal.entropy);
         pb->pal.entropy = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: entropy freed\n", pb);
 
         mbedtls_ctr_drbg_free(pb->pal.ctr_drbg);
         pb->pal.ctr_drbg = NULL;
+        PUBNUB_LOG_TRACE("pb=%p: ctr_drbg freed\n", pb);
     }
 
     PUBNUB_LOG_TRACE("pb=%p: pbpal_close() returning 0\n", pb);

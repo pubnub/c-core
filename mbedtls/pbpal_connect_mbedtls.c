@@ -95,8 +95,6 @@ static const char* get_origin(pubnub_t* pb)
 
 #define PUBNUB_PORT "443"
 
-// TODO: https://github.com/espressif/esp-idf/blob/v5.2.1/examples/protocols/https_mbedtls/main/https_mbedtls_example_main.c 
-// reference for mbedtls usage
 enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 {
     struct pubnub_pal* pal = &pb->pal;
@@ -107,7 +105,6 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 
     alloc_setup(pb);
 
-// TODO: Think about pubnub_config.h and where or which to use
     PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     PUBNUB_LOG_TRACE("pbpal_start_tls(pb=%p) socket=%d\n", pb, pb->pal.socket);
 

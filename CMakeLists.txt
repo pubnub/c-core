@@ -554,7 +554,11 @@ else()
 
 endif()
 
-# TODO: Check if CPP is supported on ESP32
+# TODO: C++ support for ESP32 platform
+if (WITH_CPP AND ESP_PLATFORM)
+    message(FATAL_ERROR "C++ support is not available for ESP32 platform!")
+endif()
+
 if (WITH_CPP AND NOT ESP_PLATFORM)
     # TODO: Tests
     # fntest/pubnub_fntest_medium.cpp
