@@ -775,6 +775,12 @@ supported-platforms:
     platforms:
       - mBed 2 is supported.
       - Newer versions should work, but are not supported out of the box.
+  -
+    version: PubNub ESP32 SDK 
+    platforms:
+      - ESP-IDF 5.2.1 is supported 
+      - Newer versions should work, but are not supported out of the box.
+
 sdks:
   -
     full-name: PubNub POSIX C SDK
