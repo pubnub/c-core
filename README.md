@@ -34,6 +34,8 @@ cmake .. -G "NMake Makefiles"
 nmake 
 ```
 
+- for other platforms you can search for information in [FreeRTOS](freertos/README.md) or [QT](qt/README.md) READMEs.
+
 There are several options to be selected via switches (using GUI) or by using command line.
 ```sh 
 cmake .. -DOPENSSL=ON -DEXAMPLES=ON <etc...>
