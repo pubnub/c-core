@@ -199,8 +199,7 @@ enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id)
             pb->user_id_len = 0;
             return PNR_OUT_OF_MEMORY;
         }
-        strncpy(pb->user_id, user_id, pb->user_id_len);
-        pb->user_id[pb->user_id_len] = '\0';
+        strcpy(pb->user_id, user_id);
     }
     return PNR_OK;
 }
