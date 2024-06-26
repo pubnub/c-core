@@ -33,7 +33,9 @@ void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int lin
     if (pb != NULL) {
 #if PUBNUB_BLOCKING_IO_SETTABLE
         PUBNUB_LOG_DEBUG(" use_blocking_io=%d\n", (int)pb->options.use_blocking_io);
-#endif
+#else
+        PUBNUB_LOG_DEBUG("\n");
+#endif // PUBNUB_BLOCKING_IO_SETTABLE
     }
     else {
         PUBNUB_LOG_DEBUG("\n");
