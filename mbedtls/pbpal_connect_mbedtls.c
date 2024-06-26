@@ -83,16 +83,6 @@ static char pubnub_cert_GlobalSign[] =
 
 static void alloc_setup(pubnub_t* pb);
 
-static const char* get_origin(pubnub_t* pb)
-{
-#ifdef PUBNUB_ORIGIN_SETTABLE
-    return pb->origin;
-#else
-    PUBNUB_UNUSED(pb);
-    return PUBNUB_ORIGIN;
-#endif
-}
-
 #define PUBNUB_PORT "443"
 
 enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
@@ -136,7 +126,7 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     }
 #endif
 
-    if (mbedtls_ssl_set_hostname(pal->ssl, get_origin(pb)) != 0) {
+    if (mbedtls_ssl_set_hostname(pal->ssl, PUBNUB_ORIGIN) != 0) {
         PUBNUB_LOG_ERROR("Failed to set hostname\n");
         return pbtlsFailed;
     }
@@ -162,13 +152,13 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         return pbtlsFailed;
     }
 
-    PUBNUB_LOG_DEBUG("Connecting to %s:%s...\n", get_origin(pb), PUBNUB_PORT);
-    if (0 != mbedtls_net_connect(pb->pal.net, get_origin(pb), PUBNUB_PORT, MBEDTLS_NET_PROTO_TCP)) {
-        PUBNUB_LOG_ERROR("Failed to connect to %s:%s\n", get_origin(pb), PUBNUB_PORT);
+    PUBNUB_LOG_DEBUG("Connecting to %s:%s...\n", PUBNUB_ORIGIN, PUBNUB_PORT);
+    if (0 != mbedtls_net_connect(pb->pal.net, PUBNUB_ORIGIN, PUBNUB_PORT, MBEDTLS_NET_PROTO_TCP)) {
+        PUBNUB_LOG_ERROR("Failed to connect to %s:%s\n", PUBNUB_ORIGIN, PUBNUB_PORT);
         return pbtlsFailed;
     }
 
-    PUBNUB_LOG_DEBUG("Connected to %s:%s\n", get_origin(pb), PUBNUB_PORT);
+    PUBNUB_LOG_DEBUG("Connected to %s:%s\n", PUBNUB_ORIGIN, PUBNUB_PORT);
 
     mbedtls_ssl_set_bio(pal->ssl, pb->pal.net, mbedtls_net_send, mbedtls_net_recv, NULL);
 

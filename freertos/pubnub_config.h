@@ -70,7 +70,7 @@
     in milliseconds. Timeout duration in the context can be changed by the 
     user after initialization.
     */
-#define PUBNUB_DEFAULT_TRANSACTION_TIMER    1024
+#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
 
 /** Mininmal duration of the transaction timer, in milliseconds. You
  * can't set less than this.
