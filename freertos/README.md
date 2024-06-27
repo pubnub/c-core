@@ -46,4 +46,38 @@ projects/makefiles for others at this time.
 Pubnub may provide support for other TCP/IP stacks on FreeRTOS in the 
 future
 
-There is yet no support for a SSL/TLS library.
+There is yet no support for a SSL/TLS library (excluding ESP32 platform).
+
+## ESP32 support
+
+You can build the FreeRTOS+TCP Pubnub C-core for the ESP32 platform 
+using the ESP-IDF build system. The ESP-IDF build system is based on 
+CMake and we provide a CMakeLists.txt file for building the Pubnub 
+C-core for the ESP32 platform as idf_component.
+
+Additionally, we support SSL/TLS on the ESP32 platform using the 
+mbedTLS library. 
+All you have to do is to set the `MBEDTLS` option to `ON` 
+when configuring the build system.
+
+To use the Pubnub C-core in your ESP-IDF project you can select the 
+one of the following options:
+
+### ESP-IDF registry
+
+> :warning: **Note**: This option is not available yet. :warning:
+
+### clone the repository
+
+You can clone the repository and add it as a component to your project.
+All you have to do is to ensure that your project is capable of building 
+external components. You can find more information about this in the 
+[ESP-IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#external-components).
+
+```sh 
+# in root directory of your project
+git clone https://github.com/pubnub/c-core.git components/c-core
+```
+
+Then calling the `idf.py build` command should look into the components
+directory, find the Pubnub C-core and build it as a part of your project.

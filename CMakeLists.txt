@@ -1,7 +1,11 @@
 # CMakeLists.txt for the C-core library of Pubnub.
 cmake_minimum_required(VERSION 3.12)
 
-project(c-core VERSION 4.10.0)
+# Project name and version for casual builds
+# For ESP32 builds it is considered as a IDF component
+if(NOT ESP_PLATFORM)
+    project(pubnub VERSION 4.10.0)
+endif()
 
 message(STATUS Preparing\ ${PROJECT_NAME}\ version\ ${PROJECT_VERSION})
 
@@ -38,6 +42,7 @@ endfunction()
 message(STATUS "Options (Enabled *):")
 
 log_option(OPENSSL "Use OpenSSL" OFF)
+num_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 log_option(WITH_CPP "Build the CPP headers" OFF)
@@ -74,7 +79,11 @@ log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "WARNING" "Log level [TRACE/WARNING/INFO/ERROR/FATAL]")
+log_set(LOG_LEVEL "TRACE" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+
+if (${OPENSSL} AND ${MBEDTLS})
+    message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
+endif()
 
 # Flags configuration
 
@@ -94,7 +103,8 @@ set(FLAGS "\
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
-    -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV}")
+    -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
+    -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
 set(LDLIBS)
 set(OS_SOURCEFILES)
@@ -141,9 +151,6 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore_pubsub.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ccore.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_netcore.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c
-    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_blocking_io.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timers.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_json_parse.c
@@ -153,13 +160,27 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c) 
 
 set(LIB_SOURCEFILES
-    ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
-    ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
     ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
+
+if(UNIX OR WIN32 OR WIN64 OR MSVC)
+    set(CORE_SOURCEFILES
+        ${CORE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c)
+
+    set(LIB_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c)
+else()
+    set(CORE_SOURCEFILES
+        ${CORE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c)
+endif()
 
 if(NOT ${OPENSSL})
     set(LIB_SOURCEFILES
@@ -168,6 +189,8 @@ if(NOT ${OPENSSL})
 endif()
 
 if(UNIX)
+    message(STATUS "Using POSIX setup")
+
     set(LDLIBS "-lpthread ${LDLIBS}")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
@@ -183,6 +206,8 @@ if(UNIX)
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_posix.c)
     endif()
 elseif(WIN32 OR WIN64 OR MSVC)
+    message(STATUS "Using Windows setup")
+
     set(LDLIBS "ws2_32.lib IPHlpAPI.lib rpcrt4.lib")
     set(OS_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
@@ -193,6 +218,20 @@ elseif(WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
         ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+else()
+    message(STATUS "Using FreeRTOS setup")
+
+    set(OS_SOURCEFILES
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_freertos_blocking_io.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pbpal_resolv_and_connect_freertos_tcp.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_assert_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_generate_uuid_freertos.c
+        ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_version_freertos.c)
+    if(ESP_PLATFORM)
+        set(OS_SOURCEFILES ${OS_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/freertos/msstopwatch_esp32.c
+            ${CMAKE_CURRENT_LIST_DIR}/freertos/pbtimespec_elapsed_ms_esp32.c)
+    endif()
 endif()
 
 set(INTF_SOURCEFILES)
@@ -343,17 +382,17 @@ if(${USE_REVOKE_TOKEN_API})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif()
 
-set(OPENSSL_LINK_LIBRARIES)
+set(SSL_LINK_LIBRARIES)
 if(${OPENSSL})
     message(STATUS "Using OpenSSL")
 
     if("${OPENSSL_ROOT_DIR}" STREQUAL "")
         find_package(OpenSSL REQUIRED)
-        set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+        set(SSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
     else()
         find_package(OpenSSL PATHS ${OPENSSL_ROOT_DIR})
         if(OpenSSl_FOUND)
-            set(OPENSSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+            set(SSL_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
         else()
             message(STATUS "Searching for custom OpenSSL library")
             if(WIN32 OR WIN64 OR MSVC)
@@ -368,7 +407,7 @@ if(${OPENSSL})
             message(STATUS "-> ${OpenSSL}")
             message(STATUS "-> ${Crypto}")
 
-            set(OPENSSL_LINK_LIBRARIES ${OpenSSL} ${Crypto})
+            set(SSL_LINK_LIBRARIES ${OpenSSL} ${Crypto})
             include_directories(${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_INCLUDE_DIR})
 
             message(STATUS "Used headers:")
@@ -408,6 +447,16 @@ if(${OPENSSL})
     elseif(WIN32 OR WIN64 OR MSVC)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_windows.c)
     endif()
+elseif(${MBEDTLS})
+    message(STATUS "Using mbedTLS")
+
+    if(NOT ESP_PLATFORM)
+        # TODO: Add mbedTLS support for generic builds
+    endif()
+
+    set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_mbedtls.c
+        ${CMAKE_CURRENT_LIST_DIR}/mbedtls/pbpal_connect_mbedtls.c)
 else()
     set(LIB_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_sockets.c 
@@ -430,44 +479,90 @@ set(SOURCEFILES
     ${FEATURE_SOURCEFILES} 
     ${INTF_SOURCEFILES})
 
-if(${SHARED_LIB})
-    message(STATUS "Building shared library")
-    set(LIBTYPE SHARED)
+if(NOT ESP_PLATFORM)
+    if(${SHARED_LIB})
+        message(STATUS "Building shared library")
+        set(LIBTYPE SHARED)
+    else()
+        message(STATUS "Building static library")
+        set(LIBYTPE STATIC)
+    endif()
+
+    add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+
+    target_include_directories(pubnub PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/core 
+        ${CMAKE_CURRENT_LIST_DIR}/lib)
+    
+    if(${WITH_CPP})
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
+    endif()
+    
+    if(${OPENSSL})
+        target_include_directories(pubnub PUBLIC 
+            ${CMAKE_CURRENT_LIST_DIR}/openssl/
+            ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
+        target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
+    elseif(${MBEDTLS})
+        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/mbedtls)
+    else()
+        if(UNIX)
+            target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
+        elseif(WIN32 OR WIN64 OR MSVC)
+            target_include_directories(pubnub PUBLIC
+                ${CMAKE_CURRENT_LIST_DIR}/windows
+                ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+        else()
+            target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/freertos)
+        endif()
+    endif()
+    
+    string(STRIP ${LDLIBS} LDLIBS)
+    target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
 else()
-    message(STATUS "Building static library")
-    set(LIBYTPE STATIC)
-endif()
+    message(STATUS "Building ESP32 IDF component")
 
-add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+    set(EXTRA_CFLAGS ${EXTRA_CFLAGS} ${FLAGS})
 
-target_include_directories(pubnub PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/core 
-    ${CMAKE_CURRENT_LIST_DIR}/lib)
-
-if(${WITH_CPP})
-    target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/cpp)
-endif()
-
-if(${OPENSSL})
-    target_include_directories(pubnub PUBLIC 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/
-        ${CMAKE_CURRENT_LIST_DIR}/lib/base64)
-    target_include_directories(pubnub PUBLIC ${OPENSSL_INCLUDE_DIR})
-else()
-    if(UNIX)
-        target_include_directories(pubnub PUBLIC ${CMAKE_CURRENT_LIST_DIR}/posix)
-    elseif(WIN32 OR WIN64 OR MSVC)
-        target_include_directories(pubnub PUBLIC
-            ${CMAKE_CURRENT_LIST_DIR}/windows
-            ${CMAKE_CURRENT_LIST_DIR}/core/c99)
+    if (${MBEDTLS})
+       idf_component_register(SRCS ${SOURCEFILES}
+           INCLUDE_DIRS 
+               ${CMAKE_CURRENT_LIST_DIR}
+               ${CMAKE_CURRENT_LIST_DIR}/core
+               ${CMAKE_CURRENT_LIST_DIR}/lib
+               ${CMAKE_CURRENT_LIST_DIR}/freertos
+               ${CMAKE_CURRENT_LIST_DIR}/mbedtls
+               $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
+               $ENV{IDF_PATH}/components/mbedtls/mbedtls/include
+           REQUIRES 
+               freertos
+               lwip
+               mbedtls)
+    else()
+        idf_component_register(SRCS ${SOURCEFILES}
+            INCLUDE_DIRS 
+                ${CMAKE_CURRENT_LIST_DIR}
+                ${CMAKE_CURRENT_LIST_DIR}/core
+                ${CMAKE_CURRENT_LIST_DIR}/lib
+                ${CMAKE_CURRENT_LIST_DIR}/freertos
+                $ENV{IDF_PATH}/components/freertos/FreeRTOS-Kernel/include/freertos
+            REQUIRES 
+                freertos
+                lwip)
     endif()
 endif()
 
-string(STRIP ${LDLIBS} LDLIBS)
-target_link_libraries(pubnub ${LDLIBS} ${OPENSSL_LINK_LIBRARIES})
+if (NOT ESP_PLATFORM)
 
-if (WITH_CPP)
+endif()
+
+# TODO: C++ support for ESP32 platform
+if (WITH_CPP AND ESP_PLATFORM)
+    message(FATAL_ERROR "C++ support is not available for ESP32 platform!")
+endif()
+
+if (WITH_CPP AND NOT ESP_PLATFORM)
     # TODO: Tests
     # fntest/pubnub_fntest_medium.cpp
     # fntest/pubnub_fntest_runner.cpp

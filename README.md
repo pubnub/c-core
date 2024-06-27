@@ -34,6 +34,8 @@ cmake .. -G "NMake Makefiles"
 nmake 
 ```
 
+- for other platforms you can search for information in [FreeRTOS](freertos/README.md) or [QT](qt/README.md) READMEs.
+
 There are several options to be selected via switches (using GUI) or by using command line.
 ```sh 
 cmake .. -DOPENSSL=ON -DEXAMPLES=ON <etc...>
@@ -48,7 +50,8 @@ For more info check those links:
 
 - [posix](posix/README.md),
 - [windows](windows/README.md),
-- [openssl](openssl/),
+- [openssl](openssl/README.md),
+- [freertos](freertos/README.md),
 
 depending on what fits you best. 
 
@@ -67,11 +70,13 @@ The directories of the library repository are:
 
 - `openssl`: Modules and Makefile(s) for OpenSSL (on POSIX and Windows)
 
+- `mbedtls`: Modules for MBedTLS
+
 - `cpp`: Modules, Makefile(s) and examples for the C++ wrapper
 
 - `qt`: Modules, Qt projects and examples for Qt
 
-- `freertos` : Modules and Makefile for the FreeRTOS
+- `freertos` : Modules and Makefile for the FreeRTOS and ESP32 platforms
 
 - `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
 

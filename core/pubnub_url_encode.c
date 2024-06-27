@@ -32,7 +32,9 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum p
     case PBTT_ADD_MEMBERS:
     case PBTT_SET_MEMBERS:
     case PBTT_REMOVE_MEMBERS:
+#if PUBNUB_USE_ADVANCED_HISTORY
     case PBTT_MESSAGE_COUNTS:
+#endif // PUBNUB_USE_ADVANCED_HISTORY
 #endif // PUBNUB_USE_OBJECTS_API
 #if PUBNUB_USE_REVOKE_TOKEN_API
     case PBTT_REVOKE_TOKEN:

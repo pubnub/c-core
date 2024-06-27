@@ -24,3 +24,8 @@ char const *pubnub_uname(void)
     return PUBNUB_SDK_NAME "/" PUBNUB_SDK_VERSION;
 }
 
+char const *pubnub_uagent(void)
+{
+    return PUBNUB_SDK_NAME "-PubNub-C-core/" PUBNUB_SDK_VERSION;
+}
+

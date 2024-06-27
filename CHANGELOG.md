@@ -1,3 +1,13 @@
+## v4.11.0
+June 27 2024
+
+#### Added
+- Provided support for ESP32 devices via ESP-IDF framework.
+- Provided support for MBedTLS library used within esp32 platform.
+
+#### Modified
+- Replace `strncpy` with `strcpy` in blocks where it is safer to be used.
+
 ## v4.10.0
 June 14 2024
 

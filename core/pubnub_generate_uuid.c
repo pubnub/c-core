@@ -46,8 +46,8 @@ int pubnub_generate_uuid_v1_time(
     ud->clock_seq_low = *io_clock_seq & 0xFF;
     ud->clock_seq_hi_and_reserved = (*io_clock_seq & 0x3F00) >> 8;
     ud->clock_seq_hi_and_reserved |= 0x80;
-    memcpy(&ud->node, &i_node, sizeof ud->node);
 
+    memcpy(&ud->node, &i_node, sizeof ud->node);
     memcpy(s_timestamp, i_timestamp, sizeof s_timestamp);
 
     return 0;
@@ -93,12 +93,22 @@ struct Pubnub_UUID_String pubnub_uuid_to_string(struct Pubnub_UUID const *uuid)
     struct Pubnub_UUID_String rslt;
     struct Pubnub_UUID_decomposed const*u = (struct Pubnub_UUID_decomposed const*)uuid;
     
+#ifdef ESP_PLATFORM
+// Compiler on ESP32 treats uint32_t as long unsigned int
+    snprintf(rslt.uuid, sizeof rslt.uuid, 
+             "%8.8lx-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x", 
+             u->time_low, u->time_mid, u->time_hi_and_version, 
+             u->clock_seq_hi_and_reserved, u->clock_seq_low,
+             u->node[0], u->node[1], u->node[2], u->node[3], u->node[4], u->node[5]
+        );
+#else
     snprintf(rslt.uuid, sizeof rslt.uuid, 
              "%8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x", 
              u->time_low, u->time_mid, u->time_hi_and_version, 
              u->clock_seq_hi_and_reserved, u->clock_seq_low,
              u->node[0], u->node[1], u->node[2], u->node[3], u->node[4], u->node[5]
         );
+#endif /* ESP_PLATFORM */
     
     return rslt;
 }

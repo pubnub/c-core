@@ -84,6 +84,11 @@
 #define PUBNUB_PROXY_API 1
 #endif
 
+#if PUBNUB_USE_GZIP_COMPRESSION
+/* Maximum compressed message length allowed. Could be shortened by the user */
+#define PUBNUB_COMPRESSED_MAXLEN 1024
+#endif
+
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
@@ -102,6 +107,65 @@
     to reduce the memory footprint.
 */
 #define PUBNUB_ONLY_PUBSUB_API 0
+#endif
+
+#if !defined(PUBNUB_USE_SUBSCRIBE_V2)
+/** If true (!=0) will enable using the subscribe v2 API, which
+    provides filter expressions and more data about messages. */
+#define PUBNUB_USE_SUBSCRIBE_V2 1
+#endif
+
+#if !defined(PUBNUB_USE_ADVANCED_HISTORY)
+/** If true (!=0) will enable using the advanced history API, which
+    provides more data about (unread) messages. */
+#define PUBNUB_USE_ADVANCED_HISTORY 1
+#endif
+
+#if !defined(PUBNUB_USE_FETCH_HISTORY)
+/** If true (!=0) will enable using the fetch history API, which
+    provides more data about single/multip channel messages. */
+#define PUBNUB_USE_FETCH_HISTORY 1
+#endif
+
+#if !defined(PUBNUB_USE_OBJECTS_API)
+/** If true (!=0) will enable using the objects API, which is a
+    collection of Rest API features that enables "CRUD"(Create, Read, Update and Delete)
+    on two new pubnub objects: User and Space, as well as manipulating connections
+    between them. */
+#define PUBNUB_USE_OBJECTS_API 1
+#endif
+
+#if !defined(PUBNUB_USE_ACTIONS_API)
+/** If true (!=0) will enable using the Actions API, which is a collection
+    of Rest API features that enables adding on, reading and removing actions
+    from published messages */
+#define PUBNUB_USE_ACTIONS_API 1
+#endif
+
+#if !defined(PUBNUB_USE_GRANT_TOKEN_API)
+/** If true (!=0) will enable using the Grant Token API */
+#define PUBNUB_USE_GRANT_TOKEN_API 1
+#endif
+
+#if !defined(PUBNUB_USE_REVOKE_TOKEN_API)
+/** If true (!=0) will enable using the Revoke Token API */
+#define PUBNUB_USE_REVOKE_TOKEN_API 1
+#endif
+
+#if !defined(PUBNUB_USE_AUTO_HEARTBEAT)
+/** If true (!=0) will enable using the Auto Heartbeat Thumps(beats), which is a feature
+    that enables keeping presence of the given uuids on channels and channel groups during
+    longer periods without subscription.
+    This gives more freedom to the user while coding whom, othrewise, should take care of
+    these things all by himself using pubnub_heartbeat() transaction */
+#define PUBNUB_USE_AUTO_HEARTBEAT 1
+#endif
+
+#ifndef PUBNUB_USE_SSL
+/** If true (!=0), will enable SSL/TLS support.  If false (==0), will
+    disable SSL/TLS support.  If not defined, will enable SSL/TLS
+    support. */
+#define PUBNUB_USE_SSL 1
 #endif
 
 

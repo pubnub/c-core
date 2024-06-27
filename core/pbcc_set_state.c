@@ -70,8 +70,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
                 if (ch_len == 0) { continue; }
 
                 char* curr_ch = (char*)malloc(ch_len + 1);
-                strncpy(curr_ch, str_ch, ch_len);
-                curr_ch[ch_len] = '\0';
+                strcpy(curr_ch, str_ch);
 
                 mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
 
@@ -98,8 +97,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
                 if (cg_len == 0) { continue; }
 
                 char* curr_cg = (char*)malloc(cg_len + 1);
-                strncpy(curr_cg, str_cg, cg_len);
-                curr_cg[cg_len] = '\0';
+                strcpy(curr_cg, str_cg);
 
                 mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
 
