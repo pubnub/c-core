@@ -42,7 +42,7 @@ endfunction()
 message(STATUS "Options (Enabled *):")
 
 log_option(OPENSSL "Use OpenSSL" OFF)
-num_option(MBEDTLS "Use mbedTLS" ON)
+num_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
 log_option(WITH_CPP "Build the CPP headers" OFF)
@@ -518,6 +518,7 @@ if(NOT ESP_PLATFORM)
         endif()
     endif()
     
+    string(STRIP ${LDLIBS} LDLIBS)
     target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
 else()
     message(STATUS "Building ESP32 IDF component")
@@ -550,13 +551,10 @@ else()
                 freertos
                 lwip)
     endif()
-
-
 endif()
 
 if (NOT ESP_PLATFORM)
-    string(STRIP ${LDLIBS} LDLIBS)
-    target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
+
 endif()
 
 # TODO: C++ support for ESP32 platform
