@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.10.0"
+version: "4.11.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-06-27
+    version: v4.11.0
+    changes:
+      - type: feature
+        text: "Provided support for ESP32 devices via ESP-IDF framework."
+      - type: feature
+        text: "Provided support for MBedTLS library used within esp32 platform."
+      - type: improvement
+        text: "Replace `strncpy` with `strcpy` in blocks where it is safer to be used."
   - date: 2024-06-14
     version: v4.10.0
     changes:
@@ -800,7 +809,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -866,7 +875,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -932,7 +941,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -994,7 +1003,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -1055,7 +1064,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -1111,7 +1120,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
@@ -1164,7 +1173,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.10.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
             requires:
               -
                 name: "miniz"
