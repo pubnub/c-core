@@ -1,3 +1,9 @@
+## v4.11.1
+June 28 2024
+
+#### Fixed
+- Fixed `cmake` build for not ESP32 builds.
+
 ## v4.11.0
 June 27 2024
 
