@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.11.0"
+version: "4.11.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-06-28
+    version: v4.11.1
+    changes:
+      - type: bug
+        text: "Fixed `cmake` build for not ESP32 builds."
   - date: 2024-06-27
     version: v4.11.0
     changes:
@@ -809,7 +814,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -875,7 +880,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -941,7 +946,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -1003,7 +1008,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -1064,7 +1069,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -1120,7 +1125,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
@@ -1173,7 +1178,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.11.1
             requires:
               -
                 name: "miniz"
