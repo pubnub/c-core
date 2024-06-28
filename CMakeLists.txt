@@ -79,7 +79,7 @@ log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "TRACE" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
 
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
@@ -174,6 +174,7 @@ if(UNIX OR WIN32 OR WIN64 OR MSVC)
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c)
 
     set(LIB_SOURCEFILES
+        ${LIB_SOURCEFILES}
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c)
 else()
