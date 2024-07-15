@@ -5,6 +5,8 @@
 #include "cgreen/cgreen.h"
 #include "cgreen/constraint_syntax_helpers.h"
 #include "cgreen/mocks.h"
+#include "pubnub_coreapi_ex.h"
+#include "pubnub_helper.h"
 #include "pubnub_memory_block.h"
 #include "test/pubnub_test_mocks.h"
 
@@ -18,6 +20,8 @@
 #include "pubnub_coreapi.h"
 #include "pubnub_crypto.h"
 #include "pbcc_crypto.h"
+#include "pubnub_subscribe_v2.h"
+#include "pubnub_subscribe_v2_message.h"
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -166,6 +170,45 @@ Ensure(crypto_api, client_should_use_cryptors_for_history) {
     assert_that(pubnub_get(pbp), is_equal_to(NULL));
     assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
 }
+
+Ensure(crypto_api, client_should_use_cryptors_for_subscribe_v2) {
+    pubnub_set_crypto_module(pbp, pubnub_crypto_module_init(&x_cryptor, &y_cryptor, 1));
+
+    assert_that(pubnub_last_time_token(pbp), is_equal_to_string("0"));
+    expect_have_dns_for_pubnub_origin_on_ctx(pbp);
+    expect_outgoing_with_url_no_params_on_ctx(pbp,
+        "/v2/subscribe/sub_key/my-channel/0");
+    incoming("HTTP/1.1 200\r\nContent-Length: "
+             "44\r\n\r\n{\"t\":{\"t\":\"15628652479932717\",\"r\":4},\"m\":[]}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
+    expect(pbntf_trans_outcome, when(pb, is_equal_to(pbp)));
+    assert_that(pubnub_subscribe_v2(pbp, "my-channel", pubnub_subscribe_v2_defopts()), is_equal_to(PNR_OK));
+
+    assert_that(pubnub_get(pbp), is_equal_to(NULL));
+    assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
+    assert_that(pubnub_last_time_token(pbp), is_equal_to_string("15628652479932717"));
+    /* Not publish operation */
+    assert_that(pubnub_last_publish_result(pbp), is_equal_to_string(""));
+
+    expect(pbntf_enqueue_for_processing, when(pb, is_equal_to(pbp)), will_return(0));
+    expect(pbntf_got_socket, when(pb, is_equal_to(pbp)), will_return(0));
+    expect_outgoing_with_url_no_params_on_ctx(pbp, 
+        "/v2/subscribe/sub_key/my-channel/0");
+    incoming("HTTP/1.1 200\r\nContent-Length: "
+             "198\r\n\r\n{\"t\":{\"t\":\"15628652479932717\",\"r\":4},\"m\":[{\"a\":\"1\",\"f\":514,\"i\":\"publisher_id\",\"s\":1,\"p\":{\"t\":\"15628652479933927\",\"r\":4},\"k\":\"demo\",\"c\":\"my-channel\",\"d\":\"UE5FRAF4eHh4BG1ldGF4eHh4\",\"b\":\"my-channel\"}]}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
+    expect(pbntf_trans_outcome, when(pb, is_equal_to(pbp)));
+    assert_that(pubnub_subscribe_v2(pbp, "my-channel", pubnub_subscribe_v2_defopts()), is_equal_to(PNR_OK));
+    assert_that(pubnub_last_time_token(pbp), is_equal_to_string("15628652479932717"));
+
+    struct pubnub_v2_message msg = pubnub_get_v2(pbp);
+    assert_that(msg.payload.ptr, is_equal_to_string(X));
+    assert_that(pubnub_get_v2(pbp).payload.ptr, is_equal_to(NULL));
+    assert_that(pubnub_last_http_code(pbp), is_equal_to(200));
+}
+
 
 int x_encrypt(pubnub_cryptor_t const* _c, struct pubnub_encrypted_data *result, pubnub_bymebl_t _d) {
     result->data.ptr = (uint8_t*)X;

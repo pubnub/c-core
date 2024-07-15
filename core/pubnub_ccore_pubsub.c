@@ -113,49 +113,20 @@ bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
 
 char const* pbcc_get_msg(struct pbcc_context* pb)
 {
+#if PUBNUB_CRYPTO_API 
+    size_t len;
+#endif // PUBNUB_CRYPTO_API
     if (pb->msg_ofs < pb->msg_end) {
         PUBNUB_LOG_DEBUG("RESPONSE = %s\n", pb->http_reply);
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
 #if PUBNUB_CRYPTO_API
-            if (NULL != pb->crypto_module) {
-                char* trimmed = (char*)malloc(strlen(rslt) + 1); // same length as rslt
-                if (NULL == trimmed) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);
-                    return NULL;
-                }
-                sprintf(trimmed, "%s", rslt);
-                
-                trimmed[strlen(trimmed) - 1] = '\0';
-
-                pubnub_bymebl_t encrypted = pbcc_base64_decode(trimmed + 1);
-                free(trimmed);
-
-                if (NULL == encrypted.ptr) {
-                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Returning original message!\n", pb);
-                    return rslt;
-                }
-
-                pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
-                free(encrypted.ptr);
-                if (NULL == rslt_block.ptr) {
-                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - decryption failed. Returning original message!\n", pb);
-                    return rslt;
-                }
-
-                if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Returning original message!\n", pb);
-                    return NULL;
-                }
-
-                pb->decrypted_messages[pb->decrypted_message_count] = rslt_block.ptr;
-                pb->decrypted_message_count++;
-
-                rslt = (char*)rslt_block.ptr;
+            if (pb->crypto_module != NULL) {
+                len = strlen(rslt);
+                rslt = pbcc_decrypt_message(pb, rslt, len, NULL);
             }
 #endif // PUBNUB_CRYPTO_API 
-
             return rslt;
         }
     }

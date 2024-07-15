@@ -1,3 +1,9 @@
+## v4.11.2
+July 15 2024
+
+#### Fixed
+- Added missing subscribe v2 crypto implementation.
+
 ## v4.11.1
 June 28 2024
 
