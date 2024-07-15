@@ -212,9 +212,6 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     char const*                          start;
     char const*                          end;
     char const*                          seeker;
-#if PUBNUB_CRYPTO_API
-    size_t                               decrypted_len;
-#endif
 
     memset(&rslt, 0, sizeof rslt);
 
@@ -224,22 +221,13 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     PUBNUB_LOG_DEBUG("RESPONSE = %s\n", p->http_reply);
     start = p->http_reply + p->msg_ofs;
 
-#if PUBNUB_CRYPTO_API 
-    if (p->crypto_module != NULL) {
-        start = pbcc_decrypt_message(p, start, &decrypted_len);
-    }
-#endif
-
     if (*start != '{') {
         PUBNUB_LOG_ERROR(
             "Message subscribe V2 response is not a JSON object\n");
         return rslt;
     }
-#if PUBNUB_CRYPTO_API
-    end    = start + decrypted_len;
-#else
+
     end    = p->http_reply + p->msg_end;
-#endif
 
     seeker = pbjson_find_end_complex(start, end);
     if (seeker == end) {
@@ -258,8 +246,19 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
 
     jpresult = pbjson_get_object_value(&el, "d", &found);
     if (jonmpOK == jpresult) {
+#if PUBNUB_CRYPTO_API
+        if (NULL != p->crypto_module) {
+            rslt.payload.ptr = pbcc_decrypt_message(
+                    p,
+                    (char*)found.start,
+                    found.end - found.start,
+                    &rslt.payload.size
+            );
+        }
+#else
         rslt.payload.ptr  = (char*)found.start;
         rslt.payload.size = found.end - found.start;
+#endif /* PUBNUB_CRYPTO_API */
     }
     else {
         PUBNUB_LOG_ERROR("pbcc=%p: No message payload in subscribe V2 response "

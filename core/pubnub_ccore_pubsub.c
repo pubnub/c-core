@@ -113,6 +113,9 @@ bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
 
 char const* pbcc_get_msg(struct pbcc_context* pb)
 {
+#if PUBNUB_CRYPTO_API 
+    size_t len;
+#endif // PUBNUB_CRYPTO_API
     if (pb->msg_ofs < pb->msg_end) {
         PUBNUB_LOG_DEBUG("RESPONSE = %s\n", pb->http_reply);
         char const* rslt = pb->http_reply + pb->msg_ofs;
@@ -120,7 +123,8 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
         if (pb->msg_ofs++ <= pb->msg_end) {
 #if PUBNUB_CRYPTO_API
             if (pb->crypto_module != NULL) {
-                rslt = pbcc_decrypt_message(pb, rslt, NULL);
+                len = strlen(rslt);
+                rslt = pbcc_decrypt_message(pb, rslt, len, NULL);
             }
 #endif // PUBNUB_CRYPTO_API 
             return rslt;
