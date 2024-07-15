@@ -248,7 +248,7 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     if (jonmpOK == jpresult) {
 #if PUBNUB_CRYPTO_API
         if (NULL != p->crypto_module) {
-            rslt.payload.ptr = pbcc_decrypt_message(
+            rslt.payload.ptr = (char*)pbcc_decrypt_message(
                     p,
                     (char*)found.start,
                     found.end - found.start,
