@@ -290,7 +290,7 @@ pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx) {
 }
 
 #if PUBNUB_CRYPTO_API
-char* pbcc_decrypt_message(struct pbcc_context *pb, const char* message, size_t len, size_t* out_len) {
+char* pbcc_decrypt_message(struct pbcc_context *pb, char* message, size_t len, size_t* out_len) {
     char* trimmed = (char*)malloc(len + 1); // same length as message
     if (NULL == trimmed) {
         PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);

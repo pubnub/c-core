@@ -306,7 +306,7 @@ pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx);
 
    @return The decrypted message or NULL on error.
 */
-char* pbcc_decrypt_message(struct pbcc_context *ctx, const char* message, size_t len, size_t* out_len);
+char* pbcc_decrypt_message(struct pbcc_context *ctx, char* message, size_t len, size_t* out_len);
 #endif /* PUBNUB_CRYPTO_API */
    
     
