@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
+#include "pbcc_crypto.h"
 #if PUBNUB_USE_SUBSCRIBE_V2
 
 #include "pubnub_internal.h"
@@ -54,6 +55,13 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
     }
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
+
+#if PUBNUB_CRYPTO_API 
+    for (size_t i = 0; i < p->decrypted_message_count; i++) {
+        free(p->decrypted_messages[i]);
+    }
+    p->decrypted_message_count = 0;
+#endif
 
     p->http_buf_len = snprintf(
         p->http_buf, sizeof p->http_buf, "/v2/subscribe/%s/", p->subscribe_key);
@@ -204,6 +212,9 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     char const*                          start;
     char const*                          end;
     char const*                          seeker;
+#if PUBNUB_CRYPTO_API
+    size_t                               decrypted_len;
+#endif
 
     memset(&rslt, 0, sizeof rslt);
 
@@ -212,12 +223,24 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     }
     PUBNUB_LOG_DEBUG("RESPONSE = %s\n", p->http_reply);
     start = p->http_reply + p->msg_ofs;
+
+#if PUBNUB_CRYPTO_API 
+    if (p->crypto_module != NULL) {
+        start = pbcc_decrypt_message(p, start, &decrypted_len);
+    }
+#endif
+
     if (*start != '{') {
         PUBNUB_LOG_ERROR(
             "Message subscribe V2 response is not a JSON object\n");
         return rslt;
     }
+#if PUBNUB_CRYPTO_API
+    end    = start + decrypted_len;
+#else
     end    = p->http_reply + p->msg_end;
+#endif
+
     seeker = pbjson_find_end_complex(start, end);
     if (seeker == end) {
         PUBNUB_LOG_ERROR(
