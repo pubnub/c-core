@@ -157,11 +157,11 @@ enum pubnub_res pubnub_set_uuidmetadata(pubnub_t* pb,
 
 
 enum pubnub_res pubnub_set_uuidmetadata_ex(pubnub_t* pb,
-    struct pubnub_set_uuidmetadata_opts opts)
+                                           struct pubnub_set_uuidmetadata_opts opts)
 {
+    char*           obj_buffer = NULL;
     enum pubnub_res result;
-    size_t obj_len = 0;
-    char* obj_buffer = NULL;
+    size_t          obj_len = 0;
 
     obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) : 0;
     obj_len += NULL != opts.data.email ? strlen(opts.data.email) : 0;
@@ -170,35 +170,48 @@ enum pubnub_res pubnub_set_uuidmetadata_ex(pubnub_t* pb,
     obj_len += NULL != opts.data.profile_url ? strlen(opts.data.profile_url) : 0;
 
     obj_buffer = (char*)malloc(obj_len + 64); // 64 is for the JSON object structure with small buffer
-    strcpy(obj_buffer, "{");
+    int offset = snprintf(obj_buffer, obj_len, "{");
 
     // TODO: maybe it will be a good idea to add serialization at some point to this SDK
     if (NULL != opts.data.custom) {
-        strcat(obj_buffer, "\"custom\":");
-        strcat(obj_buffer, opts.data.custom);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "\"custom\":%s",
+                           opts.data.custom);
     }
 
     if (NULL != opts.data.email) {
-        strcat(obj_buffer, ",\"email\":");
-        strcat(obj_buffer, opts.data.email);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"email\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.email);
     }
 
     if (NULL != opts.data.name) {
-        strcat(obj_buffer, ",\"name\":");
-        strcat(obj_buffer, opts.data.name);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"name\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.name);
     }
 
     if (NULL != opts.data.external_id) {
-        strcat(obj_buffer, ",\"externalId\":");
-        strcat(obj_buffer, opts.data.external_id);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"externalId\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.external_id);
     }
 
     if (NULL != opts.data.profile_url) {
-        strcat(obj_buffer, ",\"profileUrl\":");
-        strcat(obj_buffer, opts.data.profile_url);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"profileUrl\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.profile_url);
     }
-
-    strcat(obj_buffer, "}\0");
+    snprintf(obj_buffer + offset, obj_len - offset, "}\0");
 
     result = pubnub_set_uuidmetadata(pb, opts.uuid, opts.include, obj_buffer);
     free(obj_buffer);
@@ -359,37 +372,42 @@ enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
 }
 
 
-enum pubnub_res pubnub_set_channelmetadata_ex(pubnub_t* pb, 
-        char const* channel,
-        struct pubnub_set_channelmetadata_opts opts)
+enum pubnub_res pubnub_set_channelmetadata_ex(pubnub_t*   pb,
+                                              char const* channel,
+                                              struct pubnub_set_channelmetadata_opts opts)
 {
+    char*           obj_buffer = NULL;
     enum pubnub_res result;
-    size_t obj_len = 0;
-    char* obj_buffer = NULL;
+    size_t          obj_len = 0;
 
     obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) : 0;
     obj_len += NULL != opts.data.description ? strlen(opts.data.description) : 0;
     obj_len += NULL != opts.data.name ? strlen(opts.data.name) : 0;
 
     obj_buffer = (char*)malloc(obj_len + 64); // 64 is for the JSON object structure with small buffer
-                                              
-    strcpy(obj_buffer, "{");
+    int offset = snprintf(obj_buffer, obj_len, "{");
+
     if (NULL != opts.data.custom) {
-        strcat(obj_buffer, "\"custom\":");
-        strcat(obj_buffer, opts.data.custom);
+        offset += snprintf(obj_buffer, obj_len, "\"custom\":%s", opts.data.custom);
     }
 
     if (NULL != opts.data.description) {
-        strcat(obj_buffer, ",\"description\":");
-        strcat(obj_buffer, opts.data.description);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"description\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.description);
     }
 
     if (NULL != opts.data.name) {
-        strcat(obj_buffer, ",\"name\":");
-        strcat(obj_buffer, opts.data.name);
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"name\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.name);
     }
 
-    strcat(obj_buffer, "}\0");
+    offset += snprintf(obj_buffer + offset, obj_len - offset, "}\0");
 
     result = pubnub_set_channelmetadata(pb, channel, opts.include, obj_buffer);
     free(obj_buffer);

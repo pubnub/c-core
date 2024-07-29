@@ -8,9 +8,6 @@
 
 #include "pubnub_api_types.h"
 #include "lib/pb_extern.h"
-#include "stddef.h"
-
-#include <stdbool.h>
 
 /** Data pagination object. This object helps to paginate through the data.
    It is more readable form of `start` and `end` parameters in objects API.

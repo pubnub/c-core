@@ -45,12 +45,12 @@ int main(void) {
 
     printf("Set users' metadata\n");
     struct pubnub_set_uuidmetadata_opts set_opts = pubnub_set_uuidmetadata_defopts();
-    set_opts.data.name = "\"my_name\"";
-    set_opts.data.external_id = "\"my_external_id\"";
-    set_opts.data.profile_url = "\"my_profile_url\"";
-    set_opts.data.email = "\"my_email\"";
+    set_opts.data.name = "my_name";
+    set_opts.data.external_id = "my_external_id";
+    set_opts.data.profile_url = "my_profile_url";
+    set_opts.data.email = "my_email";
     set_opts.data.custom = "{\"key\":\"value\"}";
-    set_opts.include = "\"custom\"";
+    set_opts.include = "custom";
 
     // we didn't set the UUID, so it will be the one from the context
     result = pubnub_set_uuidmetadata_ex(pb, set_opts);
@@ -68,7 +68,7 @@ int main(void) {
 
     struct pubnub_set_uuidmetadata_opts set_opts2 = pubnub_set_uuidmetadata_defopts();
     set_opts2.data.custom = "{\"key\":\"totally different value\"}";
-    set_opts2.uuid = "\"some_user\"";
+    set_opts2.uuid = "some_user";
 
     result = pubnub_set_uuidmetadata_ex(pb, set_opts2);
     if (PNR_STARTED == result) {
@@ -164,10 +164,10 @@ int main(void) {
 
     printf("Set channels' metadata\n");
     struct pubnub_set_channelmetadata_opts set_channel_opts = pubnub_set_channelmetadata_defopts();
-    set_channel_opts.data.name = "\"my_channel_name\"";
-    set_channel_opts.data.description = "\"my_channel_description\"";
+    set_channel_opts.data.name = "my_channel_name";
+    set_channel_opts.data.description = "my_channel_description";
     set_channel_opts.data.custom = "{\"key\":\"value\"}";
-    set_channel_opts.include = "\"custom\"";
+    set_channel_opts.include = "custom";
 
     result = pubnub_set_channelmetadata_ex(pb, "channel_id", set_channel_opts);
 
