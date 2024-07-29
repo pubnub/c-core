@@ -8,6 +8,7 @@
 
 #include "pubnub_api_types.h"
 #include "lib/pb_extern.h"
+#include "stddef.h"
 
 #include <stdbool.h>
 
@@ -61,19 +62,19 @@ struct pubnub_channel_data {
 /** The "null" page object, which is used to indicate that there is no next or previous page.
     Also it can be used when there is no will to pass page as a parameter 
     */
-PUBNUB_EXTERN const struct pubnub_page_object pubnub_null_page = { NULL, NULL };
+PUBNUB_EXTERN const struct pubnub_page_object pubnub_null_page;
 
 
 /** The "null" user data object, which is used to indicate that there is no user data.
     Also it can be used when there is no will to pass user data as a parameter 
     */
-PUBNUB_EXTERN const struct pubnub_user_data pubnub_null_user_data = { NULL, NULL, NULL, NULL, NULL };
+PUBNUB_EXTERN const struct pubnub_user_data pubnub_null_user_data;
 
 
 /** The "null" channel data object, which is used to indicate that there is no channel data.
     Also it can be used when there is no will to pass channel data as a parameter 
     */
-PUBNUB_EXTERN const struct pubnub_channel_data pubnub_null_channel_data = { NULL, NULL, NULL };
+PUBNUB_EXTERN const struct pubnub_channel_data pubnub_null_channel_data;
 
 
 /** Options for the getall_*metadata functions */
@@ -110,7 +111,7 @@ struct pubnub_getall_metadata_opts {
     - sort: NULL 
     - limit: 100
     - page: pubnub_null_page
-    - count: pbNotSet
+    - count: pbccNotSet
 
     @see pubnub_getall_metadata_opts 
     @see pubnub_null_page
@@ -353,7 +354,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_channelmetadata(pubnub_t* pb, char c
 
 
 /** Options for the pubnub_get_memberships function */
-struct pubnub_membership_data {
+struct pubnub_membership_opts {
     /** The UUID to retrieve the memberships. */
     char const* uuid;
 
@@ -376,12 +377,15 @@ struct pubnub_membership_data {
     /** Pagination object.
         @see pubnub_page_object */
     struct pubnub_page_object page;
+
+    /** Request totalCount to be included in paginated response. By default, totalCount is omitted. */
+    enum pubnub_tribool count;
 };
 
 
 /** Default options for the pubnub_get_memberships function 
     Values are set as follows:
-    - uuid: NULL (`pubnub_get_memberships_ex` will take the user_id from the context on NULL)
+    - uuid: NULL (`pubnub_*_memberships_ex` will take the user_id from the context on NULL)
     - include: NULL 
     - filter: NULL 
     - sort: NULL 
@@ -392,7 +396,7 @@ struct pubnub_membership_data {
     
     @return Default options for the get_memberships function
   */
-PUBNUB_EXTERN struct pubnub_membership_data pubnub_memberships_defopts();
+PUBNUB_EXTERN struct pubnub_membership_opts pubnub_memberships_defopts();
 
 
 /** Returns the channel memberships of the user specified by @p uuid_metadataid, optionally including
@@ -434,7 +438,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_get_memberships(pubnub_t* pb,
     @param opts The options for the get_memberships function.
     @return #PNR_STARTED on success, an error otherwise
   */
-PUBNUB_EXTERN enum pubnub_res pubnub_get_memberships_ex(pubnub_t* pb, struct pubnub_membership_data opts);
+PUBNUB_EXTERN enum pubnub_res pubnub_get_memberships_ex(pubnub_t* pb, struct pubnub_membership_opts opts);
 
 
 /** Add/Update the channel memberships of the UUID specified by @p metadata_uuid. Uses the `set` property
@@ -498,7 +502,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_set_memberships(pubnub_t* pb,
     @param opts The options for the set_memberships function.
     @return #PNR_STARTED on success, an error otherwise
   */
-PUBNUB_EXTERN enum pubnub_res pubnub_set_memberships_ex(pubnub_t* pb, char const* channels, struct pubnub_membership_data opts);
+PUBNUB_EXTERN enum pubnub_res pubnub_set_memberships_ex(pubnub_t* pb, char const* channels, struct pubnub_membership_opts opts);
 
 
 /** Removes the memberships of the user specified by @p uuid_metadataid. Uses the `delete` property
@@ -551,11 +555,11 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_memberships(pubnub_t* pb,
 
     @return #PNR_STARTED on success, an error otherwise
     */
-PUBNUB_EXTERN enum pubnub_res pubnub_remove_memberships_ex(pubnub_t* pb, char const* channels, struct pubnub_membership_data opts);
+PUBNUB_EXTERN enum pubnub_res pubnub_remove_memberships_ex(pubnub_t* pb, char const* channels, struct pubnub_membership_opts opts);
 
 
 /** Options for the pubnub_*_members functions */
-struct pubnub_members_data {
+struct pubnub_members_opts {
     /** The comma delimited (C) string with additional/complex attributes to include in response.
         Use NULL if you don't want to retrieve additional attributes. */
     char const* include;
@@ -594,7 +598,7 @@ struct pubnub_members_data {
     
     @return Default options for the get_members function
   */
-PUBNUB_EXTERN struct pubnub_members_data pubnub_get_members_defopts();
+PUBNUB_EXTERN struct pubnub_members_opts pubnub_members_defopts();
 
 
 /** Returns all users in the channel specified with @p channel_metadataid, optionally including
@@ -636,7 +640,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_get_members(pubnub_t* pb,
     @param opts The options for the get_members function.
     @return #PNR_STARTED on success, an error otherwise
   */
-PUBNUB_EXTERN enum pubnub_res pubnub_get_members_ex(pubnub_t* pb, char const* channel, struct pubnub_members_data opts);
+PUBNUB_EXTERN enum pubnub_res pubnub_get_members_ex(pubnub_t* pb, char const* channel, struct pubnub_members_opts opts);
 
 
 /** Adds the list of members of the channel specified with @p channel_metadataid. Uses the `add`
@@ -722,7 +726,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_set_members(pubnub_t* pb,
 PUBNUB_EXTERN enum pubnub_res pubnub_set_members_ex(pubnub_t* pb,
                                       char const* channel,
                                       char const* uuids,
-                                      struct pubnub_members_data opts);
+                                      struct pubnub_members_opts opts);
 
 
 /** Removes the list of members of the space specified with @p space_id. Uses the `remove`
@@ -777,7 +781,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_members(pubnub_t* pb,
 PUBNUB_EXTERN enum pubnub_res pubnub_remove_members_ex(pubnub_t* pb,
                                       char const* channel,
                                       char const* uuids,
-                                      struct pubnub_members_data opts);
+                                      struct pubnub_members_opts opts);
 
 
 #endif /* !defined INC_PUBNUB_OBJECTS_API */
