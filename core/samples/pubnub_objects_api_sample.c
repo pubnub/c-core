@@ -24,10 +24,8 @@ static void sync_sample_free(pubnub_t* p);
 
 int main(void) {
     // No demo keysets as app context is not applicable to it
-//    char* publish_key = getenv("PUBNUB_PUBLISH_KEY");
-//    char* subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
-    char* publish_key = "pub-c-2451c2cf-9f04-446b-8f85-e06564095e55";
-    char* subscribe_key = "sub-c-d16ff59f-b415-4ef9-8c29-ddda64fa2b43";
+    char* publish_key = getenv("PUBNUB_PUBLISH_KEY");
+    char* subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
 
     enum pubnub_res result;
 
@@ -289,42 +287,14 @@ int main(void) {
     }
 
     sleep(1);
-    printf("Get users' memberships\n");
-
-    struct pubnub_membership_opts getall_memberships_opts = pubnub_memberships_defopts();
-    getall_memberships_opts.limit = 1;
-    getall_memberships_opts.include = "custom";
-    getall_memberships_opts.filter = "custom.key=='value'";
-    getall_memberships_opts.count = pbccTrue;
-    getall_memberships_opts.sort = "channel.name:desc";
-
-    result = pubnub_set_memberships_ex(pb, "", getall_memberships_opts);
-
-    if (PNR_STARTED == result) {
-        result = pubnub_await(pb);
-    }
-
-    if (PNR_OK == result) {
-        printf("Get memberships successful!\n");
-
-        for (const char* response = pubnub_get(pb); response != NULL; response = pubnub_get(pb)) {
-            printf("Response: %s\n", response);
-        }
-    } else {
-        printf("Get memberships failed with code: %d('%s')\n",
-               result,
-               pubnub_res_2_string(result));
-    }
-
-    sleep(1);
     printf("Get users' memberships by UUID\n");
 
     struct pubnub_membership_opts get_memberships_opts = pubnub_memberships_defopts();
     get_memberships_opts.limit = 1;
     get_memberships_opts.include = "custom";
-    get_memberships_opts.filter = "custom.key=='value'";
+    get_memberships_opts.filter = "custom.starred==true";
     get_memberships_opts.count = pbccTrue;
-    get_memberships_opts.sort = "channel.name:desc";
+    get_memberships_opts.sort = "channel.id:desc";
 
     result = pubnub_get_memberships_ex(pb, get_memberships_opts);
 
@@ -349,18 +319,19 @@ int main(void) {
     struct pubnub_membership_opts remove_memberships_opts = pubnub_memberships_defopts();
     remove_memberships_opts.include = "custom";
     remove_memberships_opts.limit = 1;
-    remove_memberships_opts.sort = "channel.name:desc";
-    remove_memberships_opts.filter = "custom.key=='value'";
+    remove_memberships_opts.sort = "channel.id:desc";
+    remove_memberships_opts.filter = "custom.starred==true";
     remove_memberships_opts.count = pbccTrue;
 
     const char* channels_meta_remove = "["
          "{"
-           "\"id\": \"main-channel-id\""
+           "\"channel\":{ \"id\": \"main-channel-id\" }"
          "},"
          "{"
-           "\"id\": \"channel-0\""
+           "\"channel\":{ \"id\": \"channel-0\" }"
          "}"
        "]";
+
 
     result = pubnub_remove_memberships_ex(pb, channels_meta_remove, remove_memberships_opts);
 
@@ -383,8 +354,8 @@ int main(void) {
     struct pubnub_members_opts set_members_opts = pubnub_members_defopts();
     set_members_opts.include = "custom";
     set_members_opts.limit = 1;
-    set_members_opts.sort = "uuid.name:desc";
-    set_members_opts.filter = "custom.key=='value'";
+    set_members_opts.sort = "uuid.id:desc";
+    set_members_opts.filter = "custom.starred==true";
     set_members_opts.count = pbccTrue;
 
     const char* members_meta = "["
@@ -422,9 +393,9 @@ int main(void) {
     struct pubnub_members_opts get_members_opts = pubnub_members_defopts();
     get_members_opts.limit = 1;
     get_members_opts.include = "custom";
-    get_members_opts.filter = "custom.key=='value'";
+    get_members_opts.filter = "custom.starred==true";
     get_members_opts.count = pbccTrue;
-    get_members_opts.sort = "uuid.name:desc";
+    get_members_opts.sort = "uuid.id:desc";
 
     result = pubnub_get_members_ex(pb, "channel_id", get_members_opts);
 
@@ -450,16 +421,16 @@ int main(void) {
     struct pubnub_members_opts remove_members_opts = pubnub_members_defopts();
     remove_members_opts.include = "custom";
     remove_members_opts.limit = 1;
-    remove_members_opts.sort = "uuid.name:desc";
-    remove_members_opts.filter = "custom.key=='value'";
+    remove_members_opts.sort = "uuid.id:desc";
+    remove_members_opts.filter = "custom.starred==true";
     remove_members_opts.count = pbccTrue;
 
     const char* members_meta_remove = "["
          "{"
-           "\"id\": \"main-user-id\""
+           "\"uuid\":{ \"id\": \"main-user-id\" }"
          "},"
          "{"
-           "\"id\": \"user-0\""
+           "\"uuid\":{ \"id\": \"user-0\" }"
          "}"
        "]";
 

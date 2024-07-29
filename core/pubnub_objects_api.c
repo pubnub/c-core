@@ -492,6 +492,10 @@ enum pubnub_res pubnub_get_memberships_ex(pubnub_t* pb,
 {
     enum pubnub_res rslt;
 
+    if (NULL == opts.uuid) {
+        opts.uuid = pb->core.user_id;
+    }
+
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
@@ -602,6 +606,10 @@ enum pubnub_res pubnub_remove_memberships_ex(pubnub_t* pb,
 {
     enum pubnub_res rslt;
     char obj_buffer[PUBNUB_BUF_MAXLEN];
+
+    if (NULL == opts.uuid) {
+        opts.uuid = pb->core.user_id;
+    }
     
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 

@@ -536,13 +536,13 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_memberships(pubnub_t* pb,
     to perform those operations on one, or more memberships.
     An example for @channels:
       [
-        {
-          "id": "main-channel-id"
-        },
-        {
-          "id": "channel-0"
-        }
-      ]
+         {
+           "channel":{ "id": "main-channel-id" }
+         },
+         {
+           "channel":{ "id": "channel-0" }
+         }
+       ]
 
     Use `pubnub_memberships_defopts()` to get the default options.
 
@@ -733,16 +733,13 @@ PUBNUB_EXTERN enum pubnub_res pubnub_set_members_ex(pubnub_t* pb,
     property to perform the operation on one or more members.
     An example for @update_obj:
       [
-        {
-          "id": "some-user-id",
-          "custom": {
-            "starred": true
-          }
-        },
-        {
-          "id": "user-0-id"
-        }
-      ]
+         {
+           "uuid":{ "id": "main-user-id" }
+         },
+         {
+           "uuid":{ "id": "user-0" }
+         }
+       ]
 
     @param pb The pubnub context. Can't be NULL
     @param channel_metadataid The Channel ID.
