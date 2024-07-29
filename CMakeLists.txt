@@ -380,6 +380,9 @@ endif()
 if(${USE_GRANT_TOKEN_API})
     set(FEATURE_SOURCEFILES 
         ${FEATURE_SOURCEFILES} 
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborerrorstrings.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser_dup_string.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_grant_token_api.c 
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_grant_token_api.c)
 endif()
@@ -681,6 +684,11 @@ if(${EXAMPLES})
                 set(EXAMPLE_LIST
                     pubnub_crypto_module_sample
                     ${EXAMPLE_LIST})
+                if (${USE_GRANT_TOKEN_API})
+                    set(EXAMPLE_LIST
+                        pubnub_sync_grant_token_sample
+                        ${EXAMPLE_LIST})
+                endif()
             endif()
             if (${USE_OBJECTS_API})
                 set(EXAMPLE_LIST
