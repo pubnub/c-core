@@ -80,6 +80,7 @@ log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
 log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(CUSTOM_BOOL_TYPE "xddd" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
 
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
@@ -141,6 +142,13 @@ if(${WITH_CPP})
             ${CMAKE_CXX_FLAGS} \
             -std=c++11")
     endif()
+endif()
+
+if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
+    message(STATUS "Using custom bool type: ${BOOL_TYPE}")
+    set(FLAGS "\
+        ${FLAGS} \
+        -D PUBNUB_BOOL_TYPE=${BOOL_TYPE}")
 endif()
 
 set(CORE_SOURCEFILES 
@@ -672,6 +680,11 @@ if(${EXAMPLES})
             if (OPENSSL)
                 set(EXAMPLE_LIST
                     pubnub_crypto_module_sample
+                    ${EXAMPLE_LIST})
+            endif()
+            if (${USE_OBJECTS_API})
+                set(EXAMPLE_LIST
+                    pubnub_objects_api_sample
                     ${EXAMPLE_LIST})
             endif()
         endif()
