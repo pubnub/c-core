@@ -80,7 +80,7 @@ log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
 log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
-log_set(CUSTOM_BOOL_TYPE "xddd" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
+log_set(CUSTOM_BOOL_TYPE "" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
 
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
