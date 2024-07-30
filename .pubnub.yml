@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.11.2"
+version: "4.12.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-07-29
+    version: v4.12.0
+    changes:
+      - type: feature
+        text: "Added `filter` and `sort` parameters to be closer to the other SDKs with object API."
+      - type: feature
+        text: "Configurable `bool` type."
+      - type: bug
+        text: "Missing features needed for grant token API in CMakeLIsts.txt."
   - date: 2024-07-15
     version: v4.11.2
     changes:
@@ -819,7 +828,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -885,7 +894,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -951,7 +960,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -1013,7 +1022,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -1074,7 +1083,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -1130,7 +1139,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"
@@ -1183,7 +1192,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.11.2
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
             requires:
               -
                 name: "miniz"

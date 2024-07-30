@@ -1,3 +1,13 @@
+## v4.12.0
+July 29 2024
+
+#### Added
+- Added `filter` and `sort` parameters to be closer to the other SDKs with object API.
+- Configurable `bool` type.
+
+#### Fixed
+- Missing features needed for grant token API in CMakeLIsts.txt.
+
 ## v4.11.2
 July 15 2024
 
