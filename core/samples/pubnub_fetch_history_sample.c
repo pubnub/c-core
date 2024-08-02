@@ -147,8 +147,21 @@ int main(int argc, char* argv[])
             res = pubnub_await(pbp);
     }
     if (PNR_OK == res) {
+        pubnub_chamebl_t response = pubnub_get_fetch_history(pbp);
             printf("Got response for Fetch History! Response from Pubnub: %s\n",
-                    pubnub_get_fetch_history(pbp).ptr);
+            response.ptr);
+        if (NULL == strstr(response.ptr, "\"message_type\"")) {
+            printf("\"message_type\" is missing in response.");
+            return 1;
+        }
+        if (NULL == strstr(response.ptr, "\"uuid\"")) {
+            printf("\"uuid\" is missing in response.");
+            return 1;
+        }
+        if (NULL == strstr(response.ptr, "\"meta\"")) {
+            printf("\"meta\" is missing in response.");
+            return 1;
+        }
     }
     else{
         printf("pubnub_fetch_history() failed with code: %d('%s')\n",
