@@ -137,6 +137,33 @@ int main()
     }
 
     puts("=========================================");
+    puts("Publishing(via post with ttl)...");
+    time(&t0);
+    struct pubnub_publish_options options = publish_opts_method(pubnubSendViaPOSTwithGZIP);
+    options.ttl = 16;
+    res = pubnub_publish_ex(pbp,
+                            chan,
+                            "\"Hello world!\"",
+                            options);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    printf("Publish 'via post with ttl' lasted %lf seconds.\n", difftime(time(NULL), t0));
+    if (PNR_OK == res) {
+        printf("Published! Response from Pubnub: %s\n",
+               pubnub_last_publish_result(pbp));
+    }
+    else if (PNR_PUBLISH_FAILED == res) {
+        printf("Publishing failed on Pubnub, description: %s\n",
+               pubnub_last_publish_result(pbp));
+    }
+    else {
+        printf("Publishing failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+
+    puts("=========================================");
     /* Publishing via post with gzip */
     puts("Publishing(via post with gzip)...");
     time(&t0);

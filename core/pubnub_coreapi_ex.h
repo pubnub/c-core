@@ -60,7 +60,11 @@ struct pubnub_publish_options {
      */
     char const* meta;
     /** Defines the method by which publish transaction will be performed */
-    enum pubnub_method method; 
+    enum pubnub_method method;
+    /** For how many hours message should be kept and available with history
+        API.
+     */
+    size_t ttl;
 };
 
 /** This returns the default options for publish V1 transactions.
