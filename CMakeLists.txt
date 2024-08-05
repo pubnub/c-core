@@ -149,6 +149,7 @@ if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
     set(FLAGS "\
         ${FLAGS} \
         -D PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE}")
+    target_compile_definitions(pubnub PRIVATE "PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE}")
 endif()
 
 set(CORE_SOURCEFILES 
