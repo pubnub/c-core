@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.12.0"
+version: "4.12.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-08-05
+    version: v4.12.1
+    changes:
+      - type: bug
+        text: "Fix query values for boolean flags for history endpoint (`include meta`, `include uuid`, `include message type` and `reverse`)."
   - date: 2024-07-29
     version: v4.12.0
     changes:
@@ -828,7 +833,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -894,7 +899,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -960,7 +965,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -1022,7 +1027,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -1083,7 +1088,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -1139,7 +1144,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
@@ -1192,7 +1197,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.12.1
             requires:
               -
                 name: "miniz"
