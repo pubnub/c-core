@@ -1,3 +1,9 @@
+## v4.12.1
+August 05 2024
+
+#### Fixed
+- Fix query values for boolean flags for history endpoint (`include meta`, `include uuid`, `include message type` and `reverse`).
+
 ## v4.12.0
 July 29 2024
 
