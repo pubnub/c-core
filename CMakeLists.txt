@@ -145,10 +145,10 @@ if(${WITH_CPP})
 endif()
 
 if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
-    message(STATUS "Using custom bool type: ${BOOL_TYPE}")
+    message(STATUS "Using custom bool type: ${CUSTOM_BOOL_TYPE}")
     set(FLAGS "\
         ${FLAGS} \
-        -D PUBNUB_BOOL_TYPE=${BOOL_TYPE}")
+        -D PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE}")
 endif()
 
 set(CORE_SOURCEFILES 
@@ -501,6 +501,10 @@ if(NOT ESP_PLATFORM)
     endif()
 
     add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+
+    if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
+        target_compile_definitions(pubnub PUBLIC PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE})
+    endif()
 
     target_include_directories(pubnub PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}
