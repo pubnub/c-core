@@ -1,3 +1,9 @@
+## v4.12.3
+August 05 2024
+
+#### Fixed
+- Add the missing `ttl` parameter to the `pubnub_publish_options` for extended `publish` configuration.
+
 ## v4.12.2
 August 05 2024
 

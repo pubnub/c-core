@@ -211,7 +211,7 @@ enum pubnub_res pubnub_set_uuidmetadata_ex(pubnub_t* pb,
                            offset > 1 ? "," : "",
                            opts.data.profile_url);
     }
-    snprintf(obj_buffer + offset, obj_len - offset, "}\0");
+    snprintf(obj_buffer + offset, obj_len - offset, "}");
 
     result = pubnub_set_uuidmetadata(pb, opts.uuid, opts.include, obj_buffer);
     free(obj_buffer);
