@@ -1,3 +1,9 @@
+## v4.12.2
+August 05 2024
+
+#### Fixed
+- Fixed custom `bool` type for CMake builds.
+
 ## v4.12.1
 August 05 2024
 
