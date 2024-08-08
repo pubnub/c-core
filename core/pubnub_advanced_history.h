@@ -20,6 +20,20 @@ struct pubnub_chan_msg_count {
     size_t message_count;
 };
 
+// Delete messages endpoint configuration definition.
+struct pubnub_delete_messages_options {
+    /**
+     * @brief Timetoken delimiting the start of time slice (exclusive) to delete
+     *        messages from.
+     */
+    char const* start;
+    /**
+     * @brief Timetoken delimiting the end of time slice (inclusive) to delete
+     *        messages to.
+     */
+    char const* end;
+};
+
 
 /** If successful returns number of members(key:value pairs) of JSON object
     'channels', or -1 on error(transaction still in progress, or so)
@@ -63,6 +77,40 @@ PUBNUB_EXTERN int pubnub_get_chan_msg_counts(pubnub_t* pb,
   */
 PUBNUB_EXTERN int pubnub_get_message_counts(pubnub_t* pb, char const*channel, int* o_count);
 
+/**
+ * @brief Delete message transaction default options.
+ *
+ * @note It's best to always call `pubnub_delete_messages_defopts()` to
+ *       initialize `pubnub_delete_messages_options`. since it has serveral
+ *       parameters which maybe extended in the future.
+ *
+ * @return Default options for delete message transaction.
+ */
+PUBNUB_EXTERN struct pubnub_delete_messages_options pubnub_delete_messages_defopts(void);
+
+/**
+ * @brief Remove messages from the `channel`.
+ *
+ * Start `delete_messages` transaction to permanently remove messages from the `channel` storage.
+ *
+ * @param pb      PubNub context which should be used to perform
+ *                `delete messages` transaction.
+ * @param channel Channel from which messages should be deleted.
+ * @param options Additional `delete messages` transaction configuration object.
+ * @return Results of `delete messages` transaction call.
+ */
+PUBNUB_EXTERN enum pubnub_res
+pubnub_delete_messages(pubnub_t*                             pb,
+                       char const*                           channel,
+                       struct pubnub_delete_messages_options options);
+
+/**
+ * @brief Get `delete messages` service response.
+ *
+ * @param pb PubNub context which has been used to delete channel messages.
+ * @return `pubnub_chamebl_t` with pointer to string with response.
+ */
+PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_delete_messages_response(pubnub_t* pb);
 
 #endif /* !defined INC_PUBNUB_ADVANCED_HISTORY */
 
