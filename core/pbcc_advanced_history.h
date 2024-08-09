@@ -70,6 +70,43 @@ enum pubnub_res pbcc_message_counts_prep(
                                          char const*          channel,
                                          char const*          timetoken,
                                          char const*          channel_timetokens);
+
+/**
+ * @brief Prepare `delete messages` operation (transaction), mostly by
+ *        formatting the URI of the HTTP request.
+ *
+ * @param pb      PubNub context which provides resources to send request.
+ * @param channel Channel from which messages should be deleted.
+ * @param start   Timetoken delimiting the start of time slice (exclusive) to
+ *                delete messages from.
+ * @param end     Timetoken delimiting the end of time slice (inclusive) to
+ *                delete messages to.
+ * @return Results of `delete messages` transaction call.
+ */
+enum pubnub_res pbcc_delete_messages_prep(struct pbcc_context* pb,
+                                          char const*          channel,
+                                          char const*          start,
+                                          char const*          end);
+
+/**
+ * @brief Get `delete messages` service response.
+ *
+ * @param pb PubNub context which has been used to delete channel messages.
+ * @return `pubnub_chamebl_t` with pointer to string with response.
+ */
+pubnub_chamebl_t pbcc_get_delete_messages_response(struct pbcc_context* pb);
+
+
+
+/**
+ * @brief Parses the string received as a response for a history v3
+ *        operation (transaction).
+ *
+ * @param pb PubNub context to parse delete channel messages response.
+ * @return PNR_OK: OK, !PNR_OK: error (invalid response)
+*/
+enum pubnub_res pbcc_parse_delete_messages_response(struct pbcc_context* pb);
+
 #endif /* INC_PBCC_ADVANCED_HISTORY */
 #endif /* PUBNUB_USE_ADVANCED_HISTORY */
 

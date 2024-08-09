@@ -200,6 +200,13 @@ enum pubnub_trans {
         history counts for channels listed.
       */
     PBTT_MESSAGE_COUNTS,
+    /**
+     * @brief History V3 (delete messages) operation/transaction.
+     *
+     * @note All `channel` messages will be removed If neither `start`, nor
+     *       `end` has been passed.
+     */
+    PBTT_DELETE_MESSAGES,
 #endif
 #if PUBNUB_USE_OBJECTS_API
     /** Objects API transaction Returns a paginated list of users associated with the

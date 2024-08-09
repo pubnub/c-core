@@ -1381,6 +1381,9 @@ pubnub_res pubnub_qt::finish(QByteArray const& data, int http_code)
     case PBTT_MESSAGE_COUNTS:
         pbres = pbcc_parse_message_counts_response(d_context.data());
         break;
+    case PBTT_DELETE_MESSAGES:
+        pbres = pbcc_parse_delete_messages_response(d_context.data());
+        break;
 #endif
 #if PUBNUB_USE_OBJECTS_API
     case PBTT_GETALL_UUIDMETADATA:

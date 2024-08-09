@@ -328,6 +328,35 @@ static void get_message_counts_for_the_list_of_timetokens(pubnub_t* pbp,
         internal_msg_counts);
 }
 
+static int get_message_counts_for_the_channel(pubnub_t* pbp, char* channel, char* timetoken)
+{
+    enum pubnub_res count_res = pubnub_message_counts(pbp, channel, timetoken);
+    if (count_res == PNR_STARTED) {
+        count_res = pubnub_await(pbp);
+    }
+    if (PNR_OK != count_res) {
+        return -1;
+    }
+
+    int count = 0;
+    pubnub_get_message_counts(pbp, channel, &count);
+
+    return count;
+}
+
+static enum pubnub_res delete_channel_messages(pubnub_t* pbp, char* channel, char* start, char* end)
+{
+    struct pubnub_delete_messages_options options =  pubnub_delete_messages_defopts();
+    if (NULL != start) { options.start = start; }
+    if (NULL != end) { options.end = end; }
+
+    enum pubnub_res delete_res = pubnub_delete_messages(pbp, channel, options);
+    if (delete_res == PNR_STARTED) {
+        delete_res = pubnub_await(pbp);
+    }
+
+    return delete_res;
+}
 
 int main(int argc, char* argv[])
 {
@@ -368,11 +397,43 @@ int main(int argc, char* argv[])
     get_message_counts_for_a_single_timetoken(pbp_2,
                                               string_channels,
                                               sizeof m_timetokens/sizeof m_timetokens[0]);
-    
-    sync_sample_free(pbp_2);
-    sync_sample_free(pbp);
+
 
     puts("Pubnub message_counts demo over.");
+
+    puts("Pubnub delete_message demo start.");
+    enum pubnub_res delete_res = delete_channel_messages(pbp, m_channel[4], m_timetokens[1], m_timetokens[3]);
+    if (PNR_OK != delete_res) {
+        printf("Delete messages failed with code: %d('%s')\n", delete_res, pubnub_res_2_string(delete_res));
+        sync_sample_free(pbp_2);
+        sync_sample_free(pbp);
+        return -1;
+    }
+
+    int count = get_message_counts_for_the_channel(pbp, m_channel[4], m_timetokens[0]);
+    if (count != 3) {
+        printf("It is expected that 2 of 5 messages to be removed. There is %d messages in %s\n", count, m_channel[4]);
+        return -1;
+    }
+
+    delete_res = delete_channel_messages(pbp, m_channel[3], NULL, NULL);
+    if (PNR_OK != delete_res) {
+        printf("Delete messages failed with code: %d('%s')\n", delete_res, pubnub_res_2_string(delete_res));
+        sync_sample_free(pbp_2);
+        sync_sample_free(pbp);
+        return -1;
+    }
+
+    count = get_message_counts_for_the_channel(pbp, m_channel[3], m_timetokens[0]);
+    if (count != 0) {
+        printf("It is expected that 4 of 4 messages to be removed. There is %d messages in %s\n", count, m_channel[3]);
+        return -1;
+    }
+
+    puts("Pubnub delete_message demo is over.");
+
+    sync_sample_free(pbp_2);
+    sync_sample_free(pbp);
 
     return 0;
 }

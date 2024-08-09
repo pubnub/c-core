@@ -10,6 +10,7 @@
 #include "pubnub_url_encode.h"
 
 #include "pubnub_assert.h"
+#include "pubnub_helper.h"
 #include "pubnub_log.h"
 #else
 #error this module can only be used if PUBNUB_USE_ADVANCED_HISTORY is defined and set to 1
@@ -542,4 +543,132 @@ enum pubnub_res pbcc_message_counts_prep(
 
     PUBNUB_LOG_DEBUG("pbcc_message_counts_prep. REQUEST =%s\n", p->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
+}
+
+enum pubnub_res pbcc_delete_messages_prep(struct pbcc_context* pb,
+                                          char const*          channel,
+                                          char const*          start,
+                                          char const*          end)
+{
+    char const* const uname = pubnub_uname();
+    char const* user_id = pbcc_user_id_get(pb);
+#if PUBNUB_CRYPTO_API
+    enum pubnub_res rslt = PNR_OK;
+#endif
+
+    PUBNUB_ASSERT_OPT(NULL != user_id);
+
+    pb->msg_ofs = pb->msg_end = 0;
+    pb->http_content_len = 0;
+
+    pb->http_buf_len =
+        snprintf(pb->http_buf,
+                 sizeof pb->http_buf,
+                 "/v3/history/sub-key/%s/channel/",
+                 pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel);
+
+    URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
+    if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    ADD_URL_PARAM(qparam, uuid, user_id);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
+    ADD_TS_TO_URL_PARAM();
+#else
+    ADD_URL_AUTH_PARAM(pb, qparam, auth);
+#endif
+    if (start) { ADD_URL_PARAM(qparam, start, start); }
+    if (end) { ADD_URL_PARAM(qparam, end, end); }
+
+#if PUBNUB_CRYPTO_API
+    SORT_URL_PARAMETERS(qparam);
+#endif
+    ENCODE_URL_PARAMETERS(pb, qparam);
+#if PUBNUB_CRYPTO_API
+    if (pb->secret_key != NULL) {
+        rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
+    }
+#endif
+
+    PUBNUB_LOG_DEBUG("pbcc_delete_messages_prep. REQUEST =%s\n", pb->http_buf);
+#if PUBNUB_CRYPTO_API
+    return (rslt != PNR_OK) ? rslt : PNR_STARTED;
+#else
+    return PNR_STARTED;
+#endif
+}
+
+pubnub_chamebl_t pbcc_get_delete_messages_response(struct pbcc_context* pb)
+{
+    pubnub_chamebl_t resp;
+    char const*      reply     = pb->http_reply;
+    int              reply_len = pb->http_buf_len;
+
+    if (PNR_OK != pb->last_result) {
+        PUBNUB_LOG_ERROR("pbcc_get_delete_messages_response(pb=%p) can be "
+                         "called only if previous transactin "
+                         "PBTT_DELETE_MESSAGES(%d) is finished successfully. "
+                         "Transaction result was: %d('%s')\n",
+                         pb,
+                         PBTT_DELETE_MESSAGES,
+                         pb->last_result,
+                         pubnub_res_2_string(pb->last_result));
+        resp.ptr  = NULL;
+        resp.size = 0;
+        return resp;
+    }
+
+    resp.ptr  = (char*)reply;
+    resp.size = reply_len;
+    return resp;
+}
+
+enum pubnub_res pbcc_parse_delete_messages_response(struct pbcc_context* pb)
+{
+    enum pbjson_object_name_parse_result jpresult;
+    struct pbjson_elem                   el;
+    struct pbjson_elem                   found;
+    char*                                reply     = pb->http_reply;
+    int                                  reply_len = pb->http_buf_len;
+
+    if ((reply[0] != '{') || (reply[reply_len - 1] != '}')) {
+        PUBNUB_LOG_ERROR(
+            "Error: pbcc_parse_delete_messages_response(pbcc=%p) - "
+            "Response is not json object: response='%.*s'\n",
+            pb,
+            reply_len,
+            reply);
+        return PNR_FORMAT_ERROR;
+    }
+    el.start = reply;
+    el.end   = reply + reply_len;
+    if (pbjson_value_for_field_found(&el, "status", "403")) {
+        PUBNUB_LOG_ERROR(
+            "Error: pbcc_parse_delete_messages_response(pbcc=%p) - "
+            "Access Denied: response='%.*s'\n",
+            pb,
+            reply_len,
+            reply);
+        return PNR_ACCESS_DENIED;
+    }
+    jpresult = pbjson_get_object_value(&el, "error", &found);
+    if (jonmpOK == jpresult) {
+        if (pbjson_elem_equals_string(&found, "true")) {
+            return PNR_ERROR_ON_SERVER;
+        }
+    }
+    else {
+        PUBNUB_LOG_ERROR(
+            "Error: pbcc_parse_delete_messages_response(pbcc=%p) - "
+            "'error' atribute not found in the response. error=%d\n"
+            "response='%.*s'\n",
+            pb,
+            jpresult,
+            reply_len,
+            reply);
+        return PNR_FORMAT_ERROR;
+    }
+    pb->chan_ofs = pb->chan_end = 0;
+
+    return PNR_OK;
 }
