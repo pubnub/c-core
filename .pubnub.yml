@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.12.3"
+version: "4.13.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-08-09
+    version: v4.13.0
+    changes:
+      - type: feature
+        text: "Add `delete message` API support to the advanced history module."
   - date: 2024-08-05
     version: v4.12.3
     changes:
@@ -843,7 +848,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -909,7 +914,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -975,7 +980,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -1037,7 +1042,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -1098,7 +1103,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -1154,7 +1159,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"
@@ -1207,7 +1212,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.12.3
+            location: https://github.com/pubnub/c-core/releases/tag/v4.13.0
             requires:
               -
                 name: "miniz"

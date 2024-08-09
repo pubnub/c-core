@@ -1,3 +1,9 @@
+## v4.13.0
+August 09 2024
+
+#### Added
+- Add `delete message` API support to the advanced history module.
+
 ## v4.12.3
 August 05 2024
 
