@@ -1,3 +1,9 @@
+## v4.13.1
+September 05 2024
+
+#### Fixed
+- Removed additional null byte character.
+
 ## v4.13.0
 August 09 2024
 

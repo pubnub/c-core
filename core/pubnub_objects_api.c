@@ -407,7 +407,7 @@ enum pubnub_res pubnub_set_channelmetadata_ex(pubnub_t*   pb,
                            opts.data.name);
     }
 
-    offset += snprintf(obj_buffer + offset, obj_len - offset, "}\0");
+    offset += snprintf(obj_buffer + offset, obj_len - offset, "}");
 
     result = pubnub_set_channelmetadata(pb, channel, opts.include, obj_buffer);
     free(obj_buffer);
