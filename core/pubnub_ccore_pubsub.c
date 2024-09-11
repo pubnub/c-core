@@ -15,6 +15,10 @@
 #include "pubnub_crypto.h"
 #endif
 
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#include "core/pbcc_subscribe_event_engine.h"
+#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -75,6 +79,9 @@ void pbcc_deinit(struct pbcc_context* p)
         p->crypto_module = NULL;   
     }
 #endif /* PUBNUB_CRYPTO_API */
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    pbcc_subscribe_ee_free(p->subscribe_ee);
+#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 }
 
 

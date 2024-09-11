@@ -3,6 +3,7 @@
 #if !defined INC_PUBNUB_INTERNAL_COMMON
 #define INC_PUBNUB_INTERNAL_COMMON
 
+#include <stdbool.h>
 #include "pubnub_config.h"
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_netcore.h"

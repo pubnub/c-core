@@ -61,6 +61,7 @@ num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use subscribe event engine" ON)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
@@ -97,6 +98,7 @@ set(FLAGS "\
     -D PUBNUB_USE_GZIP_COMPRESSION=${USE_GZIP_COMPRESSION} \
     -D PUBNUB_RECEIVE_GZIP_RESPONSE=${RECEIVE_GZIP_RESPONSE} \
     -D PUBNUB_USE_SUBSCRIBE_V2=${USE_SUBSCRIBE_V2} \
+    -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=${USE_SUBSCRIBE_EVENT_ENGINE} \
     -D PUBNUB_USE_OBJECTS_API=${USE_OBJECTS_API} \
     -D PUBNUB_USE_ACTIONS_API=${USE_ACTIONS_API} \
     -D PUBNUB_USE_AUTO_HEARTBEAT=${USE_AUTO_HEARTBEAT} \
@@ -323,6 +325,16 @@ if(${USE_SUBSCRIBE_V2})
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_v2.c)
 endif()
 
+if(${USE_SUBSCRIBE_EVENT_ENGINE})
+    message(STATUS "Using subscribe event engine API")
+    set(FEATURE_SOURCEFILES
+            ${FEATURE_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_entities.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_engine.c)
+endif()
+
 if(${USE_ADVANCED_HISTORY})
     set(FEATURE_SOURCEFILES
         ${FEATURE_SOURCEFILES}
@@ -478,7 +490,30 @@ set(SOURCEFILES
     ${LIB_SOURCEFILES} 
     ${OS_SOURCEFILES} 
     ${FEATURE_SOURCEFILES} 
-    ${INTF_SOURCEFILES})
+    ${INTF_SOURCEFILES}
+        core/pubnub_subscribe_event_engine.h
+        core/pubnub_entities.c
+        core/pubnub_entities.h
+        core/pubnub_entities_internal.h
+        lib/pbhash_set.c
+        lib/pbhash_set.h
+        lib/pbarray.c
+        lib/pbarray.h
+        core/pubnub_subscribe_event_engine_internal.h
+        lib/pbstrdup.c
+        lib/pbstrdup.h
+        lib/pbref_counter.c
+        lib/pbref_counter.h
+        core/pubnub_subscribe_event_listener.c
+        core/pubnub_subscribe_event_listener.h
+        core/pubnub_subscribe_event_listener_internal.h
+        core/pbcc_subscribe_event_listener.c
+        core/pbcc_subscribe_event_listener.h
+        core/pubnub_subscribe_event_listener_types.h
+        core/pubnub_subscribe_event_engine_types.h
+        core/pbcc_memory_utils.c
+        core/pbcc_memory_utils.h
+)
 
 if(NOT ESP_PLATFORM)
     if(${SHARED_LIB})

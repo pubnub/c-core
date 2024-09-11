@@ -88,7 +88,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_CRYPTO_API
     p->core.crypto_module = NULL;
 #endif
-
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    p->core.subscribe_ee = pbcc_subscribe_ee_alloc(p);
+#endif
     pubnub_mutex_unlock(p->monitor);
 
     return p;

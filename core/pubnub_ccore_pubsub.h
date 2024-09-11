@@ -2,6 +2,10 @@
 #if !defined INC_PUBNUB_CCORE_PUBSUB
 #define INC_PUBNUB_CCORE_PUBSUB
 
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#include "pbcc_subscribe_event_engine.h"
+#endif
+
 #include "pubnub_config.h"
 #include "pubnub_api_types.h"
 #include "pubnub_generate_uuid.h"
@@ -55,6 +59,11 @@ struct pbcc_context {
 #if PUBNUB_USE_SUBSCRIBE_V2
     /** The last received subscribe V2 region */
     int region;
+#endif
+
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    // Event Engine which supports new subscription loop.
+    pbcc_subscribe_ee_t *subscribe_ee;
 #endif
 
     /** The result of the last Pubnub transaction */

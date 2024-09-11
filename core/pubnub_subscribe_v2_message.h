@@ -9,7 +9,6 @@
 #error To use the subscribe V2 API you must define PUBNUB_USE_SUBSCRIBE_V2=1
 #endif
 
-#include <stdbool.h>
 #include "pubnub_memory_block.h"
 
 /* subscribe_v2 message types */
