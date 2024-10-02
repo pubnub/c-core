@@ -181,7 +181,7 @@ Ensure(pbhash_set, should_remove_string)
     pbhash_set_add(set, "hello once", NULL);
     pbhash_set_add(set, "hello twice", NULL);
 
-    assert_that(pbhash_set_remove(set, "hello twice"), is_equal_to(PBHSR_OK));
+    assert_that(pbhash_set_remove(set, "hello twice", NULL), is_equal_to(PBHSR_OK));
     assert_that(elementFreeCounter, is_equal_to(1));
 }
 
@@ -190,7 +190,7 @@ Ensure(pbhash_set, should_not_remove_string_when_not_found)
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, freeElement);
     pbhash_set_add(set, "hello once", NULL);
 
-    assert_that(pbhash_set_remove(set, "hello twice"),
+    assert_that(pbhash_set_remove(set, "hello twice", NULL),
                 is_equal_to(PBHSR_NOT_FOUND));
     assert_that(elementFreeCounter, is_equal_to(0));
 }

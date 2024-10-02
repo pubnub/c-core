@@ -1,3 +1,4 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PBSTRDUP_H
 #define PBSTRDUP_H
 

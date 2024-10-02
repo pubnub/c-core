@@ -1,3 +1,4 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PBREF_COUNTER_H
 #define PBREF_COUNTER_H
 
@@ -27,6 +28,10 @@ typedef struct pbref_counter pbref_counter_t;
 
 /**
  * @brief Create a shared resource reference counter.
+ *
+ * @note Usually, the reference counter allocated along with the object for
+ *       which references should be counted and, for simplicity, will be set
+ *       to \b 1.
  *
  * @return Pointer to the resource reference counter object.
  */
@@ -61,4 +66,4 @@ size_t pbref_counter_decrement(pbref_counter_t* counter);
  * @return Current number of references.
  */
 size_t pbref_counter_free(pbref_counter_t* counter);
-#endif //PBREF_COUNTER_H
+#endif // #ifndef PBREF_COUNTER_H

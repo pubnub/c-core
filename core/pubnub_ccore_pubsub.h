@@ -6,6 +6,11 @@
 #include "pbcc_subscribe_event_engine.h"
 #endif
 
+#if PUBNUB_USE_RETRY_CONFIGURATION
+#include "core/pubnub_retry_configuration.h"
+#include "core/pbcc_request_retry_timer.h"
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
+
 #include "pubnub_config.h"
 #include "pubnub_api_types.h"
 #include "pubnub_generate_uuid.h"
@@ -127,6 +132,15 @@ struct pbcc_context {
        to be received at all.
     */
     unsigned chan_ofs, chan_end;
+
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    /** Pointer to the configuration with failed request handling details. */
+    pubnub_retry_configuration_t* retry_configuration;
+    /** Failed request retry timer. */
+    pbcc_request_retry_timer_t* retry_timer;
+    /** Current number of retry attempts. */
+    int http_retry_count;
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 
 #if PUBNUB_CRYPTO_API
     /** Secret key to use for encryption/decryption */

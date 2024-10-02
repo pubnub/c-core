@@ -21,6 +21,10 @@ enum pubnub_state {
         407, sending (some more) authentication data.
      */
     PBS_RETRY,
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    /** Request retry timer is active and FSM await for it to timeout. */
+    PBS_WAIT_RETRY,
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     /** Ready to start a transaction */
     PBS_READY,
     /** Waiting for sending a DNS request */

@@ -1,12 +1,13 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_entities.h"
-#include "pubnub_entities_internal.h"
-#include <stdlib.h>
-#include <string.h>
 
-#include "pbcc_memory_utils.h"
-#include "core/pubnub_internal_common.h"
+#include <stdlib.h>
+
+#include "core/pubnub_entities_internal.h"
+#include "core/pbcc_memory_utils.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "pubnub_internal.h"
 #include "lib/pbstrdup.h"
 
 
@@ -25,7 +26,7 @@
  * @return Ready to use PubNub entity. The returned pointer must be passed to
  *         the `pubnub_entity_free` to avoid a memory leak.
  */
-static pubnub_entity_t* _create_entity(
+static pubnub_entity_t* create_entity_(
     pubnub_t*          pb,
     const char*        id,
     pubnub_entity_type type);
@@ -37,7 +38,8 @@ static pubnub_entity_t* _create_entity(
  *               entity.
  * @return `true` if passed `entity` is one of PubNub entities.
  */
-static bool _is_pubnub_entity(void* entity);
+static bool is_pubnub_entity_(void* entity);
+
 
 // ----------------------------------
 //             Functions
@@ -47,14 +49,14 @@ pubnub_channel_t* pubnub_channel_alloc(
     pubnub_t*   pb,
     const char* name)
 {
-    return (pubnub_channel_t*)_create_entity(pb, name, PUBNUB_ENTITY_CHANNEL);
+    return (pubnub_channel_t*)create_entity_(pb, name, PUBNUB_ENTITY_CHANNEL);
 }
 
 pubnub_channel_group_t* pubnub_channel_group_alloc(
     pubnub_t*   pb,
     const char* name)
 {
-    return (pubnub_channel_group_t*)_create_entity(
+    return (pubnub_channel_group_t*)create_entity_(
         pb,
         name,
         PUBNUB_ENTITY_CHANNEL_GROUP);
@@ -64,7 +66,7 @@ pubnub_channel_metadata_t* pubnub_channel_metadata_alloc(
     pubnub_t*   pb,
     const char* id)
 {
-    return (pubnub_channel_metadata_t*)_create_entity(
+    return (pubnub_channel_metadata_t*)create_entity_(
         pb,
         id,
         PUBNUB_ENTITY_CHANNEL_METADATA);
@@ -74,29 +76,35 @@ pubnub_user_metadata_t* pubnub_user_metadata_alloc(
     pubnub_t*   pb,
     const char* id)
 {
-    return (pubnub_user_metadata_t*)_create_entity(
+    return (pubnub_user_metadata_t*)create_entity_(
         pb,
         id,
         PUBNUB_ENTITY_USER_METADATA);
 }
 
-void pubnub_entity_free(pubnub_entity_t* entity)
+bool pubnub_entity_free(void** entity)
 {
-    if (NULL == entity) { return; }
-    PUBNUB_ASSERT(_is_pubnub_entity(entity));
+    if (NULL == entity || NULL == *entity) { return false; }
 
-    _entity_reference_count_update(entity, false);
-    pubnub_mutex_lock(entity->mutw);
-    if (entity->reference_count == 0) {
-        free(entity->id.ptr);
-        pubnub_mutex_unlock(entity->mutw);
-        pubnub_mutex_destroy(entity->mutw);
-        free(entity);
+    printf("~~~~~~> RESULT: %d\n", is_pubnub_entity_(*entity));
+    PUBNUB_ASSERT_OPT(true == is_pubnub_entity_(*entity));
+
+    pubnub_entity_t* _entity = *entity;
+    pubnub_mutex_lock(_entity->mutw);
+    if (0 == pbref_counter_free(_entity->counter)) {
+        free(_entity->id.ptr);
+        pubnub_mutex_unlock(_entity->mutw);
+        pubnub_mutex_destroy(_entity->mutw);
+        free(*entity);
+        *entity = NULL;
+        return true;
     }
-    else { pubnub_mutex_unlock(entity->mutw); }
+    pubnub_mutex_unlock(_entity->mutw);
+
+    return false;
 }
 
-pubnub_entity_t* _create_entity(
+pubnub_entity_t* create_entity_(
     pubnub_t*                pb,
     const char*              id,
     const pubnub_entity_type type)
@@ -115,14 +123,14 @@ pubnub_entity_t* _create_entity(
     }
 
     pubnub_mutex_init(entity->mutw);
-    entity->reference_count = 1;
-    entity->type            = type;
-    entity->pb              = pb;
+    entity->counter = pbref_counter_alloc();
+    entity->type    = type;
+    entity->pb      = pb;
 
     return entity;
 }
 
-bool _is_pubnub_entity(void* entity)
+bool is_pubnub_entity_(void* entity)
 {
     if (NULL == entity) { return false; }
 
@@ -133,15 +141,14 @@ bool _is_pubnub_entity(void* entity)
            || type == PUBNUB_ENTITY_USER_METADATA;
 }
 
-void _entity_reference_count_update(
+void entity_reference_count_update_(
     pubnub_entity_t* entity,
     const bool       increase)
 {
     PUBNUB_ASSERT_OPT(NULL != entity);
 
     pubnub_mutex_lock(entity->mutw);
-    if (increase) { entity->reference_count++; }
-    else
-        if (entity->reference_count > 0) { entity->reference_count--; }
+    if (increase) { pbref_counter_increment(entity->counter); }
+    else { pbref_counter_decrement(entity->counter); }
     pubnub_mutex_unlock(entity->mutw);
 }

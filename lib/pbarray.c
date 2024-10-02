@@ -1,9 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-
 #include "pbarray.h"
 
 #include <stdio.h>
 #include <string.h>
+
 #include "core/pubnub_mutex.h"
 #include "lib/pbref_counter.h"
 
@@ -12,20 +12,26 @@
 //              Types
 // ----------------------------------
 
+/**
+ * @brief Single array entry definition.
+ *
+ * To avoid potential segmentation failure on a secondary attempt to free
+ * resources used by the entry, non-raw pointers have been chosen.
+ */
 typedef struct pbarray_entry {
-    // Pointer to the current entry value.
-    const void* value;
-    // Object references counter.
+    /** Pointer to the current entry value. */
+    void* value;
+    /** Object references counter. */
     pbref_counter_t* counter;
 } pbarray_entry_t;
 
-// Auto-resizable array definition.
+/** Auto-resizable array definition. */
 struct pbarray {
-    // Array resize strategy.
+    /** Array resize strategy. */
     pbarray_resize_strategy resize_strategy;
-    // Type of data which will be stored in array.
+    /** Type of data which will be stored in array. */
     pbarray_content_type content_type;
-    // Stored elements `free` function.
+    /** Stored elements `free` function. */
     pbarray_element_free free;
     /**
      * @brief Initial length of array.
@@ -33,13 +39,17 @@ struct pbarray {
      * Reference length which will be used by new size computation function.
      */
     size_t initial_length;
-    // Pointer to the pointers to the entries (`pbarray_entry_t`).
+    /**
+     * @brief Pointer to the pointers to the entries.
+     *
+     * @see pbarray_entry_t
+     */
     void** elements;
-    // Current array capacity.
+    /** Current array capacity. */
     size_t length;
-    // Number of elements stored in an array.
+    /** Number of elements stored in an array. */
     size_t count;
-    // Shared resources access lock.
+    /** Shared resources access lock. */
     pubnub_mutex_t mutw;
 };
 
@@ -51,24 +61,30 @@ struct pbarray {
 /**
  * @brief Remove element from array.
  *
- * \b Important: The element destruct function (if provided during array
- * allocation) will be used for the removed `element` (only if it existed in
- * array).
+ * \b Important: If provided during array allocation, the element destruct
+ * function will be used for the matched element only if there are no other
+ * references to it (not shared with other arrays after `pbarray_merge`).<br/>
+ * \b Important: The `element` pointer will be NULLified if the memory address
+ * and value of the `element` match the elements that have been freed
+ * (no references).
  *
  * @note Remove operation is expensive because it requires other elements to
  *       shift their position in array to close the “gap”.
  *
- * @param array           Pointer to the array from which element should be
- *                        removed.
- * @param element         Pointer to the element which should be removed.
- * @param all_occurrences Whether all `element` occurrences should be removed or
- *                        not.
+ * @param array                Pointer to the array from which element should be
+ *                             removed.
+ * @param element              Pointer to the element which should be removed.
+ * @param all_occurrences      Whether all `element` occurrences should be
+ *                             removed or not.
+ * @param [in,out] freed_value Whether entry value actually has been freed
+ *                             (no references) or not.
  * @return `PBAR_OK` in case if new element has been removed.
  */
-static pbarray_res _pbarray_remove(
-    pbarray_t*  array,
-    const void* element,
-    bool        all_occurrences);
+static pbarray_res pbarray_remove_(
+    pbarray_t* array,
+    void**     element,
+    bool       all_occurrences,
+    bool*      freed_value);
 
 /**
  * @brief Compute size, which depends on whether the array increases or shrinks.
@@ -77,7 +93,7 @@ static pbarray_res _pbarray_remove(
  * @param increase Whether array should be increased in size or not.
  * @return New array size.
  */
-static size_t _pbarray_target_length(const pbarray_t* array, bool increase);
+static size_t pbarray_target_length_(const pbarray_t* array, bool increase);
 
 /**
  * @brief Resize array to fit new elements or shrink to preserve memory.
@@ -87,7 +103,7 @@ static size_t _pbarray_target_length(const pbarray_t* array, bool increase);
  * @param increase Whether array should be increased in size or not.
  * @return `PBAR_OK` in case if array resized or there were no need in resize.
  */
-static pbarray_res _pbarray_resize(pbarray_t* array, bool increase);
+static pbarray_res pbarray_resize_(pbarray_t* array, bool increase);
 
 /**
  * @brief Check whether elements are equal.
@@ -99,7 +115,7 @@ static pbarray_res _pbarray_resize(pbarray_t* array, bool increase);
  *                 from array.
  * @return `true` in case if two elements are equal.
  */
-static bool _pbarray_element_is_equal(
+static bool pbarray_element_is_equal_(
     const pbarray_t* array,
     const void*      element1,
     const void*      element2);
@@ -107,17 +123,12 @@ static bool _pbarray_element_is_equal(
 /**
  * @brief Create an array entry object.
  *
- * @param value   Pointer to the value which should be safely stored in an
- *                array.
- * @param counter Pointer to the `value` reference counter (if entry for a copy
- *                from another array).
+ * @param value Pointer to the value which should be safely stored in an array.
  * @return Pointer to the ready to use array entry object or `NULL` in case of
  *         insufficient memory error. The returned pointer must be passed to the
  *         `_pbarray_entry_free` to avoid a memory leak.
  */
-static pbarray_entry_t* _pbarray_entry_alloc(
-    const void*      value,
-    pbref_counter_t* counter);
+static pbarray_entry_t* pbarray_entry_alloc_(void* value);
 
 /**
  * @brief Add entry with user-provided value at specific index in array.
@@ -125,12 +136,14 @@ static pbarray_entry_t* _pbarray_entry_alloc(
  * @param array Pointer to the array which will store the entry.
  * @param index Index into which `entry` should be placed.
  * @param entry Pointer to the entry which holds user-provided value.
+ * @param clone Whether `entry` clone should be added into array instead.
  * @return Entry addition operation result.
  */
-static pbarray_res _pbarray_add_entry_at(
+static pbarray_res pbarray_add_entry_at_(
     pbarray_t*       array,
     size_t           index,
-    pbarray_entry_t* entry);
+    pbarray_entry_t* entry,
+    bool             clone);
 
 /**
  * @brief Remove entry by index from array.
@@ -142,27 +155,33 @@ static pbarray_res _pbarray_add_entry_at(
  * @note Remove operation is expensive because it requires other elements to
  *       shift their position in array to close the “gap”.
  *
- * @param array      Pointer to the array from which entry should be removed.
- * @param index      Index of the `entry` which should be removed.
- * @param free_entry Whether entry value destructor should be used or not.
+ * @param array                Pointer to the array from which entry should be
+ *                             removed.
+ * @param index                Index of the `entry` which should be removed.
+ * @param free_value           Whether entry value destructor should be used or
+ *                             not.
+ * @param [in,out] freed_value Whether entry value actually has been freed
+ *                             (no references) or not.
  * @return Entry removal operation result.
  */
-static pbarray_res _pbarray_remove_entry_at(
+static pbarray_res pbarray_remove_entry_at_(
     pbarray_t* array,
     size_t     index,
-    bool       free_entry);
+    bool       free_value,
+    bool*      freed_value);
 
 /**
  * @brief Clean up resources used by entry object.
  *
  * @param array      Pointer to the array which stored 'entry'.
  * @param entry      Pointer to the entry which should be to free up resources.
- * @param free_entry Whether entry value destructor should be used or not.
+ * @param free_value Whether entry value destructor should be used or not.
+ * @return `true` if entry value actually has been freed.
  */
-static void _pbarray_entry_free(
+static bool pbarray_entry_free_(
     const pbarray_t* array,
     pbarray_entry_t* entry,
-    bool             free_entry);
+    bool             free_value);
 
 
 // ----------------------------------
@@ -195,15 +214,11 @@ pbarray_t* pbarray_alloc(
     return array;
 }
 
-pbarray_t* pbarray_copy(const pbarray_t* array)
+pbarray_t* pbarray_copy(pbarray_t* array)
 {
-    pubnub_mutex_lock(array->mutw);
-    const size_t count = array->count;
-    if (0 == count) {
-        pubnub_mutex_unlock(array->mutw);
-        return NULL;
-    }
+    if (NULL == array->free) { return NULL; }
 
+    pubnub_mutex_lock(array->mutw);
     pbarray_t* copy = pbarray_alloc(array->length,
                                     array->resize_strategy,
                                     array->content_type,
@@ -212,28 +227,22 @@ pbarray_t* pbarray_copy(const pbarray_t* array)
         pubnub_mutex_unlock(array->mutw);
         return NULL;
     }
-    copy->count = count;
+    copy->count = array->count;
 
-    for (size_t i = 0; i < count; ++i) {
-        const pbarray_entry_t* entry        = array->elements[i];
-        pbarray_entry_t*       entry_to_add = _pbarray_entry_alloc(
-            entry->value,
-            entry->counter);
+    for (size_t i = 0; i < array->count; ++i) {
+        pbarray_entry_t* entry = array->elements[i];
 
-        if (NULL == entry_to_add) {
-            pubnub_mutex_unlock(array->mutw);
-            pbarray_free(copy);
-            return NULL;
+        if (PBAR_OK != pbarray_add_entry_at_(copy, i, entry, true)) {
+            pbarray_free(&copy);
+            break;
         }
-
-        _pbarray_add_entry_at(copy, i, entry_to_add);
     }
     pubnub_mutex_unlock(array->mutw);
 
     return copy;
 }
 
-size_t pbarray_count(const pbarray_t* array)
+size_t pbarray_count(pbarray_t* array)
 {
     pubnub_mutex_lock(array->mutw);
     const size_t count = array->count;
@@ -242,13 +251,13 @@ size_t pbarray_count(const pbarray_t* array)
     return count;
 }
 
-bool pbarray_contains(const pbarray_t* array, const void* element)
+bool pbarray_contains(pbarray_t* array, const void* element)
 {
     pubnub_mutex_lock(array->mutw);
     for (int i = 0; i < array->count; ++i) {
         const pbarray_entry_t* entry = array->elements[i];
 
-        if (_pbarray_element_is_equal(array, entry->value, element)) {
+        if (pbarray_element_is_equal_(array, entry->value, element)) {
             pubnub_mutex_unlock(array->mutw);
             return true;
         }
@@ -258,7 +267,7 @@ bool pbarray_contains(const pbarray_t* array, const void* element)
     return false;
 }
 
-const void** pbarray_elements(const pbarray_t* array, size_t* count)
+const void** pbarray_elements(pbarray_t* array, size_t* count)
 {
     pubnub_mutex_lock(array->mutw);
     const size_t cnt      = array->count;
@@ -271,78 +280,81 @@ const void** pbarray_elements(const pbarray_t* array, size_t* count)
     }
 
     for (size_t i = 0; i < cnt; ++i) {
-        elements[i] = (void*)((pbarray_entry_t*)array->elements[i])->value;
+        elements[i] = ((pbarray_entry_t*)array->elements[i])->value;
     }
     pubnub_mutex_unlock(array->mutw);
 
     return elements;
 }
 
-pbarray_res pbarray_add(pbarray_t* array, const void* element)
+pbarray_res pbarray_add(pbarray_t* array, void* element)
 {
     pubnub_mutex_lock(array->mutw);
-    pbarray_entry_t* entry = _pbarray_entry_alloc(element, NULL);
+    pbarray_entry_t* entry = pbarray_entry_alloc_(element);
     if (NULL == entry) {
         pubnub_mutex_unlock(array->mutw);
         return PBAR_OUT_OF_MEMORY;
     }
 
     const pbarray_res result =
-        _pbarray_add_entry_at(array, array->count, entry);
-    if (PBAR_OK != result) { _pbarray_entry_free(array, entry, false); }
+        pbarray_add_entry_at_(array, array->count, entry, false);
+    if (PBAR_OK != result) { pbarray_entry_free_(array, entry, false); }
     pubnub_mutex_unlock(array->mutw);
 
     return result;
 }
 
-pbarray_res pbarray_insert(
+pbarray_res pbarray_insert_at(
     pbarray_t*   array,
-    const void*  element,
+    void*        element,
     const size_t idx)
 {
     pubnub_mutex_lock(array->mutw);
-    pbarray_entry_t* entry = _pbarray_entry_alloc(element, NULL);
+    pbarray_entry_t* entry = pbarray_entry_alloc_(element);
     if (NULL == entry) {
         pubnub_mutex_unlock(array->mutw);
         return PBAR_OUT_OF_MEMORY;
     }
 
-    const pbarray_res result = _pbarray_add_entry_at(array, idx, entry);
-    if (PBAR_OK != result) { _pbarray_entry_free(array, entry, false); }
+    const pbarray_res result = pbarray_add_entry_at_(array, idx, entry, false);
+    if (PBAR_OK != result) { pbarray_entry_free_(array, entry, false); }
     pubnub_mutex_unlock(array->mutw);
 
     return result;
 }
 
-pbarray_res pbarray_merge(pbarray_t* array, const pbarray_t* other_array)
+pbarray_res pbarray_merge(pbarray_t* array, pbarray_t* other_array)
 {
     if (NULL == other_array) { return PBAR_OK; }
 
     pubnub_mutex_lock(array->mutw);
     pbarray_res result = PBAR_OK;
 
+    pubnub_mutex_lock(other_array->mutw);
     for (size_t i = 0; i < other_array->count; ++i) {
-        const pbarray_entry_t* entry        = other_array->elements[i];
-        pbarray_entry_t*       entry_to_add = _pbarray_entry_alloc(
-            entry->value,
-            entry->counter);
+        pbarray_entry_t* entry = other_array->elements[i];
+        result = pbarray_add_entry_at_(array, array->count, entry, true);
 
-        if (NULL == entry_to_add) { result = PBAR_OUT_OF_MEMORY; }
-        else { result = _pbarray_add_entry_at(array, i, entry_to_add); }
         if (PBAR_OK != result) { break; }
     }
+    pubnub_mutex_unlock(other_array->mutw);
     pubnub_mutex_unlock(array->mutw);
 
     return result;
 }
 
 pbarray_res pbarray_remove(
-    pbarray_t*  array,
-    const void* element,
-    const bool  all_occurrences)
+    pbarray_t* array,
+    void**     element,
+    const bool all_occurrences)
 {
     pubnub_mutex_lock(array->mutw);
-    const pbarray_res result = _pbarray_remove(array, element, all_occurrences);
+    bool              freed  = false;
+    const pbarray_res result =
+        pbarray_remove_(array, element, all_occurrences, &freed);
+
+    /** Nullify element pointer if memory actually has been freed. */
+    if (freed && NULL != element && NULL != *element) { *element = NULL; }
     pubnub_mutex_unlock(array->mutw);
 
     return result;
@@ -356,51 +368,55 @@ pbarray_res pbarray_remove_element_at(pbarray_t* array, const size_t idx)
         return idx >= array->count ? PBAR_INDEX_OUT_OF_RANGE : PBAR_OK;
     }
 
-    _pbarray_remove_entry_at(array, idx, true);
+    pbarray_remove_entry_at_(array, idx, true, NULL);
     pubnub_mutex_unlock(array->mutw);
 
     return PBAR_OK;
 }
 
-pbarray_res pbarray_remove(pbarray_t* array)
+pbarray_res pbarray_remove_all(pbarray_t* array)
 {
     pubnub_mutex_lock(array->mutw);
     for (int i = 0; i < array->count - 1; ++i) {
-        _pbarray_entry_free(array, array->elements[i], true);
+        pbarray_entry_free_(array, array->elements[i], true);
     }
     array->count = 0;
+    pbarray_resize_(array, false);
     pubnub_mutex_unlock(array->mutw);
 
     return PBAR_OK;
 }
 
 void pbarray_subtract(
-    pbarray_t*       array,
-    const pbarray_t* other_array,
-    const bool       all_occurrences)
+    pbarray_t* array,
+    pbarray_t* other_array,
+    const bool all_occurrences)
 {
     if (NULL == other_array) { return; }
 
     pubnub_mutex_lock(array->mutw);
+    pubnub_mutex_lock(other_array->mutw);
     for (size_t i = 0; i < other_array->count; ++i) {
         const pbarray_entry_t* other_entry = other_array->elements[i];
 
         for (int j = 0; j < array->count;) {
             const pbarray_entry_t* entry = array->elements[j];
 
-            if (_pbarray_element_is_equal(array,
+            if (pbarray_element_is_equal_(array,
                                           entry->value,
                                           other_entry->value)) {
-                _pbarray_remove_entry_at(array, j, true);
+                pbarray_remove_entry_at_(array, j, true, NULL);
                 if (!all_occurrences) { break; }
             }
             else { j++; }
         }
     }
+    pbarray_resize_(array, false);
+    pubnub_mutex_unlock(other_array->mutw);
     pubnub_mutex_unlock(array->mutw);
 }
 
-const void* pbarray_element_at(const pbarray_t* array, const size_t idx)
+const void* pbarray_element_at(pbarray_t* array, const size_t idx)
 {
     pubnub_mutex_lock(array->mutw);
     if (0 == array->count || idx >= array->count) {
@@ -414,7 +430,7 @@ const void* pbarray_element_at(const pbarray_t* array, const size_t idx)
     return entry->value;
 }
 
-const void* pbarray_first(const pbarray_t* array)
+const void* pbarray_first(pbarray_t* array)
 {
     pubnub_mutex_lock(array->mutw);
     const size_t           count = array->count;
@@ -424,7 +440,7 @@ const void* pbarray_first(const pbarray_t* array)
     return 0 == count ? NULL : entry->value;
 }
 
-const void* pbarray_last(const pbarray_t* array)
+const void* pbarray_last(pbarray_t* array)
 {
     pubnub_mutex_lock(array->mutw);
     const size_t           count = array->count;
@@ -442,8 +458,8 @@ const void* pbarray_pop_first(pbarray_t* array)
     }
 
     const pbarray_entry_t* entry = array->elements[0];
-    const void* value = entry->value;
-    _pbarray_remove_entry_at(array, 0, false);
+    const void*            value = entry->value;
+    pbarray_remove_entry_at_(array, 0, false, NULL);
     pubnub_mutex_unlock(array->mutw);
 
     return value;
@@ -458,60 +474,74 @@ const void* pbarray_pop_last(pbarray_t* array)
     }
 
     const pbarray_entry_t* entry = array->elements[array->count - 1];
-    const void* value = entry->value;
-    _pbarray_remove_entry_at(array, array->count - 1, false);
+    const void*            value = entry->value;
+    pbarray_remove_entry_at_(array, array->count - 1, false, NULL);
     pubnub_mutex_unlock(array->mutw);
 
     return value;
 }
 
-void pbarray_free(pbarray_t* array)
+void pbarray_free(pbarray_t** array)
 {
-    pbarray_free_with_destructor(array, array->free);
+    pbarray_free_with_destructor(array, (*array)->free);
 }
 
 void pbarray_free_with_destructor(
-    pbarray_t*                 array,
+    pbarray_t**                array,
     const pbarray_element_free free_fn)
 {
-    pubnub_mutex_lock(array->mutw);
-    if (NULL != free_fn) { array->free = free_fn; }
-    for (int i = 0; i < array->count; ++i) {
-        _pbarray_entry_free(array, array->elements[i], true);
+    pubnub_mutex_lock((*array)->mutw);
+    if (NULL != free_fn) { (*array)->free = free_fn; }
+    for (int i = 0; i < (*array)->count; ++i) {
+        pbarray_entry_free_(*array, (*array)->elements[i], true);
     }
-    pubnub_mutex_unlock(array->mutw);
-    pubnub_mutex_destroy(array->mutw);
-    free(array);
+    pubnub_mutex_unlock((*array)->mutw);
+    pubnub_mutex_destroy((*array)->mutw);
+    free(*array);
+    *array = NULL;
 }
 
-pbarray_res _pbarray_remove(
-    pbarray_t*  array,
-    const void* element,
-    const bool  all_occurrences)
+pbarray_res pbarray_remove_(
+    pbarray_t* array,
+    void**     element,
+    const bool all_occurrences,
+    bool*      freed_value)
 {
-    if (NULL == element || 0 == array->count) { return PBAR_NOT_FOUND; }
+    if (NULL == element || NULL == *element || 0 == array->count)
+        return PBAR_NOT_FOUND;
 
-    bool found = false;
+    bool freed_match = false;
+    bool found       = false;
+    /** Whether single entry value is complete match of the element or not. */
+    bool complete_match = false;
+    /** Whether single entry value freed or not. */
+    bool freed = false;
 
     for (int i = 0; i < array->count;) {
         const pbarray_entry_t* entry = array->elements[i];
 
-        if (_pbarray_element_is_equal(array, entry->value, element)) {
-            _pbarray_remove_entry_at(array, i, true);
-            found = true;
+        if (pbarray_element_is_equal_(array, entry->value, *element)) {
+            complete_match = entry->value == *element;
+            found          = true;
+            pbarray_remove_entry_at_(array, i, true, &freed);
+
+            if (complete_match && !freed_match) { freed_match = freed; }
             if (!all_occurrences) { break; }
         }
         else { i++; }
     }
+    pbarray_resize_(array, false);
 
-    _pbarray_resize(array, false);
+    /** Nullify element pointer if memory actually has been freed. */
+    if (freed_match) { *element = NULL; }
+    if (NULL != freed_value) { *freed_value = freed_match; }
 
     return found ? PBAR_OK : PBAR_NOT_FOUND;
 }
 
-size_t _pbarray_target_length(const pbarray_t* array, const bool increase)
+size_t pbarray_target_length_(const pbarray_t* array, const bool increase)
 {
-    int resize_len = 0;
+    size_t resize_len = 0;
     if (array->resize_strategy == PBARRAY_RESIZE_CONSERVATIVE) {
         resize_len = 1;
     }
@@ -519,7 +549,7 @@ size_t _pbarray_target_length(const pbarray_t* array, const bool increase)
         resize_len = increase ? array->length : array->initial_length;
     }
     else if (array->resize_strategy == PBARRAY_RESIZE_BALANCED) {
-        resize_len = array->initial_length * .5;
+        resize_len = array->initial_length / 2;
     }
 
     if (!increase) {
@@ -538,9 +568,9 @@ size_t _pbarray_target_length(const pbarray_t* array, const bool increase)
     return array->length + resize_len * (increase ? 1 : -1);
 }
 
-pbarray_res _pbarray_resize(pbarray_t* array, const bool increase)
+pbarray_res pbarray_resize_(pbarray_t* array, const bool increase)
 {
-    const size_t length = _pbarray_target_length(array, increase);
+    const size_t length = pbarray_target_length_(array, increase);
 
     if (0 == length) { return PBAR_FIXED_SIZE; }
     if (length != array->length) {
@@ -555,7 +585,7 @@ pbarray_res _pbarray_resize(pbarray_t* array, const bool increase)
     return PBAR_OK;
 }
 
-bool _pbarray_element_is_equal(
+bool pbarray_element_is_equal_(
     const pbarray_t* array,
     const void*      element1,
     const void*      element2)
@@ -569,58 +599,59 @@ bool _pbarray_element_is_equal(
     return false;
 }
 
-pbarray_entry_t* _pbarray_entry_alloc(
-    const void*      value,
-    pbref_counter_t* counter)
+pbarray_entry_t* pbarray_entry_alloc_(void* value)
 {
     pbarray_entry_t* entry = malloc(sizeof(pbarray_entry_t));
     if (NULL == entry) { return NULL; }
 
-    if (NULL == counter) {
-        entry->counter = pbref_counter_alloc();
-        entry->value   = value;
-    }
-    else { entry->counter = counter; }
+    entry->counter = pbref_counter_alloc();
+    entry->value   = value;
 
     return entry;
 }
 
-pbarray_res _pbarray_add_entry_at(
+pbarray_res pbarray_add_entry_at_(
     pbarray_t*       array,
     const size_t     index,
-    pbarray_entry_t* entry)
+    pbarray_entry_t* entry,
+    const bool       clone)
 {
     if (index > array->length) { return PBAR_INDEX_OUT_OF_RANGE; }
 
-    const pbarray_res resize_result = _pbarray_resize(array, true);
+    const pbarray_res resize_result = pbarray_resize_(array, true);
     if (PBAR_OK != resize_result) { return resize_result; }
 
-    // Check whether addition is done not to the end of the array to shift
-    // other entries position.
+    /**
+     * Check whether addition is done not to the end of the array to shift
+     * other entries position.
+     */
     if (array->count != index) {
-        for (int i = array->count; i > index; --i) {
+        for (size_t i = array->count; i > index; --i) {
             array->elements[i] = array->elements[i - 1];
         }
     }
+    /** For safe sharing we need to increase counter. */
+    if (clone) { pbref_counter_increment(entry->counter); }
 
-    pbref_counter_increment(entry->counter);
     array->elements[index] = (void*)entry;
     array->count++;
 
     return PBAR_OK;
 }
 
-pbarray_res _pbarray_remove_entry_at(
+pbarray_res pbarray_remove_entry_at_(
     pbarray_t*   array,
     const size_t index,
-    const bool   free_entry)
+    const bool   free_value,
+    bool*        freed_value)
 {
     pbarray_entry_t* entry = array->elements[index];
     if (NULL == entry) { return PBAR_NOT_FOUND; }
 
-    _pbarray_entry_free(array, entry, free_entry);
+    const bool freed = pbarray_entry_free_(array, entry, free_value);
+    if (NULL != freed_value) { *freed_value = freed; }
 
-    for (int j = index; j < array->count - 1; ++j) {
+    for (size_t j = index; j < array->count - 1; ++j) {
         array->elements[j] = array->elements[j + 1];
     }
     array->count--;
@@ -628,16 +659,22 @@ pbarray_res _pbarray_remove_entry_at(
     return PBAR_OK;
 }
 
-void _pbarray_entry_free(
+bool pbarray_entry_free_(
     const pbarray_t* array,
     pbarray_entry_t* entry,
-    const bool       free_entry)
+    const bool       free_value)
 {
-    if (NULL == entry) { return; }
+    if (NULL == entry) { return true; }
+
+    bool freed = false;
 
     if (0 == pbref_counter_free(entry->counter)) {
-        if (free_entry && NULL != array->free)
-            array->free((void*)entry->value);
+        if (free_value && NULL != array->free) {
+            array->free(entry->value);
+            freed = true;
+        }
+        free(entry);
     }
-    free(entry);
+
+    return freed;
 }

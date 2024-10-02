@@ -1,7 +1,9 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PUBNUB_ENTITIES_H
 #define PUBNUB_ENTITIES_H
 // Currently, entities is part of the subscribe event engine feature.
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+
 
 /**
  * @file  pubnub_entities.h
@@ -9,6 +11,8 @@
  *
  * Entities used to access contextual endpoints related to a specific entity.
  */
+
+#include <stdbool.h>
 
 #include "core/pubnub_api_types.h"
 #include "lib/pb_extern.h"
@@ -18,19 +22,19 @@
 //              Types
 // ----------------------------------
 
-// PubNub Channel entity definition.
+/** PubNub Channel entity definition. */
 typedef struct pubnub_channel pubnub_channel_t;
 
-// PubNub Channel Group entity definition.
+/** PubNub Channel Group entity definition. */
 typedef struct pubnub_channel_group pubnub_channel_group_t;
 
-// PubNub Channel Metadata entity (App Context) definition.
+/** PubNub Channel Metadata entity (App Context) definition. */
 typedef struct pubnub_channel_metadata pubnub_channel_metadata_t;
 
-// PubNub User Metadata entity (App Context) definition.
+/** PubNub User Metadata entity (App Context) definition. */
 typedef struct pubnub_user_metadata pubnub_user_metadata_t;
 
-// PubNub Entity definition.
+/** PubNub Entity definition. */
 typedef struct pubnub_entity pubnub_entity_t;
 
 
@@ -125,16 +129,20 @@ PUBNUB_EXTERN pubnub_user_metadata_t* pubnub_user_metadata_alloc(
  * @code
  * pubnub_channel_group_t* group = pubnub_channel_group_alloc(pb, "my_group");
  * // ...
- * pubnub_entity_free(group);
+ * pubnub_entity_free(&group);
  * @endcode
  *
  * \b Warning: Make sure that calls to the `pubnub_entity_free` is done only
  * once to not disrupt other types which still use this entity.
  *
+ * @note Function will `NULL`ify provided entity pointer (if there is no more
+ *       references to the entity).
+ *
  * @param entity PubNub entity, which should free up resources.
+ * @return `false` if there are more references to the entity.
  */
-PUBNUB_EXTERN void pubnub_entity_free(pubnub_entity_t* entity);
-#else
+PUBNUB_EXTERN bool pubnub_entity_free(void** entity);
+#else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use entities API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
-#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
-#endif //PUBNUB_ENTITIES_H
+#endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#endif // #ifndef PUBNUB_ENTITIES_H

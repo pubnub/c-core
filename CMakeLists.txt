@@ -60,8 +60,9 @@ num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
+num_option(USE_RETRY_CONFIGURATION "Use requests retry" ON)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use subscribe event engine" ON)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine" ON)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
@@ -97,6 +98,7 @@ set(FLAGS "\
     -D PUBNUB_PROXY_API=${USE_PROXY} \
     -D PUBNUB_USE_GZIP_COMPRESSION=${USE_GZIP_COMPRESSION} \
     -D PUBNUB_RECEIVE_GZIP_RESPONSE=${RECEIVE_GZIP_RESPONSE} \
+    -D PUBNUB_USE_RETRY_CONFIGURATION=${USE_RETRY_CONFIGURATION} \
     -D PUBNUB_USE_SUBSCRIBE_V2=${USE_SUBSCRIBE_V2} \
     -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=${USE_SUBSCRIBE_EVENT_ENGINE} \
     -D PUBNUB_USE_OBJECTS_API=${USE_OBJECTS_API} \
@@ -318,8 +320,15 @@ if(${RECEIVE_GZIP_RESPONSE})
         ${CMAKE_CURRENT_LIST_DIR}/core/pbgzip_decompress.c)
 endif()
 
-if(${USE_SUBSCRIBE_V2})
+if (${USE_RETRY_CONFIGURATION})
     set(FEATURE_SOURCEFILES
+        ${FEATURE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_request_retry_timer.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_retry_configuration.c)
+endif ()
+
+if(${USE_SUBSCRIBE_V2})
+set(FEATURE_SOURCEFILES
         ${FEATURE_SOURCEFILES}
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_v2.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_v2.c)
@@ -327,12 +336,25 @@ endif()
 
 if(${USE_SUBSCRIBE_EVENT_ENGINE})
     message(STATUS "Using subscribe event engine API")
+    set(LIB_SOURCEFILES
+            ${LIB_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbarray.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbhash_set.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbref_counter.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbstrdup.c)
     set(FEATURE_SOURCEFILES
             ${FEATURE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_entities.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_memory_utils.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_event_engine.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine.c
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_engine.c)
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_states.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_events.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_effects.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_transitions.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_listener.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_entities.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_listener.c)
 endif()
 
 if(${USE_ADVANCED_HISTORY})
@@ -491,29 +513,7 @@ set(SOURCEFILES
     ${OS_SOURCEFILES} 
     ${FEATURE_SOURCEFILES} 
     ${INTF_SOURCEFILES}
-        core/pubnub_subscribe_event_engine.h
-        core/pubnub_entities.c
-        core/pubnub_entities.h
-        core/pubnub_entities_internal.h
-        lib/pbhash_set.c
-        lib/pbhash_set.h
-        lib/pbarray.c
-        lib/pbarray.h
-        core/pubnub_subscribe_event_engine_internal.h
-        lib/pbstrdup.c
-        lib/pbstrdup.h
-        lib/pbref_counter.c
-        lib/pbref_counter.h
-        core/pubnub_subscribe_event_listener.c
-        core/pubnub_subscribe_event_listener.h
-        core/pubnub_subscribe_event_listener_internal.h
-        core/pbcc_subscribe_event_listener.c
-        core/pbcc_subscribe_event_listener.h
-        core/pubnub_subscribe_event_listener_types.h
-        core/pubnub_subscribe_event_engine_types.h
-        core/pbcc_memory_utils.c
-        core/pbcc_memory_utils.h
-)
+        core/samples/subscribe_event_engine_sample.c)
 
 if(NOT ESP_PLATFORM)
     if(${SHARED_LIB})
@@ -687,6 +687,7 @@ if(${EXAMPLES})
                 pubnub_callback_subloop_sample
                 subscribe_publish_callback_sample
                 subscribe_publish_from_callback
+                subscribe_event_engine_sample
                 publish_callback_subloop_sample
                 publish_queue_callback_subloop)
             if (WITH_CPP)

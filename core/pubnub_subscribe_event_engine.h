@@ -1,9 +1,13 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PUBNUB_SUBSCRIBE_EVENT_ENGINE_H
 #define PUBNUB_SUBSCRIBE_EVENT_ENGINE_H
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #if !PUBNUB_USE_SUBSCRIBE_V2
 #error Subscribe event engine requires subscribe v2 API, so you must define PUBNUB_USE_SUBSCRIBE_V2=1
-#endif
+#endif // #if !PUBNUB_USE_SUBSCRIBE_V2
+#ifndef PUBNUB_CALLBACK_API
+#error Subscribe event engine requires callback based PubNub context, so you must define PUBNUB_CALLBACK_API
+#endif // #ifndef PUBNUB_CALLBACK_API
 
 
 /**
@@ -13,6 +17,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+
 #include "core/pubnub_subscribe_event_engine_types.h"
 #include "core/pubnub_entities.h"
 #include "lib/pb_extern.h"
@@ -84,7 +89,7 @@ pubnub_subscription_options_defopts(void);
  * @see pubnub_user_metadata_alloc
  */
 PUBNUB_EXTERN pubnub_subscription_t* pubnub_subscription_alloc(
-    pubnub_entity_t*                     entity,
+    pubnub_entity_t* entity,
     const pubnub_subscription_options_t* options);
 
 /**
@@ -97,7 +102,7 @@ PUBNUB_EXTERN pubnub_subscription_t* pubnub_subscription_alloc(
  * //
  * // ... later ...
  * //
- * if(!pubnub_subscription_free(subscription)) {
+ * if(!pubnub_subscription_free(&subscription)) {
  *     // This call will decrease references count, but won't actually release
  *     // resources because the event engine holds the additional reference to
  *     // the subscription object.
@@ -114,13 +119,16 @@ PUBNUB_EXTERN pubnub_subscription_t* pubnub_subscription_alloc(
  * \b Warning: Make sure that calls to the `pubnub_subscription_free` are done
  * only once to not disrupt other types which still use this entity.
  *
+ * @note Function may NULLify provided subscription pointer if there is no other
+ *       references to it.
+ *
  * @param sub Pointer to the subscription, which should free up resources.
  * @return `false` if there are more references to the subscription.
  *
  * @see pubnub_subscription_alloc
  * @see pubnub_subscribe_with_subscription
  */
-PUBNUB_EXTERN bool pubnub_subscription_free(pubnub_subscription_t* sub);
+PUBNUB_EXTERN bool pubnub_subscription_free(pubnub_subscription_t** sub);
 
 /**
  * @brief Retrieve subscriptions currently used in subscribe.
@@ -152,6 +160,7 @@ PUBNUB_EXTERN bool pubnub_subscription_free(pubnub_subscription_t* sub);
  * }
  * // subs: subscription1, subscription2, subscription3
  * // subs_count: 3
+ * free(subs);
  * @endcode
  *
  * \b Warning: Application execution will be terminated if PubNub pointer is an
@@ -169,7 +178,7 @@ PUBNUB_EXTERN bool pubnub_subscription_free(pubnub_subscription_t* sub);
  */
 PUBNUB_EXTERN pubnub_subscription_t** pubnub_subscriptions(
     const pubnub_t* pb,
-    size_t*         count);
+    size_t* count);
 
 /**
  * @brief Create a subscription set from the list of entities.
@@ -227,8 +236,8 @@ PUBNUB_EXTERN pubnub_subscription_t** pubnub_subscriptions(
  */
 PUBNUB_EXTERN pubnub_subscription_set_t*
 pubnub_subscription_set_alloc_with_entities(
-    pubnub_entity_t**                    entities,
-    int                                  entities_count,
+    pubnub_entity_t** entities,
+    int entities_count,
     const pubnub_subscription_options_t* options);
 
 /**
@@ -266,8 +275,8 @@ pubnub_subscription_set_alloc_with_entities(
  */
 PUBNUB_EXTERN pubnub_subscription_set_t*
 pubnub_subscription_set_alloc_with_subscriptions(
-    pubnub_subscription_t*               sub1,
-    pubnub_subscription_t*               sub2,
+    pubnub_subscription_t* sub1,
+    pubnub_subscription_t* sub2,
     const pubnub_subscription_options_t* options);
 
 /**
@@ -282,7 +291,7 @@ pubnub_subscription_set_alloc_with_subscriptions(
  * //
  * // ... later ...
  * //
- * if (!pubnub_subscription_set_free(subscription_set)) {
+ * if (!pubnub_subscription_set_free(&subscription_set)) {
  *     // This call will decrease references count, but won't release resources
  *     // because the event engine holds the additional reference to the
  *     // subscription set object.
@@ -297,6 +306,9 @@ pubnub_subscription_set_alloc_with_subscriptions(
  * \b Warning: Make sure that calls to the `pubnub_subscription_set_free` are
  * done only once to not disrupt other types which still use this entity.
  *
+ * @note Function will NULLify provided subscription set pointer if it is no
+ *       other references to it.
+ *
  * @param set Pointer to the subscription set, which should free up resources.
  * @return `false` if there are more references to the subscription set.
  *
@@ -305,7 +317,7 @@ pubnub_subscription_set_alloc_with_subscriptions(
  * @see pubnub_subscribe_with_subscription_set
  */
 PUBNUB_EXTERN bool pubnub_subscription_set_free(
-    pubnub_subscription_set_t* set);
+    pubnub_subscription_set_t** set);
 
 /**
  * @brief Retrieve subscription sets currently used in subscribe.
@@ -356,7 +368,7 @@ PUBNUB_EXTERN bool pubnub_subscription_set_free(
  */
 PUBNUB_EXTERN pubnub_subscription_set_t** pubnub_subscription_sets(
     const pubnub_t* pb,
-    size_t*         count);
+    size_t* count);
 
 /**
  * @brief Retrieve subscriptions from subscription set.
@@ -400,8 +412,8 @@ PUBNUB_EXTERN pubnub_subscription_set_t** pubnub_subscription_sets(
  * @see pubnub_subscription_set_add
  */
 PUBNUB_EXTERN pubnub_subscription_t** pubnub_subscription_set_subscriptions(
-    const pubnub_subscription_set_t* set,
-    size_t*                          count);
+    pubnub_subscription_set_t* set,
+    size_t* count);
 
 /**
  * @brief Add subscription to subscription set.
@@ -438,7 +450,7 @@ PUBNUB_EXTERN pubnub_subscription_t** pubnub_subscription_set_subscriptions(
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_add(
     pubnub_subscription_set_t* set,
-    pubnub_subscription_t*     sub);
+    pubnub_subscription_t* sub);
 
 /**
  * @brief Remove subscription from subscription set.
@@ -446,7 +458,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_add(
  * Update list of set's subscription objects used in subscription loop.
  * @code
  * if (PNR_SUB_NOT_FOUND == pubnub_subscription_set_remove(subscription_set,
- *                                                         subscription2)) {
+ *                                                         &subscription2)) {
  *     // subscription is not part of set and can't be removed from it.
  * }
  * @endcode
@@ -457,9 +469,12 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_add(
  * \b Warning: Application execution will be terminated if subscription `set` or
  * subscription is `NULL`.
  *
+ * @note Function may `NULL`ify provided subscription pointer if there is no
+ *       other references to it.
+ *
  * @param set Pointer to the subscription set, which should be modified.
  * @param sub Pointer to the subscription, which should be removed from the set.
- * @return `false` if `subscription` is not part of the `subscription_set`.
+ * @return Result of subscription removal from the subscription set operation.
  *
  * @see pubnub_subscription_set_alloc_with_entities
  * @see pubnub_subscription_set_alloc_with_subscriptions
@@ -468,7 +483,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_add(
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_remove(
     pubnub_subscription_set_t* set,
-    pubnub_subscription_t*     sub);
+    pubnub_subscription_t** sub);
 
 /**
  * @brief Merge a subscription set with other subscription set.
@@ -491,15 +506,14 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_remove(
  * @param set       Pointer to the subscription set, which should be modified.
  * @param other_set Pointer to the subscription set, which should be merged into
  *                  a set.
- * @return `true` in case if another set's subscriptions have been added to the
- *         `set`.
+ * @return Result of subscription sets union operation.
  *
  * @see pubnub_subscription_set_alloc_with_entities
  * @see pubnub_subscription_set_alloc_with_subscriptions
  * @see pubnub_subscribe_with_subscription_set
  * @see pubnub_subscribe_with_subscription
  */
-PUBNUB_EXTERN bool pubnub_subscription_set_union(
+PUBNUB_EXTERN enum pubnub_res pubnub_subscription_set_union(
     pubnub_subscription_set_t* set,
     pubnub_subscription_set_t* other_set);
 
@@ -529,7 +543,7 @@ PUBNUB_EXTERN bool pubnub_subscription_set_union(
  * @see pubnub_unsubscribe_with_subscription
  */
 PUBNUB_EXTERN void pubnub_subscription_set_subtract(
-    pubnub_subscription_set_t* set,
+    const pubnub_subscription_set_t* set,
     pubnub_subscription_set_t* other_set);
 
 /**
@@ -556,7 +570,7 @@ PUBNUB_EXTERN void pubnub_subscription_set_subtract(
  */
 PUBNUB_EXTERN void pubnub_subscribe_set_filter_expression(
     const pubnub_t* pb,
-    const char*     filter_expr);
+    const char* filter_expr);
 
 /**
  * @brief Update client presence heartbeat / timeout.
@@ -580,8 +594,8 @@ PUBNUB_EXTERN void pubnub_subscribe_set_filter_expression(
  *                  alive for presence.
  */
 PUBNUB_EXTERN void pubnub_subscribe_set_heartbeat(
-    pubnub_t* pb,
-    unsigned  heartbeat);
+    const pubnub_t* pb,
+    unsigned heartbeat);
 
 /**
  * @brief Subscription cursor.
@@ -626,7 +640,7 @@ PUBNUB_EXTERN pubnub_subscribe_cursor_t pubnub_subscribe_cursor(
  * @see pubnub_subscription_alloc
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription(
-    pubnub_subscription_t*           sub,
+    pubnub_subscription_t* sub,
     const pubnub_subscribe_cursor_t* cursor);
 
 /**
@@ -638,6 +652,9 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription(
  * }
  * @endcode
  *
+ * @note Function may NULLify provided subscription pointer if there is no other
+ *       references to it.
+ *
  * @param sub Pointer to the subscription, which should be removed from the next
  *            subscription loop.
  * @return Result of subscription unsubscribe transaction.
@@ -645,7 +662,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription(
  * @see pubnub_subscription_alloc
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_unsubscribe_with_subscription(
-    pubnub_subscription_t* sub);
+    pubnub_subscription_t** sub);
 
 /**
  * @brief Receive real-time updates for subscriptions' entities from the
@@ -675,7 +692,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_unsubscribe_with_subscription(
  * @see pubnub_subscription_set_alloc_with_subscriptions
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription_set(
-    pubnub_subscription_set_t*       set,
+    pubnub_subscription_set_t* set,
     const pubnub_subscribe_cursor_t* cursor);
 
 /**
@@ -688,6 +705,9 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription_set(
  * }
  * @endcode
  *
+ * @note Function will NULLify provided subscription set pointer if it is no
+ *       other references to it.
+ *
  * @param set Pointer to the set of subscription, which should be removed from
  *            the next subscription loop.
  * @return Result of subscription set unsubscribe transaction.
@@ -696,7 +716,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription_set(
  * @see pubnub_subscription_set_alloc_with_subscriptions
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_unsubscribe_with_subscription_set(
-    pubnub_subscription_set_t* set);
+    pubnub_subscription_set_t** set);
 
 /**
  * @brief Disconnect from real-time updates.
@@ -755,7 +775,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_disconnect(const pubnub_t* pb);
  *       use before disconnection / failure.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_reconnect(
-    const pubnub_t*                  pb,
+    const pubnub_t* pb,
     const pubnub_subscribe_cursor_t* cursor);
 
 /**
@@ -782,7 +802,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_reconnect(
  * @return Result of unsubscription transaction.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_unsubscribe_all(const pubnub_t* pb);
-#else
+#else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
-#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
-#endif //PUBNUB_SUBSCRIBE_EVENT_ENGINE_H
+#endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#endif // #ifndef PUBNUB_SUBSCRIBE_EVENT_ENGINE_H

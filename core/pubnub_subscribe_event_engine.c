@@ -1,13 +1,14 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_subscribe_event_engine_internal.h"
 
 #include <stdlib.h>
 
-#include "pbcc_memory_utils.h"
 #include "core/pubnub_entities_internal.h"
-#include "core/pubnub_internal_common.h"
+#include "core/pbcc_memory_utils.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_mutex.h"
 #include "core/pubnub_log.h"
+#include "pubnub_internal.h"
 #include "lib/pbhash_set.h"
 
 
@@ -24,6 +25,37 @@
 // ----------------------------------------------
 
 /**
+ * @brief Add subscription to subscription set.
+ *
+ * @param set           Pointer to the subscription set, which should be
+ *                      modified.
+ * @param sub           Pointer to the subscription, which should be added to
+ *                      the set.
+ * @param notify_change Whether Subscribe Event Engine should be notified about
+ *                      change or not.
+ *
+ * @return Result of subscription add.
+ */
+static enum pubnub_res pubnub_subscription_set_add_(
+    const pubnub_subscription_set_t* set,
+    pubnub_subscription_t*     sub,
+    bool                       notify_change);
+
+/**
+ * @brief Remove subscription from subscription set.
+ *
+ * @param set Pointer to the subscription set, which should be modified.
+ * @param sub Pointer to the subscription, which should be removed from the set.
+ * @param notify_change Whether Subscribe Event Engine should be notified about
+ *                      change or not.
+ * @return Result of subscription removal from the subscription set operation.
+ */
+static enum pubnub_res pubnub_subscription_set_remove_(
+    const pubnub_subscription_set_t* set,
+    pubnub_subscription_t**          sub,
+    bool                             notify_change);
+
+/**
  * @brief Create entity subscription.
  *
  * Subscription is high-level access to the entity which is used in the
@@ -38,7 +70,6 @@
  *                   subscription.
  * @param options    Pointer to the subscription configuration options. Set to
  *                   `NULL` if options not required.
- * @param standalone Whether a subscription object is standalone or part of set.
  * @return Pointer to the ready to use PubNub subscription, or `NULL` will be
  *         returned in case of error (in most of the cases caused by
  *         insufficient memory for structure allocation). The returned pointer
@@ -47,10 +78,9 @@
  *
  * @see pubnub_subscriptions
  */
-static pubnub_subscription_t* _pubnub_subscription_alloc(
+static pubnub_subscription_t* pubnub_subscription_alloc_(
     pubnub_entity_t*                     entity,
-    const pubnub_subscription_options_t* options,
-    bool                                 standalone);
+    const pubnub_subscription_options_t* options);
 
 /**
  * @brief Update number references to the `subscription`.
@@ -62,7 +92,7 @@ static pubnub_subscription_t* _pubnub_subscription_alloc(
  *                     updated.
  * @param increase     Whether reference count should be increased or decreased.
  */
-static void _subscription_reference_count_update(
+static void subscription_reference_count_update_(
     pubnub_subscription_t* subscription,
     bool                   increase);
 
@@ -78,7 +108,7 @@ static void _subscription_reference_count_update(
  *         structure allocation). The returned pointer must be passed to the
  *         `pubnub_subscription_set_free` to avoid a memory leak.
  */
-static pubnub_subscription_set_t* _subscription_set_alloc(
+static pubnub_subscription_set_t* subscription_set_alloc_(
     const pubnub_subscription_options_t* options,
     int                                  length);
 
@@ -91,9 +121,18 @@ static pubnub_subscription_set_t* _subscription_set_alloc(
  *                 updated.
  * @param increase Whether reference count should be increased or decreased.
  */
-static void _subscription_set_reference_count_update(
+static void subscription_set_reference_count_update_(
     pubnub_subscription_set_t* set,
     bool                       increase);
+
+/**
+ * @brief Release resources used by subscription from subscription set.
+ *
+ * @param sub Pointer to the subscription, which should free up resources.
+ * @return `false` if there are more references to the subscription.
+ */
+static bool pubnub_subscription_set_subscription_free_(
+    pubnub_subscription_t* sub);
 
 /**
  * @brief Create subscribable object.
@@ -105,10 +144,10 @@ static void _subscription_set_reference_count_update(
  *         must be passed to the `_pubnub_subscribable_free` to avoid a memory
  *         leak.
  */
-static pubnub_subscribable_t* _pubnub_subscribable_alloc(
-    enum pubnub_subscribable_location location,
-    struct pubnub_char_mem_block*     id,
-    bool                              presence);
+static pubnub_subscribable_t* pubnub_subscribable_alloc_(
+    pubnub_subscribable_location  location,
+    struct pubnub_char_mem_block* id,
+    bool                          presence);
 
 
 // ----------------------------------------------
@@ -124,23 +163,34 @@ pubnub_subscription_t* pubnub_subscription_alloc(
     pubnub_entity_t*                     entity,
     const pubnub_subscription_options_t* options)
 {
-    return _pubnub_subscription_alloc(entity, options, true);
+    return pubnub_subscription_alloc_(entity, options);
 }
 
-bool pubnub_subscription_free(pubnub_subscription_t* sub)
+bool pubnub_subscription_free(pubnub_subscription_t** sub)
+{
+    if (NULL == sub || NULL == *sub) { return false; }
+
+    pubnub_mutex_lock((*sub)->mutw);
+    if (pubnub_subscription_free_(*sub)) {
+        pubnub_mutex_unlock((*sub)->mutw);
+        pubnub_mutex_destroy((*sub)->mutw);
+        *sub = NULL;
+        return true;
+    }
+    pubnub_mutex_unlock((*sub)->mutw);
+
+    return false;
+}
+
+bool pubnub_subscription_free_(pubnub_subscription_t* sub)
 {
     if (NULL == sub) { return false; }
 
-    _subscription_reference_count_update(sub, false);
-    pubnub_mutex_lock(sub->mutw);
-    if (sub->reference_count == 0) {
-        pubnub_entity_free(sub->entity);
-        pubnub_mutex_unlock(sub->mutw);
-        pubnub_mutex_destroy(sub->mutw);
+    if (0 == pbref_counter_free(sub->counter)) {
+        pubnub_entity_free((void**)&sub->entity);
         free(sub);
         return true;
     }
-    pubnub_mutex_unlock(sub->mutw);
 
     return false;
 }
@@ -157,8 +207,9 @@ pubnub_subscription_t** pubnub_subscriptions(const pubnub_t* pb, size_t* count)
     if (NULL != count) { *count = cnt; }
     if (NULL == subscriptions) {
         PUBNUB_LOG_ERROR("pubnub_subscriptions: failed to allocate memory for "
-                         "subscriptions list\n");
-    } else if (0 == cnt) {
+            "subscriptions list\n");
+    }
+    else if (0 == cnt) {
         PUBNUB_LOG_INFO("pubnub_subscriptions: subscriptions list is empty");
     }
 
@@ -176,21 +227,19 @@ pubnub_subscription_set_alloc_with_entities(
     const int length = entities_count - entities_count % SUBSCRIPTIONS_LENGTH +
                        SUBSCRIPTIONS_LENGTH;
     const pubnub_t*            pb  = NULL;
-    pubnub_subscription_set_t* set = _subscription_set_alloc(options, length);
+    pubnub_subscription_set_t* set = subscription_set_alloc_(options, length);
     if (NULL == set) { return NULL; }
 
     for (int i = 0; i < entities_count; ++i) {
         pubnub_entity_t*       entity = entities[i];
-        pubnub_subscription_t* sub    = _pubnub_subscription_alloc(
-            entity,
-            NULL,
-            false);
+        pubnub_subscription_t* sub    =
+            pubnub_subscription_alloc_(entity, NULL);
 
         if (NULL == pb) { pb = entity->pb; }
         if (NULL == sub ||
             PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub)) {
-            if (NULL != sub) { pubnub_subscription_free(sub); }
-            pubnub_subscription_set_free(set);
+            if (NULL != sub) { pubnub_subscription_free(&sub); }
+            pubnub_subscription_set_free(&set);
             return NULL;
         }
     }
@@ -200,7 +249,7 @@ pubnub_subscription_set_alloc_with_entities(
         PUBNUB_LOG_ERROR(
             "pubnub_subscription_set_alloc_with_entities: invalid PubNub "
             "context\n");
-        pubnub_subscription_set_free(set);
+        pubnub_subscription_set_free(&set);
         return NULL;
     }
 
@@ -216,14 +265,14 @@ pubnub_subscription_set_alloc_with_subscriptions(
     PUBNUB_ASSERT_OPT(NULL != sub1);
     PUBNUB_ASSERT_OPT(NULL != sub2);
 
-    pubnub_subscription_set_t* set = _subscription_set_alloc(
+    pubnub_subscription_set_t* set = subscription_set_alloc_(
         options,
         SUBSCRIPTIONS_LENGTH);
     if (NULL == set) { return NULL; }
 
     if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub1) ||
         PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub2)) {
-        pubnub_subscription_set_free(set);
+        pubnub_subscription_set_free(&set);
         return NULL;
     }
 
@@ -240,87 +289,31 @@ enum pubnub_res pubnub_subscription_set_add(
     PUBNUB_ASSERT_OPT(NULL != sub);
 
     pubnub_mutex_lock(set->mutw);
-    const bool subscribed = set->subscribed;
-
-    if (pbhash_set_contains(set->subscriptions, sub->entity->id.ptr)) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_set_add: subscription (sub=%p) for entity "
-            "('%s') already added into set",
-            sub,
-            sub->entity->id.ptr);
-        pubnub_mutex_unlock(set->mutw);
-        return PNR_SUB_ALREADY_ADDED;
-
-    }
-
-    if (PBHSR_OUT_OF_MEMORY == pbhash_set_add(set->subscriptions,
-                                              sub->entity->id.ptr,
-                                              sub)) {
-        pubnub_mutex_unlock(set->mutw);
-        PUBNUB_LOG_ERROR(
-            "pubnub_subscription_set_add: failed to allocate memory "
-            "for subscription\n");
-        return PNR_OUT_OF_MEMORY;
-    }
-
-    _subscription_reference_count_update(sub, true);
+    const enum pubnub_res rslt = pubnub_subscription_set_add_(set, sub, true);
     pubnub_mutex_unlock(set->mutw);
 
-    if (subscribed) {
-        // Notify changes in active subscription set.
-        pbcc_subscribe_ee_change_subscription_with_subscription_set(
-            set->ee,
-            set,
-            sub,
-            true);
-    }
-
-    return PNR_OK;
+    return rslt;
 }
 
 enum pubnub_res pubnub_subscription_set_remove(
     pubnub_subscription_set_t* set,
-    pubnub_subscription_t*     sub)
+    pubnub_subscription_t**    sub)
 {
     PUBNUB_ASSERT_OPT(NULL != set);
     PUBNUB_ASSERT_OPT(NULL != sub);
+    PUBNUB_ASSERT_OPT(NULL != *sub);
 
     pubnub_mutex_lock(set->mutw);
-    const bool subscribed = set->subscribed;
-
-    if (!pbhash_set_contains(set->subscriptions, sub->entity->id.ptr)) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_set_remove: subscription (sub=%p) for entity "
-            "('%s') not found",
-            sub,
-            sub->entity->id.ptr);
-        pubnub_mutex_unlock(set->mutw);
-        return PNR_SUB_NOT_FOUND;
-    }
-
-    if (subscribed) {
-        // Temporarily release lock to avoid deadlocks from subscription ee core
-        // code access the list of subscribables.
-        pubnub_mutex_unlock(set->mutw);
-
-        // Notify changes in active subscription set.
-        pbcc_subscribe_ee_change_subscription_with_subscription_set(
-            set->ee,
-            set,
-            sub,
-            false);
-        pubnub_mutex_lock(set->mutw);
-        pbhash_set_remove(set->subscriptions, sub->entity->id.ptr);
-    }
-    else { pbhash_set_remove(set->subscriptions, sub->entity->id.ptr); }
+    const enum pubnub_res rslt =
+        pubnub_subscription_set_remove_(set, sub, true);
     pubnub_mutex_unlock(set->mutw);
 
-    return PNR_OK;
+    return rslt;
 }
 
 enum pubnub_res pubnub_subscription_set_union(
-    pubnub_subscription_set_t*       set,
-    const pubnub_subscription_set_t* other_set)
+    pubnub_subscription_set_t* set,
+    pubnub_subscription_set_t* other_set)
 {
     PUBNUB_ASSERT_OPT(NULL != set);
     PUBNUB_ASSERT_OPT(NULL != other_set);
@@ -331,7 +324,10 @@ enum pubnub_res pubnub_subscription_set_union(
         pbhash_set_elements(set->subscriptions, &count);
 
     for (int i = 0; i < count; ++i) {
-        if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, subs[i])) {
+        if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add_(
+                set,
+                subs[i],
+                i + 1 == count)) {
             pubnub_mutex_unlock(other_set->mutw);
             if (NULL != subs) { free(subs); }
             return PNR_OUT_OF_MEMORY;
@@ -344,8 +340,8 @@ enum pubnub_res pubnub_subscription_set_union(
 }
 
 void pubnub_subscription_set_subtract(
-    pubnub_subscription_set_t*       set,
-    const pubnub_subscription_set_t* other_set)
+    const pubnub_subscription_set_t* set,
+    pubnub_subscription_set_t*       other_set)
 {
     PUBNUB_ASSERT_OPT(NULL != set);
     PUBNUB_ASSERT_OPT(NULL != other_set);
@@ -356,7 +352,7 @@ void pubnub_subscription_set_subtract(
         pbhash_set_elements(set->subscriptions, &count);
 
     for (int i = 0; i < count; ++i) {
-        pubnub_subscription_set_remove(set, subs[i]);
+        pubnub_subscription_set_remove_(set, &subs[i], i + 1 == count);
     }
     pubnub_mutex_unlock(other_set->mutw);
     if (NULL != subs) { free(subs); }
@@ -385,21 +381,22 @@ pubnub_subscription_set_t** pubnub_subscription_sets(
 }
 
 pubnub_subscription_t** pubnub_subscription_set_subscriptions(
-    const pubnub_subscription_set_t* set,
-    size_t*                          count)
+    pubnub_subscription_set_t* set,
+    size_t*                    count)
 {
     PUBNUB_ASSERT_OPT(NULL != set);
 
     pubnub_mutex_lock(set->mutw);
-    size_t                        cnt;
-    const pubnub_subscription_t** subs = (const pubnub_subscription_t**)
+    size_t                  cnt;
+    pubnub_subscription_t** subs = (pubnub_subscription_t**)
         pbhash_set_elements(set->subscriptions, &cnt);
 
     if (NULL != count) { *count = cnt; }
     if (NULL == subs) {
         PUBNUB_LOG_ERROR("pubnub_subscription_set_subscriptions: failed to "
             "allocate memory for subscriptions list\n");
-    } else if (0 == cnt) {
+    }
+    else if (0 == cnt) {
         PUBNUB_LOG_INFO(
             "pubnub_subscription_set_subscriptions: subscriptions list is "
             "empty");
@@ -409,20 +406,33 @@ pubnub_subscription_t** pubnub_subscription_set_subscriptions(
     return subs;
 }
 
-bool pubnub_subscription_set_free(pubnub_subscription_set_t* set)
+bool pubnub_subscription_set_free(pubnub_subscription_set_t** set)
+{
+    if (NULL == set || NULL == *set) { return false; }
+
+    pubnub_mutex_lock((*set)->mutw);
+    if (pubnub_subscription_set_free_(*set)) {
+        pubnub_mutex_unlock((*set)->mutw);
+        pubnub_mutex_destroy((*set)->mutw);
+        *set = NULL;
+        return true;
+    }
+    pubnub_mutex_unlock((*set)->mutw);
+
+    return false;
+}
+
+bool pubnub_subscription_set_free_(pubnub_subscription_set_t* set)
 {
     if (NULL == set) { return false; }
 
-    _subscription_set_reference_count_update(set, false);
-    pubnub_mutex_lock(set->mutw);
-    if (set->reference_count == 0) {
-        if (NULL != set->subscriptions) { pbhash_set_free(set->subscriptions); }
-        pubnub_mutex_unlock(set->mutw);
-        pubnub_mutex_destroy(set->mutw);
+    if (0 == pbref_counter_free(set->counter)) {
+        if (NULL != set->subscriptions)
+            pbhash_set_free(&set->subscriptions);
         free(set);
         return true;
     }
-    pubnub_mutex_unlock(set->mutw);
+
     return false;
 }
 
@@ -445,6 +455,7 @@ void pubnub_subscribe_set_heartbeat(
 pubnub_subscribe_cursor_t pubnub_subscribe_cursor(const char* timetoken)
 {
     pubnub_subscribe_cursor_t cursor;
+
     if (NULL != timetoken) {
         memcpy(cursor.timetoken, timetoken, sizeof(cursor.timetoken) - 1);
         cursor.timetoken[sizeof(cursor.timetoken) - 1] = '\0';
@@ -469,20 +480,30 @@ enum pubnub_res pubnub_subscribe_with_subscription(
         sub,
         cursor);
 
-    if (PNR_OK == rslt) { _subscription_reference_count_update(sub, true); }
+    if (PNR_OUT_OF_MEMORY != rslt)
+        subscription_reference_count_update_(sub, true);
 
     return rslt;
 }
 
 enum pubnub_res pubnub_unsubscribe_with_subscription(
-    pubnub_subscription_t* sub)
+    pubnub_subscription_t** sub)
 {
-    if (NULL == sub) { return PNR_INVALID_PARAMETERS; }
+    if (NULL == sub || NULL == *sub) { return PNR_INVALID_PARAMETERS; }
 
     const enum pubnub_res rslt =
-        pbcc_subscribe_ee_unsubscribe_with_subscription(sub->ee, sub);
+        pbcc_subscribe_ee_unsubscribe_with_subscription((*sub)->ee, *sub);
 
-    if (PNR_OK == rslt) { pubnub_subscription_free(sub); }
+    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND == rslt) {
+        /**
+         * Decrease subscription reference counter only if it has been used for
+         * previous subscriptions.
+         */
+        if (PNR_OK == rslt)
+            subscription_reference_count_update_(*sub, false);
+
+        pubnub_subscription_free(sub);
+    }
 
     return rslt;
 }
@@ -499,8 +520,8 @@ enum pubnub_res pubnub_subscribe_with_subscription_set(
             set,
             cursor);
 
-    if (PNR_OK == rslt) {
-        _subscription_set_reference_count_update(set, true);
+    if (PNR_OUT_OF_MEMORY != rslt) {
+        subscription_set_reference_count_update_(set, true);
         pubnub_mutex_lock(set->mutw);
         set->subscribed = true;
         pubnub_mutex_unlock(set->mutw);
@@ -510,17 +531,24 @@ enum pubnub_res pubnub_subscribe_with_subscription_set(
 }
 
 enum pubnub_res pubnub_unsubscribe_with_subscription_set(
-    pubnub_subscription_set_t* set)
+    pubnub_subscription_set_t** set)
 {
-    if (NULL == set) { return PNR_INVALID_PARAMETERS; }
+    if (NULL == set || NULL == *set) { return PNR_INVALID_PARAMETERS; }
 
     const enum pubnub_res rslt =
-        pbcc_subscribe_ee_unsubscribe_with_subscription_set(set->ee, set);
+        pbcc_subscribe_ee_unsubscribe_with_subscription_set((*set)->ee, *set);
 
-    if (PNR_OK == rslt) {
-        pubnub_mutex_lock(set->mutw);
-        set->subscribed = false;
-        pubnub_mutex_unlock(set->mutw);
+    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND == rslt) {
+        /**
+         * Decrease subscription set reference counter only if it has been used
+         * for previous subscriptions.
+         */
+        if (PNR_OK == rslt)
+            subscription_set_reference_count_update_(*set, false);
+
+        pubnub_mutex_lock((*set)->mutw);
+        (*set)->subscribed = false;
+        pubnub_mutex_unlock((*set)->mutw);
         pubnub_subscription_set_free(set);
     }
 
@@ -535,12 +563,14 @@ enum pubnub_res pubnub_disconnect(const pubnub_t* pb)
 }
 
 enum pubnub_res pubnub_reconnect(
-    const pubnub_t*                 pb,
-    const pubnub_subscribe_cursor_t cursor)
+    const pubnub_t*                  pb,
+    const pubnub_subscribe_cursor_t* cursor)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
-    return pbcc_subscribe_ee_reconnect(pb->core.subscribe_ee, cursor);
+    const pubnub_subscribe_cursor_t subscribe_cursor =
+        NULL != cursor ? *cursor : pubnub_subscribe_cursor(NULL);
+    return pbcc_subscribe_ee_reconnect(pb->core.subscribe_ee, subscribe_cursor);
 }
 
 enum pubnub_res pubnub_unsubscribe_all(const pubnub_t* pb)
@@ -550,10 +580,82 @@ enum pubnub_res pubnub_unsubscribe_all(const pubnub_t* pb)
     return pbcc_subscribe_ee_unsubscribe_all(pb->core.subscribe_ee);
 }
 
-pubnub_subscription_t* _pubnub_subscription_alloc(
+enum pubnub_res pubnub_subscription_set_add_(
+    const pubnub_subscription_set_t* set,
+    pubnub_subscription_t*     sub,
+    const bool                 notify_change)
+{
+    const bool      subscribed = set->subscribed;
+    enum pubnub_res rslt       = PNR_OK;
+
+    if (pbhash_set_contains(set->subscriptions, sub->entity->id.ptr)) {
+        PUBNUB_LOG_INFO(
+            "pubnub_subscription_set_add: subscription (sub=%p) for entity "
+            "('%s') already added into set",
+            sub,
+            sub->entity->id.ptr);
+        return PNR_SUB_ALREADY_ADDED;
+    }
+
+    if (PBHSR_OUT_OF_MEMORY == pbhash_set_add(set->subscriptions,
+                                              sub->entity->id.ptr,
+                                              sub)) {
+        PUBNUB_LOG_ERROR(
+            "pubnub_subscription_set_add: failed to allocate memory "
+            "for subscription\n");
+        return PNR_OUT_OF_MEMORY;
+    }
+
+    subscription_reference_count_update_(sub, true);
+
+    if (subscribed && notify_change) {
+        /** Notify changes in active subscription set. */
+        rslt = pbcc_subscribe_ee_change_subscription_with_subscription_set(
+            set->ee,
+            NULL,
+            NULL,
+            true);
+    }
+
+    return rslt;
+}
+
+enum pubnub_res pubnub_subscription_set_remove_(
+    const pubnub_subscription_set_t* set,
+    pubnub_subscription_t**          sub,
+    bool                             notify_change)
+{
+    const bool subscribed = set->subscribed;
+
+    if (!pbhash_set_contains(set->subscriptions, (*sub)->entity->id.ptr)) {
+        PUBNUB_LOG_INFO(
+            "pubnub_subscription_set_remove: subscription (sub=%p) for entity "
+            "('%s') not found",
+            *sub,
+            (*sub)->entity->id.ptr);
+        return PNR_SUB_NOT_FOUND;
+    }
+
+    enum pubnub_res rslt = PNR_OK;
+    if (subscribed && notify_change) {
+        /** Notify changes in active subscription set. */
+        rslt = pbcc_subscribe_ee_change_subscription_with_subscription_set(
+            set->ee,
+            set,
+            *sub,
+            false);
+    }
+
+    pbhash_set_remove(set->subscriptions,
+                      (void**)&(*sub)->entity->id.ptr,
+                      (void**)sub);
+
+    return rslt;
+}
+
+pubnub_subscription_t* pubnub_subscription_alloc_(
     pubnub_entity_t*                     entity,
-    const pubnub_subscription_options_t* options,
-    const bool                           standalone)
+    const pubnub_subscription_options_t* options)
 {
     PUBNUB_ASSERT_OPT(NULL != entity);
     PUBNUB_ASSERT(pb_valid_ctx_ptr(entity->pb));
@@ -565,29 +667,28 @@ pubnub_subscription_t* _pubnub_subscription_alloc(
     }
 
     pubnub_mutex_init(subscription->mutw);
-    subscription->options         = opts;
-    subscription->reference_count = standalone == true ? 1 : 0;
-    subscription->entity          = entity;
-    subscription->ee              = entity->pb->core.subscribe_ee;
+    subscription->options = opts;
+    subscription->counter = pbref_counter_alloc();
+    subscription->entity  = entity;
+    subscription->ee      = entity->pb->core.subscribe_ee;
+    entity_reference_count_update_(entity, true);
 
     return subscription;
 }
 
-void _subscription_reference_count_update(
+void subscription_reference_count_update_(
     pubnub_subscription_t* subscription,
     const bool             increase)
 {
     PUBNUB_ASSERT_OPT(NULL != subscription);
 
     pubnub_mutex_lock(subscription->mutw);
-    if (increase) { subscription->reference_count++; }
-    else if (subscription->reference_count > 0) {
-        subscription->reference_count--;
-    }
+    if (increase) { pbref_counter_increment(subscription->counter); }
+    else { pbref_counter_decrement(subscription->counter); }
     pubnub_mutex_unlock(subscription->mutw);
 }
 
-pbhash_set_t* _pubnub_subscription_subscribables(
+pbhash_set_t* pubnub_subscription_subscribables_(
     const pubnub_subscription_t*         sub,
     const pubnub_subscription_options_t* options)
 {
@@ -596,7 +697,7 @@ pbhash_set_t* _pubnub_subscription_subscribables(
         opts.receive_presence_events = sub->options.receive_presence_events;
     }
 
-    const enum pubnub_subscribable_location location =
+    const pubnub_subscribable_location location =
         sub->entity->type == PUBNUB_ENTITY_CHANNEL_GROUP
             ? SUBSCRIBABLE_LOCATION_QUERY
             : SUBSCRIBABLE_LOCATION_PATH;
@@ -606,19 +707,19 @@ pbhash_set_t* _pubnub_subscription_subscribables(
         NULL);
     if (NULL == hash) {
         PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-                         " memory for subscription's subscribable list\n");
-        return NULL;
+            " memory for subscription's subscribable list\n");
+        return hash;
     }
 
-    pubnub_subscribable_t* regular = _pubnub_subscribable_alloc(
+    pubnub_subscribable_t* regular = pubnub_subscribable_alloc_(
         location,
         &sub->entity->id,
         false);
     if (NULL == regular) {
         PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-                         " memory for regular subscribable identifier\n");
-        pbhash_set_free(hash);
-        return NULL;
+            " memory for regular subscribable identifier\n");
+        pbhash_set_free(&hash);
+        return hash;
     }
 
     if (PBHSR_OUT_OF_MEMORY ==
@@ -626,22 +727,24 @@ pbhash_set_t* _pubnub_subscription_subscribables(
         PUBNUB_LOG_ERROR(
             "pubnub_subscription_subscribables: failed to allocate memory "
             "for node to store regular subscribable identifier in hash set\n");
-        _pubnub_subscribable_free(regular);
-        pbhash_set_free(hash);
-        return NULL;
+        pubnub_subscribable_free_(regular);
+        pbhash_set_free(&hash);
+        return hash;
     }
 
-    if (!options->receive_presence_events) { return hash; }
+    if (!opts.receive_presence_events) { return hash; }
 
-    pubnub_subscribable_t* presence = _pubnub_subscribable_alloc(
+    pubnub_subscribable_t* presence = pubnub_subscribable_alloc_(
         location,
         &sub->entity->id,
         true);
     if (NULL == presence) {
         PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-                         " memory for presence subscribable identifier\n");
-        pbhash_set_free_with_destructor(hash, _pubnub_subscribable_free);
-        return NULL;
+            " memory for presence subscribable identifier\n");
+        pbhash_set_free_with_destructor(
+            &hash,
+            (pbhash_set_element_free)pubnub_subscribable_free_);
+        return hash;
     }
 
     if (PBHSR_OUT_OF_MEMORY == pbhash_set_add(
@@ -651,15 +754,16 @@ pbhash_set_t* _pubnub_subscription_subscribables(
         PUBNUB_LOG_ERROR(
             "pubnub_subscription_subscribables: failed to allocate memory for "
             "node to store presence subscribable identifier in hash set\n");
-        pbhash_set_free_with_destructor(hash, _pubnub_subscribable_free);
-        _pubnub_subscribable_free(presence);
-        return NULL;
+        pbhash_set_free_with_destructor(
+            &hash,
+            (pbhash_set_element_free)pubnub_subscribable_free_);
+        pubnub_subscribable_free_(presence);
     }
 
     return hash;
 }
 
-pubnub_subscription_set_t* _subscription_set_alloc(
+pubnub_subscription_set_t* subscription_set_alloc_(
     const pubnub_subscription_options_t* options,
     const int                            length)
 {
@@ -674,33 +778,38 @@ pubnub_subscription_set_t* _subscription_set_alloc(
     subscription_set->subscriptions = pbhash_set_alloc(
         length,
         PBHASH_SET_CHAR_CONTENT_TYPE,
-        pubnub_subscription_free);
+        (pbhash_set_element_free)pubnub_subscription_set_subscription_free_);
 
     if (NULL == subscription_set->subscriptions) {
         PUBNUB_LOG_ERROR("subscription_set_alloc: failed to allocate memory for"
-                         " subscriptions\n");
-        pubnub_subscription_set_free(subscription_set);
+            " subscriptions\n");
+        pubnub_subscription_set_free(&subscription_set);
         return NULL;
     }
 
-    subscription_set->subscribed      = false;
-    subscription_set->reference_count = 1;
+    subscription_set->subscribed = false;
+    subscription_set->counter    = pbref_counter_alloc();
 
     return subscription_set;
 }
 
-void _subscription_set_reference_count_update(
+void subscription_set_reference_count_update_(
     pubnub_subscription_set_t* set,
     const bool                 increase)
 {
     pubnub_mutex_lock(set->mutw);
-    if (increase) { set->reference_count++; }
-    else
-        if (set->reference_count > 0) { set->reference_count--; }
+    if (increase) { pbref_counter_increment(set->counter); }
+    else { pbref_counter_decrement(set->counter); }
     pubnub_mutex_unlock(set->mutw);
 }
 
-pbhash_set_t* _pubnub_subscription_set_subscribables(
+bool pubnub_subscription_set_subscription_free_(pubnub_subscription_t* sub)
+{
+    subscription_reference_count_update_(sub, false);
+    return pubnub_subscription_free(&sub);
+}
+
+pbhash_set_t* pubnub_subscription_set_subscribables_(
     const pubnub_subscription_set_t* set)
 {
     size_t                        count;
@@ -709,32 +818,38 @@ pbhash_set_t* _pubnub_subscription_set_subscribables(
 
     if (NULL == subs) {
         PUBNUB_LOG_ERROR("pubnub_subscription_set_subscribables: failed to "
-                         "allocate memory for subscriptions list\n");
-    } else if (0 == count) {
+            "allocate memory for subscriptions list\n");
+    }
+    else if (0 == count) {
         PUBNUB_LOG_INFO("pubnub_subscription_set_subscribables: subscriptions "
-                        "list is empty");
+            "list is empty");
     }
 
     pbhash_set_t* hash = pbhash_set_alloc(
-        count * (set->options.receive_presence_events ? 2 : 1),
+        (0 == count ? 1 : count) * (
+            set->options.receive_presence_events ? 2 : 1),
         PBHASH_SET_CHAR_CONTENT_TYPE,
         NULL);
     if (NULL == hash) {
         PUBNUB_LOG_ERROR("pubnub_subscription_set_get_subscribable: failed to "
-                         "allocate memory for subscribables list\n");
+            "allocate memory for subscribables list\n");
         if (NULL != subs) { free(subs); }
-        return NULL;
+        return hash;
     }
 
+    if (NULL == subs) { return hash; }
+
     for (int i = 0; i < count; ++i) {
-        pbhash_set_t* subsc = _pubnub_subscription_subscribables(
+        pbhash_set_t* subsc = pubnub_subscription_subscribables_(
             subs[i],
             &set->options);
 
         if (NULL == subsc) {
-            pbhash_set_free_with_destructor(hash, _pubnub_subscribable_free);
+            pbhash_set_free_with_destructor(
+                &hash,
+                (pbhash_set_element_free)pubnub_subscribable_free_);
             free(subs);
-            return NULL;
+            return hash;
         }
 
         if (PBHSR_OUT_OF_MEMORY == pbhash_set_union(hash, subsc, NULL)) {
@@ -742,25 +857,31 @@ pbhash_set_t* _pubnub_subscription_set_subscribables(
                 "pubnub_subscription_set_get_subscribable: failed to allocate "
                 "memory for nodes to store subscribable identifiers from other "
                 "hash set\n");
-            pbhash_set_free_with_destructor(hash, _pubnub_subscribable_free);
-            pbhash_set_free_with_destructor(subsc, _pubnub_subscribable_free);
+            pbhash_set_free_with_destructor(
+                &hash,
+                (pbhash_set_element_free)pubnub_subscribable_free_);
+            pbhash_set_free_with_destructor(
+                &subsc,
+                (pbhash_set_element_free)pubnub_subscribable_free_);
             free(subs);
-            return NULL;
+            return hash;
         }
+
+        pbhash_set_free(&subsc);
     }
     if (NULL != subs) { free(subs); }
 
     return hash;
 }
 
-pubnub_subscribable_t* _pubnub_subscribable_alloc(
-    const enum pubnub_subscribable_location location,
-    struct pubnub_char_mem_block*           id,
-    const bool                              presence)
+pubnub_subscribable_t* pubnub_subscribable_alloc_(
+    const pubnub_subscribable_location location,
+    struct pubnub_char_mem_block*      id,
+    const bool                         presence)
 {
     PBCC_ALLOCATE_TYPE(sub, pubnub_subscribable_t, true, NULL);
-    sub->location              = location;
-    sub->managed_memory_block  = !presence;
+    sub->location             = location;
+    sub->managed_memory_block = !presence;
     if (!presence) { sub->id = id; }
     else {
         const char* suffix = "-pnpres";
@@ -773,26 +894,29 @@ pubnub_subscribable_t* _pubnub_subscribable_alloc(
     return sub;
 }
 
-size_t _pubnub_subscribable_length(const pubnub_subscribable_t* subscribable)
+size_t pubnub_subscribable_length_(const pubnub_subscribable_t* subscribable)
 {
     return subscribable->id->size;
 }
 
-bool _pubnub_subscribable_is_presence(const pubnub_subscribable_t* subscribable)
+bool pubnub_subscribable_is_presence_(const pubnub_subscribable_t* subscribable)
 {
-    // Checking on variable which is set to `false` for presence because it is
-    // allocated by the client itself.
+    /**
+     * Checking on variable which is set to `false` for presence because it is
+     * allocated by the client itself.
+     */
     return !subscribable->managed_memory_block;
 }
 
-bool _pubnub_subscribable_is_cg(const pubnub_subscribable_t* subscribable)
+bool pubnub_subscribable_is_cg_(const pubnub_subscribable_t* subscribable)
 {
     return subscribable->location == SUBSCRIBABLE_LOCATION_QUERY;
 }
 
-void _pubnub_subscribable_free(pubnub_subscribable_t* subscribable)
+void pubnub_subscribable_free_(pubnub_subscribable_t* subscribable)
 {
     if (NULL == subscribable) { return; }
+
     if (!subscribable->managed_memory_block) {
         if (subscribable->id->ptr) { free(subscribable->id->ptr); }
         free(subscribable->id);

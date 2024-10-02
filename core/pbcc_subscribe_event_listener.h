@@ -1,5 +1,12 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PBCC_SUBSCRIBE_EVENT_LISTENER_H
 #define PBCC_SUBSCRIBE_EVENT_LISTENER_H
+#if !PUBNUB_USE_SUBSCRIBE_V2
+#error Subscribe event engine requires subscribe v2 API, so you must define PUBNUB_USE_SUBSCRIBE_V2=1
+#endif // #if !PUBNUB_USE_SUBSCRIBE_V2
+#ifndef PUBNUB_CALLBACK_API
+#error Subscribe event engine requires callback based PubNub context, so you must define PUBNUB_CALLBACK_API
+#endif // #ifndef PUBNUB_CALLBACK_API
 
 
 /**
@@ -8,16 +15,16 @@
  *        definitions and functions.
  */
 
-#include "pbarray.h"
 #include "core/pubnub_subscribe_event_listener_types.h"
 #include "core/pubnub_api_types.h"
+#include "lib/pbarray.h"
 
 
 // ----------------------------------------------
 //                Types forwarding
 // ----------------------------------------------
 
-// Event Listener definition.
+/** Event Listener definition. */
 typedef struct pbcc_event_listener pbcc_event_listener_t;
 
 
@@ -44,7 +51,7 @@ pbcc_event_listener_t* pbcc_event_listener_alloc(const pubnub_t* pb);
  * @return Results of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_status_listener(
-    pbcc_event_listener_t*             listener,
+    pbcc_event_listener_t* listener,
     pubnub_subscribe_status_callback_t cb);
 
 /**
@@ -60,7 +67,7 @@ enum pubnub_res pbcc_event_listener_add_status_listener(
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_status_listener(
-    pbcc_event_listener_t*       listener,
+    pbcc_event_listener_t* listener,
     pubnub_subscribe_status_callback_t cb);
 
 /**
@@ -76,8 +83,8 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
  * @return Results of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_message_listener(
-    pbcc_event_listener_t*              listener,
-    pubnub_subscribe_listener_type      type,
+    pbcc_event_listener_t* listener,
+    pubnub_subscribe_listener_type type,
     pubnub_subscribe_message_callback_t cb);
 
 /**
@@ -95,8 +102,8 @@ enum pubnub_res pbcc_event_listener_add_message_listener(
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_message_listener(
-    const pbcc_event_listener_t*        listener,
-    pubnub_subscribe_listener_type      type,
+    pbcc_event_listener_t* listener,
+    pubnub_subscribe_listener_type type,
     pubnub_subscribe_message_callback_t cb);
 
 /**
@@ -114,10 +121,10 @@ enum pubnub_res pbcc_event_listener_remove_message_listener(
  * @return Result of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
-    const pbcc_event_listener_t*        listener,
-    pubnub_subscribe_listener_type      type,
-    pbarray_t*                          names,
-    const void*                         subscription,
+    pbcc_event_listener_t* listener,
+    pubnub_subscribe_listener_type type,
+    pbarray_t* names,
+    const void* subscription,
     pubnub_subscribe_message_callback_t cb);
 
 /**
@@ -140,27 +147,34 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
-    const pbcc_event_listener_t*        listener,
-    pubnub_subscribe_listener_type      type,
-    pbarray_t*                          names,
-    const void*                         subscription,
+    pbcc_event_listener_t* listener,
+    pubnub_subscribe_listener_type type,
+    pbarray_t* names,
+    const void* subscription,
     pubnub_subscribe_message_callback_t cb);
 
 /**
  * @brief Notify subscription status listeners about status change.
  *
- * @param listener Pointer to the Event Listener which contains list of
- *                 listeners for subscription status change event.
- * @param status   New subscription status which should be sent the the
- *                 listeners.
- * @param reason   In case of `SUBSCRIPTION_STATUS_CONNECTION_ERROR` and
- *                 `SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY` may contain
- *                 additional information about reasons of failure.
+ * @param listener       Pointer to the Event Listener which contains list of
+ *                       listeners for subscription status change event.
+ * @param status         New subscription status which should be sent the the
+ *                       listeners.
+ * @param reason         In case of `SUBSCRIPTION_STATUS_CONNECTION_ERROR` and
+ *                       `SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY` may
+ *                       contain additional information about reasons of
+ *                       failure.
+ * @param channels       Byte string with comma-separated / `NULL` channel
+ *                       identifiers which have been used with recent operation.
+ * @param channel_groups Byte string with comma-separated / `NULL` channel group
+ *                       identifiers which have been used with recent operation.
  */
 void pbcc_event_listener_emit_status(
-    const pbcc_event_listener_t* listener,
-    pubnub_subscription_status   status,
-    enum pubnub_res              reason);
+    pbcc_event_listener_t* listener,
+    pubnub_subscription_status status,
+    enum pubnub_res reason,
+    const char* channels,
+    const char* channel_groups);
 
 /**
  * @brief Notify listeners about new real-time update / message.
@@ -170,8 +184,8 @@ void pbcc_event_listener_emit_status(
  * @param message  Received message which should be delivered to the listeners.
  */
 void pbcc_event_listener_emit_message(
-    const pbcc_event_listener_t* listener,
-    struct pubnub_v2_message     message);
+    pbcc_event_listener_t* listener,
+    struct pubnub_v2_message message);
 
 /**
  * @brief Clean up resources used by the Event Listener object.
@@ -179,5 +193,5 @@ void pbcc_event_listener_emit_message(
  * @param event_listener Pointer to the Event Listener, which should free up
  *                       used resources.
  */
-void pbcc_event_listener_free(pbcc_event_listener_t* event_listener);
-#endif //PBCC_SUBSCRIBE_EVENT_LISTENER_H
+void pbcc_event_listener_free(pbcc_event_listener_t** event_listener);
+#endif // #ifndef PBCC_SUBSCRIBE_EVENT_LISTENER_H

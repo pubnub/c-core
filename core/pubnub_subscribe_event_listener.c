@@ -1,7 +1,11 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_subscribe_event_listener.h"
+
+
+#include "pbcc_memory_utils.h"
 #include "core/pubnub_subscribe_event_engine_internal.h"
-#include "core/pubnub_internal_common.h"
 #include "core/pubnub_log.h"
+#include "pubnub_internal.h"
 #include "lib/pbstrdup.h"
 
 
@@ -24,8 +28,8 @@
  * @param callback       Real-time update handling listener function.
  * @return Result of listeners list update operation.
  */
-static enum pubnub_res _pubnub_subscribe_manage_listener(
-    const pbcc_event_listener_t*        event_listener,
+static enum pubnub_res pubnub_subscribe_manage_listener_(
+    pbcc_event_listener_t*              event_listener,
     bool                                add,
     pubnub_subscribe_listener_type      type,
     const void*                         subscription,
@@ -41,7 +45,7 @@ static enum pubnub_res _pubnub_subscribe_manage_listener(
  *         insufficient memory error. The returned pointer must be passed to the
  *         `pbarray_free` to avoid a memory leak.
  */
-static pbarray_t* _pubnub_subscribe_subscribable_names(
+static pbarray_t* pubnub_subscribe_subscribable_names_(
     pbhash_set_t* subscribables);
 
 
@@ -98,19 +102,21 @@ enum pubnub_res pubnub_subscribe_add_subscription_listener(
     const pubnub_subscribe_listener_type      type,
     const pubnub_subscribe_message_callback_t callback)
 {
-    pbhash_set_t* subs = _pubnub_subscription_subscribables(subscription, NULL);
+    pbhash_set_t* subs = pubnub_subscription_subscribables_(subscription, NULL);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
-    const pbcc_event_listener_t* event_listener =
+    pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(subscription->ee);
-    const enum pubnub_res rslt = _pubnub_subscribe_manage_listener(
+    const enum pubnub_res rslt = pubnub_subscribe_manage_listener_(
         event_listener,
         true,
         type,
         subscription,
         subs,
         callback);
-    pbhash_set_free_with_destructor(subs, _pubnub_subscribable_free);
+    pbhash_set_free_with_destructor(
+        &subs,
+        (pbhash_set_element_free)pubnub_subscribable_free_);
 
     return rslt;
 }
@@ -120,19 +126,21 @@ enum pubnub_res pubnub_subscribe_remove_subscription_listener(
     const pubnub_subscribe_listener_type      type,
     const pubnub_subscribe_message_callback_t callback)
 {
-    pbhash_set_t* subs = _pubnub_subscription_subscribables(subscription, NULL);
+    pbhash_set_t* subs = pubnub_subscription_subscribables_(subscription, NULL);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
-    const pbcc_event_listener_t* event_listener =
+    pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(subscription->ee);
-    const enum pubnub_res rslt = _pubnub_subscribe_manage_listener(
+    const enum pubnub_res rslt = pubnub_subscribe_manage_listener_(
         event_listener,
         false,
         type,
         subscription,
         subs,
         callback);
-    pbhash_set_free_with_destructor(subs, _pubnub_subscribable_free);
+    pbhash_set_free_with_destructor(
+        &subs,
+        (pbhash_set_element_free)pubnub_subscribable_free_);
 
     return rslt;
 }
@@ -143,19 +151,21 @@ enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
     const pubnub_subscribe_message_callback_t callback)
 {
     pbhash_set_t* subs =
-        _pubnub_subscription_set_subscribables(subscription_set);
+        pubnub_subscription_set_subscribables_(subscription_set);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
-    const pbcc_event_listener_t* event_listener =
+    pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(subscription_set->ee);
-    const enum pubnub_res rslt = _pubnub_subscribe_manage_listener(
+    const enum pubnub_res rslt = pubnub_subscribe_manage_listener_(
         event_listener,
         true,
         type,
         subscription_set,
         subs,
         callback);
-    pbhash_set_free_with_destructor(subs, _pubnub_subscribable_free);
+    pbhash_set_free_with_destructor(
+        &subs,
+        (pbhash_set_element_free)pubnub_subscribable_free_);
 
     return rslt;
 }
@@ -166,25 +176,27 @@ enum pubnub_res pubnub_subscribe_remove_subscription_set_listener(
     const pubnub_subscribe_message_callback_t callback)
 {
     pbhash_set_t* subs =
-        _pubnub_subscription_set_subscribables(subscription_set);
+        pubnub_subscription_set_subscribables_(subscription_set);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
-    const pbcc_event_listener_t* event_listener =
+    pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(subscription_set->ee);
-    const enum pubnub_res rslt = _pubnub_subscribe_manage_listener(
+    const enum pubnub_res rslt = pubnub_subscribe_manage_listener_(
         event_listener,
         false,
         type,
         subscription_set,
         subs,
         callback);
-    pbhash_set_free_with_destructor(subs, _pubnub_subscribable_free);
+    pbhash_set_free_with_destructor(
+        &subs,
+        (pbhash_set_element_free)pubnub_subscribable_free_);
 
     return rslt;
 }
 
-enum pubnub_res _pubnub_subscribe_manage_listener(
-    const pbcc_event_listener_t*              event_listener,
+enum pubnub_res pubnub_subscribe_manage_listener_(
+    pbcc_event_listener_t*                    event_listener,
     const bool                                add,
     const pubnub_subscribe_listener_type      type,
     const void*                               subscription,
@@ -193,11 +205,11 @@ enum pubnub_res _pubnub_subscribe_manage_listener(
 {
     if (NULL == subscribables) { return PNR_OUT_OF_MEMORY; }
 
-    // Get list of names for which listeners should be updated.
-    pbarray_t* names = _pubnub_subscribe_subscribable_names(subscribables);
+    /** Get list of names for which listeners should be updated. */
+    pbarray_t* names = pubnub_subscribe_subscribable_names_(subscribables);
     if (NULL == names) { return PNR_OUT_OF_MEMORY; }
 
-    enum pubnub_res rslt = PNR_OK;;
+    enum pubnub_res rslt = PNR_OK;
     if (add) {
         rslt = pbcc_event_listener_add_subscription_object_listener(
             event_listener,
@@ -215,14 +227,17 @@ enum pubnub_res _pubnub_subscribe_manage_listener(
             callback);
     }
 
-    // If listeners added successfully then names memory managed by event listener.
-    if (PNR_OK != rslt || !add) { pbarray_free_with_destructor(names, free); }
-    else { pbarray_free(names); }
+    /**
+     * If listeners added successfully then names memory managed by event
+     * listener.
+     */
+    if (PNR_OK != rslt || !add) { pbarray_free_with_destructor(&names, free); }
+    else { pbarray_free(&names); }
 
     return rslt;
 }
 
-pbarray_t* _pubnub_subscribe_subscribable_names(pbhash_set_t* subscribables)
+pbarray_t* pubnub_subscribe_subscribable_names_(pbhash_set_t* subscribables)
 {
     size_t                  count;
     pubnub_subscribable_t** subs = (pubnub_subscribable_t**)
@@ -255,7 +270,7 @@ pbarray_t* _pubnub_subscribe_subscribable_names(pbhash_set_t* subscribables)
                 "allocate memory for subscribable names array "
                 "element\n");
             if (NULL != name) { free(name); }
-            pbarray_free_with_destructor(names, free);
+            pbarray_free_with_destructor(&names, free);
             free(subs);
             return NULL;
         }

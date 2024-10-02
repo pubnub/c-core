@@ -1,9 +1,13 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PUBNUB_SUBSCRIBE_EVENT_LISTENER_H
 #define PUBNUB_SUBSCRIBE_EVENT_LISTENER_H
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #if !PUBNUB_USE_SUBSCRIBE_V2
 #error Subscribe event engine requires subscribe v2 API, so you must define PUBNUB_USE_SUBSCRIBE_V2=1
-#endif
+#endif // #if !PUBNUB_USE_SUBSCRIBE_V2
+#ifndef PUBNUB_CALLBACK_API
+#error Subscribe event engine requires callback based PubNub context, so you must define PUBNUB_CALLBACK_API
+#endif // #ifndef PUBNUB_CALLBACK_API
 
 
 /**
@@ -158,7 +162,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_subscription_set_listener(
     const pubnub_subscription_set_t*    subscription_set,
     pubnub_subscribe_listener_type      type,
     pubnub_subscribe_message_callback_t callback);
-#else
+#else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
-#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
-#endif //PUBNUB_SUBSCRIBE_EVENT_ENGINE_H
+#endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#endif // #ifndef PUBNUB_SUBSCRIBE_EVENT_LISTENER_H

@@ -1,25 +1,36 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PBCC_SUBSCRIBE_EVENT_ENGINE_H
 #define PBCC_SUBSCRIBE_EVENT_ENGINE_H
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #if !PUBNUB_USE_SUBSCRIBE_V2
 #error Subscribe event engine requires subscribe v2 API, so you must define PUBNUB_USE_SUBSCRIBE_V2=1
-#endif
+#endif // #if !PUBNUB_USE_SUBSCRIBE_V2
+#ifndef PUBNUB_CALLBACK_API
+#error Subscribe event engine requires callback based PubNub context, so you must define PUBNUB_CALLBACK_API
+#endif // #ifndef PUBNUB_CALLBACK_API
+
 
 /**
  * @file  pbcc_subscribe_event_engine.h
  * @brief Event engine implementation for subscription loop.
  */
 
+#include "core/pbcc_subscribe_event_engine_types.h"
 #include "core/pbcc_subscribe_event_listener.h"
 #include "core/pubnub_subscribe_event_engine.h"
 
-// Subscribe event engine structure.
+
+// ----------------------------------------------
+//                Types forwarding
+// ----------------------------------------------
+
+/** Subscribe event engine structure. */
 typedef struct pbcc_subscribe_ee pbcc_subscribe_ee_t;
 
 
-// ----------------------------------
-//             Functions
-// ----------------------------------
+// ----------------------------------------------
+//                   Functions
+// ----------------------------------------------
 
 /**
  * @brief Create Subscribe Event Engine.
@@ -33,6 +44,15 @@ typedef struct pbcc_subscribe_ee pbcc_subscribe_ee_t;
 pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb);
 
 /**
+ * @brief Dispose and free up resources used by Subscribe Event Engine.
+ *
+ * @note Function will NULLify provided subscribe event engine pointer.
+ *
+ * @param ee Pointer to the Subscribe Event Engine which should be disposed.
+ */
+void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t** ee);
+
+/**
  * @brief Get Subscribe Event Listener.
  *
  * @param ee Pointer to the Subscribe Event Engine, which should provide
@@ -40,6 +60,16 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb);
  * @return Pointer to the ready to use Event Listener.
  */
 pbcc_event_listener_t* pbcc_subscribe_ee_event_listener(
+    const pbcc_subscribe_ee_t* ee);
+
+/**
+ * @brief Get current state context.
+ *
+ * @param ee Pointer to the Subscribe Event Engine, which should provide current
+ *           state object.
+ * @return Current Subscribe Event Engine context data.
+ */
+pbcc_ee_data_t* pbcc_subscribe_ee_current_state_context(
     const pbcc_subscribe_ee_t* ee);
 
 /**
@@ -87,7 +117,7 @@ void pbcc_subscribe_ee_set_heartbeat(
  */
 enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription(
     pbcc_subscribe_ee_t* ee,
-    const pubnub_subscription_t* sub,
+    pubnub_subscription_t* sub,
     const pubnub_subscribe_cursor_t* cursor);
 
 /**
@@ -128,7 +158,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
  */
 enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
     pbcc_subscribe_ee_t* ee,
-    const pubnub_subscription_set_t* set,
+    pubnub_subscription_set_t* set,
     const pubnub_subscribe_cursor_t* cursor);
 
 /**
@@ -145,7 +175,7 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
  */
 enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
     pbcc_subscribe_ee_t* ee,
-    const pubnub_subscription_set_t* set);
+    pubnub_subscription_set_t* set);
 
 /**
  * @brief Subscription set modification handler.
@@ -242,14 +272,7 @@ pubnub_subscription_t** pbcc_subscribe_ee_subscriptions(
 pubnub_subscription_set_t** pbcc_subscribe_ee_subscription_sets(
     pbcc_subscribe_ee_t* ee,
     size_t* count);
-
-/**
- * @brief Dispose and free up resources used by Subscribe Event Engine.
- *
- * @param ee Pointer to the Subscribe Event Engine which should be disposed.
- */
-void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t* ee);
-#else
+#else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
-#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
-#endif //PBCC_SUBSCRIBE_EVENT_ENGINE_H
+#endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#endif // #ifndef PBCC_SUBSCRIBE_EVENT_ENGINE_H

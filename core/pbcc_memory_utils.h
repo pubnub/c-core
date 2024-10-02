@@ -11,6 +11,11 @@
 #include "core/pubnub_log.h"
 
 
+// ----------------------------------------------
+//                     Macros
+// ----------------------------------------------
+
+
 /**
  * @brief Macro for type allocation and error handling.
  * @code
@@ -41,4 +46,16 @@
         }                                                                \
         return return_value;                                             \
     }
+
+
+// ----------------------------------------------
+//                   Functions
+// ----------------------------------------------
+
+/**
+ * @brief Clean up resources allocated for pointer and set it to `NULL`.
+ *
+ * @param ptr Pointer with dynamically allocated resources for clean up.
+ */
+void pbcc_free_ptr(void** ptr);
 #endif //PBCC_MEMORY_UTILS_H

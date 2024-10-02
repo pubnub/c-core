@@ -1,5 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-
 #ifndef PBHASH_SET_H
 #define PBHASH_SET_H
 
@@ -22,7 +21,8 @@
  *
  * The type of data affects hash computation algorithm.
  */
-typedef enum {
+typedef enum
+{
     /**
      * @brief Hash set used for generic data storage.
      *
@@ -38,8 +38,9 @@ typedef enum {
     PBHASH_SET_CHAR_CONTENT_TYPE
 } pbhash_set_content_type;
 
-// Hash set result codes.
-typedef enum {
+/** Hash set result codes. */
+typedef enum
+{
     /**
      * @brief Success.
      *
@@ -85,10 +86,12 @@ typedef enum {
  * @brief Element `free` function prototype.
  *
  * Function which will be used when a hash set is freed using `pbhash_set_free`.
+ *
+ * @note Element destructor function will `NULL`ify provided pointer.
  */
 typedef void (*pbhash_set_element_free)(void*);
 
-// Hash set definition.
+/** Hash set definition. */
 typedef struct pbhash_set pbhash_set_t;
 
 
@@ -101,7 +104,8 @@ typedef struct pbhash_set pbhash_set_t;
  *
  * \b Example:
  * @code
- * // Allocate hash for unique strings which will call `free()` on entry remove.
+ * // Allocate hash for unique strings which will call `free_ptr()` on entry
+ * // remove.
  * pbhash_set_t* set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, free);
  * @endcode
  *
@@ -118,7 +122,7 @@ typedef struct pbhash_set pbhash_set_t;
  *         memory leak.
  */
 pbhash_set_t* pbhash_set_alloc(
-    size_t                  length,
+    size_t length,
     pbhash_set_content_type content_type,
     pbhash_set_element_free free_fn);
 
@@ -186,15 +190,15 @@ pbhash_set_t* pbhash_set_alloc(
  */
 pbhash_set_res pbhash_set_add(
     pbhash_set_t* set,
-    const void*   element,
-    const void*   containing);
+    void* element,
+    void* containing);
 
 /**
  * @brief Remove an element from a hash set.
  *
  * Remove value previously added to the hash set:
  * @code
- * pbhash_set_res result = pbhash_set_remove(set, my_value);
+ * pbhash_set_res result = pbhash_set_remove(set, my_value, NULL);
  * if (PBHSR_OK == result) {
  *     // `my_value` has been removed from a hash set.
  * } else if (PBHSR_NOT_FOUND == result) {
@@ -216,26 +220,33 @@ pbhash_set_res pbhash_set_add(
  * pbhash_set_add(set, user->name, user);
  *
  * // Remove structured data by `name`:
- * if (PBHSR_OK == pbhash_set_remove(set, user->name)) {
+ * if (PBHSR_OK == pbhash_set_remove(set, &user->name, &user)) {
  *     // `user` has been removed from hash `set` using same field value which
  *     // has been used to add it.
  * }
  * @endcode
  *
- * \b Warning: The element destruct function (if provided during set allocation)
- * will be applied to the removed `element`. If the same `element` (by value and
- * pointer) is passed to the `pbhash_set_add` or `pbhash_set_union` functions,
- * then it will be freed and shouldn't be used after `pbhash_set_remove`.
+ * \b Important: If provided during set allocation, the element destruct
+ * function will be used for the matched element only if there are no other
+ * references to it (not shared with other sets after `pbhash_set_union`).<br/>
+ * \b Important: The `element` pointer will be NULLified if the memory address
+ * and value of the `element` match the elements that have been freed
+ * (no references).
  *
- * @param set     Pointer to the hash set from which new element should be
- *                removed.
- * @param element Pointer to the element which should be removed.
+ * @param set        Pointer to the hash set from which new element should be
+ *                   removed.
+ * @param element    Pointer to the element which should be removed.
+ * @param containing Pointer to the object which contains an `element`. `NULL`
+ *                   can be used if non-structured data is stored.
  * @return Result of `element` removal from the hash set.
  *
  * @see pbhash_set_add
  * @see pbhash_set_union
  */
-pbhash_set_res pbhash_set_remove(pbhash_set_t* set, const void* element);
+pbhash_set_res pbhash_set_remove(
+    pbhash_set_t* set,
+    void** element,
+    void** containing);
 
 /**
 * @brief Union `other hash` set entries with source set.
@@ -267,10 +278,10 @@ pbhash_set_res pbhash_set_remove(pbhash_set_t* set, const void* element);
  * }
  * @endcode
  *
- * @note Hash won't let free up (call element destructor) on elements which are
- *       shared with another set. Destructor will be applied only element not
- *       shared between sets anymore.<br/>\b Important: a hash set won't be able
- *       to protect data from direct release with `free`.
+ * @note Hash set won't let free up (call element destructor) on elements which
+ *       are shared with another set. Destructor will be applied only element
+ *       not shared between sets anymore.<br/>\b Important: a hash set won't be
+ *       able to protect data from direct release with `free`.
  *
  * @param set                  Pointer to the source hash set into which should
  *                             be merged entries from `other` set.
@@ -284,9 +295,9 @@ pbhash_set_res pbhash_set_remove(pbhash_set_t* set, const void* element);
  * @see pbhash_set_subtract
  */
 pbhash_set_res pbhash_set_union(
-    pbhash_set_t*       set,
-    const pbhash_set_t* other_set,
-    pbhash_set_t**      duplicates_set);
+    pbhash_set_t* set,
+    pbhash_set_t* other_set,
+    pbhash_set_t** duplicates_set);
 
 /**
  * @brief Subtract `other hash` set entries from source set.
@@ -323,7 +334,7 @@ pbhash_set_res pbhash_set_subtract(pbhash_set_t* set, pbhash_set_t* other_set);
  *         value, element itself if stored as non-structured data or `NULL` in
  *         case if `element` can't be found.
  */
-const void* pbhash_set_element(const pbhash_set_t* set, const void* element);
+const void* pbhash_set_element(pbhash_set_t* set, const void* element);
 
 /**
  * @brief Check whether `element` already added to the `set`.
@@ -374,7 +385,21 @@ const void* pbhash_set_element(const pbhash_set_t* set, const void* element);
  *
  * @see pbhash_set_add
  */
-bool pbhash_set_contains(const pbhash_set_t* set, const void* element);
+bool pbhash_set_contains(pbhash_set_t* set, const void* element);
+
+/**
+ * @brief Check whether `set` content is equal to the other set content.
+ *
+ * @note Check will be done only by value (not `containing` object).
+ *
+ * @param set       Pointer to the source hash set from which content will be
+ *                  compared to the other set.
+ * @param other_set Pointer to the hash set with values which will be used
+ *                  in comparison with the `hash`.
+ * @return `true` if both sets has similar content type, length and set of
+ *         objects.
+ */
+bool pbhash_set_is_equal(pbhash_set_t* set, pbhash_set_t* other_set);
 
 /**
  * @brief Identify type of the `element` match in the `set`.
@@ -407,8 +432,8 @@ bool pbhash_set_contains(const pbhash_set_t* set, const void* element);
  * @see pbhash_set_add
  */
 pbhash_set_res pbhash_set_match_element(
-    const pbhash_set_t* set,
-    const void*         element);
+    pbhash_set_t* set,
+    const void* element);
 
 /**
  * @brief Retrieve a type of data stored in hash `set`.
@@ -424,8 +449,8 @@ pbhash_set_content_type pbhash_set_type(const pbhash_set_t* set);
  * @brief Get the number of elements in hash set.
  * @code
  * pbhash_set_t* set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, NULL);
- * pbhash_set_remove(set, "hello once");
- * pbhash_set_remove(set, "hello twice");
+ * pbhash_set_remove(set, "hello once", NULL);
+ * pbhash_set_remove(set, "hello twice", NULL);
  * // Output: Number of elements: 2
  * printf("Number of elements: %d\n", pbhash_set_count(set));
  * @endcode
@@ -460,14 +485,17 @@ void pbhash_set_remove_all(pbhash_set_t* set);
  *       element destructing function is not provided. Destructing function will
  *       be used on `containing` object if it has been provided along with added
  *       `element`.
+ * @note Function will NULLify provided array pointer.
  *
  * @param set Pointer to the hash set, which should free up resources used for
  *            it and stored elements.
  */
-void pbhash_set_free(pbhash_set_t* set);
+void pbhash_set_free(pbhash_set_t** set);
 
 /**
  * @brief Clean up resources used by `set` with custom element destructor.
+ *
+ * @note Function will NULLify provided array pointer.
  *
  * @param set     Pointer to the hash set, which should free up resources used
  *                for it and stored elements.
@@ -475,6 +503,6 @@ void pbhash_set_free(pbhash_set_t* set);
  *                and leave memory management to the hash set user.
  */
 void pbhash_set_free_with_destructor(
-    pbhash_set_t*           set,
+    pbhash_set_t** set,
     pbhash_set_element_free free_fn);
-#endif //PBHASH_SET_H
+#endif // #ifndef PBHASH_SET_H

@@ -1,3 +1,4 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #ifndef PUBNUB_SUBSCRIBE_EVENT_ENGINE_TYPES_H
 #define PUBNUB_SUBSCRIBE_EVENT_ENGINE_TYPES_H
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
@@ -7,6 +8,8 @@
  * @file  pubnub_subscribe_event_engine_types.h
  * @brief Public Subscribe Event Engine types.
  */
+
+#include <stdbool.h>
 
 
 // ----------------------------------------------
@@ -56,7 +59,7 @@ typedef struct pubnub_subscription pubnub_subscription_t;
  * @see pubnub_subscription_options_defopts
  */
 typedef struct pubnub_subscription_options {
-    // Whether presence events should be received or not.
+    /** Whether presence events should be received or not. */
     bool receive_presence_events;
 } pubnub_subscription_options_t;
 
@@ -71,7 +74,7 @@ typedef struct pubnub_subscription_options {
  * @see pubnub_subscribe_cursor
  */
 typedef struct {
-    // PubNub high-precision timestamp.
+    /** PubNub high-precision timestamp. */
     char timetoken[20];
     /**
      * @brief Data center region for which `timetoken` has been generated.
@@ -81,23 +84,26 @@ typedef struct {
     int region;
 } pubnub_subscribe_cursor_t;
 
-// PubNub subscription statuses.
+/** PubNub subscription statuses. */
 typedef enum {
-    // PubNub client subscribe and ready to receive real-time updates.
+    /** PubNub client subscribe and ready to receive real-time updates. */
     SUBSCRIPTION_STATUS_CONNECTED,
-    // PubNub client were unable to subscribe to receive real-time updates.
+    /** PubNub client were unable to subscribe to receive real-time updates. */
     SUBSCRIPTION_STATUS_CONNECTION_ERROR,
-    // PubNub client has been disconnected because of some error.
+    /** PubNub client has been disconnected because of some error. */
     SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY,
     /**
      * @brief PubNub client has been intentionally temporarily disconnected from
      *        the real-time updates.
      */
     SUBSCRIPTION_STATUS_DISCONNECTED,
-    // PubNub client has been unsubscribed from all real-time update sources.
+    /**
+     * @brief PubNub client has been unsubscribed from all real-time update
+     *        sources.
+     */
     SUBSCRIPTION_STATUS_SUBSCRIPTION_CHANGED
 } pubnub_subscription_status;
-#else
+#else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
-#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
-#endif //PUBNUB_SUBSCRIBE_EVENT_ENGINE_TYPES_H
+#endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#endif // #ifndef PUBNUB_SUBSCRIBE_EVENT_ENGINE_TYPES_H

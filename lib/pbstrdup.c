@@ -1,4 +1,6 @@
+/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbstrdup.h"
+
 #include <stdbool.h>
 #include <string.h>
 

@@ -560,7 +560,7 @@ bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb)
 }
 
 
-void  pbauto_heartbeat_free_channelInfo(pubnub_t* pb)
+void pbauto_heartbeat_free_channelInfo(pubnub_t* pb)
 {
     PUBNUB_ASSERT_OPT(pb_valid_ctx_ptr(pb));
 

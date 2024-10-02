@@ -190,7 +190,7 @@ Ensure(pbarray, should_insert_element_at_index_when_index_in_range)
     pbarray_add(array, "hello twice");
     pbarray_add(array, "hello again");
 
-    assert_that(pbarray_insert(array, "hello impostor", 1),
+    assert_that(pbarray_insert_at(array, "hello impostor", 1),
                 is_equal_to(PBAR_OK));
     assert_that(pbarray_count(array), is_equal_to(4));
     assert_that(pbarray_element_at(array, 0), is_equal_to_string("hello once"));
@@ -209,7 +209,7 @@ Ensure(pbarray, should_insert_element_at_index_when_index_equal_length)
     pbarray_add(array, "hello once");
     pbarray_add(array, "hello twice");
 
-    assert_that(pbarray_insert(array, "hello again", pbarray_count(array)),
+    assert_that(pbarray_insert_at(array, "hello again", pbarray_count(array)),
                 is_equal_to(PBAR_OK));
     assert_that(pbarray_count(array), is_equal_to(3));
     assert_that(pbarray_element_at(array, 2),
@@ -225,7 +225,7 @@ Ensure(pbarray, should_not_insert_element_at_index_when_index_out_of_range)
     pbarray_add(array, "hello once");
     pbarray_add(array, "hello twice");
 
-    assert_that(pbarray_insert(array, "hello again", 4),
+    assert_that(pbarray_insert_at(array, "hello again", 4),
                 is_equal_to(PBAR_INDEX_OUT_OF_RANGE));
     assert_that(pbarray_count(array), is_equal_to(2));
 }
