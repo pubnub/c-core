@@ -82,6 +82,7 @@ log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
 log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(CUSTOM_BOOL_TYPE "" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
 
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
@@ -145,6 +146,13 @@ if(${WITH_CPP})
             ${CMAKE_CXX_FLAGS} \
             -std=c++11")
     endif()
+endif()
+
+if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
+    message(STATUS "Using custom bool type: ${CUSTOM_BOOL_TYPE}")
+    set(FLAGS "\
+        ${FLAGS} \
+        -D PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE}")
 endif()
 
 set(CORE_SOURCEFILES 
@@ -406,6 +414,9 @@ endif()
 if(${USE_GRANT_TOKEN_API})
     set(FEATURE_SOURCEFILES 
         ${FEATURE_SOURCEFILES} 
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborerrorstrings.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/cbor/cborparser_dup_string.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_grant_token_api.c 
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_grant_token_api.c)
 endif()
@@ -525,6 +536,10 @@ if(NOT ESP_PLATFORM)
     endif()
 
     add_library(pubnub ${LIBTYPE} ${SOURCEFILES})
+
+    if(NOT ${CUSTOM_BOOL_TYPE} STREQUAL "")
+        target_compile_definitions(pubnub PUBLIC PUBNUB_BOOL_TYPE=${CUSTOM_BOOL_TYPE})
+    endif()
 
     target_include_directories(pubnub PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}
@@ -708,6 +723,16 @@ if(${EXAMPLES})
             if (OPENSSL)
                 set(EXAMPLE_LIST
                     pubnub_crypto_module_sample
+                    ${EXAMPLE_LIST})
+                if (${USE_GRANT_TOKEN_API})
+                    set(EXAMPLE_LIST
+                        pubnub_sync_grant_token_sample
+                        ${EXAMPLE_LIST})
+                endif()
+            endif()
+            if (${USE_OBJECTS_API})
+                set(EXAMPLE_LIST
+                    pubnub_objects_api_sample
                     ${EXAMPLE_LIST})
             endif()
         endif()

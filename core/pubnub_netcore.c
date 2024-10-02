@@ -295,6 +295,7 @@ static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
 #endif
 #if PUBNUB_USE_ADVANCED_HISTORY
     , pbcc_parse_message_counts_response /* PBTT_MESSAGE_COUNTS */
+    , pbcc_parse_delete_messages_response /* PBTT_DELETE_MESSAGES */
 #endif
 #if PUBNUB_USE_OBJECTS_API
     , pbcc_parse_objects_api_response /* PBTT_GET_USERS */

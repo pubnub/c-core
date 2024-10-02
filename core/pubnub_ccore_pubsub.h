@@ -332,12 +332,12 @@ struct pbcc_context {
         else if (pb->auth != NULL) { ADD_URL_PARAM(name, key, pb->auth); }        
 
 #define ADD_URL_PARAM_SIZET(name, key, value)                               \
-    int val_len = snprintf(NULL, 0, "%lu", (long unsigned int)value);                          \
+    int val_len = snprintf(NULL, 0, "%lu", (long unsigned int)value);       \
     if (val_len >= 21) {                                                    \
         PUBNUB_LOG_ERROR("Error: in ADD_URL_PARAM_SIZET:\n");               \
         return PNR_TX_BUFF_TOO_SMALL;                                       \
     }                                                                       \
-    snprintf(name##_val_str, val_len + 1, "%lu", (long unsigned int)value);                    \
+    snprintf(name##_val_str, val_len + 1, "%lu", (long unsigned int)value); \
     name[(int)(name##_index)].param_key = #key;                             \
     name[(int)(name##_index)].key_size = sizeof(#key)-1;                    \
     name[(int)(name##_index)].param_val = name##_val_str;                   \
@@ -480,6 +480,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   bool                 store_in_history,
                                   bool                 norep,
                                   char const*          meta,
+                                  size_t               ttl,
                                   enum pubnub_method   method);
 
 /** Prepares the Signal operation (transaction), mostly by

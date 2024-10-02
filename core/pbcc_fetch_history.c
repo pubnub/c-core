@@ -58,16 +58,16 @@ enum pubnub_res pbcc_fetch_history_prep(struct pbcc_context* pb,
     sprintf(max_per_ch_cnt_buf, "%d", max_per_channel);
     if (max_per_channel) { ADD_URL_PARAM(qparam, max, max_per_ch_cnt_buf); }
 
-    if (include_meta != pbccNotSet) { ADD_URL_PARAM(qparam, include_meta, include_meta == pbccTrue ? "1" : "0"); }
-    if (include_message_type != pbccNotSet) { ADD_URL_PARAM(qparam, include_message_type, include_meta == pbccTrue ? "1" : "0"); }
-    if (include_user_id != pbccNotSet) { ADD_URL_PARAM(qparam, include_uuid, include_user_id == pbccTrue ? "1" : "0"); }
+    if (include_meta != pbccNotSet) { ADD_URL_PARAM(qparam, include_meta, include_meta == pbccTrue ? "true" : "false"); }
+    if (include_message_type != pbccNotSet) { ADD_URL_PARAM(qparam, include_message_type, include_meta == pbccTrue ? "true" : "false"); }
+    if (include_user_id != pbccNotSet) { ADD_URL_PARAM(qparam, include_uuid, include_user_id == pbccTrue ? "true" : "false"); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
 #else
     ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
-    if (reverse != pbccNotSet) { ADD_URL_PARAM(qparam, reverse, reverse == pbccTrue ? "1" : "0"); }
+    if (reverse != pbccNotSet) { ADD_URL_PARAM(qparam, reverse, reverse == pbccTrue ? "true" : "false"); }
     if (start) { ADD_URL_PARAM(qparam, start, start); }
     if (end) { ADD_URL_PARAM(qparam, end, end); }
 

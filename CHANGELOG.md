@@ -1,3 +1,49 @@
+## v4.13.1
+September 05 2024
+
+#### Fixed
+- Removed additional null byte character.
+
+## v4.13.0
+August 09 2024
+
+#### Added
+- Add `delete message` API support to the advanced history module.
+
+## v4.12.3
+August 05 2024
+
+#### Fixed
+- Add the missing `ttl` parameter to the `pubnub_publish_options` for extended `publish` configuration.
+
+## v4.12.2
+August 05 2024
+
+#### Fixed
+- Fixed custom `bool` type for CMake builds.
+
+## v4.12.1
+August 05 2024
+
+#### Fixed
+- Fix query values for boolean flags for history endpoint (`include meta`, `include uuid`, `include message type` and `reverse`).
+
+## v4.12.0
+July 29 2024
+
+#### Added
+- Added `filter` and `sort` parameters to be closer to the other SDKs with object API.
+- Configurable `bool` type.
+
+#### Fixed
+- Missing features needed for grant token API in CMakeLIsts.txt.
+
+## v4.11.2
+July 15 2024
+
+#### Fixed
+- Added missing subscribe v2 crypto implementation.
+
 ## v4.11.1
 June 28 2024
 

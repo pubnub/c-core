@@ -32,6 +32,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.replicate  = true;
     result.meta       = NULL;
     result.method     = pubnubSendViaGET;
+    result.ttl        = SIZE_MAX;
     return result;
 }
 
@@ -54,11 +55,15 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     }
 #if PUBNUB_CRYPTO_API
     if (NULL != pb->core.crypto_module && NULL != opts.cipher_key) {
-        PUBNUB_LOG_WARNING("pubnub_publish_ex(pb=%p).cipher_key called while client crypto module is set! Using crypto module instead!\n", pb);
-    } else if (NULL != opts.cipher_key) {
+        PUBNUB_LOG_WARNING(
+            "pubnub_publish_ex(pb=%p).cipher_key called while client crypto "
+            "module is set! Using crypto module instead!\n",
+            pb);
+    }
+    else if (NULL != opts.cipher_key) {
         pubnub_bymebl_t to_encrypt;
-        char* encrypted_msg = pb->core.encrypted_msg_buf;
-        size_t          n  = sizeof pb->core.encrypted_msg_buf - sizeof("\"\"");
+        char*           encrypted_msg = pb->core.encrypted_msg_buf;
+        size_t          n = sizeof pb->core.encrypted_msg_buf - sizeof("\"\"");
 
         to_encrypt.ptr   = (uint8_t*)message;
         to_encrypt.size  = strlen(message);
@@ -73,11 +78,18 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
 #endif
 #if PUBNUB_USE_GZIP_COMPRESSION
     if (pubnubSendViaPOSTwithGZIP == opts.method) {
-        message = (pbgzip_compress(pb, message) == PNR_OK) ? pb->core.gzip_msg_buf : message;
+        message = (pbgzip_compress(pb, message) == PNR_OK) ? pb->core.gzip_msg_buf
+                                                           : message;
     }
 #endif
-    rslt = pbcc_publish_prep(
-        &pb->core, channel, message, opts.store, !opts.replicate, opts.meta, opts.method);
+    rslt = pbcc_publish_prep(&pb->core,
+                             channel,
+                             message,
+                             opts.store,
+                             !opts.replicate,
+                             opts.meta,
+                             opts.ttl,
+                             opts.method);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;

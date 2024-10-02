@@ -137,49 +137,20 @@ bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
 
 char const* pbcc_get_msg(struct pbcc_context* pb)
 {
+#if PUBNUB_CRYPTO_API 
+    size_t len;
+#endif // PUBNUB_CRYPTO_API
     if (pb->msg_ofs < pb->msg_end) {
         PUBNUB_LOG_DEBUG("RESPONSE = %s\n", pb->http_reply);
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
 #if PUBNUB_CRYPTO_API
-            if (NULL != pb->crypto_module) {
-                char* trimmed = (char*)malloc(strlen(rslt) + 1); // same length as rslt
-                if (NULL == trimmed) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);
-                    return NULL;
-                }
-                sprintf(trimmed, "%s", rslt);
-                
-                trimmed[strlen(trimmed) - 1] = '\0';
-
-                pubnub_bymebl_t encrypted = pbcc_base64_decode(trimmed + 1);
-                free(trimmed);
-
-                if (NULL == encrypted.ptr) {
-                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Returning original message!\n", pb);
-                    return rslt;
-                }
-
-                pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
-                free(encrypted.ptr);
-                if (NULL == rslt_block.ptr) {
-                    PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - decryption failed. Returning original message!\n", pb);
-                    return rslt;
-                }
-
-                if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
-                    PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Returning original message!\n", pb);
-                    return NULL;
-                }
-
-                pb->decrypted_messages[pb->decrypted_message_count] = rslt_block.ptr;
-                pb->decrypted_message_count++;
-
-                rslt = (char*)rslt_block.ptr;
+            if (pb->crypto_module != NULL) {
+                len = strlen(rslt);
+                rslt = pbcc_decrypt_message(pb, rslt, len, NULL);
             }
 #endif // PUBNUB_CRYPTO_API 
-
             return rslt;
         }
     }
@@ -551,18 +522,18 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
     return pbcc_url_encode(pb, param_val, pt);
 }
 
-
 enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   const char*          channel,
                                   const char*          message,
                                   bool                 store_in_history,
                                   bool                 norep,
                                   char const*          meta,
+                                  const size_t         ttl,
                                   enum pubnub_method   method)
 {
-    char const* const uname = pubnub_uname();
-    char const*       user_id  = pbcc_user_id_get(pb);
-    enum pubnub_res   rslt  = PNR_OK;
+    char const* const uname   = pubnub_uname();
+    char const*       user_id = pbcc_user_id_get(pb);
+    enum pubnub_res   rslt    = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
     PUBNUB_ASSERT_OPT(message != NULL);
@@ -579,10 +550,11 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
 #if PUBNUB_CRYPTO_API
     if (NULL != pb->crypto_module) {
         pubnub_bymebl_t message_block;
-        message_block.ptr = (uint8_t*)message;
+        message_block.ptr  = (uint8_t*)message;
         message_block.size = strlen(message);
 
-        pubnub_bymebl_t encrypted = pb->crypto_module->encrypt(pb->crypto_module, message_block);
+        pubnub_bymebl_t encrypted =
+            pb->crypto_module->encrypt(pb->crypto_module, message_block);
 
         if (NULL == encrypted.ptr) {
             PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - encryption failed\n", pb);
@@ -594,15 +566,19 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
         message = pbcc_base64_encode(encrypted);
 
         free(encrypted.ptr);
- 
+
         if (NULL == message) {
-            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
+            PUBNUB_LOG_ERROR(
+                "pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
             return PNR_INTERNAL_ERROR;
         }
 
-        char* quoted_message = (char*)malloc(strlen(message) + 3); // quotes + null-terminator
+        char* quoted_message =
+            (char*)malloc(strlen(message) + 3); // quotes + null-terminator
         if (NULL == quoted_message) {
-            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - failed to allocate memory for quoted message\n", pb);
+            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - failed to allocate "
+                             "memory for quoted message\n",
+                             pb);
             free((void*)message);
             return PNR_OUT_OF_MEMORY;
         }
@@ -619,7 +595,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     }
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
+    ADD_URL_PARAM(qparam, uuid, user_id);
+    if (ttl != SIZE_MAX) { ADD_URL_PARAM_SIZET(qparam, ttl, ttl); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -631,14 +608,15 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     if (meta) { ADD_URL_PARAM(qparam, meta, meta); }
 
 #if PUBNUB_CRYPTO_API
-  SORT_URL_PARAMETERS(qparam);
+    SORT_URL_PARAMETERS(qparam);
 #endif
     ENCODE_URL_PARAMETERS(pb, qparam);
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key != NULL) {
         rslt = pbcc_sign_url(pb, message, method, false);
         if (rslt != PNR_OK) {
-            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, message, method);
+            PUBNUB_LOG_ERROR(
+                "pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, message, method);
         }
     }
 #endif
@@ -648,10 +626,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     }
     PUBNUB_LOG_DEBUG("pbcc_publish_prep. REQUEST =%s\n", pb->http_buf);
 #if PUBNUB_CRYPTO_API
-    if (NULL != pb->crypto_module)
-    {
-        free((void*) message);
-    }
+    if (NULL != pb->crypto_module) { free((void*)message); }
 #endif
 
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
