@@ -1,6 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-
-#include "pbcc_crypto.h"
 #if !defined INC_PUBNUB_INTERNAL_COMMON
 #define INC_PUBNUB_INTERNAL_COMMON
 
