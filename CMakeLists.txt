@@ -108,6 +108,7 @@ set(FLAGS "\
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
+    -D PUBNUB_USE_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
@@ -474,12 +475,7 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_legacy.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c 
+        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
         ${FEATURE_SOURCEFILES})
 
     set(FEATURE_SOURCEFILES 
@@ -487,6 +483,16 @@ if(${OPENSSL})
         ${FEATURE_SOURCEFILES})
 
     set(LDLIBS  ${LDLIBS})
+
+    if(USE_CRYPTO_API)
+        set(FEATURE_SOURCEFILES
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_legacy.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c
+            ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c
+            ${FEATURE_SOURCEFILES})
+    endif()
 
     if(UNIX)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c)
