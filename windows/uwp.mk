@@ -24,9 +24,22 @@ USE_FETCH_HISTORY = 1
 USE_PROXY = 1
 !endif
 
+!ifndef USE_RETRY_CONFIGURATION
+USE_RETRY_CONFIGURATION = 0
+!endif
+
+!ifndef USE_CRYPTO_API
+USE_CRYPTO_API = 0
+!endif
+
 !if $(USE_PROXY)
 PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\core\pbhttp_digest.c ..\core\pbntlm_core.c ..\core\pbntlm_packer_std.c  
 PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj pbntlm_core.obj pbntlm_packer_std.obj  
+!endif
+
+!if $(USE_RETRY_CONFIGURATION)
+PROXY_INTF_SOURCEFILES += ..\core\pbcc_request_retry_timer.c ..\core\pubnub_retry_configuration.c
+PROXY_INTF_OBJFILES += pbcc_request_retry_timer.obj pubnub_retry_configuration.obj
 !endif
 
 !if $(USE_FETCH_HISTORY)
@@ -34,7 +47,7 @@ FETCH_HIST_SOURCEFILES = ..\core\pubnub_fetch_history.c ..\core\pbcc_fetch_histo
 FETCH_HIST_OBJFILES = pubnub_fetch_history.obj pbcc_fetch_history.obj  
 !endif
 
-DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_WIN_SSPI=0 -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY) 
+DEFINES=-D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D HAVE_STRERROR_S -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_RETRY_CONFIGURATION=$(USE_RETRY_CONFIGURATION) -D PUBNUB_USE_WIN_SSPI=0 -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
 UDEFINES=-D "_UNICODE" -D "UNICODE" -D "WINAPI_FAMILY=WINAPI_FAMILY_APP" -D "__WRL_NO_DEFAULT_LIB__" -D "_CRT_SECURE_NO_WARNINGS" -D "_WINSOCK_DEPRECATED_NO_WARNINGS" -D "__UWP__" -D "HAVE_STRUCT_TIMESPEC"
 CFLAGS = -Yu"pch.h" -Zi -Y- -MP -W3  -Gy -Zc:wchar_t $(UDEFINES) $(DEFINES) -Gm- -O2 -sdl -errorReport:prompt -WX- -Zc:forScope /Gd /Oy- /Oi /MD /FC -FU"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\lib\x86\store\references\platform.winmd"
 # -Zi enables debugging, remove to get a smaller .exe and no .pdb

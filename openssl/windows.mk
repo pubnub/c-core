@@ -44,9 +44,18 @@ USE_FETCH_HISTORY = 1
 USE_CRYPTO_API = 0
 !endif
 
+!ifndef USE_RETRY_CONFIGURATION
+USE_RETRY_CONFIGURATION = 0
+!endif
+
 !if $(USE_PROXY)
 PROXY_INTF_SOURCEFILES = ..\core\pubnub_proxy.c ..\core\pubnub_proxy_core.c ..\core\pbhttp_digest.c ..\core\pbntlm_core.c ..\core\pbntlm_packer_sspi.c ..\windows\pubnub_set_proxy_from_system_windows.c 
 PROXY_INTF_OBJFILES = pubnub_proxy.obj pubnub_proxy_core.obj pbhttp_digest.obj pbntlm_core.obj pbntlm_packer_sspi.obj pubnub_set_proxy_from_system_windows.obj 
+!endif
+
+!if $(USE_RETRY_CONFIGURATION)
+PROXY_INTF_SOURCEFILES += ..\core\pbcc_request_retry_timer.c ..\core\pubnub_retry_configuration.c
+PROXY_INTF_OBJFILES += pbcc_request_retry_timer.obj pubnub_retry_configuration.obj
 !endif
 
 !if $(USE_REVOKE_TOKEN)
@@ -64,7 +73,7 @@ FETCH_HIST_SOURCEFILES = ..\core\pubnub_fetch_history.c ..\core\pbcc_fetch_histo
 FETCH_HIST_OBJFILES = pubnub_fetch_history.obj pbcc_fetch_history.obj  
 !endif
 
-CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) /D _CRT_SECURE_NO_WARNINGS /D PUBNUB_CRYPTO_API=1 /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) /D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
+CFLAGS = /Zi /MP -D PUBNUB_THREADSAFE /D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING /W3 /D PUBNUB_USE_WIN_SSPI=1 /D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) /D PUBNUB_PROXY_API=$(USE_PROXY) /D PUBNUB_USE_RETRY_CONFIGURATION=$(USE_RETRY_CONFIGURATION) /D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) /D _CRT_SECURE_NO_WARNINGS /D PUBNUB_CRYPTO_API=$(USE_CRYPTO_API) /D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) /D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) /D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
 # /Zi enables debugging, remove to get a smaller .exe and no .pdb
 # /MP uses one compiler (`cl`) process for each input file, enabling faster build
 # /analyze To run the static analyzer (not compatible w/clang-cl)
