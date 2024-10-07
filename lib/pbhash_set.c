@@ -212,7 +212,7 @@ pbhash_set_res pbhash_set_remove(
         return PBHSR_NOT_FOUND;
     }
 
-    const size_t       hash = pbhash_set_element_hash_(set, *element);
+    const size_t hash = pbhash_set_element_hash_(set, *element);
     pbhash_set_node_t* node = set->buckets[hash];
     pbhash_set_node_t* prev = NULL;
 
@@ -284,7 +284,9 @@ pbhash_set_res pbhash_set_subtract(
         const pbhash_set_node_t* node = other_set->buckets[i];
         while (NULL != node) {
             const pbhash_set_node_t* next = node->next;
-            rslt = pbhash_set_remove(set, node->value, node->containing);
+            rslt                          = pbhash_set_remove(set,
+                (void**)&node->value,
+                (void**)&node->containing);
             node = next;
         }
     }
@@ -323,9 +325,9 @@ bool pbhash_set_contains(pbhash_set_t* set, const void* element)
     pubnub_mutex_lock(set->mutw);
     const size_t hash     = pbhash_set_element_hash_(set, element);
     const bool   contains = PBHSR_NOT_FOUND != pbhash_set_contains_(
-                              set,
-                              element,
-                              hash);
+                                set,
+                                element,
+                                hash);
     pubnub_mutex_unlock(set->mutw);
 
     return contains;
@@ -338,7 +340,7 @@ bool pbhash_set_is_equal(pbhash_set_t* set, pbhash_set_t* other_set)
     bool equal = set->content_type == other_set->content_type;
     equal      = equal && set->elements_count == other_set->elements_count;
     if (equal) {
-        size_t count;
+        size_t       count;
         const void** elements = pbhash_set_elements(set, &count);
         for (size_t i = 0; i < count; ++i) {
             equal = pbhash_set_contains(other_set, elements[i]);

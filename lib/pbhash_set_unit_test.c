@@ -21,15 +21,15 @@ static int           elementFreeCounter = 0;
 static pbhash_set_t* set                = NULL;
 
 typedef struct {
-    const char* name;
-    int         age;
+    char* name;
+    int   age;
 } user_t;
 
 // ----------------------------------
 //              Helpers
 // ----------------------------------
 
-user_t* createUser(const char* name, const int age)
+user_t* createUser(char* name, const int age)
 {
     user_t* user = malloc(sizeof(user_t));
     user->name   = name;
@@ -58,7 +58,7 @@ BeforeEach(pbhash_set)
 
 AfterEach(pbhash_set)
 {
-    if (NULL != set) { pbhash_set_free(set); }
+    if (NULL != set) { pbhash_set_free(&set); }
 }
 
 
@@ -84,7 +84,7 @@ Ensure(pbhash_set, should_add_unique_strings)
 
 Ensure(pbhash_set, should_not_add_duplicate_strings)
 {
-    const char* value = "hello once";
+    char* value = "hello once";
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, NULL);
     char* once = malloc((strlen(value) + 1) * sizeof(char));
     strcpy(once, value);
@@ -99,7 +99,7 @@ Ensure(pbhash_set, should_not_add_duplicate_strings)
 
 Ensure(pbhash_set, should_not_add_exact_duplicate_strings)
 {
-    const char* value = "hello once";
+    char* value = "hello once";
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, NULL);
 
     assert_that(pbhash_set_add(set, value, NULL), is_equal_to(PBHSR_OK));
@@ -177,20 +177,22 @@ Ensure(pbhash_set, should_not_add_duplicate_structured_data_with_key)
 
 Ensure(pbhash_set, should_remove_string)
 {
+    char* removed_str = "hello twice";
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, freeElement);
     pbhash_set_add(set, "hello once", NULL);
     pbhash_set_add(set, "hello twice", NULL);
 
-    assert_that(pbhash_set_remove(set, "hello twice", NULL), is_equal_to(PBHSR_OK));
+    assert_that(pbhash_set_remove(set, (void**)&removed_str, NULL), is_equal_to(PBHSR_OK));
     assert_that(elementFreeCounter, is_equal_to(1));
 }
 
 Ensure(pbhash_set, should_not_remove_string_when_not_found)
 {
+    char* removed_str = "hello twice";
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, freeElement);
     pbhash_set_add(set, "hello once", NULL);
 
-    assert_that(pbhash_set_remove(set, "hello twice", NULL),
+    assert_that(pbhash_set_remove(set, (void**)&removed_str, NULL),
                 is_equal_to(PBHSR_NOT_FOUND));
     assert_that(elementFreeCounter, is_equal_to(0));
 }
@@ -210,8 +212,8 @@ Ensure(pbhash_set, should_union_only_unique_elements)
     assert_that(pbhash_set_union(set1, set2, NULL), is_equal_to(PBHSR_OK));
     assert_that(pbhash_set_contains(set1, "hello twice"), is_true);
 
-    pbhash_set_free(set1);
-    pbhash_set_free(set2);
+    pbhash_set_free(&set1);
+    pbhash_set_free(&set2);
 }
 
 Ensure(pbhash_set, should_not_free_shared_data_after_union_when_one_set_free)
@@ -226,10 +228,10 @@ Ensure(pbhash_set, should_not_free_shared_data_after_union_when_one_set_free)
     pbhash_set_add(set2, "hello twice", NULL);
     pbhash_set_union(set1, set2, NULL);
 
-    pbhash_set_free(set2);
+    pbhash_set_free(&set2);
     assert_that(elementFreeCounter, is_equal_to(0));
 
-    pbhash_set_free(set1);
+    pbhash_set_free(&set1);
 }
 
 Ensure(pbhash_set, should_free_shared_data_shared_with_union_when_all_set_free)
@@ -244,9 +246,9 @@ Ensure(pbhash_set, should_free_shared_data_shared_with_union_when_all_set_free)
     pbhash_set_add(set2, "hello twice", NULL);
     pbhash_set_union(set1, set2, NULL);
 
-    pbhash_set_free(set2);
+    pbhash_set_free(&set2);
     assert_that(elementFreeCounter, is_equal_to(0));
-    pbhash_set_free(set1);
+    pbhash_set_free(&set1);
     assert_that(elementFreeCounter, is_equal_to(2));
 }
 
@@ -264,15 +266,15 @@ Ensure(pbhash_set, should_subtract_elements)
 
     assert_that(pbhash_set_subtract(set1, set2), is_equal_to(PBHSR_OK));
     assert_that(pbhash_set_contains(set1, "hello twice"), is_false);
-    pbhash_set_free(set2);
+    pbhash_set_free(&set2);
     assert_that(elementFreeCounter, is_equal_to(1));
 
-    pbhash_set_free(set1);
+    pbhash_set_free(&set1);
 }
 
 Ensure(pbhash_set, should_contain_data_by_value)
 {
-    const char* value = "hello once";
+    char* value = "hello once";
     set = pbhash_set_alloc(10, PBHASH_SET_CHAR_CONTENT_TYPE, freeElement);
     char* once = malloc((strlen(value) + 1) * sizeof(char));
     strcpy(once, value);
@@ -285,7 +287,7 @@ Ensure(pbhash_set, should_contain_data_by_value)
 
 Ensure(pbhash_set, should_not_contain_data_by_address)
 {
-    const char* value = "hello once";
+    char* value = "hello once";
     set = pbhash_set_alloc(10, PBHASH_SET_GENERIC_CONTENT_TYPE, freeElement);
     char* once = malloc((strlen(value) + 1) * sizeof(char));
     strcpy(once, value);
@@ -298,7 +300,7 @@ Ensure(pbhash_set, should_not_contain_data_by_address)
 
 Ensure(pbhash_set, should_return_added_elements)
 {
-    const char* value = "hello once";
+    char* value = "hello once";
     set = pbhash_set_alloc(10, PBHASH_SET_GENERIC_CONTENT_TYPE, NULL);
     char* once = malloc((strlen(value) + 1) * sizeof(char));
     strcpy(once, value);
@@ -331,7 +333,7 @@ Ensure(pbhash_set, should_free)
     pbhash_set_add(set, "hello once", NULL);
     pbhash_set_add(set, "hello twice", NULL);
 
-    pbhash_set_free(set);
+    pbhash_set_free(&set);
 
     assert_that(elementFreeCounter, is_equal_to(2));
 

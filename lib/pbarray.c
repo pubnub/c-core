@@ -227,7 +227,6 @@ pbarray_t* pbarray_copy(pbarray_t* array)
         pubnub_mutex_unlock(array->mutw);
         return NULL;
     }
-    copy->count = array->count;
 
     for (size_t i = 0; i < array->count; ++i) {
         pbarray_entry_t* entry = array->elements[i];
@@ -377,7 +376,7 @@ pbarray_res pbarray_remove_element_at(pbarray_t* array, const size_t idx)
 pbarray_res pbarray_remove_all(pbarray_t* array)
 {
     pubnub_mutex_lock(array->mutw);
-    for (int i = 0; i < array->count - 1; ++i) {
+    for (int i = 0; i < array->count; ++i) {
         pbarray_entry_free_(array, array->elements[i], true);
     }
     array->count = 0;

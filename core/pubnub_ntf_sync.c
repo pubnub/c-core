@@ -60,30 +60,24 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
     PBNTF_TRANS_OUTCOME_COMMON(pb, state);
     PUBNUB_ASSERT(pbnc_can_start_transaction(pb));
 #if PUBNUB_USE_RETRY_CONFIGURATION
-    pubnub_mutex_lock(pb->monitor);
-    uint16_t delay = 0;
     if (NULL != pb->core.retry_configuration &&
         pubnub_retry_configuration_retryable_result_(pb)) {
-        delay = pubnub_retry_configuration_delay_(pb);
-    }
-    pubnub_mutex_unlock(pb->monitor);
+        uint16_t delay = pubnub_retry_configuration_delay_(pb);
 
-    if (delay > 0) {
-        pubnub_mutex_lock(pb->monitor);
-        if (NULL == pb->core.retry_timer)
-            pb->core.retry_timer = pbcc_request_retry_timer_alloc(pb);
-
-        if (NULL != pb->core.retry_timer) {
-            pubnub_mutex_unlock(pb->monitor);
-            pbcc_request_retry_timer_start(pb->core.retry_timer, delay);
-        } else { pubnub_mutex_unlock(pb->monitor); }
-    } else {
-        pubnub_mutex_lock(pb->monitor);
-        if (NULL != pb->core.retry_timer) {
-            pbcc_request_retry_timer_stop(pb->core.retry_timer);
-            pbcc_request_retry_timer_free(&pb->core.retry_timer);
+        if (delay > 0) {
+            if (NULL == pb->core.retry_timer)
+                pb->core.retry_timer = pbcc_request_retry_timer_alloc(pb);
+            if (NULL != pb->core.retry_timer) {
+                pbcc_request_retry_timer_start(pb->core.retry_timer, delay);
+                return;
+            }
         }
-        pubnub_mutex_unlock(pb->monitor);
+    }
+
+    /** There were no need to start retry timer, we can free it if exists. */
+    if (NULL != pb->core.retry_timer) {
+        pb->core.http_retry_count = 0;
+        pbcc_request_retry_timer_free(&pb->core.retry_timer);
     }
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 }

@@ -110,6 +110,9 @@ void pbcc_request_retry_timer_start(
     if (NULL == timer || timer->running) { return; }
     PUBNUB_ASSERT(pb_valid_ctx_ptr(timer->pb));
 
+    /** There shouldn't be any active timers. */
+    pbcc_request_retry_timer_stop(timer);
+
     pubnub_mutex_lock(timer->mutw);
     timer->running = true;
     timer->delay   = delay;
@@ -157,10 +160,6 @@ void pbcc_request_retry_timer_stop(pbcc_request_retry_timer_t* timer)
         timer->timer_thread = NULL;
     }
 #endif // #if defined(PUBNUB_CALLBACK_API)
-    if (!timer->running) {
-        pubnub_mutex_unlock(timer->mutw);
-        return;
-    }
     timer->running = false;
     pubnub_mutex_unlock(timer->mutw);
 }
@@ -193,10 +192,7 @@ void* pbcc_request_retry_timer_run_(pbcc_request_retry_timer_t* timer)
         pbnc_fsm(timer->pb);
     }
     pubnub_mutex_unlock(timer->pb->monitor);
-
-    pubnub_mutex_lock(timer->mutw);
-    timer->running = false;
-    pubnub_mutex_unlock(timer->mutw);
+    pbcc_request_retry_timer_stop(timer);
 
     return NULL;
 }
