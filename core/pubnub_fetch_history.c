@@ -6,6 +6,7 @@
 #include "pubnub_fetch_history.h"
 #include "pubnub_json_parse.h"
 
+#include "pbcc_fetch_history.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
 

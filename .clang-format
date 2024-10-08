@@ -88,7 +88,7 @@ PenaltyExcessCharacter: 4
 PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Left
 ReflowComments:  true
-SortIncludes:    false
+SortIncludes:    Never
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true
@@ -101,7 +101,7 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard:        Cpp11
+Standard:        c++11
 TabWidth:        4
 UseTab:          Never
 ...

@@ -296,6 +296,12 @@ PUBNUB_EXTERN enum pubnub_res pubnub_last_result(pubnub_t* p);
  * context. */
 PUBNUB_EXTERN int pubnub_last_http_code(pubnub_t* p);
 
+#if PUBNUB_USE_RETRY_CONFIGURATION
+/** Returns the HTTP reply `Retry-After` header value of the last transaction in
+ * the @p p context. */
+PUBNUB_EXTERN uint16_t pubnub_last_http_retry_header(pubnub_t* pb);
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
+
 /** Returns the string of the result of the last `publish` transaction,
     as returned from Pubnub. If the last transaction is not a publish,
     or there is some other error, it returns NULL. If the Publish

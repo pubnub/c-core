@@ -65,6 +65,12 @@ enum pubnub_res {
     PNR_SUB_NO_TT_ERROR,
     /** No Region in the subscribe response */
     PNR_SUB_NO_REG_ERROR,
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    /** Subscription object already exists in subscription set */
+    PNR_SUB_ALREADY_ADDED,
+    /** Subscription object not found in subscription set */
+    PNR_SUB_NOT_FOUND,
+#endif
     /** Request cancelled by user. */
     PNR_CANCELLED,
     /** Transaction started. Await the outcome. */

@@ -8,8 +8,9 @@
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
-#include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 #include <ctype.h>
 
 #define FORWARD +1

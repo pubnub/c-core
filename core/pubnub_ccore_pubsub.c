@@ -15,6 +15,10 @@
 #include "pubnub_crypto.h"
 #endif
 
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#include "core/pbcc_subscribe_event_engine.h"
+#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,7 +46,11 @@ void pbcc_init(struct pbcc_context* p, const char* publish_key, const char* subs
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
     p->message_to_send = NULL;
     p->state = NULL;
-
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    p->retry_configuration = NULL;
+    p->http_retry_count = 0;
+    p->retry_timer = NULL;
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 #if PUBNUB_USE_GZIP_COMPRESSION
     p->gzip_msg_len = 0;
 #endif
@@ -69,12 +77,28 @@ void pbcc_deinit(struct pbcc_context* p)
     }
 #endif /* PUBNUB_RECEIVE_GZIP_RESPONSE */
 #endif /* PUBNUB_DYNAMIC_REPLY_BUFFER */
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    if (NULL != p->retry_configuration)
+        pubnub_retry_configuration_free(&p->retry_configuration);
+    p->http_retry_count = 0;
+    if (NULL != p->retry_timer) {
+        pbcc_request_retry_timer_stop(p->retry_timer);
+        pbcc_request_retry_timer_free(&p->retry_timer);
+    }
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 #if PUBNUB_CRYPTO_API
     if (NULL != p->crypto_module) {
         free(p->crypto_module);
         p->crypto_module = NULL;   
     }
 #endif /* PUBNUB_CRYPTO_API */
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    pbcc_subscribe_ee_free(&p->subscribe_ee);
+#endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    if (NULL != p->retry_configuration)
+        pubnub_retry_configuration_free(&p->retry_configuration);
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 }
 
 

@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "lib/pb_deprecated.h"
 #if !defined INC_PUBNUB_CRYPTO
 #define	INC_PUBNUB_CRYPTO
-
+#if PUBNUB_CRYPTO_API
+#include "lib/pb_deprecated.h"
 #include "core/pubnub_api_types.h"
 #include "core/pubnub_memory_block.h"
 #include "core/pbcc_crypto.h"
@@ -235,5 +235,5 @@ PUBNUB_EXTERN void pubnub_set_crypto_module(pubnub_t *pubnub, struct pubnub_cryp
    @return Pointer to the crypto provider used by the pubnub context.
 */
 PUBNUB_EXTERN pubnub_crypto_provider_t *pubnub_get_crypto_module(pubnub_t *pubnub);
-
+#endif // #if PUBNUB_CRYPTO_API
 #endif /* defined INC_PUBNUB_CRYPTO */

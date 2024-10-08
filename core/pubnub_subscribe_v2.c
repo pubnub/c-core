@@ -11,10 +11,6 @@
 #include "pubnub_netcore.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
-#include "pubnub_version.h"
-#include "pubnub_json_parse.h"
-
-#include "pbpal.h"
 
 
 struct pubnub_subscribe_v2_options pubnub_subscribe_v2_defopts(void)

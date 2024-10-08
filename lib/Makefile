@@ -39,6 +39,16 @@ pubnub_dns_codec_unit_test: pubnub_dns_codec.c pubnub_dns_codec_unit_test.c
 	$(CGREEN_RUNNER) ./pubnub_dns_codec_unit_test.so
 	$(GCOVR) -r . --html --html-details -o coverage.html
 
+pbarray_unit_test: pbref_counter.c pbarray.c pbarray_unit_test.c
+	gcc -o pbarray_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../core/c99 -Wall $(COVERAGE_FLAGS) pbref_counter.c pbarray.c pbarray_unit_test.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pbarray_unit_test.so
+	$(GCOVR) -r . --html --html-details -o coverage.html
+
+pbhash_set_unit_test: pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_test.c
+	gcc -o pbhash_set_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../core/c99 -Wall $(COVERAGE_FLAGS) pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_test.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pbhash_set_unit_test.so
+	$(GCOVR) -r . --html --html-details -o coverage.html
+
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
 	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf

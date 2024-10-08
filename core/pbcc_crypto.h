@@ -2,6 +2,7 @@
 
 #ifndef PBCC_CRYPTO_H
 #define PBCC_CRYPTO_H
+#if PUBNUB_CRYPTO_API
 
 /** @file pbcc_crypto.h
 
@@ -294,7 +295,6 @@ void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provi
 */
 pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx);
 
-#if PUBNUB_CRYPTO_API 
 /**
    Decrypt the message received from PubNub with the crypto module.
 
