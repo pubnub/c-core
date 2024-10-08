@@ -86,7 +86,6 @@ bool pubnub_entity_free(void** entity)
 {
     if (NULL == entity || NULL == *entity) { return false; }
 
-    printf("~~~~~~> RESULT: %d\n", is_pubnub_entity_(*entity));
     PUBNUB_ASSERT_OPT(true == is_pubnub_entity_(*entity));
 
     pubnub_entity_t* _entity = *entity;

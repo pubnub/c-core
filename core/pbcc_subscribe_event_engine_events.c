@@ -93,7 +93,7 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
  *
  * @param ctx Pointer to the context, which should free up resources.
  */
-void pbcc_subscribe_ee_context_free_(pbcc_subscribe_ee_context_t** ctx);
+void pbcc_subscribe_ee_context_free_(pbcc_subscribe_ee_context_t* ctx);
 
 
 // ----------------------------------------------
@@ -250,7 +250,7 @@ pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
         (pbcc_ee_data_free_function_t)pbcc_subscribe_ee_context_free_);
     if (NULL == data) {
         pubnub_mutex_unlock(ee->mutw);
-        pbcc_subscribe_ee_context_free_(&ctx);
+        pbcc_subscribe_ee_context_free_(ctx);
         return NULL;
     }
     pubnub_mutex_unlock(ee->mutw);
@@ -321,13 +321,11 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
     return context;
 }
 
-void pbcc_subscribe_ee_context_free_(pbcc_subscribe_ee_context_t** ctx)
+void pbcc_subscribe_ee_context_free_(pbcc_subscribe_ee_context_t* ctx)
 {
-    if (NULL == ctx || NULL == *ctx) { return; }
+    if (NULL == ctx) { return; }
 
-    if (NULL != (*ctx)->channels) { pbcc_ee_data_free((*ctx)->channels); }
-    if (NULL != (*ctx)->channel_groups)
-        pbcc_ee_data_free((*ctx)->channel_groups);
-    free(*ctx);
-    *ctx = NULL;
+    if (NULL != ctx->channels) { pbcc_ee_data_free(ctx->channels); }
+    if (NULL != ctx->channel_groups) { pbcc_ee_data_free(ctx->channel_groups); }
+    free(ctx);
 }

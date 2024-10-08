@@ -106,7 +106,6 @@ pubnub_subscribe_v2_unittest: $(PROJECT_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES)
 	$(CGREEN_RUNNER) ./pubnub_subscribe_v2_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
-
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
 	find . -type f -name "*.so" -o -name "*.gcda" -o -name "*.gcno" -o -name "*.html" | xargs -r rm -rf

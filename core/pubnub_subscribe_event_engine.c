@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
 #include "pubnub_subscribe_event_engine_internal.h"
 
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include "core/pubnub_log.h"
 #include "pubnub_internal.h"
 #include "lib/pbhash_set.h"
+#include "core/pubnub_helper.h"
 
 
 // ----------------------------------------------
@@ -474,6 +476,7 @@ enum pubnub_res pubnub_subscribe_with_subscription(
     const pubnub_subscribe_cursor_t* cursor)
 {
     if (NULL == sub) { return PNR_INVALID_PARAMETERS; }
+    printf("~~~~~ pubnub_subscribe_with_subscription: %p\n", sub->ee);
 
     const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_with_subscription(
         sub->ee,

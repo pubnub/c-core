@@ -33,9 +33,9 @@
  * @param type                Name of type for which memory will be allocated.
  * @param print_error_message Whether a memory allocation error should be
  *                            printed to the console and log file or not.
- * @param return_value        What should be returned in case of a memory
- *                            allocation error. The value can be 'NULL' or
- *                            'enum' field.
+ * @param return_value        What should be returned from the function which
+ *                            use macro in case of a memory allocation error.
+ *                            The value can be 'NULL' or 'enum' field .
  */
 #define PBCC_ALLOCATE_TYPE(var, type, print_error_message, return_value) \
     type *var = (type *)malloc(sizeof(type));                            \

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "core/pubnub_helper.h"
 #include "core/pubnub_subscribe_event_engine_internal.h"
 #include "core/pbcc_subscribe_event_engine_states.h"
 #include "core/pbcc_subscribe_event_engine_events.h"
@@ -262,8 +263,10 @@ pbcc_event_listener_t* pbcc_subscribe_ee_event_listener(
 pbcc_ee_data_t* pbcc_subscribe_ee_current_state_context(
     const pbcc_subscribe_ee_t* ee)
 {
+    printf("~~~~~~~~ pbcc_subscribe_ee_current_state_context asking current context\n");
     pbcc_ee_state_t*      current_state = pbcc_ee_current_state(ee->ee);
     const pbcc_ee_data_t* data          = NULL;
+    printf("~~~~~~~~ pbcc_subscribe_ee_current_state_context asking current context done\n");
 
     if (NULL != current_state) { data = pbcc_ee_state_data(current_state); }
     pbcc_ee_state_free(&current_state);
@@ -562,6 +565,12 @@ void pbcc_subscribe_callback_(
     const void*             user_data
     )
 {
+    printf(
+        "~~~~~~~~:::::::>>>> CALLBACK FIRED (RESULT: %s | TRANSACTION: %d)\n",
+        pubnub_res_2_string(result),
+        trans);
+    pthread_t thread_id = pthread_self();
+    printf("Current thread ID: %lu\n", (unsigned long)thread_id);
     pbcc_subscribe_ee_t* ee = (pbcc_subscribe_ee_t*)user_data;
 
     /**
@@ -577,7 +586,9 @@ void pbcc_subscribe_callback_(
 
     PUBNUB_ASSERT_OPT(trans == PBTT_SUBSCRIBE_V2);
     const bool                error        = PNR_OK != result;
-    pbcc_ee_state_t*    state_object = pbcc_ee_current_state(ee->ee);
+    printf("~~~~~~~~ pbcc_subscribe_callback_ asking current context\n");
+    pbcc_ee_state_t*          state_object = pbcc_ee_current_state(ee->ee);
+    printf("~~~~~~~~ pbcc_subscribe_callback_ asking current context done\n");
     pbcc_ee_event_t*          event        = NULL;
     pubnub_subscribe_cursor_t cursor;
     cursor.region = 0;
@@ -680,9 +691,15 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     /** Removing subscribable which is not part of subscription loop. */
     for (size_t i = 0; i < count; ++i) {
         pubnub_subscribable_t* sub = subs[i];
-        if (pbhash_set_contains(ee->subscribables, sub)) { continue; }
-        pbhash_set_remove(subscribables, (void**)&sub->id->ptr, (void**)&sub);
-        pubnub_subscribable_free_(sub);
+
+        printf("~~~~> SUBSCRIBABLE: %s\n", sub->id->ptr);
+        if (pbhash_set_contains(ee->subscribables, sub)) {
+            printf("~~~~> STILL USED: %s\n", sub->id->ptr);
+            pbhash_set_remove(subscribables,
+                              (void**)&sub->id->ptr,
+                              (void**)&sub);
+            pubnub_subscribable_free_(sub);
+        }
     }
     free(subs);
 
@@ -705,17 +722,34 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
      * left.
      */
     if (PNR_OK == rslt && send_leave) {
+        printf("~~~~======> 1\n");
         // TODO: CLIENT MAY NOT BE READY TO PROCESS LEAVE.
-        pubnub_leave(ee->pb, ch, cg);
+        pubnub_leave(ee->pb,
+                     0 == strlen(ch) ? NULL : ch,
+                     0 == strlen(cg) ? NULL : cg);
+        printf("~~~~======> 2");
     }
 
     /** Update subscription loop. */
-    if (PNR_OK == rslt)
+    printf("~~~~======> 3");
+    if (PNR_OK == rslt) {
+        printf("~~~~======> 4");
         rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, false);
+        printf("~~~~======> 5");
+    }
 
-    if (NULL != ch) { free(ch); }
-    if (NULL != cg) { free(cg); }
+    if (NULL != ch) {
+        printf("~~~~======> 6");
+        free(ch);
+        printf("~~~~======> 7");
+    }
+    if (NULL != cg) {
+        printf("~~~~======> 8");
+        free(cg);
+        printf("~~~~======> 9");
+    }
 
+    printf("~~~~======> 10");
     return rslt;
 }
 

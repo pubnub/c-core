@@ -23,7 +23,7 @@
  * Timeout used with sleep function inside of `while` loop to break constant
  * polling and give other processes some CPU time.
  */
-#define POLLING_TIMEOUT 10
+#define PBCC_POLLING_TIMEOUT 10
 
 
 // ----------------------------------------------
@@ -183,7 +183,7 @@ void* pbcc_request_retry_timer_run_(pbcc_request_retry_timer_t* timer)
         pubnub_mutex_unlock(timer->mutw);
 
         delta = pbms_elapsed(t0);
-        pb_sleep_ms(POLLING_TIMEOUT);
+        pb_sleep_ms(PBCC_POLLING_TIMEOUT);
     }
 
     pubnub_mutex_lock(timer->pb->monitor);

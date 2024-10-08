@@ -1,7 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbref_counter.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "core/pubnub_mutex.h"
 

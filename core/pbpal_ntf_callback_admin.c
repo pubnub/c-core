@@ -44,6 +44,7 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
         PUBNUB_LOG_TRACE("pbntf_trans_outcome(pb=%p) calling callback:\n"
                          "pb->trans = %d, pb->core.last_result=%d, pb->user_data=%p\n",
                          pb, pb->trans, pb->core.last_result, pb->user_data);
+        printf("~~~~ pbntf_trans_outcome 1\n");
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }
