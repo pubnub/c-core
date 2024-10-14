@@ -217,12 +217,10 @@ int main()
         pubnub_subscription_alloc((pubnub_entity_t*)channel, NULL);
     /** Subscription retained entity and it is safe to free */
     pubnub_entity_free((void**)&channel);
-
-
     /** Add messages listeners for subscription. */
     pubnub_subscribe_add_subscription_listener(subscription,
                                                PBSL_LISTENER_ON_MESSAGE,
-                                               global_message_listener);
+                                               subscribe_message_listener);
     printf("Subscribing with subscription...\n");
     /** Subscribe using subscription. */
     enum pubnub_res rslt = pubnub_subscribe_with_subscription(
