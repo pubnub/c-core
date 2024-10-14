@@ -16,9 +16,8 @@ typedef pthread_mutex_t pbpal_mutex_t;
         pthread_mutexattr_settype(&M_attr, PTHREAD_MUTEX_RECURSIVE); \
         pthread_mutex_init(&(m), &M_attr);                           \
     } while (0)
-#define pbpal_mutex_lock(m) (pthread_mutex_lock(&(m)) == 0 ? true : false)
-#define pbpal_mutex_trylock(m) (pthread_mutex_trylock(&(m)) == 0 ? true : false)
-#define pbpal_mutex_unlock(m) (pthread_mutex_unlock(&(m)) == 0 ? true : false)
+#define pbpal_mutex_lock(m) pthread_mutex_lock(&(m))
+#define pbpal_mutex_unlock(m) pthread_mutex_unlock(&(m))
 #define pbpal_mutex_destroy(m) pthread_mutex_destroy(&(m))
 #define pbpal_mutex_decl_and_init(m) pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #define pbpal_mutex_static_decl_and_init(m) static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
