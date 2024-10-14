@@ -183,7 +183,6 @@ void subscribe_message_listener_(
         free(msg);
     }
 
-    free(type);
     free(ch);
     free(tt);
 }

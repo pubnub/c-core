@@ -113,11 +113,11 @@ void pbcc_request_retry_timer_start(
     /** There shouldn't be any active timers. */
     pbcc_request_retry_timer_stop(timer);
 
+    pubnub_mutex_lock(timer->pb->monitor);
     pubnub_mutex_lock(timer->mutw);
     timer->running = true;
     timer->delay   = delay;
     pubnub_mutex_unlock(timer->mutw);
-    pubnub_mutex_lock(timer->pb->monitor);
     timer->pb->state = PBS_WAIT_RETRY;
     timer->pb->core.http_retry_count++;
     pubnub_mutex_unlock(timer->pb->monitor);
