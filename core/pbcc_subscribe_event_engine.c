@@ -1103,6 +1103,7 @@ char* pbcc_subscribe_ee_joined_array_elements_(
 
     char* joined_str = malloc(len * sizeof(char));
     if (NULL == joined_str || 0 == count) {
+        if (NULL != joined_str) { joined_str[0] = '\0'; }
         free(elements);
         return joined_str;
     }

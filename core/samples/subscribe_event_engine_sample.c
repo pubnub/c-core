@@ -267,7 +267,8 @@ int main()
            pubnub_res_2_string(rslt));
 
     /** Wait for messages published to one of the channels (manual). */
-    wait_seconds(60);
+//    wait_seconds(60);
+    wait_seconds(15);
 
 
     /**
