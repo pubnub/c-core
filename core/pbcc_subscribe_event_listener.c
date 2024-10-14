@@ -252,6 +252,9 @@ pbcc_event_listener_t* pbcc_event_listener_alloc(const pubnub_t* pb)
 {
     PBCC_ALLOCATE_TYPE(listener, pbcc_event_listener_t, true, NULL);
     pubnub_mutex_init(listener->mutw);
+    listener->global_events = NULL;
+    listener->global_status = NULL;
+    listener->listeners = NULL;
     listener->pb = pb;
 
     return listener;
@@ -513,6 +516,7 @@ pbcc_object_listener_t* pbcc_object_listener_alloc_(char* name)
 {
     PBCC_ALLOCATE_TYPE(updates, pbcc_object_listener_t, true, NULL);
     updates->name = name;
+    updates->listeners = NULL;
     pbcc_initialize_array_(
         &updates->listeners,
         (pbarray_element_free)pbcc_listener_free_);

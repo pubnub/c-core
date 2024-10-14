@@ -215,6 +215,7 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
         PBARRAY_CHAR_CONTENT_TYPE,
         (pbarray_element_free)free);
     ee->current_transaction = PBTT_NONE;
+    ee->cancel_invocation = NULL;
     pubnub_mutex_init(ee->mutw);
 
     if (NULL == ee->subscriptions) {
