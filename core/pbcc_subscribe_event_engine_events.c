@@ -348,6 +348,7 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
     context->channels       = NULL;
     context->channel_groups = NULL;
     context->send_heartbeat = false;
+    context->cursor = pubnub_subscribe_cursor(NULL);
     if (NULL != channels && NULL != *channels)
         context->channels = pbcc_ee_data_alloc(*channels, free);
     if (NULL != channel_groups && NULL != *channel_groups) {

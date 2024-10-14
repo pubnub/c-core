@@ -49,10 +49,10 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
         p->timetoken[1] = '\0';
         tr              = NULL;
     }
-    else {
+    else if (p->region > 0) {
         snprintf(region_str, sizeof region_str, "%d", p->region);
         tr = region_str;
-    }
+    } else { tr = NULL; }
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
 

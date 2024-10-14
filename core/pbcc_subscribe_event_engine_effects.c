@@ -198,7 +198,7 @@ void make_subscribe_request_(
     size_t token_len = strlen(ctx->cursor.timetoken);
     memcpy(pb->core.timetoken, ctx->cursor.timetoken, token_len);
     pb->core.timetoken[token_len] = '\0';
-    if (ctx->cursor.region > 0) { pb->core.region = ctx->cursor.region; }
+    pb->core.region = ctx->cursor.region;
     pbpal_mutex_unlock(pb->monitor);
 
     struct pubnub_subscribe_v2_options opts = pubnub_subscribe_v2_defopts();

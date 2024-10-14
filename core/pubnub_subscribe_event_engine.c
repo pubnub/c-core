@@ -643,7 +643,7 @@ enum pubnub_res pubnub_subscription_set_remove_(
     /** Preventing `pbhash_set` (set->subscriptions) from freeing `sub`. */
     pubnub_subscription_t* stored_subscription = (pubnub_subscription_t*)
         pbhash_set_element(set->subscriptions, (*sub)->entity->id.ptr);
-    bool same_object = stored_subscription == *sub;
+    const bool same_object = stored_subscription == *sub;
     subscription_reference_count_update_(stored_subscription, true);
     pbhash_set_remove(set->subscriptions,
                       (void**)&stored_subscription->entity->id.ptr,
