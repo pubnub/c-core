@@ -240,10 +240,11 @@ pubnub_subscription_set_alloc_with_entities(
         if (NULL == pb) { pb = entity->pb; }
         if (NULL == sub ||
             PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub)) {
-            if (NULL != sub) { pubnub_subscription_free(&sub); }
             pubnub_subscription_set_free(&set);
             return NULL;
         }
+        /** Release extra `subscription` reference because `set` retained it. */
+        if (NULL != sub) { pubnub_subscription_free(&sub); }
     }
 
     if (pb) { set->ee = pb->core.subscribe_ee; }
@@ -459,8 +460,9 @@ pubnub_subscribe_cursor_t pubnub_subscribe_cursor(const char* timetoken)
     pubnub_subscribe_cursor_t cursor;
 
     if (NULL != timetoken) {
-        memcpy(cursor.timetoken, timetoken, sizeof(cursor.timetoken) - 1);
-        cursor.timetoken[sizeof(cursor.timetoken) - 1] = '\0';
+        size_t token_len = strlen(timetoken);
+        memcpy(cursor.timetoken, timetoken, token_len);
+        cursor.timetoken[token_len] = '\0';
     }
     else {
         cursor.timetoken[0] = '0';
@@ -476,7 +478,6 @@ enum pubnub_res pubnub_subscribe_with_subscription(
     const pubnub_subscribe_cursor_t* cursor)
 {
     if (NULL == sub) { return PNR_INVALID_PARAMETERS; }
-    printf("~~~~~ pubnub_subscribe_with_subscription: %p\n", sub->ee);
 
     const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_with_subscription(
         sub->ee,
@@ -626,7 +627,7 @@ enum pubnub_res pubnub_subscription_set_add_(
 enum pubnub_res pubnub_subscription_set_remove_(
     const pubnub_subscription_set_t* set,
     pubnub_subscription_t**          sub,
-    bool                             notify_change)
+    const bool                             notify_change)
 {
     const bool subscribed = set->subscribed;
 
@@ -639,6 +640,15 @@ enum pubnub_res pubnub_subscription_set_remove_(
         return PNR_SUB_NOT_FOUND;
     }
 
+    /** Preventing `pbhash_set` (set->subscriptions) from freeing `sub`. */
+    pubnub_subscription_t* stored_subscription = (pubnub_subscription_t*)
+        pbhash_set_element(set->subscriptions, (*sub)->entity->id.ptr);
+    bool same_object = stored_subscription == *sub;
+    subscription_reference_count_update_(stored_subscription, true);
+    pbhash_set_remove(set->subscriptions,
+                      (void**)&stored_subscription->entity->id.ptr,
+                      (void**)&stored_subscription);
+
     enum pubnub_res rslt = PNR_OK;
     if (subscribed && notify_change) {
         /** Notify changes in active subscription set. */
@@ -649,9 +659,9 @@ enum pubnub_res pubnub_subscription_set_remove_(
             false);
     }
 
-    pbhash_set_remove(set->subscriptions,
-                      (void**)&(*sub)->entity->id.ptr,
-                      (void**)sub);
+    /** Trying to free up memory used for `sub`. */
+    pubnub_subscription_free(&stored_subscription);
+    if (NULL == stored_subscription && same_object) { *sub = NULL; }
 
     return rslt;
 }
@@ -808,7 +818,6 @@ void subscription_set_reference_count_update_(
 
 bool pubnub_subscription_set_subscription_free_(pubnub_subscription_t* sub)
 {
-    subscription_reference_count_update_(sub, false);
     return pubnub_subscription_free(&sub);
 }
 

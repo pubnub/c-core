@@ -106,7 +106,7 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
         }
     }
     PUBNUB_LOG_DEBUG(
-        "pbpal_ntf_callback_remove_socket(pb=%p) sockt=%d: Not Found!", pb, sockt);
+        "pbpal_ntf_callback_remove_socket(pb=%p) sockt=%d: Not Found!\n", pb, sockt);
 }
 
 
@@ -127,7 +127,7 @@ void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb
         }
     }
     PUBNUB_LOG_WARNING(
-        "pbpal_ntf_callback_update_socket(pb=%p) sockt=%d: Not Found!", pb, sockt);
+        "pbpal_ntf_callback_update_socket(pb=%p) sockt=%d: Not Found!\n", pb, sockt);
 }
 
 
@@ -140,7 +140,7 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
-    PUBNUB_LOG_WARNING("pbpal_ntf_watch_out_events(pbp=%p): Not Found!", pbp);
+    PUBNUB_LOG_WARNING("pbpal_ntf_watch_out_events(pbp=%p): Not Found!\n", pbp);
     return -1;
 }
 
@@ -154,7 +154,7 @@ int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
-    PUBNUB_LOG_WARNING("pbpal_ntf_watch_in_events(pbp=%p): Not Found!", pbp);
+    PUBNUB_LOG_WARNING("pbpal_ntf_watch_in_events(pbp=%p): Not Found!\n", pbp);
     return -1;
 }
 

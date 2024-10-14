@@ -87,21 +87,21 @@ typedef struct {
 /** PubNub subscription statuses. */
 typedef enum {
     /** PubNub client subscribe and ready to receive real-time updates. */
-    SUBSCRIPTION_STATUS_CONNECTED,
+    PNSS_SUBSCRIPTION_STATUS_CONNECTED,
     /** PubNub client were unable to subscribe to receive real-time updates. */
-    SUBSCRIPTION_STATUS_CONNECTION_ERROR,
+    PNSS_SUBSCRIPTION_STATUS_CONNECTION_ERROR,
     /** PubNub client has been disconnected because of some error. */
-    SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY,
+    PNSS_SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY,
     /**
      * @brief PubNub client has been intentionally temporarily disconnected from
      *        the real-time updates.
      */
-    SUBSCRIPTION_STATUS_DISCONNECTED,
+    PNSS_SUBSCRIPTION_STATUS_DISCONNECTED,
     /**
      * @brief PubNub client has been unsubscribed from all real-time update
      *        sources.
      */
-    SUBSCRIPTION_STATUS_SUBSCRIPTION_CHANGED
+    PNSS_SUBSCRIPTION_STATUS_SUBSCRIPTION_CHANGED
 } pubnub_subscription_status;
 #else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1

@@ -1,8 +1,10 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_subscribe_event_engine_states.h"
+
 #include "core/pbcc_subscribe_event_engine_transitions.h"
 #include "core/pbcc_subscribe_event_engine_effects.h"
 #include "core/pbcc_subscribe_event_engine_types.h"
+#include "core/pubnub_assert.h"
 
 
 // ----------------------------------------------
@@ -17,7 +19,9 @@ pbcc_ee_state_t* pbcc_unsubscribed_state_alloc()
         pbcc_unsubscribed_state_transition_alloc);
 }
 
-pbcc_ee_state_t* pbcc_handshaking_state_alloc(pbcc_ee_data_t* context)
+pbcc_ee_state_t* pbcc_handshaking_state_alloc(
+    pbcc_event_engine_t* ee,
+    pbcc_ee_data_t*      context)
 {
     pbcc_ee_state_t* state = pbcc_ee_state_alloc(
         SUBSCRIBE_EE_STATE_HANDSHAKING,
@@ -26,9 +30,13 @@ pbcc_ee_state_t* pbcc_handshaking_state_alloc(pbcc_ee_data_t* context)
     if (NULL == state) { return NULL; }
 
     pbcc_ee_invocation_t* on_enter = pbcc_ee_invocation_alloc(
+        SUBSCRIBE_EE_INVOCATION_HANDSHAKE,
         (pbcc_ee_effect_function_t)pbcc_subscribe_ee_handshake_effect,
         context,
         false);
+
+    /** Make sure that there is no outdated subscribe call. */
+    pbcc_ee_invocation_cancel_by_type(ee, SUBSCRIBE_EE_INVOCATION_HANDSHAKE);
 
     if (NULL == on_enter ||
         PNR_OK != pbcc_ee_state_add_on_enter_invocation(state, on_enter)) {
@@ -38,6 +46,7 @@ pbcc_ee_state_t* pbcc_handshaking_state_alloc(pbcc_ee_data_t* context)
     }
 
     pbcc_ee_invocation_t* on_exit = pbcc_ee_invocation_alloc(
+        SUBSCRIBE_EE_INVOCATION_CANCEL,
         (pbcc_ee_effect_function_t)pbcc_subscribe_ee_cancel_effect,
         context,
         true);
@@ -67,7 +76,9 @@ pbcc_ee_state_t* pbcc_handshake_stopped_state_alloc(pbcc_ee_data_t* context)
         pbcc_handshake_stopped_state_transition_alloc);
 }
 
-pbcc_ee_state_t* pbcc_receiving_state_alloc(pbcc_ee_data_t* context)
+pbcc_ee_state_t* pbcc_receiving_state_alloc(
+    pbcc_event_engine_t* ee,
+    pbcc_ee_data_t*      context)
 {
     pbcc_ee_state_t* state = pbcc_ee_state_alloc(
         SUBSCRIBE_EE_STATE_RECEIVING,
@@ -76,9 +87,13 @@ pbcc_ee_state_t* pbcc_receiving_state_alloc(pbcc_ee_data_t* context)
     if (NULL == state) { return NULL; }
 
     pbcc_ee_invocation_t* on_enter = pbcc_ee_invocation_alloc(
+        SUBSCRIBE_EE_INVOCATION_RECEIVE,
         (pbcc_ee_effect_function_t)pbcc_subscribe_ee_receive_effect,
         context,
         false);
+
+    /** Make sure that there is no outdated subscribe call. */
+    pbcc_ee_invocation_cancel_by_type(ee, SUBSCRIBE_EE_INVOCATION_RECEIVE);
 
     if (NULL == on_enter ||
         PNR_OK != pbcc_ee_state_add_on_enter_invocation(state, on_enter)) {
@@ -88,6 +103,7 @@ pbcc_ee_state_t* pbcc_receiving_state_alloc(pbcc_ee_data_t* context)
     }
 
     pbcc_ee_invocation_t* on_exit = pbcc_ee_invocation_alloc(
+        SUBSCRIBE_EE_INVOCATION_CANCEL,
         (pbcc_ee_effect_function_t)pbcc_subscribe_ee_cancel_effect,
         context,
         true);

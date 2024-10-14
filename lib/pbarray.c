@@ -243,6 +243,8 @@ pbarray_t* pbarray_copy(pbarray_t* array)
 
 size_t pbarray_count(pbarray_t* array)
 {
+    if (NULL == array) { return 0; }
+
     pubnub_mutex_lock(array->mutw);
     const size_t count = array->count;
     pubnub_mutex_unlock(array->mutw);

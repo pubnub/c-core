@@ -73,6 +73,8 @@ typedef enum {
 
 /** Business logic invocation definition. */
 struct pbcc_ee_invocation {
+    /** A specific Event Engine invocation type. */
+    int type;
     /**
      * @brief Whether invocation should be processed immediately without
      *        addition to the queue or not.
@@ -198,10 +200,15 @@ static void pbcc_ee_invocation_exec_(pbcc_ee_invocation_t* invocation);
  *                   execution.
  * @param invocation Pointer to the invocation which has been used to execute
  *                   effect.
+ * @param paused     Whether `invocation` execution has been paused or not.
+ *                   Paused invocation will reset its execution status to
+ *                   'CREATED'. When paused, then the Event Engine should be
+ *                   told when the next invocation should be processed.
  */
 static void pbcc_ee_effect_completion_(
     pbcc_event_engine_t*  ee,
-    pbcc_ee_invocation_t* invocation);
+    pbcc_ee_invocation_t* invocation,
+    bool                  paused);
 
 
 // ----------------------------------------------
@@ -234,13 +241,11 @@ void pbcc_ee_free(pbcc_event_engine_t** ee)
 {
     if (NULL == ee || NULL == *ee) { return; }
 
-    // pubnub_mutex_lock((*ee)->mutw);
-    printf("~~~~~~~~ pbcc_ee_free acquired lock (%p). LOCKED? %s\n", ee, pubnub_mutex_lock((*ee)->mutw) ? "YES" : "NO");
+    pubnub_mutex_lock((*ee)->mutw);
     if (NULL != (*ee)->invocations) { pbarray_free(&(*ee)->invocations); }
     if (NULL != (*ee)->current_state)
         pbcc_ee_state_free(&(*ee)->current_state);
-    // pubnub_mutex_unlock((*ee)->mutw);
-    printf("~~~~~~~~ pbcc_ee_free released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock((*ee)->mutw) ? "YES" : "NO");
+    pubnub_mutex_unlock((*ee)->mutw);
     pubnub_mutex_destroy((*ee)->mutw);
     free(*ee);
     *ee = NULL;
@@ -248,19 +253,9 @@ void pbcc_ee_free(pbcc_event_engine_t** ee)
 
 pbcc_ee_state_t* pbcc_ee_current_state(pbcc_event_engine_t* ee)
 {
-    printf("~~~~~~~~ pbcc_ee_current_state (%p)\n", ee);
-    const bool locked = pbpal_mutex_trylock(ee->mutw);
-    if(locked) {
-        printf("~~~~~~~~ pbcc_ee_current_state acquired lock (%p)\n", ee);
-    } else {
-        printf("~~~~~~~~ pbcc_ee_current_state CAN'T acquire lock. Already locked (%p)\n", ee);
-    }
-    // pubnub_mutex_lock(ee->mutw);
+    pubnub_mutex_lock(ee->mutw);
     pbcc_ee_state_t* state = pbcc_ee_state_copy_(ee->current_state);
-    if (locked) {
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_current_state released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
-    }
+    pubnub_mutex_unlock(ee->mutw);
 
     return state;
 }
@@ -270,12 +265,8 @@ enum pubnub_res pbcc_ee_handle_event(
     pbcc_ee_event_t*     event)
 {
     PUBNUB_ASSERT_OPT(NULL != ee->current_state);
-    printf("~~~~ pbcc_ee_handle_event (event type: %d)\n", event->type);
-    pthread_t thread_id = pthread_self();
-    printf("Current thread ID: %lu\n", (unsigned long)thread_id);
 
-    // pubnub_mutex_lock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_handle_event acquired lock (%p). LOCKED? %s\n", ee, pubnub_mutex_lock(ee->mutw) ? "YES" : "NO");
+    pubnub_mutex_lock(ee->mutw);
     pbcc_ee_state_t*      state      = pbcc_ee_state_copy_(ee->current_state);
     pbcc_ee_transition_t* transition = ee->current_state->transition(
         ee,
@@ -286,8 +277,7 @@ enum pubnub_res pbcc_ee_handle_event(
 
     if (NULL == transition) {
         PUBNUB_LOG_ERROR("pbcc_ee_handle_event: failed to allocate memory\n");
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_handle_event released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
+        pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
 
@@ -298,8 +288,7 @@ enum pubnub_res pbcc_ee_handle_event(
      */
     if (NULL == transition->target_state) {
         pbcc_ee_transition_free(&transition);
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_handle_event released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ?  "YES" : "NO");
+        pubnub_mutex_unlock(ee->mutw);
         return PNR_OK;
     }
 
@@ -310,32 +299,39 @@ enum pubnub_res pbcc_ee_handle_event(
     if (NULL == transition->invocations) {
         pbcc_ee_current_state_set_(ee, transition->target_state);
         pbcc_ee_transition_free(&transition);
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_handle_event released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
+        pubnub_mutex_unlock(ee->mutw);
+
         return PNR_OK;
     }
 
     /**
      * Merging transition invocations into Event Engine invocations queue.
      */
-    enum pubnub_res   rslt = PNR_OK;
+    enum pubnub_res   rslt        = PNR_OK;
     pbarray_t*        invocations = transition->invocations;
-    const size_t      count = pbarray_count(invocations);
-    const pbarray_res merge_rslt = pbarray_merge(ee->invocations, invocations);
-    bool              executing_immediate = false;
+    const size_t      count       = pbarray_count(invocations);
+    const pbarray_res merge_rslt  = pbarray_merge(ee->invocations, invocations);
     if (PBAR_OK != merge_rslt) {
         rslt = PBTT_ADD_MEMBERS == merge_rslt
                    ? PNR_OUT_OF_MEMORY
                    : PNR_INVALID_PARAMETERS;
     }
 
-    /** Restore previous state if new invocations schedule failed. */
-    if (PNR_OK != rslt) {
-        pbarray_subtract(ee->invocations, invocations, true);
+    if (PNR_OK != rslt || 0 == count) {
+        if (0 != count)
+            pbarray_subtract(ee->invocations, invocations, true);
+        if (PNR_OK == rslt)
+            pbcc_ee_current_state_set_(ee, transition->target_state);
+        pubnub_mutex_unlock(ee->mutw);
+
+        pbcc_ee_transition_free(&transition);
+        pbcc_ee_process_next_invocation(ee);
+
+        return PNR_OK;
     }
-    else { pbcc_ee_current_state_set_(ee, transition->target_state); }
-    // pubnub_mutex_unlock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_handle_event released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
+
+    pbcc_ee_current_state_set_(ee, transition->target_state);
+    pubnub_mutex_unlock(ee->mutw);
 
     for (size_t i = 0; i < count; ++i) {
         pbcc_ee_invocation_t* inv = (pbcc_ee_invocation_t*)
@@ -345,46 +341,48 @@ enum pubnub_res pbcc_ee_handle_event(
          * Event Engine invocations queue from transition.
          */
         pbref_counter_increment(inv->counter);
-
-        if (!inv->immediate) { continue; }
-
-        pbcc_ee_invocation_exec_(inv);
-        executing_immediate = true;
     }
-    pbcc_ee_transition_free(&transition);
 
-    if (!executing_immediate) { pbcc_ee_process_next_invocation(ee, false); }
+    /** Check whether any immediate  */
+    pbcc_ee_invocation_t* inv =
+        (pbcc_ee_invocation_t*)pbarray_first(invocations);
+    if (inv->immediate) { pbcc_ee_invocation_exec_(inv); }
+    else { pbcc_ee_process_next_invocation(ee); }
+
+    pbcc_ee_transition_free(&transition);
 
     return rslt;
 }
 
-void pbcc_ee_process_next_invocation(
-    pbcc_event_engine_t* ee,
-    const bool           remove_previous)
+size_t pbcc_ee_process_next_invocation(pbcc_event_engine_t* ee)
 {
-    // pubnub_mutex_lock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_process_next_invocation acquired lock (%p). LOCKED? %s\n", ee, pubnub_mutex_lock(ee->mutw) ? "YES" : "NO");
-    if (remove_previous && pbarray_count(ee->invocations) > 0) {
-        pbcc_ee_invocation_t* inv = (pbcc_ee_invocation_t*)
-            pbarray_first(ee->invocations);
-        /** Remove invocation only if it has running state. */
-        if (PBCC_EE_INVOCATION_RUNNING == inv->status) {
-            inv->status = PBCC_EE_INVOCATION_COMPLETED;
-            pbarray_remove_element_at(ee->invocations, 0);
-        }
+    pubnub_mutex_lock(ee->mutw);
+    const size_t count = pbarray_count(ee->invocations);
+
+    if (0 == count) {
+        pubnub_mutex_unlock(ee->mutw);
+        return count;
     }
 
-    if (0 == pbarray_count(ee->invocations)) {
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_process_next_invocation released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
-        return;
-    }
     pbcc_ee_invocation_t* invocation = (pbcc_ee_invocation_t*)
         pbarray_first(ee->invocations);
-        // pubnub_mutex_unlock(ee->mutw);
-        printf("~~~~~~~~ pbcc_ee_process_next_invocation released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ?  "YES" : "NO");
-
+    pubnub_mutex_unlock(ee->mutw);
     pbcc_ee_invocation_exec_(invocation);
+
+    return count;
+}
+
+void pbcc_ee_handle_effect_completion(
+    pbcc_event_engine_t*  ee,
+    pbcc_ee_invocation_t* invocation)
+{
+    /** Check whether invocation is running or not. */
+    if (PBCC_EE_INVOCATION_RUNNING != invocation->status) { return; }
+
+    pubnub_mutex_lock(ee->mutw);
+    invocation->status = PBCC_EE_INVOCATION_COMPLETED;
+    pbarray_remove(ee->invocations, (void**)&invocation, true);
+    pubnub_mutex_unlock(ee->mutw);
 }
 
 pbcc_ee_data_t* pbcc_ee_data_alloc(
@@ -409,7 +407,7 @@ void pbcc_ee_data_free(pbcc_ee_data_t* data)
     }
 }
 
-const void* pbcc_ee_data_value(const pbcc_ee_data_t* data)
+void* pbcc_ee_data_value(pbcc_ee_data_t* data)
 {
     if (NULL == data) { return NULL; }
     return data->data;
@@ -502,6 +500,7 @@ void pbcc_ee_event_free(pbcc_ee_event_t** event)
 }
 
 pbcc_ee_invocation_t* pbcc_ee_invocation_alloc(
+    int                             type,
     const pbcc_ee_effect_function_t effect,
     pbcc_ee_data_t*                 data,
     const bool                      immediate)
@@ -512,8 +511,31 @@ pbcc_ee_invocation_t* pbcc_ee_invocation_alloc(
     invocation->status    = PBCC_EE_INVOCATION_CREATED;
     invocation->effect    = effect;
     invocation->data      = pbcc_ee_data_copy(data);
+    invocation->type      = type;
 
     return invocation;
+}
+
+void pbcc_ee_invocation_cancel_by_type(pbcc_event_engine_t* ee, int type)
+{
+    pubnub_mutex_lock(ee->mutw);
+    const size_t count = pbarray_count(ee->invocations);
+    if (0 == count) {
+        pubnub_mutex_unlock(ee->mutw);
+        return;
+    }
+
+    for (size_t i = 0; i < count; i++) {
+        const pbcc_ee_invocation_t* invocation =
+            pbarray_element_at(ee->invocations, i);
+
+        if (invocation->status == PBCC_EE_INVOCATION_RUNNING) { continue; }
+        if (type == invocation->type) {
+            pbarray_remove(ee->invocations, (void**)&invocation, false);
+            break;
+        }
+    }
+    pubnub_mutex_unlock(ee->mutw);
 }
 
 void pbcc_ee_invocation_free(pbcc_ee_invocation_t* invocation)
@@ -533,19 +555,18 @@ pbcc_ee_transition_t* pbcc_ee_transition_alloc(
 {
     PUBNUB_ASSERT_OPT(NULL != ee->current_state);
 
-    // pubnub_mutex_lock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_transition_alloc acquired lock (%p). LOCKED? %s\n", ee, pubnub_mutex_lock(ee->mutw) ? "YES" : "NO");
+    pubnub_mutex_lock(ee->mutw);
     const pbcc_ee_state_t* current_state = ee->current_state;
     PBCC_ALLOCATE_TYPE(transition, pbcc_ee_transition_t, true, NULL);
     transition->target_state = pbcc_ee_state_copy_(state);
 
     /** Gather transition invocations list. */
     size_t invocations_count = 0;
-    if (NULL != current_state->on_exit_invocations)
+    if (NULL != state && NULL != current_state->on_exit_invocations)
         invocations_count += pbarray_count(current_state->on_exit_invocations);
-    if (NULL != invocations)
+    if (NULL != state && NULL != invocations)
         invocations_count += pbarray_count(invocations);
-    if (NULL != state->on_enter_invocations)
+    if (NULL != state && NULL != state->on_enter_invocations)
         invocations_count += pbarray_count(state->on_enter_invocations);
 
     if (invocations_count > 0) {
@@ -556,26 +577,32 @@ pbcc_ee_transition_t* pbcc_ee_transition_alloc(
                                                 pbcc_ee_invocation_free);
 
         pbarray_t* on_exit  = current_state->on_exit_invocations;
-        pbarray_t* on_enter = state->on_enter_invocations;
+        pbarray_t* on_enter =
+            NULL != state ? state->on_enter_invocations : NULL;
 
+        /**
+         * Attention: `invocations` should be called before `on_exit` because
+         * in most of the cases `on_exit` cancels previous request and it will
+         * reset all read buffers making it impossible to process data received
+         * for current state.
+         */
         if (NULL == transition->invocations ||
-            !pbcc_ee_transition_add_invocations_(transition, on_exit) ||
             !pbcc_ee_transition_add_invocations_(transition, invocations) ||
+            !pbcc_ee_transition_add_invocations_(transition, on_exit) ||
             !pbcc_ee_transition_add_invocations_(transition, on_enter)) {
             PUBNUB_LOG_ERROR(
                 "pbcc_ee_transition_alloc: failed to allocate memory "
                 "for transition invocations\n");
             if (NULL != invocations) { pbarray_free(&invocations); }
             pbcc_ee_transition_free(&transition);
-            // pubnub_mutex_unlock(ee->mutw);
-            printf("~~~~~~~~ pbcc_ee_transition_alloc released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
+            pubnub_mutex_unlock(ee->mutw);
+
             return NULL;
         }
     }
     else { transition->invocations = NULL; }
     if (NULL != invocations) { pbarray_free(&invocations); }
-    // pubnub_mutex_lock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_transition_alloc released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_lock(ee->mutw) ? "YES" : "NO");
+    pubnub_mutex_unlock(ee->mutw);
 
     return transition;
 }
@@ -666,16 +693,18 @@ void pbcc_ee_invocation_exec_(pbcc_ee_invocation_t* invocation)
 
 void pbcc_ee_effect_completion_(
     pbcc_event_engine_t*  ee,
-    pbcc_ee_invocation_t* invocation)
+    pbcc_ee_invocation_t* invocation,
+    const bool            paused)
 {
     /** Check whether invocation is running or not. */
     if (PBCC_EE_INVOCATION_RUNNING != invocation->status) { return; }
 
-    // pubnub_mutex_lock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_effect_completion_ acquired lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_lock(ee->mutw) ? "YES" : "NO");
-    invocation->status = PBCC_EE_INVOCATION_COMPLETED;
-    pbarray_remove(ee->invocations, (void**)&invocation, true);
-    // pubnub_mutex_unlock(ee->mutw);
-    printf("~~~~~~~~ pbcc_ee_effect_completion_ released lock (%p). UNLOCKED? %s\n", ee, pubnub_mutex_unlock(ee->mutw) ? "YES" : "NO");
-    pbcc_ee_process_next_invocation(ee, false);
+    /** Check whether called effect asked to pospone its execution or not. */
+    if (paused) {
+        invocation->status = PBCC_EE_INVOCATION_CREATED;
+        return;
+    }
+
+    pbcc_ee_handle_effect_completion(ee, invocation);
+    pbcc_ee_process_next_invocation(ee);
 }

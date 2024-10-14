@@ -43,21 +43,25 @@
  * Updated list of subscribables will be used to trigger proper event for
  * subscription loop.
  *
- * @param ee     Pointer to the Subscribe Event Engine, which should transit to
- *               `receiving` state.
- * @param cursor Pointer to the subscription cursor to be used with subscribe
- *               REST API. The SDK will try to catch up on missed messages if a
- *               cursor with older PubNub high-precision timetoken has been
- *               provided. Pass `NULL` to keep using cursor received from the
- *               previous subscribe REST API response.
- * @param update Whether list of subscribable objects should be updated or not
- *               (for unsubscribe, it updated beforehand).
+ * @param ee         Pointer to the Subscribe Event Engine, which should transit
+ *                   to `receiving` state.
+ * @param cursor     Pointer to the subscription cursor to be used with
+ *                   subscribe REST API. The SDK will try to catch up on missed
+ *                   messages if a cursor with older PubNub high-precision
+ *                   timetoken has been provided. Pass `NULL` to keep using
+ *                   cursor received from the previous subscribe REST API
+ *                   response.
+ * @param update     Whether list of subscribable objects should be updated or
+ *                   not (for unsubscribe, it updated beforehand).
+ * @param sent_by_ee Whether event has been sent by Subscribe Event Engine or
+ *                   not.
  * @return Result of subscribe enqueue transaction.
  */
 static enum pubnub_res pbcc_subscribe_ee_subscribe_(
     pbcc_subscribe_ee_t*             ee,
     const pubnub_subscribe_cursor_t* cursor,
-    bool                             update);
+    bool                             update,
+    bool                             sent_by_ee);
 
 /**
  * @brief Transit to `handshaking` / `receiving` or `unsubscribed` state.
@@ -78,6 +82,18 @@ static enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     pbhash_set_t*        subscribables);
 
 /**
+ * @brief Perform postponed `unsubscribe` / `leave` operation.
+ *
+ * Subscribe Event Engine may save channels and groups from which it should
+ * unsubscribe for later time because there is ongoing request. Saved
+ * information will be used in this function to complete `leave` operation.
+ *
+ * @param ee Pointer to the Subscribe Event Engine, which may have information for `leave` request.
+ * @return `true` in case if `leave` request sending has been scheduled.
+ */
+static bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee);
+
+/**
  * @brief Actualize list of subscribable objects.
  *
  * Update list of subscribable objects using `active` subscriptions and
@@ -91,19 +107,15 @@ static enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
  *       another subscription object from subscription set tried to do the same.
  *       As a result, the object may be removed from the subscription loop.
  *
- * @param ee                     Pointer to the Subscribe Event Engine for which
- *                               list of subscribable objects should be updated.
- * @param excluded_subscribables Pointer to the set of subscribables which
- *                               shouldn't be part of resulting subscribables
- *                               list.
+ * @param ee Pointer to the Subscribe Event Engine for which list of
+ *           subscribable objects should be updated.
  * @return Result of subscribable list update.
  *
  * @see pubnub_subscription_t
  * @see pubnub_subscription_set_t
  */
 static enum pubnub_res pbcc_subscribe_ee_update_subscribables_(
-    const pbcc_subscribe_ee_t* ee,
-    pbhash_set_t*              excluded_subscribables);
+    const pbcc_subscribe_ee_t* ee);
 
 /**
  * @brief Update Subscribe Event Engine list of subscribable objects.
@@ -158,6 +170,20 @@ static void pbcc_subscribe_callback_(
     enum pubnub_res   result,
     const void*       user_data);
 
+/**
+ * @brief Create string from the `array` elements.
+ *
+ * @param array     Pointer to the array with string elements which should be
+ *                  joined by the separator.
+ * @param separator Pointer to the string which should be used to join elements.
+ * @return Pointer to the string from the `array` elements or `NULL` in case of
+ *         insufficient memory error. The returned pointer must be passed to the
+ *         `free` to avoid a memory leak.
+ */
+static char* pbcc_subscribe_ee_joined_array_elements_(
+    pbarray_t*  array,
+    const char* separator);
+
 
 // ----------------------------------------------
 //                   Functions
@@ -178,6 +204,17 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
         PBARRAY_RESIZE_BALANCED,
         PBARRAY_GENERIC_CONTENT_TYPE,
         (pbarray_element_free)pubnub_subscription_free_);
+    ee->leave_channels = pbarray_alloc(
+        SUBSCRIBABLE_LENGTH,
+        PBARRAY_RESIZE_BALANCED,
+        PBARRAY_CHAR_CONTENT_TYPE,
+        (pbarray_element_free)free);
+    ee->leave_channel_groups = pbarray_alloc(
+        SUBSCRIBABLE_LENGTH,
+        PBARRAY_RESIZE_BALANCED,
+        PBARRAY_CHAR_CONTENT_TYPE,
+        (pbarray_element_free)free);
+    ee->current_transaction = PBTT_NONE;
     pubnub_mutex_init(ee->mutw);
 
     if (NULL == ee->subscriptions) {
@@ -189,6 +226,18 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
     if (NULL == ee->subscription_sets) {
         PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
             "for subscription sets list\n");
+        pbcc_subscribe_ee_free(&ee);
+        return NULL;
+    }
+    if (NULL == ee->leave_channels) {
+        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
+            "for unsubscribed channels\n");
+        pbcc_subscribe_ee_free(&ee);
+        return NULL;
+    }
+    if (NULL == ee->leave_channel_groups) {
+        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
+            "for unsubscribed channel groups\n");
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
@@ -206,7 +255,7 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
     }
     ee->filter_expr = NULL;
     ee->heartbeat   = PUBNUB_DEFAULT_PRESENCE_HEARTBEAT_VALUE;
-    ee->status      = SUBSCRIPTION_STATUS_DISCONNECTED;
+    ee->status      = PNSS_SUBSCRIPTION_STATUS_DISCONNECTED;
     ee->pb          = pb;
 
     /** Setup event engine */
@@ -244,6 +293,9 @@ void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t** ee)
     if (NULL != (*ee)->subscriptions) { pbarray_free(&(*ee)->subscriptions); }
     if (NULL != (*ee)->subscribables)
         pbhash_set_free(&(*ee)->subscribables);
+    if (NULL != (*ee)->leave_channel_groups)
+        pbarray_free(&(*ee)->leave_channel_groups);
+    if (NULL != (*ee)->leave_channels) { pbarray_free(&(*ee)->leave_channels); }
     if (NULL != (*ee)->filter_expr) { free((*ee)->filter_expr); }
     if (NULL != (*ee)->ee) { pbcc_ee_free(&(*ee)->ee); }
     if (NULL != (*ee)->event_listener)
@@ -263,10 +315,8 @@ pbcc_event_listener_t* pbcc_subscribe_ee_event_listener(
 pbcc_ee_data_t* pbcc_subscribe_ee_current_state_context(
     const pbcc_subscribe_ee_t* ee)
 {
-    printf("~~~~~~~~ pbcc_subscribe_ee_current_state_context asking current context\n");
     pbcc_ee_state_t*      current_state = pbcc_ee_current_state(ee->ee);
     const pbcc_ee_data_t* data          = NULL;
-    printf("~~~~~~~~ pbcc_subscribe_ee_current_state_context asking current context done\n");
 
     if (NULL != current_state) { data = pbcc_ee_state_data(current_state); }
     pbcc_ee_state_free(&current_state);
@@ -315,7 +365,11 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription(
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(ee, cursor, true);
+    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(
+        ee,
+        cursor,
+        true,
+        false);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -374,7 +428,11 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(ee, cursor, true);
+    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(
+        ee,
+        cursor,
+        true,
+        false);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -428,7 +486,7 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
     pubnub_mutex_lock(ee->mutw);
     enum pubnub_res rslt;
 
-    if (added) { rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, true); }
+    if (added) { rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, true, false); }
     else {
         const pubnub_subscription_options_t options =
             *(pubnub_subscription_options_t*)set;
@@ -519,6 +577,36 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
             pbarray_remove_all(ee->subscription_sets);
             pbarray_remove_all(ee->subscriptions);
 
+            /**
+             * Update user presence information for channels which user actually
+             * left.
+             */
+            if ((NULL != ch && 0 != strlen(ch)) ||
+                (NULL != cg && 0 != strlen(cg))) {
+                pubnub_mutex_lock(ee->pb->monitor);
+                if (!pbnc_can_start_transaction(ee->pb)) {
+                    pubnub_mutex_unlock(ee->pb->monitor);
+                    /** Using array to handle consequencive call to unsubscribe. */
+                    pubnub_mutex_lock(ee->mutw);
+                    if (NULL != ch && strlen(ch) > 0)
+                        pbarray_add(ee->leave_channels, ch);
+                    if (NULL != cg && strlen(cg) > 0)
+                        pbarray_add(ee->leave_channel_groups, cg);
+                    pubnub_mutex_unlock(ee->mutw);
+                }
+                else {
+                    pubnub_mutex_unlock(ee->pb->monitor);
+
+                    pubnub_mutex_lock(ee->mutw);
+                    ee->current_transaction = PBTT_LEAVE;
+                    pubnub_mutex_unlock(ee->mutw);
+
+                    pubnub_leave(ee->pb,
+                                 0 == strlen(ch) ? NULL : ch,
+                                 0 == strlen(cg) ? NULL : cg);
+                }
+            }
+
             rslt = pbcc_ee_handle_event(ee->ee, event);
         }
     }
@@ -528,6 +616,22 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
     if (PNR_INVALID_PARAMETERS == rslt) { rslt = PNR_OK; }
 
     return rslt;
+}
+
+void pbcc_subscribe_ee_handle_subscribe_error(
+    pbcc_subscribe_ee_t*  ee,
+    const enum pubnub_res error)
+{
+    pbcc_ee_event_t* event        = NULL;
+    pbcc_ee_state_t* state_object = pbcc_ee_current_state(ee->ee);
+
+    if (SUBSCRIBE_EE_STATE_HANDSHAKING == pbcc_ee_state_type(state_object))
+        event = pbcc_handshake_failure_event_alloc(ee, error);
+    else if (SUBSCRIBE_EE_STATE_RECEIVING == pbcc_ee_state_type(state_object))
+        event = pbcc_receive_failure_event_alloc(ee, error);
+
+    if (NULL != event) { pbcc_ee_handle_event(ee->ee, event); }
+    if (NULL != state_object) { pbcc_ee_state_free(&state_object); }
 }
 
 pubnub_subscription_t** pbcc_subscribe_ee_subscriptions(
@@ -565,30 +669,38 @@ void pbcc_subscribe_callback_(
     const void*             user_data
     )
 {
-    printf(
-        "~~~~~~~~:::::::>>>> CALLBACK FIRED (RESULT: %s | TRANSACTION: %d)\n",
-        pubnub_res_2_string(result),
-        trans);
-    pthread_t thread_id = pthread_self();
-    printf("Current thread ID: %lu\n", (unsigned long)thread_id);
     pbcc_subscribe_ee_t* ee = (pbcc_subscribe_ee_t*)user_data;
 
     /**
-     * Asynchronously cancelled subscription and presence leave shouldn't
-     * trigger any events.
+     * Checking whether a leave request should be performed if a previous
+     * (potentially subscribe) request has been cancelled or was another leave
+     * request.
      */
-    if ((PBTT_SUBSCRIBE_V2 == trans && PNR_CANCELLED == result) ||
+    if (PNR_CANCELLED == result || PBTT_HEARTBEAT == trans ||
         PBTT_LEAVE == trans) {
-        /** Asynchronous cancellation mean that */
-        pbcc_ee_process_next_invocation(ee->ee, PBTT_LEAVE != trans);
-        return;
+        pubnub_mutex_lock(ee->mutw);
+        if (NULL != ee->cancel_invocation) {
+            pbcc_ee_handle_effect_completion(ee->ee, ee->cancel_invocation);
+            ee->cancel_invocation = NULL;
+        }
+        if (PBTT_HEARTBEAT == trans || PBTT_LEAVE == trans) {
+            ee->current_transaction = PBTT_NONE;
+            /** Flush read buffer. */
+            pubnub_get(ee->pb);
+        }
+        pubnub_mutex_unlock(ee->mutw);
+
+        if (pbcc_subscribe_ee_postponed_unsubscribe_(ee)) { return; }
+
+        /**
+         * Leave or heartbeat request successfully processed. Trying schedule
+         * any pending effect invocations.
+         */
+        if (0 != pbcc_ee_process_next_invocation(ee->ee)) { return; }
     }
 
-    PUBNUB_ASSERT_OPT(trans == PBTT_SUBSCRIBE_V2);
     const bool                error        = PNR_OK != result;
-    printf("~~~~~~~~ pbcc_subscribe_callback_ asking current context\n");
     pbcc_ee_state_t*          state_object = pbcc_ee_current_state(ee->ee);
-    printf("~~~~~~~~ pbcc_subscribe_callback_ asking current context done\n");
     pbcc_ee_event_t*          event        = NULL;
     pubnub_subscribe_cursor_t cursor;
     cursor.region = 0;
@@ -619,13 +731,14 @@ void pbcc_subscribe_callback_(
 enum pubnub_res pbcc_subscribe_ee_subscribe_(
     pbcc_subscribe_ee_t*             ee,
     const pubnub_subscribe_cursor_t* cursor,
-    const bool                       update)
+    const bool                       update,
+    const bool                       sent_by_ee)
 {
     pbcc_ee_event_t* event = NULL;
     char*            ch    = NULL,* cg = NULL;
     enum pubnub_res  rslt  = PNR_OK;
 
-    if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee, NULL); }
+    if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee); }
     if (PNR_OK == rslt) {
         rslt = pbcc_subscribe_ee_subscribables_(ee->subscribables,
                                                 &ch,
@@ -649,13 +762,18 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
         const bool restore = NULL != cursor && '0' != cursor->timetoken[0];
 
         if (NULL == cursor || !restore)
-            event = pbcc_subscription_changed_event_alloc(ee, &ch, &cg);
+            event = pbcc_subscription_changed_event_alloc(
+                ee,
+                &ch,
+                &cg,
+                sent_by_ee);
         else
             event = pbcc_subscription_restored_event_alloc(
                 ee,
                 &ch,
                 &cg,
-                *cursor);
+                *cursor,
+                sent_by_ee);
         if (NULL == event) {
             PUBNUB_LOG_ERROR(
                 "pbcc_subscribe_ee_subscribe: failed to allocate memory for "
@@ -679,22 +797,29 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     pbcc_subscribe_ee_t* ee,
     pbhash_set_t*        subscribables)
 {
-    char*           ch         = NULL,* cg = NULL;
-    bool            send_leave = false;
-    enum pubnub_res rslt;
+    char* ch         = NULL,* cg = NULL;
+    bool  send_leave = false;
 
     size_t                  count = 0;
     pubnub_subscribable_t** subs  = (pubnub_subscribable_t**)
         pbhash_set_elements(subscribables, &count);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
+    /**
+     * After subscription or subscription set removal we need to update
+     * subscribables list.
+     */
+    enum pubnub_res rslt = pbcc_subscribe_ee_update_subscribables_(ee);
+    if (PNR_OK != rslt) {
+        free(subs);
+        return rslt;
+    }
+
     /** Removing subscribable which is not part of subscription loop. */
     for (size_t i = 0; i < count; ++i) {
         pubnub_subscribable_t* sub = subs[i];
 
-        printf("~~~~> SUBSCRIBABLE: %s\n", sub->id->ptr);
-        if (pbhash_set_contains(ee->subscribables, sub)) {
-            printf("~~~~> STILL USED: %s\n", sub->id->ptr);
+        if (pbhash_set_contains(ee->subscribables, sub->id->ptr)) {
             pbhash_set_remove(subscribables,
                               (void**)&sub->id->ptr,
                               (void**)&sub);
@@ -703,62 +828,103 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     }
     free(subs);
 
-    if (PNR_OK == (rslt = pbcc_subscribe_ee_update_subscribables_(
-                       ee,
-                       subscribables))) {
-        pbcc_subscribe_ee_subscribables_(
-            subscribables,
-            &ch,
-            &cg,
-            false);
-        if (PNR_OK == rslt || PNR_INVALID_PARAMETERS == rslt) {
-            send_leave = PNR_OK == rslt;
-            rslt       = PNR_OK;
-        }
+    rslt = pbcc_subscribe_ee_subscribables_(subscribables, &ch, &cg, false);
+    if (PNR_OK == rslt || PNR_INVALID_PARAMETERS == rslt) {
+        send_leave = PNR_OK == rslt;
+        rslt       = PNR_OK;
     }
 
     /**
      * Update user presence information for channels which user actually
      * left.
      */
+    bool sending_leave = false;
     if (PNR_OK == rslt && send_leave) {
-        printf("~~~~======> 1\n");
-        // TODO: CLIENT MAY NOT BE READY TO PROCESS LEAVE.
-        pubnub_leave(ee->pb,
-                     0 == strlen(ch) ? NULL : ch,
-                     0 == strlen(cg) ? NULL : cg);
-        printf("~~~~======> 2");
+        pubnub_mutex_lock(ee->pb->monitor);
+        if (!pbnc_can_start_transaction(ee->pb)) {
+            pubnub_mutex_unlock(ee->pb->monitor);
+            /** Using array to handle consequencive call to unsubscribe. */
+            pubnub_mutex_lock(ee->mutw);
+            if (NULL != ch && strlen(ch) > 0)
+                pbarray_add(ee->leave_channels, ch);
+            if (NULL != cg && strlen(cg) > 0)
+                pbarray_add(ee->leave_channel_groups, cg);
+            pubnub_mutex_unlock(ee->mutw);
+        }
+        else {
+            pubnub_mutex_unlock(ee->pb->monitor);
+
+            pubnub_mutex_lock(ee->mutw);
+            ee->current_transaction = PBTT_LEAVE;
+            pubnub_mutex_unlock(ee->mutw);
+            sending_leave = true;
+
+            pubnub_leave(ee->pb,
+                         0 == strlen(ch) ? NULL : ch,
+                         0 == strlen(cg) ? NULL : cg);
+        }
+    }
+
+    if (PNR_OK != rslt || !send_leave || sending_leave) {
+        if (NULL != ch) { free(ch); }
+        if (NULL != cg) { free(cg); }
     }
 
     /** Update subscription loop. */
-    printf("~~~~======> 3");
-    if (PNR_OK == rslt) {
-        printf("~~~~======> 4");
-        rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, false);
-        printf("~~~~======> 5");
-    }
+    if (PNR_OK == rslt)
+        rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, false, true);
 
-    if (NULL != ch) {
-        printf("~~~~======> 6");
-        free(ch);
-        printf("~~~~======> 7");
-    }
-    if (NULL != cg) {
-        printf("~~~~======> 8");
-        free(cg);
-        printf("~~~~======> 9");
-    }
-
-    printf("~~~~======> 10");
     return rslt;
 }
 
+bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee)
+{
+    pubnub_mutex_lock(ee->mutw);
+    if (0 == pbarray_count(ee->leave_channels) &&
+        0 == pbarray_count(ee->leave_channel_groups)) {
+        pubnub_mutex_unlock(ee->mutw);
+        return false;
+    }
+
+    /**
+     * Checking whether there is another ongoing request and we need to wait
+     * till its completion to start another one.
+     */
+    if (PBTT_NONE != ee->current_transaction) {
+        pubnub_mutex_unlock(ee->mutw);
+        return true;
+    }
+
+    char* ch =
+        pbcc_subscribe_ee_joined_array_elements_(ee->leave_channels, ",");
+    char* cg =
+        pbcc_subscribe_ee_joined_array_elements_(ee->leave_channel_groups, ",");
+
+    /** Cleaning up postponed channels and groups. */
+    pbarray_remove_all(ee->leave_channels);
+    pbarray_remove_all(ee->leave_channel_groups);
+
+    if (NULL == ch && NULL == cg) {
+        pubnub_mutex_unlock(ee->mutw);
+        return false;
+    }
+
+    ee->current_transaction = PBTT_LEAVE;
+    pubnub_mutex_unlock(ee->mutw);
+
+    pubnub_leave(ee->pb,
+                 NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                 NULL == cg || 0 == strlen(cg) ? NULL : cg);
+    if (NULL != ch) { free(ch); }
+    if (NULL != cg) { free(cg); }
+
+    return true;
+}
+
 enum pubnub_res pbcc_subscribe_ee_update_subscribables_(
-    const pbcc_subscribe_ee_t* ee,
-    pbhash_set_t*              excluded_subscribables)
+    const pbcc_subscribe_ee_t* ee)
 {
     PUBNUB_ASSERT_OPT(NULL != ee);
-
     pbarray_t*      sets = ee->subscription_sets;
     pbarray_t*      subs = ee->subscriptions;
     enum pubnub_res rslt = PNR_OK;
@@ -781,9 +947,6 @@ enum pubnub_res pbcc_subscribe_ee_update_subscribables_(
         pbhash_set_free(&subc);
         if (PNR_OK != rslt) { return rslt; }
     }
-
-    if (NULL != excluded_subscribables)
-        pbhash_set_subtract(ee->subscribables, excluded_subscribables);
 
     return rslt;
 }
@@ -871,6 +1034,7 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
         }
     }
 
+    /** Extra byte for null-terminator. */
     const size_t ch_len = ch_list_length + ch_count + 1;
     const size_t cg_len = cg_list_length + cg_count + 1;
     *channels           = calloc(ch_len, sizeof(char));
@@ -909,7 +1073,7 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
                                   sub->id->ptr);
         }
         else {
-            cg_offset += snprintf(*channels + cg_offset,
+            cg_offset += snprintf(*channel_groups + cg_offset,
                                   cg_len - cg_offset,
                                   "%s%s",
                                   cg_offset > 0 ? ",": "",
@@ -921,4 +1085,34 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
     return ch_list_length == 0 && cg_list_length == 0
                ? PNR_INVALID_PARAMETERS
                : PNR_OK;
+}
+
+char* pbcc_subscribe_ee_joined_array_elements_(
+    pbarray_t*  array,
+    const char* separator)
+{
+    size_t offset = 0;
+    size_t count;
+    char** elements = (char**)pbarray_elements(array, &count);
+    if (NULL == elements) { return NULL; }
+
+    /** Extra byte for null-terminator. */
+    size_t len = (count > 0 ? (count - 1) * strlen(separator) : 0) + 1;
+    for (size_t i = 0; i < count; ++i) { len += strlen(elements[i]); }
+
+    char* joined_str = malloc(len * sizeof(char));
+    if (NULL == joined_str || 0 == count) {
+        free(elements);
+        return joined_str;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        offset += snprintf(joined_str + offset,
+                           len - offset,
+                           "%s%s",
+                           offset > 0 ? separator : "",
+                           elements[i]);
+    }
+
+    return joined_str;
 }

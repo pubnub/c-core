@@ -646,7 +646,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_with_subscription(
 /**
  * @brief Stop receiving real-time updates for subscription entity.
  * @code
- * enum pubnub_res rslt = pubnub_unsubscribe_with_subscription(subscription);
+ * enum pubnub_res rslt = pubnub_unsubscribe_with_subscription(&subscription);
  * if (PNR_OK != rslt) {
  *     // handle unsubscription error (mostly because of parameters error).
  * }

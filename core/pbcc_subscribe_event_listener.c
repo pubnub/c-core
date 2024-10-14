@@ -471,6 +471,7 @@ void pbcc_event_listener_emit_status(
 
 void pbcc_event_listener_emit_message(
     pbcc_event_listener_t*         listener,
+    const char*                    subscribable,
     const struct pubnub_v2_message message)
 {
     if (NULL == listener) { return; }
@@ -485,7 +486,7 @@ void pbcc_event_listener_emit_message(
 
     // Notify subscribable object message listeners (if any has been registered).
     const pbcc_object_listener_t* object_listener = (pbcc_object_listener_t*)
-        pbhash_set_element(listener->listeners, message.channel.ptr);
+        pbhash_set_element(listener->listeners, subscribable);
     if (NULL != object_listener) {
         pbcc_event_listener_emit_message_(listener,
                                           object_listener->listeners,
@@ -649,18 +650,18 @@ pubnub_subscribe_listener_type pbcc_message_type_to_listener_type_(
 {
     switch (type) {
     case pbsbPublished:
-        return LISTENER_ON_MESSAGE;
+        return PBSL_LISTENER_ON_MESSAGE;
     case pbsbSignal:
-        return LISTENER_ON_SIGNAL;
+        return PBSL_LISTENER_ON_SIGNAL;
     case pbsbAction:
-        return LISTENER_ON_MESSAGE_ACTION;
+        return PBSL_LISTENER_ON_MESSAGE_ACTION;
     case pbsbObjects:
-        return LISTENER_ON_OBJECTS;
+        return PBSL_LISTENER_ON_OBJECTS;
     case pbsbFiles:
-        return LISTENER_ON_FILES;
+        return PBSL_LISTENER_ON_FILES;
     }
 
-    return LISTENER_ON_MESSAGE;
+    return PBSL_LISTENER_ON_MESSAGE;
 }
 
 pbarray_t* pbcc_initialize_array_(

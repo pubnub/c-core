@@ -25,6 +25,7 @@
  * State with which Subscribe Event Engine will be initialized and end up
  * when there will be no channels or groups to subscribe to.
  *
+ * @param ee Pointer to the Event Engine which new state should be created.
  * @return Pointer to the `Unsubscribed` state.
  */
 pbcc_ee_state_t* pbcc_unsubscribed_state_alloc(void);
@@ -36,13 +37,16 @@ pbcc_ee_state_t* pbcc_unsubscribed_state_alloc(void);
  * subscription loop time token (cursor) and notify channels / groups subscribes
  * about change in subscriber's presence.
  *
+ * @param ee      Pointer to the Event Engine which new state should be created.
  * @param context Pointer to the context with updated Subscribe Event Engine
  *                information which should be used for the next subscription
  *                loop.
  * @return Pointer to the `Handshaking state`, which should be used as
  *         Subscribe Event Engine state transition target state.
  */
-pbcc_ee_state_t* pbcc_handshaking_state_alloc(pbcc_ee_data_t* context);
+pbcc_ee_state_t* pbcc_handshaking_state_alloc(
+    pbcc_event_engine_t* ee,
+    pbcc_ee_data_t* context);
 
 /**
  * @brief Initial subscription failed state.
@@ -78,13 +82,16 @@ pbcc_ee_state_t* pbcc_handshake_stopped_state_alloc(pbcc_ee_data_t* context);
  * State, which is used by the Subscribe Event Engine to perform a long-poll
  * subscription loop to receive real-time updates.
  *
+ * @param ee      Pointer to the Event Engine which new state should be created.
  * @param context Pointer to the context with list of channels / groups and time
  *                token (cursor) received from previous subscription loop to
  *                receive next real-time updates.
  * @return Pointer to the `Receiving real-time updates state`, which should be
  *         used as Subscribe Event Engine state transition target state.
  */
-pbcc_ee_state_t* pbcc_receiving_state_alloc(pbcc_ee_data_t* context);
+pbcc_ee_state_t* pbcc_receiving_state_alloc(
+    pbcc_event_engine_t* ee,
+    pbcc_ee_data_t* context);
 
 /**
  * @brief Real-time updates receive failed state.
@@ -110,6 +117,7 @@ pbcc_ee_state_t* pbcc_receive_failed_state_alloc(pbcc_ee_data_t* context);
  *
  * @param context Pointer to the context with list of channels / groups and time
  *                token (cursor) received from previous subscription loop to
+ *                receive next real-time updates.
  *                receive next real-time updates.
  * @return Pointer to the `Receive real-time updates stopped state`, which
  *         should be used as Subscribe Event Engine state transition target

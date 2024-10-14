@@ -39,14 +39,17 @@
  * @param [in,out] channel_groups Pointer to the byte sting of comma-separated
  *                                channel groups from which PubNub client should
  *                                receive real-time updates.
+ * @param sent_by_ee              Whether event has been sent by Subscribe Event
+ *                                Engine or not.
  * @return Pointer to the `Subscription change event`, which will be processed
  *         by the Subscribe Event Engine to get transition instructions from the
  *         current state.
  */
 pbcc_ee_event_t* pbcc_subscription_changed_event_alloc(
     pbcc_subscribe_ee_t* ee,
-    char**               channels,
-    char**               channel_groups);
+    char** channels,
+    char** channel_groups,
+    bool sent_by_ee);
 
 /**
  * @brief Subscription restore / catchup event.
@@ -70,15 +73,18 @@ pbcc_ee_event_t* pbcc_subscription_changed_event_alloc(
  * @param cursor                  Time token to which PubNub client should try
  *                                to restore subscription (catch up on missing
  *                                messages) loop.
+ * @param sent_by_ee              Whether event has been sent by Subscribe Event
+ *                                Engine or not.
  * @return Pointer to the `Subscription restore event`, which will be processed
  *         by the Subscribe Event Engine to get transition instructions from the
  *         current state.
  */
 pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
-    pbcc_subscribe_ee_t*      ee,
-    char**                    channels,
-    char**                    channel_groups,
-    pubnub_subscribe_cursor_t cursor);
+    pbcc_subscribe_ee_t* ee,
+    char** channels,
+    char** channel_groups,
+    pubnub_subscribe_cursor_t cursor,
+    bool sent_by_ee);
 
 /**
  * @brief Initial subscription handshake success event.
@@ -95,7 +101,7 @@ pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
  *         instructions from the current state.
  */
 pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
-    pbcc_subscribe_ee_t*      ee,
+    pbcc_subscribe_ee_t* ee,
     pubnub_subscribe_cursor_t cursor);
 
 /**
@@ -115,7 +121,7 @@ pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
  */
 pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
     pbcc_subscribe_ee_t* ee,
-    enum pubnub_res      reason);
+    enum pubnub_res reason);
 
 /**
  * @default Real-time updates receive success event.
@@ -131,7 +137,7 @@ pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
  *         instructions from the current state.
  */
 pbcc_ee_event_t* pbcc_receive_success_event_alloc(
-    pbcc_subscribe_ee_t*      ee,
+    pbcc_subscribe_ee_t* ee,
     pubnub_subscribe_cursor_t cursor);
 
 /**
@@ -147,7 +153,7 @@ pbcc_ee_event_t* pbcc_receive_success_event_alloc(
  */
 pbcc_ee_event_t* pbcc_receive_failure_event_alloc(
     pbcc_subscribe_ee_t* ee,
-    enum pubnub_res      reason);
+    enum pubnub_res reason);
 
 /**
  * @brief Disconnect from real-time updates event.
@@ -178,7 +184,7 @@ pbcc_ee_event_t* pbcc_disconnect_event_alloc(pbcc_subscribe_ee_t* ee);
  *         current state.
  */
 pbcc_ee_event_t* pbcc_reconnect_event_alloc(
-    pbcc_subscribe_ee_t*      ee,
+    pbcc_subscribe_ee_t* ee,
     pubnub_subscribe_cursor_t cursor);
 
 /**
@@ -208,8 +214,8 @@ pbcc_ee_event_t* pbcc_reconnect_event_alloc(
  */
 pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
     pbcc_subscribe_ee_t* ee,
-    char**               channels,
-    char**               channel_groups);
+    char** channels,
+    char** channel_groups);
 #else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
 #endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE

@@ -65,6 +65,20 @@ typedef enum {
     SUBSCRIBE_EE_STATE_RECEIVE_STOPPED,
 } pbcc_subscribe_ee_state;
 
+/** Subscribe Event Engine events. */
+typedef enum {
+ /** Subscription list of channels / groups handshake invocation. */
+ SUBSCRIBE_EE_INVOCATION_HANDSHAKE,
+ /** Receive real-time updates for list of channels / groups invocation. */
+ SUBSCRIBE_EE_INVOCATION_RECEIVE,
+ /** Emit subscription change status invocation. */
+ SUBSCRIBE_EE_INVOCATION_EMIT_STATUS,
+ /** Emit real-time update invocation. */
+ SUBSCRIBE_EE_INVOCATION_EMIT_MESSAGE,
+ /** Cancel subscription invocation. */
+ SUBSCRIBE_EE_INVOCATION_CANCEL,
+} pbcc_subscribe_ee_invocation;
+
 /** Subscribe event engine structure. */
 struct pbcc_subscribe_ee {
     /**
@@ -104,8 +118,33 @@ struct pbcc_subscribe_ee {
     char* filter_expr;
     /** Recent subscription status. */
     pubnub_subscription_status status;
-    /** Subscribe Event Listener. */
+    /** Pointer to the Subscribe Event Listener. */
     pbcc_event_listener_t* event_listener;
+    /**
+     * @brief Pointer to the active subscription cancel invocation.
+     *
+     * PubNub context may need some time to complete cancellation operation and
+     * report to the callback
+     */
+    pbcc_ee_invocation_t* cancel_invocation;
+    /**
+     * @brief Pointer to the list of channels to leave.
+     *
+     * @note Because of PubNub specific with single request at a time we need to
+     *       wait when cancel invocation will complete to be able to send
+     *       `leave` request for channels.
+     */
+    pbarray_t* leave_channels;
+    /**
+     * @brief Pointer to the list of channel groups to leave.
+     *
+     * @note Because of PubNub specific with single request at a time we need to
+     *       wait when cancel invocation will complete to be able to send
+     *       `leave` request for channel groups.
+     */
+    pbarray_t* leave_channel_groups;
+    /** Type of transaction which is currently in progress. */
+    enum pubnub_trans current_transaction;
     /**
      * @brief Pointer to the Event Engine which handles all states and
      *        transitions on events.
@@ -142,6 +181,8 @@ typedef struct {
     pubnub_subscribe_cursor_t cursor;
     /** Previous request failure reason. */
     enum pubnub_res reason;
+    /** Whether subscription requires heartbeat to be sent before subscribe. */
+    bool send_heartbeat;
     /**
      * @brief Pointer to the PubNub context, which should be used for effects
      *        execution by Subscribe Event Engine effects dispatcher.

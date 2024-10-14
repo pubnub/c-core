@@ -318,7 +318,6 @@ void pbntf_trans_outcome(pubnub_t *pb)
     }
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     if (pb->cb != NULL) {
-        printf("~~~~ pbntf_trans_outcome 2\n");
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }

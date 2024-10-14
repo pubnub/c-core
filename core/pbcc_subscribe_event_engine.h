@@ -238,6 +238,17 @@ enum pubnub_res pbcc_subscribe_ee_reconnect(
 enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee);
 
 /**
+ * @brief Handle Subscribe v2 request schedule error.
+ *
+ * @param ee    Pointer to the Subscribe Event Engine, which should handle next
+ *              subscription schedule error.
+ * @param error Subscribe operation call result (error).
+ */
+void pbcc_subscribe_ee_handle_subscribe_error(
+    pbcc_subscribe_ee_t* ee,
+    enum pubnub_res error);
+
+/**
  * @brief Retrieve created subscriptions.
  *
  * \b Warning: Application execution will be terminated if Subscribe Event Engine

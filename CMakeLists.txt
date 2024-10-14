@@ -60,9 +60,9 @@ num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
-num_option(USE_RETRY_CONFIGURATION "Use requests retry" ON)
+num_option(USE_RETRY_CONFIGURATION "Use requests retry" OFF)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine" ON)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine" OFF)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
@@ -529,8 +529,7 @@ set(SOURCEFILES
     ${LIB_SOURCEFILES} 
     ${OS_SOURCEFILES} 
     ${FEATURE_SOURCEFILES} 
-    ${INTF_SOURCEFILES}
-        core/samples/subscribe_event_engine_sample.c)
+    ${INTF_SOURCEFILES})
 
 if(NOT ESP_PLATFORM)
     if(${SHARED_LIB})
@@ -708,9 +707,13 @@ if(${EXAMPLES})
                 pubnub_callback_subloop_sample
                 subscribe_publish_callback_sample
                 subscribe_publish_from_callback
-                subscribe_event_engine_sample
                 publish_callback_subloop_sample
                 publish_queue_callback_subloop)
+            if(${USE_SUBSCRIBE_EVENT_ENGINE})
+                set(EXAMPLE_LIST
+                    subscribe_event_engine_sample
+                    ${EXAMPLE_LIST})
+            endif()
             if (WITH_CPP)
                 set(CPP_EXAMPLE_LIST
                     subscribe_publish_callback_sample # Only supports callback!

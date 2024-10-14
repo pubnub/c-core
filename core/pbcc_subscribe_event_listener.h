@@ -160,9 +160,9 @@ enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
  *                       listeners for subscription status change event.
  * @param status         New subscription status which should be sent the the
  *                       listeners.
- * @param reason         In case of `SUBSCRIPTION_STATUS_CONNECTION_ERROR` and
- *                       `SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY` may
- *                       contain additional information about reasons of
+ * @param reason         In case of `PNSS_SUBSCRIPTION_STATUS_CONNECTION_ERROR`
+ *                       and `PNSS_SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY`
+ *                       may contain additional information about reasons of
  *                       failure.
  * @param channels       Byte string with comma-separated / `NULL` channel
  *                       identifiers which have been used with recent operation.
@@ -179,12 +179,16 @@ void pbcc_event_listener_emit_status(
 /**
  * @brief Notify listeners about new real-time update / message.
  *
- * @param listener Pointer to the Event Listener which contains list of
- *                 listeners for subscription real-time update / message event.
+ * @param listener     Pointer to the Event Listener which contains list of
+ *                     listeners for subscription real-time update / message
+ *                     event.
+ * @param subscribable Pointer to the subscrbable entity for which `message` has
+ *                     been received.
  * @param message  Received message which should be delivered to the listeners.
  */
 void pbcc_event_listener_emit_message(
     pbcc_event_listener_t* listener,
+    const char* subscribable,
     struct pubnub_v2_message message);
 
 /**

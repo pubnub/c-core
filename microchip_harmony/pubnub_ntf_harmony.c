@@ -152,7 +152,6 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 
 void pbntf_trans_outcome(pubnub_t *pb)
 {
-    printf("~~~~~~=====>>> 4\n");
     PBNTF_TRANS_OUTCOME_COMMON(pb);
 #if PUBNUB_USE_RETRY_CONFIGURATION
     if (NULL != pb->core.retry_configuration &&
@@ -176,7 +175,6 @@ void pbntf_trans_outcome(pubnub_t *pb)
     }
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     if (pb->cb != NULL) {
-        printf("~~~~ pbntf_trans_outcome 3\n");
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
 }

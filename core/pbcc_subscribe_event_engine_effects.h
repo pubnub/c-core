@@ -31,9 +31,8 @@
  *                   for initial subscribe (tt=0).
  * @param cb         Pointer to the effect execution completion callback
  *                   function.
- * @return Handshake effect execution (scheduling) operation result.
  */
-enum pubnub_res pbcc_subscribe_ee_handshake_effect(
+void pbcc_subscribe_ee_handshake_effect(
     pbcc_ee_invocation_t* invocation,
     pbcc_ee_data_t* context,
     pbcc_ee_effect_completion_function_t cb);
@@ -50,9 +49,8 @@ enum pubnub_res pbcc_subscribe_ee_handshake_effect(
  *                   for next subscription loop (tt!=0).
  * @param cb         Pointer to the effect execution completion callback
  *                   function.
- * @return Receive effect execution (scheduling) operation result.
  */
-enum pubnub_res pbcc_subscribe_ee_receive_effect(
+void pbcc_subscribe_ee_receive_effect(
     pbcc_ee_invocation_t* invocation,
     pbcc_ee_data_t* context,
     pbcc_ee_effect_completion_function_t cb);
@@ -67,9 +65,8 @@ enum pubnub_res pbcc_subscribe_ee_receive_effect(
  *                   change listeners.
  * @param cb         Pointer to the effect execution completion callback
  *                   function.
- * @return Status change emit operation result.
  */
-enum pubnub_res pbcc_subscribe_ee_emit_status_effect(
+void pbcc_subscribe_ee_emit_status_effect(
     pbcc_ee_invocation_t* invocation,
     pbcc_ee_data_t* context,
     pbcc_ee_effect_completion_function_t cb);
@@ -84,9 +81,8 @@ enum pubnub_res pbcc_subscribe_ee_emit_status_effect(
  *                   update listeners.
  * @param cb         Pointer to the effect execution completion callback
  *                   function.
- * @return Real-time updates emit operation result.
  */
-enum pubnub_res pbcc_subscribe_ee_emit_messages_effect(
+void pbcc_subscribe_ee_emit_messages_effect(
     pbcc_ee_invocation_t* invocation,
     pbcc_ee_data_t* context,
     pbcc_ee_effect_completion_function_t cb);

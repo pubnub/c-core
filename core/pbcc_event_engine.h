@@ -88,10 +88,15 @@ typedef void (*pbcc_ee_data_free_function_t)(void* data);
  *                   execution.
  * @param invocation Pointer to the invocation which has been used to execute
  *                   effect.
+ * @param paused     Whether `invocation` execution has been paused or not.
+ *                   Paused invocation will reset its execution status to
+ *                   'CREATED'. When paused, then the Event Engine should be
+ *                   told when the next invocation should be processed.
  */
 typedef void (*pbcc_ee_effect_completion_function_t)(
     pbcc_event_engine_t* ee,
-    pbcc_ee_invocation_t* invocation);
+    pbcc_ee_invocation_t* invocation,
+    bool paused);
 
 /**
  * @brief Invocation effect function definition.
@@ -105,6 +110,7 @@ typedef void (*pbcc_ee_effect_completion_function_t)(
  *                   into function for processing.
  * @param cb         Pointer to the effect execution completion callback
  *                   function.
+ * @return Effect execution result.
  */
 typedef void (*pbcc_ee_effect_function_t)(
     const pbcc_ee_invocation_t* invocation,
@@ -183,14 +189,21 @@ enum pubnub_res pbcc_ee_handle_event(
  *
  * @param ee              Pointer to the Event Engine which should dequeue
  *                        and process next invocation.
- * @param remove_previous Whether current first element should be removed from
- *                        the list or not.<br/>\b Important: This flag can be
- *                        in case of asynchronous operations when effect
- *                        execution callback can't be called in place.
+ * @return Number of enqueued effect invocations (ongoing and just created).
  */
-void pbcc_ee_process_next_invocation(
+size_t pbcc_ee_process_next_invocation(pbcc_event_engine_t* ee);
+
+/**
+ * @brief Handle effect invocation completion.
+ *
+ * @param ee         Pointer to the event engine which enqueued effect
+ *                   execution.
+ * @param invocation Pointer to the invocation which has been used to execute
+ *                   effect.
+ */
+void pbcc_ee_handle_effect_completion(
     pbcc_event_engine_t* ee,
-    bool remove_previous);
+    pbcc_ee_invocation_t* invocation);
 
 /**
  * @brief Create sharable user-provided data object.
@@ -224,7 +237,7 @@ void pbcc_ee_data_free(pbcc_ee_data_t* data);
  *             should be retrieved.
  * @return Pointer to the user-provided value.
  */
-const void* pbcc_ee_data_value(const pbcc_ee_data_t* data);
+void* pbcc_ee_data_value(pbcc_ee_data_t* data);
 
 /**
  * @brief Create a copy of existing data.
@@ -367,6 +380,7 @@ void pbcc_ee_event_free(pbcc_ee_event_t** event);
  * @note Memory allocated for `data` will be managed by the Event Engine if
  *       `data` destructor provided (`data_free`).
  *
+ * @param type      A specific Event Engine invocation type.
  * @param effect    Function which will be called by dispatcher during
  *                  invocation handling.
  * @param data      Pointer to the data which has been associated by business
@@ -379,9 +393,21 @@ void pbcc_ee_event_free(pbcc_ee_event_t** event);
  *         the `pbcc_ee_invocation_free` to avoid a memory leak.
  */
 pbcc_ee_invocation_t* pbcc_ee_invocation_alloc(
+    int type,
     pbcc_ee_effect_function_t effect,
     pbcc_ee_data_t* data,
     bool immediate);
+
+/**
+ * @brief Cancel next non-running invocation of specified type.
+ *
+ * The first invocation which is currently not active and matches the specified
+ * type will be dequeued and freed.
+ *
+ * @param ee   Pointer to the Event Engine which enqueue scheduled invocations.
+ * @param type A type of invocation which should be cancelled.
+ */
+void pbcc_ee_invocation_cancel_by_type(pbcc_event_engine_t* ee, int type);
 
 /**
  * @brief Clean up resources used by the invocation object.

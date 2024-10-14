@@ -26,6 +26,8 @@
  *                                subscription REST API loop call.
  * @param reason                  Subscription processing result code which
  *                                explain failure reason.
+ * @param sent_by_ee              Whether event created per Event Engine request
+ *                                or not.
  * @return Pointer to requested `event` type, which will be processed by the
  *         Subscribe Event Engine to get transition instructions from the
  *         current state.
@@ -36,7 +38,8 @@ static pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
     char**                           channels,
     char**                           channel_groups,
     const pubnub_subscribe_cursor_t* cursor,
-    const enum pubnub_res*           reason);
+    const enum pubnub_res*           reason,
+    bool                             sent_by_ee);
 
 /**
  * @brief Create Subscribe Event Engine context object.
@@ -76,6 +79,8 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
  *                                comma-separated channel groups which should be
  *                                used instead of `channel_groups` from provided
  *                                context.
+ * @param copy_subscribables      Whether subscribables should be copied from
+ *                                the context or not.
  * @return Pointer to the ready to use Subscribe Event Engine context created
  *         from the data of source context, or `NULL` in case of insufficient
  *         memory error.
@@ -86,7 +91,8 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
     pubnub_t*                          pb,
     const pbcc_subscribe_ee_context_t* ctx,
     char**                             channels,
-    char**                             channel_groups);
+    char**                             channel_groups,
+    bool                               copy_subscribables);
 
 /**
  * @brief Clean up resources used by subscription context.
@@ -103,13 +109,15 @@ void pbcc_subscribe_ee_context_free_(pbcc_subscribe_ee_context_t* ctx);
 pbcc_ee_event_t* pbcc_subscription_changed_event_alloc(
     pbcc_subscribe_ee_t* ee,
     char**               channels,
-    char**               channel_groups)
+    char**               channel_groups,
+    const bool           sent_by_ee)
 {
-    if (NULL != channels && 0 == strlen(*channels)) {
+    if (NULL != channels && NULL != *channels && 0 == strlen(*channels)) {
         free(*channels);
         *channels = NULL;
     }
-    if (NULL != channel_groups && 0 == strlen(*channel_groups)) {
+    if (NULL != channel_groups && NULL != *channel_groups &&
+        0 == strlen(*channel_groups)) {
         free(*channel_groups);
         *channel_groups = NULL;
     }
@@ -121,20 +129,23 @@ pbcc_ee_event_t* pbcc_subscription_changed_event_alloc(
                                           channels,
                                           channel_groups,
                                           NULL,
-                                          NULL);
+                                          NULL,
+                                          sent_by_ee);
 }
 
 pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
     pbcc_subscribe_ee_t*            ee,
     char**                          channels,
     char**                          channel_groups,
-    const pubnub_subscribe_cursor_t cursor)
+    const pubnub_subscribe_cursor_t cursor,
+    const bool                      sent_by_ee)
 {
-    if (NULL != channels && 0 == strlen(*channels)) {
+    if (NULL != channels && NULL != *channels && 0 == strlen(*channels)) {
         free(*channels);
         *channels = NULL;
     }
-    if (NULL != channel_groups && 0 == strlen(*channel_groups)) {
+    if (NULL != channel_groups && NULL != *channel_groups &&
+        0 == strlen(*channel_groups)) {
         free(*channel_groups);
         *channel_groups = NULL;
     }
@@ -146,7 +157,8 @@ pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
                                           channels,
                                           channel_groups,
                                           &cursor,
-                                          NULL);
+                                          NULL,
+                                          sent_by_ee);
 }
 
 pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
@@ -154,7 +166,13 @@ pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_HANDSHAKE_SUCCESS;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, &cursor, NULL);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          &cursor,
+                                          NULL,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
@@ -162,7 +180,13 @@ pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
     const enum pubnub_res reason)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_HANDSHAKE_FAILURE;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, NULL, &reason);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          NULL,
+                                          &reason,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_receive_success_event_alloc(
@@ -170,7 +194,13 @@ pbcc_ee_event_t* pbcc_receive_success_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECEIVE_SUCCESS;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, &cursor, NULL);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          &cursor,
+                                          NULL,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_receive_failure_event_alloc(
@@ -178,13 +208,25 @@ pbcc_ee_event_t* pbcc_receive_failure_event_alloc(
     const enum pubnub_res reason)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECEIVE_FAILURE;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, NULL, &reason);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          NULL,
+                                          &reason,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_disconnect_event_alloc(pbcc_subscribe_ee_t* ee)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_DISCONNECT;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, NULL, NULL);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          NULL,
+                                          NULL,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_reconnect_event_alloc(
@@ -192,7 +234,13 @@ pbcc_ee_event_t* pbcc_reconnect_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECONNECT;
-    return pbcc_subscribe_ee_event_alloc_(ee, type, NULL, NULL, &cursor, NULL);
+    return pbcc_subscribe_ee_event_alloc_(ee,
+                                          type,
+                                          NULL,
+                                          NULL,
+                                          &cursor,
+                                          NULL,
+                                          true);
 }
 
 pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
@@ -200,11 +248,12 @@ pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
     char**               channels,
     char**               channel_groups)
 {
-    if (NULL != channels && 0 == strlen(*channels)) {
+    if (NULL != channels && NULL != *channels && 0 == strlen(*channels)) {
         free(*channels);
         *channels = NULL;
     }
-    if (NULL != channel_groups && 0 == strlen(*channel_groups)) {
+    if (NULL != channel_groups && NULL != *channel_groups &&
+        0 == strlen(*channel_groups)) {
         free(*channel_groups);
         *channel_groups = NULL;
     }
@@ -215,7 +264,8 @@ pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
                                           channels,
                                           channel_groups,
                                           NULL,
-                                          NULL);
+                                          NULL,
+                                          false);
 }
 
 pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
@@ -224,18 +274,26 @@ pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
     char**                           channels,
     char**                           channel_groups,
     const pubnub_subscribe_cursor_t* cursor,
-    const enum pubnub_res*           reason)
+    const enum pubnub_res*           reason,
+    const bool                       sent_by_ee)
 {
     pubnub_mutex_lock(ee->mutw);
     pbcc_ee_data_t* current_state_data =
         pbcc_subscribe_ee_current_state_context(ee);
     const pbcc_subscribe_ee_context_t* current_context =
         pbcc_ee_data_value(current_state_data);
+    const bool copy_subscribables =
+        event != SUBSCRIBE_EE_EVENT_SUBSCRIPTION_CHANGED &&
+        event != SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED;
+
     pbcc_subscribe_ee_context_t* ctx = pbcc_subscribe_ee_context_copy_(
         ee->pb,
         current_context,
         channels,
-        channel_groups);
+        channel_groups,
+        copy_subscribables);
+    /** For subscription change / restore we need to send heartbeat. */
+    ctx->send_heartbeat = !copy_subscribables && !sent_by_ee;
     pbcc_ee_data_free(current_state_data);
 
     if (NULL == ctx) {
@@ -289,6 +347,7 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
     context->reason         = PNR_OK;
     context->channels       = NULL;
     context->channel_groups = NULL;
+    context->send_heartbeat = false;
     if (NULL != channels && NULL != *channels)
         context->channels = pbcc_ee_data_alloc(*channels, free);
     if (NULL != channel_groups && NULL != *channel_groups) {
@@ -303,7 +362,8 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
     pubnub_t*                          pb,
     const pbcc_subscribe_ee_context_t* ctx,
     char**                             channels,
-    char**                             channel_groups)
+    char**                             channel_groups,
+    const bool                         copy_subscribables)
 {
     pbcc_subscribe_ee_context_t* context = pbcc_subscribe_ee_context_alloc_(
         pb,
@@ -312,10 +372,12 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
     if (NULL == context) { return NULL; }
     if (NULL == ctx) { return context; }
 
-    if (NULL == context->channels && NULL != ctx->channels)
-        context->channels = pbcc_ee_data_copy(ctx->channels);
-    if (NULL == context->channel_groups && NULL != ctx->channel_groups)
-        context->channel_groups = pbcc_ee_data_copy(ctx->channel_groups);
+    if (copy_subscribables) {
+        if (NULL == context->channels && NULL != ctx->channels)
+            context->channels = pbcc_ee_data_copy(ctx->channels);
+        if (NULL == context->channel_groups && NULL != ctx->channel_groups)
+            context->channel_groups = pbcc_ee_data_copy(ctx->channel_groups);
+    }
     context->cursor = ctx->cursor;
 
     return context;

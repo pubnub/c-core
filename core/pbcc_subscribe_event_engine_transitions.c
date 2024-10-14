@@ -104,6 +104,7 @@ pbcc_ee_transition_t* pbcc_handshaking_state_transition_alloc(
             PBARRAY_GENERIC_CONTENT_TYPE,
             (pbarray_element_free)pbcc_ee_invocation_free);
         pbcc_ee_invocation_t* invocation = pbcc_ee_invocation_alloc(
+            SUBSCRIBE_EE_INVOCATION_EMIT_STATUS,
             (pbcc_ee_effect_function_t)pbcc_subscribe_ee_emit_status_effect,
             data,
             false);
@@ -127,8 +128,8 @@ pbcc_ee_transition_t* pbcc_handshaking_state_transition_alloc(
         /** Update latest Subscribe Event Engine subscription status. */
         pubnub_mutex_lock(subscribe_ee->mutw);
         subscribe_ee->status = SUBSCRIBE_EE_STATE_RECEIVING == target_state_type
-                                   ? SUBSCRIPTION_STATUS_CONNECTED
-                                   : SUBSCRIPTION_STATUS_CONNECTION_ERROR;
+                                   ? PNSS_SUBSCRIPTION_STATUS_CONNECTED
+                                   : PNSS_SUBSCRIPTION_STATUS_CONNECTION_ERROR;
         pubnub_mutex_unlock(subscribe_ee->mutw);
     }
     break;
@@ -168,6 +169,7 @@ pbcc_ee_transition_t* pbcc_handshake_failed_state_transition_alloc(
 
     switch (event->type) {
     case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_CHANGED:
+    case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED: {
         PUBNUB_ASSERT_OPT(NULL != data);
 
         const pbcc_subscribe_ee_context_t* context = pbcc_ee_data_value(data);
@@ -175,14 +177,13 @@ pbcc_ee_transition_t* pbcc_handshake_failed_state_transition_alloc(
             pbcc_ee_data_value(context->channel_groups);
         const char* channels = pbcc_ee_data_value(context->channels);
 
-        if (NULL != context && 0 == strlen(channels) &&
-            0 == strlen(channel_groups)) {
+        if (NULL != context && (NULL == channels || 0 == strlen(channels)) &&
+            (NULL == channel_groups || 0 == strlen(channel_groups))) {
             target_state_type = SUBSCRIBE_EE_STATE_UNSUBSCRIBED;
-            data              = NULL;
         }
         else { target_state_type = SUBSCRIBE_EE_STATE_HANDSHAKING; }
-        break;
-    case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED:
+    }
+    break;
     case SUBSCRIBE_EE_EVENT_RECONNECT:
         target_state_type = SUBSCRIBE_EE_STATE_HANDSHAKING;
         break;
@@ -255,24 +256,39 @@ pbcc_ee_transition_t* pbcc_receiving_state_transition_alloc(
 
     switch (event->type) {
     case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_CHANGED:
-    case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED:
-        target_state_type = SUBSCRIBE_EE_STATE_RECEIVING;
-        status = SUBSCRIPTION_STATUS_SUBSCRIPTION_CHANGED;
-        break;
+    case SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED: {
+        const pbcc_subscribe_ee_context_t* context = (
+                pbcc_subscribe_ee_context_t*)
+            pbcc_ee_data_value(data);
+        const char* channel_groups =
+            pbcc_ee_data_value(context->channel_groups);
+        const char* channels = pbcc_ee_data_value(context->channels);
+
+        if (NULL != context && (NULL == channels || 0 == strlen(channels)) &&
+            (NULL == channel_groups || 0 == strlen(channel_groups))) {
+            target_state_type = SUBSCRIBE_EE_STATE_UNSUBSCRIBED;
+            status            = PNSS_SUBSCRIPTION_STATUS_DISCONNECTED;
+        }
+        else {
+            target_state_type = SUBSCRIBE_EE_STATE_RECEIVING;
+            status            = PNSS_SUBSCRIPTION_STATUS_SUBSCRIPTION_CHANGED;
+        }
+    }
+    break;
     case SUBSCRIBE_EE_EVENT_RECEIVE_SUCCESS:
         target_state_type = SUBSCRIBE_EE_STATE_RECEIVING;
         break;
     case SUBSCRIBE_EE_EVENT_RECEIVE_FAILURE:
         target_state_type = SUBSCRIBE_EE_STATE_RECEIVE_FAILED;
-        status = SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY;
+        status            = PNSS_SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY;
         break;
     case SUBSCRIBE_EE_EVENT_DISCONNECT:
         target_state_type = SUBSCRIBE_EE_STATE_RECEIVE_STOPPED;
-        status = SUBSCRIPTION_STATUS_DISCONNECTED;
+        status            = PNSS_SUBSCRIPTION_STATUS_DISCONNECTED;
         break;
     case SUBSCRIBE_EE_EVENT_UNSUBSCRIBE_ALL:
         target_state_type = SUBSCRIBE_EE_STATE_UNSUBSCRIBED;
-        status = SUBSCRIPTION_STATUS_DISCONNECTED;
+        status            = PNSS_SUBSCRIPTION_STATUS_DISCONNECTED;
         break;
     default:
         data = NULL;
@@ -297,6 +313,7 @@ pbcc_ee_transition_t* pbcc_receiving_state_transition_alloc(
         const pbcc_subscribe_ee_context_t* context = pbcc_ee_data_value(data);
         pbcc_subscribe_ee_t* subscribe_ee = context->pb->core.subscribe_ee;
         invocation = pbcc_ee_invocation_alloc(
+            SUBSCRIBE_EE_INVOCATION_EMIT_STATUS,
             (pbcc_ee_effect_function_t)pbcc_subscribe_ee_emit_status_effect,
             data,
             false);
@@ -309,6 +326,7 @@ pbcc_ee_transition_t* pbcc_receiving_state_transition_alloc(
 
     if (SUBSCRIBE_EE_EVENT_RECEIVE_SUCCESS == event->type) {
         invocation = pbcc_ee_invocation_alloc(
+            SUBSCRIBE_EE_INVOCATION_EMIT_MESSAGE,
             (pbcc_ee_effect_function_t)pbcc_subscribe_ee_emit_messages_effect,
             data,
             false);
@@ -339,7 +357,7 @@ pbcc_ee_transition_t* pbcc_receiving_state_transition_alloc(
 
     return pbcc_transition_alloc_(ee,
                                   target_state_type,
-                                  event->data,
+                                  data,
                                   invocations);
 }
 
@@ -432,7 +450,7 @@ pbcc_ee_transition_t* pbcc_transition_alloc_(
         target_state = pbcc_unsubscribed_state_alloc();
         break;
     case SUBSCRIBE_EE_STATE_HANDSHAKING:
-        target_state = pbcc_handshaking_state_alloc(state_context);
+        target_state = pbcc_handshaking_state_alloc(ee, state_context);
         break;
     case SUBSCRIBE_EE_STATE_HANDSHAKE_FAILED:
         target_state = pbcc_handshake_failed_state_alloc(state_context);
@@ -441,7 +459,7 @@ pbcc_ee_transition_t* pbcc_transition_alloc_(
         target_state = pbcc_handshake_stopped_state_alloc(state_context);
         break;
     case SUBSCRIBE_EE_STATE_RECEIVING:
-        target_state = pbcc_receiving_state_alloc(state_context);
+        target_state = pbcc_receiving_state_alloc(ee, state_context);
         break;
     case SUBSCRIBE_EE_STATE_RECEIVE_FAILED:
         target_state = pbcc_receive_failed_state_alloc(state_context);
@@ -451,7 +469,7 @@ pbcc_ee_transition_t* pbcc_transition_alloc_(
         break;
     default:
         PUBNUB_LOG_ERROR("pbcc_transition_alloc: unknown target state type\n");
-        return NULL;
+        break;
     }
 
     if (NULL == target_state && SUBSCRIBE_EE_STATE_NONE != target_state_type) {

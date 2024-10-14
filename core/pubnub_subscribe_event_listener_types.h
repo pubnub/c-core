@@ -21,15 +21,15 @@
 typedef enum
 {
     /** Listener to handle real-time messages. */
-    LISTENER_ON_MESSAGE,
+    PBSL_LISTENER_ON_MESSAGE,
     /** Listener to handle real-time signals. */
-    LISTENER_ON_SIGNAL,
+    PBSL_LISTENER_ON_SIGNAL,
     /** Listener to handle message action real-time updates. */
-    LISTENER_ON_MESSAGE_ACTION,
+    PBSL_LISTENER_ON_MESSAGE_ACTION,
     /** Listener to handle App Context real-time updates. */
-    LISTENER_ON_OBJECTS,
+    PBSL_LISTENER_ON_OBJECTS,
     /** Listener to handle real-time files sharing events. */
-    LISTENER_ON_FILES
+    PBSL_LISTENER_ON_FILES
 } pubnub_subscribe_listener_type;
 
 /** PubNub subscription status change data object. */
@@ -38,9 +38,9 @@ typedef struct
     /**
      * @brief Error details in case of error.
      *
-     * In case of `SUBSCRIPTION_STATUS_CONNECTION_ERROR` and
-     * `SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY` may contain additional
-     * information about reasons of failure.
+     * In case of `PNSS_SUBSCRIPTION_STATUS_CONNECTION_ERROR` and
+     * `PNSS_SUBSCRIPTION_STATUS_DISCONNECTED_UNEXPECTEDLY` may contain
+     * additional information about reasons of failure.
      */
     const enum pubnub_res reason;
     /**
