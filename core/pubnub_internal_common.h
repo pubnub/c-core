@@ -1,8 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pbcc_crypto.h"
 #if !defined INC_PUBNUB_INTERNAL_COMMON
 #define INC_PUBNUB_INTERNAL_COMMON
 
+#include <stdbool.h>
 #include "pubnub_config.h"
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_netcore.h"
@@ -358,6 +358,11 @@ struct pubnub_ {
 
     /** Last received HTTP (result) code */
     uint16_t http_code;
+
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    /** Last received HTTP (result) `Retry-After` header value. */
+    uint16_t http_header_retry_after;
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 
 #if defined PUBNUB_ORIGIN_SETTABLE
     char const* origin;

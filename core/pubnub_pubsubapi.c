@@ -88,7 +88,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #if PUBNUB_CRYPTO_API
     p->core.crypto_module = NULL;
 #endif
-
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    p->core.subscribe_ee = pbcc_subscribe_ee_alloc(p);
+#endif
     pubnub_mutex_unlock(p->monitor);
 
     return p;
@@ -302,6 +304,16 @@ int pubnub_last_http_code(pubnub_t* pb)
     return result;
 }
 
+#if PUBNUB_USE_RETRY_CONFIGURATION
+uint16_t pubnub_last_http_retry_header(pubnub_t* pb)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    pubnub_mutex_lock(pb->monitor);
+    uint16_t retry_after = pb->http_header_retry_after;
+    pubnub_mutex_unlock(pb->monitor);
+    return retry_after;
+}
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 
 char const* pubnub_last_time_token(pubnub_t* pb)
 {

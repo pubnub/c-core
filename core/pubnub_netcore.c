@@ -410,6 +410,10 @@ static char const* pbnc_state2str(enum pubnub_state e)
     case PBS_RETRY:
         return "PBS_RETRY";
 #endif
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    case PBS_WAIT_RETRY:
+        return "PBS_WAIT_RETRY";
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     case PBS_IDLE:
         return "PBS_IDLE";
     case PBS_READY:
@@ -1060,6 +1064,10 @@ next_state:
             pb->http_code = atoi(pb->core.http_buf + 9);
             WATCH_USHORT(pb->http_code);
             pb->core.http_content_len = 0;
+#if PUBNUB_USE_RETRY_CONFIGURATION
+            /** Reset failed request `Retry-After` HTTP header value. */
+            pb->http_header_retry_after = 0;
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
             pb->http_chunked          = false;
             pb->state                 = PBS_RX_HEADERS;
             goto next_state;
@@ -1090,6 +1098,15 @@ next_state:
         switch (pbrslt) {
         case PNR_IN_PROGRESS:
             break;
+        case PNR_TX_BUFF_TOO_SMALL:
+            /** We could copy the "line so far" to the reply buffer
+                and then process the line from the reply buffer when
+                it's finished. This would be much more complex, yet
+                most lines will not be that long and, if the reply
+                buffer is static, it, too, might not be large enough.
+            */
+            pb->state = PBS_RX_HEADERS;
+            goto next_state;
         case PNR_OK: {
             /* We know that Pubnub will always use keep-alive unless
                we ask for `close`, so, we don't check for the
@@ -1098,6 +1115,9 @@ next_state:
             char h_chunked[] = "Transfer-Encoding: chunked";
             char h_length[]  = "Content-Length: ";
             char h_close[]   = "Connection: close";
+#if PUBNUB_USE_RETRY_CONFIGURATION
+            char h_retry_after[] = "Retry-After: ";
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
             char h_encoding[] = "Content-Encoding: gzip";
 #endif
@@ -1143,6 +1163,11 @@ next_state:
                 }
                 pb->core.http_content_len = len;
             }
+#if PUBNUB_USE_RETRY_CONFIGURATION
+            else if (pb_strncasecmp(pb->core.http_buf, h_retry_after, sizeof h_retry_after - 1) == 0) {
+                pb->http_header_retry_after = atoi(pb->core.http_buf + sizeof h_retry_after - 1);
+            }
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
             else if (pb_strncasecmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
                 pb->flags.should_close = true;
             }
@@ -1159,15 +1184,6 @@ next_state:
             pb->state = PBS_RX_HEADERS;
             goto next_state;
         }
-        case PNR_TX_BUFF_TOO_SMALL:
-            /** We could copy the "line so far" to the reply buffer
-                and then process the line from the reply buffer when
-                it's finished. This would be much more complex, yet
-                most lines will not be that long and, if the reply
-                buffer is static, it, too, might not be large enough.
-            */
-            pb->state = PBS_RX_HEADERS;
-            goto next_state;
         default:
             outcome_detected(pb, pbrslt);
             break;

@@ -81,7 +81,7 @@ static void check_if_default_channel_and_groups(pubnub_t* p,
 
 enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* channel_group)
 {
-    enum pubnub_res rslt;
+    enum pubnub_res rslt = PNR_IN_PROGRESS;
     char const* prep_channel;
     char const* prep_channel_group;
 
@@ -90,7 +90,7 @@ enum pubnub_res pubnub_leave(pubnub_t* p, const char* channel, const char* chann
     pubnub_mutex_lock(p->monitor);
     if (!pbnc_can_start_transaction(p)) {
         pubnub_mutex_unlock(p->monitor);
-        return PNR_IN_PROGRESS;
+        return rslt;
     }
     check_if_default_channel_and_groups(p,
                                         channel,

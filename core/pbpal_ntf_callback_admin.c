@@ -1,17 +1,45 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_internal.h"
 
+#if PUBNUB_USE_RETRY_CONFIGURATION
+#include "core/pubnub_retry_configuration_internal.h"
+#include "core/pubnub_pubsubapi.h"
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
+
 #include "pbntf_trans_outcome_common.h"
 
 #include "pubnub_log.h"
 #include "pubnub_assert.h"
 
 
+
 void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb, state);
     PUBNUB_ASSERT(pbnc_can_start_transaction(pb));
+
     pb->flags.sent_queries = 0;
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    if (NULL != pb->core.retry_configuration &&
+        pubnub_retry_configuration_retryable_result_(pb)) {
+        uint16_t delay = pubnub_retry_configuration_delay_(pb);
+
+        if (delay > 0) {
+            if (NULL == pb->core.retry_timer)
+                pb->core.retry_timer = pbcc_request_retry_timer_alloc(pb);
+            if (NULL != pb->core.retry_timer) {
+                pbcc_request_retry_timer_start(pb->core.retry_timer, delay);
+                return;
+            }
+        }
+    }
+
+    /** There were no need to start retry timer, we can free it if exists. */
+    if (NULL != pb->core.retry_timer) {
+        pb->core.http_retry_count = 0;
+        pbcc_request_retry_timer_free(&pb->core.retry_timer);
+    }
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     if (pb->cb != NULL) {
         PUBNUB_LOG_TRACE("pbntf_trans_outcome(pb=%p) calling callback:\n"
                          "pb->trans = %d, pb->core.last_result=%d, pb->user_data=%p\n",

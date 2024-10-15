@@ -28,7 +28,7 @@ static void remove_member(char* list, const char* member, size_t member_len)
         }
         if (((size_t)(l_ch_end - l_start) == member_len) &&
             (memcmp(l_start, member, member_len) == 0)) {
-            size_t rest = l_end - l_ch_end + 1;
+            const size_t rest = l_end != l_ch_end ? l_end - (l_ch_end + 1) : 0;
             if (rest > 1) {
                 /* Moves everything behind next comma including string end */
                 memmove(l_start, l_ch_end + 1, rest);

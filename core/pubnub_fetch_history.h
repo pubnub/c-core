@@ -1,10 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+
+#ifndef INC_PUBNUB_FETCH_HISTORY
+#define INC_PUBNUB_FETCH_HISTORY
 #if PUBNUB_USE_FETCH_HISTORY
 
-#if !defined INC_PUBNUB_FETCH_HISTORY
-#define INC_PUBNUB_FETCH_HISTORY
-
-#include "pbcc_fetch_history.h"
 #include "lib/pb_extern.h"
 
 /** Options for fetch history. */
@@ -86,7 +85,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_fetch_history(pubnub_t*                    
 
 PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_fetch_history(pubnub_t* pb);
 
-#endif /* !defined INC_PUBNUB_FETCH_HISTORY */
-
 #endif /* PUBNUB_USE_FETCH_HISTORY */
+#endif /* #ifndef INC_PUBNUB_FETCH_HISTORY */
+
 

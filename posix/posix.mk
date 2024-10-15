@@ -10,6 +10,10 @@ ifndef USE_PROXY
 USE_PROXY = 1
 endif
 
+ifndef USE_RETRY_CONFIGURATION
+USE_RETRY_CONFIGURATION = 0
+endif
+
 ifndef USE_GZIP_COMPRESSION
 USE_GZIP_COMPRESSION = 1
 endif
@@ -20,6 +24,10 @@ endif
 
 ifndef USE_SUBSCRIBE_V2
 USE_SUBSCRIBE_V2 = 1
+endif
+
+ifndef USE_SUBSCRIBE_EVENT_ENGINE
+USE_SUBSCRIBE_EVENT_ENGINE = 0
 endif
 
 ifndef USE_ADVANCED_HISTORY
@@ -55,6 +63,11 @@ SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
 endif
 
+ifeq ($(USE_RETRY_CONFIGURATION), 1)
+SOURCEFILES += ../core/pbcc_request_retry_timer.c ../core/pubnub_retry_configuration.c
+OBJFILES += pbcc_request_retry_timer.o pubnub_retry_configuration.o
+endif
+
 ifeq ($(USE_GZIP_COMPRESSION), 1)
 SOURCEFILES += ../lib/miniz/miniz_tdef.c ../lib/miniz/miniz.c ../lib/pbcrc32.c ../core/pbgzip_compress.c
 OBJFILES += miniz_tdef.o miniz.o pbcrc32.o pbgzip_compress.o
@@ -68,6 +81,11 @@ endif
 ifeq ($(USE_SUBSCRIBE_V2), 1)
 SOURCEFILES += ../core/pbcc_subscribe_v2.c ../core/pubnub_subscribe_v2.c 
 OBJFILES += pbcc_subscribe_v2.o pubnub_subscribe_v2.o 
+endif
+
+ifeq ($(USE_SUBSCRIBE_EVENT_ENGINE), 1)
+SOURCEFILES += ../core/pbcc_memory_utils.c ../core/pbcc_event_engine.c ../core/pbcc_subscribe_event_engine.c ../core/pbcc_subscribe_event_engine_effects.c ../core/pbcc_subscribe_event_engine_events.c ../core/pbcc_subscribe_event_engine_states.c ../core/pbcc_subscribe_event_engine_transitions.c ../core/pbcc_subscribe_event_listener.c ../core/pubnub_entities.c ../core/pubnub_subscribe_event_engine.c ../core/pubnub_subscribe_event_listener.c ../lib/pbarray.c ../lib/pbhash_set.c ../lib/pbref_counter.c ../lib/pbstrdup.c
+OBJFILES += pbcc_memory_utils.o pbcc_event_engine.o pbcc_subscribe_event_engine.o pbcc_subscribe_event_engine_effects.o pbcc_subscribe_event_engine_events.o pbcc_subscribe_event_engine_states.o pbcc_subscribe_event_engine_transitions.o pbcc_subscribe_event_listener.o pubnub_entities.o pubnub_subscribe_event_engine.o pubnub_subscribe_event_listener.o pbarray.o pbhash_set.o pbref_counter.o pbstrdup.o
 endif
 
 ifeq ($(USE_ADVANCED_HISTORY), 1)
@@ -106,9 +124,10 @@ OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread
 endif
 
-CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
-# -g enables debugging, remove to get a smaller executable
-# -fsanitize-address Use AddressSanitizer
+CFLAGS =-g -Wall -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_RETRY_CONFIGURATION=$(USE_RETRY_CONFIGURATION) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=$(USE_SUBSCRIBE_EVENT_ENGINE) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY)
+# -g # enables debugging, remove to get a smaller executable
+# -fsanitize=address # Use AddressSanitizer
+# -fsanitize=thread # Use ThreadSanitizer:
 
 INCLUDES=-I .. -I .
 
@@ -186,6 +205,10 @@ subscribe_publish_callback_sample: ../core/samples/subscribe_publish_callback_sa
 
 subscribe_publish_from_callback: ../core/samples/subscribe_publish_from_callback.c pubnub_callback.a
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/subscribe_publish_from_callback.c pubnub_callback.a $(LDLIBS)
+
+# Subscribe Event Engine rely on callback
+subscribe_event_engine_sample: ../core/samples/subscribe_event_engine_sample.c pubnub_callback.a
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/subscribe_event_engine_sample.c pubnub_callback.a $(LDLIBS)
 
 publish_callback_subloop_sample: ../core/samples/publish_callback_subloop_sample.c pubnub_callback.a
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/publish_callback_subloop_sample.c pubnub_callback.a $(LDLIBS)

@@ -540,6 +540,7 @@ public:
 };
 #endif /* PUBNUB_USE_OBJECTS_API */    
 
+#if PUBNUB_CRYPTO_API
 /** Interface for a cryptor. It is an algorithm class that
  * provides encryption and decryption of arrays of bytes.
  *
@@ -705,6 +706,7 @@ public:
 private:
     pubnub_crypto_provider_t* d_module;
 };
+#endif // #if PUBNUB_CRYPTO_API
 
 /** The C++ Pubnub context. It is a wrapper of the Pubnub C context,
  * not a "native" C++ implementation.

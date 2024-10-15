@@ -60,7 +60,9 @@ num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
+num_option(USE_RETRY_CONFIGURATION "Use requests retry" OFF)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine" OFF)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
@@ -97,13 +99,16 @@ set(FLAGS "\
     -D PUBNUB_PROXY_API=${USE_PROXY} \
     -D PUBNUB_USE_GZIP_COMPRESSION=${USE_GZIP_COMPRESSION} \
     -D PUBNUB_RECEIVE_GZIP_RESPONSE=${RECEIVE_GZIP_RESPONSE} \
+    -D PUBNUB_USE_RETRY_CONFIGURATION=${USE_RETRY_CONFIGURATION} \
     -D PUBNUB_USE_SUBSCRIBE_V2=${USE_SUBSCRIBE_V2} \
+    -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=${USE_SUBSCRIBE_EVENT_ENGINE} \
     -D PUBNUB_USE_OBJECTS_API=${USE_OBJECTS_API} \
     -D PUBNUB_USE_ACTIONS_API=${USE_ACTIONS_API} \
     -D PUBNUB_USE_AUTO_HEARTBEAT=${USE_AUTO_HEARTBEAT} \
     -D PUBNUB_USE_GRANT_TOKEN_API=${USE_GRANT_TOKEN_API} \
     -D PUBNUB_USE_REVOKE_TOKEN_API=${USE_REVOKE_TOKEN_API} \
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
+    -D PUBNUB_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
@@ -324,11 +329,41 @@ if(${RECEIVE_GZIP_RESPONSE})
         ${CMAKE_CURRENT_LIST_DIR}/core/pbgzip_decompress.c)
 endif()
 
-if(${USE_SUBSCRIBE_V2})
+if (${USE_RETRY_CONFIGURATION})
     set(FEATURE_SOURCEFILES
+        ${FEATURE_SOURCEFILES}
+        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_request_retry_timer.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_retry_configuration.c)
+endif ()
+
+if(${USE_SUBSCRIBE_V2})
+set(FEATURE_SOURCEFILES
         ${FEATURE_SOURCEFILES}
         ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_v2.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_v2.c)
+endif()
+
+if(${USE_SUBSCRIBE_EVENT_ENGINE})
+    message(STATUS "Using subscribe event engine API")
+    set(LIB_SOURCEFILES
+            ${LIB_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbarray.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbhash_set.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbref_counter.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pbstrdup.c)
+    set(FEATURE_SOURCEFILES
+            ${FEATURE_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_memory_utils.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_states.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_events.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_effects.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_engine_transitions.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_subscribe_event_listener.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_entities.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_engine.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_subscribe_event_listener.c)
 endif()
 
 if(${USE_ADVANCED_HISTORY})
@@ -440,12 +475,7 @@ if(${OPENSSL})
     set(FEATURE_SOURCEFILES 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c 
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_legacy.c 
-        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c 
-        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c 
+        ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
         ${FEATURE_SOURCEFILES})
 
     set(FEATURE_SOURCEFILES 
@@ -453,6 +483,16 @@ if(${OPENSSL})
         ${FEATURE_SOURCEFILES})
 
     set(LDLIBS  ${LDLIBS})
+
+    if(USE_CRYPTO_API)
+        set(FEATURE_SOURCEFILES
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_aes_cbc.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_crypto_legacy.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_crypto.c
+            ${CMAKE_CURRENT_LIST_DIR}/openssl/pbaes256.c
+            ${FEATURE_SOURCEFILES})
+    endif()
 
     if(UNIX)
         set(FEATURE_SOURCEFILES ${FEATURE_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_add_system_certs_posix.c)
@@ -669,6 +709,11 @@ if(${EXAMPLES})
                 subscribe_publish_from_callback
                 publish_callback_subloop_sample
                 publish_queue_callback_subloop)
+            if(${USE_SUBSCRIBE_EVENT_ENGINE})
+                set(EXAMPLE_LIST
+                    subscribe_event_engine_sample
+                    ${EXAMPLE_LIST})
+            endif()
             if (WITH_CPP)
                 set(CPP_EXAMPLE_LIST
                     subscribe_publish_callback_sample # Only supports callback!

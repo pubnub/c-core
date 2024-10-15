@@ -1,6 +1,6 @@
-SOURCEFILES = ../core/pbcc_set_state.c ../core/pubnub_ssl.c ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../lib/sockets/pbpal_handle_socket_error.c pbpal_openssl.c pbpal_connect_openssl.c pbpal_add_system_certs_posix.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../core/pubnub_helper.c ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c ../lib/base64/pbbase64.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../core/pubnub_crypto.c ../core/pubnub_coreapi_ex.c ../core/pubnub_free_with_timeout_std.c pbaes256.c ../posix/msstopwatch_monotonic_clock.c ../posix/pbtimespec_elapsed_ms.c ../core/pubnub_url_encode.c ../core/pubnub_memory_block.c ../posix/pb_sleep_ms.c ../core/pbcc_crypto.c ../core/pbcc_crypto_aes_cbc.c ../core/pbcc_crypto_legacy.c
+SOURCEFILES = ../core/pbcc_set_state.c ../core/pubnub_ssl.c ../core/pubnub_pubsubapi.c ../core/pubnub_coreapi.c ../core/pubnub_ccore_pubsub.c ../core/pubnub_ccore.c ../core/pubnub_netcore.c ../lib/sockets/pbpal_resolv_and_connect_sockets.c ../lib/sockets/pbpal_handle_socket_error.c pbpal_openssl.c pbpal_connect_openssl.c pbpal_add_system_certs_posix.c ../core/pubnub_alloc_std.c ../core/pubnub_assert_std.c ../core/pubnub_generate_uuid.c ../core/pubnub_blocking_io.c ../posix/posix_socket_blocking_io.c ../core/pubnub_timers.c ../core/pubnub_json_parse.c  ../core/pubnub_helper.c ../posix/pubnub_version_posix.c ../posix/pubnub_generate_uuid_posix.c pbpal_openssl_blocking_io.c ../lib/base64/pbbase64.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../core/pubnub_coreapi_ex.c ../core/pubnub_free_with_timeout_std.c ../posix/msstopwatch_monotonic_clock.c ../posix/pbtimespec_elapsed_ms.c ../core/pubnub_url_encode.c ../core/pubnub_memory_block.c ../posix/pb_sleep_ms.c
 
-OBJFILES = pbcc_set_state.o pubnub_ssl.o pubnub_pubsubapi.o pubnub_coreapi.o pubnub_ccore_pubsub.o pubnub_ccore.o pubnub_netcore.o pbpal_resolv_and_connect_sockets.o pbpal_handle_socket_error.o pbpal_openssl.o pbpal_connect_openssl.o pbpal_add_system_certs_posix.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o posix_socket_blocking_io.o pubnub_timers.o pubnub_json_parse.o pubnub_helper.o pubnub_version_posix.o pubnub_generate_uuid_posix.o pbpal_openssl_blocking_io.o pbbase64.o pb_strnlen_s.o pb_strncasecmp.o pubnub_crypto.o pubnub_coreapi_ex.o pubnub_free_with_timeout_std.o pbaes256.o msstopwatch_monotonic_clock.o pbtimespec_elapsed_ms.o pubnub_url_encode.o pubnub_memory_block.o pb_sleep_ms.o pbcc_crypto.o pbcc_crypto_aes_cbc.o pbcc_crypto_legacy.o 
+OBJFILES = pbcc_set_state.o pubnub_ssl.o pubnub_pubsubapi.o pubnub_coreapi.o pubnub_ccore_pubsub.o pubnub_ccore.o pubnub_netcore.o pbpal_resolv_and_connect_sockets.o pbpal_handle_socket_error.o pbpal_openssl.o pbpal_connect_openssl.o pbpal_add_system_certs_posix.o pubnub_alloc_std.o pubnub_assert_std.o pubnub_generate_uuid.o pubnub_blocking_io.o posix_socket_blocking_io.o pubnub_timers.o pubnub_json_parse.o pubnub_helper.o pubnub_version_posix.o pubnub_generate_uuid_posix.o pbpal_openssl_blocking_io.o pbbase64.o pb_strnlen_s.o pb_strncasecmp.o pubnub_coreapi_ex.o pubnub_free_with_timeout_std.o msstopwatch_monotonic_clock.o pbtimespec_elapsed_ms.o pubnub_url_encode.o pubnub_memory_block.o pb_sleep_ms.o
 
 ifndef ONLY_PUBSUB_API
 ONLY_PUBSUB_API = 0
@@ -8,6 +8,10 @@ endif
 
 ifndef USE_PROXY
 USE_PROXY = 1
+endif
+
+ifndef USE_RETRY_CONFIGURATION
+USE_RETRY_CONFIGURATION = 0
 endif
 
 ifndef USE_GZIP_COMPRESSION
@@ -51,7 +55,7 @@ USE_FETCH_HISTORY = 1
 endif
 
 ifndef USE_CRYPTO_API
-USE_CRYPTO_API = 0
+USE_CRYPTO_API = 1
 endif
 
 ifeq ($(USE_PROXY), 1)
@@ -109,7 +113,12 @@ REVOKE_TOKEN_SOURCEFILES = ../core/pubnub_revoke_token_api.c ../core/pbcc_revoke
 REVOKE_TOKEN_OBJFILES = pubnub_revoke_token_api.o pbcc_revoke_token_api.o
 endif
 
-CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY) 
+ifeq ($(USE_CRYPTO_API), 1)
+SOURCEFILES += ../core/pbcc_crypto.c ../core/pbcc_crypto_aes_cbc.c ../core/pbcc_crypto_legacy.c ../core/pubnub_crypto.c ../openssl/pbaes256.c
+OBJFILES += pbcc_crypto.o pbcc_crypto_aes_cbc.o pbcc_crypto_legacy.o pubnub_crypto.o pbaes256.o
+endif
+
+CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -Wall -D PUBNUB_ONLY_PUBSUB_API=$(ONLY_PUBSUB_API) -D PUBNUB_PROXY_API=$(USE_PROXY) -D PUBNUB_USE_RETRY_CONFIGURATION=$(USE_RETRY_CONFIGURATION) -D PUBNUB_USE_GZIP_COMPRESSION=$(USE_GZIP_COMPRESSION) -D PUBNUB_RECEIVE_GZIP_RESPONSE=$(RECEIVE_GZIP_RESPONSE) -D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2) -D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API) -D PUBNUB_USE_ACTIONS_API=$(USE_ACTIONS_API) -D PUBNUB_USE_AUTO_HEARTBEAT=$(USE_AUTO_HEARTBEAT) -D PUBNUB_USE_GRANT_TOKEN_API=$(USE_GRANT_TOKEN) -D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN) -D PUBNUB_USE_FETCH_HISTORY=$(USE_FETCH_HISTORY) -D PUBNUB_CRYPTO_API=$(USE_CRYPTO_API)
 # -g enables debugging, remove to get a smaller executable
 # -fsanitize=address Use AddressSanitizer
 # -fsanitize=thread Use ThreadSanitizer

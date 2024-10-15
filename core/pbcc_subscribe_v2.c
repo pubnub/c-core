@@ -49,10 +49,10 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
         p->timetoken[1] = '\0';
         tr              = NULL;
     }
-    else {
+    else if (p->region > 0) {
         snprintf(region_str, sizeof region_str, "%d", p->region);
         tr = region_str;
-    }
+    } else { tr = NULL; }
     p->http_content_len = 0;
     p->msg_ofs = p->msg_end = 0;
 
@@ -302,7 +302,7 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     else {
         rslt.message_type = pbsbPublished;
     }
-    
+
     jpresult = pbjson_get_object_value(&el, "p", &found);
     if (jonmpOK == jpresult) {
         struct pbjson_elem titel;
@@ -328,8 +328,8 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     }
 
     if (jonmpOK == pbjson_get_object_value(&el, "b", &found)) {
-        rslt.match_or_group.ptr  = (char*)found.start;
-        rslt.match_or_group.size = found.end - found.start;
+        rslt.match_or_group.ptr  = (char*)found.start + 1;
+        rslt.match_or_group.size = found.end - found.start - 2;
     }
 
     if (jonmpOK == pbjson_get_object_value(&el, "u", &found)) {

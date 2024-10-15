@@ -1,6 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_callback.h"
 
+#if PUBNUB_USE_RETRY_CONFIGURATION
+#include "core/pubnub_retry_configuration_internal.h"
+#include "core/pubnub_pubsubapi.h"
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
+
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
 #include "pbntf_trans_outcome_common.h"
@@ -148,6 +153,27 @@ void pbntf_lost_socket(pubnub_t *pb, pb_socket_t socket)
 void pbntf_trans_outcome(pubnub_t *pb)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb);
+#if PUBNUB_USE_RETRY_CONFIGURATION
+    if (NULL != pb->core.retry_configuration &&
+        pubnub_retry_configuration_retryable_result_(pb)) {
+        uint16_t delay = pubnub_retry_configuration_delay_(pb);
+
+        if (delay > 0) {
+            if (NULL == pb->core.retry_timer)
+                pb->core.retry_timer = pbcc_request_retry_timer_alloc(pb);
+            if (NULL != pb->core.retry_timer) {
+                pbcc_request_retry_timer_start(pb->core.retry_timer, delay);
+                return;
+            }
+        }
+    }
+
+    /** There were no need to start retry timer, we can free it if exists. */
+    if (NULL != pb->core.retry_timer) {
+        pb->core.http_retry_count = 0;
+        pbcc_request_retry_timer_free(&pb->core.retry_timer);
+    }
+#endif // #if PUBNUB_USE_RETRY_CONFIGURATION
     if (pb->cb != NULL) {
         pb->cb(pb, pb->trans, pb->core.last_result, pb->user_data);
     }
