@@ -1,8 +1,23 @@
 name: c-core
 schema: 1
-version: "4.13.1"
+version: "4.14.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-10-15
+    version: v4.14.0
+    changes:
+      - type: feature
+        text: "Add core Event Engine implementation with the required set of types and methods."
+      - type: feature
+        text: "Add Subscribe Event Engine built atop of the core Event Engine implementation."
+      - type: feature
+        text: "Add the following entities: channel, channel group, uuid and channel metadata objects."
+      - type: feature
+        text: "Add objects to manage subscriptions and provides interface for update listeners."
+      - type: feature
+        text: "Add new event listeners, which make it possible to add listeners to a specific entity or group of entities (though subscription and subscription set)."
+      - type: feature
+        text: "Added ability to configure automated retry policies for failed requests."
   - date: 2024-09-05
     version: v4.13.1
     changes:
@@ -853,7 +868,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -919,7 +934,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -985,7 +1000,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -1047,7 +1062,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -1108,7 +1123,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -1164,7 +1179,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
@@ -1217,7 +1232,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.13.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.14.0
             requires:
               -
                 name: "miniz"
