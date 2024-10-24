@@ -1,3 +1,12 @@
+## v4.14.1
+October 24 2024
+
+#### Fixed
+- Fix CMakeLists to build correctly on Windows.
+
+#### Modified
+- Prepare CMakeLists to support builds for Arm64 architecture.
+
 ## v4.14.0
 October 15 2024
 
