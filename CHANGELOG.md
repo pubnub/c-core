@@ -1,13 +1,7 @@
 ## v4.14.0
-October 15 2024
+October 24 2024
 
-#### Added
-- Add core Event Engine implementation with the required set of types and methods.
-- Add Subscribe Event Engine built atop of the core Event Engine implementation.
-- Add the following entities: channel, channel group, uuid and channel metadata objects.
-- Add objects to manage subscriptions and provides interface for update listeners.
-- Add new event listeners, which make it possible to add listeners to a specific entity or group of entities (though subscription and subscription set).
-- Added ability to configure automated retry policies for failed requests.
+
 
 ## v4.13.1
 September 05 2024
