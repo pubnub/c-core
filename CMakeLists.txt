@@ -446,12 +446,12 @@ if(${OPENSSL})
                 find_library(OpenSSL REQUIRED NAMES libssl PATHS ${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR} NO_DEFAULT_PATH)
                 find_library(Crypto REQUIRED NAMES libcrypto PATHS ${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR} NO_DEFAULT_PATH)
             elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
-				# find_library doesn't work when building for Android architecture
-				set(OpenSSL "${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR}/libssl.a")
-				set(Crypto "${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR}/libcrypto.a")
-				link_libraries(${OpenSSL} ${Crypto})
-			else()
-				find_library(OpenSSL REQUIRED NAMES ssl PATHS ${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR} NO_DEFAULT_PATH)
+                # find_library doesn't work when building for Android architecture
+                set(OpenSSL "${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR}/libssl.a")
+                set(Crypto "${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR}/libcrypto.a")
+                link_libraries(${OpenSSL} ${Crypto})
+            else()
+                find_library(OpenSSL REQUIRED NAMES ssl PATHS ${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR} NO_DEFAULT_PATH)
                 find_library(Crypto REQUIRED NAMES crypto PATHS ${OPENSSL_ROOT_DIR}/${CUSTOM_OPENSSL_LIB_DIR} NO_DEFAULT_PATH)
             endif()
 
@@ -483,15 +483,15 @@ if(${OPENSSL})
         ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
         ${FEATURE_SOURCEFILES})
 
-	if(UNIX)
-		set(FEATURE_SOURCEFILES 
-			${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c 
-			${FEATURE_SOURCEFILES})
-	else()
-		set(FEATURE_SOURCEFILES 
-			${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c 
-			${FEATURE_SOURCEFILES})
-	endif()
+    if(UNIX)
+        set(FEATURE_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/posix/pbauto_heartbeat_init_posix.c 
+            ${FEATURE_SOURCEFILES})
+    else()
+        set(FEATURE_SOURCEFILES 
+            ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c 
+            ${FEATURE_SOURCEFILES})
+    endif()
 
     set(LDLIBS  ${LDLIBS})
 
