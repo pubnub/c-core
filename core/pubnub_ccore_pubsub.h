@@ -477,6 +477,7 @@ void pbcc_via_post_headers(struct pbcc_context* p, char* header, size_t max_leng
 enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   const char*          channel,
                                   const char*          message,
+                                  const char*          custom_message_type,
                                   bool                 store_in_history,
                                   bool                 norep,
                                   char const*          meta,
@@ -488,7 +489,8 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
  */
 enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                  const char* channel,
-                                 const char* message);
+                                 const char* message,
+                                 const char* custom_message_type);
 
 /** Prepares the Subscribe operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -496,7 +498,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     char const*          channel,
                                     char const*          channel_group,
-                                    unsigned*            heartbeat);
+                                    const unsigned*            heartbeat);
 
 
 /** Split @p buf string containing a JSON array (with arbitrary

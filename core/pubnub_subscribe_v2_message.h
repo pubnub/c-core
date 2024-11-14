@@ -54,6 +54,8 @@ struct pubnub_v2_message {
     enum pubnub_message_type message_type;
     /** The message information about publisher */
     struct pubnub_char_mem_block publisher;
+    /** User-provided message type. */
+    struct pubnub_char_mem_block custom_message_type;
 };
 
 

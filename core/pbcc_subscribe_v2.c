@@ -27,7 +27,7 @@
 enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
                                        char const*          channel,
                                        char const*          channel_group,
-                                       unsigned*            heartbeat,
+                                       const unsigned*      heartbeat,
                                        char const*          filter_expr)
 {
     char        region_str[20];
@@ -301,6 +301,11 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
     }
     else {
         rslt.message_type = pbsbPublished;
+    }
+
+    if (jonmpOK == pbjson_get_object_value(&el, "cmt", &found)) {
+        rslt.custom_message_type.ptr  = (char*)found.start + 1;
+        rslt.custom_message_type.size = found.end - found.start - 2;
     }
 
     jpresult = pbjson_get_object_value(&el, "p", &found);

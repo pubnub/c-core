@@ -21,6 +21,7 @@ enum pubnub_res pbcc_fetch_history_prep(struct pbcc_context* pb,
                                   const char*          channel,
                                   unsigned int         max_per_channel,
                                   enum pubnub_tribool  include_meta,
+                                  enum pubnub_tribool  include_custom_message_type,
                                   enum pubnub_tribool  include_message_type,
                                   enum pubnub_tribool  include_user_id,
                                   enum pubnub_tribool  include_message_actions,
@@ -59,7 +60,8 @@ enum pubnub_res pbcc_fetch_history_prep(struct pbcc_context* pb,
     if (max_per_channel) { ADD_URL_PARAM(qparam, max, max_per_ch_cnt_buf); }
 
     if (include_meta != pbccNotSet) { ADD_URL_PARAM(qparam, include_meta, include_meta == pbccTrue ? "true" : "false"); }
-    if (include_message_type != pbccNotSet) { ADD_URL_PARAM(qparam, include_message_type, include_meta == pbccTrue ? "true" : "false"); }
+    if (include_custom_message_type != pbccNotSet) { ADD_URL_PARAM(qparam, include_custom_message_type, include_custom_message_type == pbccTrue ? "true" : "false"); }
+    if (include_message_type != pbccNotSet) { ADD_URL_PARAM(qparam, include_message_type, include_message_type == pbccTrue ? "true" : "false"); }
     if (include_user_id != pbccNotSet) { ADD_URL_PARAM(qparam, include_uuid, include_user_id == pbccTrue ? "true" : "false"); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
