@@ -74,7 +74,8 @@ struct pubnub_publish_options {
 
 /** This returns the default options for publish V1 transactions.
     Will set `store = true`, `cipher_key = NULL`, `replicate = true`,
-    `meta = NULL` and `method = pubnubPublishViaGet`
+    `meta = NULL`, `method = pubnubPublishViaGet`, `ttl=0`, and
+    `custom_message_type=NULL`.
  */
 PUBNUB_EXTERN struct pubnub_publish_options pubnub_publish_defopts(void);
 
@@ -108,7 +109,8 @@ struct pubnub_signal_options {
     char const* custom_message_type;
 };
 
-/** This returns the default options for signal V1 transactions. */
+/** This returns the default options for signal V1 transactions.
+    Will set `custom_message_type=NULL`. */
 PUBNUB_EXTERN struct pubnub_signal_options pubnub_signal_defopts(void);
 
 /** The extended signal V1. Basically the same as pubnub_signal(),

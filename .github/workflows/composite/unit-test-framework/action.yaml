@@ -18,7 +18,7 @@ runs:
   steps:
     - name: Build and Cache Unit Test framework ('${{ inputs.os }}' ${{ inputs.compilers }})
       id: unit-test-framework
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           cgreen
@@ -27,7 +27,7 @@ runs:
           ${{ inputs.os }}-cgreen-${{ inputs.version }}-
     - name: Checkout Unit Test framework
       if: steps.unit-test-framework.outputs.cache-hit != 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cgreen-devs/cgreen
         ref: ${{ matrix.cgreen }}

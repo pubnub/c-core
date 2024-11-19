@@ -53,10 +53,8 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
 #if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
-    /* Connectivity type(true-Ipv6/false-Ipv4) chosen on given contex.
-       Ipv4 by default.
-     */
-    p->options.ipv6_connectivity = false;
+    /* IPv4 connectivity type by default. */
+    pubnub_set_ipv4_connectivity(p);
 #endif
     p->flags.started_while_kept_alive = false;
     p->method                         = pubnubSendViaGET;

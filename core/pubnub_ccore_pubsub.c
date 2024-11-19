@@ -597,7 +597,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     ADD_URL_PARAM(qparam, uuid, user_id);
-    if (ttl != SIZE_MAX) { ADD_URL_PARAM_SIZET(qparam, ttl, ttl); }
+    if (ttl != 0) { ADD_URL_PARAM_SIZET(qparam, ttl, ttl); }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();

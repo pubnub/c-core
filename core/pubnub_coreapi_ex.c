@@ -32,7 +32,7 @@ struct pubnub_publish_options pubnub_publish_defopts(void)
     result.replicate           = true;
     result.meta                = NULL;
     result.method              = pubnubSendViaGET;
-    result.ttl                 = SIZE_MAX;
+    result.ttl                 = 0;
     result.custom_message_type = NULL;
     return result;
 }

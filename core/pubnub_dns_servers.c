@@ -33,7 +33,6 @@ void pubnub_dns_servers_deinit(void)
     pubnub_mutex_destroy(m_lock);
 }
 
-
 int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4_address)
 {
     uint8_t* ipv4 = ipv4_address.ipv4;
@@ -166,6 +165,20 @@ int pubnub_get_dns_secondary_server_ipv4(struct pubnub_ipv4_address* o_ipv4)
 }
 
 #if PUBNUB_USE_IPV6
+void pubnub_set_ipv4_connectivity(pubnub_t *p)
+{
+    pubnub_mutex_lock(p->monitor);
+    p->options.ipv6_connectivity = false;
+    pubnub_mutex_unlock(p->monitor);
+}
+
+void pubnub_set_ipv6_connectivity(pubnub_t *p)
+{
+    pubnub_mutex_lock(p->monitor);
+    p->options.ipv6_connectivity = true;
+    pubnub_mutex_unlock(p->monitor);
+}
+
 int pubnub_dns_set_primary_server_ipv6(struct pubnub_ipv6_address ipv6_address)
 {
     uint8_t* ipv6 = ipv6_address.ipv6;

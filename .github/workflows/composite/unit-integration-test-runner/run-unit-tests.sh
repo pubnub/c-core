@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
 cd "$GITHUB_WORKSPACE/core"
