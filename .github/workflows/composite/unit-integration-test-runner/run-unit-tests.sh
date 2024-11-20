@@ -4,7 +4,8 @@ set -e
 #ls /usr/include/openssl
 #ls /usr/lib/x86_64-linux-gnu/libssl.so
 
-echo "~~~> $1"
+find /usr/lib -name 'openssl.pc' -exec ls -l {} \;
+echo "----"
 
 if [[ "$1" == "ubuntu" ]]; then
   if [ ! -f /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc ]; then
@@ -65,13 +66,11 @@ if [[ "$1" == "ubuntu" ]]; then
 
   export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
     echo "----"
-  pkg-config --list-package-names
+  echo "CFLAGS 1: '$(pkg-config --print-errors --no-cache --debug --cflags openssl)'"
+  echo "LIBS 1: '$(pkg-config --print-errors --no-cache --debug --libs openssl)'"
     echo "----"
-  echo "CFLAGS 1: '$(pkg-config --print-errors --no-cache --debug --path --cflags openssl)'"
-  echo "LIBS 1: '$(pkg-config --print-errors --no-cache --debug --path --libs openssl)'"
-    echo "----"
-  echo "CFLAGS 2: '$(pkg-config --print-errors --no-cache --debug --path --internal-cflags --cflags openssl)'"
-  echo "LIBS 2: '$(pkg-config --print-errors --no-cache --debug --path --libs openssl)'"
+  echo "CFLAGS 2: '$(pkg-config --print-errors --no-cache --debug --internal-cflags --cflags openssl)'"
+  echo "LIBS 2: '$(pkg-config --print-errors --no-cache --debug --libs openssl)'"
 fi
 
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
