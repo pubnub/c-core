@@ -4,10 +4,6 @@ set -e
 #ls /usr/include/openssl
 #ls /usr/lib/x86_64-linux-gnu/libssl.so
 
-ls /usr/lib/x86_64-linux-gnu/pkgconfig
-echo "----"
-openssl version
-echo "----"
 if [ ! -f /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc ]; then
   echo "'openssl' package config not found!"
 else
@@ -45,11 +41,23 @@ Version: $OPENSSL_VERSION
 Requires:
 Libs: -L\${libdir} -lssl -lcrypto
 Cflags: -I\${includedir}" | sudo tee /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc > /dev/null
+else
+  OPENSSL_PC_FILE=/usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc;
+# Fix Libs if required.
+if ! grep -q "Libs:" "$OPENSSL_PC_FILE"; then
+  echo "Adding missing Libs field..."
+  echo "Libs: -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto" | sudo tee -a "$OPENSSL_PC_FILE"
+fi
+
+# Fix C flags if required.
+if ! grep -q "Cflags:" "$OPENSSL_PC_FILE"; then
+  echo "Adding missing Cflags field..."
+  echo "Cflags: -I/usr/include" | sudo tee -a "$OPENSSL_PC_FILE"
+fi
 fi
 
 
 export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
-echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 echo "CFLAGS: '$(pkg-config --cflags openssl)'"
 echo "LIBS: '$(pkg-config --libs openssl)'"
 
