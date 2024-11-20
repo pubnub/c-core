@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_DNS_SERVERS
 #define INC_PUBNUB_DNS_SERVERS
 
+#include "core/pubnub_api_types.h"
 #include <stdint.h>
 
 /** IPv4 Address, in binary format.
