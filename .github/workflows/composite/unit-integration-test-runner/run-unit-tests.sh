@@ -2,6 +2,9 @@
 set -e
 
 ls /usr/lib/x86_64-linux-gnu/libcrypto.*
+echo "----"
+ls /usr/include/openssl
+echo "----"
 
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
 cd "$GITHUB_WORKSPACE/core"
