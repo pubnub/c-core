@@ -12,12 +12,16 @@ if [ ! -f /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc ]; then
   echo "'openssl' package config not found!"
 else
   echo "'openssl' package configuration exists"
+  cat /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc
+  echo "----"
 fi
 echo "----"
 if [ ! -f /usr/lib/x86_64-linux-gnu/pkgconfig/libssl.pc ]; then
     echo "'libssl' package config not found!"
 else
   echo "'libssl' package configuration exists"
+  cat /usr/lib/x86_64-linux-gnu/pkgconfig/libssl.pc
+  echo "----"
 
   if [ ! -f /usr/lib/x86_64-linux-gnu/pkgconfig/openssl.pc ]; then
     echo "'openssl' package config not found!"
@@ -46,8 +50,8 @@ fi
 
 export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
 echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-echo "CFLAGS: '$(shell pkg-config --cflags openssl)'"
-echo "LIBS: '$(shell pkg-config --libs openssl)'"
+echo "CFLAGS: '$(pkg-config --cflags openssl)'"
+echo "LIBS: '$(pkg-config --libs openssl)'"
 
 
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
