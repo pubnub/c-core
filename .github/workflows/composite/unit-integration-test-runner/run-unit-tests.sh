@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+ls -la /usr/include
+
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
 cd "$GITHUB_WORKSPACE/core"
 make clean generate_report
