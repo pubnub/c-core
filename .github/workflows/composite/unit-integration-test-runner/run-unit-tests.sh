@@ -2,12 +2,6 @@
 set -e
 
 if [ -d "/usr/lib/x86_64-linux-gnu/" ]; then
-ls /usr/lib/x86_64-linux-gnu/libcrypto.*
-echo "----"
-nm -D /usr/lib/x86_64-linux-gnu/libcrypto.so
-echo "----"
-nm -D /usr/lib/x86_64-linux-gnu/libcrypto.so | grep EVP_DecryptFinal_ex
-echo "----"
 export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 fi
 
