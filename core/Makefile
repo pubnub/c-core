@@ -116,7 +116,7 @@ endif
 
 
 pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_unit_tests.c
-	gcc -o pbcc_crypto_unit_test.so -shared -v $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c -lcgreen -lm
+	gcc -o pbcc_crypto_unit_test.so -shared -v $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c $(CRYPTO_LIBS) -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pbcc_crypto_unit_tests.c -lcgreen -lm
 	ldd pbcc_crypto_unit_test.so
 	readelf -s pbcc_crypto_unit_test.so | grep EVP_DecryptFinal_ex
@@ -126,7 +126,7 @@ pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_u
 SUBSCRIBE_V2_SOURCEFILES += pubnub_subscribe_v2.c pbcc_subscribe_v2.c 
 
 pubnub_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) pubnub_crypto_unit_tests.c
-	gcc -o pubnub_crypto_unit_test.so -shared -v $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c -lcgreen -lm
+	gcc -o pubnub_crypto_unit_test.so -shared -v $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c $(CRYPTO_LIBS) -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_crypto_unit_tests.c -lcgreen -lm
 	ldd pubnub_crypto_unit_test.so
 	readelf -s pubnub_crypto_unit_test.so | grep EVP_DecryptFinal_ex
