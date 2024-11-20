@@ -64,8 +64,16 @@ if [[ "$1" == "ubuntu" ]]; then
   fi
 
   export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
-  echo "CFLAGS: '$(pkg-config --debug --static --cflags openssl)'"
-  echo "LIBS: '$(pkg-config --debug --static --libs openssl)'"
+    echo "----"
+  pkg-config list-package-names
+    echo "----"
+  pkg-config --exists openssl
+    echo "----"
+  echo "CFLAGS 1: '$(pkg-config --print-errors --no-cache --debug --path --cflags openssl)'"
+  echo "LIBS 1: '$(pkg-config --print-errors --no-cache --debug --path --libs openssl)'"
+    echo "----"
+  echo "CFLAGS 2: '$(pkg-config --print-errors --no-cache --debug --path --internal-cflags --cflags openssl)'"
+  echo "LIBS 2: '$(pkg-config --print-errors --no-cache --debug --path --libs openssl)'"
 fi
 
 echo "::group::Run unit tests ('$1' $CC / $CXX)"
