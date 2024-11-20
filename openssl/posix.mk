@@ -125,29 +125,37 @@ CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -W
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
-OBJFILES += monotonic_clock_get_time_darwin.o
-LDLIBS = -lpthread -lssl -lcrypto
+	SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
+	OBJFILES += monotonic_clock_get_time_darwin.o
+	LDLIBS = -lpthread -lssl -lcrypto
+
+	# Ensure OpenSSL paths are set.
+	OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+	OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+	ifneq ($(OPENSSL_CFLAGS),)
+		CFLAGS += $(OPENSSL_CFLAGS)
+	endif
+	ifneq ($(OPENSSL_LIBS),)
+		LDLIBS += $(OPENSSL_LIBS)
+	endif
 else
-SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
-OBJFILES += monotonic_clock_get_time_posix.o
-LDLIBS=-lrt -lpthread -lssl -lcrypto
+	SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
+	OBJFILES += monotonic_clock_get_time_posix.o
+	LDLIBS=-lrt -lpthread -lssl -lcrypto
+
+	ifeq ($(shell test -d "/usr/local/opt/openssl" && echo yes || echo no),yes)
+		CFLAGS += -I/usr/local/opt/openssl/include
+	else
+		# Path on GitHub Action Runner (ubuntu-latest image)
+		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
+			CFLAGS += -I/usr/include/openssl
+		endif
+	endif
+	# Path on GitHub Action Runner (ubuntu-latest image)
+	ifeq ($(shell test -d "/usr/lib/x86_64-linux-gnu" && echo yes || echo no),yes)
+		LDLIBS += -L/usr/lib/x86_64-linux-gnu
+	endif
 endif
-
-# Searching for proper OpenSSL paths.
-OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
-OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
-
-ifeq ($(OPENSSL_CFLAGS),)
-	OPENSSL_CFLAGS := -I/usr/local/opt/openssl/include
-endif
-ifeq ($(OPENSSL_LIBS),)
-	OPENSSL_LIBS := -L/usr/local/opt/openssl/lib
-endif
-
-CFLAGS += $(OPENSSL_CFLAGS)
-LDLIBS += $(OPENSSL_LIBS)
-
 
 INCLUDES=-I .. -I . -I ../lib/base64/
 

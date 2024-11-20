@@ -87,25 +87,35 @@ CRYPTO_INCLUDES += -I ../openssl/.
 CRYPTO_LIBS += -lssl -lcrypto
 CRYPTO_SOURCEFILES += pubnub_crypto.c pbcc_crypto.c pbcc_crypto_aes_cbc.c pbcc_crypto_legacy.c ../openssl/pbaes256.c
 
-# Searching for proper OpenSSL paths.
-CRYPTO_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
-CRYPTO_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
-OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl)
-OPENSSL_LIBS := $(shell pkg-config --libs openssl)
 
-ifeq ($(CRYPTO_CFLAGS),)
-	CRYPTO_CFLAGS := -I/usr/local/opt/openssl/include
-endif
-ifeq ($(CRYPTO_LIBS),)
-	CRYPTO_LIBS := -L/usr/local/opt/openssl/lib
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+	# Ensure OpenSSL paths are set.
+	OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+	OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+	ifneq ($(OPENSSL_CFLAGS),)
+		CRYPTO_INCLUDES += $(OPENSSL_CFLAGS)
+	endif
+	ifneq ($(OPENSSL_LIBS),)
+		CRYPTO_LIBS += $(OPENSSL_LIBS)
+	endif
+else
+	ifeq ($(shell test -d "/usr/local/opt/openssl" && echo yes || echo no),yes)
+		CRYPTO_INCLUDES += -I/usr/local/opt/openssl/include
+	else
+		# Path on GitHub Action Runner (ubuntu-latest image)
+		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
+			CRYPTO_INCLUDES += -I/usr/include/openssl
+		endif
+	endif
+	# Path on GitHub Action Runner (ubuntu-latest image)
+	ifeq ($(shell test -d "/usr/lib/x86_64-linux-gnu" && echo yes || echo no),yes)
+		CRYPTO_LIBS += -L/usr/lib/x86_64-linux-gnu
+	endif
 endif
 
-CRYPTO_INCLUDES += $(CRYPTO_CFLAGS)
-CRYPTO_LIBS += $(CRYPTO_LIBS)
 
 pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_unit_tests.c
-	@echo "Includes: '$(OPENSSL_CFLAGS)'"
-	@echo "Libraries: '$(OPENSSL_LIBS)'"
 	gcc -o pbcc_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pbcc_crypto_unit_tests.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pbcc_crypto_unit_test.so
@@ -114,8 +124,6 @@ pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_u
 SUBSCRIBE_V2_SOURCEFILES += pubnub_subscribe_v2.c pbcc_subscribe_v2.c 
 
 pubnub_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) pubnub_crypto_unit_tests.c
-	@echo "Includes: '$(OPENSSL_CFLAGS)'"
-	@echo "Libraries: '$(OPENSSL_LIBS)'"
 	gcc -o pubnub_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_crypto_unit_tests.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_crypto_unit_test.so
