@@ -65,9 +65,7 @@ if [[ "$1" == "ubuntu" ]]; then
 
   export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
     echo "----"
-  pkg-config list-package-names
-    echo "----"
-  pkg-config --exists openssl
+  pkg-config --list-package-names
     echo "----"
   echo "CFLAGS 1: '$(pkg-config --print-errors --no-cache --debug --path --cflags openssl)'"
   echo "LIBS 1: '$(pkg-config --print-errors --no-cache --debug --path --libs openssl)'"
