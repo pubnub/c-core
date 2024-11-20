@@ -105,7 +105,7 @@ else
 	else
 		# Path on GitHub Action Runner (ubuntu-latest image)
 		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
-			CRYPTO_INCLUDES += -I/usr/include/openssl
+			CRYPTO_INCLUDES += -I/usr/include
 		endif
 	endif
 	# Path on GitHub Action Runner (ubuntu-latest image)

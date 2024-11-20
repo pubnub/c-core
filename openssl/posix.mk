@@ -148,7 +148,7 @@ else
 	else
 		# Path on GitHub Action Runner (ubuntu-latest image)
 		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
-			CFLAGS += -I/usr/include/openssl
+			CFLAGS += -I/usr/include
 		endif
 	endif
 	# Path on GitHub Action Runner (ubuntu-latest image)
