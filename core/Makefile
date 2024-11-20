@@ -87,20 +87,19 @@ CRYPTO_INCLUDES += -I ../openssl/.
 CRYPTO_LIBS += -lssl -lcrypto
 CRYPTO_SOURCEFILES += pubnub_crypto.c pbcc_crypto.c pbcc_crypto_aes_cbc.c pbcc_crypto_legacy.c ../openssl/pbaes256.c
 
-ifeq ($(shell uname),Darwin)
-	CRYPTO_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
-	CRYPTO_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+# Searching for proper OpenSSL paths.
+CRYPTO_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+CRYPTO_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
 
-	ifeq ($(CRYPTO_CFLAGS),)
-		CRYPTO_CFLAGS := -I/usr/local/opt/openssl/include
-	endif
-	ifeq ($(CRYPTO_LIBS),)
-		CRYPTO_LIBS := -L/usr/local/opt/openssl/lib -lssl -lcrypto
-	endif
-
-	CRYPTO_INCLUDES += $(CRYPTO_CFLAGS)
-	CRYPTO_LIBS += $(CRYPTO_LIBS)
+ifeq ($(CRYPTO_CFLAGS),)
+	CRYPTO_CFLAGS := -I/usr/local/opt/openssl/include
 endif
+ifeq ($(CRYPTO_LIBS),)
+	CRYPTO_LIBS := -L/usr/local/opt/openssl/lib
+endif
+
+CRYPTO_INCLUDES += $(CRYPTO_CFLAGS)
+CRYPTO_LIBS += $(CRYPTO_LIBS)
 
 pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_unit_tests.c
 	gcc -o pbcc_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c -lcgreen -lm

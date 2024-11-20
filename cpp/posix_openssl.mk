@@ -120,13 +120,26 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
 SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
 OBJFILES += monotonic_clock_get_time_darwin.o
-LDLIBS=-lpthread -lssl -lcrypto -L/usr/local/opt/openssl/lib
-CFLAGS += -I/usr/local/opt/openssl/include
+LDLIBS=-lpthread -lssl -lcrypto
 else
 SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
 OBJFILES += monotonic_clock_get_time_posix.o
 LDLIBS=-lrt -lpthread -lssl -lcrypto
 endif
+
+# Searching for proper OpenSSL paths.
+OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+
+ifeq ($(OPENSSL_CFLAGS),)
+	OPENSSL_CFLAGS := -I/usr/local/opt/openssl/include
+endif
+ifeq ($(OPENSSL_LIBS),)
+	OPENSSL_LIBS := -L/usr/local/opt/openssl/lib
+endif
+
+CFLAGS += $(OPENSSL_CFLAGS)
+LDLIBS += $(OPENSSL_LIBS)
 
 
 all: openssl/pubnub_sync_sample openssl/pubnub_callback_sample openssl/pubnub_sync_grant_sample openssl/pubnub_callback_cpp11_sample openssl/cancel_subscribe_sync_sample openssl/subscribe_publish_callback_sample openssl/futres_nesting_sync openssl/fntest_runner openssl/futres_nesting_callback openssl/futres_nesting_callback_cpp11
