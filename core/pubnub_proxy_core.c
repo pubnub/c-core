@@ -122,6 +122,15 @@ static int process_digest_header_line(pubnub_t* p, char const* header)
     return 0;
 }
 
+void pbproxy_handle_connection_close(pubnub_t *pb)
+{
+    /* Invalidate current NTLM proxy context state. */
+    if (pbhtauNTLM == pb->proxy_auth_scheme &&
+        (pb->ntlm_context.state != pbntlmSendNegotiate &&
+            pb->ntlm_context.state != pbntlmDone)) {
+        pbntlm_core_deinit(pb);
+    }
+}
     
 int pbproxy_handle_http_header(pubnub_t* p, char const* header)
 {
@@ -211,6 +220,7 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
     }
     else if ((0 == strncmp(contents, scheme_NTLM, sizeof scheme_NTLM - 1)) &&
              (auth_sheme_priority(p->proxy_auth_scheme) <= auth_sheme_priority(pbhtauNTLM))) {
+        PUBNUB_LOG_TRACE("pbproxy_handle_http_header() NTLM authentication\n");
         if (pbhtauNTLM != p->proxy_auth_scheme) {
             pbntlm_core_init(p);
             p->proxy_auth_scheme        = pbhtauNTLM;

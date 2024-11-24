@@ -206,7 +206,7 @@ struct pubnub_options {
      */
     bool use_http_keep_alive : 1;
 
-#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
+#if PUBNUB_USE_IPV6
     /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
     bool ipv6_connectivity : 1;
 #endif

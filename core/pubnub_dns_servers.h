@@ -20,14 +20,6 @@ struct pubnub_ipv6_address {
     uint8_t ipv6[16];
 };
 
-/** IPv4 connectivity type for @p.
-    Use IPv4 addresses to establish connection with remote origin. */
-void pubnub_set_ipv4_connectivity(pubnub_t *p);
-
-/** IPv6 connectivity type for @p.
-    Use IPv6 addresses to establish connection with remote origin. */
-void pubnub_set_ipv6_connectivity(pubnub_t *p);
-
 /* primary, secondary(ipv4, ipv6) and default dns server */
 #define PUBNUB_MAX_DNS_SERVERS_MASK 0x10 
 #else
