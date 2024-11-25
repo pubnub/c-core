@@ -254,6 +254,9 @@ struct pubnub_v2_message pbcc_get_msg_v2(struct pbcc_context* p)
                     found.end - found.start,
                     &rslt.payload.size
             );
+        } else {
+            rslt.payload.ptr  = (char*)found.start;
+            rslt.payload.size = found.end - found.start;
         }
 #else
         rslt.payload.ptr  = (char*)found.start;
