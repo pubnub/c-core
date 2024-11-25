@@ -182,7 +182,7 @@ pubnub_sync.a : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFIL
 	ar rcs pubnub_sync.a $(OBJFILES) $(SYNC_INTF_OBJFILES) $(REVOKE_TOKEN_OBJFILES) $(GRANT_TOKEN_OBJFILES)
 
 pubnub_sync_dynamiciv.a : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
-	$(CC) -c $(CFLAGS) -D PUBNUB_RAND_INIT_VECTOR=1 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
+	$(CC) -c $(CFLAGS) -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_RAND_INIT_VECTOR=1 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
 	ar rcs pubnub_sync_dynamiciv.a $(OBJFILES) $(SYNC_INTF_OBJFILES) $(REVOKE_TOKEN_OBJFILES) $(GRANT_TOKEN_OBJFILES)
 
 CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_ntf_callback_poller_poll.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
