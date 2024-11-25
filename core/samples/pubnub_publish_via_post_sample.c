@@ -98,6 +98,7 @@ int main()
     if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "demo"; }
     if (NULL == my_env_secret_key) { my_env_secret_key = "demo"; }
     if (NULL == my_env_origin) { my_env_origin = "ps.pndsn.com"; }
+    if (NULL == my_env_ipv6_connectivity) { my_env_ipv6_connectivity = "0"; }
     printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
 
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
@@ -105,7 +106,7 @@ int main()
     pubnub_origin_set(pbp, my_env_origin);
 #if PUBNUB_USE_IPV6
     // Enable IPv6 connectivity.
-    if (NULL != my_env_ipv6_connectivity) {
+    if (0 == strcmp(my_env_ipv6_connectivity, "1")) {
         pubnub_set_ipv6_connectivity(pbp);
     }
 #endif
