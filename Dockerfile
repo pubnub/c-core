@@ -37,11 +37,11 @@ RUN apt-get install -y cmake g++ ruby ruby-dev git ninja-build libboost-all-dev 
 RUN git clone https://github.com/cgreen-devs/cgreen.git
 RUN cd cgreen && git checkout 1.4.1 && make
 
-FROM ubuntu:20.04 
+FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /home
 
-ENV GMOCK_VER=1.7.0 
+ENV GMOCK_VER=1.7.0
 ENV CMAKE_CXX_COMPILER=/usr/bin/g++
 
 RUN apt-get update
@@ -83,7 +83,7 @@ RUN if [ -z "$MOCK_SERVER_DOCKER" ]; then \
         -Icucumber-cpp/include -Icucumber-cpp/build/src/ -Iposix -Icore -I. -Icpp \
         -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SSL=0 -D MOCK_SERVER_DOCKER; \
     fi
-    
+
 
 RUN g++ -o steps BoostSteps.o cpp/pubnub_sync.a cucumber-cpp/build/src/libcucumber-cpp.a \
         -Lboost -lboost_unit_test_framework -lpthread -lboost_regex \

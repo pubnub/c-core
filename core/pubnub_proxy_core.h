@@ -19,12 +19,15 @@
 
 
 #if PUBNUB_PROXY_API
+/** Handle PubNub context connection close. */
+void pbproxy_handle_connection_close(pubnub_t *pb);
 /** Processes a proxy related HTTP @p header on the Pubnub context @p
     p.
     @return 0 expected, -1 unexpected proxy authentication header
 */
 int pbproxy_handle_http_header(pubnub_t *p, char const* header);
 #else
+#define pbproxy_handle_connection_close(p, header)
 #define pbproxy_handle_http_header(p, header) 0
 #endif
 

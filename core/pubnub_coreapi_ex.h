@@ -65,11 +65,17 @@ struct pubnub_publish_options {
         API.
      */
     size_t ttl;
+    /** User-specified message type.
+        Important: String limited by **3**-**50** case-sensitive alphanumeric
+        characters with only `-` and `_` special characters allowed.
+     */
+    char const* custom_message_type;
 };
 
 /** This returns the default options for publish V1 transactions.
     Will set `store = true`, `cipher_key = NULL`, `replicate = true`,
-    `meta = NULL` and `method = pubnubPublishViaGet`
+    `meta = NULL`, `method = pubnubPublishViaGet`, `ttl=0`, and
+    `custom_message_type=NULL`.
  */
 PUBNUB_EXTERN struct pubnub_publish_options pubnub_publish_defopts(void);
 
@@ -85,13 +91,48 @@ PUBNUB_EXTERN struct pubnub_publish_options pubnub_publish_defopts(void);
     @param p The Pubnub context. Can't be NULL.
     @param channel The string with the channel name to publish to. Can't be
    NULL.
-    @param opt Publish V1 options
+    @param opts Publish V1 options
     @return #PNR_STARTED on success, an error otherwise
 */
 PUBNUB_EXTERN enum pubnub_res pubnub_publish_ex(pubnub_t*                     p,
                                   const char*                   channel,
                                   const char*                   message,
                                   struct pubnub_publish_options opts);
+
+
+/** Options for "extended" signal V1. */
+struct pubnub_signal_options {
+    /** User-specified message type.
+        Important: String limited by **3**-**50** case-sensitive alphanumeric
+        characters with only `-` and `_` special characters allowed.
+     */
+    char const* custom_message_type;
+};
+
+/** This returns the default options for signal V1 transactions.
+    Will set `custom_message_type=NULL`. */
+PUBNUB_EXTERN struct pubnub_signal_options pubnub_signal_defopts(void);
+
+/** The extended signal V1. Basically the same as pubnub_signal(),
+    but with added optional parameters in @p opts.
+
+    Basic usage:
+
+        struct pubnub_signal_options opt = pubnub_signal_defopts();
+        opt.custom_message_type = "test-message-type";
+        pbresult = pubnub_signal_ex(pn, "my_channel", "status:active", opt);
+
+    @param pb The pubnub context. Can't be NULL
+    @param channel The string with the channel to signal to.
+    @param message The signal message to send, expected to be in JSON format
+    @param opts Signal V1 options
+    @return #PNR_STARTED on success, an error otherwise
+*/
+PUBNUB_EXTERN enum pubnub_res pubnub_signal_ex(
+    pubnub_t* pb,
+    const char* channel,
+    const char* message,
+    struct pubnub_signal_options opts);
 
 
 /** Options for "extended" subscribe. */

@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "4.14.1"
+version: "4.15.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-11-25
+    version: v4.15.0
+    changes:
+      - type: feature
+        text: "Add custom message type support for the following APIs: publish, signal, share file, subscribe and history."
+      - type: feature
+        text: "Add `pubnub_set_ipv4_connectivity` and `pubnub_set_ipv6_connectivity` to `pubnub_coreapi` to switch preferred connectivity protocol."
+      - type: bug
+        text: "Make sure that in case of connection close (including because of error) proxy context object will be reset."
   - date: 2024-10-24
     version: v4.14.1
     changes:
@@ -875,7 +884,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -941,7 +950,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -1007,7 +1016,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -1069,7 +1078,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -1130,7 +1139,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -1186,7 +1195,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"
@@ -1239,7 +1248,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.14.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
             requires:
               -
                 name: "miniz"

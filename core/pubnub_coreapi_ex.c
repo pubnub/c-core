@@ -27,12 +27,13 @@
 struct pubnub_publish_options pubnub_publish_defopts(void)
 {
     struct pubnub_publish_options result;
-    result.store      = true;
-    result.cipher_key = NULL;
-    result.replicate  = true;
-    result.meta       = NULL;
-    result.method     = pubnubSendViaGET;
-    result.ttl        = SIZE_MAX;
+    result.store               = true;
+    result.cipher_key          = NULL;
+    result.replicate           = true;
+    result.meta                = NULL;
+    result.method              = pubnubSendViaGET;
+    result.ttl                 = 0;
+    result.custom_message_type = NULL;
     return result;
 }
 
@@ -85,6 +86,7 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     rslt = pbcc_publish_prep(&pb->core,
                              channel,
                              message,
+                             opts.custom_message_type,
                              opts.store,
                              !opts.replicate,
                              opts.meta,
@@ -102,6 +104,40 @@ enum pubnub_res pubnub_publish_ex(pubnub_t*                     pb,
     return rslt;
 }
 
+struct pubnub_signal_options pubnub_signal_defopts(void)
+{
+    struct pubnub_signal_options result;
+    result.custom_message_type = NULL;
+    return result;
+}
+
+enum pubnub_res pubnub_signal_ex(
+    pubnub_t* pb,
+    const char* channel,
+    const char* message,
+    struct pubnub_signal_options opts)
+{
+    enum pubnub_res rslt;
+
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    if (!pbnc_can_start_transaction(pb)) {
+        pubnub_mutex_unlock(pb->monitor);
+        return PNR_IN_PROGRESS;
+    }
+
+    rslt = pbcc_signal_prep(&pb->core, channel, message, opts.custom_message_type);
+    if (PNR_STARTED == rslt) {
+        pb->trans            = PBTT_SIGNAL;
+        pb->core.last_result = PNR_STARTED;
+        pbnc_fsm(pb);
+        rslt = pb->core.last_result;
+    }
+    pubnub_mutex_unlock(pb->monitor);
+
+    return rslt;
+}
 
 struct pubnub_subscribe_options pubnub_subscribe_defopts(void)
 {

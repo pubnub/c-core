@@ -55,6 +55,10 @@ struct pubnub_fetch_history_options {
      * false.
      */
     bool include_message_actions;
+    /** Include messages' custom type flag.
+        Message / signal and file messages may contain user-provided type.
+     */
+    bool include_custom_message_type;
 };
 
 /** This returns the default options for fetch history transactions.

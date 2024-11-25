@@ -52,10 +52,8 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
-#if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
-    /* Connectivity type(true-Ipv6/false-Ipv4) chosen on given contex.
-       Ipv4 by default.
-     */
+#if PUBNUB_USE_IPV6
+    /* IPv4 connectivity type by default. */
     p->options.ipv6_connectivity = false;
 #endif
     p->flags.started_while_kept_alive = false;
@@ -110,7 +108,7 @@ enum pubnub_res pubnub_publish(pubnub_t* pb, const char* channel, const char* me
     }
 
     rslt = pbcc_publish_prep(
-        &pb->core, channel, message, true, false, NULL, SIZE_MAX, pubnubSendViaGET);
+        &pb->core, channel, message, NULL, true, false, NULL, SIZE_MAX, pubnubSendViaGET);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_PUBLISH;
         pb->core.last_result = PNR_STARTED;
@@ -137,7 +135,7 @@ enum pubnub_res pubnub_signal(pubnub_t* pb,
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_signal_prep(&pb->core, channel, message);
+    rslt = pbcc_signal_prep(&pb->core, channel, message, NULL);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_SIGNAL;
         pb->core.last_result = PNR_STARTED;

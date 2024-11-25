@@ -25,11 +25,11 @@ jobs:
 #            group: organization/macos-gh
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1

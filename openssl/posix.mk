@@ -58,6 +58,14 @@ ifndef USE_CRYPTO_API
 USE_CRYPTO_API = 1
 endif
 
+ifndef USE_IPV6
+USE_IPV6 = 1
+endif
+
+ifndef USE_DNS_SERVERS
+USE_DNS_SERVERS = 1
+endif
+
 ifeq ($(USE_PROXY), 1)
 SOURCEFILES += ../core/pubnub_proxy.c ../core/pubnub_proxy_core.c ../core/pbhttp_digest.c ../core/pbntlm_core.c ../core/pbntlm_packer_std.c
 OBJFILES += pubnub_proxy.o pubnub_proxy_core.o pbhttp_digest.o pbntlm_core.o pbntlm_packer_std.o
@@ -125,43 +133,61 @@ CFLAGS = -g -D PUBNUB_THREADSAFE -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_WARNING -W
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
-OBJFILES += monotonic_clock_get_time_darwin.o
-LDLIBS = -lpthread -lssl -lcrypto -L/usr/local/opt/openssl/lib
-CFLAGS += -I/usr/local/opt/openssl/include
+	SOURCEFILES += ../posix/monotonic_clock_get_time_darwin.c
+	OBJFILES += monotonic_clock_get_time_darwin.o
+	LDLIBS = -lpthread -lssl -lcrypto
+
+	# Ensure OpenSSL paths are set.
+	OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+	OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+	ifneq ($(OPENSSL_CFLAGS),)
+		CFLAGS += $(OPENSSL_CFLAGS)
+	endif
+	ifneq ($(OPENSSL_LIBS),)
+		LDLIBS += $(OPENSSL_LIBS)
+	endif
 else
-SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
-OBJFILES += monotonic_clock_get_time_posix.o
-LDLIBS=-lrt -lpthread -lssl -lcrypto
+	SOURCEFILES += ../posix/monotonic_clock_get_time_posix.c
+	OBJFILES += monotonic_clock_get_time_posix.o
+	LDLIBS=-lrt -lpthread -lssl -lcrypto
+
+	ifeq ($(shell test -d "/usr/local/opt/openssl" && echo yes || echo no),yes)
+		CFLAGS += -I/usr/local/opt/openssl/include
+	else
+		# Path on GitHub Action Runner (ubuntu-latest image)
+		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
+			CFLAGS += -I/usr/include
+		endif
+	endif
+	# Path on GitHub Action Runner (ubuntu-latest image)
+	ifeq ($(shell test -d "/usr/lib/x86_64-linux-gnu" && echo yes || echo no),yes)
+		LDLIBS += -L/usr/lib/x86_64-linux-gnu
+	endif
 endif
 
-
 INCLUDES=-I .. -I . -I ../lib/base64/
-
 
 all: pubnub_sync_sample pubnub_sync_grant_token_sample pubnub_sync_revoke_token_sample pubnub_objects_secretkey_sample metadata cancel_subscribe_sync_sample pubnub_sync_subloop_sample pubnub_publish_via_post_sample pubnub_publish_via_post_secretkey_sample pubnub_advanced_history_sample pubnub_fetch_history_sample pubnub_callback_sample subscribe_publish_callback_sample pubnub_callback_subloop_sample pubnub_fntest pubnub_console_sync pubnub_console_callback pubnub_crypto_sync_sample subscribe_publish_from_callback publish_callback_subloop_sample publish_queue_callback_subloop pubnub_crypto_module_sample
 
 SYNC_INTF_SOURCEFILES=../core/pubnub_ntf_sync.c ../core/pubnub_sync_subscribe_loop.c ../core/srand_from_pubnub_time.c
 SYNC_INTF_OBJFILES=pubnub_ntf_sync.o pubnub_sync_subscribe_loop.o srand_from_pubnub_time.o
 
+ifeq ($(USE_IPV6), 1)
+SYNC_INTF_SOURCEFILES += ../lib/pubnub_parse_ipv6_addr.c
+SYNC_INTF_OBJFILES += pubnub_parse_ipv6_addr.o
+endif
+
 pubnub_sync.a : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
-	$(CC) -c $(CFLAGS) -D PUBNUB_RAND_INIT_VECTOR=0 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
+	$(CC) -c $(CFLAGS) -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_RAND_INIT_VECTOR=0 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
 	ar rcs pubnub_sync.a $(OBJFILES) $(SYNC_INTF_OBJFILES) $(REVOKE_TOKEN_OBJFILES) $(GRANT_TOKEN_OBJFILES)
 
 pubnub_sync_dynamiciv.a : $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
-	$(CC) -c $(CFLAGS) -D PUBNUB_RAND_INIT_VECTOR=1 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
+	$(CC) -c $(CFLAGS) -D PUBNUB_USE_IPV6=$(USE_IPV6) -D PUBNUB_RAND_INIT_VECTOR=1 $(INCLUDES) $(SOURCEFILES) $(SYNC_INTF_SOURCEFILES) $(REVOKE_TOKEN_SOURCEFILES) $(GRANT_TOKEN_SOURCEFILES)
 	ar rcs pubnub_sync_dynamiciv.a $(OBJFILES) $(SYNC_INTF_OBJFILES) $(REVOKE_TOKEN_OBJFILES) $(GRANT_TOKEN_OBJFILES)
 
 CALLBACK_INTF_SOURCEFILES=pubnub_ntf_callback_posix.c pubnub_get_native_socket.c ../core/pubnub_timer_list.c ../lib/sockets/pbpal_ntf_callback_poller_poll.c ../lib/sockets/pbpal_adns_sockets.c ../lib/pubnub_dns_codec.c ../core/pbpal_ntf_callback_queue.c ../core/pbpal_ntf_callback_admin.c ../core/pbpal_ntf_callback_handle_timer_list.c  ../core/pubnub_callback_subscribe_loop.c
 CALLBACK_INTF_OBJFILES=pubnub_ntf_callback_posix.o pubnub_get_native_socket.o pubnub_timer_list.o pbpal_ntf_callback_poller_poll.o pbpal_adns_sockets.o pubnub_dns_codec.o pbpal_ntf_callback_queue.o pbpal_ntf_callback_admin.o pbpal_ntf_callback_handle_timer_list.o pubnub_callback_subscribe_loop.o
 
-ifndef USE_DNS_SERVERS
-USE_DNS_SERVERS = 1
-endif
-
-ifndef USE_IPV6
-USE_IPV6 = 1
-endif
 
 ifeq ($(USE_DNS_SERVERS), 1)
 CALLBACK_INTF_SOURCEFILES += ../core/pubnub_dns_servers.c ../posix/pubnub_dns_system_servers.c ../lib/pubnub_parse_ipv4_addr.c
@@ -216,7 +242,7 @@ pubnub_sync_subloop_sample: ../core/samples/pubnub_sync_subloop_sample.c pubnub_
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_sync_subloop_sample.c pubnub_sync.a $(LDLIBS)
 
 pubnub_publish_via_post_sample: ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a
-	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) -D PUBNUB_USE_IPV6=$(USE_IPV6) $(INCLUDES) ../core/samples/pubnub_publish_via_post_sample.c pubnub_sync.a $(LDLIBS)
 
 pubnub_publish_via_post_secretkey_sample: ../core/samples/pubnub_publish_via_post_secretkey_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) ../core/samples/pubnub_publish_via_post_secretkey_sample.c pubnub_sync.a $(LDLIBS)
@@ -243,7 +269,7 @@ publish_callback_subloop_sample: ../core/samples/publish_callback_subloop_sample
 	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/publish_callback_subloop_sample.c pubnub_callback.a $(LDLIBS)
 
 publish_queue_callback_subloop: ../core/samples/publish_queue_callback_subloop.c pubnub_callback.a
-	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/publish_queue_callback_subloop.c pubnub_callback.a $(LDLIBS)
+	$(CC) -o $@ -D PUBNUB_CALLBACK_API $(CFLAGS) -D PUBNUB_USE_IPV6=$(USE_IPV6) $(CFLAGS_CALLBACK) $(INCLUDES) ../core/samples/publish_queue_callback_subloop.c pubnub_callback.a $(LDLIBS)
 
 pubnub_crypto_module_sample: ../core/samples/pubnub_crypto_module_sample.c pubnub_sync.a
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) -I ../core/ ../core/samples/pubnub_crypto_module_sample.c pubnub_sync.a $(LDLIBS)

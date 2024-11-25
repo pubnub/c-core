@@ -2,6 +2,7 @@
 #include "pubnub_sync.h"
 
 #include "core/pubnub_coreapi_ex.h"
+#include "core/pubnub_coreapi.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 
@@ -89,14 +90,25 @@ int main()
     char* my_env_publish_key = getenv("PUBNUB_PUBLISH_KEY");
     char* my_env_subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
     char* my_env_secret_key = getenv("PUBNUB_SECRET_KEY");
+    char* my_env_ipv6_connectivity = getenv("PUBNUB_USE_IPV6_CONNECTIVITY");
+    char* my_env_origin = getenv("PUBNUB_ORIGIN");
 
     if (NULL == my_env_publish_key) { my_env_publish_key = "demo"; }
     if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "demo"; }
     if (NULL == my_env_secret_key) { my_env_secret_key = "demo"; }
+    if (NULL == my_env_origin) { my_env_origin = "ps.pndsn.com"; }
+    if (NULL == my_env_ipv6_connectivity) { my_env_ipv6_connectivity = "0"; }
     printf("%s\n%s\n%s\n",my_env_publish_key,my_env_subscribe_key,my_env_secret_key);
 
     pubnub_init(pbp, my_env_publish_key, my_env_subscribe_key);
     pubnub_set_user_id(pbp, user_id);
+    pubnub_origin_set(pbp, my_env_origin);
+#if PUBNUB_USE_IPV6
+    // Enable IPv6 connectivity.
+    if (0 == strcmp(my_env_ipv6_connectivity, "1")) {
+        pubnub_set_ipv6_connectivity(pbp);
+    }
+#endif
 
     pubnub_set_transaction_timeout(pbp, PUBNUB_DEFAULT_NON_SUBSCRIBE_TIMEOUT);
 

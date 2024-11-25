@@ -53,7 +53,7 @@ Ensure(subscribe_v2, should_parse_response_correctly) {
     assert_that(pubnub_auth_get(pbp), is_equal_to_string(NULL));
     expect_have_dns_for_pubnub_origin_on_ctx(pbp);
     expect_outgoing_with_url_on_ctx(pbp,
-        "/v2/subscribe/sub_key/my-channel/0?pnsdk=unit-test-0.1&tt=0&tr=0&uuid=test_id&heartbeat=270");
+        "/v2/subscribe/sub_key/my-channel/0?pnsdk=unit-test-0.1&tt=0&uuid=test_id&heartbeat=300");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "44\r\n\r\n{\"t\":{\"t\":\"15628652479932717\",\"r\":4},\"m\":[]}",
              NULL);
@@ -71,9 +71,9 @@ Ensure(subscribe_v2, should_parse_response_correctly) {
     expect(pbntf_got_socket, when(pb, is_equal_to(pbp)), will_return(0));
  
     expect_outgoing_with_url_on_ctx(pbp,
-        "/v2/subscribe/sub_key/my-channel/0?pnsdk=unit-test-0.1&tt=15628652479932717&tr=4&uuid=test_id&heartbeat=270");
+        "/v2/subscribe/sub_key/my-channel/0?pnsdk=unit-test-0.1&tt=15628652479932717&tr=4&uuid=test_id&heartbeat=300");
     incoming("HTTP/1.1 220\r\nContent-Length: "
-             "183\r\n\r\n{\"t\":{\"t\":\"15628652479932717\",\"r\":4},\"m\":[{\"a\":\"1\",\"f\":514,\"i\":\"publisher_id\",\"s\":1,\"p\":{\"t\":\"15628652479933927\",\"r\":4},\"k\":\"demo\",\"c\":\"my-channel\",\"d\":\"mymessage\",\"b\":\"my-channel\"}]}",
+             "209\r\n\r\n{\"t\":{\"t\":\"15628652479932717\",\"r\":4},\"m\":[{\"a\":\"1\",\"f\":514,\"cmt\":\"test-message-type\",\"i\":\"publisher_id\",\"s\":1,\"p\":{\"t\":\"15628652479933927\",\"r\":4},\"k\":\"demo\",\"c\":\"my-channel\",\"d\":\"mymessage\",\"b\":\"my-channel\"}]}",
              NULL);
 
     expect(pbntf_lost_socket, when(pb, is_equal_to(pbp)));
@@ -88,6 +88,7 @@ Ensure(subscribe_v2, should_parse_response_correctly) {
     assert_char_mem_block(msg.channel, "my-channel");
     assert_char_mem_block(msg.payload, "\"mymessage\"");
     assert_char_mem_block(msg.publisher, "publisher_id");
+    assert_char_mem_block(msg.custom_message_type, "test-message-type");
 
     assert_that(msg.region, is_equal_to(4));
     assert_that(msg.flags, is_equal_to(514));

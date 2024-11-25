@@ -13,7 +13,13 @@
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_Resolve(origin, TCPIP_DNS_TYPE_A);
+#if PUBNUB_USE_IPV6
+    TCPIP_DNS_RESOLVE_TYPE query_type =
+        pb->options.ipv6_connectivity ? TCPIP_DNS_TYPE_AAAA : TCPIP_DNS_TYPE_A;
+#else
+    TCPIP_DNS_RESOLVE_TYPE query_type = TCPIP_DNS_TYPE_A;
+#endif
+    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_Resolve(origin, query_type);
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS_SEND) 
             || (pb->state == PBS_WAIT_DNS_RCV));
@@ -41,8 +47,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 {
     char const* origin = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
+#if PUBNUB_USE_IPV6
+    IP_ADDRESS_TYPE address_type =
+        pb->options.ipv6_connectivity ? IP_ADDRESS_TYPE_IPV6 : IP_ADDRESS_TYPE_IPV4;
+#else
+    IP_ADDRESS_TYPE address_type = IP_ADDRESS_TYPE_IPV4;
+#endif
     IP_MULTI_ADDRESS ip_addr;
-    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_IsResolved(origin, &ip_addr, IP_ADDRESS_TYPE_IPV4);
+    TCPIP_DNS_RESULT dns_result = TCPIP_DNS_IsResolved(origin, &ip_addr, address_type);
 	PUBNUB_ASSERT_OPT(pb != NULL);
     switch (dns_result) {
         case TCPIP_DNS_RES_OK:
@@ -51,12 +63,12 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
                 pb->pal.socket = NET_PRES_SocketOpen(
                         0, 
                         pb->options.useSSL ? NET_PRES_SKT_ENCRYPTED_STREAM_CLIENT : NET_PRES_SKT_UNENCRYPTED_STREAM_CLIENT,
-                        IP_ADDRESS_TYPE_IPV4, 
+                        address_type,
                         HTTPS_PORT, 
                         (NET_PRES_ADDRESS*)&ip_addr, NULL
                         );
 #else
-                pb->pal.socket = TCPIP_TCP_ClientOpen(IP_ADDRESS_TYPE_IPV4, HTTP_PORT, &ip_addr);
+                pb->pal.socket = TCPIP_TCP_ClientOpen(address_type, HTTP_PORT, &ip_addr);
 #endif
             }
             if (SOCKET_INVALID == pb->pal.socket) {

@@ -15,7 +15,7 @@ struct pbcc_context;
 enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
                                        char const*          channel,
                                        char const*          channel_group,
-                                       unsigned*            heartbeat,
+                                       const unsigned*      heartbeat,
                                        char const*          filter_expr);
 
 

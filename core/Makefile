@@ -66,7 +66,7 @@ pubnub_timer_list_unittest: pubnub_timer_list.c pubnub_timer_list_unit_test.c
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 
-PROXY_PROJECT_SOURCEFILES = pubnub_proxy_core.c pubnub_proxy.c pbhttp_digest.c pbntlm_core.c pbntlm_packer_std.c pubnub_generate_uuid_v4_random_std.c ../lib/pubnub_parse_ipv4_addr.c ../lib/pubnub_parse_ipv6_addr.c  ../lib/md5/md5.c
+PROXY_PROJECT_SOURCEFILES = pubnub_proxy_core.c pubnub_proxy.c pbhttp_digest.c pbntlm_core.c pbntlm_packer_std.c pubnub_generate_uuid_v4_random_std.c pubnub_dns_servers.c ../lib/pubnub_parse_ipv4_addr.c ../lib/pubnub_parse_ipv6_addr.c  ../lib/md5/md5.c
 
 pubnub_proxy_unittest: $(PROJECT_SOURCEFILES) $(PROXY_PROJECT_SOURCEFILES) pubnub_proxy_unit_test.c
 	gcc -o pubnub_proxy_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_CALLBACK_API -D PUBNUB_PROXY_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(PROXY_PROJECT_SOURCEFILES) pubnub_proxy_unit_test.c -lcgreen -lm
@@ -87,17 +87,47 @@ CRYPTO_INCLUDES += -I ../openssl/.
 CRYPTO_LIBS += -lssl -lcrypto
 CRYPTO_SOURCEFILES += pubnub_crypto.c pbcc_crypto.c pbcc_crypto_aes_cbc.c pbcc_crypto_legacy.c ../openssl/pbaes256.c
 
+
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+	# Ensure OpenSSL paths are set.
+	OPENSSL_CFLAGS := $(shell pkg-config --cflags openssl 2>/dev/null)
+	OPENSSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+	ifneq ($(OPENSSL_CFLAGS),)
+		CRYPTO_INCLUDES += $(OPENSSL_CFLAGS)
+	endif
+	ifneq ($(OPENSSL_LIBS),)
+		CRYPTO_LIBS += $(OPENSSL_LIBS)
+	endif
+else
+	ifeq ($(shell test -d "/usr/local/opt/openssl" && echo yes || echo no),yes)
+		CRYPTO_INCLUDES += -I/usr/local/opt/openssl/include
+	else
+		# Path on GitHub Action Runner (ubuntu-latest image)
+		ifeq ($(shell test -d "/usr/include/openssl" && echo yes || echo no),yes)
+			CRYPTO_INCLUDES += -I/usr/include
+		endif
+	endif
+	# Path on GitHub Action Runner (ubuntu-latest image)
+	ifeq ($(shell test -d "/usr/lib/x86_64-linux-gnu" && echo yes || echo no),yes)
+		CRYPTO_LIBS += -L/usr/lib/x86_64-linux-gnu -Wl,-Bdynamic
+	endif
+endif
+
+
 pbcc_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) pbcc_crypto_unit_tests.c
-	gcc -o pbcc_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c -lcgreen -lm
+	gcc -o pbcc_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) -D PUBNUB_CRYPTO_API=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) test/pubnub_test_mocks.c pbcc_crypto_unit_tests.c $(CRYPTO_LIBS) -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pbcc_crypto_unit_tests.c -lcgreen -lm
+	#ldd pbcc_crypto_unit_test.so
 	$(CGREEN_RUNNER) ./pbcc_crypto_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 SUBSCRIBE_V2_SOURCEFILES += pubnub_subscribe_v2.c pbcc_subscribe_v2.c 
 
 pubnub_crypto_unittest: $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) pubnub_crypto_unit_tests.c
-	gcc -o pubnub_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) $(CRYPTO_LIBS) -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c -lcgreen -lm
+	gcc -o pubnub_crypto_unit_test.so -shared $(CFLAGS) $(LDFLAGS) $(CRYPTO_INCLUDES) -D PUBNUB_CRYPTO_API=1 -D PUBNUB_USE_SUBSCRIBE_V2=1 -Wall $(COVERAGE_FLAGS) -fPIC $(PROJECT_SOURCEFILES) $(CRYPTO_SOURCEFILES) $(SUBSCRIBE_V2_SOURCEFILES) test/pubnub_test_mocks.c pubnub_crypto_unit_tests.c $(CRYPTO_LIBS) -lcgreen -lm
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_crypto_unit_tests.c -lcgreen -lm
+	#ldd pubnub_crypto_unit_test.so
 	$(CGREEN_RUNNER) ./pubnub_crypto_unit_test.so
 
 

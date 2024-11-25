@@ -33,7 +33,6 @@ void pubnub_dns_servers_deinit(void)
     pubnub_mutex_destroy(m_lock);
 }
 
-
 int pubnub_dns_set_primary_server_ipv4(struct pubnub_ipv4_address ipv4_address)
 {
     uint8_t* ipv4 = ipv4_address.ipv4;

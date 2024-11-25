@@ -186,6 +186,10 @@ static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 
 static void close_connection(struct pubnub_* pb)
 {
+#if PUBNUB_PROXY_API
+    pbproxy_handle_connection_close(pb);
+#endif /* PUBNUB_PROXY_API */
+
     if (pbpal_close(pb) <= 0) {
 #if PUBNUB_NEED_RETRY_AFTER_CLOSE
         PUBNUB_LOG_TRACE("close_connection(): pb->flags.retry_after_close=%d\n",
@@ -588,7 +592,7 @@ next_state:
         if (0 == i) {
             goto next_state;
         }
-        else if (i < 0) {
+        if (i < 0) {
             pb->core.last_result = PNR_CONNECT_FAILED;
 #if PUBNUB_ADNS_RETRY_AFTER_CLOSE
             if (pb->flags.retry_after_close) {

@@ -23,6 +23,7 @@ struct pubnub_fetch_history_options pubnub_fetch_history_defopts(void)
     rslt.include_message_type = false;
     rslt.include_user_id = false;
     rslt.include_message_actions = false;
+    rslt.include_custom_message_type = false;
 
     return rslt;
 }
@@ -45,6 +46,7 @@ enum pubnub_res pubnub_fetch_history(pubnub_t*                     pb,
                              channel,
                              opt.max_per_channel,
                              opt.include_meta ? pbccTrue : pbccFalse,
+                             opt.include_custom_message_type ? pbccTrue : pbccFalse,
                              opt.include_message_type ? pbccTrue : pbccFalse,
                              opt.include_user_id ? pbccTrue : pbccFalse,
                              opt.include_message_actions ? pbccTrue : pbccFalse,

@@ -4,6 +4,7 @@
 #if PUBNUB_USE_FETCH_HISTORY
 #include "core/pubnub_fetch_history.c"
 #endif
+#include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 
@@ -58,9 +59,13 @@ static void publish_on_channels(pubnub_t* pbp)
         enum pubnub_res res;
         char msg[100];
         sprintf(msg,"\"Hello world from fetch history sample %d !\"", i);
-        res = pubnub_publish(pbp,
+        struct pubnub_publish_options opts = pubnub_publish_defopts();
+        opts.custom_message_type = "test-message-type";
+
+        res = pubnub_publish_ex(pbp,
                                 m_channel1,
-                                msg);
+                                msg,
+                                opts);
         if (res == PNR_STARTED) {
             puts("Await publish");
             res = pubnub_await(pbp);
@@ -139,6 +144,7 @@ int main(int argc, char* argv[])
              m_channel2);    
 
     struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+    opt.include_custom_message_type = true;
     opt.include_message_type = true;
     opt.include_meta = true;
     res = pubnub_fetch_history(pbp, string_channels, opt);
@@ -160,6 +166,10 @@ int main(int argc, char* argv[])
         }
         if (NULL == strstr(response.ptr, "\"meta\"")) {
             printf("\"meta\" is missing in response.");
+            return 1;
+        }
+        if (NULL == strstr(response.ptr, "\"custom_message_type\"")) {
+            printf("\"custom_message_type\" is missing in response.");
             return 1;
         }
     }

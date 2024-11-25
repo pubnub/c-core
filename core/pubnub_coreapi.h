@@ -439,4 +439,14 @@ PUBNUB_EXTERN int pubnub_get_error_message(pubnub_t* pb, pubnub_chamebl_t* o_msg
  */
 PUBNUB_EXTERN int pubnub_last_http_response_body(pubnub_t* pb, pubnub_chamebl_t* o_msg);
 
+#if PUBNUB_USE_IPV6
+/** IPv4 connectivity type for @p.
+    Use IPv4 addresses to establish connection with remote origin. */
+PUBNUB_EXTERN void pubnub_set_ipv4_connectivity(pubnub_t *p);
+
+/** IPv6 connectivity type for @p.
+    Use IPv6 addresses to establish connection with remote origin. */
+PUBNUB_EXTERN void pubnub_set_ipv6_connectivity(pubnub_t *p);
+#endif
+
 #endif /* defined INC_PUBNUB_COREAPI */
