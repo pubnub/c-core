@@ -3,7 +3,6 @@
 
 #include "core/pubnub_coreapi_ex.h"
 #include "core/pubnub_coreapi.h"
-#include "core/pubnub_dns_servers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 

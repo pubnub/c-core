@@ -2,6 +2,7 @@
 #include "pubnub_callback.h"
 
 #include "core/pubnub_callback_subscribe_loop.h"
+#include "core/pubnub_coreapi.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_log.h"
@@ -158,6 +159,11 @@ int main()
     time_t                     start           = time(NULL);
     unsigned                   i               = 0;
 
+    char* my_env_ipv6_connectivity = getenv("PUBNUB_USE_IPV6_CONNECTIVITY");
+    char* my_env_origin = getenv("PUBNUB_ORIGIN");
+    if (NULL == my_env_origin) { my_env_origin = "ps.pndsn.com"; }
+    if (NULL == my_env_ipv6_connectivity) { my_env_ipv6_connectivity = "0"; }
+
     if ((NULL == pbp) || (NULL == pbp_2)) {
         printf("Failed to allocate Pubnub context(1 or 2)!\n");
         return -1;
@@ -167,6 +173,17 @@ int main()
 
     pubnub_set_user_id(pbp, "demo");
     pubnub_set_user_id(pbp_2, "demo_2");
+
+    pubnub_origin_set(pbp, my_env_origin);
+    pubnub_origin_set(pbp_2, my_env_origin);
+
+#if PUBNUB_USE_IPV6
+    // Enable IPv6 connectivity.
+    if (0 == strcmp(my_env_ipv6_connectivity, "1")) {
+        pubnub_set_ipv6_connectivity(pbp);
+        pubnub_set_ipv6_connectivity(pbp_2);
+    }
+#endif
 
     pubnub_register_callback(pbp_2, publish_callback, (void*)chan);
 
