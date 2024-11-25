@@ -3,10 +3,10 @@ November 25 2024
 
 #### Added
 - Add custom message type support for the following APIs: publish, signal, share file, subscribe and history.
-- Add connectivity setter.
+- Add `pubnub_set_ipv4_connectivity` and `pubnub_set_ipv6_connectivity` to `pubnub_coreapi` to switch preferred connectivity protocol.
 
 #### Fixed
-- Add `pubnub_set_ipv4_connectivity` and `pubnub_set_ipv6_connectivity` to `pubnub_coreapi` to switch preferred connectivity protocol.           Make sure that in case of connection close (including because of error) proxy context object will be reset.
+- Make sure that in case of connection close (including because of error) proxy context object will be reset.
 
 ## v4.14.1
 October 24 2024
