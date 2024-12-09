@@ -27,7 +27,7 @@ DEFAULT_WITH_CPP = 0
 DEFAULT_USE_CPP11 = 0
 
 # Whether extern C API should be used or not.
-DEFAULT_USE_EXTERN_API = 1
+DEFAULT_USE_EXTERN_API = 0
 
 # Whether PubNub should be built with callback interface or not.
 DEFAULT_USE_CALLBACK_API = 0
