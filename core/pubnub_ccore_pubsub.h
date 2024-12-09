@@ -350,12 +350,12 @@ struct pbcc_context
     name[(int)(name##_index)].param_val = value;                          \
     (name##_index)++;
 
-#define ADD_TS_TO_URL_PARAM()                                               \
-    time_t epoch_time = time(NULL);                                         \
-    char timestamp[16];                                                     \
-    if (epoch_time > 0) {                                                   \
-        sprintf(timestamp, "%lld", (long long)epoch_time);                  \
-        ADD_URL_PARAM(qparam, timestamp, timestamp);                        \
+#define ADD_TS_TO_URL_PARAM()                                                  \
+    time_t epoch_time = time(NULL);                                            \
+    char timestamp[16];                                                        \
+    if (epoch_time > 0) {                                                      \
+        snprintf(timestamp, sizeof(timestamp), "%lld", (long long)epoch_time); \
+        ADD_URL_PARAM(qparam, timestamp, timestamp);                           \
     }
 
 #define SORT_URL_PARAMETERS(name)                                              \

@@ -28,6 +28,7 @@ CORE_SOURCE_FILES = \
     ../core/pubnub_timers.c                           \
     ../core/pubnub_url_encode.c                       \
     ../lib/base64/pbbase64.c                          \
+    ../lib/md5/md5.c                                  \
     ../lib/pb_strncasecmp.c                           \
     ../lib/pb_strnlen_s.c                             \
     ../lib/sockets/pbpal_handle_socket_error.c        \
@@ -76,7 +77,6 @@ CORE_CPP_SOURCE_FILES_WINDOWS = \
 # `CORE_SOURCE_FILES` extension without OpenSSL support used for all
 # platforms.
 CORE_NON_OPENSSL_SOURCE_FILES = \
-    ../lib/md5/md5.c               \
     ../lib/sockets/pbpal_sockets.c
 
 # `CORE_NON_OPENSSL_SOURCE_FILES` extension for POSIX build.

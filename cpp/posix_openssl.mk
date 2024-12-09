@@ -18,7 +18,7 @@ include ../make/posix_compiler_linker_flags.mk
 #                                Build targets                                #
 ###############################################################################
 
-TARGET_BUILD_PATH = openssl
+TARGET_BUILD_PATH = openssl/
 
 include ../make/posix_cpp_targets.mk
 

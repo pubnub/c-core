@@ -171,7 +171,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             int64_t val;
             cbor_value_get_int64(it, &val);     // can't fail
             char int_str[100];
-            sprintf(int_str, "%lld", (long long)val);
+            snprintf(int_str, sizeof(int_str), "%lld", (long long)val);
             current_allocation_size = safe_alloc_strcat(json_result, int_str, current_allocation_size);
             break;
         }
@@ -184,7 +184,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             type = cbor_value_get_type(it);
             if (cbor_value_get_type(it) != CborInvalidType) {
                 char byte_str[1000];
-                sprintf(byte_str, "\"%s\":", buf);
+                snprintf(byte_str, sizeof(byte_str), "\"%s\":", buf);
                 current_allocation_size = safe_alloc_strcat(json_result, byte_str, current_allocation_size);
             }
             else {
@@ -202,7 +202,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                     }
 
                     char base64_str[67]; // HMAC+SHA256 max size + quotes + tailing null
-                    sprintf(base64_str, "\"%s\"", encoded_sig.ptr);
+                    snprintf(base64_str, sizeof(base64_str), "\"%s\"", encoded_sig.ptr);
 
                     free(encoded_sig.ptr);
                     current_allocation_size = safe_alloc_strcat(json_result, base64_str, current_allocation_size);
@@ -211,7 +211,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                 }
                 else {
                     char* buff_str = (char*)malloc(sizeof(char) * (n+3));
-                    sprintf(buff_str, "\"%s\"", buf);
+                    snprintf(buff_str, sizeof(buff_str), "\"%s\"", buf);
                     current_allocation_size = safe_alloc_strcat(json_result, buff_str, current_allocation_size);
                     free(buff_str);
                 }
@@ -239,10 +239,10 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
 	    
 	    type = cbor_value_get_type(it);
 	    if (!uuid_flag) {
-		    sprintf(txt_str, "\"%s\":", buf);
+	        snprintf(txt_str, sizeof(txt_str), "\"%s\":", buf);
 		    uuid_flag = false;
 	    } else {
-		    sprintf(txt_str, "\"%s\",", buf);
+	        snprintf(txt_str, sizeof(txt_str), "\"%s\",", buf);
 	    }
 
 	    current_allocation_size = safe_alloc_strcat(json_result, txt_str, current_allocation_size);
@@ -278,7 +278,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             bool val;
             cbor_value_get_boolean(it, &val);       // can't fail
             char bool_str[10];
-            sprintf(bool_str, "%s:", val ? "true" : "false");
+	        snprintf(bool_str, sizeof(bool_str), "%s:", val ? "true" : "false");
             current_allocation_size = safe_alloc_strcat(json_result, bool_str, current_allocation_size);
 
             break;
@@ -296,7 +296,7 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                 cbor_value_get_double(it, &val);
             }
             char flt_str[1000];
-            sprintf(flt_str, "%lf", val);
+	        snprintf(flt_str, sizeof(flt_str), "%lf", val);
             current_allocation_size = safe_alloc_strcat(json_result, flt_str, current_allocation_size);
 
             break;
@@ -358,7 +358,7 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
   
     unsigned int init_allocation_size = 5*(strlen(rawToken)/4);
     char * json_result = (char*)malloc(init_allocation_size);
-    sprintf(json_result, "%s", "");
+	snprintf(json_result, sizeof(json_result), "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
 
     if (!err){
