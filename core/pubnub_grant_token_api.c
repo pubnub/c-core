@@ -210,8 +210,9 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
                     sig_flag = false;
                 }
                 else {
-                    char* buff_str = (char*)malloc(sizeof(char) * (n+3));
-                    snprintf(buff_str, sizeof(buff_str), "\"%s\"", buf);
+                    size_t buff_size = sizeof(char) * (n+3);
+                    char* buff_str = (char*)malloc(buff_size);
+                    snprintf(buff_str, buff_size, "\"%s\"", buf);
                     current_allocation_size = safe_alloc_strcat(json_result, buff_str, current_allocation_size);
                     free(buff_str);
                 }
@@ -234,15 +235,16 @@ static CborError data_recursion(CborValue* it, int nestingLevel, char** json_res
             size_t n;
             err = cbor_value_dup_text_string(it, &buf, &n, it);
             if (err) { return err; } // parse error
-	    
-	    char* txt_str = (char*)malloc(sizeof(char) * (n+4));
+
+	    size_t txt_size = sizeof(char) * (n+4);
+	    char* txt_str = (char*)malloc(txt_size);
 	    
 	    type = cbor_value_get_type(it);
 	    if (!uuid_flag) {
-	        snprintf(txt_str, sizeof(txt_str), "\"%s\":", buf);
+	        snprintf(txt_str, txt_size, "\"%s\":", buf);
 		    uuid_flag = false;
 	    } else {
-	        snprintf(txt_str, sizeof(txt_str), "\"%s\",", buf);
+	        snprintf(txt_str, txt_size, "\"%s\",", buf);
 	    }
 
 	    current_allocation_size = safe_alloc_strcat(json_result, txt_str, current_allocation_size);
@@ -358,7 +360,7 @@ char* pubnub_parse_token(pubnub_t* pb, char const* token){
   
     unsigned int init_allocation_size = 5*(strlen(rawToken)/4);
     char * json_result = (char*)malloc(init_allocation_size);
-	snprintf(json_result, sizeof(json_result), "%s", "");
+	snprintf(json_result, init_allocation_size, "%s", "");
     CborError err = cbor_parser_init(buf, length, 0, &parser, &it);
 
     if (!err){

@@ -291,8 +291,9 @@ char* pbjson_get_status_400_message_value(struct pbjson_elem const* el)
             "pbjson_get_status_400_message_value: \"error\"='%.*s'\n",
             parse_len,
             parsed.start);
-        char* msgtext = (char*)malloc(sizeof(char) * (parse_len + 3));
-        snprintf(msgtext, sizeof(msgtext), "%.*s", parse_len, parsed.start);
+        size_t text_size = sizeof(char) * (parse_len + 3);
+        char*  msgtext   = (char*)malloc(text_size);
+        snprintf(msgtext, text_size, "%.*s", parse_len, parsed.start);
         return msgtext;
     }
 
