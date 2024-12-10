@@ -112,6 +112,14 @@ set(FLAGS "\
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
+#Required on windows with Event Engine, so only winsock2 is used (otherwise it tries to use winsock and winsock2 and there are redefinition errors)
+if(WIN32 OR WIN64 OR MSVC)
+set(FLAGS "\
+    ${FLAGS} \
+	-D _WINSOCKAPI_")
+endif()
+
+	
 set(LDLIBS)
 set(OS_SOURCEFILES)
 
@@ -277,19 +285,11 @@ if(${USE_CALLBACK_API})
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
     elseif(WIN32 OR WIN64 OR MSVC)
-        if (${OPENSSL})
-            set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c)
-        else()
-            set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
-        endif()
+		set(INTF_SOURCEFILES
+			${INTF_SOURCEFILES}
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
     endif()
 else()
     message(STATUS "Using sync API")
