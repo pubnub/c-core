@@ -1,3 +1,43 @@
+# Makefile for PubNub C-core SDK.
+# Description: All-in-one make file which show how to build various versions of
+#              PubNub SDK which has specific features and link them with application.
+
+# Making CPP version of the PubNub SDK.
+WITH_CPP = 1
+
+include ../make/posix_preprocessing.mk
+include ../make/posix_source_files.mk
+include ../make/posix_compiler_linker_flags.mk
+
+
+###############################################################################
+#                                Build targets                                #
+###############################################################################
+
+TARGET_BUILD_PATH =
+
+include ../make/windows_cpp_targets.mk
+
+
+all: \
+    $(TARGET_BUILD_PATH)pubnub_callback_cpp11_sample$(APP_EXT)         \
+    $(TARGET_BUILD_PATH)pubnub_callback_sample$(APP_EXT)               \
+    $(TARGET_BUILD_PATH)subscribe_publish_callback_sample$(APP_EXT)    \
+    $(TARGET_BUILD_PATH)pubnub_sync_sample$(APP_EXT)                   \
+    $(TARGET_BUILD_PATH)cancel_subscribe_sync_sample$(APP_EXT)         \
+    $(TARGET_BUILD_PATH)futres_nesting_sync$(APP_EXT)                  \
+    $(TARGET_BUILD_PATH)futres_nesting_callback$(APP_EXT)              \
+    $(TARGET_BUILD_PATH)futres_nesting_callback_cpp11$(APP_EXT)        \
+    $(TARGET_BUILD_PATH)fntest_runner$(APP_EXT)
+
+clean:
+	del *.obj
+	del *.exe
+	del *.pdb
+	del *.il?
+
+#/D HAVE_STRERROR_S /D _CRT_SECURE_NO_WARNINGS /D _WINSOCK_DEPRECATED_NO_WARNINGS
+
 SOURCEFILES = ..\core\pbcc_set_state.c ..\core\pubnub_pubsubapi.c ..\core\pubnub_coreapi.c ..\core\pubnub_coreapi_ex.c ..\core\pubnub_ccore_pubsub.c ..\core\pubnub_ccore.c ..\core\pubnub_netcore.c ..\lib\sockets\pbpal_sockets.c ..\lib\sockets\pbpal_resolv_and_connect_sockets.c ..\lib\sockets\pbpal_handle_socket_error.c ..\core\pubnub_alloc_std.c ..\core\pubnub_assert_std.c ..\core\pubnub_generate_uuid.c ..\core\pubnub_timers.c ..\core\pubnub_blocking_io.c ..\lib\base64\pbbase64.c ..\core\pubnub_json_parse.c ..\core\pubnub_free_with_timeout_std.c ..\windows\pbtimespec_elapsed_ms.c ..\lib\md5\md5.c ..\lib\pb_strnlen_s.c ..\lib\pb_strncasecmp.c ..\core\pubnub_helper.c pubnub_version_windows.cpp ..\windows\pubnub_generate_uuid_windows.c ..\windows\pbpal_windows_blocking_io.c ..\windows\windows_socket_blocking_io.c ..\core\c99\snprintf.c ..\lib\miniz\miniz_tinfl.c ..\lib\miniz\miniz_tdef.c ..\lib\miniz\miniz.c ..\lib\pbcrc32.c ..\core\pbgzip_compress.c ..\core\pbgzip_decompress.c ..\core\pbcc_subscribe_v2.c ..\core\pubnub_subscribe_v2.c ..\windows\msstopwatch_windows.c ..\core\pubnub_url_encode.c ..\core\pbcc_advanced_history.c ..\core\pubnub_advanced_history.c ..\core\pbcc_objects_api.c ..\core\pubnub_objects_api.c ..\core\pbcc_actions_api.c ..\core\pubnub_actions_api.c ..\core\pubnub_memory_block.c ..\lib\pbstr_remove_from_list.c ..\windows\pb_sleep_ms.c ..\core\pbauto_heartbeat.c ..\windows\pbauto_heartbeat_init_windows.c
 
 LIBS=ws2_32.lib rpcrt4.lib
@@ -80,10 +120,4 @@ futres_nesting_callback.exe: samples\futres_nesting.cpp $(SOURCEFILES) $(PROXY_I
 futres_nesting_callback_cpp11.exe: samples\futres_nesting.cpp $(SOURCEFILES) $(PROXY_INTF_SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp
 	$(CXX) /Fe$@ -D PUBNUB_CALLBACK_API $(CFLAGS) samples\futres_nesting.cpp $(CALLBACK_INTF_SOURCEFILES) pubnub_futres_cpp11.cpp $(SOURCEFILES) $(FETCH_HIST_SOURCEFILES) $(PROXY_INTF_SOURCEFILES) /link $(LIBS)
 
-
-clean:
-	del *.obj
-	del *.exe
-	del *.pdb
-	del *.il?
 
