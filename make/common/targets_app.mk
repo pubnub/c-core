@@ -75,7 +75,7 @@ pubnub_callback_subloop_sample$(APP_EXT): \
 subscribe_event_engine_sample$(APP_EXT): \
     $(subst /,$(PATH_SEP),../core/samples/subscribe_event_engine_sample.c) \
     pubnub_callback$(LIB_EXT)
-	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CALLBACK_CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
 subscribe_publish_callback_sample$(APP_EXT): \
     $(subst /,$(PATH_SEP),../core/samples/subscribe_publish_callback_sample.c) \
