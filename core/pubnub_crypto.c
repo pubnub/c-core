@@ -610,9 +610,10 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
 enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature) {
     enum pubnub_res sign_status = PNR_OK;
     int str_to_sign_len = strlen(p->core.subscribe_key) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign);
-    char* str_to_sign = (char*)malloc(sizeof(char) * str_to_sign_len + 5); // 4 variables concat + 1
+    size_t str_to_sign_size = sizeof(char) * str_to_sign_len + 5;
+    char* str_to_sign = (char*)malloc(str_to_sign_size); // 4 variables concat + 1
     if (str_to_sign != NULL) {
-        sprintf(str_to_sign, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
+	    snprintf(str_to_sign, str_to_sign_size, "%s\n%s\n%s\n%s", p->core.subscribe_key, p->core.publish_key, partial_url, qs_to_sign);
     }
     PUBNUB_LOG_DEBUG("\nv2 str_to_sign = %s\n", str_to_sign);
     char* part_sign = (char*)"";
@@ -624,7 +625,7 @@ enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char con
 #endif
     free((char*)str_to_sign);
     if (sign_status == PNR_OK) {
-        sprintf(signature, "%s", part_sign);
+	    snprintf(signature, sizeof(signature), "%s", part_sign);
     }
     free(part_sign);
     return sign_status;
@@ -661,13 +662,14 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
         return PNR_CRYPTO_NOT_SUPPORTED;
     }
     int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign) + 4 * strlen("\n") + (hasBody ? strlen(msg) : 0);
-    char* str_to_sign = (char*)malloc(sizeof(char) * (str_to_sign_len + 1));
+    size_t str_to_sign_size = sizeof(char) * (str_to_sign_len + 1);
+    char* str_to_sign = (char*)malloc(str_to_sign_size);
     if (str_to_sign != NULL) {
         if (hasBody) {
-            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
+	        snprintf(str_to_sign, str_to_sign_size, "%s\n%s\n%s\n%s\n%s", method_verb, p->core.publish_key, partial_url, qs_to_sign, msg);
         }
         else {
-            sprintf(str_to_sign, "%s\n%s\n%s\n%s\n", method_verb, p->core.publish_key, partial_url, qs_to_sign);
+	        snprintf(str_to_sign, str_to_sign_size, "%s\n%s\n%s\n%s\n", method_verb, p->core.publish_key, partial_url, qs_to_sign);
         }
     }
     PUBNUB_LOG_DEBUG("\nv3 str_to_sign = %s\n", str_to_sign);
@@ -685,7 +687,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
             part_sign[strlen(part_sign) - 1] = '\0';
             last_sign_char = part_sign[strlen(part_sign) - 1];
         }
-        sprintf(signature, "v2.%s", part_sign);
+	    snprintf(signature, sizeof(signature), "v2.%s", part_sign);
     }
     free(part_sign);
     return sign_status;
