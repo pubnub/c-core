@@ -8,7 +8,8 @@
 ###############################################################################
 
 # Included public headers.
-INCLUDES = $(OPTION_PREFIX)I.. $(OPTION_PREFIX)I. $(INCLUDES_PLATFORM) $(INCLUDES_OPENSSL)
+INCLUDES_ = $(OPTION_PREFIX)I.. $(OPTION_PREFIX)I. $(INCLUDES_PLATFORM) $(INCLUDES_OPENSSL)
+INCLUDES = $(strip $(INCLUDES_))
 
 # Feature flags definition.
 DEFINES_COMMON = \
@@ -28,14 +29,17 @@ DEFINES_COMMON = \
     $(OPTION_PREFIX)D PUBNUB_USE_OBJECTS_API=$(USE_OBJECTS_API)                       \
     $(OPTION_PREFIX)D PUBNUB_USE_RETRY_CONFIGURATION=$(USE_RETRY_CONFIGURATION)       \
     $(OPTION_PREFIX)D PUBNUB_USE_REVOKE_TOKEN_API=$(USE_REVOKE_TOKEN)                 \
+    $(OPTION_PREFIX)D PUBNUB_USE_SSL=$(USE_SSL)                                       \
     $(OPTION_PREFIX)D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=$(USE_SUBSCRIBE_EVENT_ENGINE) \
     $(OPTION_PREFIX)D PUBNUB_USE_SUBSCRIBE_V2=$(USE_SUBSCRIBE_V2)
 
 # Preprocessing flags for synchronous PubNub library version.
-CPPFLAGS = $(INCLUDES) $(DEFINES_COMMON) $(DEFINES_EXTERN_C) $(DEFINES_RANDOM_IV)
+CPPFLAGS_ = $(INCLUDES) $(DEFINES_PLATFORM) $(DEFINES_COMMON) $(DEFINES_EXTERN_C) $(DEFINES_RANDOM_IV)
+CPPFLAGS = $(strip $(CPPFLAGS_))
 
 # Preprocessing flags for PubNub library with callback interface.
-CALLBACK_CPPFLAGS = \
-	$(CPPFLAGS)                                                 \
+CALLBACK_CPPFLAGS_ = \
+	$(CPPFLAGS_)                                                 \
 	$(OPTION_PREFIX)D PUBNUB_CALLBACK_API                       \
 	$(OPTION_PREFIX)D PUBNUB_SET_DNS_SERVERS=$(USE_DNS_SERVERS)
+CALLBACK_CPPFLAGS = $(strip $(CALLBACK_CPPFLAGS_))

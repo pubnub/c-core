@@ -1,8 +1,11 @@
 # Targets for Windows system.
 # Description: Makefile used to declare list of targets which can be built for
 #              Windows systems.
+#
+# Note: `nmake` can't handle `/` to `\` replacement in multiline prerequisites
+#       so they have been separated from targets for preprocessing.
 
-!include <common/targets_app.mk>
+!include <../make/common/targets_app.mk>
 
 
 ###############################################################################
@@ -11,13 +14,14 @@
 
 # --------------- Tests based on sync PubNub library --------------
 
-pubnub_fntest$(APP_EXT): \
-    $(subst /,$(PATH_SEP),../core/fntest/pubnub_fntest.c)            \
-    $(subst /,$(PATH_SEP),../core/fntest/pubnub_fntest_basic.c)      \
-    $(subst /,$(PATH_SEP),../core/fntest/pubnub_fntest_medium.c)     \
-    $(subst /,$(PATH_SEP),../windows/fntest/pubnub_fntest_runner.c)  \
-    $(subst /,$(PATH_SEP),../windows/fntest/pubnub_fntest_windows.c) \
-    pubnub_sync$(LIB_EXT)
+FNTEST_SOURCES_ = \
+    ../core/fntest/pubnub_fntest.c            \
+    ../core/fntest/pubnub_fntest_basic.c      \
+    ../core/fntest/pubnub_fntest_medium.c     \
+    ../windows/fntest/pubnub_fntest_runner.c  \
+    ../windows/fntest/pubnub_fntest_windows.c
+FNTEST_SOURCES = $(subst /,$(PATH_SEP),$(FNTEST_SOURCES_))
+pubnub_fntest$(APP_EXT): $(FNTEST_SOURCES) pubnub_sync$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
 clean:

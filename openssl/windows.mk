@@ -27,6 +27,9 @@ OPENSSL = 1
 !include <../make/common/targets_app_openssl.mk>
 !include <../make/windows_targets.mk>
 
+# There is also `subscribe_event_engine_sample$(APP_EXT)` target but it can't be built
+# with `all` because requires `USE_SUBSCRIBE_EVENT_ENGINE=1`.
+
 all: \
 	cancel_subscribe_sync_sample$(APP_EXT)                \
 	metadata$(APP_EXT)                                    \
@@ -49,7 +52,6 @@ all: \
 	publish_queue_callback_subloop$(APP_EXT)              \
 	pubnub_callback_sample$(APP_EXT)                      \
 	pubnub_callback_subloop_sample$(APP_EXT)              \
-	subscribe_event_engine_sample$(APP_EXT)               \
 	subscribe_publish_callback_sample$(APP_EXT)           \
 	subscribe_publish_from_callback$(APP_EXT)             \
 	pubnub_console_sync$(APP_EXT)                         \

@@ -17,6 +17,7 @@ ASAN ?= $(DEFAULT_ASAN)
 
 # Whether OpenSSL should be used or not.
 OPENSSL ?= $(DEFAULT_OPENSSL)
+USE_SSL ?= $(OPENSSL)
 
 # Path relative to the `OPENSSL_ROOT_DIR` which points to the linked OpenSSL
 # libraries.
@@ -224,6 +225,7 @@ PREREQUISITES = $^
 # Included public headers.
 INCLUDES_PLATFORM = -I../lib/base64
 
+DEFINES_PLATFORM =
 DEFINES_EXTERN_C =
 ifeq ($(WITH_CPP),1)
     ifeq ($(USE_EXTERN_API),1)

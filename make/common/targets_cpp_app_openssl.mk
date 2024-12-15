@@ -9,23 +9,31 @@
 
 # ----------------- Samples based on sync PubNub library -----------------
 
-$(TARGET_BUILD_PATH)pubnub_sync_grant_sample$(APP_EXT): \
-    $(subst /,$(PATH_SEP),../cpp/samples/pubnub_sample_grant_token.cpp) \
-    $(SOURCE_FILES)                                                     \
-    $(SYNC_SOURCE_FILES)                                                \
-    $(subst /,$(PATH_SEP),$(PUBNUB_FUTRES_SYNC_SOURCE_FILE))
+SYNC_GRANT_SOURCES_ = \
+    ../cpp/samples/pubnub_sample_grant_token.cpp \
+    $(SOURCE_FILES)                              \
+    $(SYNC_SOURCE_FILES)                         \
+    $(PUBNUB_FUTRES_SYNC_SOURCE_FILE)
+SYNC_GRANT_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_GRANT_SOURCES_))
+$(TARGET_BUILD_PATH)pubnub_sync_grant_sample$(APP_EXT): $(SYNC_GRANT_SOURCES)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LINK_FLAG) $(LDLIBS)
 
+SYNC_REVOKE_SOURCES_ = \
+    ../cpp/samples/pubnub_sample_revoke_token.cpp \
+    $(SOURCE_FILES)                               \
+    $(SYNC_SOURCE_FILES)                          \
+    $(PUBNUB_FUTRES_SYNC_SOURCE_FILE)
+SYNC_REVOKE_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_REVOKE_SOURCES_))
 $(TARGET_BUILD_PATH)pubnub_sync_revoke_sample$(APP_EXT): \
-    $(subst /,$(PATH_SEP),../cpp/samples/pubnub_sample_revoke_token.cpp) \
-    $(SOURCE_FILES)                                                      \
-    $(SYNC_SOURCE_FILES)                                                 \
-    $(subst /,$(PATH_SEP),$(PUBNUB_FUTRES_SYNC_SOURCE_FILE))
+    $(SYNC_REVOKE_SOURCES)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LINK_FLAG) $(LDLIBS)
 
+SYNC_CRYPTO_MODULE_SOURCES_ = \
+    ./cpp/samples/pubnub_crypto_module_sample.cpp \
+    $(SOURCE_FILES)                               \
+    $(SYNC_SOURCE_FILES)                          \
+    $(PUBNUB_FUTRES_SYNC_SOURCE_FILE)
+SYNC_CRYPTO_MODULE_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_CRYPTO_MODULE_SOURCES_))
 $(TARGET_BUILD_PATH)pubnub_crypto_module_sample$(APP_EXT): \
-    $(subst /,$(PATH_SEP),../cpp/samples/pubnub_crypto_module_sample.cpp) \
-    $(SOURCE_FILES)                                                       \
-    $(SYNC_SOURCE_FILES)                                                  \
-    $(subst /,$(PATH_SEP),$(PUBNUB_FUTRES_SYNC_SOURCE_FILE))
+    $(SYNC_CRYPTO_MODULE_SOURCES)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LINK_FLAG) $(LDLIBS)
