@@ -98,6 +98,8 @@ CORE_OPENSSL_SOURCE_FILES = \
 # `CORE_OPENSSL_SOURCE_FILES` extension for POSIX build.
 CORE_OPENSSL_SOURCE_FILES_POSIX = \
     ../openssl/pbpal_add_system_certs_posix.c
+CORE_OPENSSL_SOURCE_FILES_NOT_DARWIN = \
+    ../lib/md5/md5.c
 
 # `CORE_OPENSSL_SOURCE_FILES` extension for Windows build.
 CORE_OPENSSL_SOURCE_FILES_WINDOWS = \
