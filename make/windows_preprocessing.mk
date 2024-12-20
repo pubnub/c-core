@@ -79,10 +79,10 @@ COMPILER = $(DEFAULT_COMPILER_TYPE)
 !if $(WITH_CPP)
 COMPILER = $(CXX)
 !ifndef $(USE_EXTERN_API)
-    USE_EXTERN_API = $(DEFAULT_USE_EXTERN_API)
+USE_EXTERN_API = $(DEFAULT_USE_EXTERN_API)
 !endif
 !ifndef $(USE_CPP11)
-    USE_CPP11 = $(DEFAULT_USE_CPP11)
+USE_CPP11 = $(DEFAULT_USE_CPP11)
 !endif
 !endif
 !if "$(COMPILER)" == ""
@@ -132,7 +132,7 @@ USE_CRYPTO_API = $(DEFAULT_USE_CRYPTO_API)
 !endif
 !if $(USE_CRYPTO_API)
 !if !$(OPENSSL)
-	!error "You can't use Crypto API without OpenSSL!"
+!error "You can't use Crypto API without OpenSSL!"
 !endif
 !endif
 
@@ -156,7 +156,7 @@ USE_GRANT_TOKEN = $(DEFAULT_USE_GRANT_TOKEN)
 !endif
 !if $(USE_GRANT_TOKEN) == 1
 !if $(OPENSSL) == 0
-	!error "You can't use Grant Token API without OpenSSL!"
+!error "You can't use Grant Token API without OpenSSL!"
 !endif
 !endif
 
@@ -202,7 +202,7 @@ USE_REVOKE_TOKEN = $(DEFAULT_USE_REVOKE_TOKEN)
 !endif
 !if $(USE_REVOKE_TOKEN)
 !if !$(OPENSSL)
-	!error "You can't use Revoke Token API without OpenSSL!"
+!error "You can't use Revoke Token API without OpenSSL!"
 !endif
 !endif
 
@@ -257,7 +257,7 @@ OUT_FLAG = -o
 
 # Compiler's flag to enforce C++11 standard.
 !if "$(WITH_CPP)" == "1" && "$(USE_CPP11)" == "1"
-    CPP11_STANDARD_FLAG = -std=c++11
+CPP11_STANDARD_FLAG = -std=c++11
 !endif
 !else
 OBJ_EXT = .obj
@@ -284,11 +284,11 @@ OUT_FLAG = /Fe
 
 # Compiler's flag to enforce C++11 standard.
 !if $(WITH_CPP)
-    # Linker flag.
-    LINK_FLAG = /link
-    !if $(USE_CPP11)
-        CPP11_STANDARD_FLAG = /std:c++11
-    !endif
+# Linker flag.
+LINK_FLAG = /link
+!if $(USE_CPP11)
+CPP11_STANDARD_FLAG = /std:c++11
+!endif
 !endif
 !endif
 
@@ -318,8 +318,10 @@ DEFINE_RANDOM_IV = $(OPTION_PREFIX)D PUBNUB_RAND_INIT_VECTOR=$(USE_LEGACY_CRYPTO
 INCLUDES_OPENSSL = $(OPTION_PREFIX)I..$(PATH_SEP)openssl
 
 !if "$(OPENSSL_ROOT_DIR)" != "" && "$(CUSTOM_OPENSSL_INCLUDE_DIR)" != ""
-    INCLUDES_OPENSSL = $(INCLUDES_OPENSSL) \
-        $(OPTION_PREFIX)I$(OPENSSL_ROOT_DIR)$(PATH_SEP)$(CUSTOM_OPENSSL_INCLUDE_DIR)
+OPENSSL_ROOT_DIR_ = $(subst /,$(PATH_SEP),$(OPENSSL_ROOT_DIR))
+CUSTOM_OPENSSL_INCLUDE_DIR_ = $(subst /,$(PATH_SEP),$(CUSTOM_OPENSSL_INCLUDE_DIR))
+INCLUDES_OPENSSL = $(INCLUDES_OPENSSL) \
+    $(OPTION_PREFIX)I"$(OPENSSL_ROOT_DIR_)$(PATH_SEP)$(CUSTOM_OPENSSL_INCLUDE_DIR_)"
 !endif
 !else
 INCLUDES_PLATFORM = $(INCLUDES_PLATFORM) $(OPTION_PREFIX)I..$(PATH_SEP)windows

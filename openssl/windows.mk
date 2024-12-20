@@ -5,13 +5,13 @@
 # Making OpenSSL version of the PubNub SDK.
 OPENSSL = 1
 !ifndef USE_CRYPTO_API
-    USE_CRYPTO_API = 0
+USE_CRYPTO_API = 0
 !endif
 !ifndef USE_GRANT_TOKEN
-    USE_GRANT_TOKEN = 1
+USE_GRANT_TOKEN = 1
 !endif
 !ifndef USE_REVOKE_TOKEN
-    USE_REVOKE_TOKEN = 1
+USE_REVOKE_TOKEN = 1
 !endif
 
 !include <../make/windows_preprocessing.mk>

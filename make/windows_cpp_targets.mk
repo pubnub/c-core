@@ -17,13 +17,13 @@ COMPILER_FLAGS = \
     $(OPTION_PREFIX)D _WINSOCK_DEPRECATED_NO_WARNINGS
 
 !if $(OPENSSL)
-    COMPILER_FLAGS = \
-        $(COMPILER_FLAGS)                       \
-        $(OPTION_PREFIX)D PUBNUB_USE_WIN_SSPI=1
+COMPILER_FLAGS = \
+    $(COMPILER_FLAGS)                       \
+    $(OPTION_PREFIX)D PUBNUB_USE_WIN_SSPI=1
 !endif
 
 !include <../make/common/targets_cpp_app.mk>
 
 !if $(OPENSSL)
-    !include <../make/common/targets_cpp_app_openssl.mk>
+!include <../make/common/targets_cpp_app_openssl.mk>
 !endif
