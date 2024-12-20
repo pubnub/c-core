@@ -1,7 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
 #include <string.h>
+#if !defined _WIN32
 #include <unistd.h>
+#else
+#include <windows.h>
+#endif
 #include <stdio.h>
 #include <time.h>
 
@@ -87,7 +91,11 @@ static void wait_seconds(const double time_in_seconds)
     double       time_passed_in_seconds;
     do {
         time_passed_in_seconds = difftime(time(NULL), start);
+#if !defined _WIN32
         usleep(10);
+#else
+        Sleep(1);
+#endif
     } while (time_passed_in_seconds < time_in_seconds);
 }
 
@@ -166,7 +174,7 @@ void subscribe_message_listener_(
     char* msg  = string_from_mem_block(message.payload);
     char* tt   = string_from_mem_block(message.tt);
     char* type = message_type_2_string(message.message_type);
-    char client[100];
+    char  client[100];
 
     if (global) {
         snprintf(client, sizeof(client), "PubNub (%p) received", pb);

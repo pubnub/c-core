@@ -1,10 +1,8 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_subscribe_event_engine.h"
 
-#include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "core/pubnub_helper.h"
 #include "core/pubnub_subscribe_event_engine_internal.h"
@@ -215,7 +213,7 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
         PBARRAY_CHAR_CONTENT_TYPE,
         (pbarray_element_free)free);
     ee->current_transaction = PBTT_NONE;
-    ee->cancel_invocation = NULL;
+    ee->cancel_invocation   = NULL;
     pubnub_mutex_init(ee->mutw);
 
     if (NULL == ee->subscriptions) {
@@ -557,7 +555,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
     PUBNUB_ASSERT_OPT(NULL != ee);
 
     pubnub_mutex_lock(ee->mutw);
-    char*           ch,* cg;
+    char *          ch, *cg;
     enum pubnub_res rslt = pbcc_subscribe_ee_subscribables_(ee->subscribables,
         &ch,
         &cg,
@@ -736,7 +734,7 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
     const bool                       sent_by_ee)
 {
     pbcc_ee_event_t* event = NULL;
-    char*            ch    = NULL,* cg = NULL;
+    char *           ch    = NULL, *cg = NULL;
     enum pubnub_res  rslt  = PNR_OK;
 
     if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee); }
@@ -798,7 +796,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     pbcc_subscribe_ee_t* ee,
     pbhash_set_t*        subscribables)
 {
-    char* ch         = NULL,* cg = NULL;
+    char *ch         = NULL, *cg = NULL;
     bool  send_leave = false;
 
     size_t                  count = 0;
@@ -1070,14 +1068,14 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
             ch_offset += snprintf(*channels + ch_offset,
                                   ch_len - ch_offset,
                                   "%s%s",
-                                  ch_offset > 0 ? ",": "",
+                                  ch_offset > 0 ? "," : "",
                                   sub->id->ptr);
         }
         else {
             cg_offset += snprintf(*channel_groups + cg_offset,
                                   cg_len - cg_offset,
                                   "%s%s",
-                                  cg_offset > 0 ? ",": "",
+                                  cg_offset > 0 ? "," : "",
                                   sub->id->ptr);
         }
     }
