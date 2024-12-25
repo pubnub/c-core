@@ -37,13 +37,14 @@
 /** The Pubnub "(C) core" context, contains context data
     that is shared among all Pubnub C clients.
  */
-struct pbcc_context {
+struct pbcc_context
+{
     /** The publish key (to use when publishing) */
     char const* publish_key;
     /** The subscribe key (to use when subscribing) */
     char const* subscribe_key;
     /** The user_id to be sent to server. If empty string, don't send any */
-    char *user_id;
+    char* user_id;
     /** The user_id length */
     int user_id_len;
     /** The `auth` parameter to be sent to server. If NULL, don't send
@@ -68,7 +69,7 @@ struct pbcc_context {
 
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
     // Event Engine which supports new subscription loop.
-    pbcc_subscribe_ee_t *subscribe_ee;
+    pbcc_subscribe_ee_t* subscribe_ee;
 #endif
 
     /** The result of the last Pubnub transaction */
@@ -90,7 +91,7 @@ struct pbcc_context {
 #if PUBNUB_USE_GZIP_COMPRESSION
     /** Buffer for compressed message */
     char gzip_msg_buf[PUBNUB_COMPRESSED_MAXLEN];
-    
+
     /** The length of compressed data in 'comp_http_buf' ready to be sent */
     size_t gzip_msg_len;
 #endif
@@ -325,11 +326,11 @@ struct pbcc_context {
     name[(int)(name##_index)].param_key = #key;                             \
     name[(int)(name##_index)].key_size = sizeof(#key)-1;                    \
     name[(int)(name##_index)].param_val = value;                            \
-    (int)(name##_index)++;
+    (name##_index)++;
 
 #define ADD_URL_AUTH_PARAM(pb, name, key)                                     \
         if (pb->auth_token != NULL) { ADD_URL_PARAM(name, key, pb->auth_token); } \
-        else if (pb->auth != NULL) { ADD_URL_PARAM(name, key, pb->auth); }        
+        else if (pb->auth != NULL) { ADD_URL_PARAM(name, key, pb->auth); }
 
 #define ADD_URL_PARAM_SIZET(name, key, value)                               \
     int val_len = snprintf(NULL, 0, "%lu", (long unsigned int)value);       \
@@ -341,20 +342,20 @@ struct pbcc_context {
     name[(int)(name##_index)].param_key = #key;                             \
     name[(int)(name##_index)].key_size = sizeof(#key)-1;                    \
     name[(int)(name##_index)].param_val = name##_val_str;                   \
-    (int)(name##_index)++;
+    (name##_index)++;
 
 #define ADD_URL_PARAM_TRUE_KEY(name, key, value)                          \
     name[(int)(name##_index)].param_key = key;                            \
     name[(int)(name##_index)].key_size = strlen(key);                     \
     name[(int)(name##_index)].param_val = value;                          \
-    (int)(name##_index)++;
+    (name##_index)++;
 
-#define ADD_TS_TO_URL_PARAM()                                               \
-    time_t epoch_time = time(NULL);                                         \
-    char timestamp[16];                                                     \
-    if (epoch_time > 0) {                                                   \
-        sprintf(timestamp, "%lld", (long long)epoch_time);                  \
-        ADD_URL_PARAM(qparam, timestamp, timestamp);                        \
+#define ADD_TS_TO_URL_PARAM()                                                  \
+    time_t epoch_time = time(NULL);                                            \
+    char timestamp[16];                                                        \
+    if (epoch_time > 0) {                                                      \
+        snprintf(timestamp, sizeof(timestamp), "%lld", (long long)epoch_time); \
+        ADD_URL_PARAM(qparam, timestamp, timestamp);                           \
     }
 
 #define SORT_URL_PARAMETERS(name)                                              \
@@ -398,8 +399,8 @@ struct pbcc_context {
 
 /** Initializes the Pubnub C core context */
 void pbcc_init(struct pbcc_context* pbcc,
-               const char*          publish_key,
-               const char*          subscribe_key);
+               const char* publish_key,
+               const char* subscribe_key);
 
 /** Deinitializes the Pubnub C core context */
 void pbcc_deinit(struct pbcc_context* p);
@@ -475,14 +476,14 @@ void pbcc_via_post_headers(struct pbcc_context* p, char* header, size_t max_leng
     formatting the URI of the HTTP request.
  */
 enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
-                                  const char*          channel,
-                                  const char*          message,
-                                  const char*          custom_message_type,
-                                  bool                 store_in_history,
-                                  bool                 norep,
-                                  char const*          meta,
-                                  size_t               ttl,
-                                  enum pubnub_method   method);
+                                  const char* channel,
+                                  const char* message,
+                                  const char* custom_message_type,
+                                  bool store_in_history,
+                                  bool norep,
+                                  char const* meta,
+                                  size_t ttl,
+                                  enum pubnub_method method);
 
 /** Prepares the Signal operation (transaction), mostly by
     formatting the URI of the HTTP request.
@@ -496,9 +497,9 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
     formatting the URI of the HTTP request.
  */
 enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
-                                    char const*          channel,
-                                    char const*          channel_group,
-                                    const unsigned*            heartbeat);
+                                    char const* channel,
+                                    char const* channel_group,
+                                    const unsigned* heartbeat);
 
 
 /** Split @p buf string containing a JSON array (with arbitrary
@@ -508,23 +509,23 @@ bool pbcc_split_array(char* buf);
 
 
 enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
-                                      char const*          param_name,
-                                      size_t               param_name_len,
-                                      char const*          param_val,
-                                      char                 separator);
+                                      char const* param_name,
+                                      size_t param_name_len,
+                                      char const* param_val,
+                                      char separator);
 
 enum pubnub_res pbcc_url_encode(struct pbcc_context* pb, char const* what, enum pubnub_trans pt);
 
 enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
-                                              char const*          param_name,
-                                              size_t      param_name_len,
+                                              char const* param_name,
+                                              size_t param_name_len,
                                               char const* param_val,
-                                              char        separator, 
+                                              char separator,
                                               enum pubnub_trans pt);
 
 enum pubnub_res pbcc_sign_url(struct pbcc_context* pc,
-                                const char* msg,
-                                enum pubnub_method method,
-                                bool v3sign);
+                              const char* msg,
+                              enum pubnub_method method,
+                              bool v3sign);
 
 #endif /* !defined INC_PUBNUB_CCORE_PUBSUB */

@@ -38,7 +38,7 @@ char const* pbjson_find_end_string(char const* start, char const* end)
             if (!in_escape) {
                 return start;
             }
-            /*FALLTHRU*/
+        /*FALLTHRU*/
         default:
             in_escape = false;
             break;
@@ -73,8 +73,8 @@ char const* pbjson_find_end_primitive(char const* start, char const* end)
 
 char const* pbjson_find_end_complex(char const* start, char const* end)
 {
-    bool        in_string = false, in_escape = false;
-    int         bracket_level = 0, brace_level = 0;
+    bool        in_string     = false, in_escape   = false;
+    int         bracket_level = 0,     brace_level = 0;
     char        c;
     char const* s;
 
@@ -115,7 +115,7 @@ char const* pbjson_find_end_complex(char const* start, char const* end)
                     in_string = false;
                     break;
                 }
-                /*FALLTHRU*/
+            /*FALLTHRU*/
             default:
                 in_escape = false;
                 break;
@@ -171,8 +171,9 @@ pbjson_get_object_value(struct pbjson_elem const* p,
         if (*end != '"') {
             return jonmpStringNotTerminated;
         }
-        found = (end - s - 1 == name_len) && (0 == memcmp(s + 1, name, name_len));
-        s     = pbjson_skip_whitespace(end + 1, p->end);
+        found = (end - s - 1 == name_len) && (
+                    0 == memcmp(s + 1, name, name_len));
+        s = pbjson_skip_whitespace(end + 1, p->end);
         if (s == p->end) {
             return jonmpMissingColon;
         }
@@ -217,7 +218,8 @@ bool pbjson_elem_equals_string(struct pbjson_elem const* e, char const* s)
 }
 
 
-char const* pbjson_object_name_parse_result_2_string(enum pbjson_object_name_parse_result e)
+char const* pbjson_object_name_parse_result_2_string(
+    enum pbjson_object_name_parse_result e)
 {
     switch (e) {
     case jonmpNoStartCurly:
@@ -266,7 +268,10 @@ size_t pbjson_element_strcpy(struct pbjson_elem const* p, char* s, size_t n)
     return len + 1;
 }
 
-bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name, char const* value) {
+bool pbjson_value_for_field_found(struct pbjson_elem const* p,
+                                  char const*               name,
+                                  char const*               value)
+{
     enum pbjson_object_name_parse_result result;
     struct pbjson_elem                   found;
 
@@ -275,17 +280,20 @@ bool pbjson_value_for_field_found(struct pbjson_elem const* p, char const* name,
     return jonmpOK == result && pbjson_elem_equals_string(&found, value);
 }
 
-char* pbjson_get_status_400_message_value(struct pbjson_elem const* el){
+char* pbjson_get_status_400_message_value(struct pbjson_elem const* el)
+{
     enum pbjson_object_name_parse_result json_rslt;
-    struct pbjson_elem parsed;
+    struct pbjson_elem                   parsed;
     json_rslt = pbjson_get_object_value(el, "message", &parsed);
     if (json_rslt == jonmpOK) {
         int parse_len = (int)(parsed.end - parsed.start);
-        PUBNUB_LOG_ERROR("pbjson_get_status_400_message_value: \"error\"='%.*s'\n",
-                        parse_len,
-                        parsed.start);
-        char* msgtext = (char*)malloc(sizeof(char) * (parse_len+3));
-        sprintf(msgtext, "%.*s", parse_len, parsed.start);
+        PUBNUB_LOG_ERROR(
+            "pbjson_get_status_400_message_value: \"error\"='%.*s'\n",
+            parse_len,
+            parsed.start);
+        size_t text_size = sizeof(char) * (parse_len + 3);
+        char*  msgtext   = (char*)malloc(text_size);
+        snprintf(msgtext, text_size, "%.*s", parse_len, parsed.start);
         return msgtext;
     }
 

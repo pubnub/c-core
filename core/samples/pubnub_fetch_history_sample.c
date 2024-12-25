@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
     opt.include_custom_message_type = true;
     opt.include_message_type = true;
+    opt.include_user_id = true;
     opt.include_meta = true;
     res = pubnub_fetch_history(pbp, string_channels, opt);
     if (res == PNR_STARTED) {

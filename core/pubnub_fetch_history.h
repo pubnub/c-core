@@ -7,7 +7,8 @@
 #include "lib/pb_extern.h"
 
 /** Options for fetch history. */
-struct pubnub_fetch_history_options {
+struct pubnub_fetch_history_options
+{
     /** The maximum number of messages to return per channel if multiple channels provided. 
      * Has to be between 1 and 25 messages. Default is 25.
      * If single channel is provided, maximum 100 messages. Default is 100.
@@ -50,7 +51,7 @@ struct pubnub_fetch_history_options {
      * false.
      */
     bool include_user_id;
-    /** If true to recieve message actions with each history
+    /** If true to receive message actions with each history
      * message. If false, no message actions per message. Defaults to
      * false.
      */
@@ -83,9 +84,9 @@ PUBNUB_EXTERN struct pubnub_fetch_history_options pubnub_fetch_history_defopts(v
     @param opt Options for this fetch history transaction
     @return #PNR_STARTED on success, an error otherwise
 */
-PUBNUB_EXTERN enum pubnub_res pubnub_fetch_history(pubnub_t*                     pb,
-                                  char const*                   channel,
-                                  struct pubnub_fetch_history_options opt);
+PUBNUB_EXTERN enum pubnub_res pubnub_fetch_history(pubnub_t* pb,
+                                                   char const* channel,
+                                                   struct pubnub_fetch_history_options opt);
 
 PUBNUB_EXTERN pubnub_chamebl_t pubnub_get_fetch_history(pubnub_t* pb);
 

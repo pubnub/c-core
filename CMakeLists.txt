@@ -62,17 +62,17 @@ num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
 num_option(USE_RETRY_CONFIGURATION "Use requests retry" OFF)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine" OFF)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine [USE_SUBSCRIBE_V2=ON needed]" OFF)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
 num_option(USE_ACTIONS_API "Use actions API" ON)
-num_option(USE_REVOKE_TOKEN_API "Use revoke token API" OFF)
-num_option(USE_GRANT_TOKEN_API "Use grant token API" OFF)
+num_option(USE_REVOKE_TOKEN_API "Use revoke token API [OPENSSL ONLY]" OFF)
+num_option(USE_GRANT_TOKEN_API "Use grant token API [OPENSSL ONLY]" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
-num_option(USE_IPV6 "Use IPv6 [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
+num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
@@ -112,6 +112,14 @@ set(FLAGS "\
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
     
+#Required on windows with Event Engine, so only winsock2 is used (otherwise it tries to use winsock and winsock2 and there are redefinition errors)
+if(WIN32 OR WIN64 OR MSVC)
+set(FLAGS "\
+    ${FLAGS} \
+	-D _WINSOCKAPI_")
+endif()
+
+	
 set(LDLIBS)
 set(OS_SOURCEFILES)
 
@@ -277,19 +285,11 @@ if(${USE_CALLBACK_API})
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
     elseif(WIN32 OR WIN64 OR MSVC)
-        if (${OPENSSL})
-            set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c)
-        else()
-            set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
-        endif()
+		set(INTF_SOURCEFILES
+			${INTF_SOURCEFILES}
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
+			${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
     endif()
 else()
     message(STATUS "Using sync API")
