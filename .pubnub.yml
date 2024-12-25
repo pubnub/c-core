@@ -1,8 +1,19 @@
 name: c-core
 schema: 1
-version: "4.15.0"
+version: "4.16.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2024-12-25
+    version: v4.16.0
+    changes:
+      - type: feature
+        text: "Additional flags for C/CPP can be set with: `USER_C_FLAGS` / `USER_CXX_FLAGS`."
+      - type: bug
+        text: "Fix because of which one of the source files has been missed for Windows."
+      - type: bug
+        text: "Fix issue with unsupported concatenation of sources files / definitions (`+=`)."
+      - type: improvement
+        text: "Refactor our `Makefiles` from different folders and platforms to use `include` directives to include shared definitions, flags, source files."
   - date: 2024-11-25
     version: v4.15.0
     changes:
@@ -884,7 +895,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -950,7 +961,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -1016,7 +1027,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -1078,7 +1089,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -1139,7 +1150,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -1195,7 +1206,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"
@@ -1248,7 +1259,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.15.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
             requires:
               -
                 name: "miniz"

@@ -1,3 +1,16 @@
+## v4.16.0
+December 25 2024
+
+#### Added
+- Additional flags for C/CPP can be set with: `USER_C_FLAGS` / `USER_CXX_FLAGS`.
+
+#### Fixed
+- Fix because of which one of the source files has been missed for Windows.
+- Fix issue with unsupported concatenation of sources files / definitions (`+=`).
+
+#### Modified
+- Refactor our `Makefiles` from different folders and platforms to use `include` directives to include shared definitions, flags, source files.
+
 ## v4.15.0
 November 25 2024
 
