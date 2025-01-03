@@ -40,10 +40,10 @@ enum pubnub_log_level {
 
     @param callback The callback that will be executed instead of default log
  */
-PUBNUB_EXTERN void pubnub_setLogCallback(void (*callback)(enum pubnub_log_level log_level, const char* message));
+PUBNUB_EXTERN void pubnub_set_log_callback(void (*callback)(enum pubnub_log_level log_level, const char* message));
 
 // A global variable to store log function provided by the user
-PUBNUB_EXTERN void (*pubnub_logCallback)(enum pubnub_log_level log_level, const char* message);
+PUBNUB_EXTERN void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message);
 
 #if !defined PUBNUB_LOG_PRINTF
 #include <stdio.h>
@@ -52,10 +52,10 @@ PUBNUB_EXTERN void (*pubnub_logCallback)(enum pubnub_log_level log_level, const 
 */
 #define PUBNUB_LOG_PRINTF(LVL, ...) \
     do { \
-        if (pubnub_logCallback) { \
+        if (pubnub_log_callback) { \
             char logMessage[1024]; \
             snprintf(logMessage, sizeof(logMessage), __VA_ARGS__); \
-            pubnub_logCallback(LVL, logMessage); \
+            pubnub_log_callback(LVL, logMessage); \
         } else { \
             printf(__VA_ARGS__); \
         } \

@@ -2,9 +2,9 @@
 #include "pubnub_log.h"
 #include <stddef.h>
 
-void pubnub_setLogCallback(void (*callback)(enum pubnub_log_level log_level, const char* message))
+void pubnub_set_log_callback(void (*callback)(enum pubnub_log_level log_level, const char* message))
 {
-    pubnub_logCallback = callback;
+    pubnub_log_callback = callback;
 }
 
-void (*pubnub_logCallback)(enum pubnub_log_level log_level, const char* message) = NULL;
+void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message) = NULL;
