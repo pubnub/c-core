@@ -3,7 +3,6 @@
 #define	INC_PUBNUB_LOG
 
 #include "../lib/pb_extern.h"
-#include "pbcc_log.h"
 
 /** @file pubnub_log.h 
     This is the "Log" API of the Pubnub client library.
