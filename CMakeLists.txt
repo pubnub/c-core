@@ -174,6 +174,7 @@ set(CORE_SOURCEFILES
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_netcore.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_blocking_io.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timers.c
+    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_log.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_json_parse.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c
     ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c
