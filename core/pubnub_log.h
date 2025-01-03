@@ -2,6 +2,7 @@
 #if !defined INC_PUBNUB_LOG
 #define	INC_PUBNUB_LOG
 
+#include "../lib/pb_extern.h"
 
 /** @file pubnub_log.h 
     This is the "Log" API of the Pubnub client library.
@@ -35,6 +36,19 @@ enum pubnub_log_level {
 #define PUBNUB_LOG_LEVEL PUBNUB_LOG_LEVEL_INFO
 #endif
 
+/** Replaces default logging function "printf" with provided callback.
+
+    @param callback The callback that will be executed instead of default log
+ */
+PUBNUB_EXTERN void pubnub_set_log_callback(void (*callback)(enum pubnub_log_level log_level, const char* message));
+
+/** A global variable to store log function provided by the user.
+ * This shouldn't be accessed or set directly. Use pubnub_set_log_callback instead.
+*/
+extern void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message);
+
+void log_with_callback(enum pubnub_log_level log_level, const char* format, ...);
+
 #if !defined PUBNUB_LOG_PRINTF
 #include <stdio.h>
 /** User should define a printf-like function that will do the actual
@@ -44,9 +58,21 @@ enum pubnub_log_level {
 #endif
 
 /** Generic logging macro, logs to given @a LVL using a printf-like
-    interface
+    interface. Uses callback instead of printf if pubnub_log_callback
+    is set.
 */
-#define PUBNUB_LOG(LVL, ...) do { if (LVL <= PUBNUB_LOG_LEVEL) PUBNUB_LOG_PRINTF(__VA_ARGS__); } while(0)
+#if !defined PUBNUB_LOG
+#define PUBNUB_LOG(LVL, ...) \
+    do { \
+        if (LVL <= PUBNUB_LOG_LEVEL) { \
+            if (pubnub_log_callback) { \
+                log_with_callback(LVL, __VA_ARGS__); \
+            } else { \
+                PUBNUB_LOG_PRINTF(__VA_ARGS__); \
+            } \
+        } \
+    } while(0)
+#endif
 
 /** Helper macro to log an error message */
 #define PUBNUB_LOG_ERROR(...) PUBNUB_LOG(PUBNUB_LOG_LEVEL_ERROR, __VA_ARGS__)
