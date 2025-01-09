@@ -1,3 +1,12 @@
+## v4.16.1
+January 09 2025
+
+#### Fixed
+- Remove the `user_id` length restriction for dynamically allocated memory for it.
+
+#### Modified
+- Configure `try_compile` when building a static library.
+
 ## v4.16.0
 December 25 2024
 
