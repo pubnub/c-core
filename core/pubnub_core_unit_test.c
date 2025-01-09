@@ -355,6 +355,18 @@ static void cancel_and_cleanup(pubnub_t* pbp)
     attest(pbp->core.last_result, equals(PNR_CANCELLED));
 }
 
+
+Ensure(single_context_pubnub, no_user_id_length_limit)
+{
+    pubnub_init(pbp, "pubkey", "subkey");
+    char *user_id = "WC65Z7Gg9fnY6M2XxfxF6Q0JRH8pFRhwDiJsnqtgXs6keqzOE24SqQiE20Yzv4v5wuKtrn96iA7TjDKe3pMeAqW3wYRsjLAVWO1efmIdueuQwlB6DRRgoCSKReczOySSoH9KcJTLtjDZatNFTFyP2IF8jtYtef3P1SOwEWzGtJW6jV67gM0tTPJogEdcxetJhRYU5BtMTrsxA2EMmnZ8AWXZWCPAr3rZ";
+    // Test 224 long user id
+    pubnub_set_uuid(pbp, user_id);
+    attest(pubnub_uuid_get(pbp), streqs(user_id));
+    pubnub_set_user_id(pbp, user_id);
+    attest(pubnub_user_id_get(pbp), streqs(user_id));
+}
+
 /* -- LEAVE operation -- */
 Ensure(single_context_pubnub, leave_have_dns)
 {
@@ -4571,11 +4583,9 @@ Ensure(single_context_pubnub, illegal_context_fires_assert)
     expect_assert_in(pubnub_leave(NULL, "x", NULL), "pubnub_coreapi.c");
     expect_assert_in(pubnub_cancel(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_user_id(NULL, ""), "pubnub_pubsubapi.c");
-    expect_assert_in(pubnub_set_user_id(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
     PUBNUB_DISABLE_WARNING_PUSH
     PUBNUB_DISABLE_DEPRECATED
     expect_assert_in(pubnub_set_uuid(NULL, ""), "pubnub_pubsubapi.c");
-    expect_assert_in(pubnub_set_uuid(pbp, "50fb7a0b-1688-45b9-9f27-ea83308464d8-ab3817df-07eb-446a-b990-c3b62a31706f"), "pubnub_ccore_pubsub.c");
     PUBNUB_DISABLE_WARNING_POP
     expect_assert_in(pubnub_user_id_get(NULL), "pubnub_pubsubapi.c");
     expect_assert_in(pubnub_set_auth(NULL, ""), "pubnub_pubsubapi.c");

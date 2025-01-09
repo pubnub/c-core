@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.16.0"
+version: "4.16.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-01-09
+    version: v4.16.1
+    changes:
+      - type: bug
+        text: "Remove the `user_id` length restriction for dynamically allocated memory for it."
+      - type: improvement
+        text: "Configure `try_compile` when building a static library."
   - date: 2024-12-25
     version: v4.16.0
     changes:
@@ -895,7 +902,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -961,7 +968,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -1027,7 +1034,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -1089,7 +1096,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -1150,7 +1157,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -1206,7 +1213,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
@@ -1259,7 +1266,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
             requires:
               -
                 name: "miniz"
