@@ -15,7 +15,7 @@ endif
 
 generate_report: all
 	#$(GCOVR) -r . --html --html-details -o coverage.html
-	$(GCOVR) -r . --xml -o coverage.xml
+	#$(GCOVR) -r . --xml -o coverage.xml
 
 CFLAGS +=-g -D PUBNUB_CALLBACK_API -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -I. -I.. -I../core -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
 
@@ -29,7 +29,7 @@ pubnub_parse_ipv6_addr_unit_test: pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_add
 	gcc -o pubnub_parse_ipv6_addr_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -Wall $(COVERAGE_FLAGS) -fPIC $(PARSE_IPV6_ADDR_SOURCE_FILES) pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_addr_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_parse_ipv6_addr_unit_testo $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PARSE_IPV6_ADDR_SOURCE_FILES) ../lib/pubnub_parse_ipv6_addr.c pubnub_parse_ipv6_addr_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_parse_ipv6_addr_unit_test.so
-	$(GCOVR) -r . --html --html-details -o coverage.html
+	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 DNS_CODEC_SOURCE_FILES = ../core/pubnub_assert_std.c
 
@@ -37,17 +37,17 @@ pubnub_dns_codec_unit_test: pubnub_dns_codec.c pubnub_dns_codec_unit_test.c
 	gcc -o pubnub_dns_codec_unit_test.so -shared $(CFLAGS) -D PUBNUB_USE_IPV6=1 -D PUBNUB_USE_SSL=1 $(LDFLAGS) -Wall $(COVERAGE_FLAGS) -fPIC $(DNS_CODEC_SOURCE_FILES) pubnub_dns_codec.c pubnub_dns_codec_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_dns_codec_unit_testo $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(DNS_CODEC_SOURCE_FILES) ../lib/pubnub_dns_codec.c pubnub_dns_codec_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_dns_codec_unit_test.so
-	$(GCOVR) -r . --html --html-details -o coverage.html
+	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 pbarray_unit_test: pbref_counter.c pbarray.c pbarray_unit_test.c
 	gcc -o pbarray_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../core/c99 -Wall $(COVERAGE_FLAGS) pbref_counter.c pbarray.c pbarray_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pbarray_unit_test.so
-	$(GCOVR) -r . --html --html-details -o coverage.html
+	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 pbhash_set_unit_test: pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_test.c
 	gcc -o pbhash_set_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../core/c99 -Wall $(COVERAGE_FLAGS) pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pbhash_set_unit_test.so
-	$(GCOVR) -r . --html --html-details -o coverage.html
+	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+

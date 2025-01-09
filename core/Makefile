@@ -17,7 +17,7 @@ endif
 
 generate_report: all
 	#$(GCOVR) -r . --html --html-details -o coverage.html
-	$(GCOVR) -r . --xml -o coverage.xml
+	#$(GCOVR) -r . --xml -o coverage.xml
 
 ifndef RECEIVE_GZIP_RESPONSE
 RECEIVE_GZIP_RESPONSE = 1
