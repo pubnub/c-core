@@ -43,25 +43,20 @@ enum pubnub_log_level {
 #define PUBNUB_LOG_PRINTF(...) printf(__VA_ARGS__)
 #endif
 
-/** Generic logging macro, logs to given @a LVL using a printf-like
-    interface.
-*/
-#define PUBNUB_LOG(LVL, ...) do { if (LVL <= PUBNUB_LOG_LEVEL) PUBNUB_LOG_PRINTF(__VA_ARGS__); } while(0)
-
 #if PUBNUB_USE_LOG_CALLBACK
 
 #include "../lib/pb_extern.h"
+
+/** A global variable to store log function provided by the user.
+    This shouldn't be accessed or set directly. Use pubnub_set_log_callback instead.
+*/
+extern void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message);
 
 /** Replaces default logging function "printf" with provided callback.
 
     @param callback The callback that will be executed instead of default log
  */
 PUBNUB_EXTERN void pubnub_set_log_callback(void (*callback)(enum pubnub_log_level log_level, const char* message));
-
-/** A global variable to store log function provided by the user.
-    This shouldn't be accessed or set directly. Use pubnub_set_log_callback instead.
-*/
-extern void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message);
 
 void log_with_callback(enum pubnub_log_level log_level, const char* format, ...);
 
@@ -71,16 +66,20 @@ void log_with_callback(enum pubnub_log_level log_level, const char* format, ...)
     is set.
 */
 #define PUBNUB_LOG(LVL, ...) \
-    do { \
-        if (LVL <= PUBNUB_LOG_LEVEL) { \
-            if (pubnub_log_callback) { \
-                log_with_callback(LVL, __VA_ARGS__); \
-            } else { \
-                PUBNUB_LOG_PRINTF(__VA_ARGS__); \
-            } \
+do { \
+    if (LVL <= PUBNUB_LOG_LEVEL) { \
+        if (pubnub_log_callback) { \
+            log_with_callback(LVL, __VA_ARGS__); \
+        } else { \
+            PUBNUB_LOG_PRINTF(__VA_ARGS__); \
         } \
-    } while(0)
-
+    } \
+} while(0)
+#else
+/** Generic logging macro, logs to given @a LVL using a printf-like
+    interface.
+*/
+#define PUBNUB_LOG(LVL, ...) do { if (LVL <= PUBNUB_LOG_LEVEL) PUBNUB_LOG_PRINTF(__VA_ARGS__); } while(0)
 #endif /* PUBNUB_USE_LOG_CALLBACK */
 
 
