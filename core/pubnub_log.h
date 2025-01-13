@@ -43,6 +43,10 @@ enum pubnub_log_level {
 #define PUBNUB_LOG_PRINTF(...) printf(__VA_ARGS__)
 #endif
 
+/** Generic logging macro, logs to given @a LVL using a printf-like
+    interface.
+*/
+#define PUBNUB_LOG(LVL, ...) do { if (LVL <= PUBNUB_LOG_LEVEL) PUBNUB_LOG_PRINTF(__VA_ARGS__); } while(0)
 
 #if PUBNUB_USE_LOG_CALLBACK
 
@@ -61,6 +65,7 @@ extern void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* 
 
 void log_with_callback(enum pubnub_log_level log_level, const char* format, ...);
 
+//Redefine this macro to include callback functionality
 /** Generic logging macro, logs to given @a LVL using a printf-like
     interface. Uses callback instead of printf if pubnub_log_callback
     is set.
@@ -75,11 +80,6 @@ void log_with_callback(enum pubnub_log_level log_level, const char* format, ...)
             } \
         } \
     } while(0)
-#else
-/** Generic logging macro, logs to given @a LVL using a printf-like
-    interface.
-*/
-#define PUBNUB_LOG(LVL, ...) do { if (LVL <= PUBNUB_LOG_LEVEL) PUBNUB_LOG_PRINTF(__VA_ARGS__); } while(0)
 
 #endif /* PUBNUB_USE_LOG_CALLBACK */
 
