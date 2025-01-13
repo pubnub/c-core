@@ -162,7 +162,7 @@
 #endif
 
 #if !defined(PUBNUB_USE_LOG_CALLBACK)
-#define PUBNUB_USE_LOG_CALLBACK 1
+#define PUBNUB_USE_LOG_CALLBACK 0
 #endif
 
 #if !defined(PUBNUB_ONLY_PUBSUB_API)
