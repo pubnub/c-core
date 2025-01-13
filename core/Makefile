@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c pubnub_log.c
+PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c
 # TODO: move coreapi_ex to new module
 
 all: pubnub_crypto_unittest pubnub_subscribe_v2_unittest pbcc_crypto_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
@@ -57,7 +57,7 @@ unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 
 
-TIMER_LIST_SOURCEFILES = pubnub_alloc_static.c pubnub_assert_std.c pubnub_timers.c pubnub_log.c
+TIMER_LIST_SOURCEFILES = pubnub_alloc_static.c pubnub_assert_std.c pubnub_timers.c
 
 pubnub_timer_list_unittest: pubnub_timer_list.c pubnub_timer_list_unit_test.c
 	gcc -o pubnub_timer_list_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_CALLBACK_API -D PUBNUB_ASSERT_LEVEL_NONE -Wall $(COVERAGE_FLAGS) -fPIC $(TIMER_LIST_SOURCEFILES) pubnub_timer_list.c pubnub_timer_list_unit_test.c -lcgreen -lm
