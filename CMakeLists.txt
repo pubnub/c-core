@@ -84,6 +84,7 @@ num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
+num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" ON)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
 log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
@@ -118,6 +119,7 @@ set(FLAGS "\
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
     -D PUBNUB_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
+    -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
 
 #Required on windows with Event Engine, so only winsock2 is used (otherwise it tries to use winsock and winsock2 and there are redefinition errors)
