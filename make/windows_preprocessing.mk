@@ -218,6 +218,11 @@ USE_SUBSCRIBE_EVENT_ENGINE = $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 USE_SUBSCRIBE_V2 = $(DEFAULT_USE_SUBSCRIBE_V2)
 !endif
 
+# Whether user defined callback for logging should be enabled or not.
+!ifndef USE_LOG_CALLBACK
+USE_LOG_CALLBACK = $(DEFAULT_USE_LOG_CALLBACK)
+!endif
+
 # Additional user-provided compiler flags (C/C++).
 !ifndef USER_C_FLAGS
 USER_C_FLAGS =

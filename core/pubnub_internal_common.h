@@ -17,6 +17,10 @@
 #define PUBNUB_USE_IPV6 0
 #endif
 
+#if !defined(PUBNUB_USE_LOG_CALLBACK)
+#define PUBNUB_USE_LOG_CALLBACK 0
+#endif
+
 #if !defined(PUBNUB_SET_DNS_SERVERS)
 #define PUBNUB_SET_DNS_SERVERS 0
 #endif

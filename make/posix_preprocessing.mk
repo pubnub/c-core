@@ -143,6 +143,9 @@ USE_SUBSCRIBE_EVENT_ENGINE ?= $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 # Whether subscribe v2 feature should be enabled or not.
 USE_SUBSCRIBE_V2 ?= $(DEFAULT_USE_SUBSCRIBE_V2)
 
+# Whether user defined callback for logging should be enabled or not.
+USE_LOG_CALLBACK ?= $(DEFAULT_USE_LOG_CALLBACK)
+
 # Additional user-provided compiler flags (C/C++).
 USER_C_FLAGS ?=
 USER_CXX_FLAGS ?=
