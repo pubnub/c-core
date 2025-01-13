@@ -1,13 +1,13 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_log.h"
 
-void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message) = NULL;
-
 #if PUBNUB_USE_LOG_CALLBACK
 
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdlib.h>
+
+void (*pubnub_log_callback)(enum pubnub_log_level log_level, const char* message) = NULL;
 
 void pubnub_set_log_callback(void (*callback)(enum pubnub_log_level log_level, const char* message)) {
     pubnub_log_callback = callback;
