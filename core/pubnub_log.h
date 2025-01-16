@@ -143,4 +143,4 @@ do { \
 
 
 
-#endif /*!defined INC_PUBNUB_LOG */
+#endif /* !defined INC_PUBNUB_LOG */
