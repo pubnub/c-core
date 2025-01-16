@@ -1,3 +1,9 @@
+## v4.17.0
+January 16 2025
+
+#### Added
+- Add possibility to replace default log function with a callback provided by the user.
+
 ## v4.16.1
 January 09 2025
 

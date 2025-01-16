@@ -22,6 +22,7 @@ CORE_SOURCE_FILES = \
     ../core/pubnub_generate_uuid_v3_md5.c             \
     ../core/pubnub_helper.c                           \
     ../core/pubnub_json_parse.c                       \
+    ../core/pubnub_log.c                              \
     ../core/pubnub_memory_block.c                     \
     ../core/pubnub_netcore.c                          \
     ../core/pubnub_pubsubapi.c                        \

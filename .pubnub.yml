@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.16.1"
+version: "4.17.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-01-16
+    version: v4.17.0
+    changes:
+      - type: feature
+        text: "Add possibility to replace default log function with a callback provided by the user."
   - date: 2025-01-09
     version: v4.16.1
     changes:
@@ -902,7 +907,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -968,7 +973,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -1034,7 +1039,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -1096,7 +1101,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -1157,7 +1162,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -1213,7 +1218,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"
@@ -1266,7 +1271,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.16.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
             requires:
               -
                 name: "miniz"

@@ -161,6 +161,9 @@
 #define PUBNUB_CRYPTO_API 0
 #endif
 
+#if !defined(PUBNUB_USE_LOG_CALLBACK)
+#define PUBNUB_USE_LOG_CALLBACK 0
+#endif
 
 #if !defined(PUBNUB_ONLY_PUBSUB_API)
 /** If true (!=0), will enable only publish and subscribe. All
