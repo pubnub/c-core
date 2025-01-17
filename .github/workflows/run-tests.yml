@@ -55,6 +55,7 @@ jobs:
       - name: Setup environment
         shell: bash
         run: |
+          sudo apt-get update
           sudo apt-get install -y ninja-build libboost-all-dev libssl-dev
           sudo gem install cucumber
       - name: Checkout project
@@ -78,7 +79,7 @@ jobs:
         with:
           path: |
             cucumber-cpp
-          key: ${{ runner.os }}-cucumber-cpp-4d47d6c4e505d293114751bb8a6610cf4dc55665
+          key: ${{ runner.os }}-cucumber-cpp-naster
           restore-keys: |
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
@@ -86,15 +87,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cucumber/cucumber-cpp
-          ref: 4d47d6c4e505d293114751bb8a6610cf4dc55665
+          ref: master
           path: cucumber-cpp-src
       - name: Build Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cd ./cucumber-cpp-src
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --config Debug
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
           mv cucumber-cpp-src/build cucumber-cpp/build
