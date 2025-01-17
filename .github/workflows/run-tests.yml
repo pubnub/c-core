@@ -92,8 +92,9 @@ jobs:
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          g++ --version
           cd ./cucumber-cpp-src
-          cmake -B build -DCUKE_ENABLE_BOOST_TEST=ON -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCUKE_ENABLE_BOOST_TEST=ON -DCMAKE_CXX_STANDARD=14 -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
