@@ -95,8 +95,8 @@ jobs:
         run: |
           g++ --version
           cd ./cucumber-cpp-src
-          cmake --debug-output -B build -DCUKE_ENABLE_BOOST_TEST=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --config Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
           mv cucumber-cpp-src/build cucumber-cpp/build
