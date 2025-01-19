@@ -54,8 +54,6 @@ jobs:
     steps:
       - name: Setup environment
         shell: bash
-        env:
-          BOOST_TIMER_ENABLE_DEPRECATED: 1
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build libboost-all-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
@@ -97,7 +95,7 @@ jobs:
         run: |
           g++ --version
           cd ./cucumber-cpp-src
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          BOOST_TIMER_ENABLE_DEPRECATED=1 cmake -B build -DCMAKE_BUILD_TYPE=Debug
           cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
