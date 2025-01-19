@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libboost-all-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
+          sudo apt-get install -y ninja-build libboost1.74-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
           sudo gem install cucumber
       - name: Checkout project
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
         run: |
           g++ --version
           cd ./cucumber-cpp-src
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBOOST_TIMER_ENABLE_DEPRECATED=1
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug
           cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
