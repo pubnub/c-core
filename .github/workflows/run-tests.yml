@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libboost1.74-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
+          sudo apt-get install -y ninja-build libboost-all-dev=1.74.* libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
           sudo gem install cucumber
       - name: Checkout project
         uses: actions/checkout@v4
