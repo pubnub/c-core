@@ -95,7 +95,7 @@ jobs:
         run: |
           g++ --version
           cd ./cucumber-cpp-src
-          BOOST_TIMER_ENABLE_DEPRECATED=1 cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBOOST_TIMER_ENABLE_DEPRECATED=1
           cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
