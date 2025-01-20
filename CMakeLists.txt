@@ -100,7 +100,6 @@ endif ()
 # Flags configuration
 
 set(FLAGS "\
-    -g \
     -Wall \
     -D PUBNUB_THREADSAFE \
     -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_${LOG_LEVEL} \
@@ -121,6 +120,12 @@ set(FLAGS "\
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
+
+if (DEFINED SDK_VERSION_SUFFIX)
+    set(FLAGS "\
+        ${FLAGS} \
+        -D PUBNUB_SDK_VERSION_SUFFIX=${SDK_VERSION_SUFFIX}")
+endif ()
 
 #Required on windows with Event Engine, so only winsock2 is used (otherwise it tries to use winsock and winsock2 and there are redefinition errors)
 if (WIN32 OR WIN64 OR MSVC)
@@ -144,6 +149,7 @@ endif ()
 if (${ASAN})
     set(FLAGS "\
         ${FLAGS} \
+        -g \
         -fsanitize=address")
     set(LDLIBS "\
         ${LDLIBS} \

@@ -55,7 +55,8 @@ jobs:
       - name: Setup environment
         shell: bash
         run: |
-          sudo apt-get install -y ninja-build libboost-all-dev libssl-dev
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libboost-all-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev g++ cmake
           sudo gem install cucumber
       - name: Checkout project
         uses: actions/checkout@v4
@@ -92,8 +93,9 @@ jobs:
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          g++ --version
           cd ./cucumber-cpp-src
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCUKE_TESTS_UNIT=OFF
           cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
