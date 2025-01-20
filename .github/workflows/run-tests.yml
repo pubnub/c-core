@@ -95,7 +95,7 @@ jobs:
         run: |
           g++ --version
           cd ./cucumber-cpp-src
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCUKE_TESTS_UNIT=OFF
           cmake --build build --config Debug
           cd "$GITHUB_WORKSPACE"
           mkdir -p cucumber-cpp
