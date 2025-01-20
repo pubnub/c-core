@@ -39,7 +39,12 @@ struct pubnub_subloop_descriptor {
 
     @result The subscribe loop descriptor made 
  */
+// TODO: DYNAMIC API
+#if 1
+PUBNUB_EXTERN struct pubnub_subloop_descriptor pubnub_sync_subloop_define(pubnub_t *p, char const *channel);
+#else
 PUBNUB_EXTERN struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *channel);
+#endif
 
 /** Designed to be called once in every iteration of a subscribe loop.
     Fetches the next message on the given @p channel and/or @p

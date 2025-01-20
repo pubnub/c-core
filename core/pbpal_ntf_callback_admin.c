@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_ntf_dynamic.h"
 #include "pubnub_internal.h"
 
 #if PUBNUB_USE_RETRY_CONFIGURATION
@@ -11,6 +12,18 @@
 #include "pubnub_log.h"
 #include "pubnub_assert.h"
 
+
+// TODO: decide if it is worth to keep that here 
+// 1 - till the flag is fixed
+#if 1
+#define MAYBE_INLINE 
+#else 
+#if __STDC_VERSION__ >= 199901L 
+#define MAYBE_INLINE static inline 
+#else
+#define MAYBE_INLINE static 
+#endif
+#endif // 1
 
 
 void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
@@ -48,7 +61,7 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
     }
 }
 
-void pbnc_tr_cxt_state_reset(pubnub_t* pb)
+MAYBE_INLINE void pbnc_tr_cxt_state_reset_callback(pubnub_t* pb)
 {
     if (pb->trans == PBTT_SET_STATE)
     {
@@ -60,7 +73,7 @@ void pbnc_tr_cxt_state_reset(pubnub_t* pb)
     }
 }
 
-enum pubnub_res pubnub_last_result(pubnub_t* pb)
+MAYBE_INLINE enum pubnub_res pubnub_last_result(pubnub_t* pb)
 {
     enum pubnub_res rslt;
 
@@ -69,7 +82,7 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb)
     pubnub_mutex_lock(pb->monitor);
     rslt = pb->core.last_result;
     if (rslt != PNR_OK){
-        pbnc_tr_cxt_state_reset(pb);
+        pbnc_tr_cxt_state_reset_callback(pb);
     }
     pubnub_mutex_unlock(pb->monitor);
 
@@ -77,12 +90,34 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb)
 }
 
 
+// TODO: DYNAMIC API
+#if 0
+void pbnc_tr_cxt_state_reset(pubnub_t* pb) 
+{
+    pbnc_tr_cxt_state_reset_callback(pb);
+}
+
+
+enum pubnub_res pubnub_last_result(pubnub_t* pb) 
+{
+    return pubnub_last_result_callback(pb);
+}
+#endif
+
 enum pubnub_res pubnub_register_callback(pubnub_t*         pb,
                                          pubnub_callback_t cb,
                                          void*             user_data)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
+
+// TODO: DYNAMIC API
+#if 1 
+    if (PNA_DYNAMIC == pb->api_policy && NULL == pb->cb) {
+        pbntf_init_callback();
+    }
+#endif
+
     pb->cb        = cb;
     pb->user_data = user_data;
     pubnub_mutex_unlock(pb->monitor);

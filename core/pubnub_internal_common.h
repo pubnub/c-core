@@ -109,6 +109,13 @@
 #include <time.h>
 #endif
 
+// TODO: FIX FLAG MANAGEMENT
+//#if !defined PUBNUB_NTF_DYNAMIC
+//#define PUBNUB_NTF_DYNAMIC 0 
+//#else 
+#include "core/pubnub_ntf_dynamic.h"
+//#endif
+
 #include "core/pubnub_crypto.h"
 
 /* Maximum object length that will be sent via PATCH, or POST methods */
@@ -535,6 +542,12 @@ struct pubnub_ {
 #endif /* PUBNUB_PROXY_API */
     /** Crypto module for encryption and decryption */
     struct pubnub_crypto_provider_t *crypto_module;
+
+// TODO: FIX FLAG MANAGEMENT
+//#if PUBNUB_NTF_DYNAMIC
+    /** The PubNub API enforcement policy. */
+    enum pubnub_api_enforcement api_policy;
+//#endif // PUBNUB_NTF_DYNAMIC
 };
 
 

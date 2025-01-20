@@ -61,7 +61,12 @@ static void sublup_context_callback(pubnub_t*         pb,
 }
 
 
+// TODO: DYNAMIC API
+#if 0
 pubnub_subloop_t* pubnub_subloop_define(pubnub_t*                       p,
+#else 
+pubnub_subloop_t* pubnub_callback_subloop_define(pubnub_t*              p,
+#endif
                                         char const*                     channel,
                                         struct pubnub_subscribe_options options,
                                         pubnub_subloop_callback_t       cb)

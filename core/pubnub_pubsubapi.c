@@ -62,6 +62,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->keep_alive.max     = 1000;
     p->keep_alive.timeout = 50;
 #endif
+
+// TODO: DYNAMIC API
+#if 1
+    p->api_policy = PNA_DYNAMIC;
+#endif
+
     pbpal_init(p);
 #if PUBNUB_PROXY_API
     p->proxy_type        = pbproxyNONE;
