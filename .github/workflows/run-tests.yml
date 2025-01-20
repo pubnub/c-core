@@ -55,9 +55,8 @@ jobs:
       - name: Setup environment
         shell: bash
         run: |
-          echo "deb http://archive.ubuntu.com/ubuntu jammy main universe" | sudo tee -a /etc/apt/sources.list
           sudo apt-get update
-          sudo apt-get install -y ninja-build libboost-all-dev/jammy libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev
+          sudo apt-get install -y ninja-build libboost-all-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev g++ cmake
           sudo gem install cucumber
       - name: Checkout project
         uses: actions/checkout@v4
@@ -80,7 +79,7 @@ jobs:
         with:
           path: |
             cucumber-cpp
-          key: ${{ runner.os }}-cucumber-cpp-c79100eb70fbb34f6ea10030cec051c2cc9f7961
+          key: ${{ runner.os }}-cucumber-cpp-main
           restore-keys: |
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
@@ -88,7 +87,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cucumber/cucumber-cpp
-          ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961
           path: cucumber-cpp-src
       - name: Build Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
