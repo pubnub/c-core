@@ -60,7 +60,7 @@ if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
     set(DEFAULT_USE_SYNC_API OFF)
 else ()
-    set(DEFAULT_USE_CALLBACK_API OFF)
+    set(DEFAULT_USE_CALLBACK_API ON)
     set(DEFAULT_USE_SYNC_API ON)
 endif ()
 
@@ -332,9 +332,10 @@ endif ()
 if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
     message(STATUS "Using runtime API selection")
 
-    set(FLAGS "\
-        ${FLAGS} \
-        -D PUBNUB_NTF_DYNAMIC=1")
+    # TODO: something is wrong with flags :c
+    set(CMAKE_C_FLAGS "\
+        ${CMAKE_C_FLAGS} \
+        -D PUBNUB_NTF_RUNTIME_SELECTION")
 
     set(INTF_SOURCEFILES
             ${INTF_SOURCEFILES}
@@ -761,7 +762,8 @@ if (${EXAMPLES})
             set(EXAMPLE_LIST
                     pubnub_callback_sample
                     subscribe_publish_callback_sample
-                    subscribe_publish_from_callback)
+                    subscribe_publish_from_callback
+                    ${EXAMPLE_LIST})
 
             if (NOT ${USE_SYNC_API})
                 set(EXAMPLE_LIST
@@ -790,7 +792,8 @@ if (${EXAMPLES})
                     pubnub_publish_via_post_sample
                     pubnub_advanced_history_sample
                     pubnub_fetch_history_sample
-                    cancel_subscribe_sync_sample)
+                    cancel_subscribe_sync_sample
+                    ${EXAMPLE_LIST})
 
             if (NOT ${USE_CALLBACK_API})
                 set(EXAMPLE_LIST
@@ -814,6 +817,13 @@ if (${EXAMPLES})
                         ${EXAMPLE_LIST})
             endif ()
         endif ()
+
+        if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
+            set(EXAMPLE_LIST 
+                pubnub_api_enforcement_sample
+                ${EXAMPLE_LIST})
+        endif ()
+
     else ()
         message(STATUS "Building example ${EXAMPLE}")
         set(EXAMPLE_LIST ${EXAMPLE})
