@@ -90,7 +90,7 @@ static void buf_setup(pubnub_t* pb)
 }
 
 
-static int pal_init(void)
+static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
     if (!s_init) {
@@ -115,7 +115,7 @@ static int pal_init(void)
         if (0 != socket_platform_init()) {
             return -1;
         }
-        pbntf_init();
+        pbntf_init(pb);
         s_init = true;
     }
     return 0;
@@ -124,7 +124,7 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t* pb)
 {
-    pal_init();
+    pal_init(pb);
     memset(&pb->pal, 0, sizeof pb->pal);
     pb->pal.socket     = SOCKET_INVALID;
     pb->options.useSSL = pb->flags.trySSL = pb->options.fallbackSSL = true;

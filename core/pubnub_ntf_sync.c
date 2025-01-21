@@ -159,8 +159,9 @@ MAYBE_INLINE enum pubnub_res pubnub_last_result_sync(pubnub_t* pb)
 
 #if 0
 
-int pbntf_init(void)
+int pbntf_init(pubnub_t* pb)
 {
+    PUBNUB_UNUSED(pb);
     return pbntf_init_sync();
 }
 

@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_ntf_dynamic.h"
 #include "pubnub_internal.h"
 
 #include "core/pbpal.h"
@@ -19,15 +20,15 @@ static void buf_setup(pubnub_t* pb)
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
-
-static int pal_init(void)
+static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
     if (!s_init) {
         if (0 != socket_platform_init()) {
             return -1;
         }
-        pbntf_init();
+
+        pbntf_init(pb);
         s_init = true;
     }
     return 0;
@@ -36,7 +37,7 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t* pb)
 {
-    pal_init();
+    pal_init(pb);
     pb->pal.socket = SOCKET_INVALID;
     pb->sock_state = STATE_NONE;
     buf_setup(pb);

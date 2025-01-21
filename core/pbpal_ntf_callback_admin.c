@@ -90,8 +90,7 @@ MAYBE_INLINE enum pubnub_res pubnub_last_result(pubnub_t* pb)
 }
 
 
-// TODO: DYNAMIC API
-#if 0
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 void pbnc_tr_cxt_state_reset(pubnub_t* pb) 
 {
     pbnc_tr_cxt_state_reset_callback(pb);
@@ -110,14 +109,6 @@ enum pubnub_res pubnub_register_callback(pubnub_t*         pb,
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     pubnub_mutex_lock(pb->monitor);
-
-// TODO: DYNAMIC API
-#if 1 
-    if (PNA_DYNAMIC == pb->api_policy && NULL == pb->cb) {
-        pbntf_init_callback();
-    }
-#endif
-
     pb->cb        = cb;
     pb->user_data = user_data;
     pubnub_mutex_unlock(pb->monitor);

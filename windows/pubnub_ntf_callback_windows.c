@@ -94,8 +94,9 @@ void socket_watcher_thread(void* arg)
 }
 
 
-int pbntf_init(void)
+int pbntf_init(pubnub_t* pb)
 {
+    PUBNUB_UNUSED(pb);
     InitializeCriticalSection(&m_watcher.stoplock);
     InitializeCriticalSection(&m_watcher.mutw);
     InitializeCriticalSection(&m_watcher.timerlock);

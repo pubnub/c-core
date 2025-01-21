@@ -61,7 +61,7 @@ if (WITH_CPP)
     set(DEFAULT_USE_SYNC_API OFF)
 else ()
     set(DEFAULT_USE_CALLBACK_API ON)
-    set(DEFAULT_USE_SYNC_API ON)
+    set(DEFAULT_USE_SYNC_API OFF)
 endif ()
 
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
@@ -88,6 +88,7 @@ num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
 num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" OFF)
+log_option(COMPILE_COMMANDS "Generate compile_commands.json" OFF)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
 log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
@@ -103,6 +104,11 @@ endif ()
 if (NOT ${USE_CALLBACK_API} AND NOT ${USE_SYNC_API})
     message(FATAL_ERROR "You must select at least one API type!")
 endif ()
+
+if(${COMPILE_COMMANDS})
+    message(STATUS "Generating compile_commands.json")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+endif()
 
 # Flags configuration
 

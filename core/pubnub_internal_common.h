@@ -109,12 +109,9 @@
 #include <time.h>
 #endif
 
-// TODO: FIX FLAG MANAGEMENT
-//#if !defined PUBNUB_NTF_DYNAMIC
-//#define PUBNUB_NTF_DYNAMIC 0 
-//#else 
+#if defined PUBNUB_NTF_RUNTIME_SELECTION
 #include "core/pubnub_ntf_dynamic.h"
-//#endif
+#endif
 
 #include "core/pubnub_crypto.h"
 
@@ -558,7 +555,7 @@ struct pubnub_ {
 */
 void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state);
 
-int pbntf_init(void);
+int pbntf_init(pubnub_t* pb);
 
 int pbntf_got_socket(pubnub_t* pb);
 

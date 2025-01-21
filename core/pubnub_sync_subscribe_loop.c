@@ -7,10 +7,7 @@
 #include "pubnub_ntf_sync.h"
 #include "pubnub_assert.h"
 
-
-
-// TODO: DYNAMIC API
-#if 0
+#if !defined PUBNUB_NTF_RUNTIME_SELECTION
 struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *channel)
 #else 
 struct pubnub_subloop_descriptor pubnub_sync_subloop_define(pubnub_t *p, char const *channel)

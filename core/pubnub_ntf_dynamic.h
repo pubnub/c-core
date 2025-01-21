@@ -1,29 +1,21 @@
 #ifndef PUBNUB_NTF_DYNAMIC_H
 #define PUBNUB_NTF_DYNAMIC_H
 
-// TODO: FIX THIS FLAG MANAGMENT BEFORE MERGING
-//#if PUBNUB_NTF_DYNAMIC
+#if defined PUBNUB_NTF_RUNTIME_SELECTION
 
 #include "core/pubnub_api_types.h"
 
 /** The PubNub API enforcement policy.
  * 
  * This is used to select the PubNub API to be used by the client at runtime.
- * The client can use the sync API, the callback API, or it can
- * dynamically select the API depending on the context.
+ * The client can use the sync API, the callback API.
  *
- * By default API will be selected depending on the context.
+ * By default it selects the sync API.
  *
  * Policy is required only if the client is built with both sync and callback 
  * APIs. If the client is built with only one API, the policy is not even compiled.
  */
 enum pubnub_api_enforcement {
-    /** The PubNub API will be selected depending on the context.
-     * By default, The client will use the sync API, unless any 
-     * callback is set, in which case the client will use the callback API.
-     */
-    PNA_DYNAMIC,
-
     /** The PubNub client will enforce the sync API. */
     PNA_SYNC,
 
@@ -37,6 +29,9 @@ enum pubnub_api_enforcement {
  * This function is used to enforce the PubNub API policy.
  * The policy is used to select the PubNub API to be used by the client.
  *
+ * It is crucial to select the API right after the allocation of the context
+ * but before the initialization to let the client know which API to use.
+ *
  * Policy is required only if the client is built with both sync and callback 
  * APIs. If the client is built with only one API, the policy is not even compiled.
  *
@@ -49,7 +44,7 @@ enum pubnub_api_enforcement {
  * @see pubnub_api_enforcement
  * @see pubnub_res
  */
-enum pubnub_res pubnub_enforce_api(pubnub_t* pb, enum pubnub_api_enforcement policy);
+void pubnub_enforce_api(pubnub_t* pb, enum pubnub_api_enforcement policy);
 
 
 // TODO: maybe move it to pbcc file
@@ -93,5 +88,5 @@ void pbnc_tr_cxt_state_reset_callback(pubnub_t* pb);
 enum pubnub_res pubnub_last_result_sync(pubnub_t* pb);
 enum pubnub_res pubnub_last_result_callback(pubnub_t* pb);
 
-//#endif // PUBNUB_NTF_DYNAMIC
+#endif // PUBNUB_NTF_RUNTIME_SELECTION
 #endif // PUBNUB_NTF_DYNAMIC_H
