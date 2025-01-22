@@ -20,6 +20,7 @@ static void buf_setup(pubnub_t* pb)
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
@@ -33,6 +34,33 @@ static int pal_init(pubnub_t* pb)
     }
     return 0;
 }
+#else
+static int pal_init(pubnub_t* pb)
+{
+    bool* s_init = NULL;
+    static bool s_init_sync = false;
+    static bool s_init_callback = false;
+
+    switch(pb->api_policy) {
+        case PNA_SYNC:
+            s_init = &s_init_sync;
+            break;
+        case PNA_CALLBACK:
+            s_init = &s_init_callback;
+            break;
+    }
+
+    if (!*s_init) {
+        if (0 != socket_platform_init()) {
+            return -1;
+        }
+
+        pbntf_init(pb);
+        *s_init = true;
+    }
+    return 0;
+}
+#endif
 
 
 void pbpal_init(pubnub_t* pb)

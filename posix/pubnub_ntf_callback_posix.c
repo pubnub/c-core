@@ -37,9 +37,7 @@ struct SocketWatcherData {
 static struct SocketWatcherData m_watcher;
 
 
-// TODO: decide if it is worth to keep that here 
-// 1 - till the flag is fixed
-#if 1
+#if PUBNUB_NTF_RUNTIME_SELECTION
 #define MAYBE_INLINE 
 #else 
 #if __STDC_VERSION__ >= 199901L 
@@ -47,7 +45,7 @@ static struct SocketWatcherData m_watcher;
 #else
 #define MAYBE_INLINE static 
 #endif
-#endif // 1
+#endif // PUBNUB_NTF_RUNTIME_SELECTION
 
 
 MAYBE_INLINE int pbntf_watch_in_events_callback(pubnub_t* pbp)

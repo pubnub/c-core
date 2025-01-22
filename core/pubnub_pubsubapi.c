@@ -26,7 +26,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
         p->wait_connect_timeout_ms = PUBNUB_DEFAULT_WAIT_CONNECT_TIMER;
 #if defined(PUBNUB_CALLBACK_API)
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
-        if (p->api_policy == PNA_CALLBACK) {
+        if (PNA_CALLBACK == p->api_policy) {
             p->previous = p->next = NULL;
         }
 #else 
@@ -36,7 +36,7 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     }
 #if defined(PUBNUB_CALLBACK_API)
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
-    if (p->api_policy == PNA_CALLBACK) {
+    if (PNA_CALLBACK == p->api_policy) {
         p->cb = NULL;
         p->user_data = NULL;
         p->flags.sent_queries = 0;
