@@ -317,7 +317,7 @@ MAYBE_INLINE void pbntf_update_socket_callback(pubnub_t* pb)
     pthread_mutex_unlock(&m_watcher.mutw);
 }
 
-#if 0
+#ifndef PUBNUB_NTF_RUNTIME_SELECTION
 
 int pbntf_watch_in_events(pubnub_t* pbp)
 {
@@ -378,5 +378,6 @@ void pbntf_update_socket(pubnub_t* pb)
     pbntf_update_socket_callback(pb);
 }
 
-#endif
+#endif // !PUBNUB_NTF_RUNTIME_SELECTION
+
 

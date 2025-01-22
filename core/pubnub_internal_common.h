@@ -540,11 +540,10 @@ struct pubnub_ {
     /** Crypto module for encryption and decryption */
     struct pubnub_crypto_provider_t *crypto_module;
 
-// TODO: FIX FLAG MANAGEMENT
-//#if PUBNUB_NTF_DYNAMIC
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
     /** The PubNub API enforcement policy. */
     enum pubnub_api_enforcement api_policy;
-//#endif // PUBNUB_NTF_DYNAMIC
+#endif
 };
 
 

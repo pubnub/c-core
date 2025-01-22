@@ -129,4 +129,14 @@ void pbntf_update_socket(pubnub_t* pb)
     }
 }
 
+enum pubnub_res pubnub_last_result(pubnub_t* pb) {
+    switch (pb->api_policy) {
+        case PNA_SYNC:
+            return pubnub_last_result_sync(pb);
+        case PNA_CALLBACK:
+            return pubnub_last_result_callback(pb);
+    }
+}
+
+
 #endif /* PUBNUB_NTF_RUNTIME_SELECTION */

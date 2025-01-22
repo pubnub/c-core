@@ -75,24 +75,24 @@ int main()
 
     /** Sync context */
 
-    enum pubnub_res publish_result = pubnub_publish(pbp_sync, channel_id, "\"Hello world from sync!\"");
-    if (PNR_OK != publish_result && PNR_STARTED != publish_result) {
-        printf("Failed to publish message from sync context!\n");
+//    enum pubnub_res publish_result = pubnub_publish(pbp_sync, channel_id, "\"Hello world from sync!\"");
+//    if (PNR_OK != publish_result && PNR_STARTED != publish_result) {
+//        printf("Failed to publish message from sync context!\n");
+//
+//        sync_sample_free(pbp_sync);
+//        pubnub_subscription_free(&subscription);
+//        callback_sample_free(pbp_callback);
+//        return -1;
+//    }
 
-        sync_sample_free(pbp_sync);
-        pubnub_subscription_free(&subscription);
-        callback_sample_free(pbp_callback);
-        return -1;
-    }
-
-    if (PNR_OK != pubnub_await(pbp_sync)) {
-        printf("Failed to await message from sync context!\n");
-
-        sync_sample_free(pbp_sync);
-        pubnub_subscription_free(&subscription);
-        callback_sample_free(pbp_callback);
-        return -1;
-    }
+//    if (PNR_OK != pubnub_await(pbp_sync)) {
+//        printf("Failed to await message from sync context!\n");
+//
+//        sync_sample_free(pbp_sync);
+//        pubnub_subscription_free(&subscription);
+//        callback_sample_free(pbp_callback);
+//        return -1;
+//    }
 
     wait_seconds(5);
 

@@ -73,7 +73,7 @@ MAYBE_INLINE void pbnc_tr_cxt_state_reset_callback(pubnub_t* pb)
     }
 }
 
-MAYBE_INLINE enum pubnub_res pubnub_last_result(pubnub_t* pb)
+MAYBE_INLINE enum pubnub_res pubnub_last_result_callback(pubnub_t* pb)
 {
     enum pubnub_res rslt;
 

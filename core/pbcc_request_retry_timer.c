@@ -122,6 +122,11 @@ void pbcc_request_retry_timer_start(
     timer->pb->core.http_retry_count++;
     pubnub_mutex_unlock(timer->pb->monitor);
 
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    if (PNA_SYNC == timer->pb->api_policy) {
+        pbcc_request_retry_timer_run_(timer);
+    } else {
+#endif
 #if defined(PUBNUB_CALLBACK_API)
     if (pthread_create(&timer->timer_thread,
                        NULL,
@@ -144,6 +149,9 @@ void pbcc_request_retry_timer_start(
         }
         pubnub_mutex_unlock(timer->pb->monitor);
     }
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    } /* if (PNA_SYNC == timer->pb->api_policy) */
+#endif
 #else
     pbcc_request_retry_timer_run_(timer);
 #endif // #if defined(PUBNUB_CALLBACK_API)

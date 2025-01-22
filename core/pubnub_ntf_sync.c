@@ -157,7 +157,7 @@ MAYBE_INLINE enum pubnub_res pubnub_last_result_sync(pubnub_t* pb)
 }
 
 
-#if 0
+#ifndef PUBNUB_NTF_RUNTIME_SELECTION
 
 int pbntf_init(pubnub_t* pb)
 {
