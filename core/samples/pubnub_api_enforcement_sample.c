@@ -46,8 +46,8 @@ int main()
     char* my_env_publish_key = getenv("PUBNUB_PUBLISH_KEY");
     char* my_env_subscribe_key = getenv("PUBNUB_SUBSCRIBE_KEY");
 
-    if (NULL == my_env_publish_key) { my_env_publish_key = "pub-c-3c19dc89-6dd9-4ecf-be7e-01ea81d284d2"; }
-    if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "sub-c-e9c43746-6c7f-44da-b292-8c50c0e4c39e"; }
+    if (NULL == my_env_publish_key) { my_env_publish_key = "demo"; }
+    if (NULL == my_env_subscribe_key) { my_env_subscribe_key = "demo"; }
 
     pubnub_init(pbp_sync, my_env_publish_key, my_env_subscribe_key);
     pubnub_init(pbp_callback, my_env_publish_key, my_env_subscribe_key);
