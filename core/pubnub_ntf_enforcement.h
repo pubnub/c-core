@@ -4,6 +4,7 @@
 #if defined PUBNUB_NTF_RUNTIME_SELECTION
 
 #include "core/pubnub_api_types.h"
+#include "core/pubnub_netcore.h"
 
 /** The PubNub API enforcement policy.
  * 

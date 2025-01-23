@@ -2,6 +2,8 @@
 #if !defined INC_PUBNUB_NETCORE
 #define INC_PUBNUB_NETCORE
 
+#include "stdbool.h"
+
 /** @file pubnub_netcore.h
 
     This is the interface of the Pubnub C-core network module.
