@@ -100,7 +100,7 @@ int main()
     }
     printf("Message published from sync context!\n");
 
-    wait_seconds(5);
+    wait_seconds(2);
 
     /** Cleanup */
 
