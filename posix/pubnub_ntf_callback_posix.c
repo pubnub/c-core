@@ -37,7 +37,7 @@ struct SocketWatcherData {
 static struct SocketWatcherData m_watcher;
 
 
-#if PUBNUB_NTF_RUNTIME_SELECTION
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
 #define MAYBE_INLINE 
 #else 
 #if __STDC_VERSION__ >= 199901L 
@@ -315,7 +315,7 @@ MAYBE_INLINE void pbntf_update_socket_callback(pubnub_t* pb)
     pthread_mutex_unlock(&m_watcher.mutw);
 }
 
-#ifndef PUBNUB_NTF_RUNTIME_SELECTION
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 
 int pbntf_watch_in_events(pubnub_t* pbp)
 {
