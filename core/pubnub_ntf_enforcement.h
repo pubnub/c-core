@@ -47,8 +47,9 @@ enum pubnub_api_enforcement {
  */
 void pubnub_enforce_api(pubnub_t* pb, enum pubnub_api_enforcement policy);
 
-
-// TODO: maybe move it to pbcc file
+/* This section declares the functions that are used when the api enforcement 
+ * policy is set to sync. They are bridge between the sync and callback interfaces.
+ */
 
 void pbntf_trans_outcome_sync(pubnub_t* pb, enum pubnub_state state);
 void pbntf_trans_outcome_callback(pubnub_t* pb, enum pubnub_state state);
@@ -88,6 +89,8 @@ void pbnc_tr_cxt_state_reset_callback(pubnub_t* pb);
 
 enum pubnub_res pubnub_last_result_sync(pubnub_t* pb);
 enum pubnub_res pubnub_last_result_callback(pubnub_t* pb);
+
+/* End of the section */
 
 #endif // PUBNUB_NTF_RUNTIME_SELECTION
 #endif // PUBNUB_NTF_ENFORCEMENT_H
