@@ -338,7 +338,6 @@ endif ()
 if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
     message(STATUS "Using runtime API selection")
 
-    # TODO: something is wrong with flags :c
     set(CMAKE_C_FLAGS "\
         ${CMAKE_C_FLAGS} \
         -D PUBNUB_NTF_RUNTIME_SELECTION")
