@@ -1,5 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "core/pubnub_ntf_dynamic.h"
+#include "pubnub_api_types.h"
 #include "pubnub_sync.h"
 
 #include "core/pubnub_coreapi_ex.h"
@@ -122,7 +123,7 @@ static void sync_sample_free(pubnub_t* p)
 {
     if (PN_CANCEL_STARTED == pubnub_cancel(p)) {
         enum pubnub_res pnru = pubnub_await(p);
-        if (pnru != PNR_OK) {
+        if (pnru != PNR_CANCELLED) {
             printf("Awaiting cancel failed: %d('%s')\n",
                    pnru,
                    pubnub_res_2_string(pnru));
