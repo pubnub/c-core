@@ -1,10 +1,10 @@
-#include "pubnub_log.h"
 #if defined PUBNUB_NTF_RUNTIME_SELECTION
 
 #include "core/pubnub_assert.h"
 #include "core/pubnub_ntf_callback.h"
+#include "pubnub_log.h"
 #include "pubnub_internal.h"
-#include "core/pubnub_ntf_dynamic.h"
+#include "core/pubnub_ntf_enforcement.h"
 #include "core/pubnub_internal_common.h"
 #include "pubnub_config.h"
 

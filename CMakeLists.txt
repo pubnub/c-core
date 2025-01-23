@@ -345,7 +345,7 @@ if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
 
     set(INTF_SOURCEFILES
             ${INTF_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_dynamic.c)
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_enforcement.c)
 
 elseif (${USE_SYNC_API})
     message(STATUS "Using sync API")

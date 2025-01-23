@@ -9,7 +9,7 @@
 #include "core/pubnub_timers.h"
 
 #include "core/pbpal.h"
-#include "pubnub_ntf_dynamic.h"
+#include "pubnub_ntf_enforcement.h"
 
 #include <ctype.h>
 #include <string.h>

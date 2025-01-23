@@ -1,5 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_ntf_dynamic.h"
 #include "pubnub_internal.h"
 
 #include "core/pbpal.h"
@@ -7,6 +6,7 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "core/pubnub_ntf_enforcement.h"
 
 #include <sys/types.h>
 #include <fcntl.h>

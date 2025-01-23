@@ -1,12 +1,12 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-#include "pubnub_ntf_dynamic.h"
 #if PUBNUB_PROXY_API
 
 #include "pubnub_internal.h"
 
 #include "pubnub_proxy.h"
 #include "pubnub_assert.h"
+#include "pubnub_ntf_enforcement.h"
 #include "pubnub_log.h"
 #if defined(PUBNUB_CALLBACK_API)
 #include "lib/pubnub_parse_ipv4_addr.h"

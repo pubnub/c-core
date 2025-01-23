@@ -110,7 +110,7 @@
 #endif
 
 #if defined PUBNUB_NTF_RUNTIME_SELECTION
-#include "core/pubnub_ntf_dynamic.h"
+#include "core/pubnub_ntf_enforcement.h"
 #endif
 
 #include "core/pubnub_crypto.h"

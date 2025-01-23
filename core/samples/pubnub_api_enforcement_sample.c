@@ -1,5 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_ntf_dynamic.h"
+#include "core/pubnub_ntf_enforcement.h"
 #include "pubnub_api_types.h"
 #include "pubnub_sync.h"
 

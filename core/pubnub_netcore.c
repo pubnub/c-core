@@ -2,12 +2,12 @@
 #include "pubnub_internal.h"
 
 #include "lib/pb_strncasecmp.h"
-#include "pubnub_ntf_dynamic.h"
 
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_ccore_pubsub.h"
+#include "pubnub_ntf_enforcement.h"
 #include "core/pbpal.h"
 #include "core/pubnub_version.h"
 #include "core/pubnub_version_internal.h"

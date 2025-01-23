@@ -1,5 +1,4 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_ntf_dynamic.h"
 #include "pubnub_internal.h"
 
 #if PUBNUB_USE_RETRY_CONFIGURATION
@@ -11,11 +10,10 @@
 
 #include "pubnub_log.h"
 #include "pubnub_assert.h"
+#include "core/pubnub_ntf_enforcement.h"
 
 
-// TODO: decide if it is worth to keep that here 
-// 1 - till the flag is fixed
-#if 1
+#if PUBNUB_NTF_RUNTIME_SELECTION
 #define MAYBE_INLINE 
 #else 
 #if __STDC_VERSION__ >= 199901L 
