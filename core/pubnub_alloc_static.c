@@ -5,7 +5,7 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
-#include "pubnub_ntf_dynamic.h"
+#include "pubnub_ntf_enforcement.h"
 
 
 static struct pubnub_ m_aCtx[PUBNUB_CTX_MAX];

@@ -1,5 +1,5 @@
-#ifndef PUBNUB_NTF_DYNAMIC_H
-#define PUBNUB_NTF_DYNAMIC_H
+#ifndef PUBNUB_NTF_ENFORCEMENT_H
+#define PUBNUB_NTF_ENFORCEMENT_H
 
 #if defined PUBNUB_NTF_RUNTIME_SELECTION
 
@@ -90,4 +90,4 @@ enum pubnub_res pubnub_last_result_sync(pubnub_t* pb);
 enum pubnub_res pubnub_last_result_callback(pubnub_t* pb);
 
 #endif // PUBNUB_NTF_RUNTIME_SELECTION
-#endif // PUBNUB_NTF_DYNAMIC_H
+#endif // PUBNUB_NTF_ENFORCEMENT_H
