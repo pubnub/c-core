@@ -3,7 +3,11 @@
 
 #if defined PUBNUB_NTF_RUNTIME_SELECTION
 
-#include "core/pubnub_api_types.h"
+struct pubnub_;
+typedef struct pubnub_ pubnub_t;
+
+enum pubnub_res;
+
 #include "core/pubnub_netcore.h"
 
 /** The PubNub API enforcement policy.
