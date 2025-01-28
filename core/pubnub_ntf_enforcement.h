@@ -9,6 +9,7 @@ typedef struct pubnub_ pubnub_t;
 enum pubnub_res;
 
 #include "core/pubnub_netcore.h"
+#include "lib/pb_extern.h"
 
 /** The PubNub API enforcement policy.
  * 
@@ -49,7 +50,7 @@ enum pubnub_api_enforcement {
  * @see pubnub_api_enforcement
  * @see pubnub_res
  */
-void pubnub_enforce_api(pubnub_t* pb, enum pubnub_api_enforcement policy);
+PUBNUB_EXTERN void pubnub_enforce_api(pubnub_t* pb, enum pubnub_api_enforcement policy);
 
 /* This section declares the functions that are used when the api enforcement 
  * policy is set. They are bridge between the sync and callback interfaces.
