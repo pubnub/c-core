@@ -1,5 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_sync.h"
+#include "pubnub_api_types.h"
+#include "pubnub_ntf_enforcement.h"
 
 #if PUBNUB_USE_RETRY_CONFIGURATION
 #include "core/pubnub_retry_configuration_internal.h"
@@ -245,6 +247,13 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
+
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    if (PNA_SYNC != pb->api_policy) {
+        return PNR_INTERNAL_ERROR;
+    }
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
+
     t0 = pbms_start();
     while (!pbnc_can_start_transaction(pb)) {
         pbms_t delta;
