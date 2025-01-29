@@ -56,7 +56,7 @@ int main()
     pubnub_set_user_id(pbp_callback, user_id);
 
     pubnub_set_blocking_io(pbp_sync);
-    pubnub_set_blocking_io(pbp_callback);
+    pubnub_set_non_blocking_io(pbp_callback);
 
     /** Callback context */
 
