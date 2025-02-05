@@ -1,11 +1,12 @@
-#include "pubnub_api_types.h"
-#include "pubnub_blocking_io.h"
-#include "pubnub_pubsubapi.h"
+#include "core/pubnub_api_types.h"
+#include "core/pubnub_blocking_io.h"
+#include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_alloc.h"
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_objects_api.h"
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 // This sample demo is split into 4 sections:
@@ -50,6 +51,8 @@ int main(void) {
     set_opts.data.profile_url = "my_profile_url";
     set_opts.data.email = "my_email";
     set_opts.data.custom = "{\"key\":\"value\"}";
+    set_opts.data.status = "active";
+    set_opts.data.type = "admin";
     set_opts.include = "custom";
 
     // we didn't set the UUID, so it will be the one from the context
@@ -88,7 +91,7 @@ int main(void) {
     // getall_opts.page.next = you can retrieve the next page in the response when the response is paginated
     // getall_opts.page.prev = as above
     getall_opts.limit = 1;
-    getall_opts.include = "custom";
+    getall_opts.include = "custom,status,type";
     getall_opts.filter = "name=='my_name'";
     getall_opts.count = pbccTrue;
     getall_opts.sort = "name:desc";
@@ -103,6 +106,14 @@ int main(void) {
 
         for (const char* response = pubnub_get(pb); response != NULL; response = pubnub_get(pb)) {
             printf("Response: %s\n", response);
+            if (NULL == strstr(response, "\"status\":\"active\"")) {
+                printf("\"status\" is missing in response.\n");
+                return 1;
+            }
+            if (NULL == strstr(response, "\"type\":\"admin\"")) {
+                printf("\"type\" is missing in response.\n");
+                return 1;
+            }
         }
     } else {
         printf("Get UUID metadata failed with code: %d('%s')\n",
@@ -112,7 +123,7 @@ int main(void) {
 
     sleep(1);
     printf("Get users' metadata by UUID\n");
-    result = pubnub_get_uuidmetadata(pb, "custom", "my_user");
+    result = pubnub_get_uuidmetadata(pb, "custom,status", "my_user");
 
     if (PNR_STARTED == result) {
         result = pubnub_await(pb);
@@ -123,6 +134,10 @@ int main(void) {
 
         const char* response = pubnub_get(pb);
         printf("Response: %s\n", response);
+        if (NULL == strstr(response, "\"status\":\"active\"")) {
+            printf("\"status\" is missing in response.\n");
+            return 1;
+        }
     } else {
         printf("Get UUID metadata by UUID failed with code: %d('%s')\n",
                result,
@@ -167,6 +182,8 @@ int main(void) {
     set_channel_opts.data.name = "my_channel_name";
     set_channel_opts.data.description = "my_channel_description";
     set_channel_opts.data.custom = "{\"key\":\"value\"}";
+    set_channel_opts.data.status = "closed";
+    set_channel_opts.data.type = "lobby";
     set_channel_opts.include = "custom";
 
     result = pubnub_set_channelmetadata_ex(pb, "channel_id", set_channel_opts);
@@ -188,7 +205,7 @@ int main(void) {
 
     struct pubnub_getall_metadata_opts getall_channel_opts = pubnub_getall_metadata_defopts();
     getall_channel_opts.limit = 1;
-    getall_channel_opts.include = "custom";
+    getall_channel_opts.include = "custom,status,type";
     getall_channel_opts.filter = "custom.key=='value'";
     getall_channel_opts.count = pbccTrue;
     getall_channel_opts.sort = "name:desc";
@@ -214,7 +231,7 @@ int main(void) {
     sleep(1);
     printf("Get channels' metadata by channel ID\n");
 
-    result = pubnub_get_channelmetadata(pb, "custom", "channel_id");
+    result = pubnub_get_channelmetadata(pb, "custom,type", "channel_id");
 
     if (PNR_STARTED == result) {
         result = pubnub_await(pb);
@@ -225,6 +242,10 @@ int main(void) {
 
         const char* response = pubnub_get(pb);
         printf("Response: %s\n", response);
+        if (NULL == strstr(response, "\"type\":\"lobby\"")) {
+            printf("\"type\" is missing in response.\n");
+            return 1;
+        }
     } else {
         printf("Get channel metadata by channel ID failed with code: %d('%s')\n",
                result,
@@ -251,7 +272,7 @@ int main(void) {
 
     printf("Set users' memberships\n");
     struct pubnub_membership_opts set_memberships_opts = pubnub_memberships_defopts();
-    set_memberships_opts.include = "custom";
+    set_memberships_opts.include = "custom,status,type";
     set_memberships_opts.limit = 1;
     set_memberships_opts.sort = "channel.name:desc";
     set_memberships_opts.filter = "custom.key=='value'";
@@ -262,7 +283,9 @@ int main(void) {
            "\"channel\":{ \"id\": \"main-channel-id\" },"
            "\"custom\": {"
              "\"starred\": true"
-           "}"
+           "},"
+           "\"status\":\"active\","
+           "\"type\":\"hall\""
          "},"
          "{"
            "\"channel\":{ \"id\": \"channel-0\" },"
@@ -291,7 +314,7 @@ int main(void) {
 
     struct pubnub_membership_opts get_memberships_opts = pubnub_memberships_defopts();
     get_memberships_opts.limit = 1;
-    get_memberships_opts.include = "custom";
+    get_memberships_opts.include = "custom,status,type";
     get_memberships_opts.filter = "custom.starred==true";
     get_memberships_opts.count = pbccTrue;
     get_memberships_opts.sort = "channel.id:desc";
@@ -307,6 +330,14 @@ int main(void) {
 
         const char* response = pubnub_get(pb);
         printf("Response: %s\n", response);
+        if (NULL == strstr(response, "\"status\":\"active\"")) {
+            printf("\"status\" is missing in response.\n");
+            return 1;
+        }
+        if (NULL == strstr(response, "\"type\":\"hall\"")) {
+            printf("\"type\" is missing in response.\n");
+            return 1;
+        }
     } else {
         printf("Get memberships by UUID failed with code: %d('%s')\n",
                result,
@@ -363,7 +394,9 @@ int main(void) {
            "\"uuid\":{ \"id\": \"main-user-id\" },"
            "\"custom\": {"
              "\"starred\": true"
-           "}"
+           "},"
+           "\"status\":\"moderating\","
+           "\"type\":\"admin\""
          "},"
          "{"
            "\"uuid\":{ \"id\": \"user-0\" },"
@@ -392,7 +425,7 @@ int main(void) {
 
     struct pubnub_members_opts get_members_opts = pubnub_members_defopts();
     get_members_opts.limit = 1;
-    get_members_opts.include = "custom";
+    get_members_opts.include = "custom,status";
     get_members_opts.filter = "custom.starred==true";
     get_members_opts.count = pbccTrue;
     get_members_opts.sort = "uuid.id:desc";
@@ -408,6 +441,10 @@ int main(void) {
 
         for (const char* response = pubnub_get(pb); response != NULL; response = pubnub_get(pb)) {
             printf("Response: %s\n", response);
+            if (NULL == strstr(response, "\"status\":\"moderating\"")) {
+                printf("\"status\" is missing in response.\n");
+                return 1;
+            }
         }
     } else {
         printf("Get members failed with code: %d('%s')\n",
