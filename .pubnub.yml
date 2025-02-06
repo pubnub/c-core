@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "4.17.0"
+version: "4.18.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-02-06
+    version: v4.18.0
+    changes:
+      - type: feature
+        text: "Add `status` and `type` support for channel and uuid metadata objects state update API."
   - date: 2025-01-16
     version: v4.17.0
     changes:
@@ -907,7 +912,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -973,7 +978,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -1039,7 +1044,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -1101,7 +1106,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -1162,7 +1167,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -1218,7 +1223,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
@@ -1271,7 +1276,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.17.0
+            location: https://github.com/pubnub/c-core/releases/tag/v4.18.0
             requires:
               -
                 name: "miniz"
