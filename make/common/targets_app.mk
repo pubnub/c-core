@@ -54,6 +54,11 @@ SYNC_SAMPLE_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_SAMPLE_SOURCES_))
 pubnub_sync_sample$(APP_EXT): $(SYNC_SAMPLE_SOURCES) pubnub_sync$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
+SYNC_OBJECTS_SOURCES_ = ../core/samples/pubnub_objects_api_sample.c
+SYNC_OBJECTS_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_OBJECTS_SOURCES_))
+pubnub_objects_api_sample$(APP_EXT): $(SYNC_OBJECTS_SOURCES) pubnub_sync$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+
 
 # ----------------- Samples based on callback PubNub library -----------------
 

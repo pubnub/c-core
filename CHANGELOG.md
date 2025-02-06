@@ -1,3 +1,9 @@
+## v4.18.0
+February 06 2025
+
+#### Added
+- Add `status` and `type` support for channel and uuid metadata objects state update API.
+
 ## v4.17.0
 January 16 2025
 

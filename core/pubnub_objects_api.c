@@ -40,9 +40,9 @@ do {                                                                            
 
 const struct pubnub_page_object pubnub_null_page = {NULL, NULL};
 
-const struct pubnub_user_data pubnub_null_user_data = {NULL, NULL, NULL, NULL, NULL};
+const struct pubnub_user_data pubnub_null_user_data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
-const struct pubnub_channel_data pubnub_null_channel_data = {NULL, NULL, NULL};
+const struct pubnub_channel_data pubnub_null_channel_data = {NULL, NULL, NULL, NULL, NULL};
 
 
 struct pubnub_getall_metadata_opts pubnub_getall_metadata_defopts(void)
@@ -163,13 +163,19 @@ enum pubnub_res pubnub_set_uuidmetadata_ex(pubnub_t* pb,
     enum pubnub_res result;
     size_t          obj_len = 0;
 
-    obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) : 0;
-    obj_len += NULL != opts.data.email ? strlen(opts.data.email) : 0;
-    obj_len += NULL != opts.data.name ? strlen(opts.data.name) : 0;
-    obj_len += NULL != opts.data.external_id ? strlen(opts.data.external_id) : 0;
-    obj_len += NULL != opts.data.profile_url ? strlen(opts.data.profile_url) : 0;
+    // "Magic numbers" is length for JSON keys.
+    obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) + 9 : 0;
+    obj_len += NULL != opts.data.email ? strlen(opts.data.email) + 10 : 0;
+    obj_len += NULL != opts.data.name ? strlen(opts.data.name) + 9 : 0;
+    obj_len += NULL != opts.data.external_id ? strlen(opts.data.external_id) + 15 : 0;
+    obj_len += NULL != opts.data.profile_url ? strlen(opts.data.profile_url) + 15 : 0;
+    obj_len += NULL != opts.data.status ? strlen(opts.data.status) + 11 : 0;
+    obj_len += NULL != opts.data.type ? strlen(opts.data.type) + 9 : 0;
 
-    obj_buffer = (char*)malloc(obj_len + 64); // 64 is for the JSON object structure with small buffer
+    // Buffer for JSON object end/start and fields separation comma + null byte.
+    if (obj_len > 0) obj_len += 9;
+
+    obj_buffer = (char*)malloc(obj_len);
     int offset = snprintf(obj_buffer, obj_len, "{");
 
     // TODO: maybe it will be a good idea to add serialization at some point to this SDK
@@ -210,6 +216,22 @@ enum pubnub_res pubnub_set_uuidmetadata_ex(pubnub_t* pb,
                            "%s\"profileUrl\":\"%s\"",
                            offset > 1 ? "," : "",
                            opts.data.profile_url);
+    }
+
+    if (NULL != opts.data.status) {
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"status\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.status);
+    }
+
+    if (NULL != opts.data.type) {
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"type\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.type);
     }
     snprintf(obj_buffer + offset, obj_len - offset, "}");
 
@@ -380,15 +402,21 @@ enum pubnub_res pubnub_set_channelmetadata_ex(pubnub_t*   pb,
     enum pubnub_res result;
     size_t          obj_len = 0;
 
-    obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) : 0;
-    obj_len += NULL != opts.data.description ? strlen(opts.data.description) : 0;
-    obj_len += NULL != opts.data.name ? strlen(opts.data.name) : 0;
+    // "Magic numbers" is length for JSON keys.
+    obj_len = NULL != opts.data.custom ? strlen(opts.data.custom) + 9 : 0;
+    obj_len += NULL != opts.data.description ? strlen(opts.data.description) + 16 : 0;
+    obj_len += NULL != opts.data.name ? strlen(opts.data.name) + 9 : 0;
+    obj_len += NULL != opts.data.status ? strlen(opts.data.status) + 11 : 0;
+    obj_len += NULL != opts.data.type ? strlen(opts.data.type) + 9 : 0;
 
-    obj_buffer = (char*)malloc(obj_len + 64); // 64 is for the JSON object structure with small buffer
+    // Buffer for JSON object end/start and fields separation comma + null byte.
+    if (obj_len > 0) obj_len += 7;
+
+    obj_buffer = (char*)malloc(obj_len);
     int offset = snprintf(obj_buffer, obj_len, "{");
 
     if (NULL != opts.data.custom) {
-        offset += snprintf(obj_buffer, obj_len, "\"custom\":%s", opts.data.custom);
+        offset += snprintf(obj_buffer + offset, obj_len, "\"custom\":%s", opts.data.custom);
     }
 
     if (NULL != opts.data.description) {
@@ -405,6 +433,22 @@ enum pubnub_res pubnub_set_channelmetadata_ex(pubnub_t*   pb,
                            "%s\"name\":\"%s\"",
                            offset > 1 ? "," : "",
                            opts.data.name);
+    }
+
+    if (NULL != opts.data.status) {
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"status\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.status);
+    }
+
+    if (NULL != opts.data.type) {
+        offset += snprintf(obj_buffer + offset,
+                           obj_len - offset,
+                           "%s\"type\":\"%s\"",
+                           offset > 1 ? "," : "",
+                           opts.data.type);
     }
 
     offset += snprintf(obj_buffer + offset, obj_len - offset, "}");
