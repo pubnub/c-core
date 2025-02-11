@@ -662,10 +662,10 @@ enum pubnub_res pbcc_sign_url(struct pbcc_context* pc,
 #if PUBNUB_CRYPTO_API
         char* query_str = ques + 1;
         if (v3sign) {
-            rslt_ = pn_gen_pam_v3_sign((pubnub_t *)pc, query_str, url, msg, final_signature);
+            rslt_ = pn_gen_pam_v3_sign((pubnub_t *)pc, query_str, url, msg, final_signature, sizeof(final_signature));
         }
         else {
-            rslt_ = pn_gen_pam_v2_sign((pubnub_t *)pc, query_str, url, final_signature);
+            rslt_ = pn_gen_pam_v2_sign((pubnub_t *)pc, query_str, url, final_signature, sizeof(final_signature));
         }
 #endif
         if (rslt_ == PNR_OK) {
