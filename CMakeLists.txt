@@ -315,15 +315,34 @@ if (${USE_CALLBACK_API})
     if (UNIX)
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
+                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c)
+		if (${OPENSSL})
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_posix.c)
+		else ()
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c)
+		endif ()
+		
     elseif (WIN32 OR WIN64 OR MSVC)
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c)
+		if (${OPENSSL})
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c)
+		else ()
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c)
+		endif ()
     endif ()
 endif ()
 
