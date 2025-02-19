@@ -187,8 +187,10 @@ void socket_watcher_task(void *arg)
 #define PUBNUB_TASK_PRIORITY 2
 
 
-int pbntf_init(void)
+int pbntf_init(pubnub_t* pb)
 {
+    PUBNUB_UNUSED(pb);
+
     m_watcher.mutw = xSemaphoreCreateRecursiveMutex();
     if (NULL == m_watcher.mutw) {
         return -1;

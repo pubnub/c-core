@@ -6,6 +6,7 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#include "core/pubnub_ntf_enforcement.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -19,24 +20,52 @@ static void buf_setup(pubnub_t* pb)
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
 }
 
-
-static int pal_init(void)
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
+static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
     if (!s_init) {
         if (0 != socket_platform_init()) {
             return -1;
         }
-        pbntf_init();
+
+        pbntf_init(pb);
         s_init = true;
     }
     return 0;
 }
+#else
+static int pal_init(pubnub_t* pb)
+{
+    bool* s_init = NULL;
+    static bool s_init_sync = false;
+    static bool s_init_callback = false;
+
+    switch(pb->api_policy) {
+        case PNA_SYNC:
+            s_init = &s_init_sync;
+            break;
+        case PNA_CALLBACK:
+            s_init = &s_init_callback;
+            break;
+    }
+
+    if (!*s_init) {
+        if (0 != socket_platform_init()) {
+            return -1;
+        }
+
+        pbntf_init(pb);
+        *s_init = true;
+    }
+    return 0;
+}
+#endif
 
 
 void pbpal_init(pubnub_t* pb)
 {
-    pal_init();
+    pal_init(pb);
     pb->pal.socket = SOCKET_INVALID;
     pb->sock_state = STATE_NONE;
     buf_setup(pb);

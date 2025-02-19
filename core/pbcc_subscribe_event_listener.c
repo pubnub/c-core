@@ -503,8 +503,15 @@ void pbcc_event_listener_free(pbcc_event_listener_t** event_listener)
     if (NULL == event_listener || NULL == *event_listener) { return; }
 
     pubnub_mutex_lock((*event_listener)->mutw);
-    pbarray_free(&(*event_listener)->global_status);
-    pbarray_free(&(*event_listener)->global_events);
+
+    if (NULL != (*event_listener)->global_events) {
+        pbarray_free(&(*event_listener)->global_events);
+    }
+
+    if (NULL != (*event_listener)->listeners) {
+        pbhash_set_free(&(*event_listener)->listeners);
+    }
+
     pbhash_set_free(&(*event_listener)->listeners);
     pubnub_mutex_unlock((*event_listener)->mutw);
     pubnub_mutex_destroy((*event_listener)->mutw);
