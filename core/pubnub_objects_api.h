@@ -39,6 +39,12 @@ struct pubnub_user_data {
     /** JSON providing custom data about the user. Values must be scalar only; arrays or objects are not supported.
         Filtering App Context data through the custom property is not recommended in SDKs. */
     char const* custom;
+
+    /** User's object type information. */
+    char const* type;
+
+    /** User's object status. */
+    char const* status;
 };
 
 
@@ -53,6 +59,13 @@ struct pubnub_channel_data {
     /** JSON providing custom data about the channel. Values must be scalar only; arrays or objects are not supported.
         Filtering App Context data through the custom property is not recommended in SDKs. */
     char const* custom;
+
+    /** Channel's object type information. */
+    char const* type;
+
+    /** Channel's object status. */
+    char const* status;
+
 };
 
 
@@ -179,7 +192,7 @@ struct pubnub_set_uuidmetadata_opts {
     /** Uuid of the user. */
     char const* uuid; 
 
-    /** The comma delimited (C) string with additional/complex attributes to include in response.
+    /** The comma-delimited (C) string with additional/complex attributes to include in response.
         Use NULL if you don't want to retrieve additional attributes. */
     char const* include;
 
@@ -240,7 +253,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_remove_uuidmetadata(pubnub_t* pb, char cons
 /** Returns the spaces associated with the subscriber key of the context @p pbp, optionally
     including each space's custom data object.
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma-delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
     @param limit Number of entities to return in response. Regular values 1 - 100. If you set `0`,
                  that means “use the default”. At the time of this writing, default was 100.
@@ -279,7 +292,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_getall_channelmetadata_ex(pubnub_t* pb, str
     Returns the created space object, optionally including its custom data object.
     @note Channel ID and name are required properties of @p channel_metadata_obj
     @param pb The pubnub context. Can't be NULL
-    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma-delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
     @param channel_metadata_obj The JSON string with the definition of the channel metadata Object to create.
     @return #PNR_STARTED on success, an error otherwise
@@ -292,7 +305,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_set_channelmetadata(pubnub_t* pb,
 
 /** Options for the `pubnub_set_channelmetadata_ex` function */
 struct pubnub_set_channelmetadata_opts {
-    /** The comma delimited (C) string with additional/complex attributes to include in response.
+    /** The comma-delimited (C) string with additional/complex attributes to include in response.
         Use NULL if you don't want to retrieve additional attributes. */
     char const* include;
 
@@ -355,7 +368,7 @@ struct pubnub_membership_opts {
     /** The UUID to retrieve the memberships. */
     char const* uuid;
 
-    /** The comma delimited (C) string with additional/complex attributes to include in response.
+    /** The comma-delimited (C) string with additional/complex attributes to include in response.
         Use NULL if you don't want to retrieve additional attributes. */
     char const* include;
 
@@ -401,7 +414,7 @@ PUBNUB_EXTERN struct pubnub_membership_opts pubnub_memberships_defopts();
     @param pb The pubnub context. Can't be NULL
     @param uuid_metadataid The UUID to retrieve the memberships.
                    Cannot be NULL.
-    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma-delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
     @param limit Number of entities to return in response. Regular values 1 - 100.
                  If you set `0`, that means “use the default”. At the time of this writing,
@@ -459,7 +472,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_get_memberships_ex(pubnub_t* pb, struct pub
     @param pb The pubnub context. Can't be NULL
     @param uuid_metadataid The UUID to add/update the memberships.
                    Cannot be NULL.
-    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma-delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
     @param set_obj The JSON object that defines the add/update to perform.
                       Cannot be NULL.
@@ -479,7 +492,9 @@ PUBNUB_EXTERN enum pubnub_res pubnub_set_memberships(pubnub_t* pb,
            "channel":{ "id": "main-channel-id" },
            "custom": {
              "starred": true
-           }
+           },
+           "status": "active",
+           "type": "hall"
          },
          {
            "channel":{ "id": "channel-0" },
@@ -673,7 +688,9 @@ PUBNUB_EXTERN enum pubnub_res pubnub_add_members(pubnub_t* pb,
            "id": "some-user-id",
            "custom": {
              "starred": true
-           }
+           },
+           "status": "moderating",
+           "type": "admin"
          },
          {
            "id": "user-0-id",
@@ -685,7 +702,7 @@ PUBNUB_EXTERN enum pubnub_res pubnub_add_members(pubnub_t* pb,
 
     @param pb The pubnub context. Can't be NULL
     @param channel_metadataid The Channel ID for which to add/update the user metadata.
-    @param include array of (C) strings in comma delimited format with additional/complex attributes to include in response.
+    @param include array of (C) strings in comma-delimited format with additional/complex attributes to include in response.
                    Use NULL if you don't want to retrieve additional attributes.
     @param set_obj The JSON object that defines the add/update to perform. Cannot be NULL.
     @return #PNR_STARTED on success, an error otherwise

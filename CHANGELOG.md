@@ -1,3 +1,15 @@
+## v4.18.1
+February 11 2025
+
+#### Fixed
+- Fix issue because of which `signature` value in query has been truncated.
+
+## v4.18.0
+February 06 2025
+
+#### Added
+- Add `status` and `type` support for channel and uuid metadata objects state update API.
+
 ## v4.17.0
 January 16 2025
 

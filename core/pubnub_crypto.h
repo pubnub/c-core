@@ -164,8 +164,8 @@ PUBNUB_EXTERN int base64encode(char* result, int max_size, const void* b64_encod
 */
 PUBNUB_EXTERN char* pn_pam_hmac_sha256_sign(char const* key, char const* message);
 
-PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature);
-PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature);
+PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature, size_t signature_len);
+PUBNUB_EXTERN enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature, size_t signature_len);
 
 /** 
    Prepare the aes cbc crypto module for use.

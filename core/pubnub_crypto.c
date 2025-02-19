@@ -607,7 +607,7 @@ char* pn_pam_hmac_sha256_sign(char const* key, char const* message) {
     return base64_encoded;
 }
 
-enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature) {
+enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char* signature, size_t signature_len) {
     enum pubnub_res sign_status = PNR_OK;
     int str_to_sign_len = strlen(p->core.subscribe_key) + strlen(p->core.publish_key) + strlen(partial_url) + strlen(qs_to_sign);
     size_t str_to_sign_size = sizeof(char) * str_to_sign_len + 5;
@@ -625,13 +625,13 @@ enum pubnub_res pn_gen_pam_v2_sign(pubnub_t* p, char const* qs_to_sign, char con
 #endif
     free((char*)str_to_sign);
     if (sign_status == PNR_OK) {
-	    snprintf(signature, sizeof(signature), "%s", part_sign);
+	    snprintf(signature, signature_len, "%s", part_sign);
     }
     free(part_sign);
     return sign_status;
 }
 
-enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature) {
+enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char const* partial_url, char const* msg, char* signature, size_t signature_len) {
     enum pubnub_res sign_status = PNR_OK;
     bool hasBody = false;
     char* method_verb;
@@ -687,7 +687,7 @@ enum pubnub_res pn_gen_pam_v3_sign(pubnub_t* p, char const* qs_to_sign, char con
             part_sign[strlen(part_sign) - 1] = '\0';
             last_sign_char = part_sign[strlen(part_sign) - 1];
         }
-	    snprintf(signature, sizeof(signature), "v2.%s", part_sign);
+	    snprintf(signature, signature_len, "v2.%s", part_sign);
     }
     free(part_sign);
     return sign_status;
