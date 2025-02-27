@@ -30,14 +30,17 @@
  *
  * @note It is possible to add multiple listeners.
  *
- * @param pb       Pointer to the PubNub context from which subscription status
- *                 changes should be reported by provided listener.
- * @param callback Subscription status change handling listener function.
+ * @param pb        Pointer to the PubNub context from which subscription status
+ *                  changes should be reported by provided listener.
+ * @param callback  Subscription status change handling listener function.
+ * @param user_data User data pointer which will be passed to the listener function.
+ *
  * @return Results of listener addition.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_status_listener(
     const pubnub_t*                    pb,
-    pubnub_subscribe_status_callback_t callback);
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data);
 
 /**
  * @brief Remove subscription status change listener.
@@ -46,14 +49,18 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_status_listener(
  * list. If multiple observers registered with the same listener function
  * (same address) they all will stop receiving updates.
  *
- * @param pb       Pointer to the PubNub context from which subscription status
- *                 changes shouldn't be reported to the provided listener.
- * @param callback Subscription status change handling listener function.
+ * @param pb        Pointer to the PubNub context from which subscription status
+ *                  changes shouldn't be reported to the provided listener.
+ * @param callback  Subscription status change handling listener function.
+ * @param user_data User data pointer which would be passed to the listener function.
+ *                  \b Warning: It checks only the address of the user data pointer,
+ *                  not the content.
  * @return Results of listener removal.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_status_listener(
     const pubnub_t*                    pb,
-    pubnub_subscribe_status_callback_t callback);
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data);
 
 /**
  * @brief Add subscription real-time updates listener.
@@ -63,16 +70,19 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_status_listener(
  *
  * @note It is possible to add multiple listeners.
  *
- * @param pb       Pointer to the PubNub context from which subscription status
- *                 changes should be reported by provided listener.
- * @param type     Type of real-time update for which listener will be called.
- * @param callback Subscription status change handling listener function.
- * @return Results of listener addition.
+ * @param pb        Pointer to the PubNub context from which subscription status
+ *                  changes should be reported by provided listener.
+ * @param type      Type of real-time update for which listener will be called.
+ * @param callback  Subscription status change handling listener function.
+ * @param user_data User data pointer which will be passed to the listener function.
+ *
+ * @return Results  of listener addition.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_message_listener(
     const pubnub_t*                     pb,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Remove subscription real-time updates listener..
@@ -81,17 +91,20 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_message_listener(
  * list. If multiple observers registered with the same listener function
  * (same address) they all will stop receiving updates.
  *
- * @param pb       Pointer to the PubNub context from which subscription status
- *                 changes shouldn't be reported to the provided listener.
- * @param type     Type of real-time update for which listener won't be called
- *                 anymore.
- * @param callback Subscription status change handling listener function.
- * @return Results of listener removal.
+ * @param pb        Pointer to the PubNub context from which subscription status
+ *                  changes shouldn't be reported to the provided listener.
+ * @param type      Type of real-time update for which listener won't be called
+ *                  anymore.
+ * @param callback  Subscription status change handling listener function.
+ * @param user_data User data pointer which would be passed to the listener function.
+ *
+ * @return Results  of listener removal.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_message_listener(
     const pubnub_t*                     pb,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Add subscription real-time updates listener.
@@ -101,12 +114,16 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_message_listener(
  * @param type         Type of real-time update for which listener will be
  *                     called.
  * @param callback     Real-time update handling listener function.
+ * @param user_data    User data pointer which will be passed to the listener
+ *                     function.
+ *                     \b Note: User data is not managed by the PubNub context.
  * @return Result of listener addition.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_subscription_listener(
     const pubnub_subscription_t*        subscription,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);    
 
 /**
  * @brief Remove subscription real-time updates listener.
@@ -121,12 +138,17 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_subscription_listener(
  * @param type         Type of real-time update for which listener won't be
  *                     called anymore.
  * @param callback     Real-time update handling listener function.
+ * @param user_data    User data pointer which would be passed to the listener
+ *                     function.
+ *                     \b Warning: It checks only the address of the user data 
+ *                     pointer, not the content.
  * @return Results of listener removal.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_subscription_listener(
     const pubnub_subscription_t*        subscription,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Add subscription set real-time updates listener.
@@ -136,12 +158,16 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_subscription_listener(
  * @param type             Type of real-time update for which listener will be
  *                         called.
  * @param callback         Real-time update handling listener function.
+ * @param user_data        User data pointer which will be passed to the listener 
+ *                         function.
+ *                         \b Note: User data is not managed by the PubNub context.
  * @return Result of listener addition.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
     const pubnub_subscription_set_t*    subscription_set,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Remove subscription set real-time updates listener.
@@ -156,12 +182,17 @@ PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
  * @param type             Type of real-time update for which listener won't be
  *                         called anymore.
  * @param callback         Real-time update handling listener function.
+ * @param user_data        User data pointer which would be passed to the listener 
+ *                         function.
+ *                         \b Warning: It checks only the address of the user data 
+ *                         pointer, not the content.
  * @return Results of listener removal.
  */
 PUBNUB_EXTERN enum pubnub_res pubnub_subscribe_remove_subscription_set_listener(
     const pubnub_subscription_set_t*    subscription_set,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 #else // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #error To use subscribe event engine API you must define PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1
 #endif // #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE

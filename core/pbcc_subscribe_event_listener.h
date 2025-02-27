@@ -45,14 +45,17 @@ pbcc_event_listener_t* pbcc_event_listener_alloc(const pubnub_t* pb);
 /**
  * @brief Add subscription status change listener.
  *
- * @param listener Pointer to the Event Listener which is used to track and call
- *                 registered subscription status change listeners.
- * @param cb       Subscription status change handling listener function.
+ * @param listener  Pointer to the Event Listener which is used to track and call
+ *                  registered subscription status change listeners.
+ * @param cb        Subscription status change handling listener function.
+ * @param user_data User data pointer which will be passed to the listener
+ *                  function.
  * @return Results of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_status_listener(
     pbcc_event_listener_t* listener,
-    pubnub_subscribe_status_callback_t cb);
+    pubnub_subscribe_status_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Remove subscription status change listener.
@@ -61,14 +64,17 @@ enum pubnub_res pbcc_event_listener_add_status_listener(
  * list. If multiple observers registered with the same listener function
 * (same address) they all will stop receiving updates.
  *
- * @param listener Pointer to the Event Listener which should unregister
- *                 subscription status change listener.
- * @param cb       Subscription status change handling listener function.
+ * @param listener  Pointer to the Event Listener which should unregister
+ *                  subscription status change listener.
+ * @param cb        Subscription status change handling listener function.
+ * @param user_data User data pointer which would be passed to the listener 
+ *                  function.
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_status_listener(
     pbcc_event_listener_t* listener,
-    pubnub_subscribe_status_callback_t cb);
+    pubnub_subscribe_status_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Add subscription real-time updates listener.
@@ -76,16 +82,19 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
  * PubNub context will receive real-time updates from all subscription and
  * subscription sets.
  *
- * @param listener Pointer to the Event Listener which is used to track and call
- *                 registered real-time updates listeners.
- * @param type     Type of real-time update for which listener will be called.
- * @param cb       Real-time update handling listener function.
+ * @param listener  Pointer to the Event Listener which is used to track and call
+ *                  registered real-time updates listeners.
+ * @param type      Type of real-time update for which listener will be called.
+ * @param cb        Real-time update handling listener function.
+ * @param user_data User data pointer which will be passed to the listener
+ *                  function.
  * @return Results of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_message_listener(
     pbcc_event_listener_t* listener,
     pubnub_subscribe_listener_type type,
-    pubnub_subscribe_message_callback_t cb);
+    pubnub_subscribe_message_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Remove subscription real-time updates listener.
@@ -94,17 +103,20 @@ enum pubnub_res pbcc_event_listener_add_message_listener(
  * list. If multiple observers registered with the same listener function
 * (same address) they all will stop receiving updates.
  *
- * @param listener Pointer to the Event Listener which should unregister
-*                  registered real-time updates listeners.
- * @param type     Type of real-time update for which listener won't be called
- *                 anymore.
- * @param cb       Real-time update handling listener function.
+ * @param listener  Pointer to the Event Listener which should unregister
+*                   registered real-time updates listeners.
+ * @param type      Type of real-time update for which listener won't be called
+ *                  anymore.
+ * @param cb        Real-time update handling listener function.
+ * @param user_data User data pointer which would be passed to the listener
+ *                  function.
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_message_listener(
     pbcc_event_listener_t* listener,
     pubnub_subscribe_listener_type type,
-    pubnub_subscribe_message_callback_t cb);
+    pubnub_subscribe_message_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Add subscription real-time updates listener.
@@ -118,6 +130,8 @@ enum pubnub_res pbcc_event_listener_remove_message_listener(
  * @param subscription Pointer to the subscription object for which 'callback'
  *                     for specific real-time updates 'type' will be registered.
  * @param cb           Real-time update handling listener function.
+ * @param user_data    Additional data which should be passed to the `callback`
+ *                     function.
  * @return Result of listener addition.
  */
 enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
@@ -125,7 +139,8 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
     pubnub_subscribe_listener_type type,
     pbarray_t* names,
     const void* subscription,
-    pubnub_subscribe_message_callback_t cb);
+    pubnub_subscribe_message_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Remove subscription real-time updates listener.
@@ -144,6 +159,10 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
  * @param subscription Subscription object for which `callback` for specific
  *                     real-time updates 'type' will be removed.
  * @param cb           Real-time update handling listener function.
+ * @param user_data    Additional data which would be passed to the `callback`
+ *                     function.
+ *                     \b Warning: It checks the address of the data pointer, 
+ *                     not the content.
  * @return Results of listener removal.
  */
 enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
@@ -151,7 +170,8 @@ enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
     pubnub_subscribe_listener_type type,
     pbarray_t* names,
     const void* subscription,
-    pubnub_subscribe_message_callback_t cb);
+    pubnub_subscribe_message_callback_t cb,
+    void* user_data);
 
 /**
  * @brief Notify subscription status listeners about status change.

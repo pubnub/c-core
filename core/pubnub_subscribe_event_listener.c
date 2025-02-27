@@ -26,6 +26,7 @@
  *                       registered.
  * @param subscribables  Pointer to the subscription object subscribables.
  * @param callback       Real-time update handling listener function.
+ * @param user_data      User data to be passed to the listener function.
  * @return Result of listeners list update operation.
  */
 static enum pubnub_res pubnub_subscribe_manage_listener_(
@@ -34,7 +35,8 @@ static enum pubnub_res pubnub_subscribe_manage_listener_(
     pubnub_subscribe_listener_type      type,
     const void*                         subscription,
     pbhash_set_t*                       subscribables,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Get list of channel and groups which can be used to map listeners.
@@ -55,52 +57,59 @@ static pbarray_t* pubnub_subscribe_subscribable_names_(
 
 enum pubnub_res pubnub_subscribe_add_status_listener(
     const pubnub_t*                          pb,
-    const pubnub_subscribe_status_callback_t callback)
+    const pubnub_subscribe_status_callback_t callback, 
+    void*                                    user_data)
 {
     pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(pb->core.subscribe_ee);
-    return pbcc_event_listener_add_status_listener(event_listener, callback);
+    return pbcc_event_listener_add_status_listener(event_listener, callback, user_data);
 }
 
 enum pubnub_res pubnub_subscribe_remove_status_listener(
     const pubnub_t*                          pb,
-    const pubnub_subscribe_status_callback_t callback)
+    const pubnub_subscribe_status_callback_t callback,
+    void*                                    user_data)
 {
     pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(pb->core.subscribe_ee);
-    return pbcc_event_listener_remove_status_listener(event_listener, callback);
+    return pbcc_event_listener_remove_status_listener(event_listener, callback, user_data);
 }
 
 enum pubnub_res pubnub_subscribe_add_message_listener(
     const pubnub_t*                           pb,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(pb->core.subscribe_ee);
     return pbcc_event_listener_add_message_listener(
         event_listener,
         type,
-        callback);
+        callback,
+        user_data);
 }
 
 enum pubnub_res pubnub_subscribe_remove_message_listener(
     const pubnub_t*                           pb,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbcc_event_listener_t* event_listener =
         pbcc_subscribe_ee_event_listener(pb->core.subscribe_ee);
     return pbcc_event_listener_remove_message_listener(
         event_listener,
         type,
-        callback);
+        callback,
+        user_data);
 }
 
 enum pubnub_res pubnub_subscribe_add_subscription_listener(
     const pubnub_subscription_t*              subscription,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbhash_set_t* subs = pubnub_subscription_subscribables_(subscription, NULL);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
@@ -113,7 +122,8 @@ enum pubnub_res pubnub_subscribe_add_subscription_listener(
         type,
         subscription,
         subs,
-        callback);
+        callback,
+        user_data);
     pbhash_set_free_with_destructor(
         &subs,
         (pbhash_set_element_free)pubnub_subscribable_free_);
@@ -124,7 +134,8 @@ enum pubnub_res pubnub_subscribe_add_subscription_listener(
 enum pubnub_res pubnub_subscribe_remove_subscription_listener(
     const pubnub_subscription_t*              subscription,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbhash_set_t* subs = pubnub_subscription_subscribables_(subscription, NULL);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
@@ -137,7 +148,8 @@ enum pubnub_res pubnub_subscribe_remove_subscription_listener(
         type,
         subscription,
         subs,
-        callback);
+        callback,
+        user_data);
     pbhash_set_free_with_destructor(
         &subs,
         (pbhash_set_element_free)pubnub_subscribable_free_);
@@ -148,7 +160,8 @@ enum pubnub_res pubnub_subscribe_remove_subscription_listener(
 enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
     const pubnub_subscription_set_t*          subscription_set,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbhash_set_t* subs =
         pubnub_subscription_set_subscribables_(subscription_set);
@@ -162,7 +175,8 @@ enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
         type,
         subscription_set,
         subs,
-        callback);
+        callback,
+        user_data);
     pbhash_set_free_with_destructor(
         &subs,
         (pbhash_set_element_free)pubnub_subscribable_free_);
@@ -173,7 +187,8 @@ enum pubnub_res pubnub_subscribe_add_subscription_set_listener(
 enum pubnub_res pubnub_subscribe_remove_subscription_set_listener(
     const pubnub_subscription_set_t*          subscription_set,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     pbhash_set_t* subs =
         pubnub_subscription_set_subscribables_(subscription_set);
@@ -187,7 +202,8 @@ enum pubnub_res pubnub_subscribe_remove_subscription_set_listener(
         type,
         subscription_set,
         subs,
-        callback);
+        callback,
+        user_data);
     pbhash_set_free_with_destructor(
         &subs,
         (pbhash_set_element_free)pubnub_subscribable_free_);
@@ -201,7 +217,8 @@ enum pubnub_res pubnub_subscribe_manage_listener_(
     const pubnub_subscribe_listener_type      type,
     const void*                               subscription,
     pbhash_set_t*                             subscribables,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data) 
 {
     if (NULL == subscribables) { return PNR_OUT_OF_MEMORY; }
 
@@ -216,7 +233,8 @@ enum pubnub_res pubnub_subscribe_manage_listener_(
             type,
             names,
             subscription,
-            callback);
+            callback,
+            user_data);
     }
     else {
         rslt = pbcc_event_listener_remove_subscription_object_listener(
@@ -224,7 +242,8 @@ enum pubnub_res pubnub_subscribe_manage_listener_(
             type,
             names,
             subscribables,
-            callback);
+            callback,
+            user_data);
     }
 
     /**
