@@ -7,6 +7,7 @@
 #include "core/pubnub_log.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_ccore_pubsub.h"
+#include "pubnub_ntf_enforcement.h"
 #include "core/pbpal.h"
 #include "core/pubnub_version.h"
 #include "core/pubnub_version_internal.h"
@@ -1425,6 +1426,9 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
     case PBS_WAIT_DNS_RCV:
     case PBS_WAIT_CONNECT:
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_CALLBACK == pbp->api_policy) {
+#endif
         if (PNR_TIMEOUT == outcome_to_report) {
             if ((pbp->state != PBS_WAIT_CONNECT) &&
 #if PUBNUB_CHANGE_DNS_SERVERS
@@ -1446,6 +1450,9 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
             pbp->state = PBS_WAIT_CANCEL;
         }
         pbntf_requeue_for_processing(pbp);
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        } /* if api_policy */
+#endif
 #else
         pbp->state = PBS_WAIT_CANCEL;
         pbnc_fsm(pbp);
@@ -1472,7 +1479,11 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
         /*FALLTHRU*/
     default:
         pbp->state = PBS_WAIT_CANCEL;
-#if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_CALLBACK == pbp->api_policy) {
+            pbntf_requeue_for_processing(pbp);
+        }
+#elif defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pbp);
 #else
         pbnc_fsm(pbp);

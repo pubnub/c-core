@@ -6,6 +6,7 @@
 
 #include "pubnub_proxy.h"
 #include "pubnub_assert.h"
+#include "pubnub_ntf_enforcement.h"
 #include "pubnub_log.h"
 #if defined(PUBNUB_CALLBACK_API)
 #include "lib/pubnub_parse_ipv4_addr.h"
@@ -48,6 +49,9 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
     p->proxy_type = protocol;
     p->proxy_port = port;
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    if (PNA_CALLBACK == p->api_policy) {
+#endif
     /* If we haven't got numerical address for proxy we'll have to do DNS resolution(from proxy
        host name) later on, but in order to do that we have to have all proxy addresses(on the
        given context) set to zeros.
@@ -63,6 +67,9 @@ int pubnub_set_proxy_manual(pubnub_t*              p,
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     pbpal_multiple_addresses_reset_counters(&p->spare_addresses);
 #endif
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    } /* if (PNA_CALLBACK == p->api_policy) */
+#endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
     memcpy(p->proxy_hostname, ip_address_or_url, ip_or_url_len + 1);
     pubnub_mutex_unlock(p->monitor);
@@ -77,12 +84,18 @@ void pubnub_set_proxy_none(pubnub_t* p)
 
     pubnub_mutex_lock(p->monitor);
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    if (PNA_CALLBACK == p->api_policy) {
+#endif
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     pbpal_multiple_addresses_reset_counters(&p->spare_addresses);
+#endif
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    } /* if (PNA_CALLBACK == p->api_policy) */
 #endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_type = pbproxyNONE;

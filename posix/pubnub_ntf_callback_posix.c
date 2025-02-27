@@ -37,17 +37,28 @@ struct SocketWatcherData {
 static struct SocketWatcherData m_watcher;
 
 
-int pbntf_watch_in_events(pubnub_t* pbp)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+#define MAYBE_INLINE 
+#else 
+#if __STDC_VERSION__ >= 199901L 
+#define MAYBE_INLINE static inline 
+#else
+#define MAYBE_INLINE static 
+#endif
+#endif // PUBNUB_NTF_RUNTIME_SELECTION
+
+
+MAYBE_INLINE int pbntf_watch_in_events_callback(pubnub_t* pbp)
 {
     return pbpal_ntf_watch_in_events(m_watcher.poll, pbp);
 }
 
 
-int pbntf_watch_out_events(pubnub_t* pbp)
+MAYBE_INLINE int pbntf_watch_out_events_callback(pubnub_t* pbp)
 {
     return pbpal_ntf_watch_out_events(m_watcher.poll, pbp);
 }
-
+   
 
 void* socket_watcher_thread(void* arg)
 {
@@ -108,7 +119,7 @@ void pubnub_stop(void)
 }
     
 
-int pbntf_init(void)
+MAYBE_INLINE int pbntf_init_callback(void)
 {
     int                 rslt;
     pthread_mutexattr_t attr;
@@ -227,19 +238,19 @@ int pbntf_init(void)
 }
 
 
-int pbntf_enqueue_for_processing(pubnub_t* pb)
+MAYBE_INLINE int pbntf_enqueue_for_processing_callback(pubnub_t* pb)
 {
     return pbpal_ntf_callback_enqueue_for_processing(&m_watcher.queue, pb);
 }
 
 
-int pbntf_requeue_for_processing(pubnub_t* pb)
+MAYBE_INLINE int pbntf_requeue_for_processing_callback(pubnub_t* pb)
 {
     return pbpal_ntf_callback_requeue_for_processing(&m_watcher.queue, pb);
 }
 
 
-int pbntf_got_socket(pubnub_t* pb)
+MAYBE_INLINE int pbntf_got_socket_callback(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_save_socket(m_watcher.poll, pb);
@@ -257,7 +268,7 @@ int pbntf_got_socket(pubnub_t* pb)
 }
 
 
-void pbntf_lost_socket(pubnub_t* pb)
+MAYBE_INLINE void pbntf_lost_socket_callback(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
@@ -271,7 +282,7 @@ void pbntf_lost_socket(pubnub_t* pb)
 }
 
 
-void pbntf_start_wait_connect_timer(pubnub_t* pb)
+MAYBE_INLINE void pbntf_start_wait_connect_timer_callback(pubnub_t* pb)
 {
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
@@ -284,7 +295,7 @@ void pbntf_start_wait_connect_timer(pubnub_t* pb)
 }
 
 
-void pbntf_start_transaction_timer(pubnub_t* pb)
+MAYBE_INLINE void pbntf_start_transaction_timer_callback(pubnub_t* pb)
 {
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
@@ -297,9 +308,74 @@ void pbntf_start_transaction_timer(pubnub_t* pb)
 }
 
 
-void pbntf_update_socket(pubnub_t* pb)
+MAYBE_INLINE void pbntf_update_socket_callback(pubnub_t* pb)
 {
     pthread_mutex_lock(&m_watcher.mutw);
     pbpal_ntf_callback_update_socket(m_watcher.poll, pb);
     pthread_mutex_unlock(&m_watcher.mutw);
 }
+
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
+
+int pbntf_watch_in_events(pubnub_t* pbp)
+{
+    return pbntf_watch_in_events_callback(pbp);
+}
+
+
+int pbntf_watch_out_events(pubnub_t* pbp)
+{
+    return pbntf_watch_out_events_callback(pbp);
+}
+
+ 
+int pbntf_init(pubnub_t* pb)
+{
+    return pbntf_init_callback();
+}
+
+
+int pbntf_enqueue_for_processing(pubnub_t* pb)
+{
+    return pbntf_enqueue_for_processing_callback(pb);
+}
+
+
+int pbntf_requeue_for_processing(pubnub_t* pb)
+{
+    return pbntf_requeue_for_processing_callback(pb);
+}
+
+
+int pbntf_got_socket(pubnub_t* pb) 
+{
+    return pbntf_got_socket_callback(pb);
+}
+
+
+void pbntf_lost_socket(pubnub_t* pb)
+{
+    pbntf_lost_socket_callback(pb);
+}
+
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    pbntf_start_wait_connect_timer_callback(pb);
+}
+
+
+void pbntf_start_transaction_timer(pubnub_t* pb) 
+{
+    pbntf_start_transaction_timer_callback(pb);
+}
+
+
+void pbntf_update_socket(pubnub_t* pb)
+{
+    pbntf_update_socket_callback(pb);
+}
+
+#endif // !PUBNUB_NTF_RUNTIME_SELECTION
+
+

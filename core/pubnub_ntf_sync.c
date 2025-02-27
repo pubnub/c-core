@@ -1,5 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_sync.h"
+#include "pubnub_api_types.h"
+#include "pubnub_ntf_enforcement.h"
 
 #if PUBNUB_USE_RETRY_CONFIGURATION
 #include "core/pubnub_retry_configuration_internal.h"
@@ -16,13 +18,26 @@
 #include "lib/msstopwatch/msstopwatch.h"
 
 
-int pbntf_init(void)
+// TODO: decide if it is worth to keep that here 
+// 1 - till the flag is fixed
+#if 1
+#define MAYBE_INLINE 
+#else 
+#if __STDC_VERSION__ >= 199901L 
+#define MAYBE_INLINE static inline 
+#else
+#define MAYBE_INLINE static 
+#endif
+#endif // 1
+
+
+MAYBE_INLINE int pbntf_init_sync(void) 
 {
     return 0;
 }
 
 
-int pbntf_got_socket(pubnub_t* pb)
+MAYBE_INLINE int pbntf_got_socket_sync(pubnub_t* pb)
 {
 #if PUBNUB_BLOCKING_IO_SETTABLE
     pbpal_set_blocking_io(pb);
@@ -31,31 +46,31 @@ int pbntf_got_socket(pubnub_t* pb)
 }
 
 
-void pbntf_update_socket(pubnub_t* pb)
+MAYBE_INLINE void pbntf_update_socket_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
 }
 
 
-void pbntf_start_transaction_timer(pubnub_t* pb)
+MAYBE_INLINE void pbntf_start_transaction_timer_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
 }
 
 
-void pbntf_start_wait_connect_timer(pubnub_t* pb)
+MAYBE_INLINE void pbntf_start_wait_connect_timer_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
 }
 
 
-void pbntf_lost_socket(pubnub_t* pb)
+MAYBE_INLINE void pbntf_lost_socket_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
 }
 
 
-void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
+MAYBE_INLINE void pbntf_trans_outcome_sync(pubnub_t* pb, enum pubnub_state state)
 {
     PBNTF_TRANS_OUTCOME_COMMON(pb, state);
     PUBNUB_ASSERT(pbnc_can_start_transaction(pb));
@@ -83,14 +98,14 @@ void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state)
 }
 
 
-int pbntf_enqueue_for_processing(pubnub_t* pb)
+MAYBE_INLINE int pbntf_enqueue_for_processing_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
     return 0;
 }
 
 
-int pbntf_requeue_for_processing(pubnub_t* pb)
+MAYBE_INLINE int pbntf_requeue_for_processing_sync(pubnub_t* pb)
 {
     PUBNUB_UNUSED(pb);
 
@@ -98,20 +113,21 @@ int pbntf_requeue_for_processing(pubnub_t* pb)
 }
 
 
-int pbntf_watch_in_events(pubnub_t* pbp)
+MAYBE_INLINE int pbntf_watch_out_events_sync(pubnub_t* pbp)
 {
     PUBNUB_UNUSED(pbp);
     return 0;
 }
 
 
-int pbntf_watch_out_events(pubnub_t* pbp)
+MAYBE_INLINE int pbntf_watch_in_events_sync(pubnub_t* pbp)
 {
     PUBNUB_UNUSED(pbp);
     return 0;
 }
 
-void pbnc_tr_cxt_state_reset(pubnub_t* pb)
+
+MAYBE_INLINE void pbnc_tr_cxt_state_reset_sync(pubnub_t* pb)
 {
     if (pb->trans == PBTT_SET_STATE)
     {
@@ -123,7 +139,8 @@ void pbnc_tr_cxt_state_reset(pubnub_t* pb)
     }
 }
 
-enum pubnub_res pubnub_last_result(pubnub_t* pb)
+
+MAYBE_INLINE enum pubnub_res pubnub_last_result_sync(pubnub_t* pb)
 {
     enum pubnub_res result;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -134,12 +151,92 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb)
     }
     result = pb->core.last_result;
     if (result != PNR_OK){
-        pbnc_tr_cxt_state_reset(pb);
+        pbnc_tr_cxt_state_reset_sync(pb);
     }
     pubnub_mutex_unlock(pb->monitor);
 
     return result;
 }
+
+
+#ifndef PUBNUB_NTF_RUNTIME_SELECTION
+
+int pbntf_init(pubnub_t* pb)
+{
+    PUBNUB_UNUSED(pb);
+    return pbntf_init_sync();
+}
+
+
+int pbntf_got_socket(pubnub_t* pb) 
+{
+    return pbntf_got_socket_sync(pb);
+}
+
+
+void pbntf_update_socket(pubnub_t* pb)
+{
+    pbntf_update_socket_sync(pb);
+}
+
+
+void pbntf_start_transaction_timer(pubnub_t* pb)
+{
+    pbntf_start_transaction_timer_sync(pb);
+}
+
+
+void pbntf_start_wait_connect_timer(pubnub_t* pb)
+{
+    pbntf_start_wait_connect_timer_sync(pb);
+}
+
+
+void pbntf_lost_socket(pubnub_t* pb)
+{
+    pbntf_lost_socket_sync(pb);
+}
+
+
+void pbntf_trans_outcome(pubnub_t* pb, enum pubnub_state state) 
+{
+    pbntf_trans_outcome_sync(pb, state);
+}
+
+
+int pbntf_enqueue_for_processing(pubnub_t* pb) {
+    return pbntf_enqueue_for_processing_sync(pb);
+}
+
+
+int pbntf_requeue_for_processing(pubnub_t* pb) 
+{
+    return pbntf_requeue_for_processing_sync(pb);
+}
+
+
+int pbntf_watch_in_events(pubnub_t* pbp)
+{
+    return pbntf_watch_in_events_sync(pbp);
+}
+
+
+int pbntf_watch_out_events(pubnub_t* pbp) 
+{
+    return pbntf_watch_out_events_sync(pbp);
+}
+
+
+void pbnc_tr_cxt_state_reset(pubnub_t* pb) {
+    return pbnc_tr_cxt_state_reset_sync(pb);
+}
+
+
+enum pubnub_res pubnub_last_result(pubnub_t* pb) {
+    return pubnub_last_result_sync(pb);
+}
+#endif
+
 
 enum pubnub_res pubnub_await(pubnub_t* pb)
 {
@@ -150,6 +247,13 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->monitor);
+
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    if (PNA_SYNC != pb->api_policy) {
+        return PNR_INTERNAL_ERROR;
+    }
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
+
     t0 = pbms_start();
     while (!pbnc_can_start_transaction(pb)) {
         pbms_t delta;
@@ -170,9 +274,11 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     }
     result = pb->core.last_result;
     if (result != PNR_OK){
-        pbnc_tr_cxt_state_reset(pb);
+        pbnc_tr_cxt_state_reset_sync(pb);
     }
     pubnub_mutex_unlock(pb->monitor);
 
     return result;
 }
+
+
