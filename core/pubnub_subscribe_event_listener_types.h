@@ -80,7 +80,8 @@ typedef struct
 typedef void (*pubnub_subscribe_status_callback_t)(
     const pubnub_t* pb,
     pubnub_subscription_status status,
-    pubnub_subscription_status_data_t status_data);
+    pubnub_subscription_status_data_t status_data,
+    void* data);
 
 /**
  * @brief PubNub subscribe real-time updates (messages) function definition.
@@ -97,5 +98,6 @@ typedef void (*pubnub_subscribe_status_callback_t)(
  */
 typedef void (*pubnub_subscribe_message_callback_t)(
     const pubnub_t* pb,
-    struct pubnub_v2_message message);
+    struct pubnub_v2_message message, 
+    void* data);
 #endif // #ifndef PUBNUB_SUBSCRIBE_EVENT_LISTENER_TYPES_H
