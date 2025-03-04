@@ -55,6 +55,8 @@ typedef struct {
     pubnub_subscribe_status_callback_t callback;
     /** User provided data to be passed to the callback. */
     void* user_data;
+    /** Object references counter. */
+    pbref_counter_t* counter;
 } pbcc_status_listener_t;
 
 /**
@@ -260,21 +262,28 @@ static pbarray_t* pbcc_initialize_array_(
     pbarray_t**          array,
     pbarray_element_free free_fn);
 
+/** @brief Create real-time status update listener.
+ *
+ * @param callback  Real-time status update handling listener function.
+ * @param user_data User provided data to be passed to the callback.
+ * @return Pointer to the ready to use real-time status listener or `NULL` in
+ *         case of insufficient memory error. The returned pointer must be
+ *         passed to the `_pbcc_status_listener_free` to avoid a memory leak.
+ */
+static pbcc_status_listener_t* pbcc_status_listener_alloc_(
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data);
+
+/** @brief Clean up resources used by status listener object.
+ *
+ * @param listener Pointer to the status listener, which should free up
+ *                 resources.
+ */
+static void pbcc_status_listener_free_(pbcc_status_listener_t* listener);
 
 // ----------------------------------------------
 //                 Functions
 // ----------------------------------------------
-
-pbcc_status_listener_t* pbcc_status_listener_alloc_(
-    pubnub_subscribe_status_callback_t callback,
-    void*                              user_data)
-{
-    PBCC_ALLOCATE_TYPE(listener, pbcc_status_listener_t, true, NULL);
-    listener->callback  = callback;
-    listener->user_data = user_data;
-
-    return listener;
-}
 
 pbcc_event_listener_t* pbcc_event_listener_alloc(const pubnub_t* pb)
 {
@@ -297,7 +306,8 @@ enum pubnub_res pbcc_event_listener_add_status_listener(
 
     pubnub_mutex_lock(listener->mutw);
     /** Check whether listeners array should be created on demand or not. */
-    if (NULL == pbcc_initialize_array_(&listener->global_status, NULL)) {
+    if (NULL == pbcc_initialize_array_(&listener->global_status,
+                (pbarray_element_free)pbcc_status_listener_free_)) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -338,7 +348,7 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
     /**
      * It is safe to release temporarily object which used only to match object.
      */
-    free(_listener);
+    pbcc_status_listener_free_(_listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return PNR_OK;
@@ -653,6 +663,18 @@ pbcc_listener_t* pbcc_listener_alloc_(
     return listener;
 }
 
+pbcc_status_listener_t* pbcc_status_listener_alloc_(
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data)
+{
+    PBCC_ALLOCATE_TYPE(listener, pbcc_status_listener_t, true, NULL);
+    listener->counter   = pbref_counter_alloc();
+    listener->callback  = callback;
+    listener->user_data = user_data;
+
+    return listener;
+}
+
 enum pubnub_res pbcc_add_listener_(
     pbarray_t*       listeners,
     pbcc_listener_t* listener)
@@ -688,6 +710,12 @@ enum pubnub_res pbcc_remove_listener_(
 }
 
 void pbcc_listener_free_(pbcc_listener_t* listener)
+{
+    if (NULL == listener) { return; }
+    if (0 == pbref_counter_free(listener->counter)) { free(listener); }
+}
+
+void pbcc_status_listener_free_(pbcc_status_listener_t* listener)
 {
     if (NULL == listener) { return; }
     if (0 == pbref_counter_free(listener->counter)) { free(listener); }
