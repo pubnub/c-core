@@ -267,6 +267,7 @@ class subscribe_v2_options {
     unsigned    d_heartbeat;
     QString d_chgrp;
     QString d_filter_expr;
+    QString d_timetoken;
     
 public:
     subscribe_v2_options() : d_heartbeat(PUBNUB_MINIMAL_HEARTBEAT_INTERVAL) {}
@@ -289,11 +290,18 @@ public:
         d_filter_expr = filter_exp;
         return *this;
     }
+    subscribe_v2_options& timetoken(QString const& token) {
+        d_timetoken = token;
+        return *this;
+    }
     unsigned* get_heartbeat() { return &d_heartbeat; }
     char const* get_chgroup() { return d_chgrp.isEmpty() ? 0 : d_chgrp.toLatin1().data(); }
     char const* get_filter_expr()
     {
         return d_filter_expr.isEmpty() ? 0 : d_filter_expr.toLatin1().data();
+    }
+    char const* get_timetoken() {
+        return d_timetoken.isEmpty() ? nullptr : d_timetoken.toLatin1().data();
     }
 };
 #endif /* PUBNUB_USE_SUBSCRIBE_V2 */
