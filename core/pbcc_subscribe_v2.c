@@ -45,7 +45,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
         return PNR_RX_BUFF_NOT_EMPTY;
     }
 
-    if (NULL != timetoken) {
+    if (NULL != timetoken && '\0' != timetoken[0]) {
         size_t token_len = strlen(timetoken);
         memcpy(p->timetoken, timetoken, token_len);
         p->timetoken[token_len] = '\0';
