@@ -28,8 +28,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
                                        char const*          channel,
                                        char const*          channel_group,
                                        const unsigned*      heartbeat,
-                                       char const*          filter_expr,
-                                       char const*          timetoken)
+                                       char const*          filter_expr)
 {
     char        region_str[20];
     char const* tr;
@@ -43,12 +42,6 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
     }
     if (p->msg_ofs < p->msg_end) {
         return PNR_RX_BUFF_NOT_EMPTY;
-    }
-
-    if (NULL != timetoken && '\0' != timetoken[0]) {
-        size_t token_len = strlen(timetoken);
-        memcpy(p->timetoken, timetoken, token_len);
-        p->timetoken[token_len] = '\0';
     }
 
     if ('\0' == p->timetoken[0]) {
