@@ -53,6 +53,16 @@ struct pubnub_subscribe_v2_options {
         If NULL, will not be used.
      */
     char const* filter_expr;
+
+    /** Catch up subscribe time token.
+
+        Timetoken can be retrieved from local time by multiplying received
+        milliseconds to 10_000_000 or using `pubnub_time()` to get PubNub
+        high-precision timetoken.
+
+        By default, is set to 0.
+     */
+    char timetoken[20];
 };
 
 /** This returns the default options for subscribe V2 transactions.

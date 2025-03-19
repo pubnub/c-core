@@ -176,6 +176,7 @@ bool pubnub_subscription_free(pubnub_subscription_t** sub)
     if (pubnub_subscription_free_(*sub)) {
         pubnub_mutex_unlock((*sub)->mutw);
         pubnub_mutex_destroy((*sub)->mutw);
+        free(*sub);
         *sub = NULL;
         return true;
     }
@@ -190,7 +191,6 @@ bool pubnub_subscription_free_(pubnub_subscription_t* sub)
 
     if (0 == pbref_counter_free(sub->counter)) {
         pubnub_entity_free((void**)&sub->entity);
-        free(sub);
         return true;
     }
 
