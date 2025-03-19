@@ -659,6 +659,7 @@ pubnub_res pubnub_qt::subscribe_v2(QString const& channel, subscribe_v2_options 
             prep_channel_groups.isEmpty() ? 0 : prep_channel_groups.toLatin1().data(),
             opt.get_heartbeat(),
             opt.get_filter_expr()),
+            opt.get_timetoken(),
         PBTT_SUBSCRIBE_V2);
 }
 
