@@ -17,13 +17,22 @@
 #include <time.h>
 
 
+/** Helper functions */
+
+/** Waits for the specified number of seconds */
 static void wait_seconds(double time_in_seconds);
+
+/** Frees the resources of the sync context */
 static void sync_sample_free(pubnub_t* p);
+
+/** Frees the resources of the callback context */
 static void callback_sample_free(pubnub_t* p);
+
+/** Callback for message listener */
 static void subscribe_message_listener(
     const pubnub_t*                pb,
-    const struct pubnub_v2_message message);
-
+    const struct pubnub_v2_message message,
+    void*                          user_data);
 
 int main()
 {
@@ -66,7 +75,8 @@ int main()
     pubnub_entity_free((void**)&channel);
     pubnub_subscribe_add_subscription_listener(subscription,
                                                PBSL_LISTENER_ON_MESSAGE,
-                                               subscribe_message_listener);
+                                               subscribe_message_listener,
+                                               NULL);
     printf("Subscribing with subscription...\n");
     enum pubnub_res rslt = pubnub_subscribe_with_subscription(
         subscription,
@@ -157,7 +167,8 @@ static void callback_sample_free(pubnub_t* p)
 
 static void subscribe_message_listener(
     const pubnub_t*                pb,
-    const struct pubnub_v2_message message) {
+    const struct pubnub_v2_message message,
+    void*                          user_data) {
     printf("CALLBACK | Received message: %.*s\n", (int) message.payload.size, message.payload.ptr);
 }
 
