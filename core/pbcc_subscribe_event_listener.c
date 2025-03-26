@@ -485,7 +485,7 @@ enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
     pubnub_mutex_lock(listener->mutw);
-    if (NULL == listener->global_events) {
+    if (NULL == listener->listeners) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OK;
     }

@@ -241,7 +241,7 @@ enum pubnub_res pubnub_subscribe_manage_listener_(
             event_listener,
             type,
             names,
-            subscribables,
+            subscription,
             callback,
             user_data);
     }
