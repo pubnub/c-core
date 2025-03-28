@@ -5,7 +5,9 @@
 #include "pubnub_log.h"
 
 #include "pbpal.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
+#endif
 
 
 static struct pubnub_ m_aCtx[PUBNUB_CTX_MAX];

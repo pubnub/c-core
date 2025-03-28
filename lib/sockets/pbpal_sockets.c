@@ -6,7 +6,9 @@
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "core/pubnub_ntf_enforcement.h"
+#endif
 
 #include <sys/types.h>
 #include <fcntl.h>

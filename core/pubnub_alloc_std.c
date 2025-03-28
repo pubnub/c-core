@@ -3,9 +3,10 @@
 #include "pubnub_auto_heartbeat.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
-
-#include "pbpal.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
+#endif
+#include "pbpal.h"
 
 #include <stdlib.h>
 #include <string.h>

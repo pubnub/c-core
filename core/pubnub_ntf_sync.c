@@ -1,7 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_ntf_sync.h"
 #include "pubnub_api_types.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
+#endif
 
 #if PUBNUB_USE_RETRY_CONFIGURATION
 #include "core/pubnub_retry_configuration_internal.h"

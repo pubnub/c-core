@@ -7,7 +7,9 @@
 #include "core/pubnub_log.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_ccore_pubsub.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
+#endif
 #include "core/pbpal.h"
 #include "core/pubnub_version.h"
 #include "core/pubnub_version_internal.h"

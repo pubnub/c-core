@@ -10,7 +10,9 @@
 
 #include "pubnub_log.h"
 #include "pubnub_assert.h"
-#include "core/pubnub_ntf_enforcement.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+#include "pubnub_ntf_enforcement.h"
+#endif
 
 
 #if PUBNUB_NTF_RUNTIME_SELECTION

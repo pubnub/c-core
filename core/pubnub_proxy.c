@@ -6,9 +6,11 @@
 
 #include "pubnub_proxy.h"
 #include "pubnub_assert.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
+#endif
 #include "pubnub_log.h"
-#if defined(PUBNUB_CALLBACK_API)
+#ifdef PUBNUB_CALLBACK_API
 #include "lib/pubnub_parse_ipv4_addr.h"
 #if PUBNUB_USE_IPV6
 #include "lib/pubnub_parse_ipv6_addr.h"

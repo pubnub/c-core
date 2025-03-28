@@ -61,7 +61,7 @@ static void sublup_context_callback(pubnub_t*         pb,
 }
 
 
-#if !defined PUBNUB_NTF_RUNTIME_SELECTION
+#ifndef PUBNUB_NTF_RUNTIME_SELECTION
 pubnub_subloop_t* pubnub_subloop_define(pubnub_t*                       p,
 #else 
 pubnub_subloop_t* pubnub_callback_subloop_define(pubnub_t*              p,
