@@ -3,7 +3,9 @@
 #include "pubnub_auto_heartbeat.h"
 #include "pubnub_assert.h"
 #include "pubnub_log.h"
-
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+#include "pubnub_ntf_enforcement.h"
+#endif
 #include "pbpal.h"
 
 #include <stdlib.h>
@@ -154,7 +156,15 @@ int pubnub_free(pubnub_t* pb)
         pubnub_disable_auto_heartbeat(pb);
         pbauto_heartbeat_free_channelInfo(pb);
         pb->state = PBS_NULL;
-#if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_CALLBACK == pb->api_policy) {
+            pbntf_requeue_for_processing(pb);
+            pubnub_mutex_unlock(pb->monitor);
+        } else {
+            pubnub_mutex_unlock(pb->monitor);
+            pballoc_free_at_last(pb);
+        }
+#elif defined(PUBNUB_CALLBACK_API)
         pbntf_requeue_for_processing(pb);
         pubnub_mutex_unlock(pb->monitor);
 #else

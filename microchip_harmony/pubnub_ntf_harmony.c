@@ -108,8 +108,9 @@ void pubnub_task(void)
 }
 
 
-int pbntf_init(void)
+int pbntf_init(pubnub_t* pb)
 {
+    PUBNUB_UNUSED(pb);
     return 0;
 }
 

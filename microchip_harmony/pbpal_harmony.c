@@ -17,11 +17,11 @@ static void buf_setup(pubnub_t *pb)
 }
 
 
-static int pal_init(void)
+static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
     if (!s_init) {
-        pbntf_init();
+        pbntf_init(pb);
         s_init = true;
     }
     return 0;
@@ -30,7 +30,7 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t *pb)
 {
-    pal_init();
+    pal_init(pb);
     pb->options.use_blocking_io = false;
     pb->pal.socket = SOCKET_INVALID;
 #if PUBNUB_USE_SSL
