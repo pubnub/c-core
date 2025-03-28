@@ -58,10 +58,8 @@ log_option(ASAN "Use Address sanitizer" OFF)
 
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
-    set(DEFAULT_USE_SYNC_API OFF)
 else ()
     set(DEFAULT_USE_CALLBACK_API OFF)
-    set(DEFAULT_USE_SYNC_API ON)
 endif ()
 
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
@@ -81,7 +79,7 @@ num_option(USE_REVOKE_TOKEN_API "Use revoke token API [OPENSSL ONLY]" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API [OPENSSL ONLY]" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
-num_option(USE_SYNC_API "Use sync API" ${DEFAULT_USE_SYNC_API})
+num_option(USE_NTF_RUNTIME_SELECTION "Use runtime NTF API selection" OFF)
 num_option(USE_CALLBACK_API "Use callback API" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
@@ -101,8 +99,8 @@ if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
 endif ()
 
-if (NOT ${USE_CALLBACK_API} AND NOT ${USE_SYNC_API})
-    message(FATAL_ERROR "You must select at least one API type!")
+if (${USE_NTF_RUNTIME_SELECTION} AND NOT ${USE_CALLBACK_API})
+    message(FATAL_ERROR "You must enable callback API to use runtime NTF API selection!")
 endif ()
 
 if(${COMPILE_COMMANDS})
@@ -346,7 +344,7 @@ if (${USE_CALLBACK_API})
     endif ()
 endif ()
 
-if (${USE_SYNC_API})
+if (${USE_NTF_RUNTIME_SELECTION} OR NOT ${USE_CALLBACK_API})
     set(INTF_SOURCEFILES
             ${INTF_SOURCEFILES}
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_sync.c
@@ -354,7 +352,7 @@ if (${USE_SYNC_API})
             ${CMAKE_CURRENT_LIST_DIR}/core/srand_from_pubnub_time.c)
 endif ()
 
-if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
+if (${USE_NTF_RUNTIME_SELECTION})
     message(STATUS "Using runtime API selection")
 
     set(CMAKE_C_FLAGS "\
@@ -365,10 +363,10 @@ if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
             ${INTF_SOURCEFILES}
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_enforcement.c)
 
-elseif (${USE_SYNC_API})
-    message(STATUS "Using sync API")
 elseif (${USE_CALLBACK_API})
     message(STATUS "Using callback API")
+else ()
+    message(STATUS "Using sync API")
 endif ()
 
 set(FEATURE_SOURCEFILES)
@@ -808,7 +806,7 @@ if (${EXAMPLES})
                         ${CPP_EXAMPLE_LIST})
             endif ()
         endif ()
-        if (${USE_SYNC_API})
+        if (NOT ${USE_CALLBACK_API} OR ${USE_NTF_RUNTIME_SELECTION})
             message(STATUS "Building sync examples")
             set(EXAMPLE_LIST
                     metadata
@@ -842,7 +840,7 @@ if (${EXAMPLES})
             endif ()
         endif ()
 
-        if (${USE_SYNC_API} AND ${USE_CALLBACK_API})
+        if (${USE_NTF_RUNTIME_SELECTION})
             set(EXAMPLE_LIST 
                 pubnub_api_enforcement_sample
                 ${EXAMPLE_LIST})
