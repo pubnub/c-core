@@ -212,30 +212,25 @@ set(CORE_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c)
 
 set(LIB_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
+        ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c)
 
 if (UNIX OR WIN32 OR WIN64 OR MSVC)
     set(CORE_SOURCEFILES
             ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c)
 
     set(LIB_SOURCEFILES
             ${LIB_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
             ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c)
-else ()
-    set(CORE_SOURCEFILES
-            ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c)
 endif ()
 
 if (NOT ${OPENSSL})
@@ -250,11 +245,13 @@ if (UNIX)
     set(LDLIBS "-lpthread ${LDLIBS}")
     set(OS_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
-            ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
+    if (NOT ${WITH_CPP})
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c)
+    endif ()
 
     if (APPLE)
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
@@ -268,12 +265,15 @@ elseif (WIN32 OR WIN64 OR MSVC)
     set(OS_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbtimespec_elapsed_ms.c
-            ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+
+    if (NOT ${WITH_CPP})
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c)
+    endif ()
 else ()
     message(STATUS "Using FreeRTOS setup")
 
@@ -295,7 +295,6 @@ set(INTF_SOURCEFILES)
 if (${USE_CALLBACK_API})
     set(CORE_SOURCEFILES
             ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_dns_servers.c)
 
     set(INTF_SOURCEFILES
@@ -308,6 +307,7 @@ if (${USE_CALLBACK_API})
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_callback_subscribe_loop.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_admin.c
             ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c
             ${INTF_SOURCEFILES})
 
     if (UNIX)
@@ -341,6 +341,12 @@ if (${USE_CALLBACK_API})
 				${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c
                 ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c)
 		endif ()
+    endif ()
+
+    if (UNIX OR WIN32 OR WIN64 OR MSVC)
+        set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c)
     endif ()
 endif ()
 
@@ -546,6 +552,7 @@ if (${OPENSSL})
             ${LIB_SOURCEFILES})
 
     set(FEATURE_SOURCEFILES
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
