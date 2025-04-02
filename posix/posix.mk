@@ -37,7 +37,8 @@ all: \
 	subscribe_publish_from_callback$(APP_EXT)   \
 	pubnub_console_sync$(APP_EXT)               \
 	pubnub_console_callback$(APP_EXT)           \
-	pubnub_fntest$(APP_EXT)
+	pubnub_fntest$(APP_EXT)					    \
+	pubnub_api_enforcement_sample$(APP_EXT)
 
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
