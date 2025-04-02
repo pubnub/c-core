@@ -21,6 +21,8 @@ cppcheck: $(SOURCE_FILES) $(SYNC_SOURCE_FILES) $(CALLBACK_SOURCE_FILES)
 
 # There is also `subscribe_event_engine_sample$(APP_EXT)` target but it can't be built
 # with `all` because requires `USE_SUBSCRIBE_EVENT_ENGINE=1`.
+# To enable features use temporal environmental variables like: set "<FEATURE=1>" && nmake /f windows.mk
+# For example: set "USE_SUBSCRIBE_EVENT_ENGINE=1" && nmake /f windows.mk clean pubnub_api_enforcement_sample.exe
 
 all: \
 	cancel_subscribe_sync_sample$(APP_EXT)      \

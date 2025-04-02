@@ -117,9 +117,9 @@ API_ENFORCEMENT_SOURCES_ = ../core/samples/pubnub_api_enforcement_sample.c
 API_ENFORCEMENT_SOURCES = $(subst /,$(PATH_SEP),$(API_ENFORCEMENT_SOURCES_))
 pubnub_api_enforcement_sample$(APP_EXT): \
 	$(API_ENFORCEMENT_SOURCES) \
-	pubnub_ntf_sync            \
-	pubnub_ntf_callback		   \
-	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+    pubnub_ntf_runtime_selection$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS) \
+    $(NTF_SELECTION_CPPFLAGS)
 
 
 # --------------- Console based on sync PubNub library --------------

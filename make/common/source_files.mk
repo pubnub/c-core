@@ -164,7 +164,7 @@ CALLBACK_CORE_OPENSSL_SOURCE_FILES_WINDOWS = \
 #                     PubNub SDK NTF runtime api selection                    #
 ###############################################################################
 # PubNub SDK NTF runtime api selection source files.
-NTF_RUNTIME_SELECTION_SOURCE_FILES = \
+NTF_RUNTIME_SELECTION_CORE_SOURCE_FILES = \
 	../core/pubnub_ntf_enforcement.c 
 
 

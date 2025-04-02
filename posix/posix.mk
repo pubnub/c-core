@@ -18,6 +18,8 @@ include ../make/posix_targets.mk
 
 # There is also `subscribe_event_engine_sample$(APP_EXT)` target but it can't be built
 # with `all` because requires `USE_SUBSCRIBE_EVENT_ENGINE=1`.
+# To enable features use temporal environmental variables like: <FEATURE=1> make -f posix.mk
+# For example: USE_SUBSCRIBE_EVENT_ENGINE=1 make -f posix.mk clean pubnub_api_enforcement_sample
 
 all: \
 	cancel_subscribe_sync_sample$(APP_EXT)      \

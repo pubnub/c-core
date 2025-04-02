@@ -40,15 +40,16 @@ CPPFLAGS = $(strip $(CPPFLAGS_))
 
 # Preprocessing flags for PubNub library with callback interface.
 CALLBACK_CPPFLAGS_ = \
-	$(CPPFLAGS_)                                                 \
+	$(CPPFLAGS)                                                 \
 	$(OPTION_PREFIX)D PUBNUB_CALLBACK_API                       \
 	$(OPTION_PREFIX)D PUBNUB_SET_DNS_SERVERS=$(USE_DNS_SERVERS)
 CALLBACK_CPPFLAGS = $(strip $(CALLBACK_CPPFLAGS_))
 
 # Preprocessing flags for PubNub library with NTF runtime selection.
 NTF_SELECTION_CPPFLAGS_ = \
-	$(CPPFLAGS_)                                                 \
+	$(CPPFLAGS)                                                  \
 	$(CALLBACK_CPPFLAGS)                                         \
+    $(OPTION_PREFIX)D PUBNUB_CALLBACK_API                        \
 	$(OPTION_PREFIX)D PUBNUB_NTF_RUNTIME_SELECTION
 NTF_SELECTION_CPPFLAGS = $(strip $(NTF_SELECTION_CPPFLAGS_))
 
