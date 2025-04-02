@@ -26,11 +26,13 @@
  * @param global  Whether listener called from PubNub context or specific
  *                entity.
  * @param message Received real-time update information.
+ * @param data    Additional data passed to the listener.
  */
 void subscribe_message_listener_(
     const pubnub_t*          pb,
     bool                     global,
-    struct pubnub_v2_message message);
+    struct pubnub_v2_message message,
+    void*                    data);
 
 
 // ----------------------------------------------
@@ -106,11 +108,14 @@ static void wait_seconds(const double time_in_seconds)
  *                    status has been changed.
  * @param status      Current subscription status.
  * @param status_data Information from subscriber.
+ * @param data        Additional data provided by user to the listener.
+ *                    In this case, it is not used.           
  */
 void subscribe_status_change_listener(
     const pubnub_t*                         pb,
     const pubnub_subscription_status        status,
-    const pubnub_subscription_status_data_t status_data)
+    const pubnub_subscription_status_data_t status_data, 
+    void*                                   _data)
 {
     switch (status) {
     case PNSS_SUBSCRIPTION_STATUS_CONNECTED:
@@ -143,12 +148,14 @@ void subscribe_status_change_listener(
  *
  * @param pb      Pointer to the PubNub context which received real-time update.
  * @param message Received real-time update information.
+ * @param data    Additional data provided by user to the listener.
  */
 void global_message_listener(
     const pubnub_t*                pb,
-    const struct pubnub_v2_message message)
+    const struct pubnub_v2_message message,
+    void*                          data)
 {
-    subscribe_message_listener_(pb, true, message);
+    subscribe_message_listener_(pb, true, message, data);
 }
 
 /**
@@ -156,18 +163,21 @@ void global_message_listener(
  *
  * @param pb      Pointer to the PubNub context which received real-time update.
  * @param message Received real-time update information.
+ * @param data    Additional data passed to the listener.
  */
 void subscribe_message_listener(
     const pubnub_t*                pb,
-    const struct pubnub_v2_message message)
+    const struct pubnub_v2_message message,
+    void*                          data)
 {
-    subscribe_message_listener_(pb, false, message);
+    subscribe_message_listener_(pb, false, message, data);
 }
 
 void subscribe_message_listener_(
     const pubnub_t*                pb,
     const bool                     global,
-    const struct pubnub_v2_message message)
+    const struct pubnub_v2_message message,
+    void*                          data)
 {
     char* uuid = string_from_mem_block(message.publisher);
     char* ch   = string_from_mem_block(message.channel);
@@ -190,6 +200,9 @@ void subscribe_message_listener_(
         printf("\t- message: %s\n", msg);
         free(msg);
     }
+    if (NULL != data) {
+        printf("\t- data: %s\n", (char*)data);
+    }
 
     free(ch);
     free(tt);
@@ -209,10 +222,12 @@ int main()
 
     /** Add subscription status change listener. */
     pubnub_subscribe_add_status_listener(pubnub,
-                                         subscribe_status_change_listener);
+                                         subscribe_status_change_listener,
+                                         NULL);
     pubnub_subscribe_add_message_listener(pubnub,
                                           PBSL_LISTENER_ON_MESSAGE,
-                                          global_message_listener);
+                                          global_message_listener,
+                                          NULL);
 
 
     /**
@@ -228,7 +243,8 @@ int main()
     /** Add messages listeners for subscription. */
     pubnub_subscribe_add_subscription_listener(subscription,
                                                PBSL_LISTENER_ON_MESSAGE,
-                                               subscribe_message_listener);
+                                               subscribe_message_listener,
+                                               NULL);
     printf("Subscribing with subscription...\n");
     /** Subscribe using subscription. */
     enum pubnub_res rslt = pubnub_subscribe_with_subscription(
@@ -266,13 +282,46 @@ int main()
     pubnub_subscribe_add_subscription_set_listener(
         set,
         PBSL_LISTENER_ON_MESSAGE,
-        subscribe_message_listener);
+        subscribe_message_listener,
+        NULL);
     printf("Subscribing with subscription set...\n");
     rslt = pubnub_subscribe_with_subscription_set(
         set,
         NULL);
     printf("Subscribe with subscription set result: %s\n",
            pubnub_res_2_string(rslt));
+
+
+    /**
+     * Subscription with custom user data.
+     */
+    pubnub_channel_t* channel_ud = pubnub_channel_alloc(
+        pubnub,
+        "channel-test-history1");
+    pubnub_subscription_t* subscription_ud = pubnub_subscription_alloc(
+        (pubnub_entity_t*)channel_ud,
+        NULL);
+    /** Subscription retained entity and it is safe to free */
+    pubnub_entity_free((void**)&channel_ud);
+
+    /** Here we add custom user data to the subscription.
+     *  It can be anything that is needed by your listener and it is safe to 
+     *  be used in the listener (e.g. heap allocated structure or string literal).
+     *  Keep in mind that it is user's responsibility to free the memory.
+     */
+    char* custom_data = "custom user data";
+    pubnub_subscribe_add_subscription_listener(subscription_ud,
+                                               PBSL_LISTENER_ON_MESSAGE,
+                                               subscribe_message_listener,
+                                               (void*)custom_data);
+
+    printf("Subscribing with subscription with custom user data...\n");
+    rslt = pubnub_subscribe_with_subscription(
+        subscription_ud,
+        NULL);
+    printf("Subscribe with subscription with custom user data result: %s\n",
+           pubnub_res_2_string(rslt));
+
 
     /** Wait for messages published to one of the channels (manual). */
     wait_seconds(60);
