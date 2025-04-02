@@ -18,6 +18,9 @@ SYNC_SOURCE_FILES = $(SYNC_CORE_SOURCE_FILES)
 # Source files for a call-back based PubNub C-core client version support.
 CALLBACK_SOURCE_FILES = $(CALLBACK_CORE_SOURCE_FILES)
 
+# Source files for a ntf runtime selection based PubNub C-core client version support.
+NTF_RUNTIME_SELECTION_SOURCE_FILES = $(NTF_RUNTIME_SELECTION_CORE_SOURCE_FILES)
+
 ifeq ($(WITH_CPP), 1)
     SOURCE_FILES += \
         $(CORE_CPP_SOURCE_FILES)       \
@@ -169,3 +172,4 @@ endif
 OBJECT_FILES = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(notdir $(SOURCE_FILES))))
 SYNC_OBJECT_FILES = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(notdir $(SYNC_SOURCE_FILES))))
 CALLBACK_OBJECT_FILES = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(notdir $(CALLBACK_SOURCE_FILES))))
+NTF_RUNTIME_SELECTION_OBJECT_FILES = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(notdir $(NTF_RUNTIME_SELECTION_SOURCE_FILES))))

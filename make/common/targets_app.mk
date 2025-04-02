@@ -119,12 +119,7 @@ pubnub_api_enforcement_sample$(APP_EXT): \
 	$(API_ENFORCEMENT_SOURCES) \
     pubnub_ntf_runtime_selection$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS) \
-    -D PUBNUB_NTF_RUNTIME_SELECTION \
-    -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=1 \
-    -D PUBNUB_USE_SUBSCRIBE_V2=1 \
-    -D PUBNUB_CALLBACK_API=1 \
-    -D PUBNUB_SET_DNS_SERVERS=1 \
-    -D PUBNUB_USE_IPV6=1 
+    $(NTF_SELECTION_CPPFLAGS)
 
 
 # --------------- Console based on sync PubNub library --------------

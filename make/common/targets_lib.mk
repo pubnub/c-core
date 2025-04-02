@@ -61,10 +61,7 @@ pubnub_callback_dynamiciv$(LIB_EXT): $(SOURCE_FILES) $(CALLBACK_SOURCE_FILES)
 # PubNub SDK library with NTF runtime selection.
 # Note: Initialization vector make sense only if `OPENSSL` preprocessing flag 
 # 	 is set to `1`.
-pubnub_ntf_runtime_selection$(LIB_EXT): $(SOURCE_FILES) \
-		$(SYNC_SOURCE_FILES)     \
-		$(CALLBACK_SOURCE_FILES) \
-		$(NTF_RUNTIME_SELECTION_SOURCE_FILES)
+pubnub_ntf_runtime_selection$(LIB_EXT): $(SOURCE_FILES) $(SYNC_SOURCE_FILES) $(CALLBACK_SOURCE_FILES) $(NTF_RUNTIME_SELECTION_SOURCE_FILES)
 	$(COMPILER) \
 		$(OPTION_PREFIX)c                           \
 		$(COMPILER_FLAGS)                           \
@@ -74,7 +71,7 @@ pubnub_ntf_runtime_selection$(LIB_EXT): $(SOURCE_FILES) \
 		$(OPTION_PREFIX)U PUBNUB_RAND_INIT_VECTOR   \
 		$(OPTION_PREFIX)D PUBNUB_RAND_INIT_VECTOR=0 \
 		$(PREREQUISITES)
-	$(LIB_TOOL) $(LIB_CMD) $(LIB_OUT_FLAG)$@ $(OBJECT_FILES) $(SYNC_OBJECT_FILES) $(CALLBACK_OBJECT_FILES)
+	$(LIB_TOOL) $(LIB_CMD) $(LIB_OUT_FLAG)$@ $(OBJECT_FILES) $(SYNC_OBJECT_FILES) $(CALLBACK_OBJECT_FILES) $(NTF_RUNTIME_SELECTION_OBJECT_FILES)
 # PubNub SDK library with NTF runtime selection and dynamic initialization 
 # vector.
 # Note: Initialization vector make sense only if `OPENSSL` preprocessing flag 
@@ -92,4 +89,4 @@ pubnub_ntf_runtime_selection_dynamiciv$(LIB_EXT): $(SOURCE_FILES) \
 		$(OPTION_PREFIX)U PUBNUB_RAND_INIT_VECTOR   \
 		$(OPTION_PREFIX)D PUBNUB_RAND_INIT_VECTOR=1 \
 		$(PREREQUISITES)
-	$(LIB_TOOL) $(LIB_CMD) $(LIB_OUT_FLAG)$@ $(OBJECT_FILES) $(SYNC_OBJECT_FILES) $(CALLBACK_OBJECT_FILES)
+	$(LIB_TOOL) $(LIB_CMD) $(LIB_OUT_FLAG)$@ $(OBJECT_FILES) $(SYNC_OBJECT_FILES) $(CALLBACK_OBJECT_FILES) $(NTF_RUNTIME_SELECTION_OBJECT_FILES)
