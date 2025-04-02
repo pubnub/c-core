@@ -189,7 +189,9 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
     }
     else {
         PUBNUB_ASSERT(pb->options.useSSL);
-        switch (SSL_get_error(ssl, result)) {
+        const int error = SSL_get_error(ssl, result);
+
+        switch (error) {
         case SSL_ERROR_NONE:
             break;
         case SSL_ERROR_WANT_READ:
@@ -198,7 +200,7 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
         case SSL_ERROR_WANT_X509_LOOKUP:
             if (!pbms_active(pb->pal.tryconn)
                 || (pbms_elapsed(pb->pal.tryconn) < pb->transaction_timeout_ms)) {
-                PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation should retry\n", pb);
+                PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation should retry, error=%d\n", pb, error);
 
                 return PNR_IN_PROGRESS;
             }
