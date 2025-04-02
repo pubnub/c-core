@@ -16,7 +16,8 @@ enum pubnub_res pbcc_subscribe_v2_prep(struct pbcc_context* p,
                                        char const*          channel,
                                        char const*          channel_group,
                                        const unsigned*      heartbeat,
-                                       char const*          filter_expr);
+                                       char const*          filter_expr,
+                                       char const*          timetoken);
 
 
 /** Parses the string received as a response for a subscribe_v2 operation

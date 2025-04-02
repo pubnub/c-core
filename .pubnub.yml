@@ -1,8 +1,20 @@
 name: c-core
 schema: 1
-version: "4.18.1"
+version: "4.19.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-04-02
+    version: v4.19.1
+    changes:
+      - type: bug
+        text: "Fix the issue that there was an assertion when using App Context functions with `limit` set to 100."
+  - date: 2025-03-19
+    version: v4.19.0
+    changes:
+      - type: feature
+        text: "Add the ability to set `timetoken` (for message catchup) in `pubnub_subscribe_v2_options` which is used with `pubnub_subscribe_v2`."
+      - type: bug
+        text: "Fix issue which was source of segmentation fault when tried to access memory after it has been freed."
   - date: 2025-02-11
     version: v4.18.1
     changes:
@@ -917,7 +929,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -983,7 +995,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -1049,7 +1061,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -1111,7 +1123,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -1172,7 +1184,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -1228,7 +1240,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"
@@ -1281,7 +1293,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.18.1
+            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
             requires:
               -
                 name: "miniz"

@@ -1,3 +1,18 @@
+## v4.19.1
+April 02 2025
+
+#### Fixed
+- Fix the issue that there was an assertion when using App Context functions with `limit` set to 100.
+
+## v4.19.0
+March 19 2025
+
+#### Added
+- Add the ability to set `timetoken` (for message catchup) in `pubnub_subscribe_v2_options` which is used with `pubnub_subscribe_v2`.
+
+#### Fixed
+- Fix issue which was source of segmentation fault when tried to access memory after it has been freed.
+
 ## v4.18.1
 February 11 2025
 

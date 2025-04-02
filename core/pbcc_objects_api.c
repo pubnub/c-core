@@ -86,7 +86,7 @@ enum pubnub_res pbcc_getall_uuidmetadata_prep(
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_OBJECTS_LIMIT);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
@@ -306,7 +306,7 @@ enum pubnub_res pbcc_getall_channelmetadata_prep(struct pbcc_context* pb,
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_OBJECTS_LIMIT);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
@@ -535,7 +535,7 @@ enum pubnub_res pbcc_get_memberships_prep(struct pbcc_context* pb,
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_OBJECTS_LIMIT);
 
     if (NULL == uuid_metadataid) {
         uuid_metadataid = user_id;
@@ -676,7 +676,7 @@ enum pubnub_res pbcc_get_members_prep(struct pbcc_context* pb,
     enum pubnub_res   rslt = PNR_OK;
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
-    PUBNUB_ASSERT_OPT(limit < MAX_OBJECTS_LIMIT);
+    PUBNUB_ASSERT_OPT(limit <= MAX_OBJECTS_LIMIT);
     if (NULL == channel_metadataid) {
         PUBNUB_LOG_ERROR("pbcc_get_members_prep(pbcc=%p) - Invalid param: "
             "channel_metadataid=NULL\n", pb);
