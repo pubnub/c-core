@@ -6,6 +6,9 @@
 #include "core/pubnub_log.h"
 #include "lib/sockets/pbpal_adns_sockets.h"
 #include "lib/sockets/pbpal_socket_blocking_io.h"
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+#include "pubnub_ntf_enforcement.h"
+#endif
 
 #include <string.h>
 #include <sys/types.h>
@@ -412,6 +415,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     uint16_t    port = HTTP_PORT;
     char const* origin;
 
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    if (PNA_CALLBACK == pb->api_policy) { // if policy 
+#endif
 #ifdef PUBNUB_CALLBACK_API
     sockaddr_inX_t dest = { 0 };
 #if PUBNUB_USE_IPV6
@@ -489,7 +495,11 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     
     return pbpal_resolv_sent;
 
-#else
+#endif /* PUBNUB_CALLBACK_API */
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    } else { // if policy
+#endif
+#if !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION
     char             port_string[20];
     struct addrinfo* result;
     struct addrinfo* it;
@@ -553,7 +563,10 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     socket_disable_SIGPIPE(pb->pal.socket);
 
     return error ? pbpal_connect_wouldblock : pbpal_connect_success;
-#endif /* PUBNUB_CALLBACK_API */
+#endif /* !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION */
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    } // if policy 
+#endif
 }
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
@@ -564,6 +577,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
 enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 {
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    if (PNA_CALLBACK == pb->api_policy) { // if policy 
+#endif
 #ifdef PUBNUB_CALLBACK_API
 
     sockaddr_inX_t                     dns_server = { 0 };
@@ -627,7 +643,11 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
     }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
     return rslt;
-#else /* PUBNUB_CALLBACK_API */
+#endif /* PUBNUB_CALLBACK_API */
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    } else { // if policy
+#endif
+#if !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION
 
     PUBNUB_UNUSED(pb);
 
@@ -635,7 +655,10 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
        called unless using async DNS, so this is an error */
     return pbpal_connect_failed;
 
-#endif /* PUBNUB_CALLBACK_API */
+#endif /* !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION */
+#ifdef PUBNUB_NTF_RUNTIME_SELECTION
+    } // if policy
+#endif
 }
 
 

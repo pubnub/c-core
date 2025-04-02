@@ -79,12 +79,14 @@ num_option(USE_REVOKE_TOKEN_API "Use revoke token API [OPENSSL ONLY]" OFF)
 num_option(USE_GRANT_TOKEN_API "Use grant token API [OPENSSL ONLY]" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
 num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
-num_option(USE_CALLBACK_API "Use callback API [CALLBACK=ON SYNC=OFF]" ${DEFAULT_USE_CALLBACK_API})
+num_option(USE_NTF_RUNTIME_SELECTION "Use runtime NTF API selection" OFF)
+num_option(USE_CALLBACK_API "Use callback API" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
 num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" OFF)
+log_option(COMPILE_COMMANDS "Generate compile_commands.json" OFF)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
 log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
@@ -96,6 +98,15 @@ log_set(CUSTOM_BOOL_TYPE "" "Type of bool for platform differences. Select whate
 if (${OPENSSL} AND ${MBEDTLS})
     message(FATAL_ERROR "You can't use both OpenSSL and mbedTLS at the same time!")
 endif ()
+
+if (${USE_NTF_RUNTIME_SELECTION} AND NOT ${USE_CALLBACK_API})
+    message(FATAL_ERROR "You must enable callback API to use runtime NTF API selection!")
+endif ()
+
+if(${COMPILE_COMMANDS})
+    message(STATUS "Generating compile_commands.json")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+endif()
 
 # Flags configuration
 
@@ -143,7 +154,13 @@ if (${USE_CALLBACK_API})
         ${FLAGS} \
         -D PUBNUB_SET_DNS_SERVERS=${USE_SET_DNS_SERVERS} \
         -D PUBNUB_USE_IPV6=${USE_IPV6} \
-        -D PUBNUB_CALLBACK_API")
+        -D PUBNUB_CALLBACK_API=${USE_CALLBACK_API}")
+endif ()
+
+if (${USE_SYNC_API})
+    set(FLAGS "\
+        ${FLAGS} \
+        -D PUBNUB_USE_SYNC_API=${USE_SYNC_API}")
 endif ()
 
 if (${ASAN})
@@ -195,30 +212,25 @@ set(CORE_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_free_with_timeout_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
+        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_url_encode.c)
 
 set(LIB_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_handle_socket_error.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
         ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strnlen_s.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c)
+        ${CMAKE_CURRENT_LIST_DIR}/lib/pb_strncasecmp.c)
 
 if (UNIX OR WIN32 OR WIN64 OR MSVC)
     set(CORE_SOURCEFILES
             ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_assert_std.c)
 
     set(LIB_SOURCEFILES
             ${LIB_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
             ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_resolv_and_connect_sockets.c)
-else ()
-    set(CORE_SOURCEFILES
-            ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_alloc_std.c)
 endif ()
 
 if (NOT ${OPENSSL})
@@ -233,11 +245,13 @@ if (UNIX)
     set(LDLIBS "-lpthread ${LDLIBS}")
     set(OS_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/posix/posix_socket_blocking_io.c
-            ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_generate_uuid_posix.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
+    if (NOT ${WITH_CPP})
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c)
+    endif ()
 
     if (APPLE)
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/monotonic_clock_get_time_darwin.c)
@@ -251,12 +265,15 @@ elseif (WIN32 OR WIN64 OR MSVC)
     set(OS_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/windows/windows_socket_blocking_io.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbtimespec_elapsed_ms.c
-            ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_generate_uuid_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_windows_blocking_io.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/msstopwatch_windows.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
+
+    if (NOT ${WITH_CPP})
+        set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c)
+    endif ()
 else ()
     message(STATUS "Using FreeRTOS setup")
 
@@ -276,11 +293,8 @@ endif ()
 set(INTF_SOURCEFILES)
 
 if (${USE_CALLBACK_API})
-    message(STATUS "Using callback API")
-
     set(CORE_SOURCEFILES
             ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_memory_block.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_dns_servers.c)
 
     set(INTF_SOURCEFILES
@@ -293,29 +307,72 @@ if (${USE_CALLBACK_API})
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_callback_subscribe_loop.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pbpal_ntf_callback_admin.c
             ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c
+            ${CMAKE_CURRENT_LIST_DIR}/lib/pubnub_dns_codec.c
             ${INTF_SOURCEFILES})
 
     if (UNIX)
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c)
+                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c)
+		if (${OPENSSL})
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_posix.c)
+		else ()
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c)
+		endif ()
+		
     elseif (WIN32 OR WIN64 OR MSVC)
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c)
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c)
+		if (${OPENSSL})
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c)
+		else ()
+            set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+				${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c
+                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c)
+		endif ()
     endif ()
-else ()
-    message(STATUS "Using sync API")
 
+    if (UNIX OR WIN32 OR WIN64 OR MSVC)
+        set(INTF_SOURCEFILES
+                ${INTF_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/lib/sockets/pbpal_adns_sockets.c)
+    endif ()
+endif ()
+
+if (${USE_NTF_RUNTIME_SELECTION} OR NOT ${USE_CALLBACK_API})
     set(INTF_SOURCEFILES
             ${INTF_SOURCEFILES}
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_sync.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_sync_subscribe_loop.c
             ${CMAKE_CURRENT_LIST_DIR}/core/srand_from_pubnub_time.c)
+endif ()
+
+if (${USE_NTF_RUNTIME_SELECTION})
+    message(STATUS "Using runtime API selection")
+
+    set(CMAKE_C_FLAGS "\
+        ${CMAKE_C_FLAGS} \
+        -D PUBNUB_NTF_RUNTIME_SELECTION")
+
+    set(INTF_SOURCEFILES
+            ${INTF_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ntf_enforcement.c)
+
+elseif (${USE_CALLBACK_API})
+    message(STATUS "Using callback API")
+else ()
+    message(STATUS "Using sync API")
 endif ()
 
 set(FEATURE_SOURCEFILES)
@@ -495,6 +552,7 @@ if (${OPENSSL})
             ${LIB_SOURCEFILES})
 
     set(FEATURE_SOURCEFILES
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_ssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
@@ -732,11 +790,18 @@ if (${EXAMPLES})
             message(STATUS "Building callback examples")
             set(EXAMPLE_LIST
                     pubnub_callback_sample
-                    pubnub_callback_subloop_sample
                     subscribe_publish_callback_sample
                     subscribe_publish_from_callback
-                    publish_callback_subloop_sample
-                    publish_queue_callback_subloop)
+                    ${EXAMPLE_LIST})
+
+            if (NOT ${USE_SYNC_API})
+                set(EXAMPLE_LIST
+                        pubnub_callback_subloop_sample
+                        publish_callback_subloop_sample
+                        publish_queue_callback_subloop
+                        ${EXAMPLE_LIST})
+            endif ()
+
             if (${USE_SUBSCRIBE_EVENT_ENGINE})
                 set(EXAMPLE_LIST
                         subscribe_event_engine_sample
@@ -747,16 +812,24 @@ if (${EXAMPLES})
                         subscribe_publish_callback_sample # Only supports callback!
                         ${CPP_EXAMPLE_LIST})
             endif ()
-        else ()
+        endif ()
+        if (NOT ${USE_CALLBACK_API} OR ${USE_NTF_RUNTIME_SELECTION})
             message(STATUS "Building sync examples")
             set(EXAMPLE_LIST
                     metadata
-                    pubnub_sync_subloop_sample
                     pubnub_sync_publish_retry
                     pubnub_publish_via_post_sample
                     pubnub_advanced_history_sample
                     pubnub_fetch_history_sample
-                    cancel_subscribe_sync_sample)
+                    cancel_subscribe_sync_sample
+                    ${EXAMPLE_LIST})
+
+            if (NOT ${USE_CALLBACK_API})
+                set(EXAMPLE_LIST
+                    pubnub_sync_subloop_sample
+                        ${EXAMPLE_LIST})
+            endif ()
+
             if (OPENSSL)
                 set(EXAMPLE_LIST
                         pubnub_crypto_module_sample
@@ -773,6 +846,13 @@ if (${EXAMPLES})
                         ${EXAMPLE_LIST})
             endif ()
         endif ()
+
+        if (${USE_NTF_RUNTIME_SELECTION})
+            set(EXAMPLE_LIST 
+                pubnub_api_enforcement_sample
+                ${EXAMPLE_LIST})
+        endif ()
+
     else ()
         message(STATUS "Building example ${EXAMPLE}")
         set(EXAMPLE_LIST ${EXAMPLE})

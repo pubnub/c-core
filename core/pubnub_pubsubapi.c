@@ -9,6 +9,7 @@
 #include "core/pubnub_timers.h"
 
 #include "core/pbpal.h"
+#include "pubnub_ntf_enforcement.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -24,13 +25,27 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
         p->transaction_timeout_ms = PUBNUB_DEFAULT_TRANSACTION_TIMER;
         p->wait_connect_timeout_ms = PUBNUB_DEFAULT_WAIT_CONNECT_TIMER;
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_CALLBACK == p->api_policy) {
+            p->previous = p->next = NULL;
+        }
+#else 
         p->previous = p->next = NULL;
-#endif
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
+#endif /* defined(PUBNUB_CALLBACK_API) */
     }
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    if (PNA_CALLBACK == p->api_policy) {
+        p->cb = NULL;
+        p->user_data = NULL;
+        p->flags.sent_queries = 0;
+    }
+#else
     p->cb        = NULL;
     p->user_data = NULL;
     p->flags.sent_queries = 0;
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
 #endif /* defined(PUBNUB_CALLBACK_API) */
     if (PUBNUB_ORIGIN_SETTABLE) {
         p->origin = PUBNUB_ORIGIN;
@@ -38,7 +53,18 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     }
 #if PUBNUB_BLOCKING_IO_SETTABLE
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    switch (p->api_policy) {
+        case PNA_CALLBACK:
+            p->options.use_blocking_io = false;
+            break;
+        case PNA_SYNC:
+            p->options.use_blocking_io = true;
+            break;
+    }
+#else
     p->options.use_blocking_io = false;
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
 #else
     p->options.use_blocking_io = true;
 #endif
@@ -67,10 +93,19 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->proxy_type        = pbproxyNONE;
     p->proxy_hostname[0] = '\0';
 #if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    if (PNA_CALLBACK == p->api_policy) {
+        memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
+#if PUBNUB_USE_IPV6
+        memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
+#endif
+    }
+#else
     memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
     memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
 #endif
+#endif /* PUBNUB_NTF_RUNTIME_SELECTION */
 #endif /* defined(PUBNUB_CALLBACK_API) */
     p->proxy_tunnel_established = false;
     p->proxy_port               = 80;

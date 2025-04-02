@@ -104,7 +104,7 @@ static bool pubsub_keys_changed(pubnub_t const* pb_clone, pubnub_t const* pb)
            || (pb_clone->core.subscribe_key != pb->core.subscribe_key);
 }
 
-#if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_CALLBACK_API) && !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 #define add_heartbeat_in_progress(thumper_index)
 #else
 static void add_heartbeat_in_progress(unsigned thumper_index)
@@ -131,7 +131,13 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
 
     if (keys_changed) {
         /** Used in sync environment while for callback it's an empty macro */
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_SYNC == pb->api_policy) {
+            add_heartbeat_in_progress(pb->thumperIndex);
+        }
+#else
         add_heartbeat_in_progress(pb->thumperIndex);
+#endif
         pubnub_mutex_unlock(pb->monitor);
         pubnub_cancel(heartbeat_pb);
         return;
@@ -156,7 +162,13 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
                              pubnub_res_2_string(res));
         }
         /** Used in sync environment while for callback it's an empty macro */
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_SYNC == pb->api_policy) {
+            add_heartbeat_in_progress(pb->thumperIndex);
+        }
+#else
         add_heartbeat_in_progress(pb->thumperIndex);
+#endif
     }
     pubnub_mutex_unlock(pb->monitor);
 }
@@ -240,7 +252,7 @@ void pbauto_take_the_node_out(unsigned* indexes, unsigned i, unsigned* dimension
     memmove(node_out, node_out + 1, (*dimension - i) * sizeof(unsigned));
 }
 
-#if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_CALLBACK_API) && !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 #define handle_heartbeats_in_progress()
 #else
 static void handle_heartbeats_in_progress(void)

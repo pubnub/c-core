@@ -90,10 +90,27 @@ static void buf_setup(pubnub_t* pb)
 }
 
 
-static int pal_init(void)
+static int pal_init(pubnub_t* pb)
 {
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
     static bool s_init = false;
     if (!s_init) {
+#else 
+    bool* s_init = NULL;
+    static bool s_init_sync = false;
+    static bool s_init_callback = false;
+
+    switch(pb->api_policy) {
+        case PNA_SYNC:
+            s_init = &s_init_sync;
+            break;
+        case PNA_CALLBACK:
+            s_init = &s_init_callback;
+            break;
+    }
+
+    if (!*s_init) {
+#endif
         #if !defined(__UWP__) && (OPENSSL_VERSION_MAJOR < 3)
         ERR_load_BIO_strings(); //Per OpenSSL 3.0 this is deprecated. Allowing this stmt for non-UWP as it exists.
         #endif
@@ -115,8 +132,12 @@ static int pal_init(void)
         if (0 != socket_platform_init()) {
             return -1;
         }
-        pbntf_init();
+        pbntf_init(pb);
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
         s_init = true;
+#else
+        *s_init = true;
+#endif
     }
     return 0;
 }
@@ -124,7 +145,7 @@ static int pal_init(void)
 
 void pbpal_init(pubnub_t* pb)
 {
-    pal_init();
+    pal_init(pb);
     memset(&pb->pal, 0, sizeof pb->pal);
     pb->pal.socket     = SOCKET_INVALID;
     pb->options.useSSL = pb->flags.trySSL = pb->options.fallbackSSL = true;

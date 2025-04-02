@@ -36,7 +36,7 @@ void pbpal_init(pubnub_t* pb)
     PUBNUB_LOG_DEBUG("pbpal_init()\n");
     memset(&pb->pal, 0, sizeof pb->pal);
 
-    pbntf_setup();
+    pbntf_setup(pb);
     options_setup(pb);
     buffer_setup(pb);
 }
@@ -409,7 +409,9 @@ void pbpal_free(pubnub_t* pb)
     pb->sock_state = STATE_NONE;
 }
 
-static void pbntf_setup(void)
+
+#if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
+static void pbntf_setup(pubnub_t* pb)
 {
     static bool init_done = false;
     PUBNUB_LOG_TRACE("pbntf_setup()\n");
@@ -419,9 +421,36 @@ static void pbntf_setup(void)
         return;
     }
 
-    pbntf_init();
+    pbntf_init(pb);
     init_done = true;
 }
+#else 
+static void pbntf_setup(pubnub_t* pb)
+{
+    bool* init_done = NULL;
+    static bool init_sync_done = false;
+    static bool init_callback_done = false;
+
+    switch(pb->api_policy) {
+        case PNA_SYNC:
+            s_init = &s_init_sync;
+            break;
+        case PNA_CALLBACK:
+            s_init = &s_init_callback;
+            break;
+    }
+
+    PUBNUB_LOG_TRACE("pbntf_setup()\n");
+
+    if (*init_done) {
+        PUBNUB_LOG_TRACE("pbntf_setup() already done\n");
+        return;
+    }
+
+    pbntf_init(pb);
+    *init_done = true;
+}
+#endif
 
 
 static void options_setup(pubnub_t* pb)

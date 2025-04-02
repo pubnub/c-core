@@ -424,7 +424,7 @@ enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
     pubnub_mutex_lock(listener->mutw);
-    if (NULL == listener->global_events) {
+    if (NULL == listener->listeners) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OK;
     }
@@ -503,8 +503,15 @@ void pbcc_event_listener_free(pbcc_event_listener_t** event_listener)
     if (NULL == event_listener || NULL == *event_listener) { return; }
 
     pubnub_mutex_lock((*event_listener)->mutw);
-    pbarray_free(&(*event_listener)->global_status);
-    pbarray_free(&(*event_listener)->global_events);
+
+    if (NULL != (*event_listener)->global_events) {
+        pbarray_free(&(*event_listener)->global_events);
+    }
+
+    if (NULL != (*event_listener)->listeners) {
+        pbhash_set_free(&(*event_listener)->listeners);
+    }
+
     pbhash_set_free(&(*event_listener)->listeners);
     pubnub_mutex_unlock((*event_listener)->mutw);
     pubnub_mutex_destroy((*event_listener)->mutw);
