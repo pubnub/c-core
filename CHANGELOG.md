@@ -1,3 +1,9 @@
+## v4.19.1
+April 02 2025
+
+#### Fixed
+- Fix the issue that there was an assertion when using App Context functions with `limit` set to 100.
+
 ## v4.19.0
 March 19 2025
 
