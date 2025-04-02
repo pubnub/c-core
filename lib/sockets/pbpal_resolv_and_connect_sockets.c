@@ -7,7 +7,7 @@
 #include "lib/sockets/pbpal_adns_sockets.h"
 #include "lib/sockets/pbpal_socket_blocking_io.h"
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
-#include "pubnub_ntf_enforcement.h"
+#include "core/pubnub_ntf_enforcement.h"
 #endif
 
 #include <string.h>
