@@ -43,7 +43,11 @@ typedef void (*pubnub_subloop_callback_t)(pubnub_t *pbp, char const* message, en
     @retval NULL Failed to create a descriptor
     @result The subscribe loop descriptor created 
  */
+#if defined PUBNUB_NTF_RUNTIME_SELECTION
+PUBNUB_EXTERN pubnub_subloop_t* pubnub_callback_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb);
+#else
 PUBNUB_EXTERN pubnub_subloop_t* pubnub_subloop_define(pubnub_t *p, char const *channel, struct pubnub_subscribe_options options, pubnub_subloop_callback_t cb);
+#endif
 
 /** Starts a subscribe loop.
 

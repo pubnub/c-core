@@ -112,6 +112,16 @@ subscribe_publish_from_callback$(APP_EXT): \
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CALLBACK_CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
 
+# -------------- Samples based on NTF runtime selection -------------
+API_ENFORCEMENT_SOURCES_ = ../core/samples/pubnub_api_enforcement_sample.c
+API_ENFORCEMENT_SOURCES = $(subst /,$(PATH_SEP),$(API_ENFORCEMENT_SOURCES_))
+pubnub_api_enforcement_sample$(APP_EXT): \
+	$(API_ENFORCEMENT_SOURCES) \
+    pubnub_ntf_runtime_selection$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS) \
+    $(NTF_SELECTION_CPPFLAGS)
+
+
 # --------------- Console based on sync PubNub library --------------
 
 SYNC_CONSOLE_SOURCES_ = $(CONSOLE_SOURCE_FILES) ../core/samples/console/pnc_ops_sync.c

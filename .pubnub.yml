@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "4.19.1"
+version: "5.0.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-04-03
+    version: v5.0.0
+    changes:
+      - type: feature
+        text: "Add `PUBNUB_NTF_RUNTIME_SELECTION` flag that allows to select API type at runtime."
+      - type: feature
+        text: "Introduce `void*` parameter for user data in listeners to let callbacks keep context on demand."
   - date: 2025-04-02
     version: v4.19.1
     changes:
@@ -929,7 +936,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -995,7 +1002,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -1061,7 +1068,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -1123,7 +1130,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -1184,7 +1191,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -1240,7 +1247,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"
@@ -1293,7 +1300,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v4.19.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.0
             requires:
               -
                 name: "miniz"

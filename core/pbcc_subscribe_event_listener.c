@@ -45,6 +45,21 @@ typedef struct {
 } pbcc_object_listener_t;
 
 /**
+ * @brief Real-time status update listener definition.
+ *
+ * Object listeners entry object with information about the callback to use
+ * when status update arrives.
+ */
+typedef struct {
+    /** Real-time status update handling listener function. */
+    pubnub_subscribe_status_callback_t callback;
+    /** User provided data to be passed to the callback. */
+    void* user_data;
+    /** Object references counter. */
+    pbref_counter_t* counter;
+} pbcc_status_listener_t;
+
+/**
  * @brief Listener definition.
  *
  * Object listeners entry object with information about the source of real-time
@@ -67,6 +82,8 @@ typedef struct {
     pubnub_subscribe_listener_type type;
     /** Real-time update handling listener function. */
     pubnub_subscribe_message_callback_t callback;
+    /** User provided data to be passed to the callback. */
+    void* user_data;
     /** Object references counter. */
     pbref_counter_t* counter;
 } pbcc_listener_t;
@@ -157,6 +174,7 @@ static void pbcc_object_listener_free_(pbcc_object_listener_t* listener);
  * @param type         Type of real-time update for which listener will be
  *                     called.
  * @param callback     Real-time update handling listener function.
+ * @param user_data    User provided data to be passed to the callback.
  * @return Pointer to the ready to use real-time events listener or `NULL` in
  *         case of insufficient memory error. The returned pointer must be
  *         passed to the `_pbcc_listener_free` to avoid a memory leak.
@@ -164,7 +182,8 @@ static void pbcc_object_listener_free_(pbcc_object_listener_t* listener);
 static pbcc_listener_t* pbcc_listener_alloc_(
     const void*                         subscription,
     pubnub_subscribe_listener_type      type,
-    pubnub_subscribe_message_callback_t callback);
+    pubnub_subscribe_message_callback_t callback,
+    void*                               user_data);
 
 /**
  * @brief Add / register real-time update listener.
@@ -243,6 +262,24 @@ static pbarray_t* pbcc_initialize_array_(
     pbarray_t**          array,
     pbarray_element_free free_fn);
 
+/** @brief Create real-time status update listener.
+ *
+ * @param callback  Real-time status update handling listener function.
+ * @param user_data User provided data to be passed to the callback.
+ * @return Pointer to the ready to use real-time status listener or `NULL` in
+ *         case of insufficient memory error. The returned pointer must be
+ *         passed to the `_pbcc_status_listener_free` to avoid a memory leak.
+ */
+static pbcc_status_listener_t* pbcc_status_listener_alloc_(
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data);
+
+/** @brief Clean up resources used by status listener object.
+ *
+ * @param listener Pointer to the status listener, which should free up
+ *                 resources.
+ */
+static void pbcc_status_listener_free_(pbcc_status_listener_t* listener);
 
 // ----------------------------------------------
 //                 Functions
@@ -262,18 +299,26 @@ pbcc_event_listener_t* pbcc_event_listener_alloc(const pubnub_t* pb)
 
 enum pubnub_res pbcc_event_listener_add_status_listener(
     pbcc_event_listener_t*                   listener,
-    const pubnub_subscribe_status_callback_t cb)
+    const pubnub_subscribe_status_callback_t cb,
+    void*                                    user_data)
 {
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
     pubnub_mutex_lock(listener->mutw);
     /** Check whether listeners array should be created on demand or not. */
-    if (NULL == pbcc_initialize_array_(&listener->global_status, NULL)) {
+    if (NULL == pbcc_initialize_array_(&listener->global_status,
+                (pbarray_element_free)pbcc_status_listener_free_)) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OUT_OF_MEMORY;
     }
 
-    const pbarray_res result = pbarray_add(listener->global_status, cb);
+    pbcc_status_listener_t* _listener = pbcc_status_listener_alloc_(cb, user_data);
+    if (NULL == _listener) {
+        pubnub_mutex_unlock(listener->mutw);
+        return PNR_OUT_OF_MEMORY;
+    }
+
+    const pbarray_res result = pbarray_add(listener->global_status, _listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return PBAR_OUT_OF_MEMORY != result ? PNR_OK : PNR_OUT_OF_MEMORY;
@@ -281,7 +326,8 @@ enum pubnub_res pbcc_event_listener_add_status_listener(
 
 enum pubnub_res pbcc_event_listener_remove_status_listener(
     pbcc_event_listener_t*             listener,
-    pubnub_subscribe_status_callback_t cb)
+    pubnub_subscribe_status_callback_t cb,
+    void*                              user_data)
 {
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
@@ -291,7 +337,18 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
         return PNR_OK;
     }
 
-    pbarray_remove(listener->global_status, (void**)&cb, true);
+    pbcc_status_listener_t* _listener = pbcc_status_listener_alloc_(cb, user_data);
+    if (NULL == _listener) {
+        pubnub_mutex_unlock(listener->mutw);
+        return PNR_OUT_OF_MEMORY;
+    }
+
+    pbarray_remove(listener->global_status, (void**)&_listener, true);
+
+    /**
+     * It is safe to release temporarily object which used only to match object.
+     */
+    pbcc_status_listener_free_(_listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return PNR_OK;
@@ -300,7 +357,8 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
 enum pubnub_res pbcc_event_listener_add_message_listener(
     pbcc_event_listener_t*                    listener,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t cb)
+    const pubnub_subscribe_message_callback_t cb,
+    void*                                     user_data)
 {
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
@@ -313,7 +371,7 @@ enum pubnub_res pbcc_event_listener_add_message_listener(
         return PNR_OUT_OF_MEMORY;
     }
 
-    pbcc_listener_t* _listener = pbcc_listener_alloc_(NULL, type, cb);
+    pbcc_listener_t* _listener = pbcc_listener_alloc_(NULL, type, cb, user_data);
     if (NULL == _listener) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OUT_OF_MEMORY;
@@ -331,7 +389,8 @@ enum pubnub_res pbcc_event_listener_add_message_listener(
 enum pubnub_res pbcc_event_listener_remove_message_listener(
     pbcc_event_listener_t*                    listener,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t cb)
+    const pubnub_subscribe_message_callback_t cb,
+    void*                                     user_data)
 {
     if (NULL == listener || NULL == cb)
         return PNR_INVALID_PARAMETERS;
@@ -342,7 +401,7 @@ enum pubnub_res pbcc_event_listener_remove_message_listener(
         return PNR_OK;
     }
 
-    pbcc_listener_t* _listener = pbcc_listener_alloc_(NULL, type, cb);
+    pbcc_listener_t* _listener = pbcc_listener_alloc_(NULL, type, cb, user_data);
     if (NULL == _listener) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OUT_OF_MEMORY;
@@ -366,7 +425,8 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
     const pubnub_subscribe_listener_type      type,
     pbarray_t*                                names,
     const void*                               subscription,
-    const pubnub_subscribe_message_callback_t cb)
+    const pubnub_subscribe_message_callback_t cb,
+    void*                                     user_data)
 {
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
@@ -384,7 +444,7 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
         }
     }
 
-    pbcc_listener_t* _listener = pbcc_listener_alloc_(subscription, type, cb);
+    pbcc_listener_t* _listener = pbcc_listener_alloc_(subscription, type, cb, user_data);
     bool             added     = false;
     if (NULL == _listener) {
         pubnub_mutex_unlock(listener->mutw);
@@ -419,17 +479,18 @@ enum pubnub_res pbcc_event_listener_remove_subscription_object_listener(
     const pubnub_subscribe_listener_type      type,
     pbarray_t*                                names,
     const void*                               subscription,
-    const pubnub_subscribe_message_callback_t cb)
+    const pubnub_subscribe_message_callback_t cb, 
+    void*                                     user_data)
 {
     if (NULL == listener || NULL == cb) { return PNR_INVALID_PARAMETERS; }
 
     pubnub_mutex_lock(listener->mutw);
-    if (NULL == listener->global_events) {
+    if (NULL == listener->listeners) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OK;
     }
 
-    pbcc_listener_t* _listener = pbcc_listener_alloc_(subscription, type, cb);
+    pbcc_listener_t* _listener = pbcc_listener_alloc_(subscription, type, cb, user_data);
     if (NULL == _listener) {
         pubnub_mutex_unlock(listener->mutw);
         return PNR_OUT_OF_MEMORY;
@@ -464,10 +525,10 @@ void pbcc_event_listener_emit_status(
         { reason, channels, channel_groups };
     const size_t status_count = pbarray_count(listener->global_status);
     for (size_t i = 0; i < status_count; ++i) {
-        const pubnub_subscribe_status_callback_t cb = (
-                pubnub_subscribe_status_callback_t)
+        const pbcc_status_listener_t* sl = (
+                pbcc_status_listener_t*)
             pbarray_element_at(listener->global_status, i);
-        cb(listener->pb, status, data);
+        sl->callback(listener->pb, status, data, sl->user_data);
     }
     pubnub_mutex_unlock(listener->mutw);
 }
@@ -503,8 +564,15 @@ void pbcc_event_listener_free(pbcc_event_listener_t** event_listener)
     if (NULL == event_listener || NULL == *event_listener) { return; }
 
     pubnub_mutex_lock((*event_listener)->mutw);
-    pbarray_free(&(*event_listener)->global_status);
-    pbarray_free(&(*event_listener)->global_events);
+
+    if (NULL != (*event_listener)->global_events) {
+        pbarray_free(&(*event_listener)->global_events);
+    }
+
+    if (NULL != (*event_listener)->listeners) {
+        pbhash_set_free(&(*event_listener)->listeners);
+    }
+
     pbhash_set_free(&(*event_listener)->listeners);
     pubnub_mutex_unlock((*event_listener)->mutw);
     pubnub_mutex_destroy((*event_listener)->mutw);
@@ -582,13 +650,27 @@ void pbcc_object_listener_free_(pbcc_object_listener_t* listener)
 pbcc_listener_t* pbcc_listener_alloc_(
     const void*                               subscription,
     const pubnub_subscribe_listener_type      type,
-    const pubnub_subscribe_message_callback_t callback)
+    const pubnub_subscribe_message_callback_t callback,
+    void*                                     user_data)
 {
     PBCC_ALLOCATE_TYPE(listener, pbcc_listener_t, true, NULL);
     listener->counter             = pbref_counter_alloc();
     listener->type                = type;
     listener->subscription_object = subscription;
     listener->callback            = callback;
+    listener->user_data           = user_data;
+
+    return listener;
+}
+
+pbcc_status_listener_t* pbcc_status_listener_alloc_(
+    pubnub_subscribe_status_callback_t callback,
+    void*                              user_data)
+{
+    PBCC_ALLOCATE_TYPE(listener, pbcc_status_listener_t, true, NULL);
+    listener->counter   = pbref_counter_alloc();
+    listener->callback  = callback;
+    listener->user_data = user_data;
 
     return listener;
 }
@@ -616,7 +698,8 @@ enum pubnub_res pbcc_remove_listener_(
 
         if (_listener->type == listener->type &&
             _listener->subscription_object == listener->subscription_object &&
-            _listener->callback == listener->callback) {
+            _listener->callback == listener->callback &&
+            _listener->user_data == listener->user_data) {
             pbref_counter_decrement(_listener->counter);
             pbarray_remove(listeners, (void**)&_listener, true);
         }
@@ -627,6 +710,12 @@ enum pubnub_res pbcc_remove_listener_(
 }
 
 void pbcc_listener_free_(pbcc_listener_t* listener)
+{
+    if (NULL == listener) { return; }
+    if (0 == pbref_counter_free(listener->counter)) { free(listener); }
+}
+
+void pbcc_status_listener_free_(pbcc_status_listener_t* listener)
 {
     if (NULL == listener) { return; }
     if (0 == pbref_counter_free(listener->counter)) { free(listener); }
@@ -645,7 +734,7 @@ void pbcc_event_listener_emit_message_(
         pbcc_listener_t* _listener = (pbcc_listener_t*)
             pbarray_element_at(listeners, i);
         if (NULL == _listener->subscription_object || _listener->type == type)
-            _listener->callback(listener->pb, message);
+            _listener->callback(listener->pb, message, _listener->user_data);
     }
 }
 

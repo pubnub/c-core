@@ -1,3 +1,12 @@
+## v5.0.0
+April 03 2025
+
+#### Added
+- Add `PUBNUB_NTF_RUNTIME_SELECTION` flag that allows to select API type at runtime.
+- Introduce `void*` parameter for user data in listeners to let callbacks keep context on demand.
+
+WARNING: Release contains breaking changes!
+
 ## v4.19.1
 April 02 2025
 
