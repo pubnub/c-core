@@ -239,6 +239,19 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb) {
 }
 #endif
 
+void downloadSucceeded(emscripten_fetch_t *fetch) {
+  printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+  printf("Data: %s\n", fetch->data);
+  // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+  emscripten_fetch_close(fetch); // Free data associated with the fetch.
+}
+
+void downloadFailed(emscripten_fetch_t *fetch) {
+  printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+  emscripten_fetch_close(fetch); // Also free data on failure.
+}
+
+#include <emscripten/fetch.h>
 
 enum pubnub_res pubnub_await(pubnub_t* pb)
 {
@@ -255,29 +268,38 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
         return PNR_INTERNAL_ERROR;
     }
 #endif /* PUBNUB_NTF_RUNTIME_SELECTION */
+    
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "POST");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    attr.data = pb->core.http_buf;
+    attr.onsuccess = uploadSucceeded;
+    attr.onerror = uploadFailed;
+    emscripten_fetch(&attr, "myfile.dat");
 
-    t0 = pbms_start();
-    while (!pbnc_can_start_transaction(pb)) {
-        pbms_t delta;
-
-        pbnc_fsm(pb);
-
-        delta = pbms_elapsed(t0);
-        if (delta > pb->transaction_timeout_ms) {
-            if (!stopped) {
-                pbnc_stop(pb, PNR_TIMEOUT);
-                t0      = pbms_start();
-                stopped = true;
-            }
-            else {
-                break;
-            }
-        }
-    }
-    result = pb->core.last_result;
-    if (result != PNR_OK){
-        pbnc_tr_cxt_state_reset_sync(pb);
-    }
+    //t0 = pbms_start();
+    //while (!pbnc_can_start_transaction(pb)) {
+    //    pbms_t delta;
+    //
+    //    pbnc_fsm(pb);
+    //
+    //    delta = pbms_elapsed(t0);
+    //    if (delta > pb->transaction_timeout_ms) {
+    //        if (!stopped) {
+    //            pbnc_stop(pb, PNR_TIMEOUT);
+    //            t0      = pbms_start();
+    //            stopped = true;
+    //        }
+    //        else {
+    //            break;
+    //        }
+    //    }
+    //}
+    //result = pb->core.last_result;
+    //if (result != PNR_OK){
+    //    pbnc_tr_cxt_state_reset_sync(pb);
+    //}
     pubnub_mutex_unlock(pb->monitor);
 
     return result;
