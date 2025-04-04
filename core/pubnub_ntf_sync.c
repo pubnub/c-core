@@ -251,7 +251,7 @@ void downloadFailed(emscripten_fetch_t *fetch) {
   emscripten_fetch_close(fetch); // Also free data on failure.
 }
 
-#include <emscripten/fetch.h>
+#include <emscripten.h>
 
 enum pubnub_res pubnub_await(pubnub_t* pb)
 {
