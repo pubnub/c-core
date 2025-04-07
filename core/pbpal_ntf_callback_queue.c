@@ -158,7 +158,7 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
 
                 int i = 0;
                 for (;;) {
-                    if (pbp->core.http_buf[i] == '{' || pbp->core.http_buf[i] == '\"' || i > 16000) {
+                    if (pbp->core.http_buf[i] == '{'  || i > 16000) {
                         break;
                     }
                     i++;
