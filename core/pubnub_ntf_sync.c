@@ -309,7 +309,6 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     
     // Get URL, method, headers and body from pb context
     const char* url = strcat("http://", strcat(pb->origin, pb->core.http_buf));
-    const char* method = "POST";
     const char* headers = "{}";
 
     int i = 0;
@@ -319,6 +318,8 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
         }
         i++;
     }
+    
+    const char* method = i > 16000 ? "GET" : "POST";
 
     const char* body = pb->core.http_buf + i;
     

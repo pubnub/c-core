@@ -154,7 +154,6 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
             else {
                 // Get URL, method, headers and body from pb context
                 const char* url = strcat("http://", strcat(pbp->origin, pbp->core.http_buf));
-                const char* method = "POST";
                 const char* headers = "{}";
 
                 int i = 0;
@@ -164,6 +163,7 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                     }
                     i++;
                 }
+                const char* method = i > 16000 ? "GET" : "POST";
 
                 const char* body = pbp->core.http_buf + i;
 
