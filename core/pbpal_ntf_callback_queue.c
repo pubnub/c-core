@@ -111,12 +111,21 @@ EM_ASYNC_JS(void, send_fetch_request_cb, (const char* url, const char* method, c
         }, timeout * 1000);
     });
 
-    const request = new Request(UTF8ToString(url), {
-        method: UTF8ToString(method),
-        headers: JSON.parse(UTF8ToString(headers)),
-        redirect: 'follow',
-        body: body == "" ? null : UTF8ToString(body)
-    });
+    var request;
+    if (body == "") {
+        request = new Request(UTF8ToString(url), {
+            method: UTF8ToString(method),
+            headers: JSON.parse(UTF8ToString(headers)),
+            redirect: 'follow',
+        });
+    } else {
+        request = new Request(UTF8ToString(url), {
+            method: UTF8ToString(method),
+            headers: JSON.parse(UTF8ToString(headers)),
+            redirect: 'follow',
+            body: UTF8ToString(body)
+        });
+    }
 
     await Promise.race([
         fetch(request, {
