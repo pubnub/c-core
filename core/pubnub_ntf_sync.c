@@ -19,6 +19,8 @@
 
 #include "lib/msstopwatch/msstopwatch.h"
 
+#include <emscripten.h>
+
 
 // TODO: decide if it is worth to keep that here 
 // 1 - till the flag is fixed
@@ -239,19 +241,52 @@ enum pubnub_res pubnub_last_result(pubnub_t* pb) {
 }
 #endif
 
-void downloadSucceeded(emscripten_fetch_t *fetch) {
-  printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
-  printf("Data: %s\n", fetch->data);
-  // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
-  emscripten_fetch_close(fetch); // Free data associated with the fetch.
-}
+EM_JS(void, call_alert, (), {
+    console.log('test');
+});
 
-void downloadFailed(emscripten_fetch_t *fetch) {
-  printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
-  emscripten_fetch_close(fetch); // Also free data on failure.
-}
+EM_ASYNC_JS(void, send_fetch_request, (const char* url, const char* method, const char* headers, const char* body, int timeout), {
+    let timeoutId;
+    const controller = new AbortController();
+    
+    console.log('send_fetch_request');
+    console.log(UTF8ToString(url));
+    console.log(UTF8ToString(method));
+    console.log(UTF8ToString(headers));
+    console.log(UTF8ToString(body));
+   
+    const requestTimeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+            clearTimeout(timeoutId);
+            reject(new Error('Request timeout')); 
+            controller.abort('Cancel because of timeout');
+        }, timeout * 1000);
+    });
 
-#include <emscripten.h>
+    const request = new Request(UTF8ToString(url), {
+        method: UTF8ToString(method),
+        headers: JSON.parse(UTF8ToString(headers)),
+        redirect: 'follow',
+        body: UTF8ToString(body)
+    });
+
+    await Promise.race([
+        fetch(request, {
+            signal: controller.signal,
+            credentials: 'omit',
+            cache: 'no-cache'
+        }).then((response) => {
+            if (timeoutId) clearTimeout(timeoutId);
+            return response;
+        }),
+        requestTimeout
+    ]).then(response => {
+        // Handle response
+        console.log('Fetch completed:', response);
+    }).catch(error => {
+        console.error('Fetch error:', error);
+    });
+});
 
 enum pubnub_res pubnub_await(pubnub_t* pb)
 {
@@ -268,40 +303,65 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
         return PNR_INTERNAL_ERROR;
     }
 #endif /* PUBNUB_NTF_RUNTIME_SELECTION */
+    call_alert();
     
-    emscripten_fetch_attr_t attr;
-    emscripten_fetch_attr_init(&attr);
-    strcpy(attr.requestMethod, "POST");
-    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-    attr.data = pb->core.http_buf;
-    attr.onsuccess = uploadSucceeded;
-    attr.onerror = uploadFailed;
-    emscripten_fetch(&attr, "myfile.dat");
+    emscripten_run_script("console.log('test')");
+    
+    // Get URL, method, headers and body from pb context
+    const char* url = strcat("http://", strcat(pb->origin, pb->core.http_buf));
+    const char* method = "POST";
+    const char* headers = "{}";
 
-    //t0 = pbms_start();
-    //while (!pbnc_can_start_transaction(pb)) {
-    //    pbms_t delta;
-    //
-    //    pbnc_fsm(pb);
-    //
-    //    delta = pbms_elapsed(t0);
-    //    if (delta > pb->transaction_timeout_ms) {
-    //        if (!stopped) {
-    //            pbnc_stop(pb, PNR_TIMEOUT);
-    //            t0      = pbms_start();
-    //            stopped = true;
-    //        }
-    //        else {
-    //            break;
-    //        }
-    //    }
-    //}
-    //result = pb->core.last_result;
-    //if (result != PNR_OK){
-    //    pbnc_tr_cxt_state_reset_sync(pb);
-    //}
+    int i = 0;
+    for (;;) {
+        if (pb->core.http_buf[i] == '{' || pb->core.http_buf[i] == '\"' || i > 16000) {
+            break;
+        }
+        i++;
+    }
+
+    const char* body = pb->core.http_buf + i;
+    
+   
+    printf("url: %s\n", url);
+    
+    printf("body: %s\n", body);
+
+    // Call the send_fetch_request function with the parameters
+    send_fetch_request(url, method, headers, body, 10000);
+    
+    /*t0 = pbms_start();
+    while (!pbnc_can_start_transaction(pb)) {
+        pbms_t delta;
+
+        pbnc_fsm(pb);
+
+        delta = pbms_elapsed(t0);
+        if (delta > pb->transaction_timeout_ms) {
+            if (!stopped) {
+                pbnc_stop(pb, PNR_TIMEOUT);
+                t0      = pbms_start();
+                stopped = true;
+            }
+            else {
+                break;
+            }
+        }
+    }
+    result = pb->core.last_result;
+    if (result != PNR_OK){
+        pbnc_tr_cxt_state_reset_sync(pb);
+    }*/
+
+    pb->state = PBS_IDLE;
+    pb->core.http_buf_len = 0;
+    pb->core.http_reply = "";
+    pb->core.http_content_len = 0;
+    pb->core.http_buf_len = 0;
+    pb->core.http_reply = "";
+    pb->core.http_content_len = 0;
+    pb->core.http_buf_len = 0;
     pubnub_mutex_unlock(pb->monitor);
-
     return result;
 }
 

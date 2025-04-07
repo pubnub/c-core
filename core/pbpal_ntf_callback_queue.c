@@ -90,6 +90,48 @@ void pbpal_ntf_callback_remove_from_queue(struct pbpal_ntf_callback_queue* queue
     pubnub_mutex_unlock(queue->monitor);
 }
 
+EM_ASYNC_JS(void, send_fetch_request, (const char* url, const char* method, const char* headers, const char* body, int timeout), {
+    let timeoutId;
+    const controller = new AbortController();
+    
+    console.log('send_fetch_request');
+    console.log(UTF8ToString(url));
+    console.log(UTF8ToString(method));
+    console.log(UTF8ToString(headers));
+    console.log(UTF8ToString(body));
+   
+    const requestTimeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+            clearTimeout(timeoutId);
+            reject(new Error('Request timeout')); 
+            controller.abort('Cancel because of timeout');
+        }, timeout * 1000);
+    });
+
+    const request = new Request(UTF8ToString(url), {
+        method: UTF8ToString(method),
+        headers: JSON.parse(UTF8ToString(headers)),
+        redirect: 'follow',
+        body: UTF8ToString(body)
+    });
+
+    await Promise.race([
+        fetch(request, {
+            signal: controller.signal,
+            credentials: 'omit',
+            cache: 'no-cache'
+        }).then((response) => {
+            if (timeoutId) clearTimeout(timeoutId);
+            return response;
+        }),
+        requestTimeout
+    ]).then(response => {
+        // Handle response
+        console.log('Fetch completed:', response);
+    }).catch(error => {
+        console.error('Fetch error:', error);
+    });
+});
 
 void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
 {
@@ -107,7 +149,29 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                 pballoc_free_at_last(pbp);
             }
             else {
-                pbnc_fsm(pbp);
+   // Get URL, method, headers and body from pb context
+    const char* url = strcat("http://", strcat(pb->origin, pb->core.http_buf));
+    const char* method = "POST";
+    const char* headers = "{}";
+
+    int i = 0;
+    for (;;) {
+        if (pb->core.http_buf[i] == '{' || pb->core.http_buf[i] == '\"' || i > 16000) {
+            break;
+        }
+        i++;
+    }
+
+    const char* body = pb->core.http_buf + i;
+    
+   
+    printf("url: %s\n", url);
+    
+    printf("body: %s\n", body);
+
+    // Call the send_fetch_request function with the parameters
+    send_fetch_request(url, method, headers, body, 10000);
+                //pbnc_fsm(pbp);
                 pubnub_mutex_unlock(pbp->monitor);
             }
             pubnub_mutex_lock(queue->monitor);

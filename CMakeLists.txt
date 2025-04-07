@@ -92,7 +92,7 @@ log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(LOG_LEVEL "DEBUG" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
 log_set(CUSTOM_BOOL_TYPE "" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
 
 if (${OPENSSL} AND ${MBEDTLS})
@@ -661,7 +661,7 @@ if (NOT ESP_PLATFORM)
     endif ()
 
     string(STRIP ${LDLIBS} LDLIBS)
-    target_link_libraries(pubnub ${LDLIBS} ${SSL_LINK_LIBRARIES})
+    target_link_libraries(pubnub ${LDLIBS} -sSTANDALONE_WASM ${SSL_LINK_LIBRARIES})
 else ()
     message(STATUS "Building ESP32 IDF component")
 
@@ -860,7 +860,7 @@ if (${EXAMPLES})
 
     foreach (EXAMPLE ${EXAMPLE_LIST})
         add_executable(${EXAMPLE} ${CMAKE_CURRENT_LIST_DIR}/core/samples/${EXAMPLE}.c)
-        target_link_libraries(${EXAMPLE} pubnub ${LDLIBS})
+        target_link_libraries(${EXAMPLE} -sASYNCIFY pubnub -s ${LDLIBS})
     endforeach ()
 
     foreach (EXAMPLE ${CPP_EXAMPLE_LIST})
