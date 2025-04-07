@@ -4,6 +4,8 @@
 #include "pbpal_ntf_callback_queue.h"
 
 #include "pubnub_assert.h"
+#include <stdio.h>
+
 #include <emscripten.h>
 
 
