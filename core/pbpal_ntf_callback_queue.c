@@ -93,7 +93,7 @@ void pbpal_ntf_callback_remove_from_queue(struct pbpal_ntf_callback_queue* queue
     pubnub_mutex_unlock(queue->monitor);
 }
 
-EM_ASYNC_JS(void, send_fetch_request, (const char* url, const char* method, const char* headers, const char* body, int timeout), {
+EM_ASYNC_JS(void, send_fetch_request_cb, (const char* url, const char* method, const char* headers, const char* body, int timeout), {
     let timeoutId;
     const controller = new AbortController();
     
@@ -171,7 +171,7 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                 printf("body: %s\n", body);
 
                 // Call the send_fetch_request function with the parameters
-                send_fetch_request(url, method, headers, body, 10000);
+                send_fetch_request_cb(url, method, headers, body, 10000);
                 
                 pbp->state = PBS_IDLE;
                 pbp->core.http_buf_len = 0;
