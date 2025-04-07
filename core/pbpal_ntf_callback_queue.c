@@ -149,36 +149,35 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                 pballoc_free_at_last(pbp);
             }
             else {
-   // Get URL, method, headers and body from pb context
-    const char* url = strcat("http://", strcat(pb->origin, pb->core.http_buf));
-    const char* method = "POST";
-    const char* headers = "{}";
+                // Get URL, method, headers and body from pb context
+                const char* url = strcat("http://", strcat(pbp->origin, pbp->core.http_buf));
+                const char* method = "POST";
+                const char* headers = "{}";
 
-    int i = 0;
-    for (;;) {
-        if (pb->core.http_buf[i] == '{' || pb->core.http_buf[i] == '\"' || i > 16000) {
-            break;
-        }
-        i++;
-    }
+                int i = 0;
+                for (;;) {
+                    if (pbp->core.http_buf[i] == '{' || pbp->core.http_buf[i] == '\"' || i > 16000) {
+                        break;
+                    }
+                    i++;
+                }
 
-    const char* body = pb->core.http_buf + i;
-    
-   
-    printf("url: %s\n", url);
-    
-    printf("body: %s\n", body);
+                const char* body = pbp->core.http_buf + i;
 
-    // Call the send_fetch_request function with the parameters
-    send_fetch_request(url, method, headers, body, 10000);
-        pb->state = PBS_IDLE;
-    pb->core.http_buf_len = 0;
-    pb->core.http_reply = "";
-    pb->core.http_content_len = 0;
-    pb->core.http_buf_len = 0;
-    pb->core.http_reply = "";
-    pb->core.http_content_len = 0;
-    pb->core.http_buf_len = 0;
+                printf("url: %s\n", url);
+                printf("body: %s\n", body);
+
+                // Call the send_fetch_request function with the parameters
+                send_fetch_request(url, method, headers, body, 10000);
+                
+                pbp->state = PBS_IDLE;
+                pbp->core.http_buf_len = 0;
+                pbp->core.http_reply = "";
+                pbp->core.http_content_len = 0;
+                pbp->core.http_buf_len = 0;
+                pbp->core.http_reply = "";
+                pbp->core.http_content_len = 0;
+                pbp->core.http_buf_len = 0;
 
                 //pbnc_fsm(pbp);
                 pubnub_mutex_unlock(pbp->monitor);
