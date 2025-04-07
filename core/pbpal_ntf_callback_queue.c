@@ -165,7 +165,7 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                 }
                 const char* method = i > 16000 ? "GET" : "POST";
 
-                const char* body = pbp->core.http_buf + i;
+                const char* body = i > 16000 ? "" : pbp->core.http_buf + i;
 
                 printf("url: %s\n", url);
                 printf("body: %s\n", body);

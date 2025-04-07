@@ -313,7 +313,7 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
 
     int i = 0;
     for (;;) {
-        if (pb->core.http_buf[i] == '{' || pb->core.http_buf[i] == '\"' || i > 16000) {
+        if (pb->core.http_buf[i] == '{' || i > 16000) {
             break;
         }
         i++;
@@ -321,7 +321,7 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     
     const char* method = i > 16000 ? "GET" : "POST";
 
-    const char* body = pb->core.http_buf + i;
+    const char* body = i > 16000 ? "" : pb->core.http_buf + i;
     
    
     printf("url: %s\n", url);
