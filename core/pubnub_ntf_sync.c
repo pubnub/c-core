@@ -267,7 +267,7 @@ EM_ASYNC_JS(void, send_fetch_request, (const char* url, const char* method, cons
         method: UTF8ToString(method),
         headers: JSON.parse(UTF8ToString(headers)),
         redirect: 'follow',
-        body: UTF8ToString(body)
+        body: body == "" ? null : UTF8ToString(body)
     });
 
     await Promise.race([
