@@ -112,7 +112,7 @@ EM_ASYNC_JS(void, send_fetch_request_cb, (const char* url, const char* method, c
     });
 
     var request;
-    if (body == "") {
+    if (UTF8ToString(body) == "") {
         request = new Request(UTF8ToString(url), {
             method: UTF8ToString(method),
             headers: JSON.parse(UTF8ToString(headers)),
