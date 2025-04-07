@@ -4,6 +4,7 @@
 #include "pbpal_ntf_callback_queue.h"
 
 #include "pubnub_assert.h"
+#include <emscripten.h>
 
 
 void pbpal_ntf_callback_queue_init(struct pbpal_ntf_callback_queue* queue)
