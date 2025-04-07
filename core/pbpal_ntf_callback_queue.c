@@ -171,6 +171,15 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
 
     // Call the send_fetch_request function with the parameters
     send_fetch_request(url, method, headers, body, 10000);
+        pb->state = PBS_IDLE;
+    pb->core.http_buf_len = 0;
+    pb->core.http_reply = "";
+    pb->core.http_content_len = 0;
+    pb->core.http_buf_len = 0;
+    pb->core.http_reply = "";
+    pb->core.http_content_len = 0;
+    pb->core.http_buf_len = 0;
+
                 //pbnc_fsm(pbp);
                 pubnub_mutex_unlock(pbp->monitor);
             }
