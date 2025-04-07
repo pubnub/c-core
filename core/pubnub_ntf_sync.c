@@ -263,7 +263,7 @@ EM_ASYNC_JS(void, send_fetch_request, (const char* url, const char* method, cons
         }, timeout * 1000);
     });
     var request;
-    if (UTF8ToString(body) === "") {
+    if (UTF8ToString(body) == "") {
         request = new Request(UTF8ToString(url), {
             method: UTF8ToString(method),
             headers: JSON.parse(UTF8ToString(headers)),
@@ -364,10 +364,11 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
 
     pb->state = PBS_IDLE;
     pb->core.http_buf_len = 0;
-    pb->core.http_reply = "";
+    memset(pb->core.http_buf, 0, sizeof(pb->core.http_buf));
     pb->core.http_content_len = 0;
     pb->core.http_buf_len = 0;
     pb->core.http_reply = "";
+    memset(pb->core.http_reply, 0, sizeof(pb->core.http_reply));
     pb->core.http_content_len = 0;
     pb->core.http_buf_len = 0;
     pubnub_mutex_unlock(pb->monitor);

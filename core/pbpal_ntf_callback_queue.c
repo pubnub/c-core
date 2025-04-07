@@ -185,9 +185,11 @@ void pbpal_ntf_callback_process_queue(struct pbpal_ntf_callback_queue* queue)
                 pbp->state = PBS_IDLE;
                 pbp->core.http_buf_len = 0;
                 pbp->core.http_reply = "";
+                memset(pbp->core.http_buf, 0, sizeof(pbp->core.http_buf));
                 pbp->core.http_content_len = 0;
                 pbp->core.http_buf_len = 0;
                 pbp->core.http_reply = "";
+                memset(pbp->core.http_reply, 0, sizeof(pbp->core.http_reply));
                 pbp->core.http_content_len = 0;
                 pbp->core.http_buf_len = 0;
 
