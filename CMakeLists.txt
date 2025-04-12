@@ -383,8 +383,16 @@ if (${USE_PROXY})
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_proxy.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_proxy_core.c
             ${CMAKE_CURRENT_LIST_DIR}/core/pbhttp_digest.c
-            ${CMAKE_CURRENT_LIST_DIR}/core/pbntlm_core.c
-            ${CMAKE_CURRENT_LIST_DIR}/core/pbntlm_packer_std.c)
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbntlm_core.c)
+    if (WIN32)
+        set(FEATURE_SOURCEFILES
+                ${FEATURE_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/core/pbntlm_packer_sspi.c)
+    else ()
+        set(FEATURE_SOURCEFILES
+                ${FEATURE_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/core/pbntlm_packer_std.c)
+    endif ()
 endif ()
 
 if (${USE_GZIP_COMPRESSION})
