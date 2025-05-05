@@ -235,7 +235,7 @@ PUBNUB_EXTERN void PUBNUB_NORETURN pubnub_assert_handler_loop(char const* s,
 /** This handler will print a message  formed from the parameters and
     then abort (exit, end) the process. Useful for testing.
  */
-PUBNUB_EXTERN void pubnub_assert_handler_abort(char const* s,
+PUBNUB_EXTERN void PUBNUB_NORETURN pubnub_assert_handler_abort(char const* s,
                                                  char const* file,
                                                  long        line);
 
