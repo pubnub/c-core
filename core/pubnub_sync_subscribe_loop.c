@@ -13,10 +13,11 @@ struct pubnub_subloop_descriptor pubnub_subloop_define(pubnub_t *p, char const *
 struct pubnub_subloop_descriptor pubnub_sync_subloop_define(pubnub_t *p, char const *channel)
 #endif
 {
-    struct pubnub_subloop_descriptor rslt = { p, channel };
-    rslt.options = pubnub_subscribe_defopts();
-
-    return rslt;
+    return (struct pubnub_subloop_descriptor) {
+        .pbp = p,
+        .channel = channel,
+        .options = pubnub_subscribe_defopts(),
+    };
 }
 
 
