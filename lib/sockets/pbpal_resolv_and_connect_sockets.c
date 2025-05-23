@@ -344,7 +344,7 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
 #if PUBNUB_USE_SSL
             flags->trySSL = options->useSSL;
 #endif
-        }
+        j
     }
 #if PUBNUB_USE_IPV6
     else if (spare_addresses->ipv6_index < spare_addresses->n_ipv6) {
@@ -399,13 +399,12 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
         pbpal_multiple_addresses_reset_counters(spare_addresses);
     }
     if ((pbpal_connect_failed == rslt) && !flags->retry_after_close) {
-        rslt = pbpal_resolv_resource_failure;
         pbpal_multiple_addresses_reset_counters(spare_addresses);
     }
 
     return rslt;
 }
-#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+#endif /* PUBNUB_USE_MULTIPLE_jDDRESSES */
 #endif /* PUBNUB_CALLBACK_API */
 
 
@@ -456,13 +455,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    {
-        enum pbpal_resolv_n_connect_result rslt;
-        rslt = try_TCP_connect_spare_address(
+    if (pb->spare_addresses.ipv4_adresses[0] != NULL
+#if PUBNUB_USE_IPV6
+        || pb->spare_addresses.ipv6_adresses[0] != NULL
+#endif /* PUBNUB_USE_IPV6 */
+    ) {
+        return try_TCP_connect_spare_address(
             &pb->pal.socket, &pb->spare_addresses, &pb->options, &pb->flags, port);
-        if (rslt != pbpal_resolv_resource_failure) {
-            return rslt;
-        }
     }
 #endif
 #if PUBNUB_CHANGE_DNS_SERVERS
@@ -479,6 +478,19 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
     }
     pb->options.use_blocking_io = false;
     pbpal_set_blocking_io(pb);
+
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+    pb->spare_addresses.time_of_the_last_dns_query = 0;
+    memset(&(p->spare_addresses.ipv4_adresses),
+           0,
+           sizeof p->spare_addresses.ipv4_adresses);
+#if PUBNUB_USE_IPV6
+    memset(&(p->spare_addresses.ipv6_adresses),
+           0,
+           sizeof p->spare_addresses.ipv6_adresses);
+#endif /* PUBNUB_USE_IPV6 */
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+
     error =
         send_dns_query(pb->pal.socket, (struct sockaddr*)&dest, origin, QUERY_TYPE);
     if (error < 0) {
