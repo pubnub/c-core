@@ -344,7 +344,7 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
 #if PUBNUB_USE_SSL
             flags->trySSL = options->useSSL;
 #endif
-        j
+        }
     }
 #if PUBNUB_USE_IPV6
     else if (spare_addresses->ipv6_index < spare_addresses->n_ipv6) {
@@ -455,9 +455,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    if (pb->spare_addresses.ipv4_adresses[0] != NULL
+    if (&pb->spare_addresses.ipv4_addresses[0] != NULL
 #if PUBNUB_USE_IPV6
-        || pb->spare_addresses.ipv6_adresses[0] != NULL
+        || &pb->spare_addresses.ipv6_addresses[0] != NULL
 #endif /* PUBNUB_USE_IPV6 */
     ) {
         return try_TCP_connect_spare_address(
@@ -481,13 +481,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     pb->spare_addresses.time_of_the_last_dns_query = 0;
-    memset(&(p->spare_addresses.ipv4_adresses),
+    memset(&(pb->spare_addresses.ipv4_addresses),
            0,
-           sizeof p->spare_addresses.ipv4_adresses);
+           sizeof pb->spare_addresses.ipv4_addresses);
 #if PUBNUB_USE_IPV6
-    memset(&(p->spare_addresses.ipv6_adresses),
+    memset(&(pb->spare_addresses.ipv6_addresses),
            0,
-           sizeof p->spare_addresses.ipv6_adresses);
+           sizeof pb->spare_addresses.ipv6_addresses);
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 

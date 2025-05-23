@@ -49,7 +49,7 @@ endfunction()
 
 message(STATUS "Options (Enabled *):")
 
-log_option(OPENSSL "Use OpenSSL" OFF)
+log_option(OPENSSL "Use OpenSSL" ON)
 num_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
@@ -59,7 +59,7 @@ log_option(ASAN "Use Address sanitizer" OFF)
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
 else ()
-    set(DEFAULT_USE_CALLBACK_API OFF)
+    set(DEFAULT_USE_CALLBACK_API ON)
 endif ()
 
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
@@ -132,6 +132,7 @@ set(FLAGS "\
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
     -D PUBNUB_USE_MULTIPLE_ADDRESSES=${USE_MULTIPLE_ADDRESSES} \
+    -D PUBNUB_USE_IPV6=${USE_IPV6} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
 
 if (DEFINED SDK_VERSION_SUFFIX)

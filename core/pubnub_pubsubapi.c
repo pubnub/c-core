@@ -90,13 +90,13 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #endif
     pbpal_init(p);
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    memset(&(p->spare_addresses.ipv4_adresses),
+    memset(&(p->spare_addresses.ipv4_addresses),
            0,
-           sizeof p->spare_addresses.ipv4_adresses);
+           sizeof p->spare_addresses.ipv4_addresses);
 #if PUBNUB_USE_IPV6
-    memset(&(p->spare_addresses.ipv6_adresses),
+    memset(&(p->spare_addresses.ipv6_addresses),
            0,
-           sizeof p->spare_addresses.ipv6_adresses);
+           sizeof p->spare_addresses.ipv6_addresses);
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #if PUBNUB_PROXY_API
