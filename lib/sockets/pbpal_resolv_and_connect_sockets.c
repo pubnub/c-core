@@ -455,9 +455,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    if (&pb->spare_addresses.ipv4_addresses[0] != NULL
+    if (*(int*)&pb->spare_addresses.ipv4_addresses[0] != 0x0
 #if PUBNUB_USE_IPV6
-        || &pb->spare_addresses.ipv6_addresses[0] != NULL
+        || *(int*)&pb->spare_addresses.ipv6_addresses[0] != 0x0
 #endif /* PUBNUB_USE_IPV6 */
     ) {
         return try_TCP_connect_spare_address(
@@ -469,6 +469,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #else
     get_dns_ip((struct sockaddr*)&dest);
 #endif
+    PUBNUB_LOG_TRACE("pb->pal.socket = %d\n", pb->pal.socket);
     if (SOCKET_INVALID == pb->pal.socket) {
         pb->pal.socket =
             socket(((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
