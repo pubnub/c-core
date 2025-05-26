@@ -61,6 +61,11 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
     pubnub_mutex_lock(pb_clone->monitor);
     pb_clone->core.auth_token = pb->core.auth_token;
     pb_clone->core.auth = pb->core.auth;
+    if (pb_clone->core.user_id_len != pb->core.user_id_len) {
+        if (NULL != pb_clone->core.user_id) free(pb_clone->core.user_id);
+        pb_clone->core.user_id_len = pb->core.user_id_len;
+        pb_clone->core.user_id = (char*)malloc((pb->core.user_id_len + 1) * sizeof(char));
+    }
     strcpy(pb_clone->core.user_id, pb->core.user_id);
     if (PUBNUB_ORIGIN_SETTABLE) {
         pb_clone->origin = pb->origin;
@@ -443,9 +448,7 @@ int pubnub_set_heartbeat_period(pubnub_t* pb, size_t period_sec)
         return -1;
     }
     pubnub_mutex_lock(m_watcher.mutw);
-    m_watcher.heartbeat_data[pb->thumperIndex].period_sec =
-        period_sec < PUBNUB_MIN_HEARTBEAT_PERIOD ? PUBNUB_MIN_HEARTBEAT_PERIOD
-                                                 : period_sec;
+    m_watcher.heartbeat_data[pb->thumperIndex].period_sec = period_sec;
     pubnub_mutex_unlock(pb->monitor);
     pubnub_mutex_unlock(m_watcher.mutw);
 
