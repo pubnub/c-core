@@ -23,6 +23,10 @@
 
 #define TLS_PORT 443
 
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+#define MEMORY_VALUE_AT(x) *(int*)&x
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+
 #ifndef PUBNUB_CALLBACK_API
 #define send_dns_query(x, y, z, v) -1
 #define read_response(x, y, z, v) -1
@@ -407,7 +411,6 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
 #endif /* PUBNUB_USE_MULTIPLE_jDDRESSES */
 #endif /* PUBNUB_CALLBACK_API */
 
-
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 {
     int         error;
@@ -455,9 +458,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    if (*(int*)&pb->spare_addresses.ipv4_addresses[0] != 0x0
+    if (MEMORY_VALUE_AT(pb->spare_addresses.ipv4_addresses[0]) != 0x0
 #if PUBNUB_USE_IPV6
-        || *(int*)&pb->spare_addresses.ipv6_addresses[0] != 0x0
+        || MEMORY_VALUE_AT(pb->spare_addresses.ipv6_addresses[0]) != 0x0
 #endif /* PUBNUB_USE_IPV6 */
     ) {
         return try_TCP_connect_spare_address(
