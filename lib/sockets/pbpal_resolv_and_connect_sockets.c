@@ -339,6 +339,13 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
                              ipv4[1],
                              ipv4[2],
                              ipv4[3]);
+            
+            memset(
+                spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4,
+                0x00,
+                sizeof spare_addresses->ipv4_addresses[spare_addresses->ipv4_index].ipv4
+            );
+
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
@@ -387,6 +394,13 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
                 ipv6[10] * 256 + ipv6[11],
                 ipv6[12] * 256 + ipv6[13],
                 ipv6[14] * 256 + ipv6[15]);
+
+            memset(
+                spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6,
+                0x00,
+                sizeof spare_addresses->ipv6_addresses[spare_addresses->ipv6_index].ipv6
+            );
+
             rslt = pbpal_connect_failed;
         }
         if (pbpal_connect_failed == rslt) {
@@ -410,6 +424,25 @@ try_TCP_connect_spare_address(pb_socket_t*                   skt,
 }
 #endif /* PUBNUB_USE_MULTIPLE_jDDRESSES */
 #endif /* PUBNUB_CALLBACK_API */
+
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+static bool should_call_dns_query(struct pubnub_multi_addresses* spare_addresses)
+{
+    for (int i = 0; i < spare_addresses->n_ipv4; i++) {
+        if (MEMORY_VALUE_AT(spare_addresses->ipv4_addresses[i].ipv4) != 0x00) {
+            return false;
+        }
+    }
+#if PUBNUB_USE_IPV6
+    for (int i = 0; i < spare_addresses->n_ipv6; i++) {
+        if (MEMORY_VALUE_AT(spare_addresses->ipv6_addresses[i].ipv6) != 0x00) {
+            return false;
+        }
+    }
+#endif /* PUBNUB_USE_IPV6 */
+    return true;
+}
+#endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 {
@@ -458,13 +491,20 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-    if (MEMORY_VALUE_AT(pb->spare_addresses.ipv4_addresses[0]) != 0x0
-#if PUBNUB_USE_IPV6
-        || MEMORY_VALUE_AT(pb->spare_addresses.ipv6_addresses[0]) != 0x0
-#endif /* PUBNUB_USE_IPV6 */
-    ) {
-        return try_TCP_connect_spare_address(
+    {
+        enum pbpal_resolv_n_connect_result rslt;
+        rslt = try_TCP_connect_spare_address(
             &pb->pal.socket, &pb->spare_addresses, &pb->options, &pb->flags, port);
+
+        if (rslt != pbpal_connect_failed && rslt != pbpal_resolv_resource_failure) {
+            PUBNUB_LOG_TRACE("try_TCP_connect_spare_address() returned %d\n", rslt);
+            return rslt;
+        }
+
+        if (!should_call_dns_query(&pb->spare_addresses)) {
+            PUBNUB_LOG_TRACE("No spare addresses to try\n");
+            return rslt;
+        }
     }
 #endif
 #if PUBNUB_CHANGE_DNS_SERVERS
