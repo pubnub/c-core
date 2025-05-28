@@ -236,7 +236,7 @@
     these things all by himself using pubnub_heartbeat() transaction */
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
-#define PUBNUB_MAX_URL_PARAMS 10
+#define PUBNUB_MAX_URL_PARAMS 12
 
 #ifndef PUBNUB_RAND_INIT_VECTOR
 #define PUBNUB_RAND_INIT_VECTOR 1

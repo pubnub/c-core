@@ -220,9 +220,7 @@ int pubnub_qt::set_heartbeat_period(size_t period_sec)
     if (false == d_auto_heartbeat_enabled) {
         return -1;
     }
-    d_auto_heartbeat_period_sec =
-        period_sec < PUBNUB_MIN_HEARTBEAT_PERIOD ? PUBNUB_MIN_HEARTBEAT_PERIOD
-                                                 : period_sec;
+    d_auto_heartbeat_period_sec = period_sec;
     return 0;
 }
 

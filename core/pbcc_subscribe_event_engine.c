@@ -601,8 +601,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
                     pubnub_mutex_unlock(ee->mutw);
 
                     pubnub_leave(ee->pb,
-                                 0 == strlen(ch) ? NULL : ch,
-                                 0 == strlen(cg) ? NULL : cg);
+                                 NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                                 NULL == cg || 0 == strlen(cg) ? NULL : cg);
                 }
             }
 
@@ -859,8 +859,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
             sending_leave = true;
 
             pubnub_leave(ee->pb,
-                         0 == strlen(ch) ? NULL : ch,
-                         0 == strlen(cg) ? NULL : cg);
+                         NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                         NULL == cg || 0 == strlen(cg) ? NULL : cg);
         }
     }
 

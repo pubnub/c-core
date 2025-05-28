@@ -111,7 +111,7 @@ struct pubnub_pal {
 /** The maximum number of URL parameters that can be saved in the Pubnub
     context.
 */
-#define PUBNUB_MAX_URL_PARAMS 10 
+#define PUBNUB_MAX_URL_PARAMS 12 
 #endif
 
 #if !defined(PUBNUB_MIN_WAIT_CONNECT_TIMER)
