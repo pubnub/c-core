@@ -557,11 +557,12 @@ enum pubnub_res pbcc_subscribe_ee_reconnect(
     pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
     if (NULL != current_state_obj) {
         pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
-        if (current_state_type == SUBSCRIBE_EE_STATE_RECEIVING ||
-            current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED) {
+        if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
+            current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKING ||
+            current_state_type == SUBSCRIBE_EE_STATE_RECEIVING) {
             pbcc_ee_state_free(&current_state_obj);
             pubnub_mutex_unlock(ee->mutw);
-            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_reconnect: called while in state. Skipping reconnect.\n");
+            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_reconnect: called in state that can't be reconnected. Skipping reconnect.\n");
             return PNR_OK;
         }
         pbcc_ee_state_free(&current_state_obj);
