@@ -1,3 +1,9 @@
+## v5.0.2
+June 02 2025
+
+#### Fixed
+- Fix `pubnub_reconnect` and `pubnub_disconnect` not to print an error when called within incorrect subscription state. Warning will be printed instead and function won't execute further.
+
 ## v5.0.1
 May 26 2025
 
