@@ -49,7 +49,7 @@ endfunction()
 
 message(STATUS "Options (Enabled *):")
 
-log_option(OPENSSL "Use OpenSSL" ON)
+log_option(OPENSSL "Use OpenSSL" OFF)
 num_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
@@ -59,7 +59,7 @@ log_option(ASAN "Use Address sanitizer" OFF)
 if (WITH_CPP)
     set(DEFAULT_USE_CALLBACK_API ON)
 else ()
-    set(DEFAULT_USE_CALLBACK_API ON)
+    set(DEFAULT_USE_CALLBACK_API OFF)
 endif ()
 
 log_option(USE_CPP11 "Use C++11 [WITH_CPP=ON needed]" OFF)
@@ -86,7 +86,6 @@ num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
 num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" OFF)
-num_option(USE_MULTIPLE_ADDRESSES "Use multiple addresses" ON)
 log_option(COMPILE_COMMANDS "Generate compile_commands.json" OFF)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
 log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
@@ -131,8 +130,6 @@ set(FLAGS "\
     -D PUBNUB_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
     -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
-    -D PUBNUB_USE_MULTIPLE_ADDRESSES=${USE_MULTIPLE_ADDRESSES} \
-    -D PUBNUB_USE_IPV6=${USE_IPV6} \
     -D PUBNUB_MBEDTLS=${MBEDTLS}")
 
 if (DEFINED SDK_VERSION_SUFFIX)
