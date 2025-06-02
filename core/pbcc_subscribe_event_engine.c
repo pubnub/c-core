@@ -522,17 +522,16 @@ enum pubnub_res pbcc_subscribe_ee_disconnect(pbcc_subscribe_ee_t* ee)
     pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
     if (NULL != current_state_obj) {
         pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_ee_state_free(&current_state_obj);
         if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
             current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKE_FAILED ||
             current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKE_STOPPED ||
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_FAILED ||
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_STOPPED) {
-            pbcc_ee_state_free(&current_state_obj);
             pubnub_mutex_unlock(ee->mutw);
             PUBNUB_LOG_WARNING("pbcc_subscribe_ee_disconnect: called while already in a disconnected/terminal state. Skipping disconnect.\n");
             return PNR_OK;
         }
-        pbcc_ee_state_free(&current_state_obj);
     }
 
     pbcc_ee_event_t* event = pbcc_disconnect_event_alloc(ee);
@@ -557,15 +556,14 @@ enum pubnub_res pbcc_subscribe_ee_reconnect(
     pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
     if (NULL != current_state_obj) {
         pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_ee_state_free(&current_state_obj);
         if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
             current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKING ||
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVING) {
-            pbcc_ee_state_free(&current_state_obj);
             pubnub_mutex_unlock(ee->mutw);
             PUBNUB_LOG_WARNING("pbcc_subscribe_ee_reconnect: called in state that can't be reconnected. Skipping reconnect.\n");
             return PNR_OK;
         }
-        pbcc_ee_state_free(&current_state_obj);
     }
 
     pbcc_ee_event_t* event = pbcc_reconnect_event_alloc(ee, cursor);
