@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "5.0.1"
+version: "5.0.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-06-02
+    version: v5.0.2
+    changes:
+      - type: bug
+        text: "Fix `pubnub_reconnect` and `pubnub_disconnect` not to print an error when called within incorrect subscription state. Warning will be printed instead and function won't execute further."
   - date: 2025-05-26
     version: v5.0.1
     changes:
@@ -945,7 +950,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1011,7 +1016,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1077,7 +1082,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1139,7 +1144,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1200,7 +1205,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1256,7 +1261,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
@@ -1309,7 +1314,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
             requires:
               -
                 name: "miniz"
