@@ -79,8 +79,8 @@ pbcc_ee_transition_t* pbcc_handshaking_state_transition_alloc(
             pbcc_ee_data_value(context->channel_groups);
         const char* channels = pbcc_ee_data_value(context->channels);
 
-        if (NULL != context && 0 == strlen(channels) &&
-            0 == strlen(channel_groups)) {
+        if (NULL != context && (NULL == channels || 0 == strlen(channels)) &&
+            (NULL == channel_groups || 0 == strlen(channel_groups))) {
             target_state_type = SUBSCRIBE_EE_STATE_UNSUBSCRIBED;
             data              = NULL;
         }

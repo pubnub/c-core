@@ -519,6 +519,21 @@ enum pubnub_res pbcc_subscribe_ee_disconnect(pbcc_subscribe_ee_t* ee)
     PUBNUB_ASSERT_OPT(NULL != ee);
 
     pubnub_mutex_lock(ee->mutw);
+    pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
+    if (NULL != current_state_obj) {
+        pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_ee_state_free(&current_state_obj);
+        if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
+            current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKE_FAILED ||
+            current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKE_STOPPED ||
+            current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_FAILED ||
+            current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_STOPPED) {
+            pubnub_mutex_unlock(ee->mutw);
+            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_disconnect: called while already in a disconnected/terminal state. Skipping disconnect.\n");
+            return PNR_OK;
+        }
+    }
+
     pbcc_ee_event_t* event = pbcc_disconnect_event_alloc(ee);
     if (NULL == event) {
         PUBNUB_LOG_ERROR("pbcc_subscribe_ee_disconnect: failed to allocate "
@@ -538,6 +553,19 @@ enum pubnub_res pbcc_subscribe_ee_reconnect(
     PUBNUB_ASSERT_OPT(NULL != ee);
 
     pubnub_mutex_lock(ee->mutw);
+    pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
+    if (NULL != current_state_obj) {
+        pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_ee_state_free(&current_state_obj);
+        if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
+            current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKING ||
+            current_state_type == SUBSCRIBE_EE_STATE_RECEIVING) {
+            pubnub_mutex_unlock(ee->mutw);
+            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_reconnect: called in state that can't be reconnected. Skipping reconnect.\n");
+            return PNR_OK;
+        }
+    }
+
     pbcc_ee_event_t* event = pbcc_reconnect_event_alloc(ee, cursor);
     if (NULL == event) {
         PUBNUB_LOG_ERROR("pbcc_subscribe_ee_reconnect: failed to allocate "
@@ -601,8 +629,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
                     pubnub_mutex_unlock(ee->mutw);
 
                     pubnub_leave(ee->pb,
-                                 0 == strlen(ch) ? NULL : ch,
-                                 0 == strlen(cg) ? NULL : cg);
+                                 NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                                 NULL == cg || 0 == strlen(cg) ? NULL : cg);
                 }
             }
 
@@ -859,8 +887,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
             sending_leave = true;
 
             pubnub_leave(ee->pb,
-                         0 == strlen(ch) ? NULL : ch,
-                         0 == strlen(cg) ? NULL : cg);
+                         NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                         NULL == cg || 0 == strlen(cg) ? NULL : cg);
         }
     }
 
