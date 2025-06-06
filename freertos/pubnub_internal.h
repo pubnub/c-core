@@ -45,7 +45,6 @@ typedef Socket_t pb_socket_t;
 #define socket(family, type, protocol) lwip_socket((family), (type), (protocol))
 #define socket_connect(socket, addr, addrlen) lwip_connect((socket), (addr), (addrlen))
 #define socket_setsockopt(socket, level, optname, optval, optlen) lwip_setsockopt((socket), (level), (optname), (optval), (optlen))
-#define sockaddr sockaddr_in
 
 typedef int pb_socket_t;
 

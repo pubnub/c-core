@@ -59,11 +59,7 @@ void pubnub_assert_handler_abort(char const *s, char const *file, long line)
         */
     taskDISABLE_INTERRUPTS();
 	{
-        /** In the debugger, user can change the value of this
-            variable to get out of the loop and continue processing.
-            */
-        volatile int stay_blocked = 1;
-        while (stay_blocked) {
+        for (;;) {
 #if INCLUDE_vTaskDelay
             vTaskDelay(pdMS_TO_TICKS(1000));
 #endif
