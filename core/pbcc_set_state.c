@@ -42,7 +42,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
 
     int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
     char * json_state = (char*)malloc(buff_size);
-    if (core->state != NULL && buff_size != sizeof(core->state)){
+    if (core->state != NULL && buff_size > strlen(core->state)){
         core->state = (char*)realloc((char*)core->state, buff_size);
     }
     else if (core->state == NULL){
