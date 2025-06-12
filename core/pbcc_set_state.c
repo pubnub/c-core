@@ -60,7 +60,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
             bool end = false;
             do{
                 ch_temp = strchr(str_ch,',');
-                if (ch_cnt > 0) { 
+                if (ch_cnt > 0 && json_state[mem_len - 1] != ',') { 
                     memcpy(json_state + mem_len, ",", cm_len);
                     mem_len += cm_len;
                 }
@@ -89,7 +89,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
             bool end = false;
             do{
                 cg_temp = strchr(str_cg,',');
-                if (ch_cnt > 0 || cg_cnt > 0) { 
+                if ((ch_cnt > 0 || cg_cnt > 0) && json_state[mem_len - 1] != ',') { 
                     memcpy(json_state + mem_len, ",", cm_len);
                     mem_len += cm_len;
                 }
@@ -112,8 +112,9 @@ void pbcc_adjust_state(struct pbcc_context* core,
         }
 
         int cb_len = strlen("}");
-        memcpy(json_state + mem_len, "}", cb_len);
-        mem_len += cb_len;
+        int trim_comma = json_state[mem_len - 1] == ',' ? 1 : 0;
+        memcpy(json_state + mem_len - trim_comma, "}", cb_len);
+        mem_len += cb_len - trim_comma;
         json_state[mem_len] = '\0';
         PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
 
