@@ -67,8 +67,6 @@ void pbcc_adjust_state(struct pbcc_context* core,
                 if (ch_temp == NULL) { end = true; ch_len = strlen(str_ch); }
                 else { ch_len = ch_temp - str_ch; }
 
-                if (ch_len == 0) { continue; }
-
                 char* curr_ch = (char*)malloc(ch_len + 1);
                 memcpy(curr_ch, str_ch, ch_len);
                 curr_ch[ch_len] = '\0';
