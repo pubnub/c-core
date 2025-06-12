@@ -66,16 +66,19 @@ void pbcc_adjust_state(struct pbcc_context* core,
                 }
                 if (ch_temp == NULL) { end = true; ch_len = strlen(str_ch); }
                 else { ch_len = ch_temp - str_ch; }
+                
+                if (ch_len != 0) { 
+                    char* curr_ch = (char*)malloc(ch_len + 1);
+                    memcpy(curr_ch, str_ch, ch_len);
+                    curr_ch[ch_len] = '\0';
 
-                char* curr_ch = (char*)malloc(ch_len + 1);
-                memcpy(curr_ch, str_ch, ch_len);
-                curr_ch[ch_len] = '\0';
+                    mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
 
-                mem_len = json_kvp_builder(json_state, mem_len, curr_ch, (char*)state);
+                    free(curr_ch);
+                }
 
                 ch_cnt++;
                 str_ch = ch_temp + 1;
-                free(curr_ch);
             } while (false == end);
         }
 
@@ -93,17 +96,18 @@ void pbcc_adjust_state(struct pbcc_context* core,
                 if (cg_temp == NULL) { end = true; cg_len = strlen(str_cg); }
                 else { cg_len = cg_temp - str_cg; }
 
-                if (cg_len == 0) { continue; }
+                if (cg_len != 0) { 
+                    char* curr_cg = (char*)malloc(cg_len + 1);
+                    memcpy(curr_cg, str_cg, cg_len);
+                    curr_cg[cg_len] = '\0';
 
-                char* curr_cg = (char*)malloc(cg_len + 1);
-                memcpy(curr_cg, str_cg, cg_len);
-                curr_cg[cg_len] = '\0';
+                    mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
 
-                mem_len = json_kvp_builder(json_state, mem_len, curr_cg, (char*)state);
+                    free(curr_cg);
+                }
 
                 cg_cnt++;
                 str_cg = cg_temp + 1;
-                free(curr_cg);
             } while (false == end);
         }
 
