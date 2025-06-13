@@ -1797,6 +1797,20 @@ public:
         return pubnub_is_auto_heartbeat_enabled(d_pb);
     }
 
+    /// Enable "smart heartbeat" for presence management.
+    /// @see pubnub_enable_smart_heartbeat()
+    void enable_smart_heartbeat()
+    {
+        pubnub_enable_smart_heartbeat(d_pb);
+    }
+
+    /// Disable "smart heartbeat" for presence management.
+    /// @see pubnub_disable_smart_heartbeat()
+    void disable_smart_heartbeat()
+    {
+        pubnub_disable_smart_heartbeat(d_pb);
+    }
+
     /// Releases all allocated heartbeat thumpers.
     /// Done on any object of the class, once, suffices.
     /// @see pubnub_heartbeat_free_thumpers()

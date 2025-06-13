@@ -239,7 +239,8 @@ int pbntf_watch_out_events(pubnub_t* pbp)
 
 int pbntf_init(pubnub_t* pb)
 {
-    return pbntf_init_callback(pb);
+    PUBNUB_UNUSED(pb);
+    return pbntf_init_callback();
 }
 
  

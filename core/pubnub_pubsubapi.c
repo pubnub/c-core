@@ -70,6 +70,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #endif
 #endif /* PUBNUB_BLOCKING_IO_SETTABLE */
 #if PUBNUB_USE_AUTO_HEARTBEAT
+    pubnub_mutex_init(p->thumper_monitor);
+    p->should_announce_presence = true;
+    p->use_smart_heartbeat = true;
     p->thumperIndex = UNASSIGNED;
     p->channelInfo.channel = NULL;
     p->channelInfo.channel_group = NULL;
