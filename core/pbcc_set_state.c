@@ -40,8 +40,34 @@ void pbcc_adjust_state(struct pbcc_context* core,
         for (int i=0; i < (int)strlen(channel_group); i++) { tot_cg = (channel_group[i] == ',') ? tot_cg + 1 : tot_cg; }
     }
 
-    int buff_size = ((tot_ch + tot_cg) * strlen(state)) + (channel ? strlen(channel) : 1) + (channel_group ? strlen(channel_group) : 1) + 20;
-    char * json_state = (char*)malloc(buff_size);
+    int dq_len       = strlen("\"");
+    int co_len       = strlen(":");
+    int cm_len       = strlen(",");
+    int ch_keys_len  = 0;
+    int chg_keys_len = 0;
+
+    if (tot_ch >= 1 && 0 != strcmp(channel, ",")) {
+        // commas length included in strlen(channel)
+        // tot_ch * (dq_len * 2) - double-quotes around channel name
+        // (tot_ch - 1) * (co_len + cm_len) - how many commas and semicolons 
+        // we need for channels key-value pairs
+        ch_keys_len = strlen(channel) + tot_ch * (dq_len * 2)
+                      + (tot_ch - 1) * (co_len + cm_len);
+    }
+
+    if (tot_cg >= 1) {
+        // commas length included in strlen(channel_group)
+        // tot_cg * (dq_len * 2) - double-quotes around channel group name
+        // (tot_cg - 1) * (co_len + cm_len) - how many commas and semicolons
+        // we need for channel groups key-value pairs
+        chg_keys_len = strlen(channel_group) + tot_cg * (dq_len * 2)
+                       + (tot_cg - 1) * (co_len + cm_len);
+    }
+
+    // 2 is our {}
+    int buff_size =
+        (tot_ch + tot_cg) * strlen(state) + ch_keys_len + chg_keys_len + 2;
+    char* json_state = (char*)malloc(buff_size);
     if (core->state != NULL && buff_size > strlen(core->state)){
         core->state = (char*)realloc((char*)core->state, buff_size);
     }
