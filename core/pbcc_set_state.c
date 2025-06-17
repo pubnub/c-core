@@ -154,7 +154,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
         }
 
         int cb_len     = strlen("}");
-        int trim_comma = json_state[mem_len - 1] == ',' ? 1 : 0;
+        int trim_comma = json_state[mem_len - 1] == ',' ? strlen(",") : 0;
         memcpy(json_state + mem_len - trim_comma, "}", cb_len);
         mem_len += cb_len - trim_comma;
         json_state[mem_len] = '\0';
