@@ -1,8 +1,21 @@
 name: c-core
 schema: 1
-version: "5.0.2"
+version: "5.0.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-06-17
+    version: v5.0.3
+    changes:
+      - type: bug
+        text: "Fixed wrong string copy if multiple channels(groups) are provided for `pubnub_set_state`. Note that using `memcpy` instead of `strncpy` is used intentionally because of the ESP support."
+      - type: bug
+        text: "Fixed crash when double comma is provided to `pubnub_set_state` as a channels(groups)."
+      - type: bug
+        text: "Fixed wrong check if the reallocation is required in `pubnub_set_state`."
+      - type: bug
+        text: "Removed additional allocation of memory for temporary data."
+      - type: bug
+        text: "Changed the amount of bytes allocated based on the provided parameters instead of hardcoded values."
   - date: 2025-06-02
     version: v5.0.2
     changes:
@@ -950,7 +963,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1016,7 +1029,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1082,7 +1095,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1144,7 +1157,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1205,7 +1218,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1261,7 +1274,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
@@ -1314,7 +1327,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.0.3
             requires:
               -
                 name: "miniz"
