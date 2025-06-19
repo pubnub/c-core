@@ -1834,6 +1834,15 @@ public:
         return pubnub_last_publish_result(d_pb);
     }
 
+    /// Returns the string of the timetoken of the last `publish` transaction,
+    /// as returned from Pubnub. If the last transaction is not a publish,
+    /// or there is some other error, it returns "0".
+    /// @see pubnub_last_publish_timetoken
+    std::string last_publish_timetoken() const
+    {
+        return pubnub_last_publish_timetoken(d_pb);
+    }
+
     /// Returns the result of parsing the last publish
     /// transaction's server response.
     /// @see pubnub_parse_publish_result
