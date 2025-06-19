@@ -600,12 +600,10 @@ void pubnub_disable_auto_heartbeat(pubnub_t* pb)
 
 bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb)
 {
-    bool rslt;
-
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
     pubnub_mutex_lock(pb->thumper_monitor);
-    rslt = (pb->thumperIndex != UNASSIGNED);
+    bool rslt = (pb->thumperIndex != UNASSIGNED);
     pubnub_mutex_unlock(pb->thumper_monitor);
 
     return rslt;
@@ -808,13 +806,10 @@ void pubnub_heartbeat_free_thumpers(void)
 }
 
 
-static void stop_auto_heartbeat(unsigned thumper_index)
+static void stop_auto_heartbeat(const unsigned thumper_index)
 {
-    pubnub_t* heartbeat_pb;
-
     pubnub_mutex_lock(m_watcher.mutw);
-    struct pubnub_heartbeat_data thump = m_watcher.heartbeat_data[thumper_index];
-    heartbeat_pb = thump.heartbeat_pb;
+    pubnub_t* heartbeat_pb = m_watcher.heartbeat_data[thumper_index].heartbeat_pb;
     pubnub_mutex_unlock(m_watcher.mutw);
 
     stop_heartbeat(heartbeat_pb, thumper_index);
