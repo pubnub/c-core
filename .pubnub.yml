@@ -7,7 +7,7 @@ changelog:
     version: v5.1.0
     changes:
       - type: feature
-        text: "Add functions which allow to enable and disable "smart heartbeat" behavior for automatic heartbeat: `pubnub_enable_smart_heartbeat` and `pubnub_disable_smart_heartbeat`."
+        text: "Add functions which allow to enable and disable 'smart heartbeat' behavior for automatic heartbeat: `pubnub_enable_smart_heartbeat` and `pubnub_disable_smart_heartbeat`."
       - type: feature
         text: "Add `pubnub_last_publish_timetoken` function to retrieve recently published message high precision timetoken."
       - type: bug
