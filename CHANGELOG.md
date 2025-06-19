@@ -1,3 +1,14 @@
+## v5.1.0
+June 19 2025
+
+#### Added
+- Add functions which allow to enable and disable "smart heartbeat" behavior for automatic heartbeat: `pubnub_enable_smart_heartbeat` and `pubnub_disable_smart_heartbeat`.
+- Add `pubnub_last_publish_timetoken` function to retrieve recently published message high precision timetoken.
+
+#### Fixed
+- Fix issue which caused deadlock on secondary thread and as result heartbeat stop.
+- Fix signature of `pbntf_init_callback` and its usage in Windows dedicated code.
+
 ## v5.0.3
 June 17 2025
 
