@@ -1797,6 +1797,20 @@ public:
         return pubnub_is_auto_heartbeat_enabled(d_pb);
     }
 
+    /// Enable "smart heartbeat" for presence management.
+    /// @see pubnub_enable_smart_heartbeat()
+    void enable_smart_heartbeat()
+    {
+        pubnub_enable_smart_heartbeat(d_pb);
+    }
+
+    /// Disable "smart heartbeat" for presence management.
+    /// @see pubnub_disable_smart_heartbeat()
+    void disable_smart_heartbeat()
+    {
+        pubnub_disable_smart_heartbeat(d_pb);
+    }
+
     /// Releases all allocated heartbeat thumpers.
     /// Done on any object of the class, once, suffices.
     /// @see pubnub_heartbeat_free_thumpers()
@@ -1818,6 +1832,15 @@ public:
     std::string last_publish_result() const
     {
         return pubnub_last_publish_result(d_pb);
+    }
+
+    /// Returns the string of the timetoken of the last `publish` transaction,
+    /// as returned from Pubnub. If the last transaction is not a publish,
+    /// or there is some other error, it returns "0".
+    /// @see pubnub_last_publish_timetoken
+    std::string last_publish_timetoken() const
+    {
+        return pubnub_last_publish_timetoken(d_pb);
     }
 
     /// Returns the result of parsing the last publish
