@@ -414,7 +414,10 @@ struct pubnub_ {
 
 #if PUBNUB_THREADSAFE
     pubnub_mutex_t monitor;
+    pubnub_mutex_t  cancel_monitor;
 #endif
+    /** Whether sync `await` should stop (cancel) or not. */
+    bool should_stop_await;
 
 #if PUBNUB_TIMERS_API
     /** Duration of the transaction timeout, in milliseconds */
