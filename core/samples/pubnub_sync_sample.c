@@ -5,16 +5,24 @@
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 
+#if defined _WIN32
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
- 
-static void generate_user_id(pubnub_t* pbp)  
+
+static void generate_user_id(pubnub_t* pbp)
 {
     char const*                      user_id_default = "zeka-peka-iz-jendeka";
     struct Pubnub_UUID               uuid;
-    static struct Pubnub_UUID_String str_uuid; 
-  
+    static struct Pubnub_UUID_String str_uuid;
+
     if (0 != pubnub_generate_uuid_v4_random(&uuid)) {
         pubnub_set_user_id(pbp, user_id_default);
     }
@@ -67,9 +75,71 @@ static int do_time(pubnub_t* pbp)
     return 0;
 }
 
+static
+#if defined _WIN32
+    void
+#else
+    void*
+#endif
+subscribe_thr(void *pn_sub_addr)
+{
+    pubnub_t *pbp = (pubnub_t *)pn_sub_addr;
+    char const*     chan = "hello_world";
+    char const*     msg;
+    time_t          t0;
+    enum pubnub_res res;
+
+    puts("Subscribing...");
+    time(&t0);
+    res = pubnub_subscribe(pbp, chan, NULL);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    printf("Subscribe/connect lasted %lf seconds.\n", difftime(time(NULL), t0));
+    if (PNR_OK == res) {
+        puts("Subscribed!");
+    }
+    else {
+        printf("Subscribing failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+
+    time(&t0);
+    res = pubnub_subscribe(pbp, chan, NULL);
+    if (PNR_STARTED == res) {
+        res = pubnub_await(pbp);
+    }
+    printf("Subscribe lasted %lf seconds.\n", difftime(time(NULL), t0));
+    if (PNR_OK == res) {
+        puts("Subscribed! Got messages:");
+        for (;;) {
+            msg = pubnub_get(pbp);
+            if (NULL == msg) {
+                break;
+            }
+            puts(msg);
+        }
+    }
+    else {
+        printf("Subscribing failed with code: %d('%s')\n",
+               res,
+               pubnub_res_2_string(res));
+    }
+
+#if !defined _WIN32
+    return NULL;
+#endif
+}
+
 
 int main()
 {
+#if defined _WIN32
+    uintptr_t sub_thread;
+#else
+    pthread_t sub_thread;
+#endif
     time_t          t0;
     char const*     msg;
     enum pubnub_res res;
@@ -93,6 +163,19 @@ int main()
     generate_user_id(pbp);
 
     pubnub_set_auth(pbp, "danaske");
+
+#if defined _WIN32
+    sub_thread = _beginthread(subscribe_thr, 0, pbp);
+#else
+    pthread_create(&sub_thread, NULL, subscribe_thr, pbp);
+#endif
+    puts("Lets go sleeping...");
+    sleep(4);
+    puts("Done sleeping. Cancelling subscribe long-poll...");
+    pubnub_cancel(pbp);
+    sleep(2);
+    printf("What we have: %s\n", pubnub_res_2_string(pubnub_last_result(pbp)));
+    return 0;
 
     puts("Publishing...");
     time(&t0);

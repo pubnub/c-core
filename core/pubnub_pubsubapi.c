@@ -19,7 +19,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
 
     pubnub_mutex_init(p->monitor);
+#if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
     pubnub_mutex_init(p->cancel_monitor);
+#endif
     pubnub_mutex_lock(p->monitor);
     pbcc_init(&p->core, publish_key, subscribe_key);
     if (PUBNUB_TIMERS_API) {
@@ -82,7 +84,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
+#if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
     p->should_stop_await              = false;
+#endif
 #if PUBNUB_USE_IPV6
     /* IPv4 connectivity type by default. */
     p->options.ipv6_connectivity = false;
@@ -250,9 +254,11 @@ enum pubnub_cancel_res pubnub_cancel(pubnub_t* pb)
     enum pubnub_cancel_res res = PN_CANCEL_STARTED;
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
+#if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
     pubnub_mutex_lock(pb->cancel_monitor);
     pb->should_stop_await = true;
     pubnub_mutex_unlock(pb->cancel_monitor);
+#endif
 
     pubnub_mutex_lock(pb->monitor);
     pbnc_stop(pb, PNR_CANCELLED);
