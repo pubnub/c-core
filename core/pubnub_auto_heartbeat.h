@@ -42,6 +42,35 @@ PUBNUB_EXTERN void pubnub_disable_auto_heartbeat(pubnub_t* pb);
   */
 PUBNUB_EXTERN bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb);
 
+/** Enable "smart heartbeat" for presence management.
+
+    "Smart heartbeat" is the algorithm with which the user's presence is
+    maintained by explicit and implicit heartbeats. Explicit heartbeats are sent
+    periodically at intervals specified with the @c pubnub_enable_auto_heartbeat
+    or @c pubnub_set_heartbeat_period functions. The next heartbeat will be
+    rescheduled with each received @c subscribe response (implicit heartbeat
+    happens with subscribe response).
+
+    @b Default: enabled by default.
+    @warning It is recommended to use explicit heartbeats for faster presence
+             state update. To use explicit heartbeats use
+             @c pubnub_disable_smart_heartbeat instead.
+
+    @param pb The pubnub context. Can't be NULL
+ */
+PUBNUB_EXTERN void pubnub_enable_smart_heartbeat(pubnub_t* pb);
+
+/** Disable "smart heartbeat" for presence management.
+
+    "Smart heartbeat" is the algorithm with which the user's presence is
+    maintained by explicit and implicit heartbeats. Explicit heartbeats are sent
+    periodically at intervals specified with the @c pubnub_enable_auto_heartbeat
+    or @c pubnub_set_heartbeat_period functions.
+
+    @param pb The pubnub context. Can't be NULL
+ */
+PUBNUB_EXTERN void pubnub_disable_smart_heartbeat(pubnub_t* pb);
+
 /** Releases all allocated heartbeat thumpers.
   */
 PUBNUB_EXTERN void pubnub_heartbeat_free_thumpers(void);
@@ -50,6 +79,8 @@ PUBNUB_EXTERN void pubnub_heartbeat_free_thumpers(void);
 #define pubnub_set_heartbeat_period(pb, period_sec) -1
 #define pubnub_disable_auto_heartbeat(pb)
 #define pubnub_is_auto_heartbeat_enabled(pb) false
+#define pubnub_enable_smart_heartbeat(pb)
+#define pubnub_disable_smart_heartbeat(pb)
 #define pubnub_heartbeat_free_thumpers()
 #endif /* PUBNUB_USE_AUTO_HEARTBEAT */
 

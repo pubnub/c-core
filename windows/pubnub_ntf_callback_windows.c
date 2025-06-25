@@ -105,9 +105,8 @@ void socket_watcher_thread(void* arg)
 }
 
 
-MAYBE_INLINE int pbntf_init_callback(pubnub_t* pb)
+MAYBE_INLINE int pbntf_init_callback(void)
 {
-    PUBNUB_UNUSED(pb);
     InitializeCriticalSection(&m_watcher.stoplock);
     InitializeCriticalSection(&m_watcher.mutw);
     InitializeCriticalSection(&m_watcher.timerlock);
@@ -241,7 +240,8 @@ int pbntf_watch_out_events(pubnub_t* pbp)
 
 int pbntf_init(pubnub_t* pb)
 {
-    return pbntf_init_callback(pb);
+    PUBNUB_UNUSED(pb);
+    return pbntf_init_callback();
 }
 
  

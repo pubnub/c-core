@@ -1,3 +1,24 @@
+## v5.1.0
+June 19 2025
+
+#### Added
+- Add functions which allow to enable and disable "smart heartbeat" behavior for automatic heartbeat: `pubnub_enable_smart_heartbeat` and `pubnub_disable_smart_heartbeat`.
+- Add `pubnub_last_publish_timetoken` function to retrieve recently published message high precision timetoken.
+
+#### Fixed
+- Fix issue which caused deadlock on secondary thread and as result heartbeat stop.
+- Fix signature of `pbntf_init_callback` and its usage in Windows dedicated code.
+
+## v5.0.3
+June 17 2025
+
+#### Fixed
+- Fixed wrong string copy if multiple channels(groups) are provided for `pubnub_set_state`. Note that using `memcpy` instead of `strncpy` is used intentionally because of the ESP support.
+- Fixed crash when double comma is provided to `pubnub_set_state` as a channels(groups).
+- Fixed wrong check if the reallocation is required in `pubnub_set_state`.
+- Removed additional allocation of memory for temporary data.
+- Changed the amount of bytes allocated based on the provided parameters instead of hardcoded values.
+
 ## v5.0.2
 June 02 2025
 

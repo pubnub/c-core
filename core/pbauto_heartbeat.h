@@ -62,11 +62,24 @@ struct HeartbeatWatcherData {
 
 /** Pubnub context fields for heartbeat info used by the module for keeping presence.
  */
-#define M_heartbeatInfo() unsigned thumperIndex;
+#if PUBNUB_THREADSAFE
+#define M_heartbeatInfo()           \
+    pubnub_mutex_t thumper_monitor; \
+    unsigned thumperIndex;          \
+    bool use_smart_heartbeat;       \
+    bool should_announce_presence;  \
+    bool waiting_announce_presence;
+#else
+    #define M_heartbeatInfo()       \
+    unsigned thumperIndex;          \
+    bool use_smart_heartbeat;       \
+    bool should_announce_presence;  \
+    bool waiting_announce_presence;
+#endif
 
 /** Reads channel and channel groups saved(subscribed on)
   */
-void pbauto_heartbeat_read_channelInfo(pubnub_t const* pb,
+void pbauto_heartbeat_read_channelInfo(pubnub_t* pb,
                                        char const** channel,
                                        char const** channel_group);
 

@@ -70,6 +70,9 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
 #endif
 #endif /* PUBNUB_BLOCKING_IO_SETTABLE */
 #if PUBNUB_USE_AUTO_HEARTBEAT
+    pubnub_mutex_init(p->thumper_monitor);
+    p->should_announce_presence = true;
+    p->use_smart_heartbeat = true;
     p->thumperIndex = UNASSIGNED;
     p->channelInfo.channel = NULL;
     p->channelInfo.channel_group = NULL;
@@ -361,6 +364,54 @@ char const* pubnub_last_time_token(pubnub_t* pb)
 }
 
 
+static char const* do_last_publish_timetoken(pubnub_t* pb)
+{
+    char* ptr;
+    char const* end_of_buffer;
+
+    if (PUBNUB_DYNAMIC_REPLY_BUFFER && (NULL == pb->core.http_reply)) {
+        return "0";
+    }
+    if (((pb->trans != PBTT_PUBLISH) && (pb->trans != PBTT_SIGNAL)) ||
+        (pb->core.http_reply[0] == '\0')) {
+        return "0";
+    }
+    if (pb->core.http_reply[0] != '[') {
+        return "0";
+    }
+
+    ptr = pb->core.http_reply + 1;
+    end_of_buffer = pb->core.http_reply + pb->core.http_buf_len;
+
+    /* Find the end of the first part (the status code) */
+    char* next_part = (char*)memchr(ptr, '\0', end_of_buffer - ptr);
+    if (NULL == next_part || next_part >= end_of_buffer) {
+        return "0";
+    }
+    ptr = next_part + 1;
+
+    /* Find the end of the second part (the message) */
+    next_part = (char*)memchr(ptr, '\0', end_of_buffer - ptr);
+    if (NULL == next_part || next_part >= end_of_buffer) {
+        return "0";
+    }
+    ptr = next_part + 1;
+
+    /* Now ptr points to the timetoken which is a string like "\"17298458222356632\""
+       We should remove the quotes. */
+    if (*ptr == '"') {
+        char* end_of_token;
+        ptr++; /* skip opening quote */
+        end_of_token = strrchr(ptr, '"');
+        if (end_of_token != NULL) {
+            *end_of_token = '\0';
+        }
+    }
+
+    return ptr;
+}
+
+
 static char const* do_last_publish_result(pubnub_t* pb)
 {
     char* end;
@@ -395,6 +446,19 @@ char const* pubnub_last_publish_result(pubnub_t* pb)
 
     pubnub_mutex_lock(pb->monitor);
     rslt = do_last_publish_result(pb);
+    pubnub_mutex_unlock(pb->monitor);
+
+    return rslt;
+}
+
+
+char const* pubnub_last_publish_timetoken(pubnub_t* pb)
+{
+    char const* rslt;
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+
+    pubnub_mutex_lock(pb->monitor);
+    rslt = do_last_publish_timetoken(pb);
     pubnub_mutex_unlock(pb->monitor);
 
     return rslt;

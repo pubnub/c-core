@@ -310,6 +310,14 @@ PUBNUB_EXTERN uint16_t pubnub_last_http_retry_header(pubnub_t* pb);
  */
 PUBNUB_EXTERN char const* pubnub_last_publish_result(pubnub_t* p);
 
+/** Returns the string of the timetoken of the last `publish` transaction,
+    as returned from Pubnub. If the last transaction is not a publish,
+    or there is some other error, it returns "0".
+    @param p Pubnub context to get the last published message time token from
+    @return A read only string of the last published message time token
+ */
+PUBNUB_EXTERN char const* pubnub_last_publish_timetoken(pubnub_t* p);
+
 /** Returns the string of the last received time token on the
     @c p context. After pubnub_init() this should be "0".
     @param p Pubnub context to get the last received time token from
