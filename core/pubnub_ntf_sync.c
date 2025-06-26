@@ -258,6 +258,19 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
 
     t0 = pbms_start();
     while (!pbnc_can_start_transaction(pb)) {
+        // Checking whether await cycle should be stopped or not.
+        pubnub_mutex_lock(pb->cancel_monitor);
+        if (pb->should_stop_await) {
+            // Need to reset cancellation flag.
+            pb->should_stop_await = false;
+            pubnub_mutex_unlock(pb->cancel_monitor);
+            pubnub_mutex_unlock(pb->monitor);
+            // This is not real result because actual cancellation result is
+            // returned by `pubnub_cancel()` function.
+            return PNR_CANCELLED;
+        }
+        pubnub_mutex_unlock(pb->cancel_monitor);
+
         pbms_t delta;
 
         pbnc_fsm(pb);

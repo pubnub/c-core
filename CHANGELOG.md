@@ -1,3 +1,12 @@
+## v5.1.1
+June 26 2025
+
+#### Fixed
+- Fix issue because of which it was impossible for sync PubNub context version to cancel operation awaited in secondary thread.
+
+#### Modified
+- Fix the code for which the compiler emitted warnings during the build for `mbedTLS` and `ESP_PLATFORM=1`. Fixed the following issues reported by [@blake-spangenberg](https://github.com/blake-spangenberg): [#213](https://github.com/pubnub/c-core/issues/213).
+
 ## v5.1.0
 June 19 2025
 

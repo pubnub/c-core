@@ -58,6 +58,9 @@ void pballoc_free_at_last(pubnub_t *pb)
     pbpal_free(pb);
     pubnub_mutex_unlock(pb->monitor);
     pubnub_mutex_destroy(pb->monitor);
+#if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
+    pubnub_mutex_destroy(pb->cancel_monitor);
+#endif
 #if PUBNUB_USE_AUTO_HEARTBEAT
     pubnub_mutex_destroy(pb->thumper_monitor);
 #endif

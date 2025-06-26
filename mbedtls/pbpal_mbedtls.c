@@ -26,7 +26,7 @@
 #endif
 
 
-static void pbntf_setup(void);
+static void pbntf_setup(pubnub_t* pb);
 static void options_setup(pubnub_t* pb);
 static void buffer_setup(pubnub_t* pb);
 
