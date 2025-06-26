@@ -16,14 +16,14 @@
 
 enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 {
-    struct sockaddr addr;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND)  || (pb->state == PBS_WAIT_DNS_RCV));
-    
-    addr.sin_port = htons(HTTP_PORT);
 
 #if ESP_PLATFORM
+    struct sockaddr_in addr;
+    addr.sin_port = htons(HTTP_PORT);
+
     PUBNUB_LOG_TRACE("pbpal_resolv_and_connect: gethostbyname(%s)\n",
             PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
 
@@ -39,12 +39,23 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         PUBNUB_LOG_ERROR("pbpal_resolv_and_connect: no address found!\n");
         return pbpal_resolv_failed_processing;
     }
+
+    pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (pb->pal.socket == SOCKET_INVALID) {
+        return pbpal_connect_resource_failure;
+    }
+    if (connect(pb->pal.socket, (const struct sockaddr*) &addr, sizeof addr) != 0) {
+        closesocket(pb->pal.socket);
+        pb->pal.socket = SOCKET_INVALID;
+        return pbpal_connect_failed;
+    }
 #else
+    struct sockaddr addr;
+    addr.sin_port = htons(HTTP_PORT);
     addr.sin_addr = gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
     if (addr.sin_addr == 0) {
         return pbpal_resolv_failed_processing;
     }
-#endif
 
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
@@ -55,6 +66,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
         pb->pal.socket = SOCKET_INVALID;
         return pbpal_connect_failed;
     }
+#endif
 
     {
         TickType_t tmval = pdMS_TO_TICKS(pb->transaction_timeout_ms);
