@@ -1,3 +1,9 @@
+## v5.1.2
+July 08 2025
+
+#### Modified
+- Use recursive semaphore for `mutex` lock and unlock in `pbpal_mutex.h`.
+
 ## v5.1.1
 June 26 2025
 
