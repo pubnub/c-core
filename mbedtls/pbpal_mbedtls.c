@@ -29,6 +29,7 @@
 static void pbntf_setup(pubnub_t* pb);
 static void options_setup(pubnub_t* pb);
 static void buffer_setup(pubnub_t* pb);
+static void pbpal_mbedtls_close(pubnub_t* pb, bool notify);
 
 
 void pbpal_init(pubnub_t* pb)
@@ -85,28 +86,18 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
                 return PNR_IN_PROGRESS;
             }
 
-            mbedtls_ssl_close_notify(pb->pal.ssl);
-            mbedtls_ssl_session_reset(pb->pal.ssl);
-            mbedtls_net_free(pb->pal.server_fd);
-
+            pbpal_mbedtls_close(pb, true);
             PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_TIMEOUT\n", pb);
 
             return PNR_TIMEOUT;
         case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
+            pbpal_mbedtls_close(pb, true);
             PUBNUB_LOG_INFO("pb=%p TLS/SSL_I/O peer closed connection\n", pb);
-            mbedtls_ssl_close_notify(pb->pal.ssl);
-            mbedtls_ssl_session_reset(pb->pal.ssl);
-            mbedtls_net_free(pb->pal.server_fd);
-
-            pb->unreadlen = 0;
 
             return PNR_OK;
         default:
-            mbedtls_ssl_session_reset(pb->pal.ssl);
-            mbedtls_net_free(pb->pal.server_fd);
-
+            pbpal_mbedtls_close(pb, false);
             mbedtls_strerror(result, reason, sizeof reason);
-
             PUBNUB_LOG_ERROR("pb=%p TLS/SSL_I/O operation failed, PNR_IO_ERROR: %s\n", pb, reason);
 
             return PNR_IO_ERROR;
@@ -331,84 +322,60 @@ bool pbpal_closed(pubnub_t* pb)
     return (pb->pal.ssl == NULL) && (pb->pal.socket == SOCKET_INVALID);
 }
 
-
-void pbpal_forget(pubnub_t* pb)
+int pbpal_close(pubnub_t *pb)
 {
-    /* a no-op under MBedTLS */
-}
-
-
-int pbpal_close(pubnub_t* pb)
-{
-    PUBNUB_LOG_TRACE("pbpal_close(pb=%p)\n", pb);
-    pb->unreadlen = 0;
-
-    if (pb->pal.ssl != NULL) {
-        mbedtls_ssl_close_notify(pb->pal.ssl);
-        PUBNUB_LOG_TRACE("pb=%p: SSL session closed\n", pb);
-        mbedtls_ssl_session_reset(pb->pal.ssl);
-        PUBNUB_LOG_TRACE("pb=%p: SSL reset\n", pb);
-        mbedtls_ssl_free(pb->pal.ssl);
-        pb->pal.ssl = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: SSL context freed\n", pb);
-
-        mbedtls_ssl_config_free(pb->pal.ssl_config);
-        pb->pal.ssl_config = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: SSL config freed\n", pb);
-
-        mbedtls_net_free(pb->pal.server_fd);
-        pb->pal.server_fd = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: server_fd freed\n", pb);
-
-        mbedtls_net_free(pb->pal.net);
-        pb->pal.net = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: net freed\n", pb);
-
-        mbedtls_x509_crt_free(pb->pal.ca_certificates);
-        pb->pal.ca_certificates = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: ca_certificates freed\n", pb);
-
-        mbedtls_entropy_free(pb->pal.entropy);
-        pb->pal.entropy = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: entropy freed\n", pb);
-
-        mbedtls_ctr_drbg_free(pb->pal.ctr_drbg);
-        pb->pal.ctr_drbg = NULL;
-        PUBNUB_LOG_TRACE("pb=%p: ctr_drbg freed\n", pb);
-    }
-
-    PUBNUB_LOG_TRACE("pb=%p: pbpal_close() returning 0\n", pb);
+    pbpal_mbedtls_close(pb, true);
 
     return 0;
 }
 
-
-void pbpal_free(pubnub_t* pb)
+void pbpal_forget(pubnub_t *pb)
 {
-    PUBNUB_LOG_TRACE("pbpal_free(pb=%p)\n", pb);
-    if (NULL != pb->pal.ssl) {
-        mbedtls_ssl_free(pb->pal.ssl);
-        pb->pal.ssl = NULL;
-    }
+    pbpal_mbedtls_close(pb, false);
+}
 
-    if (NULL != pb->pal.ssl_config) {
+void pbpal_free(pubnub_t *pb)
+{
+    pbpal_forget(pb);
+
+    // pb->pal.ssl is freed and set to NULL in forget/close
+
+    if (pb->pal.ssl_config != NULL) {
         mbedtls_ssl_config_free(pb->pal.ssl_config);
+        free(pb->pal.ssl_config);
         pb->pal.ssl_config = NULL;
     }
 
-    if (NULL != pb->pal.net) {
-        mbedtls_net_free(pb->pal.net);
-        pb->pal.net = NULL;
-    }
-
-    if (NULL != pb->pal.ca_certificates) {
+    if (pb->pal.ca_certificates != NULL) {
         mbedtls_x509_crt_free(pb->pal.ca_certificates);
+        free(pb->pal.ca_certificates);
         pb->pal.ca_certificates = NULL;
     }
 
-    pb->sock_state = STATE_NONE;
-}
+    if (pb->pal.ctr_drbg != NULL) {
+        mbedtls_ctr_drbg_free(pb->pal.ctr_drbg);
+        free(pb->pal.ctr_drbg);
+        pb->pal.ctr_drbg = NULL;
+    }
 
+    if (pb->pal.entropy != NULL) {
+        mbedtls_entropy_free(pb->pal.entropy);
+        free(pb->pal.entropy);
+        pb->pal.entropy = NULL;
+    }
+
+    if (pb->pal.server_fd != NULL) {
+        mbedtls_net_free(pb->pal.server_fd);
+        free(pb->pal.server_fd);
+        pb->pal.server_fd = NULL;
+    }
+
+    if (pb->pal.net != NULL) {
+        mbedtls_net_free(pb->pal.net);
+        free(pb->pal.net);
+        pb->pal.net = NULL;
+    }
+}
 
 #if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 static void pbntf_setup(pubnub_t* pb)
@@ -475,6 +442,29 @@ static void buffer_setup(pubnub_t* pb)
 {
     pb->ptr  = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf / sizeof pb->core.http_buf[0];
+}
+
+
+static void pbpal_mbedtls_close(pubnub_t* pb, bool notify)
+{
+    pb->unreadlen = 0;
+
+    if (pb->pal.ssl != NULL) {
+        if (notify) {
+            mbedtls_ssl_close_notify(pb->pal.ssl);
+        }
+        mbedtls_ssl_session_reset(pb->pal.ssl);
+        mbedtls_ssl_free(pb->pal.ssl);
+        pb->pal.ssl = NULL;
+    }
+
+    if (pb->pal.socket != SOCKET_INVALID) {
+        shutdown(pb->pal.socket, SHUT_RDWR);
+        lwip_close(pb->pal.socket);
+        pb->pal.socket = SOCKET_INVALID;
+    }
+
+    pb->sock_state = STATE_NONE;
 }
 
 #endif /* defined PUBNUB_USE_SSL */
