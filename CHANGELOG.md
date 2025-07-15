@@ -1,3 +1,12 @@
+## v5.1.3
+July 15 2025
+
+#### Fixed
+- Fixed memory leak when calling pubnub_free on an initialized PubNub object.
+- Fixed socket leak when calling pubnub_free on a PubNub object with an open connection.
+- Fixed socket leak when publishing using a context with use_http_keep_alive = 0.
+- Fixed crash due to double-free when calling pubnub_free after pbpal_handle_socket_condition encounters a socket error. Fixed the following issues reported by [@blake-spangenberg](https://github.com/blake-spangenberg): [#221](https://github.com/pubnub/c-core/issues/221).
+
 ## v5.1.2
 July 08 2025
 
