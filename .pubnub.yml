@@ -1,8 +1,19 @@
 name: c-core
 schema: 1
-version: "5.1.2"
+version: "5.1.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-07-15
+    version: v5.1.3
+    changes:
+      - type: bug
+        text: "Fixed memory leak when calling pubnub_free on an initialized PubNub object."
+      - type: bug
+        text: "Fixed socket leak when calling pubnub_free on a PubNub object with an open connection."
+      - type: bug
+        text: "Fixed socket leak when publishing using a context with use_http_keep_alive = 0."
+      - type: bug
+        text: "Fixed crash due to double-free when calling pubnub_free after pbpal_handle_socket_condition encounters a socket error."
   - date: 2025-07-08
     version: v5.1.2
     changes:
@@ -986,7 +997,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1052,7 +1063,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1118,7 +1129,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1180,7 +1191,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1241,7 +1252,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1297,7 +1308,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
@@ -1350,7 +1361,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
             requires:
               -
                 name: "miniz"
