@@ -32,7 +32,7 @@ static enum pubnub_res pbcc_subscribe_with_state_prep(struct pbcc_context *p,
                                sizeof p->http_buf,
                                "/subscribe/%s/",
                                p->subscribe_key);
-    APPEND_URL_ENCODED_M(pb, channel);
+    APPEND_URL_ENCODED_M(p, channel);
     p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
                                 sizeof p->http_buf - p->http_buf_len,
                                 "/0/%s",

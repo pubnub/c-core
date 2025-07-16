@@ -2193,7 +2193,7 @@ Ensure(single_context_pubnub, where_now)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-where/uuid/shane(1953)?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/sub-where/uuid/shane%281953%29?pnsdk=unit-test-0.1&uuid=test_id");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "89\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"Payload\":{\"channels\":[tcm,retro,mgm]}}",
