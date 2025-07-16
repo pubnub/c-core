@@ -4,8 +4,8 @@
 
 /* RFC 3986 Unreserved characters plus few
  * safe reserved ones. */
-#define OK_SPAN_CHARACTERS (char*)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~,[]"
-#define OK_SPAN_CHARS_MINUS_COMMA (char*)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~[]"
+#define OK_SPAN_CHARACTERS (char*)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~,"
+#define OK_SPAN_CHARS_MINUS_COMMA (char*)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~"
 
 #include "lib/pb_extern.h"
 
