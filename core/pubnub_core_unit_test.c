@@ -1516,7 +1516,7 @@ Ensure(single_context_pubnub, set_state)
     pubnub_set_auth(pbp, "three");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/[ch1,ch2]/"
+    expect_outgoing_with_url("/v2/presence/sub-key/subhis/channel/%5Bch1,ch2%5D/"
                              "uuid/linda-darnell/"
                              "data?pnsdk=unit-test-0.1&channel-group="
                              "[gr3,gr4]&uuid=universal&auth=three&state=%7BI%7D");
@@ -1719,7 +1719,7 @@ Ensure(single_context_pubnub, state_get_channelgroup)
     pubnub_set_auth(pbp, "cat");
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/[ch1,ch2]/uuid/"
+    expect_outgoing_with_url("/v2/presence/sub-key/subY/channel/%5Bch1,ch2%5D/uuid/"
                              "leslie-mann?pnsdk=unit-test-0.1&channel-group=["
                              "gr3,gr4]&uuid=test_id&auth=cat");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -2193,7 +2193,7 @@ Ensure(single_context_pubnub, where_now)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-where/uuid/shane(1953)?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/sub-where/uuid/shane%281953%29?pnsdk=unit-test-0.1&uuid=test_id");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "89\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"Payload\":{\"channels\":[tcm,retro,mgm]}}",
@@ -2781,7 +2781,7 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
     pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -2799,7 +2799,7 @@ Ensure(single_context_pubnub, subscribe_channels_and_channel_groups)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-"
                              "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -2998,7 +2998,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0"
                             "/0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,chgr4]"
                             "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3024,7 +3024,7 @@ Ensure(single_context_pubnub, subscribe_reestablishing_broken_keep_alive_conecti
     expect(pbpal_forget, when(pb, equals(pbp)));
     /* Renewing DNS resolution and reestablishing connection */
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,chgr4]"
                              "&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3088,7 +3088,7 @@ Ensure(single_context_pubnub, subscribe_not_using_keep_alive_connection)
     pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
@@ -3113,7 +3113,7 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
@@ -3132,7 +3132,7 @@ Ensure(single_context_pubnub, subscribe_not_using_and_than_using_keep_alive_conn
     pubnub_use_http_keep_alive(pbp);
     /* Renewing DNS resolution with new request */
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "3516149789251234578?pnsdk=unit-test-0.1&channel-"
                              "group=[chgr2,chgr3,chgr4]&uuid=admin&auth=msgs");
     incoming("HTTP/1.1 200\r\nContent-Length: "
@@ -3395,7 +3395,7 @@ Ensure(single_context_pubnub,
     pubnub_set_user_id(pbp, "admin");
     pubnub_set_auth(pbp, "msgs");
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/subscribe/sub-Key/[ch1,ch2]/0/"
+    expect_outgoing_with_url("/subscribe/sub-Key/%5Bch1,ch2%5D/0/"
                              "0?pnsdk=unit-test-0.1&channel-group=[chgr2,chgr3,"
                              "chgr4]&uuid=admin&auth=msgs");
     incoming_and_close("HTTP/1.1 200\r\nContent-Length: "
