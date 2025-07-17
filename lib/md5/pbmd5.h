@@ -32,14 +32,14 @@
 /** Initializes the MD5 context for a new calculation. 
     @param x Pointer to a MD5 context
  */
-#define pbmd5_init(x) MD5_Init(x)
+#define pbmd5_init(x) MD5_Init_(x)
 
 /** Update the MD5 context with the "next part of the message".
     @param x Pointer to a MD5 context
     @param m Pointer to the start of the "next part of the message"
     @param l Length (in bytes) of the "next part of the message"
  */
-#define pbmd5_update(x, m, l) MD5_Update((x), (m), (l))
+#define pbmd5_update(x, m, l) MD5_Update_((x), (m), (l))
 
 /** Update the MD5 context with the "next part of the message".
     Assumes it is an ASCIIZ string.
@@ -47,22 +47,22 @@
     @param x Pointer to a MD5 context
     @param str String being the "next part of the message"
  */
-#define pbmd5_update_str(x, str) MD5_Update((x), (str), strlen(str))
+#define pbmd5_update_str(x, str) MD5_Update_((x), (str), strlen(str))
 
 /** Does the final calculations of the MD5 on context @p x and
     stores the digest to @p d.
     @param x Pointer to a MD5 context
     @param d Pointer to an array of (at least) 16 bytes
 */
-#define pbmd5_final(x, d) MD5_Final((d), (x))
+#define pbmd5_final(x, d) MD5_Final_((d), (x))
 
 /** This helper macro will calculate the MD5 on the message
     in @p m, having the length @p l and store it in @p d.
 */
 #define pbmd5_digest(m, l, d) do { MD5_CTX M_ctx_;      \
-        MD5_Init(&M_ctx_);                              \
-        MD5_Update(&M_ctx_, (m), (l));                  \
-        MD5_Final((d), &M_ctx);                         \
+        MD5_Init_(&M_ctx_);                              \
+        MD5_Update_(&M_ctx_, (m), (l));                  \
+        MD5_Final_((d), &M_ctx);                         \
     } while (0)
 
 /** This helper macro will calculate the MD5 on the message in @p str,
@@ -70,9 +70,9 @@
     @warning This macro uses @p str twice!
 */
 #define pbmd5_digest_str(str, d) do { MD5_CTX M_ctx_;   \
-        MD5_Init(&M_ctx_);                              \
-        MD5_Update(&M_ctx_, (str), strlen(str));        \
-        MD5_Final((d), &M_ctx);                         \
+        MD5_Init_(&M_ctx_);                              \
+        MD5_Update_(&M_ctx_, (str), strlen(str));        \
+        MD5_Final_((d), &M_ctx);                         \
     } while (0)
 
 #endif /* !defined INC_PBMD5 */
