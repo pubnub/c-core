@@ -3,7 +3,11 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "lib/msstopwatch/msstopwatch.h"
 #include "core/pbcc_memory_utils.h"

@@ -14,7 +14,11 @@
 
 #include <stdio.h>
 #include <time.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 
 static void generate_user_id(pubnub_t* pbp)
