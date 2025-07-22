@@ -1,3 +1,9 @@
+## v5.1.4
+July 22 2025
+
+#### Fixed
+- Fix bug that UTF8 characters used in some end points were breaking the request format.
+
 ## v5.1.3
 July 15 2025
 
