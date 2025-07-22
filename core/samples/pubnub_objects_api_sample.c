@@ -7,8 +7,12 @@
 #include "core/pubnub_objects_api.h"
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 // This sample demo is split into 4 sections:
 // 1. UUID metadata section 
 // 2. Channels metadata section 
