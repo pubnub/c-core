@@ -86,12 +86,7 @@ public:
             return d_result;
         }
     }
-    static void* do_the_then(void* parg)
-    {
-        futres::impl* that = static_cast<futres::impl*>(parg);
-        that->d_thenf(that->d_parent->d_ctx, that->d_result);
-        return 0;
-    }
+
     void signal(pubnub_res rslt)
     {
         // SAFETY: it is safe to pass the `d_thread_id` without a lock because
