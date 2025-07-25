@@ -26,13 +26,14 @@ static void futres_callback(pubnub_t*         pb,
 
 class futres::impl {
     friend class futres;
+
 public:
-    impl(pubnub_t *pb, pubnub_res initial) :
-        d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL)),
-        d_pb(pb),
-        d_parent(nullptr),
-        d_thread(0),
-        d_result(initial)
+    impl(pubnub_t* pb, pubnub_res initial)
+        : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL))
+        , d_pb(pb)
+        , d_parent(nullptr)
+        , d_thread(0)
+        , d_result(initial)
     {
         pubnub_mutex_init(d_mutex);
         if (NULL == d_wevent) {
@@ -53,8 +54,9 @@ public:
         pubnub_mutex_destroy(d_mutex);
         CloseHandle(d_wevent);
     }
-    void start_await() { }
-    pubnub_res end_await() {
+    void       start_await() {}
+    pubnub_res end_await()
+    {
         pubnub_res res;
         {
             lock_guard lck(d_mutex);
@@ -70,7 +72,8 @@ public:
             return res;
         }
     }
-    pubnub_res last_result() {
+    pubnub_res last_result()
+    {
         lock_guard lck(d_mutex);
         if (PNR_STARTED == d_result) {
             return d_result = pubnub_last_result(d_pb);
@@ -79,20 +82,14 @@ public:
             return d_result;
         }
     }
-    static unsigned __stdcall do_the_then(void* parg)
-    {
-        futres::impl* that = static_cast<futres::impl*>(parg);
-        that->d_thenf(that->d_parent->d_ctx, that->d_result);
-        return 0;
-    }
+
     void signal(pubnub_res rslt)
     {
-        lock_guard lck(d_mutex);
-        if (!!d_thenf && d_parent) {
-            d_result = rslt;
-            d_thread = (HANDLE)_beginthreadex(NULL, 0, do_the_then, this, 0, NULL);
-        }
-        SetEvent(d_wevent);
+        // SAFETY: it is safe to pass the `d_thread` without a lock because
+        // the only other usage of it is to join it, which is done in
+        // `wait4_then_thread_to_finish` which is called from the destructor.
+        futres_callback_data data = { this, rslt };
+        d_thread = (HANDLE)_beginthreadex(NULL, 0, signal_thread, &data, 0, NULL);
     }
     bool is_ready() const
     {
@@ -129,6 +126,36 @@ private:
         if (d_thread) {
             WaitForSingleObject(d_thread, INFINITE);
         }
+    }
+
+    struct futres_callback_data {
+        futres::impl* p;
+        pubnub_res    result;
+    };
+
+    static unsigned __stdcall signal_thread(void* parg)
+    {
+        futres_callback_data* d    = static_cast<futres_callback_data*>(parg);
+        futres::impl*         that = d->p;
+        pubnub_res            rslt = d->result;
+        bool                  should_call_then = false;
+
+        {
+            lock_guard lck(that->d_mutex);
+            should_call_then = !!that->d_thenf && that->d_parent;
+
+            if (should_call_then) {
+                that->d_result = rslt;
+            }
+
+            SetEvent(that->d_wevent);
+        }
+
+        if (should_call_then) {
+            that->d_thenf(that->d_parent->d_ctx, that->d_result);
+        }
+
+        return 0;
     }
 
     HANDLE         d_wevent;
@@ -192,7 +219,7 @@ void futres::start_await()
 
 pubnub_res futres::end_await()
 {
-   return d_pimpl->end_await();
+    return d_pimpl->end_await();
 }
 
 
