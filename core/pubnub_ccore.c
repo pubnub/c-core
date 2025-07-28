@@ -425,9 +425,9 @@ enum pubnub_res pbcc_where_now_prep(struct pbcc_context* pb,
 
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/presence/sub-key/%s/uuid/%s",
-                                pb->subscribe_key,
-                                user_id);
+                                "/v2/presence/sub-key/%s/uuid/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, user_id);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (pb_user_id) { ADD_URL_PARAM(qparam, uuid, pb_user_id); }
@@ -484,8 +484,9 @@ enum pubnub_res pbcc_set_state_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len += snprintf(pb->http_buf + pb->http_buf_len,
                                  sizeof pb->http_buf - pb->http_buf_len,
-                                 "/uuid/%s/data",
-                                 user_id);
+                                 "/uuid/");
+    APPEND_URL_ENCODED_M(pb, user_id);
+    APPEND_URL_LITERAL_M(pb, "/data");
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -543,8 +544,8 @@ enum pubnub_res pbcc_state_get_prep(struct pbcc_context* pb,
     APPEND_URL_ENCODED_M(pb, channel);
     pb->http_buf_len += snprintf(pb->http_buf + pb->http_buf_len,
                                  sizeof pb->http_buf - pb->http_buf_len,
-                                 "/uuid/%s",
-                                 user_id);
+                                 "/uuid/");
+    APPEND_URL_ENCODED_M(pb, user_id);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
@@ -584,9 +585,10 @@ enum pubnub_res pbcc_remove_channel_group_prep(struct pbcc_context* pb,
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
-        "/v1/channel-registration/sub-key/%s/channel-group/%s/remove",
-        pb->subscribe_key,
-        channel_group);
+        "/v1/channel-registration/sub-key/%s/channel-group/",
+        pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_group);
+    APPEND_URL_LITERAL_M(pb, "/remove");
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -628,9 +630,9 @@ enum pubnub_res pbcc_channel_registry_prep(struct pbcc_context* pb,
     pb->http_buf_len = snprintf(
         pb->http_buf,
         sizeof pb->http_buf,
-        "/v1/channel-registration/sub-key/%s/channel-group/%s",
-        pb->subscribe_key,
-        channel_group);
+        "/v1/channel-registration/sub-key/%s/channel-group/",
+        pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_group);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
