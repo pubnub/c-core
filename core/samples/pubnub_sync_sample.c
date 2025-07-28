@@ -8,6 +8,7 @@
 #if defined _WIN32
 #include <windows.h>
 #include <process.h>
+#define sleep(s) Sleep(s * 1000)
 #else
 #include <pthread.h>
 #endif

@@ -10,6 +10,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#define sleep(s) Sleep(s * 1000)
 #else
 #include <unistd.h>
 #endif
@@ -215,11 +216,7 @@ int main()
     }
 
     time(&t0);
-    #ifdef _WIN32
-    Sleep(70000); //70 seconds
-    #else
     sleep(70); //70 seconds
-    #endif
     printf("Slept for %lf seconds.\n", difftime(time(NULL), t0));
     puts("Publishing after revoke...");
     time(&t0);
