@@ -2,8 +2,9 @@
 #include "pbcc_request_retry_timer.h"
 
 #include <stdbool.h>
-#ifdef _WIN32
-#include <Windows.h>
+#ifdef _WIN3
+// cppcheck-suppress missingInclude
+#include <windows.h>
 #else
 #include <pthread.h>
 #include <unistd.h>
