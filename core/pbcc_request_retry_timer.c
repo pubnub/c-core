@@ -1,11 +1,11 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_request_retry_timer.h"
 
-#include <pthread.h>
 #include <stdbool.h>
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #else
+#include <pthread.h>
 #include <unistd.h>
 #endif
 

@@ -14,6 +14,10 @@
 #include "core/pubnub_log.h"
 #include "pubnub_internal.h"
 
+#ifdef _WIN32
+#define random() rand()
+#endif
+
 
 // ----------------------------------------------
 //                   Constants
