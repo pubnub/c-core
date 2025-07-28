@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "5.1.3"
+version: "5.1.4"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-07-22
+    version: v5.1.4
+    changes:
+      - type: bug
+        text: "Fix bug that UTF8 characters used in some end points were breaking the request format."
   - date: 2025-07-15
     version: v5.1.3
     changes:
@@ -997,7 +1002,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1063,7 +1068,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1129,7 +1134,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1191,7 +1196,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1252,7 +1257,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1308,7 +1313,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"
@@ -1361,7 +1366,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.3
+            location: https://github.com/pubnub/c-core/releases/tag/v5.1.4
             requires:
               -
                 name: "miniz"

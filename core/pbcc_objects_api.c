@@ -157,8 +157,9 @@ enum pubnub_res pbcc_set_uuidmetadata_prep(
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/uuids/%s",
-                                pb->subscribe_key, uuid_metadataid);
+                                "/v2/objects/%s/uuids/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, uuid_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -210,9 +211,9 @@ enum pubnub_res pbcc_get_uuidmetadata_prep(
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/uuids/%s",
-                                pb->subscribe_key,
-                                uuid_metadataid);
+                                "/v2/objects/%s/uuids/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, uuid_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -259,9 +260,9 @@ enum pubnub_res pbcc_remove_uuidmetadata_prep(struct pbcc_context* pb, char cons
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/uuids/%s",
-                                pb->subscribe_key,
-                                uuid_metadataid);
+                                "/v2/objects/%s/uuids/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, uuid_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -377,8 +378,9 @@ enum pubnub_res pbcc_set_channelmetadata_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/channels/%s",
-                                pb->subscribe_key, channel_metadataid);
+                                "/v2/objects/%s/channels/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -434,9 +436,9 @@ enum pubnub_res pbcc_get_channelmetadata_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/channels/%s",
-                                pb->subscribe_key,
-                                channel_metadataid);
+                                "/v2/objects/%s/channels/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -487,9 +489,9 @@ enum pubnub_res pbcc_remove_channelmetadata_prep(struct pbcc_context* pb, char c
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/channels/%s",
-                                pb->subscribe_key,
-                                channel_metadataid);
+                                "/v2/objects/%s/channels/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_metadataid);
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -545,9 +547,10 @@ enum pubnub_res pbcc_get_memberships_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/uuids/%s/channels",
-                                pb->subscribe_key,
-                                uuid_metadataid);
+                                "/v2/objects/%s/uuids/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, uuid_metadataid);
+    APPEND_URL_LITERAL_M(pb, "/channels");
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -614,9 +617,10 @@ enum pubnub_res pbcc_set_memberships_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/uuids/%s/channels",
-                                pb->subscribe_key,
-                                uuid_metadataid);
+                                "/v2/objects/%s/uuids/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, uuid_metadataid);
+    APPEND_URL_LITERAL_M(pb, "/channels");
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -688,9 +692,10 @@ enum pubnub_res pbcc_get_members_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/channels/%s/uuids",
-                                pb->subscribe_key,
-                                channel_metadataid);
+                                "/v2/objects/%s/channels/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_metadataid);
+    APPEND_URL_LITERAL_M(pb, "/uuids");
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
@@ -759,9 +764,11 @@ enum pubnub_res pbcc_set_members_prep(struct pbcc_context* pb,
     pb->msg_ofs = pb->msg_end = 0;
     pb->http_buf_len = snprintf(pb->http_buf,
                                 sizeof pb->http_buf,
-                                "/v2/objects/%s/channels/%s/uuids",
-                                pb->subscribe_key,
-                                channel_metadataid);
+                                "/v2/objects/%s/channels/",
+                                pb->subscribe_key);
+    APPEND_URL_ENCODED_M(pb, channel_metadataid);
+    APPEND_URL_LITERAL_M(pb, "/uuids");
+
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
