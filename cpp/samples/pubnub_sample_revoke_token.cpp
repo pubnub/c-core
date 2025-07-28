@@ -8,6 +8,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#define sleep(s) Sleep(s * 1000)
 #else
 #include <unistd.h>
 #endif
@@ -114,11 +115,7 @@ int main()
             return 0;
         }
 
-#ifdef _WIN32
-        Sleep(70000); //70 seconds
-#else
         sleep(70); //70 seconds
-#endif
 
 #if PUBNUB_CRYPTO_API
         std::cout << "Publishing encrypted after revoke" << std::endl;
