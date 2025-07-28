@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #ifdef _WIN3
-// cppcheck-suppress missingInclude
+// cppcheck-suppress missingIncludeSystem
 #include <windows.h>
 #else
 #include <pthread.h>
