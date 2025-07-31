@@ -1,9 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_request_retry_timer.h"
 
-#include <pthread.h>
 #include <stdbool.h>
+#ifdef _WIN3
+// cppcheck-suppress missingIncludeSystem
+#include <windows.h>
+#else
+#include <pthread.h>
 #include <unistd.h>
+#endif
 
 #include "lib/msstopwatch/msstopwatch.h"
 #include "core/pbcc_memory_utils.h"

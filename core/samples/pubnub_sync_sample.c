@@ -8,13 +8,18 @@
 #if defined _WIN32
 #include <windows.h>
 #include <process.h>
+#define sleep(s) Sleep(s * 1000)
 #else
 #include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <time.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 
 static void generate_user_id(pubnub_t* pbp)

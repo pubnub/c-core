@@ -1,3 +1,12 @@
+## v5.1.5
+July 28 2025
+
+#### Fixed
+- Define sleep function for Windows builds.
+
+#### Modified
+- Guard `unistd` inclusion with platform check.
+
 ## v5.1.4
 July 22 2025
 
