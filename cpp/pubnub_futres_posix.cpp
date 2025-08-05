@@ -38,6 +38,7 @@ static void futres_callback(pubnub_t*         pb,
 
 class futres::impl {
     friend class futres;
+
 public:
     impl(pubnub_t* pb, pubnub_res initial)
         : d_triggered(false)
@@ -60,9 +61,7 @@ public:
         wait4_then_thread_to_finish();
         (void)pubnub_register_callback(d_pb, NULL, NULL);
     }
-    void start_await()
-    {
-    }
+    void       start_await() {}
     pubnub_res end_await()
     {
         pthread_lock_guard lck(&d_mutex);
@@ -70,7 +69,7 @@ public:
             while (!d_triggered) {
                 pthread_cond_wait(&d_cond, &d_mutex);
             }
-            d_triggered = false;
+            d_triggered     = false;
             return d_result = pubnub_last_result(d_pb);
         }
         else {
@@ -87,22 +86,15 @@ public:
             return d_result;
         }
     }
-    static void* do_the_then(void* parg)
-    {
-        futres::impl* that = static_cast<futres::impl*>(parg);
-        that->d_thenf(that->d_parent->d_ctx, that->d_result);
-        return 0;
-    }
+
     void signal(pubnub_res rslt)
     {
-        pthread_lock_guard lck(&d_mutex);
-        d_triggered = true;
-        if (!!d_thenf && d_parent) {
-            d_result = rslt;
-            d_have_thread_id =
-                !pthread_create(&d_thread_id, NULL, do_the_then, this);
-        }
-        pthread_cond_signal(&d_cond);
+        // SAFETY: it is safe to pass the `d_thread_id` without a lock because
+        // any other usage of it requires the `d_have_thread_id` to be true
+        // which is only set after the thread is created.
+
+        futres_callback_data data = { this, rslt };
+        pthread_create(&d_thread_id, NULL, signal_thread, &data);
     }
     bool is_ready() const
     {
@@ -141,6 +133,38 @@ private:
             void* retval;
             pthread_join(d_thread_id, &retval);
         }
+    }
+
+    struct futres_callback_data {
+        futres::impl* p;
+        pubnub_res    result;
+    };
+
+    static void* signal_thread(void* data)
+    {
+        futres_callback_data* d    = static_cast<futres_callback_data*>(data);
+        futres::impl*         that = d->p;
+        pubnub_res            rslt = d->result;
+        bool                  should_call_then = false;
+
+        {
+            pthread_lock_guard lck(&that->d_mutex);
+            should_call_then = !!that->d_thenf && that->d_parent;
+
+            that->d_triggered = true;
+            if (should_call_then && !that->d_have_thread_id) {
+                that->d_result         = rslt;
+                that->d_have_thread_id = true;
+            }
+
+            pthread_cond_signal(&that->d_cond);
+        }
+
+        if (should_call_then) {
+            that->d_thenf(that->d_parent->d_ctx, rslt);
+        }
+
+        return NULL;
     }
 
     mutable pthread_mutex_t d_mutex;

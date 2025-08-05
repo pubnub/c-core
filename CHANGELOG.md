@@ -1,3 +1,9 @@
+## v5.1.6
+August 05 2025
+
+#### Fixed
+- Fixed deadlock for sync polling via `last_result`. Fixed the following issues reported by [@lucast-broadsign](https://github.com/lucast-broadsign): [#222](https://github.com/pubnub/c-core/issues/222).
+
 ## v5.1.5
 July 28 2025
 
