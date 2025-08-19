@@ -1,3 +1,9 @@
+## v5.2.0
+August 19 2025
+
+#### Added
+- Expose functions through the C++ interface to enable or disable system SSL certificate usage when establishing a secure connection.
+
 ## v5.1.6
 August 05 2025
 
