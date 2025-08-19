@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "5.1.6"
+version: "5.2.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-08-19
+    version: v5.2.0
+    changes:
+      - type: feature
+        text: "Expose functions through the C++ interface to enable or disable system SSL certificate usage when establishing a secure connection."
   - date: 2025-08-05
     version: v5.1.6
     changes:
@@ -1014,7 +1019,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1080,7 +1085,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1146,7 +1151,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1208,7 +1213,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1269,7 +1274,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1325,7 +1330,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
@@ -1378,7 +1383,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.1.6
+            location: https://github.com/pubnub/c-core/releases/tag/v5.2.0
             requires:
               -
                 name: "miniz"
