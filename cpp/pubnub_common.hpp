@@ -1879,6 +1879,20 @@ public:
                                (options & ignoreSecureConnectionRequirement) != 0);
     }
 
+    /// Instructs C-core to use system certificate store.
+    /// @see pubnub_ssl_use_system_certificate_store
+    int use_system_certificate_store()
+    {
+        pubnub_ssl_use_system_certificate_store(d_pb);
+    }
+
+    /// Instructs C-core to not use system certificate store.
+    /// @see pubnub_ssl_dont_use_system_certificate_store
+    int dont_use_system_certificate_store()
+    {
+        pubnub_ssl_dont_use_system_certificate_store(d_pb);
+    }
+
     /// Reuse SSL sessions, if possible (from now on).
     /// @see pubnub_set_reuse_ssl_session
     void reuse_ssl_session()
