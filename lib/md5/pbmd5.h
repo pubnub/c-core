@@ -1,9 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PBMD5
 #define	INC_PBMD5
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /** @file pbmd5.h 
 
@@ -78,6 +75,3 @@ extern "C" {
     } while (0)
 
 #endif /* !defined INC_PBMD5 */
-#ifdef __cplusplus
-}
-#endif
