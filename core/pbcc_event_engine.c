@@ -312,7 +312,7 @@ enum pubnub_res pbcc_ee_handle_event(
     const size_t      count       = pbarray_count(invocations);
     const pbarray_res merge_rslt  = pbarray_merge(ee->invocations, invocations);
     if (PBAR_OK != merge_rslt) {
-        rslt = PBTT_ADD_MEMBERS == merge_rslt
+        rslt = PBAR_OUT_OF_MEMORY == merge_rslt
                    ? PNR_OUT_OF_MEMORY
                    : PNR_INVALID_PARAMETERS;
     }

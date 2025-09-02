@@ -759,7 +759,9 @@ void pbauto_heartbeat_start_timer(pubnub_t const* pb)
             }
             /*FALLTHRU*/
         case PBTT_SUBSCRIBE:
+#if PUBNUB_USE_SUBSCRIBE_V2
         case PBTT_SUBSCRIBE_V2:
+#endif // #if PUBNUB_USE_SUBSCRIBE_V2
             start_heartbeat_timer(pb->thumperIndex);
             break;
         default:
@@ -828,7 +830,9 @@ void pbauto_heartbeat_transaction_ongoing(pubnub_t const* pb)
             }
             /*FALLTHRU*/
         case PBTT_SUBSCRIBE:
+#if PUBNUB_USE_SUBSCRIBE_V2
         case PBTT_SUBSCRIBE_V2:
+#endif // #if PUBNUB_USE_SUBSCRIBE_V2
             // Ignore implicit heartbeat if "smart heartbeat" is disabled.
             if (!pb->use_smart_heartbeat) return;
 

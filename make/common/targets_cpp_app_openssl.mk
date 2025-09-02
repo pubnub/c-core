@@ -29,7 +29,7 @@ $(TARGET_BUILD_PATH)pubnub_sync_revoke_sample$(APP_EXT): \
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LINK_FLAG) $(LDLIBS)
 
 SYNC_CRYPTO_MODULE_SOURCES_ = \
-    ./cpp/samples/pubnub_crypto_module_sample.cpp \
+    ../cpp/samples/pubnub_crypto_module_sample.cpp \
     $(SOURCE_FILES)                               \
     $(SYNC_SOURCE_FILES)                          \
     $(PUBNUB_FUTRES_SYNC_SOURCE_FILE)

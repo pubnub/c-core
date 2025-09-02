@@ -238,6 +238,7 @@ class subscribe_v2_options {
     pubnub_subscribe_v2_options d_;
     std::string d_chgrp;
     std::string d_filter_expr;
+    std::string d_timetoken;
     
 public:
     subscribe_v2_options() { d_ = pubnub_subscribe_v2_defopts(); }
@@ -260,6 +261,17 @@ public:
     {
         d_filter_expr = filter_exp;
         d_.filter_expr = d_filter_expr.empty() ? 0 : d_filter_expr.c_str();
+        return *this;
+    }
+    subscribe_v2_options& timetoken(std::string const& timetoken)
+    {
+        d_timetoken          = timetoken;
+        if (d_timetoken.empty()) {
+            d_.timetoken[0] = '\0';
+        } else {
+            std::strncpy(d_.timetoken, d_timetoken.c_str(), sizeof(d_.timetoken) - 1);
+            d_.timetoken[d_timetoken.size()] = '\0';
+        }
         return *this;
     }
     pubnub_subscribe_v2_options data() { return d_; }
@@ -1881,14 +1893,14 @@ public:
 
     /// Instructs C-core to use system certificate store.
     /// @see pubnub_ssl_use_system_certificate_store
-    int use_system_certificate_store()
+    void use_system_certificate_store()
     {
         pubnub_ssl_use_system_certificate_store(d_pb);
     }
 
     /// Instructs C-core to not use system certificate store.
     /// @see pubnub_ssl_dont_use_system_certificate_store
-    int dont_use_system_certificate_store()
+    void dont_use_system_certificate_store()
     {
         pubnub_ssl_dont_use_system_certificate_store(d_pb);
     }

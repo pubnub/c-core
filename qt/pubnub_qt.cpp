@@ -256,7 +256,9 @@ void pubnub_qt::stop_auto_heartbeat_before_transaction(pubnub_trans transaction)
     switch (transaction) {
     case PBTT_HEARTBEAT:
     case PBTT_SUBSCRIBE:
+#if PUBNUB_USE_SUBSCRIBE_V2
     case PBTT_SUBSCRIBE_V2:
+#endif // #if PUBNUB_USE_SUBSCRIBE_V2
         stop_auto_heartbeat();
         break;
     default:
@@ -274,7 +276,9 @@ void pubnub_qt::start_auto_heartbeat_timer(pubnub_res pbres)
     switch (d_trans) {
     case PBTT_HEARTBEAT:
     case PBTT_SUBSCRIBE:
+#if PUBNUB_USE_SUBSCRIBE_V2
     case PBTT_SUBSCRIBE_V2:
+#endif // #if PUBNUB_USE_SUBSCRIBE_V2
         if (PNR_OK == pbres) {
             d_auto_heartbeatTimer->start(d_auto_heartbeat_period_sec * UNIT_IN_MILLI);
         }
@@ -640,6 +644,7 @@ pubnub_res pubnub_qt::subscribe(QString const& channel, QString const& channel_g
 }
 
 
+#if PUBNUB_USE_SUBSCRIBE_V2
 pubnub_res pubnub_qt::subscribe_v2(QString const& channel, subscribe_v2_options opt)
 {
     QString prep_channels;
@@ -660,6 +665,7 @@ pubnub_res pubnub_qt::subscribe_v2(QString const& channel, subscribe_v2_options 
             opt.get_timetoken(),
         PBTT_SUBSCRIBE_V2);
 }
+#endif // #if PUBNUB_USE_SUBSCRIBE_V2
 
 
 pubnub_res pubnub_qt::leave(QString const& channel, QString const& channel_group)
