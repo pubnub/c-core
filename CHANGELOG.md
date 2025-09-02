@@ -1,3 +1,12 @@
+## v5.3.0
+September 02 2025
+
+#### Added
+- Add a field that lets the user specify a timetoken for catch-up or `0` to make an initial / handshake subscription.
+
+#### Fixed
+- Fix subscribe v2 types visibility when `USE_SUBSCRIBE_V2` not set.
+
 ## v5.2.0
 August 19 2025
 
