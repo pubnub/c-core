@@ -76,7 +76,10 @@ public:
         // SAFETY: it is safe to pass the `d_thread` without a lock because
         // the only other usage of it is to join it, which is done in
         // `wait4_then_thread_to_finish` which is called from the destructor.
-        d_thread = std::thread([&] {
+        if (d_thread.joinable()) {
+            d_thread.join();
+        }
+        d_thread = std::thread([this, rslt] {
             bool should_call_then = false;
             {
                 std::lock_guard<std::mutex> lk(d_mutex);
