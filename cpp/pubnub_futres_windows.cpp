@@ -88,8 +88,16 @@ public:
         // SAFETY: it is safe to pass the `d_thread` without a lock because
         // the only other usage of it is to join it, which is done in
         // `wait4_then_thread_to_finish` which is called from the destructor.
-        futres_callback_data data = { this, rslt };
-        d_thread = (HANDLE)_beginthreadex(NULL, 0, signal_thread, &data, 0, NULL);
+        if (d_thread) {
+            WaitForSingleObject(d_thread, INFINITE);
+            CloseHandle(d_thread);
+            d_thread = 0;
+        }
+        futres_callback_data* data = new futres_callback_data{ this, rslt };
+        d_thread = (HANDLE)_beginthreadex(NULL, 0, signal_thread, data, 0, NULL);
+        if (NULL == d_thread) {
+            delete data;
+        }
     }
     bool is_ready() const
     {
@@ -125,6 +133,8 @@ private:
     {
         if (d_thread) {
             WaitForSingleObject(d_thread, INFINITE);
+            CloseHandle(d_thread);
+            d_thread = 0;
         }
     }
 
@@ -138,6 +148,7 @@ private:
         futres_callback_data* d    = static_cast<futres_callback_data*>(parg);
         futres::impl*         that = d->p;
         pubnub_res            rslt = d->result;
+        delete d;
         bool                  should_call_then = false;
 
         {

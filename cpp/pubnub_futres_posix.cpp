@@ -92,9 +92,21 @@ public:
         // SAFETY: it is safe to pass the `d_thread_id` without a lock because
         // any other usage of it requires the `d_have_thread_id` to be true
         // which is only set after the thread is created.
+        if (d_have_thread_id) {
+            void* retval;
+            pthread_join(d_thread_id, &retval);
+            d_have_thread_id = false;
+        }
 
-        futres_callback_data data = { this, rslt };
-        pthread_create(&d_thread_id, NULL, signal_thread, &data);
+        futres_callback_data* data = new futres_callback_data{ this, rslt };
+        int                   rc   = pthread_create(&d_thread_id, NULL, signal_thread, data);
+        if (rc != 0) {
+            delete data;
+        }
+        else {
+            pthread_lock_guard lck(&d_mutex);
+            d_have_thread_id = true;
+        }
     }
     bool is_ready() const
     {
@@ -145,6 +157,7 @@ private:
         futres_callback_data* d    = static_cast<futres_callback_data*>(data);
         futres::impl*         that = d->p;
         pubnub_res            rslt = d->result;
+        delete d;
         bool                  should_call_then = false;
 
         {

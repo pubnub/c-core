@@ -1,3 +1,9 @@
+## v5.3.1
+September 17 2025
+
+#### Fixed
+- Add fix to CPP wrapper to fix guard crash that could happen during freeing context.
+
 ## v5.3.0
 September 02 2025
 

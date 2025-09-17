@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "5.3.0"
+version: "5.3.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-09-17
+    version: v5.3.1
+    changes:
+      - type: bug
+        text: "Add fix to CPP wrapper to fix guard crash that could happen during freeing context."
   - date: 2025-09-02
     version: v5.3.0
     changes:
@@ -1026,7 +1031,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1092,7 +1097,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1158,7 +1163,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1220,7 +1225,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1281,7 +1286,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1337,7 +1342,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
@@ -1390,7 +1395,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.0
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
             requires:
               -
                 name: "miniz"
