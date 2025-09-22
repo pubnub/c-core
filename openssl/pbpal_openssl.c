@@ -180,7 +180,7 @@ int pbpal_send_str(pubnub_t* pb, char const* s)
 }
 
 
-enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line)
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line, bool *needRead, bool* needWrite)
 {
     SSL* ssl = pb->pal.ssl;
 
@@ -201,6 +201,9 @@ enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char con
             if (!pbms_active(pb->pal.tryconn)
                 || (pbms_elapsed(pb->pal.tryconn) < pb->transaction_timeout_ms)) {
                 PUBNUB_LOG_TRACE("pb=%p: TLS/SSL_I/O operation should retry, error=%d\n", pb, error);
+
+                if (needWrite && SSL_ERROR_WANT_WRITE == error) *needWrite = true;
+                if (needRead && SSL_ERROR_WANT_READ == error) *needRead = true;
 
                 return PNR_IN_PROGRESS;
             }
@@ -258,8 +261,7 @@ int pbpal_send_status(pubnub_t* pb)
         rslt = SSL_write(ssl, pb->ptr, pb->len);
     }
     if (rslt <= 0) {
-        rslt = (pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__) == PNR_IN_PROGRESS) ? +1
-                                                                                                : -1;
+        rslt = (pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__, NULL, NULL) == PNR_IN_PROGRESS) ? +1 : -1;
     }
     else {
         PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
@@ -323,7 +325,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
                 recvres = SSL_read(ssl, (char*)pb->ptr, pb->left);
             }
             if (recvres <= 0) {
-                return pbpal_handle_socket_condition(recvres, pb, __FILE__, __LINE__);
+                return pbpal_handle_socket_condition(recvres, pb, __FILE__, __LINE__, NULL, NULL);
             }
 
             PUBNUB_ASSERT_OPT(recvres <= pb->left);
@@ -424,7 +426,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
                 have_read = SSL_read(ssl, pb->ptr, to_recv);
             }
             if (have_read <= 0) {
-                return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__);
+                return pbpal_handle_socket_condition(have_read, pb, __FILE__, __LINE__, NULL, NULL);
             }
             PUBNUB_ASSERT_OPT(pb->left >= have_read);
             pb->left -= have_read;

@@ -174,11 +174,13 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb) {
     PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
     PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p)\n", pb);
 
+    bool needRead = false, needWrite = false;
     result = mbedtls_ssl_handshake(pb->pal.ssl);
 
-    if (PNR_OK != (result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__))) {
+    if (PNR_OK != (result = pbpal_handle_socket_condition(result, pb, __FILE__, __LINE__, &needRead, &needWrite))) {
         PUBNUB_LOG_TRACE("pbpal_check_tls(pb=%p) result = %d\n", pb, result);
-        return (result == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
+        if (result != PNR_IN_PROGRESS) return pbtlsFailed;
+        return needRead ? pbtlsStartedWaitRead : needWrite ? pbtlsStartedWaitWrite : pbtlsStarted;
     }
 
     PUBNUB_LOG_DEBUG("TLS connection established\n");
