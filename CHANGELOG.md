@@ -1,3 +1,9 @@
+## v5.3.2
+September 23 2025
+
+#### Fixed
+- Fix the issue because of which `poll` always returned immediately without waiting for the actual event (TLS handshake flow uses proper watcher now).
+
 ## v5.3.1
 September 17 2025
 
