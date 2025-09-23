@@ -420,10 +420,12 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif
 #ifdef PUBNUB_CALLBACK_API
     sockaddr_inX_t dest = { 0 };
+#if PUBNUB_PROXY_API
 #if PUBNUB_USE_IPV6
     const bool has_ipv6_proxy = 0 != pb->proxy_ipv6_address.ipv6[0]
         || 0 != pb->proxy_ipv6_address.ipv6[1];
 #endif /* PUBNUB_USE_IPV6 */
+#endif /* PUBNUB_PROXY_API */
 
     prepare_port_and_hostname(pb, &port, &origin);
 #if PUBNUB_PROXY_API

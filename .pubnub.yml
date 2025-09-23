@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "5.3.1"
+version: "5.3.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-09-23
+    version: v5.3.2
+    changes:
+      - type: bug
+        text: "Fix the issue because of which `poll` always returned immediately without waiting for the actual event (TLS handshake flow uses proper watcher now)."
   - date: 2025-09-17
     version: v5.3.1
     changes:
@@ -1031,7 +1036,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1097,7 +1102,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1163,7 +1168,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1225,7 +1230,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1286,7 +1291,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1342,7 +1347,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"
@@ -1395,7 +1400,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
             requires:
               -
                 name: "miniz"

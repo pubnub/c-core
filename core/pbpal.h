@@ -37,13 +37,15 @@ enum pbpal_resolv_n_connect_result {
 enum pbpal_tls_result {
     pbtlsEstablished,
     pbtlsStarted,
+    pbtlsStartedWaitRead,
+    pbtlsStartedWaitWrite,
     pbtlsInProgress,
     pbtlsResourceFailure,
     pbtlsFailed
 };
 
 /* Handles socket condition on given platform */
-enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line);
+enum pubnub_res pbpal_handle_socket_condition(int result, pubnub_t* pb, char const* file, int line, bool *needRead, bool* needWrite);
 
 /** Handles start of a TCP (HTTP) connection. It first handles DNS
     resolving for the context @p pb.  If DNS is already resolved, it

@@ -140,11 +140,6 @@ subscribe_thr(void *pn_sub_addr)
 
 int main()
 {
-#if defined _WIN32
-    uintptr_t sub_thread;
-#else
-    pthread_t sub_thread;
-#endif
     time_t          t0;
     char const*     msg;
     enum pubnub_res res;
@@ -168,19 +163,6 @@ int main()
     generate_user_id(pbp);
 
     pubnub_set_auth(pbp, "danaske");
-
-#if defined _WIN32
-    sub_thread = _beginthread(subscribe_thr, 0, pbp);
-#else
-    pthread_create(&sub_thread, NULL, subscribe_thr, pbp);
-#endif
-    puts("Lets go sleeping...");
-    sleep(4);
-    puts("Done sleeping. Cancelling subscribe long-poll...");
-    pubnub_cancel(pbp);
-    sleep(2);
-    printf("What we have: %s\n", pubnub_res_2_string(pubnub_last_result(pbp)));
-    return 0;
 
     puts("Publishing...");
     time(&t0);

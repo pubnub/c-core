@@ -44,6 +44,8 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
 /* Starfields Inc (Class 2) Root certificate.
    It was used to sign the server certificate of https://pubsub.pubnub.com.
    (at the time of writing this, 2015-06-04).
+
+   Valid to: June 29, 2034
  */
 static char pubnub_cert_Starfield[] =
     "-----BEGIN CERTIFICATE-----\n"
@@ -78,6 +80,7 @@ static char pubnub_cert_Starfield[] =
  2 s:/C=BE/O=GlobalSign nv-sa/OU=Root CA/CN=GlobalSign Root CA
    i:/C=BE/O=GlobalSign nv-sa/OU=Root CA/CN=GlobalSign Root CA
 
+ Valid to: January 28, 2028
  */
 static char pubnub_cert_GlobalSign[] =
     "-----BEGIN CERTIFICATE-----\n"
@@ -231,10 +234,12 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     ssl = pb->pal.ssl;
     PUBNUB_ASSERT(NULL != ssl);
 
+    bool needRead = false, needWrite = false;
     rslt = SSL_connect(ssl);
-    rslt = pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__);
+    rslt = pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__, &needRead, &needWrite);
     if (PNR_OK != rslt) {
-        return (rslt == PNR_IN_PROGRESS) ? pbtlsStarted : pbtlsFailed;
+        if (rslt != PNR_IN_PROGRESS) return pbtlsFailed;
+        return needRead ? pbtlsStartedWaitRead : needWrite ? pbtlsStartedWaitWrite : pbtlsStarted;
     }
     PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);

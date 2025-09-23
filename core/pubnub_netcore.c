@@ -723,7 +723,11 @@ next_state:
             case pbtlsEstablished:
                 break;
             case pbtlsStarted:
+            case pbtlsStartedWaitRead:
+            case pbtlsStartedWaitWrite:
                 pb->state = PBS_WAIT_TLS_CONNECT;
+                if (pbtlsStartedWaitWrite == res) pbntf_watch_out_events(pb);
+                if (pbtlsStartedWaitRead == res) pbntf_watch_in_events(pb);
                 return 0;
             case pbtlsFailed:
                 if (pb->options.fallbackSSL) {
@@ -770,6 +774,8 @@ next_state:
             pb->state = PBS_TX_GET;
             goto next_state;
         case pbtlsStarted:
+        case pbtlsStartedWaitRead:
+        case pbtlsStartedWaitWrite:
             break;
         case pbtlsFailed:
             if (pb->options.fallbackSSL) {
