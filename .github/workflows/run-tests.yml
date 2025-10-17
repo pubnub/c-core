@@ -13,11 +13,17 @@ defaults:
 jobs:
   tests:
     name: Integration and Unit tests
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: ${{ matrix.group }}
     strategy:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            group: organization/Default
+          - os: macos-latest
+            group: macos-gh
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -44,7 +50,8 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   acceptance-tests:
     name: Acceptance tests
-    runs-on: ubuntu-latest
+    runs-on:
+      group: organization/Default
     steps:
       - name: Setup environment
         shell: bash
@@ -125,7 +132,8 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on:
+      group: organization/Default
     needs: [tests, acceptance-tests]
     steps:
       - name: Tests summary
