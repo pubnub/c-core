@@ -52,6 +52,8 @@ jobs:
     name: Acceptance tests
     runs-on:
       group: organization/Default
+    env:
+      BOOST_TIMER_ENABLE_DEPRECATED: 1
     steps:
       - name: Setup environment
         shell: bash
