@@ -26,11 +26,11 @@ jobs:
             group: macos-gh
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
@@ -59,11 +59,11 @@ jobs:
           sudo apt-get install -y ninja-build libboost-all-dev libssl-dev
           sudo gem install cucumber
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout mock-server action
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
@@ -75,7 +75,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - name: Pull Cucumber cache
         id: cucumber-cpp
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             cucumber-cpp
@@ -84,7 +84,7 @@ jobs:
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: cucumber/cucumber-cpp
           ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961
@@ -122,7 +122,7 @@ jobs:
           ls -la results
       - name: Expose acceptance tests reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: acceptance-test-reports
           path: ./results/**
