@@ -114,9 +114,7 @@ void pbpal_set_tcp_keepalive(const pubnub_t *pb)
 {
     if (pb->pal.socket == SOCKET_INVALID) return;
     const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
-    const pb_socket_t skt = pb->pal.socket;
-
-    TCP_SOCKET tcpSock = (TCP_SOCKET)hTrans;
+    TCP_SOCKET tcpSock = (TCP_SOCKET)pb->pal.socket;
 
     TCP_OPTION_KEEP_ALIVE_DATA ka = {
         .keepAliveEnable   = pbccTrue == keepalive.enabled,
