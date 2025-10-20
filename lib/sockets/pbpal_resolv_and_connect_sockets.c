@@ -53,7 +53,6 @@ static void prepare_port_and_hostname(pubnub_t*    pb,
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND));
-    *p_origin = PUBNUB_ORIGIN;
     *p_port = HTTP_PORT;
 #if PUBNUB_USE_SSL
     if (pb->flags.trySSL) {
@@ -65,7 +64,7 @@ static void prepare_port_and_hostname(pubnub_t*    pb,
     if (pb->port != INITIAL_PORT_VALUE) {
         *p_port = pb->port;
     }
-    *p_origin = pb->origin;
+    *p_origin = pb->origin ? pb->origin : PUBNUB_ORIGIN;
 #endif
 #if PUBNUB_PROXY_API
     switch (pb->proxy_type) {
