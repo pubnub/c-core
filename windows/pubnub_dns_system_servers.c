@@ -2,68 +2,116 @@
 #include "pubnub_internal.h"
 
 #include "core/pubnub_dns_servers.h"
-#include "lib/pubnub_parse_ipv4_addr.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"
 
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include <stdio.h>
 #include <windows.h>
-
+#include <string.h>
 
 #pragma comment(lib, "IPHLPAPI.lib")
-
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
+
+/* Check if an IPv4 address already exists in the array */
+static int ipv4_already_exists(
+    const struct pubnub_ipv4_address* array,
+    const size_t count,
+    const unsigned char new_ip[4])
+{
+    for (size_t i = 0; i < count; i++) {
+        if (memcmp(array[i].ipv4, new_ip, 4) == 0) {
+            return 1; /* Found duplicate */
+        }
+    }
+    return 0; /* Not found */
+}
+
 int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size_t n)
 {
-    FIXED_INFO*     pFixedInfo;
-    ULONG           ulOutBufLen;
-    DWORD           dwRetVal;
-    IP_ADDR_STRING* pIPAddr;
-    unsigned        j;
+    ULONG buflen;
+    DWORD ret;
+    IP_ADAPTER_ADDRESSES* addrs;
+    IP_ADAPTER_ADDRESSES* aa;
+    IP_ADAPTER_DNS_SERVER_ADDRESS* ds;
+    const struct sockaddr_in* sin;
+    DWORD net_addr;
+    unsigned j;
+    unsigned char temp_ip[4];
 
-    pFixedInfo = (FIXED_INFO*)MALLOC(sizeof(FIXED_INFO));
-    if (pFixedInfo == NULL) {
-        PUBNUB_LOG_ERROR(
-            "Error allocating memory needed to call GetNetworkParams\n");
+    if (!o_ipv4 || n == 0) {
+        return 0;
+    }
+
+    buflen = 0;
+    j = 0;
+
+    /* Get required buffer size */
+    ret = GetAdaptersAddresses(
+        AF_INET,
+        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST, /* keep DNS servers */
+        NULL, NULL, &buflen
+    );
+
+    if (ret != ERROR_BUFFER_OVERFLOW || buflen == 0) {
+        PUBNUB_LOG_ERROR("GetAdaptersAddresses preflight failed: %lu\n", (unsigned long)ret);
         return -1;
     }
-    ulOutBufLen = sizeof(FIXED_INFO);
 
-    // Make an initial call to GetAdaptersInfo to get
-    // the necessary size into the ulOutBufLen variable
-    if (GetNetworkParams(pFixedInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
-        FREE(pFixedInfo);
-        pFixedInfo = (FIXED_INFO*)MALLOC(ulOutBufLen);
-        if (pFixedInfo == NULL) {
-            PUBNUB_LOG_ERROR(
-                "Error allocating memory needed to call GetNetworkParams\n");
-            return -1;
-        }
+    addrs = (IP_ADAPTER_ADDRESSES*)MALLOC(buflen);
+    if (!addrs) {
+        PUBNUB_LOG_ERROR("OOM allocating %lu for GetAdaptersAddresses\n", (unsigned long)buflen);
+        return -1;
     }
-    dwRetVal = GetNetworkParams(pFixedInfo, &ulOutBufLen);
-    if (NO_ERROR == dwRetVal) {
-        j       = 0;
-        pIPAddr = &pFixedInfo->DnsServerList;
-        while ((j < n) && pIPAddr) {
-            struct pubnub_ipv4_address addr;
-            if (pubnub_parse_ipv4_addr(pIPAddr->IpAddress.String, &addr) == 0) {
-                memcpy(o_ipv4[j++].ipv4, addr.ipv4, sizeof o_ipv4[0].ipv4);
+
+    /* Get adapter information */
+    ret = GetAdaptersAddresses(
+        AF_INET,
+        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST, /* keep DNS servers */
+        NULL, addrs, &buflen
+    );
+    if (ret != NO_ERROR) {
+        PUBNUB_LOG_ERROR("GetAdaptersAddresses failed: %lu\n", (unsigned long)ret);
+        FREE(addrs);
+        return -1;
+    }
+
+    /* Enumerate adapters and collect unique DNS servers */
+    for (aa = addrs; aa && j < n; aa = aa->Next) {
+        for (ds = aa->FirstDnsServerAddress; ds && j < n; ds = ds->Next) {
+            if (!ds->Address.lpSockaddr ||
+                ds->Address.lpSockaddr->sa_family != AF_INET) {
+                continue;
             }
-            pIPAddr = pIPAddr->Next;
+
+            sin = (const struct sockaddr_in*)ds->Address.lpSockaddr;
+            net_addr = sin->sin_addr.S_un.S_addr;
+            if (net_addr == 0) {
+                continue; /* skip 0.0.0.0 */
+            }
+
+            /* Convert from network order to host order, then extract bytes */
+            {
+                DWORD host_addr = ntohl(net_addr);
+                temp_ip[0] = (unsigned char)((host_addr >> 24) & 0xFF);
+                temp_ip[1] = (unsigned char)((host_addr >> 16) & 0xFF);
+                temp_ip[2] = (unsigned char)((host_addr >>  8) & 0xFF);
+                temp_ip[3] = (unsigned char)( host_addr        & 0xFF);
+            }
+
+            if (!ipv4_already_exists(o_ipv4, j, temp_ip)) {
+                o_ipv4[j].ipv4[0] = temp_ip[0];
+                o_ipv4[j].ipv4[1] = temp_ip[1];
+                o_ipv4[j].ipv4[2] = temp_ip[2];
+                o_ipv4[j].ipv4[3] = temp_ip[3];
+                ++j;
+            }
         }
     }
-    else {
-        PUBNUB_LOG_ERROR("GetNetworkParams failed with error: %d\n", dwRetVal);
-        FREE(pFixedInfo);
-        return -1;
-    }
 
-    FREE(pFixedInfo);
-
-    return j;
+    FREE(addrs);
+    return (int)j;
 }

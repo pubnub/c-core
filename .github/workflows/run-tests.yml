@@ -25,11 +25,11 @@ jobs:
 #            group: organization/macos-gh
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
@@ -59,11 +59,11 @@ jobs:
           sudo apt-get install -y ninja-build libboost-all-dev libssl-dev libgtest-dev nlohmann-json3-dev libasio-dev libtclap-dev g++ cmake
           sudo gem install cucumber
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_TOKEN }}
       - name: Checkout mock-server action
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
@@ -84,7 +84,7 @@ jobs:
             ${{ runner.os }}-cucumber-cpp-
       - name: Checkout Cucumber
         if: steps.cucumber-cpp.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: cucumber/cucumber-cpp
           ref: c79100eb70fbb34f6ea10030cec051c2cc9f7961

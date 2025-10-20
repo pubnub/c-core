@@ -27,7 +27,7 @@ runs:
           ${{ inputs.os }}-cgreen-${{ inputs.version }}-
     - name: Checkout Unit Test framework
       if: steps.unit-test-framework.outputs.cache-hit != 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: cgreen-devs/cgreen
         ref: ${{ matrix.cgreen }}
