@@ -1945,7 +1945,7 @@ public:
 
     /// Don't use of TCP Keep-Alive ("probes") on the context.
     /// @see pubnub_dont_use_tcp_keep_alive
-    void dont_use_http_keep_alive()
+    void dont_use_tcp_keep_alive()
     {
         pubnub_dont_use_tcp_keep_alive(d_pb);
     }
