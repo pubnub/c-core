@@ -394,5 +394,39 @@ PUBNUB_EXTERN void pubnub_use_http_keep_alive(pubnub_t* p);
 */
 PUBNUB_EXTERN void pubnub_dont_use_http_keep_alive(pubnub_t* p);
 
+/** Enable the use of TCP Keep-Alive ("probes") on the context @p pb .
+ *
+ * @b Defaults:
+ *  - @c time: @b 60 seconds
+ *  - @c interval: @b 20 seconds
+ *  - @c probes: @b 3
+ *
+ * @b Important: this option works well @b only together with HTTP Keep-Alive, which
+ * is managed by @c pubnub_use_http_keep_alive and
+ * @c pubnub_dont_use_http_keep_alive.
+ *
+ * @param pb       Pointer to the PubNub context which TCP KA should be enabled.
+ * @param time     The time in seconds a socket needs to be @c idle before the
+ *                 first keep-alive probe is sent.
+ * @param interval The number of seconds that should pass between sends of
+ *                 keep-alive probes if the last one wasn't acknowledged.
+ * @param probes   The number of times a probe will be sent and not acknowledged
+ *                 before the connection is deemed broken.
+ */
+PUBNUB_EXTERN void pubnub_use_tcp_keep_alive(
+    pubnub_t* pb,
+    uint8_t   time,
+    uint8_t   interval,
+    uint8_t   probes);
+
+/** Disables the use of TCP Keep-Alive ("probes") on the context @p pb .
+ *
+ * @b Important: this option works @b only together with HTTP Keep-Alive, which
+ * is managed by @c pubnub_use_http_keep_alive and
+ * @c pubnub_dont_use_http_keep_alive.
+ *
+ * @param pb Pointer to the PubNub context which TCP KA should be disabled.
+ */
+PUBNUB_EXTERN void pubnub_dont_use_tcp_keep_alive(pubnub_t* pb);
 
 #endif /* !defined INC_PUBNUB_PUBSUBAPI */

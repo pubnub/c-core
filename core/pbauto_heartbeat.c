@@ -98,6 +98,10 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
         pb_clone->origin = pb->origin;
     }
     pb_clone->options.use_http_keep_alive = pb->options.use_http_keep_alive;
+    pb_clone->options.tcp_keepalive.enabled  = pb->options.tcp_keepalive.enabled;
+    pb_clone->options.tcp_keepalive.time     = pb->options.tcp_keepalive.time;
+    pb_clone->options.tcp_keepalive.interval = pb->options.tcp_keepalive.interval;
+    pb_clone->options.tcp_keepalive.probes   = pb->options.tcp_keepalive.probes;
 #if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
     pb_clone->options.ipv6_connectivity = pb->options.ipv6_connectivity;
 #endif
@@ -252,6 +256,14 @@ static void auto_heartbeat_callback(pubnub_t*         heartbeat_pb,
             if (pubsub_keys_changed(heartbeat_pb, pb)) {
                 pubnub_init(
                     heartbeat_pb, pb->core.publish_key, pb->core.subscribe_key);
+                if (pbccTrue == pb->options.tcp_keepalive.enabled) {
+                    pubnub_use_tcp_keep_alive(
+                        heartbeat_pb,
+                        pb->options.tcp_keepalive.time,
+                        pb->options.tcp_keepalive.interval,
+                        pb->options.tcp_keepalive.probes);
+                } else if (pbccFalse == pb->options.tcp_keepalive.enabled)
+                    pubnub_dont_use_tcp_keep_alive(heartbeat_pb);
 
                 heartbeat_thump(pb, heartbeat_pb);
             }
@@ -275,6 +287,14 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
     }
     pubnub_mutex_lock(pb->monitor);
     pubnub_init(pb_new, pb->core.publish_key, pb->core.subscribe_key);
+    if (pbccTrue == pb->options.tcp_keepalive.enabled) {
+        pubnub_use_tcp_keep_alive(
+            pb_new,
+            pb->options.tcp_keepalive.time,
+            pb->options.tcp_keepalive.interval,
+            pb->options.tcp_keepalive.probes);
+    } else if (pbccFalse == pb->options.tcp_keepalive.enabled)
+        pubnub_dont_use_tcp_keep_alive(pb_new);
     pubnub_mutex_unlock(pb->monitor);
 
     pubnub_mutex_lock(pb_new->monitor);

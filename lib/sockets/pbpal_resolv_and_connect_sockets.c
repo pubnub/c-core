@@ -15,8 +15,10 @@
 
 #if defined(_WIN32)
 #include "windows/pubnub_get_native_socket.h"
+#include <mstcpip.h>
 #else
 #include "posix/pubnub_get_native_socket.h"
+#include <netinet/tcp.h>
 #endif
 
 #define HTTP_PORT 80
@@ -206,7 +208,7 @@ connect_TCP_socket(pb_socket_t*           skt,
 #endif
     default:
         PUBNUB_LOG_ERROR(
-            "connect_TCP_socket(socket=%ld): invalid internet protokol "
+            "connect_TCP_socket(socket=%ld): invalid internet protocol "
             "dest->sa_family =%uh\n",
             (long)*skt,
             dest->sa_family);
@@ -536,7 +538,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             if (pb->pal.socket == SOCKET_INVALID) {
                 continue;
             }
+
             pbpal_set_blocking_io(pb);
+            pbpal_set_tcp_keepalive(pb);
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
                 if (socket_would_block()) {
                     error = 1;
@@ -553,6 +557,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             break;
         }
 #if PUBNUB_USE_IPV6
+        if (1 == error) break;
     }
 #endif /* PUBNUB_USE_IPV6 */
     freeaddrinfo(result);
@@ -733,4 +738,50 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
     return pbpal_connect_wouldblock;
+}
+
+void pbpal_set_tcp_keepalive(const pubnub_t *pb)
+{
+    if (pb->pal.socket == SOCKET_INVALID) return;
+    const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
+    const pb_socket_t skt = pb->pal.socket;
+
+#if defined(_WIN32)
+    const BOOL enabled = pbccTrue == keepalive.enabled ? TRUE : FALSE;
+    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
+#else
+    const int enabled = pbccTrue == keepalive.enabled ? 1 : 0;
+    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
+#endif
+
+    if (pbccTrue != keepalive.enabled ||
+        (0 == keepalive.time &&  0 == keepalive.interval)) return;
+
+#if defined(_WIN32)
+    struct tcp_keepalive alive;
+    DWORD bytes = 0;
+    alive.onoff = 1;
+    alive.keepaliveinterval = (keepalive.interval > 0) ? (ULONG)keepalive.interval * 1000UL : 0;
+    alive.keepalivetime = (keepalive.time > 0) ? (ULONG)keepalive.time  * 1000UL : 0;
+    (void)WSAIoctl(skt, SIO_KEEPALIVE_VALS, &alive, sizeof(alive),
+                   NULL, 0, &bytes, NULL, NULL);
+#else
+    const int interval = keepalive.interval;
+    const int probes = keepalive.probes;
+    const int time = keepalive.time;
+
+    if (time > 0) {
+#if defined(__APPLE__)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPALIVE, &time, sizeof(time));
+#else
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPIDLE, &time, sizeof(time));
+#endif
+    }
+
+    if (interval > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+
+    if (probes > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPCNT, &probes, sizeof(probes));
+#endif
 }
