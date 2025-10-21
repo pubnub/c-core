@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "5.3.2"
+version: "5.4.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-10-21
+    version: v5.4.0
+    changes:
+      - type: feature
+        text: "Provide interfaces (`pubnub_use_tcp_keep_alive`, `pubnub_dont_use_tcp_keep_alive`, `use_tcp_keep_alive`, and `dont_use_tcp_keep_alive`) to set up active TCP connection keep-alive packet sending."
+      - type: bug
+        text: "Replace the Windows API, which in a multithreaded environment became a reason for crashes during the DNS resolution process."
+      - type: bug
+        text: "Fix the issue because of which client created a secondary connection when built with `PUBNUB_USE_IPV6` support."
   - date: 2025-09-23
     version: v5.3.2
     changes:
@@ -1036,7 +1045,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1102,7 +1111,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1168,7 +1177,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1230,7 +1239,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1291,7 +1300,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1347,7 +1356,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"
@@ -1400,7 +1409,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
             requires:
               -
                 name: "miniz"

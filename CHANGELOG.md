@@ -1,3 +1,13 @@
+## v5.4.0
+October 21 2025
+
+#### Added
+- Provide interfaces (`pubnub_use_tcp_keep_alive`, `pubnub_dont_use_tcp_keep_alive`, `use_tcp_keep_alive`, and `dont_use_tcp_keep_alive`) to set up active TCP connection keep-alive packet sending.
+
+#### Fixed
+- Replace the Windows API, which in a multithreaded environment became a reason for crashes during the DNS resolution process.
+- Fix the issue because of which client created a secondary connection when built with `PUBNUB_USE_IPV6` support.
+
 ## v5.3.2
 September 23 2025
 
