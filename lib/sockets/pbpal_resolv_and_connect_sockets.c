@@ -764,14 +764,6 @@ void pbpal_set_tcp_keepalive(const pubnub_t *pb)
     const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
     const pb_socket_t skt = pb->pal.socket;
 
-#if defined(_WIN32)
-    const BOOL enabled = pbccTrue == keepalive.enabled ? TRUE : FALSE;
-    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
-#else
-    const int enabled = pbccTrue == keepalive.enabled ? 1 : 0;
-    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
-#endif
-
     if (pbccTrue != keepalive.enabled ||
         (0 == keepalive.time &&  0 == keepalive.interval)) return;
 
