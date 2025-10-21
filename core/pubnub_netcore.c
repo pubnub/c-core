@@ -226,9 +226,7 @@ static enum pubnub_state close_kept_alive_connection(struct pubnub_* pb)
         pbpal_forget(pb);
         return PBS_IDLE;
     }
-    else {
-        return PBS_KEEP_ALIVE_WAIT_CLOSE;
-    }
+    return PBS_KEEP_ALIVE_WAIT_CLOSE;
 }
 
 
@@ -1085,7 +1083,6 @@ next_state:
             pb->state                 = PBS_RX_HEADERS;
             goto next_state;
         case PNR_CONNECTION_TIMEOUT:
-        case PNR_TIMEOUT:
         case PNR_IO_ERROR:
             if (pb->flags.started_while_kept_alive) {
                 pb->state = close_kept_alive_connection(pb);

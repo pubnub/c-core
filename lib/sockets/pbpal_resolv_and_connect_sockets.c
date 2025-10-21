@@ -224,6 +224,11 @@ connect_TCP_socket(pb_socket_t*           skt,
         return socket_would_block() ? pbpal_connect_wouldblock
                                     : pbpal_connect_failed;
     }
+
+#if defined(_WIN32)
+    pbpal_set_tcp_keepalive(pb);
+#endif
+
     return pbpal_connect_success;
 }
 
@@ -539,7 +544,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             }
 
             pbpal_set_blocking_io(pb);
+#if defined(_WIN32)
+            const BOOL enabled = pbccTrue == pb->options.tcp_keepalive.enabled ? TRUE : FALSE;
+            (void)setsockopt(pb->pal.socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
+#else
+            const int enabled = pbccTrue == pb->options.tcp_keepalive.enabled ? 1 : 0;
+            (void)setsockopt(pb->pal.socket, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
             pbpal_set_tcp_keepalive(pb);
+#endif
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
                 if (socket_would_block()) {
                     error = 1;
@@ -567,6 +579,10 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
     socket_disable_SIGPIPE(pb->pal.socket);
+
+#if defined(_WIN32)
+    if (!error) pbpal_set_tcp_keepalive(pb);
+#endif
 
     return error ? pbpal_connect_wouldblock : pbpal_connect_success;
 #endif /* !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION */
@@ -733,6 +749,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+#if defined(_WIN32)
+        pbpal_set_tcp_keepalive(pb);
+#endif
         return pbpal_connect_success;
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
