@@ -461,7 +461,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                sizeof dest.sin6_addr.s6_addr);
         dest.sin6_family = AF_INET6;
 #if defined(_WIN32)
-        enum pbpal_resolv_n_connect_result connect_TCP_socket(
+        enum pbpal_resolv_n_connect_result rslt = connect_TCP_socket(
             &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
         if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
 #else
