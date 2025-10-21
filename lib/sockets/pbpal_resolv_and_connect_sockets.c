@@ -555,10 +555,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             }
 
             pbpal_set_blocking_io(pb);
-#if defined(_WIN32)
-            const BOOL enabled = pbccTrue == pb->options.tcp_keepalive.enabled ? TRUE : FALSE;
-            (void)setsockopt(pb->pal.socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
-#else
+#ifndef _WIN32
             const int enabled = pbccTrue == pb->options.tcp_keepalive.enabled ? 1 : 0;
             (void)setsockopt(pb->pal.socket, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
             pbpal_set_tcp_keepalive(pb);
@@ -777,6 +774,11 @@ void pbpal_set_tcp_keepalive(const pubnub_t *pb)
     if (pb->pal.socket == SOCKET_INVALID) return;
     const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
     const pb_socket_t skt = pb->pal.socket;
+
+#if defined(_WIN32)
+    const BOOL enabled = pbccTrue == keepalive.enabled ? TRUE : FALSE;
+    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
+#endif
 
     if (pbccTrue != keepalive.enabled ||
         (0 == keepalive.time &&  0 == keepalive.interval)) return;
