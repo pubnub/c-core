@@ -1933,6 +1933,23 @@ public:
         pubnub_dont_use_http_keep_alive(d_pb);
     }
 
+    /// Use of TCP Keep-Alive ("probes") on the context.
+    /// @see pubnub_use_tcp_keep_alive
+    void use_tcp_keep_alive(
+        uint8_t   time,
+        uint8_t   interval,
+        uint8_t   probes)
+    {
+        pubnub_use_tcp_keep_alive(d_pb, time, interval, probes);
+    }
+
+    /// Don't use of TCP Keep-Alive ("probes") on the context.
+    /// @see pubnub_dont_use_tcp_keep_alive
+    void dont_use_tcp_keep_alive()
+    {
+        pubnub_dont_use_tcp_keep_alive(d_pb);
+    }
+
 #if PUBNUB_PROXY_API
     /// Manually set a proxy to use
     /// @see pubnub_set_proxy_manual

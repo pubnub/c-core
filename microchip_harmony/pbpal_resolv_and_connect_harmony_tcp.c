@@ -74,6 +74,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
             if (SOCKET_INVALID == pb->pal.socket) {
                 return pbpal_connect_resource_failure;
             }
+            pbpal_set_tcp_keepalive(pb);
             /* It's not clear that failure here means "you can retry" if using
              * `NET_PRES_` functions...
              */
@@ -108,3 +109,17 @@ int pbpal_dns_rotate_server(pubnub_t *pb)
 }
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
+
+void pbpal_set_tcp_keepalive(const pubnub_t *pb)
+{
+    if (pb->pal.socket == SOCKET_INVALID) return;
+    const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
+    TCP_SOCKET tcpSock = (TCP_SOCKET)pb->pal.socket;
+
+    TCP_OPTION_KEEP_ALIVE_DATA ka = {
+        .keepAliveEnable   = pbccTrue == keepalive.enabled,
+        .keepAliveTmo      = keepalive.time * 1000u,
+        .keepAliveUnackLim = keepalive.probes
+    };
+    (void)TCPIP_TCP_OptionsSet(tcpSock, TCP_OPTION_KEEP_ALIVE, &ka);
+}

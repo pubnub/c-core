@@ -84,6 +84,12 @@ pubnub_t* pubnub_init(pubnub_t* p, const char* publish_key, const char* subscrib
     p->state                          = PBS_IDLE;
     p->trans                          = PBTT_NONE;
     p->options.use_http_keep_alive    = true;
+
+    // Setting default TCP keep-alive options.
+    p->options.tcp_keepalive.enabled  = pbccTrue;
+    p->options.tcp_keepalive.time     = 60;
+    p->options.tcp_keepalive.interval = 20;
+    p->options.tcp_keepalive.probes   = 3;
 #if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
     p->should_stop_await              = false;
 #endif
@@ -539,4 +545,21 @@ void pubnub_use_http_keep_alive(pubnub_t* p)
 void pubnub_dont_use_http_keep_alive(pubnub_t* p)
 {
     p->options.use_http_keep_alive = 0;
+}
+
+void pubnub_use_tcp_keep_alive(
+    pubnub_t*     pb,
+    const uint8_t time,
+    const uint8_t interval,
+    const uint8_t probes)
+{
+    pb->options.tcp_keepalive.enabled  = pbccTrue;
+    pb->options.tcp_keepalive.time     = time;
+    pb->options.tcp_keepalive.interval = interval;
+    pb->options.tcp_keepalive.probes   = probes;
+}
+
+void pubnub_dont_use_tcp_keep_alive(pubnub_t* pb)
+{
+    pb->options.tcp_keepalive.enabled = pbccFalse;
 }

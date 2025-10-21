@@ -15,8 +15,10 @@
 
 #if defined(_WIN32)
 #include "windows/pubnub_get_native_socket.h"
+#include <mstcpip.h>
 #else
 #include "posix/pubnub_get_native_socket.h"
+#include <netinet/tcp.h>
 #endif
 
 #define HTTP_PORT 80
@@ -51,7 +53,6 @@ static void prepare_port_and_hostname(pubnub_t*    pb,
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT((pb->state == PBS_READY) || (pb->state == PBS_WAIT_DNS_SEND));
-    *p_origin = PUBNUB_ORIGIN;
     *p_port = HTTP_PORT;
 #if PUBNUB_USE_SSL
     if (pb->flags.trySSL) {
@@ -63,7 +64,7 @@ static void prepare_port_and_hostname(pubnub_t*    pb,
     if (pb->port != INITIAL_PORT_VALUE) {
         *p_port = pb->port;
     }
-    *p_origin = pb->origin;
+    *p_origin = pb->origin ? pb->origin : PUBNUB_ORIGIN;
 #endif
 #if PUBNUB_PROXY_API
     switch (pb->proxy_type) {
@@ -206,7 +207,7 @@ connect_TCP_socket(pb_socket_t*           skt,
 #endif
     default:
         PUBNUB_LOG_ERROR(
-            "connect_TCP_socket(socket=%ld): invalid internet protokol "
+            "connect_TCP_socket(socket=%ld): invalid internet protocol "
             "dest->sa_family =%uh\n",
             (long)*skt,
             dest->sa_family);
@@ -223,6 +224,7 @@ connect_TCP_socket(pb_socket_t*           skt,
         return socket_would_block() ? pbpal_connect_wouldblock
                                     : pbpal_connect_failed;
     }
+
     return pbpal_connect_success;
 }
 
@@ -440,8 +442,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                pb->proxy_ipv4_address.ipv4,
                sizeof dest.sin_addr.s_addr);
         dest.sin_family = AF_INET;
+#if defined(_WIN32)
+        enum pbpal_resolv_n_connect_result rslt = connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#else
         return connect_TCP_socket(
             &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+#endif
     }
 #if PUBNUB_USE_IPV6
     if (has_ipv6_proxy) {
@@ -452,8 +460,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                pb->proxy_ipv6_address.ipv6,
                sizeof dest.sin6_addr.s6_addr);
         dest.sin6_family = AF_INET6;
+#if defined(_WIN32)
+        enum pbpal_resolv_n_connect_result rslt = connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#else
         return connect_TCP_socket(
             &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+#endif
     }
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
@@ -462,6 +476,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         enum pbpal_resolv_n_connect_result rslt;
         rslt = try_TCP_connect_spare_address(
             &pb->pal.socket, &pb->spare_addresses, &pb->options, &pb->flags, port);
+#if defined(_WIN32)
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#endif
         if (rslt != pbpal_resolv_resource_failure) {
             return rslt;
         }
@@ -536,7 +553,13 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             if (pb->pal.socket == SOCKET_INVALID) {
                 continue;
             }
+
             pbpal_set_blocking_io(pb);
+#ifndef _WIN32
+            const int enabled = pbccTrue == pb->options.tcp_keepalive.enabled ? 1 : 0;
+            (void)setsockopt(pb->pal.socket, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
+            pbpal_set_tcp_keepalive(pb);
+#endif
             if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
                 if (socket_would_block()) {
                     error = 1;
@@ -553,6 +576,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             break;
         }
 #if PUBNUB_USE_IPV6
+        if (1 == error) break;
     }
 #endif /* PUBNUB_USE_IPV6 */
     freeaddrinfo(result);
@@ -563,6 +587,10 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
     socket_disable_SIGPIPE(pb->pal.socket);
+
+#if defined(_WIN32)
+    if (!error) pbpal_set_tcp_keepalive(pb);
+#endif
 
     return error ? pbpal_connect_wouldblock : pbpal_connect_success;
 #endif /* !defined PUBNUB_CALLBACK_API || defined PUBNUB_NTF_RUNTIME_SELECTION */
@@ -644,6 +672,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 #endif
     }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+#if defined(_WIN32)
+    if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#endif
     return rslt;
 #endif /* PUBNUB_CALLBACK_API */
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
@@ -729,8 +760,54 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
     }
     else if (rslt > 0) {
         PUBNUB_LOG_TRACE("pbpal_connected(): select() event\n");
+#if defined(_WIN32)
+        pbpal_set_tcp_keepalive(pb);
+#endif
         return pbpal_connect_success;
     }
     PUBNUB_LOG_TRACE("pbpal_connected(): no select() events\n");
     return pbpal_connect_wouldblock;
+}
+
+void pbpal_set_tcp_keepalive(const pubnub_t *pb)
+{
+    if (pb->pal.socket == SOCKET_INVALID) return;
+    const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
+    const pb_socket_t skt = pb->pal.socket;
+
+#if defined(_WIN32)
+    const BOOL enabled = pbccTrue == keepalive.enabled ? TRUE : FALSE;
+    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
+#endif
+
+    if (pbccTrue != keepalive.enabled ||
+        (0 == keepalive.time &&  0 == keepalive.interval)) return;
+
+#if defined(_WIN32)
+    struct tcp_keepalive alive;
+    DWORD bytes = 0;
+    alive.onoff = 1;
+    alive.keepaliveinterval = (keepalive.interval > 0) ? (ULONG)keepalive.interval * 1000UL : 0;
+    alive.keepalivetime = (keepalive.time > 0) ? (ULONG)keepalive.time  * 1000UL : 0;
+    (void)WSAIoctl(skt, SIO_KEEPALIVE_VALS, &alive, sizeof(alive),
+                   NULL, 0, &bytes, NULL, NULL);
+#else
+    const int interval = keepalive.interval;
+    const int probes = keepalive.probes;
+    const int time = keepalive.time;
+
+    if (time > 0) {
+#if defined(__APPLE__)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPALIVE, &time, sizeof(time));
+#else
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPIDLE, &time, sizeof(time));
+#endif
+    }
+
+    if (interval > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+
+    if (probes > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPCNT, &probes, sizeof(probes));
+#endif
 }

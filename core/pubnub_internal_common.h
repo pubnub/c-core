@@ -197,6 +197,27 @@ struct pbntlm_context {
 
 typedef struct pbntlm_context pbntlm_ctx_t;
 
+/** TCP Keep-Alive configuration object. */
+typedef struct pubnub_tcp_keepalive_ {
+    /** Whether TCP Keep-Alive should be used or not. */
+    enum pubnub_tribool enabled;
+
+    /** The time in seconds a socket needs to be @c idle before the first
+        keep-alive probe is sent.
+     */
+    uint8_t             time;
+
+    /** The number of seconds that should pass between sends of
+        keep-alive probes if the last one wasn't acknowledged.
+    */
+    uint8_t             interval;
+
+    /** The number of times a probe will be sent and not acknowledged
+        before the connection is deemed broken.
+    */
+    uint8_t             probes;
+} pubnub_tcp_keepalive;
+
 struct pubnub_options {
 #if PUBNUB_BLOCKING_IO_SETTABLE
     /** Indicates whether to use blocking I/O. Not implemented if
@@ -214,6 +235,9 @@ struct pubnub_options {
      */
     bool use_http_keep_alive : 1;
 
+    /** Per-context (because of one request per-context) TCP Keep-Alive
+        configuration. */
+    pubnub_tcp_keepalive tcp_keepalive;
 #if PUBNUB_USE_IPV6
     /* Connectivity type(true-Ipv6/false-Ipv4) chosen on a given context */
     bool ipv6_connectivity : 1;

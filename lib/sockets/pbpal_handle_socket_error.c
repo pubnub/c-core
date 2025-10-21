@@ -72,9 +72,20 @@ enum pubnub_res pbpal_handle_socket_error(int socket_result,
             return PNR_IN_PROGRESS;
         }
         else {
+            // Whether socket already in use for data sending / receiving or not.
+            const bool handles_data = STATE_READ == pb->sock_state ||
+                STATE_NEWDATA_EXHAUSTED == pb->sock_state ||
+                STATE_READ_LINE == pb->sock_state ||
+                STATE_SENDING_DATA == pb->sock_state;
+            const bool timed_out = socket_timed_out();
             pb->sock_state = STATE_NONE;
             pbpal_report_error_from_environment(pb, file, line);
-            return socket_timed_out() ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
+
+            // Report data sending / receive timeout, which happened in the
+            // middle of the operation.
+            if (timed_out && handles_data) return PNR_TIMEOUT;
+
+            return timed_out ? PNR_CONNECTION_TIMEOUT : PNR_IO_ERROR;
         }
     }
     else if (0 == socket_result) {

@@ -1,8 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "lwip/dns.h"
-#include "lwip/inet.h"
+#include "lwip/sockets.h"
 #include "lwip/ip_addr.h"
 #include "lwip/netdb.h"
+#include "lwip/inet.h"
+#include "lwip/dns.h"
 #include "pbpal.h"
 
 #include "pubnub_internal.h"
@@ -44,6 +45,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (pb->pal.socket == SOCKET_INVALID) {
         return pbpal_connect_resource_failure;
     }
+    pbpal_set_tcp_keepalive(pb);
     if (connect(pb->pal.socket, (const struct sockaddr*) &addr, sizeof addr) != 0) {
         closesocket(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
@@ -61,6 +63,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
     if (pb->pal.socket == SOCKET_INVALID) {
         return pbpal_connect_resource_failure;
     }
+    pbpal_set_tcp_keepalive(pb);
     if (connect(pb->pal.socket, &addr, sizeof addr) != 0) {
         closesocket(pb->pal.socket);
         pb->pal.socket = SOCKET_INVALID;
@@ -101,3 +104,38 @@ int pbpal_dns_rotate_server(pubnub_t *pb)
 }
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
+
+void pbpal_set_tcp_keepalive(const pubnub_t *pb)
+{
+    if (pb->pal.socket == SOCKET_INVALID) return;
+    const pubnub_tcp_keepalive keepalive = pb->options.tcp_keepalive;
+    const pb_socket_t skt = pb->pal.socket;
+
+    const int enabled = pbccTrue == keepalive.enabled ? 1 : 0;
+    (void)setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled));
+
+    if (pbccTrue != keepalive.enabled ||
+        (0 == keepalive.time &&  0 == keepalive.interval)) return;
+
+    const int time = keepalive.time;
+
+    if (time > 0) {
+#if defined(TCP_KEEPIDLE)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPIDLE, &time, sizeof(time));
+#elif defined(TCP_KEEPALIVE)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPALIVE, &time, sizeof(time));
+#endif
+    }
+
+#if defined(TCP_KEEPINTVL)
+    const int interval = keepalive.interval;
+    if (interval > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+#endif
+
+#if defined(TCP_KEEPCNT)
+    const int probes = keepalive.probes;
+    if (probes > 0)
+        (void)setsockopt(skt, IPPROTO_TCP, TCP_KEEPCNT, &probes, sizeof(probes));
+#endif
+}
