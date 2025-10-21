@@ -225,10 +225,6 @@ connect_TCP_socket(pb_socket_t*           skt,
                                     : pbpal_connect_failed;
     }
 
-#if defined(_WIN32)
-    pbpal_set_tcp_keepalive(pb);
-#endif
-
     return pbpal_connect_success;
 }
 
@@ -446,8 +442,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                pb->proxy_ipv4_address.ipv4,
                sizeof dest.sin_addr.s_addr);
         dest.sin_family = AF_INET;
+#if defined(_WIN32)
+        enum pbpal_resolv_n_connect_result rslt = connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#else
         return connect_TCP_socket(
             &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+#endif
     }
 #if PUBNUB_USE_IPV6
     if (has_ipv6_proxy) {
@@ -458,8 +460,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
                pb->proxy_ipv6_address.ipv6,
                sizeof dest.sin6_addr.s6_addr);
         dest.sin6_family = AF_INET6;
+#if defined(_WIN32)
+        enum pbpal_resolv_n_connect_result connect_TCP_socket(
+            &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#else
         return connect_TCP_socket(
             &pb->pal.socket, &pb->options, (struct sockaddr*)&dest, port);
+#endif
     }
 #endif /* PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_PROXY_API */
@@ -468,6 +476,9 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         enum pbpal_resolv_n_connect_result rslt;
         rslt = try_TCP_connect_spare_address(
             &pb->pal.socket, &pb->spare_addresses, &pb->options, &pb->flags, port);
+#if defined(_WIN32)
+        if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#endif
         if (rslt != pbpal_resolv_resource_failure) {
             return rslt;
         }
@@ -664,6 +675,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 #endif
     }
 #endif /* PUBNUB_USE_MULTIPLE_ADDRESSES */
+#if defined(_WIN32)
+    if (pbpal_connect_success == rslt) pbpal_set_tcp_keepalive(pb);
+#endif
     return rslt;
 #endif /* PUBNUB_CALLBACK_API */
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
