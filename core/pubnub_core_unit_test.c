@@ -2246,7 +2246,7 @@ Ensure(single_context_pubnub, global_here_now_uses_default_limit_1000)
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_global_here_now(pbp), equals(PNR_OK));
 
-    attest(pubnub_get(pbp), streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}"));
+    attest(pubnub_get(pbp), streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\",\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}"));
     attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
