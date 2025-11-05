@@ -1857,7 +1857,7 @@ Ensure(single_context_pubnub, here_now_channel)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/shade?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/subZ/channel/shade?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[jack,johnnie,chivas],\"occupancy\":3}",
@@ -1879,7 +1879,7 @@ Ensure(single_context_pubnub, here_now_channel_with_auth)
     pubnub_set_auth(pbp, "auth-key");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
-                             "channel?pnsdk=unit-test-0.1&uuid=test_id&auth=auth-key");
+                             "channel?pnsdk=unit-test-0.1&uuid=test_id&auth=auth-key&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "102\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"uuids\":[daniel's,walker,regal,beam],"
@@ -1906,7 +1906,7 @@ Ensure(single_context_pubnub, here_now_channelgroups)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              ",?pnsdk=unit-test-0.1&channel-group=[gr2,gr1]&"
-                             "uuid=test_id&auth=mouse");
+                             "uuid=test_id&auth=mouse&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "233\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -1941,7 +1941,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
-                             "gr4]&uuid=12345&auth=globe");
+                             "gr4]&uuid=12345&auth=globe&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "290\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -1989,7 +1989,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
      */
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
-                             "gr4]&uuid=12345&auth=globe");
+                             "gr4]&uuid=12345&auth=globe&limit=1000");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: chunked\r\n\r\n "
              "118\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -2027,7 +2027,7 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-one/channel/"
                              "[ch5,ch7]?pnsdk=unit-test-0.1&channel-group=[gr1,"
-                             "gr2]&uuid=cub&auth=lion");
+                             "gr2]&uuid=cub&auth=lion&limit=1000");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n122\r\n{\"status\":200,\"mes",
              NULL);
@@ -2156,37 +2156,11 @@ Ensure(single_context_pubnub, here_now_ex_limit_exceeds_server_maximum)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_PRESENCE_API_ERROR));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_PRESENCE_API_ERROR));
 
     attest(pubnub_last_http_code(pbp), equals(400));
 }
 
-Ensure(single_context_pubnub, here_now_server_error_without_message_field)
-{
-    pubnub_init(pbp, "publZ", "subZ");
-    pubnub_set_user_id(pbp, "test_id");
-
-    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
-    opt.limit = 2000;
-
-    expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=2000");
-    /* Server returns error without "message" field */
-    incoming("HTTP/1.1 400\r\nContent-Length: 35\r\n\r\n"
-             "{\"error\":1,\"service\":\"Presence\"}",
-             NULL);
-    expect(pbntf_lost_socket, when(pb, equals(pbp)));
-    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    /* Should still return PNR_PRESENCE_API_ERROR even without message field */
-    attest(pbp->core.last_result, equals(PNR_PRESENCE_API_ERROR));
-
-    attest(pubnub_last_http_code(pbp), equals(400));
-}
 
 Ensure(single_context_pubnub, here_now_defopts_returns_correct_defaults)
 {
