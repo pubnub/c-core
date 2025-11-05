@@ -2073,7 +2073,7 @@ Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=500&offset=50");
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=500&offset=50");
     incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
@@ -2100,7 +2100,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
     expect_have_dns_for_pubnub_origin();
     /* Verify that limit=1000 is in the URL (default override) */
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
@@ -2126,7 +2126,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
     expect_have_dns_for_pubnub_origin();
     /* Verify that offset=0 is NOT in the URL */
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=100");
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=100");
     incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
@@ -2150,7 +2150,7 @@ Ensure(single_context_pubnub, here_now_ex_limit_exceeds_server_maximum)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=2000");
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=2000");
     incoming("HTTP/1.1 400\r\nContent-Length: 89\r\n\r\n"
              "{\"error\":1,\"message\":\"Cannot return more than 1000 uuids at a time\",\"service\":\"Presence\"}",
              NULL);
@@ -2192,7 +2192,7 @@ Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&limit=250&offset=100");
+        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=250&offset=100");
     incoming("HTTP/1.1 200\r\nContent-Length: 150\r\n\r\n"
              "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
              "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
