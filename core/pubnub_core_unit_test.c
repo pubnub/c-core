@@ -2257,7 +2257,7 @@ Ensure(single_context_pubnub, global_here_now)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "334\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -2297,7 +2297,7 @@ Ensure(single_context_pubnub, global_here_now_chunked)
     pubnub_set_user_id(pbp, "pobednik");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/"
-                             "sub-beo?pnsdk=unit-test-0.1&uuid=pobednik&auth=beograd");
+                             "sub-beo?pnsdk=unit-test-0.1&uuid=pobednik&auth=beograd&limit=1000");
     /* Chunk lengths are in hexadecimal representation */
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n1\r\n{\r\n12c\r\n\"status\":200,\"message\":"
@@ -2336,7 +2336,7 @@ Ensure(single_context_pubnub, global_here_now_in_progress_interrupted_and_acompl
     pubnub_set_user_id(pbp, "test_id");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/sub-my?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/sub-my?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming(
         "HTTP/1.1 200\r\nContent-Length: 334\r\n\r\n{\"status\":200,\"mess", NULL);
     /* Keeps fsm in progress */
@@ -4229,7 +4229,7 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
     pubnub_set_user_id(pbp, "test_id");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\n"
              "Content-Length: 197\r\n"
              "Content-Encoding: gzip\r\n"
@@ -4253,7 +4253,7 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\n"
              "Content-Encoding: gzip\r\n"
              "Transfer-Encoding: chunked\r\n"
