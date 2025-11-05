@@ -247,7 +247,7 @@ enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      pb,
                               opt.limit,
                               opt.offset);
     if (PNR_STARTED == rslt) {
-        pb->trans            = PBTT_HERENOW;
+        pb->trans            = PBTT_GLOBAL_HERENOW;
         pb->core.last_result = PNR_STARTED;
         pbnc_fsm(pb);
         rslt = pb->core.last_result;
