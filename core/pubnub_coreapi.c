@@ -8,6 +8,7 @@
 #include "pubnub_timers.h"
 #include "pubnub_memory_block.h"
 #include "pbcc_set_state.h"
+#include "pubnub_server_limits.h"
 
 #include "pbpal.h"
 #include "pubnub_log.h"
@@ -212,7 +213,7 @@ enum pubnub_res pubnub_here_now(pubnub_t*   pb,
     }
 
     rslt = pbcc_here_now_prep(
-        &pb->core, channel, channel_group, pbccNotSet, pbccNotSet);
+        &pb->core, channel, channel_group, pbccNotSet, pbccNotSet, PUBNUB_DEFAULT_HERE_NOW_LIMIT, 0);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;
@@ -237,7 +238,7 @@ enum pubnub_res pubnub_global_here_now(pubnub_t* pb)
         return PNR_IN_PROGRESS;
     }
 
-    rslt = pbcc_here_now_prep(&pb->core, NULL, NULL, pbccNotSet, pbccNotSet);
+    rslt = pbcc_here_now_prep(&pb->core, NULL, NULL, pbccNotSet, pbccNotSet, PUBNUB_DEFAULT_HERE_NOW_LIMIT, 0);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_GLOBAL_HERENOW;
         pb->core.last_result = PNR_STARTED;

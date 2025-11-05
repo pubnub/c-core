@@ -82,6 +82,7 @@ char const* pubnub_res_2_string(enum pubnub_res e)
     case PNR_FETCH_HISTORY_ERROR: return "Fetch History API reported error";
     case PNR_REVOKE_TOKEN_API_ERROR: return "Revoke Token API reported error";
     case PNR_GROUP_EMPTY: return "Channel Group is empty";
+    case PNR_PRESENCE_API_ERROR: return "Presence API transaction reported an error";
     default: return "!?!?!";
     }
 }

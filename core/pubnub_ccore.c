@@ -7,6 +7,7 @@
 #include "pubnub_json_parse.h"
 #include "pubnub_log.h"
 #include "pubnub_memory_block.h"
+#include "pubnub_server_limits.h"
 
 #include <stdio.h>
 
@@ -59,6 +60,8 @@ enum pubnub_res pbcc_parse_history_response(struct pbcc_context* p)
 enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p)
 {
     struct pbjson_elem el;
+    struct pbjson_elem parsed;
+    enum pbjson_object_name_parse_result json_rslt;
     char*              reply    = p->http_reply;
     int                replylen = p->http_buf_len;
     if (replylen < 2) {
@@ -78,6 +81,31 @@ enum pubnub_res pbcc_parse_presence_response(struct pbcc_context* p)
 
     if ((reply[0] != '{') || (reply[replylen - 1] != '}')) {
         return PNR_FORMAT_ERROR;
+    }
+
+    /* Check for error field (typically present when status is 400) */
+    json_rslt = pbjson_get_object_value(&el, "error", &parsed);
+    if (jonmpOK == json_rslt) {
+        /* Server returned an error - try to extract the message */
+        struct pbjson_elem msg_elem;
+        json_rslt = pbjson_get_object_value(&el, "message", &msg_elem);
+        if (jonmpOK == json_rslt) {
+            PUBNUB_LOG_ERROR(
+                "pbcc_parse_presence_response(pbcc=%p) - Server reported an error: "
+                "message='%.*s', response='%s'\n",
+                p,
+                (int)(msg_elem.end - msg_elem.start),
+                msg_elem.start,
+                reply);
+        }
+        else {
+            PUBNUB_LOG_ERROR(
+                "pbcc_parse_presence_response(pbcc=%p) - Server reported an error: "
+                "response='%s'\n",
+                p,
+                reply);
+        }
+        return PNR_PRESENCE_API_ERROR;
     }
 
     p->chan_ofs = p->chan_end = 0;
@@ -352,7 +380,9 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
                                    const char*          channel,
                                    const char*          channel_group,
                                    enum pubnub_tribool  disable_uuids,
-                                   enum pubnub_tribool  state)
+                                   enum pubnub_tribool  state,
+                                   unsigned             limit,
+                                   unsigned             offset)
 {
     char const* const uname   = pubnub_uname();
     char const*       user_id = pbcc_user_id_get(pb);
@@ -393,6 +423,18 @@ enum pubnub_res pbcc_here_now_prep(struct pbcc_context* pb,
     }
     if (state != pbccNotSet) {
         ADD_URL_PARAM(qparam, state, state == pbccTrue ? "1" : "0");
+    }
+    
+
+    if (!limit) { limit = PUBNUB_DEFAULT_HERE_NOW_LIMIT; }
+    char limit_buf[sizeof(unsigned) * 4 + 1];
+    snprintf(limit_buf, sizeof(limit_buf), "%u", limit);
+    ADD_URL_PARAM(qparam, limit, limit_buf);
+    
+    if (offset) {
+        char offset_buf[sizeof(unsigned) * 4 + 1];
+        snprintf(offset_buf, sizeof(offset_buf), "%u", offset);
+        ADD_URL_PARAM(qparam, offset, offset_buf);
     }
 
 #if PUBNUB_CRYPTO_API

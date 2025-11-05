@@ -186,6 +186,8 @@ struct pubnub_here_now_options pubnub_here_now_defopts(void)
     result.channel_group = NULL;
     result.disable_uuids = false;
     result.state         = false;
+    result.limit         = PUBNUB_DEFAULT_HERE_NOW_LIMIT;
+    result.offset        = 0;
     return result;
 }
 
@@ -208,7 +210,9 @@ enum pubnub_res pubnub_here_now_ex(pubnub_t*                      pb,
                               channel,
                               opt.channel_group,
                               opt.disable_uuids ? pbccTrue : pbccFalse,
-                              opt.state ? pbccTrue : pbccFalse);
+                              opt.state ? pbccTrue : pbccFalse,
+                              opt.limit,
+                              opt.offset);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;
@@ -239,7 +243,9 @@ enum pubnub_res pubnub_global_here_now_ex(pubnub_t*                      pb,
                               NULL,
                               NULL,
                               opt.disable_uuids ? pbccTrue : pbccFalse,
-                              opt.state ? pbccTrue : pbccFalse);
+                              opt.state ? pbccTrue : pbccFalse,
+                              opt.limit,
+                              opt.offset);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_HERENOW;
         pb->core.last_result = PNR_STARTED;

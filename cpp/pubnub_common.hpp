@@ -353,6 +353,16 @@ public:
         d_.state = state;
         return *this;
     }
+    here_now_options& limit(unsigned limit)
+    {
+        d_.limit = limit;
+        return *this;
+    }
+    here_now_options& offset(unsigned offset)
+    {
+        d_.offset = offset;
+        return *this;
+    }
     pubnub_here_now_options data() { return d_; }
 };
 

@@ -7,6 +7,7 @@ extern "C" {
 #include "core/pubnub_ccore_pubsub.h"
 #include "core/pubnub_ccore.h"
 #include "core/pubnub_assert.h"
+#include "core/pubnub_server_limits.h"
 #include "lib/pbcrc32.h"
 #include "core/pubnub_memory_block.h"
 #include "core/pbcc_set_state.h"
@@ -855,7 +856,9 @@ pubnub_res pubnub_qt::here_now(QString const& channel, QString const& channel_gr
             channel.isEmpty() ? 0 : channel.toLatin1().data(),
             channel_group.isEmpty() ? 0 : channel_group.toLatin1().data(),
             pbccNotSet,
-            pbccNotSet),
+            pbccNotSet,
+            PUBNUB_DEFAULT_HERE_NOW_LIMIT,
+            0),
         PBTT_HERENOW);
 }
 
@@ -864,7 +867,7 @@ pubnub_res pubnub_qt::global_here_now()
 {
     KEEP_THREAD_SAFE();
     return startRequest(
-        pbcc_here_now_prep(d_context.data(), 0, 0, pbccNotSet, pbccNotSet),
+        pbcc_here_now_prep(d_context.data(), 0, 0, pbccNotSet, pbccNotSet, PUBNUB_DEFAULT_HERE_NOW_LIMIT, 0),
         PBTT_GLOBAL_HERENOW);
 }
 

@@ -106,7 +106,9 @@ PUBNUB_EXTERN enum pubnub_res pbcc_here_now_prep(struct pbcc_context* p,
                                    const char*          channel,
                                    const char*          channel_group,
                                    enum pubnub_tribool  disable_uuids,
-                                   enum pubnub_tribool  state);
+                                   enum pubnub_tribool  state,
+                                   unsigned             limit,
+                                   unsigned             offset);
 
 /** Prepares the Where-now operation (transaction), mostly by
     formatting the URI of the HTTP request.

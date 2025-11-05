@@ -2060,6 +2060,220 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
+/* HERE_NOW_EX operation with limit and offset parameters */
+
+Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 500;
+    opt.offset = 50;
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=500&offset=50");
+    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 0;  /* Should be overridden to 1000 */
+
+    expect_have_dns_for_pubnub_origin();
+    /* Verify that limit=1000 is in the URL (default override) */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 100;
+    opt.offset = 0;  /* Should not appear in URL */
+
+    expect_have_dns_for_pubnub_origin();
+    /* Verify that offset=0 is NOT in the URL */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=100");
+    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_limit_exceeds_server_maximum)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 2000;  /* Exceeds server limit of 1000 */
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=2000");
+    incoming("HTTP/1.1 400\r\nContent-Length: 89\r\n\r\n"
+             "{\"error\":1,\"message\":\"Cannot return more than 1000 uuids at a time\",\"service\":\"Presence\"}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_PRESENCE_API_ERROR));
+
+    attest(pubnub_last_http_code(pbp), equals(400));
+}
+
+Ensure(single_context_pubnub, here_now_server_error_without_message_field)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 2000;
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&limit=2000");
+    /* Server returns error without "message" field */
+    incoming("HTTP/1.1 400\r\nContent-Length: 35\r\n\r\n"
+             "{\"error\":1,\"service\":\"Presence\"}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    /* Should still return PNR_PRESENCE_API_ERROR even without message field */
+    attest(pbp->core.last_result, equals(PNR_PRESENCE_API_ERROR));
+
+    attest(pubnub_last_http_code(pbp), equals(400));
+}
+
+Ensure(single_context_pubnub, here_now_defopts_returns_correct_defaults)
+{
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    
+    attest(opt.limit, equals(1000));
+    attest(opt.offset, equals(0));
+    attest(opt.disable_uuids, equals(0));
+    attest(opt.state, equals(0));
+    attest(opt.channel_group, equals(NULL));
+}
+
+Ensure(single_context_pubnub, presence_api_error_res_to_string)
+{
+    char const* error_str = pubnub_res_2_string(PNR_PRESENCE_API_ERROR);
+    
+    attest(error_str, differs(NULL));
+    attest(error_str, streqs("Presence API transaction reported an error"));
+}
+
+Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 250;
+    opt.offset = 100;
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&limit=250&offset=100");
+    incoming("HTTP/1.1 200\r\nContent-Length: 150\r\n\r\n"
+             "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
+             "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_uses_default_limit_1000)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    expect_have_dns_for_pubnub_origin();
+    /* Non-extended here_now should always use limit=1000 */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-ch?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1],\"occupancy\":1}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now(pbp, "test-ch", NULL), equals(PNR_OK));
+
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, global_here_now_uses_default_limit_1000)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    expect_have_dns_for_pubnub_origin();
+    /* Non-extended global_here_now should always use limit=1000 */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 150\r\n\r\n"
+             "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
+             "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_global_here_now(pbp), equals(PNR_STARTED));
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
 /* GLOBAL_HERE_NOW operation */
 
 Ensure(single_context_pubnub, global_here_now)
