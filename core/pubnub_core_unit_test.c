@@ -2219,12 +2219,13 @@ Ensure(single_context_pubnub, here_now_uses_default_limit_1000)
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1],\"occupancy\":1}",
              NULL);
+
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now(pbp, "test-ch", NULL), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now(pbp, "test-ch", NULL), equals(PNR_OK));
 
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1],\"occupancy\":1}"));
+    attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
