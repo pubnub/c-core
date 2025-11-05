@@ -2080,9 +2080,7 @@ Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
     attest(pubnub_get(pbp), equals(NULL));
@@ -2107,10 +2105,10 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
@@ -2133,10 +2131,10 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
@@ -2183,7 +2181,7 @@ Ensure(single_context_pubnub, presence_api_error_res_to_string)
 
 Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
 {
-    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_init(pbp, "publ-white", "sub-white");
     pubnub_set_user_id(pbp, "test_id");
 
     struct pubnub_here_now_options opt = pubnub_here_now_defopts();
@@ -2192,17 +2190,34 @@ Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=250&offset=100");
-    incoming("HTTP/1.1 200\r\nContent-Length: 115\r\n\r\n"
-             "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
-             "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
+        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=250&offset=100");
+    incoming("HTTP/1.1 200\r\nContent-Length: "
+             "334\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
+             "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
+             "uuid2,uuid3],\"occupancy\":3},\"ch2\":{\"uuids\":[uuid3,uuid4],"
+             "\"occupancy\":2},\"ch3\":{\"uuids\":[uuid7],\"occupancy\":1},"
+             "\"ch4\":{\"uuids\":[],\"occupancy\":0},\"ch5\":{\"uuids\":[prle, "
+             "tihi, mrki, paja], "
+             "\"occupancy\":4}},\"total_channels\":5,\"total_occupancy\":12}}",
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
     attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_STARTED));
+    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_IN_PROGRESS));
+
     attest(pbnc_fsm(pbp), equals(0));
     attest(pbp->core.last_result, equals(PNR_OK));
 
+    attest(pubnub_get(pbp),
+           streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
+                  "\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,uuid2,"
+                  "uuid3],\"occupancy\":3},\"ch2\":{\"uuids\":[uuid3,uuid4],"
+                  "\"occupancy\":2},\"ch3\":{\"uuids\":[uuid7],\"occupancy\":1}"
+                  ",\"ch4\":{\"uuids\":[],\"occupancy\":0},\"ch5\":{\"uuids\":["
+                  "prle, tihi, mrki, paja], "
+                  "\"occupancy\":4}},\"total_channels\":5,\"total_occupancy\":"
+                  "12}}"));
+    attest(pubnub_get(pbp), equals(NULL));
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
