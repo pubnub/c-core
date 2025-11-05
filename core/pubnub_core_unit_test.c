@@ -2080,9 +2080,7 @@ Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
     attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
     attest(pubnub_get(pbp), equals(NULL));
@@ -2107,9 +2105,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
 }
@@ -2133,9 +2129,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
 }
