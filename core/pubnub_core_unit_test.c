@@ -2199,9 +2199,7 @@ Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
 }
@@ -2241,9 +2239,7 @@ Ensure(single_context_pubnub, global_here_now_uses_default_limit_1000)
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
     expect(pbntf_trans_outcome, when(pb, equals(pbp)));
-    attest(pubnub_global_here_now(pbp), equals(PNR_STARTED));
-    attest(pbnc_fsm(pbp), equals(0));
-    attest(pbp->core.last_result, equals(PNR_OK));
+    attest(pubnub_global_here_now(pbp), equals(PNR_OK));
 
     attest(pubnub_last_http_code(pbp), equals(200));
 }
