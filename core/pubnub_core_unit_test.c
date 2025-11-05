@@ -2074,7 +2074,7 @@ Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=500&offset=50");
-    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
              NULL);
@@ -2101,7 +2101,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
     /* Verify that limit=1000 is in the URL (default override) */
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=1000");
-    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
              NULL);
@@ -2127,7 +2127,7 @@ Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
     /* Verify that offset=0 is NOT in the URL */
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=100");
-    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1,user2],\"occupancy\":2}",
              NULL);
@@ -2193,7 +2193,7 @@ Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=250&offset=100");
-    incoming("HTTP/1.1 200\r\nContent-Length: 150\r\n\r\n"
+    incoming("HTTP/1.1 200\r\nContent-Length: 115\r\n\r\n"
              "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
              "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
              NULL);
@@ -2215,7 +2215,7 @@ Ensure(single_context_pubnub, here_now_uses_default_limit_1000)
     /* Non-extended here_now should always use limit=1000 */
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ/channel/test-ch?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
-    incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
+    incoming("HTTP/1.1 200\r\nContent-Length: 84\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[user1],\"occupancy\":1}",
              NULL);
@@ -2238,7 +2238,7 @@ Ensure(single_context_pubnub, global_here_now_uses_default_limit_1000)
     /* Non-extended global_here_now should always use limit=1000 */
     expect_outgoing_with_url(
         "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
-    incoming("HTTP/1.1 200\r\nContent-Length: 150\r\n\r\n"
+    incoming("HTTP/1.1 200\r\nContent-Length: 115\r\n\r\n"
              "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
              "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
              NULL);
