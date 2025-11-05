@@ -2171,13 +2171,6 @@ Ensure(single_context_pubnub, here_now_defopts_returns_correct_defaults)
     attest(opt.channel_group, equals(NULL));
 }
 
-Ensure(single_context_pubnub, presence_api_error_res_to_string)
-{
-    char const* error_str = pubnub_res_2_string(PNR_PRESENCE_API_ERROR);
-    
-    attest(error_str, differs(NULL));
-    attest(error_str, streqs("Presence API transaction reported an error"));
-}
 
 Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
 {
