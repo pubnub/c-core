@@ -26,7 +26,6 @@ static bool copy_ipv4_bytes_from_be_dword(
 {
     DWORD host_addr = ntohl(n_addr);
     unsigned char temp_ip[4];
-    bool is_unique = false;
 
     temp_ip[0] = (unsigned char)((host_addr >> 24) & 0xFF);
     temp_ip[1] = (unsigned char)((host_addr >> 16) & 0xFF);
