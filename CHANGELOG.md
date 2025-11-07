@@ -1,3 +1,12 @@
+## v6.0.0
+November 07 2025
+
+#### Added
+- BREAKING CHANGES: Add `limit` and `offset` parameters to `pubnub_here_now_options` used in `pubnub_here_now_ex`. Set `limit` to be set to default (`1000`) for `pubnub_here_now` (not ex) function.
+
+#### Modified
+- Try receiving DNS servers with `DnsQueryConfig` and fallback to the adapters with `GetAdaptersAddresses`.
+
 ## v5.4.0
 October 21 2025
 

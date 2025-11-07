@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "5.4.0"
+version: "6.0.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-11-07
+    version: v6.0.0
+    changes:
+      - type: feature
+        text: "BREAKING CHANGES: Add `limit` and `offset` parameters to `pubnub_here_now_options` used in `pubnub_here_now_ex`. Set `limit` to be set to default (`1000`) for `pubnub_here_now` (not ex) function."
+      - type: improvement
+        text: "Try receiving DNS servers with `DnsQueryConfig` and fallback to the adapters with `GetAdaptersAddresses`."
   - date: 2025-10-21
     version: v5.4.0
     changes:
@@ -1045,7 +1052,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1111,7 +1118,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1177,7 +1184,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1239,7 +1246,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1300,7 +1307,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1356,7 +1363,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"
@@ -1409,7 +1416,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v5.4.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
             requires:
               -
                 name: "miniz"

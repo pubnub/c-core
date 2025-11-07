@@ -1857,7 +1857,7 @@ Ensure(single_context_pubnub, here_now_channel)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/subZ/channel/shade?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/subZ/channel/shade?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: 98\r\n\r\n{\"status\": "
              "200,\"message\":\"OK\", \"service\": \"Presence\", "
              "\"uuids\":[jack,johnnie,chivas],\"occupancy\":3}",
@@ -1879,7 +1879,7 @@ Ensure(single_context_pubnub, here_now_channel_with_auth)
     pubnub_set_auth(pbp, "auth-key");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
-                             "channel?pnsdk=unit-test-0.1&uuid=test_id&auth=auth-key");
+                             "channel?pnsdk=unit-test-0.1&uuid=test_id&auth=auth-key&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "102\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"uuids\":[daniel's,walker,regal,beam],"
@@ -1906,7 +1906,7 @@ Ensure(single_context_pubnub, here_now_channelgroups)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              ",?pnsdk=unit-test-0.1&channel-group=[gr2,gr1]&"
-                             "uuid=test_id&auth=mouse");
+                             "uuid=test_id&auth=mouse&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "233\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -1941,7 +1941,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
-                             "gr4]&uuid=12345&auth=globe");
+                             "gr4]&uuid=12345&auth=globe&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "290\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -1989,7 +1989,7 @@ Ensure(single_context_pubnub, here_now_channel_and_channelgroups_chunked)
      */
     expect_outgoing_with_url("/v2/presence/sub-key/subZ/channel/"
                              "[ch1,ch2]?pnsdk=unit-test-0.1&channel-group=[gr3,"
-                             "gr4]&uuid=12345&auth=globe");
+                             "gr4]&uuid=12345&auth=globe&limit=1000");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: chunked\r\n\r\n "
              "118\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -2027,7 +2027,7 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/sub-one/channel/"
                              "[ch5,ch7]?pnsdk=unit-test-0.1&channel-group=[gr1,"
-                             "gr2]&uuid=cub&auth=lion");
+                             "gr2]&uuid=cub&auth=lion&limit=1000");
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n122\r\n{\"status\":200,\"mes",
              NULL);
@@ -2060,6 +2060,205 @@ Ensure(single_context_pubnub, here_now_in_progress_interrupted_and_accomplished)
     attest(pubnub_last_http_code(pbp), equals(200));
 }
 
+/* HERE_NOW_EX operation with limit and offset parameters */
+
+Ensure(single_context_pubnub, here_now_ex_with_custom_limit_and_offset)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 500;
+    opt.offset = 50;
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=500&offset=50");
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_with_zero_limit_uses_default)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 0;  /* Should be overridden to 1000 */
+
+    expect_have_dns_for_pubnub_origin();
+    /* Verify that limit=1000 is in the URL (default override) */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_with_zero_offset_not_in_url)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 100;
+    opt.offset = 0;  /* Should not appear in URL */
+
+    expect_have_dns_for_pubnub_origin();
+    /* Verify that offset=0 is NOT in the URL */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=100");
+    incoming("HTTP/1.1 200\r\nContent-Length: 90\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1,user2],\"occupancy\":2}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1,user2],\"occupancy\":2}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_ex_limit_exceeds_server_maximum)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 2000;  /* Exceeds server limit of 1000 */
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-channel?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=2000");
+    incoming("HTTP/1.1 400\r\nContent-Length: 89\r\n\r\n"
+             "{\"error\":1,\"message\":\"Cannot return more than 1000 uuids at a time\",\"service\":\"Presence\"}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now_ex(pbp, "test-channel", opt), equals(PNR_PRESENCE_API_ERROR));
+
+    attest(pubnub_last_http_code(pbp), equals(400));
+}
+
+
+Ensure(single_context_pubnub, here_now_defopts_returns_correct_defaults)
+{
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    
+    attest(opt.limit, equals(1000));
+    attest(opt.offset, equals(0));
+    attest(opt.disable_uuids, equals(0));
+    attest(opt.state, equals(0));
+    attest(opt.channel_group, equals(NULL));
+}
+
+
+Ensure(single_context_pubnub, global_here_now_ex_with_custom_limit_and_offset)
+{
+    pubnub_init(pbp, "publ-white", "sub-white");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_here_now_options opt = pubnub_here_now_defopts();
+    opt.limit = 250;
+    opt.offset = 100;
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id&disable_uuids=0&state=0&limit=250&offset=100");
+    incoming("HTTP/1.1 200\r\nContent-Length: "
+             "334\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
+             "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
+             "uuid2,uuid3],\"occupancy\":3},\"ch2\":{\"uuids\":[uuid3,uuid4],"
+             "\"occupancy\":2},\"ch3\":{\"uuids\":[uuid7],\"occupancy\":1},"
+             "\"ch4\":{\"uuids\":[],\"occupancy\":0},\"ch5\":{\"uuids\":[prle, "
+             "tihi, mrki, paja], "
+             "\"occupancy\":4}},\"total_channels\":5,\"total_occupancy\":12}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_STARTED));
+    attest(pubnub_global_here_now_ex(pbp, opt), equals(PNR_IN_PROGRESS));
+
+    attest(pbnc_fsm(pbp), equals(0));
+    attest(pbp->core.last_result, equals(PNR_OK));
+
+    attest(pubnub_get(pbp),
+           streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
+                  "\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,uuid2,"
+                  "uuid3],\"occupancy\":3},\"ch2\":{\"uuids\":[uuid3,uuid4],"
+                  "\"occupancy\":2},\"ch3\":{\"uuids\":[uuid7],\"occupancy\":1}"
+                  ",\"ch4\":{\"uuids\":[],\"occupancy\":0},\"ch5\":{\"uuids\":["
+                  "prle, tihi, mrki, paja], "
+                  "\"occupancy\":4}},\"total_channels\":5,\"total_occupancy\":"
+                  "12}}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, here_now_uses_default_limit_1000)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    expect_have_dns_for_pubnub_origin();
+    /* Non-extended here_now should always use limit=1000 */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ/channel/test-ch?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 84\r\n\r\n{\"status\": "
+             "200,\"message\":\"OK\", \"service\": \"Presence\", "
+             "\"uuids\":[user1],\"occupancy\":1}",
+             NULL);
+
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_here_now(pbp, "test-ch", NULL), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\": 200,\"message\":\"OK\", \"service\": \"Presence\", \"uuids\":[user1],\"occupancy\":1}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, global_here_now_uses_default_limit_1000)
+{
+    pubnub_init(pbp, "publZ", "subZ");
+    pubnub_set_user_id(pbp, "test_id");
+
+    expect_have_dns_for_pubnub_origin();
+    /* Non-extended global_here_now should always use limit=1000 */
+    expect_outgoing_with_url(
+        "/v2/presence/sub-key/subZ?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 115\r\n\r\n"
+             "{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\","
+             "\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_global_here_now(pbp), equals(PNR_OK));
+
+    attest(pubnub_get(pbp), streqs("{\"status\":200,\"message\":\"OK\",\"service\":\"Presence\",\"payload\":{\"channels\":{},\"total_channels\":0,\"total_occupancy\":0}}"));
+    attest(pubnub_get(pbp), equals(NULL));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
 /* GLOBAL_HERE_NOW operation */
 
 Ensure(single_context_pubnub, global_here_now)
@@ -2069,7 +2268,7 @@ Ensure(single_context_pubnub, global_here_now)
 
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url(
-        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id");
+        "/v2/presence/sub-key/sub-white?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\nContent-Length: "
              "334\r\n\r\n{\"status\":200,\"message\":\"OK\",\"service\":"
              "\"Presence\",\"payload\":{channels:{\"ch1\":{\"uuids\":[uuid1,"
@@ -2109,7 +2308,7 @@ Ensure(single_context_pubnub, global_here_now_chunked)
     pubnub_set_user_id(pbp, "pobednik");
     expect_have_dns_for_pubnub_origin();
     expect_outgoing_with_url("/v2/presence/sub-key/"
-                             "sub-beo?pnsdk=unit-test-0.1&uuid=pobednik&auth=beograd");
+                             "sub-beo?pnsdk=unit-test-0.1&uuid=pobednik&auth=beograd&limit=1000");
     /* Chunk lengths are in hexadecimal representation */
     incoming("HTTP/1.1 200\r\nTransfer-Encoding: "
              "chunked\r\n\r\n1\r\n{\r\n12c\r\n\"status\":200,\"message\":"
@@ -2148,7 +2347,7 @@ Ensure(single_context_pubnub, global_here_now_in_progress_interrupted_and_acompl
     pubnub_set_user_id(pbp, "test_id");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/sub-my?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/sub-my?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming(
         "HTTP/1.1 200\r\nContent-Length: 334\r\n\r\n{\"status\":200,\"mess", NULL);
     /* Keeps fsm in progress */
@@ -4041,7 +4240,7 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
     pubnub_set_user_id(pbp, "test_id");
 
     expect_have_dns_for_pubnub_origin();
-    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\n"
              "Content-Length: 197\r\n"
              "Content-Encoding: gzip\r\n"
@@ -4065,7 +4264,7 @@ Ensure(single_context_pubnub, global_here_now_gzip_response)
 
     expect(pbntf_enqueue_for_processing, when(pb, equals(pbp)), returns(0));
     expect(pbntf_got_socket, when(pb, equals(pbp)), returns(0));
-    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id");
+    expect_outgoing_with_url("/v2/presence/sub-key/demo?pnsdk=unit-test-0.1&uuid=test_id&limit=1000");
     incoming("HTTP/1.1 200\r\n"
              "Content-Encoding: gzip\r\n"
              "Transfer-Encoding: chunked\r\n"

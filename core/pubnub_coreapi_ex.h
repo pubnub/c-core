@@ -190,11 +190,17 @@ struct pubnub_here_now_options {
         state alongside uuid info
      */
     bool state;
+    /** The maximum number of users to return. Has to
+     * be between 1 and 1000 users.
+     */
+    unsigned limit;
+    /** Sets the offset for pagination in the here now response. */
+    unsigned offset;
 };
 
 /** This returns the default options for here-now transactions.  Will
-    set `channel_group = NULL`, `disable_uuids=true` and `state =
-    false`.
+    set `channel_group = NULL`, `disable_uuids=false`, `state =
+    false`, `limit = 1000`, and `offset = 0`.
  */
 PUBNUB_EXTERN struct pubnub_here_now_options pubnub_here_now_defopts(void);
 

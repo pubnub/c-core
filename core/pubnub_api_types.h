@@ -136,7 +136,9 @@ enum pubnub_res {
     /** Access/Permission denied */
     PNR_ACCESS_DENIED,
     /** No Channels in the ChannelGroup */
-    PNR_GROUP_EMPTY
+    PNR_GROUP_EMPTY,
+    /** Presence API transaction reported an error */
+    PNR_PRESENCE_API_ERROR
 };
 
 /** 'pubnub_cancel()' return value */
