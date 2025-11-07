@@ -24,14 +24,14 @@ static bool copy_ipv4_bytes_from_be_dword(
     DWORD n_addr,
     unsigned char out[4])
 {
-    DWORD h_addr = ntohl(n_addr);
+    DWORD host_addr = ntohl(n_addr);
     unsigned char temp_ip[4];
     bool is_unique = false;
 
-    temp_ip[0] = (unsigned char)((h_addr >> 24) & 0xFF);
-    temp_ip[1] = (unsigned char)((h_addr >> 16) & 0xFF);
-    temp_ip[2] = (unsigned char)((h_addr >> 8) & 0xFF);
-    temp_ip[3] = (unsigned char)(h_addr & 0xFF);
+    temp_ip[0] = (unsigned char)((host_addr >> 24) & 0xFF);
+    temp_ip[1] = (unsigned char)((host_addr >> 16) & 0xFF);
+    temp_ip[2] = (unsigned char)((host_addr >> 8) & 0xFF);
+    temp_ip[3] = (unsigned char)(host_addr & 0xFF);
 
     for (size_t i = 0; i < count; i++) {
         if (memcmp(array[i].ipv4, temp_ip, 4) == 0) return false;
