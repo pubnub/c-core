@@ -24,14 +24,14 @@ static bool copy_ipv4_bytes_from_be_dword(
     DWORD n_addr,
     unsigned char out[4])
 {
-    DWORD h_addr = ntohl(n_addr);
+    DWORD host_addr = ntohl(n_addr);
     unsigned char temp_ip[4];
     bool is_unique = false;
 
-    temp_ip[0] = (unsigned char)((h_addr >> 24) & 0xFF);
-    temp_ip[1] = (unsigned char)((h_addr >> 16) & 0xFF);
-    temp_ip[2] = (unsigned char)((h_addr >> 8) & 0xFF);
-    temp_ip[3] = (unsigned char)(h_addr & 0xFF);
+    temp_ip[0] = (unsigned char)((host_addr >> 24) & 0xFF);
+    temp_ip[1] = (unsigned char)((host_addr >> 16) & 0xFF);
+    temp_ip[2] = (unsigned char)((host_addr >> 8) & 0xFF);
+    temp_ip[3] = (unsigned char)(host_addr & 0xFF);
 
     for (size_t i = 0; i < count; i++) {
         if (memcmp(array[i].ipv4, temp_ip, 4) == 0) return false;
@@ -47,7 +47,7 @@ static bool copy_ipv4_bytes_from_be_dword(
 
 int fallback_get_dns_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
 {
-    ULONG buf_len;
+    ULONG buflen;
     DWORD ret;
     IP_ADAPTER_ADDRESSES* addrs;
     IP_ADAPTER_ADDRESSES* aa;
@@ -140,9 +140,9 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
 
             if (status == ERROR_SUCCESS) {
                 for (DWORD i = 0; i < ip4_list->AddrCount && j < n; ++i) {
-                    if (h == 0) continue;
+                    if (ip4_list->AddrArray[i] == 0) continue;
 
-                    if (copy_ipv4_bytes_from_be_dword(o_ipv4, j, ip4_list->AddrArray[i] o_ipv4[j].ipv4))
+                    if (copy_ipv4_bytes_from_be_dword(o_ipv4, j, ip4_list->AddrArray[i], o_ipv4[j].ipv4))
                         ++j;
                 }
             }
