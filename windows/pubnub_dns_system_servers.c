@@ -18,7 +18,7 @@
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
 /** Copy to the local address endianness from the network address endianness. */
-static bool copy_ipv4_bytes_from_be_dword(
+static bool pubnub_copy_ipv4_bytes_from_be_dword(
     const struct pubnub_ipv4_address* array,
     const size_t count,
     DWORD n_addr,
@@ -32,6 +32,10 @@ static bool copy_ipv4_bytes_from_be_dword(
     temp_ip[2] = (unsigned char)((host_addr >> 8) & 0xFF);
     temp_ip[3] = (unsigned char)(host_addr & 0xFF);
 
+    /* Filter out loopback and APIPA addresses from `DnsQueryConfig`. */
+    if (127 == temp_ip[0] || (169 == temp_ip[0] && 254 == temp_ip[1]))
+        return false;
+
     for (size_t i = 0; i < count; i++) {
         if (memcmp(array[i].ipv4, temp_ip, 4) == 0) return false;
     }
@@ -44,24 +48,66 @@ static bool copy_ipv4_bytes_from_be_dword(
     return true;
 }
 
-int fallback_get_dns_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
+/** Check whether the DNS address is retrieved for the active network adapter
+    or not.
+ */
+static bool pubnub_dns_from_active_adapter(DWORD n_addr, IP_ADAPTER_ADDRESSES* addrs)
 {
-    ULONG buflen;
-    DWORD ret;
+    if (!addrs) return true;
+    bool found = false;
+
+    for (IP_ADAPTER_ADDRESSES* aa = addrs; aa; aa = aa->Next) {
+        if (aa->OperStatus != IfOperStatusUp) continue;
+
+        /** Search for "online" adapters */
+        bool has_gateway = false;
+        for (IP_ADAPTER_GATEWAY_ADDRESS* gw = aa->FirstGatewayAddress; gw != NULL; gw = gw->Next) {
+            if (NULL != gw->Address.lpSockaddr) {
+                has_gateway = true;
+                break;
+            }
+        }
+        if (!has_gateway) continue;
+
+        for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds; ds = ds->Next) {
+            if (!ds->Address.lpSockaddr ||
+                ds->Address.lpSockaddr->sa_family != AF_INET) {
+                continue;
+            }
+
+            const struct sockaddr_in* sin = (const struct sockaddr_in*)ds->Address.lpSockaddr;
+            DWORD net_addr = sin->sin_addr.S_un.S_addr;
+            if (net_addr == 0) continue;
+
+            if (net_addr == n_addr) {
+                found = true;
+                break;
+            }
+        }
+        if (found) break;
+    }
+
+    return found;
+}
+
+/** Retrieve DNS servers from "online" network adapters. */
+int pubnub_dns_get_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
+{
     IP_ADAPTER_ADDRESSES* addrs;
+    unsigned char temp_ip[4];
     DWORD net_addr;
     unsigned j = 0;
-    unsigned char temp_ip[4];
+    ULONG buflen;
+    DWORD ret;
 
     /* Get required buffer size */
     ret = GetAdaptersAddresses(
         AF_INET,
-        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST, /* keep DNS servers */
-        NULL, NULL, &buflen
-    );
+        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+        NULL, NULL, &buflen);
 
     if (ret != ERROR_BUFFER_OVERFLOW || buflen == 0) {
-        PUBNUB_LOG_ERROR("GetAdaptersAddresses preflight failed: %lu\n", (unsigned long)ret);
+        PUBNUB_LOG_DEBUG("GetAdaptersAddresses can't retrieve any adapters: %lu\n", (unsigned long)ret);
         return (int)j;
     }
 
@@ -74,9 +120,8 @@ int fallback_get_dns_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
     /* Get adapter information */
     ret = GetAdaptersAddresses(
         AF_INET,
-        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST, /* keep DNS servers */
-        NULL, addrs, &buflen
-    );
+        GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+        NULL, addrs, &buflen);
     if (ret != NO_ERROR) {
         PUBNUB_LOG_ERROR("GetAdaptersAddresses failed: %lu\n", (unsigned long)ret);
         FREE(addrs);
@@ -92,6 +137,16 @@ int fallback_get_dns_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
             continue;
         }
 
+        /** Search for "online" adapters */
+        bool has_gateway = false;
+        for (IP_ADAPTER_GATEWAY_ADDRESS* gw = aa->FirstGatewayAddress; gw != NULL; gw = gw->Next) {
+            if (NULL != gw->Address.lpSockaddr) {
+                has_gateway = true;
+                break;
+            }
+        }
+        if (!has_gateway) continue;
+
         for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds && j < n; ds = ds->Next) {
             if (!ds->Address.lpSockaddr ||
                 ds->Address.lpSockaddr->sa_family != AF_INET) {
@@ -100,9 +155,9 @@ int fallback_get_dns_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
 
             const struct sockaddr_in* sin = (const struct sockaddr_in*)ds->Address.lpSockaddr;
             net_addr = sin->sin_addr.S_un.S_addr;
-            if (net_addr == 0) continue; /* skip 0.0.0.0 */
+            if (net_addr == 0) continue;
 
-            if (copy_ipv4_bytes_from_be_dword(o_ipv4, j, net_addr, o_ipv4[j].ipv4))
+            if (pubnub_copy_ipv4_bytes_from_be_dword(o_ipv4, j, net_addr, o_ipv4[j].ipv4))
                 ++j;
         }
     }
@@ -129,12 +184,34 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
                 0, NULL, NULL, ip4_list, &buflen);
 
             if (status == ERROR_SUCCESS) {
-                for (DWORD i = 0; i < ip4_list->AddrCount && j < n; ++i) {
-                    if (ip4_list->AddrArray[i] == 0) continue;
+                IP_ADAPTER_ADDRESSES* active_adapters = NULL;
+                ULONG adapter_buflen = 0;
 
-                    if (copy_ipv4_bytes_from_be_dword(o_ipv4, j, ip4_list->AddrArray[i], o_ipv4[j].ipv4))
+                if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+                    NULL, NULL, &adapter_buflen) == ERROR_BUFFER_OVERFLOW) {
+                    active_adapters = (IP_ADAPTER_ADDRESSES*)MALLOC(adapter_buflen);
+                    if (active_adapters) {
+                        DWORD ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+                                                         NULL, active_adapters, &adapter_buflen);
+                        if (NO_ERROR != ret) {
+                            PUBNUB_LOG_WARNING("GetAdaptersAddresses failed: %lu - can't validate DNS servers\n",
+                                               (unsigned long)ret);
+                            FREE(active_adapters);
+                            active_adapters = NULL;
+                        }
+                    }
+                }
+
+                for (DWORD i = 0; i < ip4_list->AddrCount && j < n; ++i) {
+                    if (ip4_list->AddrArray[i] == 0 ||
+                        !pubnub_dns_from_active_adapter(ip4_list->AddrArray[i], active_adapters)) {
+                        continue;
+                    }
+
+                    if (pubnub_copy_ipv4_bytes_from_be_dword(o_ipv4, j, ip4_list->AddrArray[i], o_ipv4[j].ipv4))
                         ++j;
                 }
+                if (active_adapters) FREE(active_adapters);
             }
 
             LocalFree(ip4_list);
@@ -143,5 +220,5 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
         if (j > 0) return (int)j;
     }
 
-    return fallback_get_dns_via_adapters(o_ipv4, n);
+    return pubnub_dns_get_via_adapters(o_ipv4, n);
 }
