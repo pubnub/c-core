@@ -48,10 +48,10 @@
 // Helper to format IPv4 address
 std::string format_ipv4(const pubnub_ipv4_address& addr) {
     std::ostringstream oss;
-    oss << (int)addr.ipv4[0] << "."
-        << (int)addr.ipv4[1] << "."
-        << (int)addr.ipv4[2] << "."
-        << (int)addr.ipv4[3];
+    oss << static_cast<int>(addr.ipv4[0]) << "."
+        << static_cast<int>(addr.ipv4[1]) << "."
+        << static_cast<int>(addr.ipv4[2]) << "."
+        << static_cast<int>(addr.ipv4[3]);
     return oss.str();
 }
 
@@ -69,7 +69,7 @@ bool is_dns_reachable(const pubnub_ipv4_address& dns_server, int timeout_ms = 20
 
     // Set socket timeout
     DWORD timeout = timeout_ms;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeout), sizeof(timeout));
 
     // Simple DNS query for "test.local" - type A
     unsigned char query[] = {
@@ -87,13 +87,13 @@ bool is_dns_reachable(const pubnub_ipv4_address& dns_server, int timeout_ms = 20
         0x00, 0x01   // Class IN
     };
 
-    int sent = sendto(sock, (const char*)query, sizeof(query), 0,
-                      (sockaddr*)&dns_addr, sizeof(dns_addr));
+    int sent = sendto(sock, reinterpret_cast<const char*>(query), sizeof(query), 0,
+                      reinterpret_cast<sockaddr*>(&dns_addr), sizeof(dns_addr));
 
     bool reachable = false;
     if (sent > 0) {
         unsigned char response[512];
-        int received = recvfrom(sock, (char*)response, sizeof(response), 0, NULL, NULL);
+        int received = recvfrom(sock, reinterpret_cast<char*>(response), sizeof(response), 0, NULL, NULL);
         // We got a response (even if it's NXDOMAIN), server is reachable
         reachable = (received > 0);
     }
@@ -165,7 +165,7 @@ bool test_dns_only_up_adapters() {
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
                          NULL, NULL, &buflen);
 
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
+    IP_ADAPTER_ADDRESSES* addrs = static_cast<IP_ADAPTER_ADDRESSES*>(malloc(buflen));
     TEST_ASSERT(addrs != NULL, "Failed to allocate memory");
 
     DWORD ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
@@ -180,8 +180,9 @@ bool test_dns_only_up_adapters() {
 
             for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress;
                  ds != NULL; ds = ds->Next) {
-                if (ds->Address.lpSockaddr->sa_family == AF_INET) {
-                    sockaddr_in* sin = (sockaddr_in*)ds->Address.lpSockaddr;
+                if (ds->Address.lpSockaddr &&
+                    ds->Address.lpSockaddr->sa_family == AF_INET) {
+                    sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(ds->Address.lpSockaddr);
                     pubnub_ipv4_address addr;
                     DWORD net_addr = sin->sin_addr.S_un.S_addr;
                     DWORD host_addr = ntohl(net_addr);
@@ -253,9 +254,12 @@ bool test_dns_no_invalid_adapter_types() {
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
                          NULL, NULL, &buflen);
 
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
-    GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
-                         NULL, addrs, &buflen);
+    IP_ADAPTER_ADDRESSES* addrs = static_cast<IP_ADAPTER_ADDRESSES*>(malloc(buflen));
+    TEST_ASSERT(addrs != NULL, "Failed to allocate memory");
+
+    DWORD ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+                                     NULL, addrs, &buflen);
+    TEST_ASSERT(ret == NO_ERROR, "GetAdaptersAddresses failed");
 
     for (IP_ADAPTER_ADDRESSES* aa = addrs; aa != NULL; aa = aa->Next) {
         if (aa->IfType == IF_TYPE_SOFTWARE_LOOPBACK || aa->IfType == IF_TYPE_TUNNEL) {
@@ -264,8 +268,9 @@ bool test_dns_no_invalid_adapter_types() {
 
             for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress;
                  ds != NULL; ds = ds->Next) {
-                if (ds->Address.lpSockaddr->sa_family == AF_INET) {
-                    sockaddr_in* sin = (sockaddr_in*)ds->Address.lpSockaddr;
+                if (ds->Address.lpSockaddr &&
+                    ds->Address.lpSockaddr->sa_family == AF_INET) {
+                    sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(ds->Address.lpSockaddr);
                     pubnub_ipv4_address bad_addr;
                     DWORD net_addr = sin->sin_addr.S_un.S_addr;
                     DWORD host_addr = ntohl(net_addr);
@@ -356,22 +361,62 @@ bool test_dns_ipv4_enabled_only() {
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
                          NULL, NULL, &buflen);
 
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
-    GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
-                         NULL, addrs, &buflen);
+    IP_ADAPTER_ADDRESSES* addrs = static_cast<IP_ADAPTER_ADDRESSES*>(malloc(buflen));
+    TEST_ASSERT(addrs != NULL, "Failed to allocate memory");
+
+    DWORD ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
+                                     NULL, addrs, &buflen);
+    TEST_ASSERT(ret == NO_ERROR, "GetAdaptersAddresses failed");
+
+    // Collect DNS servers from adapters without IPv4 enabled
+    std::vector<std::string> non_ipv4_adapter_dns;
+    int adapters_without_ipv4 = 0;
 
     for (IP_ADAPTER_ADDRESSES* aa = addrs; aa != NULL; aa = aa->Next) {
         if (!(aa->Flags & IP_ADAPTER_IPV4_ENABLED)) {
-            TEST_LOG("Found adapter without IPv4: " << aa->AdapterName);
+            adapters_without_ipv4++;
+            TEST_LOG("Found adapter without IPv4 enabled: " << aa->AdapterName);
 
-            // This adapter's DNS servers should not be in our list
+            // Collect DNS servers from this adapter
             for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress;
                  ds != NULL; ds = ds->Next) {
-                if (ds->Address.lpSockaddr->sa_family == AF_INET) {
-                    TEST_LOG("  WARNING: Adapter has IPv4 DNS but IPv4 not enabled");
+                if (ds->Address.lpSockaddr &&
+                    ds->Address.lpSockaddr->sa_family == AF_INET) {
+                    sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(ds->Address.lpSockaddr);
+                    pubnub_ipv4_address addr;
+                    DWORD net_addr = sin->sin_addr.S_un.S_addr;
+                    DWORD host_addr = ntohl(net_addr);
+                    addr.ipv4[0] = (host_addr >> 24) & 0xFF;
+                    addr.ipv4[1] = (host_addr >> 16) & 0xFF;
+                    addr.ipv4[2] = (host_addr >> 8) & 0xFF;
+                    addr.ipv4[3] = host_addr & 0xFF;
+
+                    std::string dns_str = format_ipv4(addr);
+                    non_ipv4_adapter_dns.push_back(dns_str);
+                    TEST_LOG("  Found DNS on non-IPv4 adapter: " << dns_str);
                 }
             }
         }
+    }
+
+    TEST_LOG("Found " << adapters_without_ipv4 << " adapters without IPv4 enabled");
+    TEST_LOG("Found " << non_ipv4_adapter_dns.size() << " DNS servers from non-IPv4 adapters");
+
+    // CRITICAL CHECK: None of these DNS servers should be in our returned list
+    for (const auto& bad_dns : non_ipv4_adapter_dns) {
+        for (int i = 0; i < our_count; i++) {
+            std::string our_dns = format_ipv4(our_servers[i]);
+            TEST_ASSERT(our_dns != bad_dns,
+                "CRITICAL: DNS from non-IPv4-enabled adapter found: " << bad_dns
+                << " - this indicates the IPv4-enabled check is not working!");
+        }
+    }
+
+    if (adapters_without_ipv4 > 0) {
+        TEST_LOG("✓ IPv4-enabled check working: " << adapters_without_ipv4
+                 << " adapters without IPv4 were properly filtered");
+    } else {
+        TEST_LOG("INFO: All adapters have IPv4 enabled");
     }
 
     free(addrs);
@@ -391,7 +436,7 @@ bool test_dns_only_adapters_with_gateway() {
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
                          NULL, NULL, &buflen);
 
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
+    IP_ADAPTER_ADDRESSES* addrs = static_cast<IP_ADAPTER_ADDRESSES*>(malloc(buflen));
     TEST_ASSERT(addrs != NULL, "Failed to allocate memory");
 
     DWORD ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
@@ -424,7 +469,7 @@ bool test_dns_only_adapters_with_gateway() {
                      ds != NULL; ds = ds->Next) {
                     if (ds->Address.lpSockaddr &&
                         ds->Address.lpSockaddr->sa_family == AF_INET) {
-                        sockaddr_in* sin = (sockaddr_in*)ds->Address.lpSockaddr;
+                        sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(ds->Address.lpSockaddr);
                         pubnub_ipv4_address addr;
                         DWORD net_addr = sin->sin_addr.S_un.S_addr;
                         DWORD host_addr = ntohl(net_addr);
