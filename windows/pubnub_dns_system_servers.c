@@ -59,7 +59,11 @@ static bool pubnub_dns_from_active_adapter(DWORD n_addr, IP_ADAPTER_ADDRESSES* a
     for (IP_ADAPTER_ADDRESSES* aa = addrs; aa; aa = aa->Next) {
         if (aa->OperStatus != IfOperStatusUp) continue;
 
-        /** Search for "online" adapters */
+        /** Search for "online" adapters with gateway or valid unicast address.
+         *  Note: FirstGatewayAddress can be NULL even for working adapters
+         *  on some Windows configurations (WSL, Hyper-V, certain VPNs), so we
+         *  also check if the adapter has a valid unicast IP address as a fallback.
+         */
         bool has_gateway = false;
         for (IP_ADAPTER_GATEWAY_ADDRESS* gw = aa->FirstGatewayAddress; gw != NULL; gw = gw->Next) {
             if (NULL != gw->Address.lpSockaddr) {
@@ -67,7 +71,27 @@ static bool pubnub_dns_from_active_adapter(DWORD n_addr, IP_ADAPTER_ADDRESSES* a
                 break;
             }
         }
-        if (!has_gateway) continue;
+        
+        /* Fallback: if no gateway, check if adapter has valid unicast address */
+        bool has_valid_unicast = false;
+        if (!has_gateway) {
+            for (IP_ADAPTER_UNICAST_ADDRESS* ua = aa->FirstUnicastAddress; ua != NULL; ua = ua->Next) {
+                if (ua->Address.lpSockaddr && 
+                    ua->Address.lpSockaddr->sa_family == AF_INET) {
+                    struct sockaddr_in* sin = (struct sockaddr_in*)ua->Address.lpSockaddr;
+                    DWORD addr = ntohl(sin->sin_addr.S_un.S_addr);
+                    /* Valid if not 0.0.0.0, not loopback (127.x), not APIPA (169.254.x.x) */
+                    if (addr != 0 && 
+                        ((addr >> 24) & 0xFF) != 127 &&
+                        !(((addr >> 24) & 0xFF) == 169 && ((addr >> 16) & 0xFF) == 254)) {
+                        has_valid_unicast = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!has_gateway && !has_valid_unicast) continue;
 
         for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds; ds = ds->Next) {
             if (!ds->Address.lpSockaddr ||
@@ -137,7 +161,11 @@ int pubnub_dns_get_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
             continue;
         }
 
-        /** Search for "online" adapters */
+        /** Search for "online" adapters with gateway or valid unicast address.
+         *  Note: FirstGatewayAddress can be NULL even for working adapters
+         *  on some Windows configurations (WSL, Hyper-V, certain VPNs), so we
+         *  also check if the adapter has a valid unicast IP address as a fallback.
+         */
         bool has_gateway = false;
         for (IP_ADAPTER_GATEWAY_ADDRESS* gw = aa->FirstGatewayAddress; gw != NULL; gw = gw->Next) {
             if (NULL != gw->Address.lpSockaddr) {
@@ -145,7 +173,27 @@ int pubnub_dns_get_via_adapters(struct pubnub_ipv4_address* o_ipv4, size_t n)
                 break;
             }
         }
-        if (!has_gateway) continue;
+        
+        /* Fallback: if no gateway, check if adapter has valid unicast address */
+        bool has_valid_unicast = false;
+        if (!has_gateway) {
+            for (IP_ADAPTER_UNICAST_ADDRESS* ua = aa->FirstUnicastAddress; ua != NULL; ua = ua->Next) {
+                if (ua->Address.lpSockaddr && 
+                    ua->Address.lpSockaddr->sa_family == AF_INET) {
+                    struct sockaddr_in* sin = (struct sockaddr_in*)ua->Address.lpSockaddr;
+                    DWORD addr = ntohl(sin->sin_addr.S_un.S_addr);
+                    /* Valid if not 0.0.0.0, not loopback (127.x), not APIPA (169.254.x.x) */
+                    if (addr != 0 && 
+                        ((addr >> 24) & 0xFF) != 127 &&
+                        !(((addr >> 24) & 0xFF) == 169 && ((addr >> 16) & 0xFF) == 254)) {
+                        has_valid_unicast = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!has_gateway && !has_valid_unicast) continue;
 
         for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds && j < n; ds = ds->Next) {
             if (!ds->Address.lpSockaddr ||
