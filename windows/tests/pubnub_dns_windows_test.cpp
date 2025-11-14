@@ -1,4 +1,3 @@
-/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 /**
  * @file pubnub_dns_windows_test.cpp
  * @brief Comprehensive Windows DNS resolution tests for PubNub C-core SDK
@@ -11,9 +10,11 @@
  * - Edge cases with VPN/virtual adapters
  */
 
-#include "core/pubnub_dns_servers.h"
-#include "core/pubnub_log.h"
-#include "core/pubnub_assert.h"
+extern "C" {
+    #include "core/pubnub_dns_servers.h"
+    #include "core/pubnub_log.h"
+    #include "core/pubnub_assert.h"
+}
 
 #include <windows.h>
 #include <iphlpapi.h>

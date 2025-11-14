@@ -419,8 +419,8 @@ int pubnub_dns_read_system_servers_ipv4(
           compare_adapters_by_priority);
 
     /* Extract DNS servers from adapters in priority order. */
-    unsigned j = 0;
-    for (size_t i = 0; i < adapter_count && j < n; i++) {
+    unsigned dns_count = 0;
+    for (size_t i = 0; i < adapter_count && dns_count < n; i++) {
         IP_ADAPTER_ADDRESSES* aa = adapter_list[i].adapter;
 
         PUBNUB_LOG_TRACE("Processing adapter: Index=%lu, Metric=%lu, IsBestRoute=%d\n",
@@ -428,7 +428,7 @@ int pubnub_dns_read_system_servers_ipv4(
                          (unsigned long)adapter_list[i].metric,
                          adapter_list[i].is_best_route);
 
-        for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds && j < n; ds = ds->Next) {
+        for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress; ds && dns_count < n; ds = ds->Next) {
             if (!ds->Address.lpSockaddr || ds->Address.lpSockaddr->sa_family != AF_INET)
                 continue;
 
@@ -456,10 +456,10 @@ int pubnub_dns_read_system_servers_ipv4(
             }
 
             /* Add to output if not duplicate */
-            if (pubnub_copy_ipv4_bytes_from_be_dword(o_ipv4, j, net_addr, o_ipv4[j].ipv4)) {
+            if (pubnub_copy_ipv4_bytes_from_be_dword(o_ipv4, dns_count, net_addr, o_ipv4[dns_count].ipv4)) {
                 PUBNUB_LOG_TRACE("Added DNS server from adapter index %lu\n",
                                  (unsigned long)aa->IfIndex);
-                ++j;
+                ++dns_count;
             }
         }
     }
@@ -467,5 +467,5 @@ int pubnub_dns_read_system_servers_ipv4(
     FREE(adapter_list);
     FREE(addrs);
 
-    return (int)j;
+    return (int)dns_count;
 }

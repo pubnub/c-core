@@ -1,4 +1,3 @@
-/* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 /**
  * @file pubnub_tls_security_test.cpp
  * @brief TLS/SSL security validation tests for PubNub C-core SDK on Windows
@@ -12,11 +11,13 @@
  * - Certificate expiration handling
  */
 
+extern "C" {
 #include "pubnub_sync.h"
 #include "core/pubnub_ssl.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_log.h"
+}
 
 #include <iostream>
 #include <string>
