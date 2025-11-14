@@ -204,6 +204,21 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         PUBNUB_LOG_ERROR("pb=%p SSL_new failed\n", pb);
         return pbtlsResourceFailure;
     }
+
+    /** Enable hostname verification. */
+    X509_VERIFY_PARAM *param = SSL_get0_param(ssl);
+    if (param != NULL) {
+        char const* hostname = pb->origin;
+        if (!X509_VERIFY_PARAM_set1_host(param, hostname, 0)) {
+            PUBNUB_LOG_WARNING(
+                "pb=%p: X509_VERIFY_PARAM_set1_host() failed to set hostname '%s' for verification\n",
+                pb,
+                hostname);
+            return pbtlsFailed;
+        }
+        PUBNUB_LOG_DEBUG("pb=%p: Hostname verification configured for '%s'\n",
+                         pb, hostname);
+    }
     PUBNUB_LOG_TRACE("pb=%p: Got SSL\n", pb);
     SSL_set_fd(ssl, pb->pal.socket);
     WATCH_ENUM(pb->options.use_blocking_io);
