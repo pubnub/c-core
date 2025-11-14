@@ -43,13 +43,8 @@ struct adapter_with_metric {
  */
 static bool pubnub_ipv4_address_valid(DWORD host_addr)
 {
-    if (host_addr == 0 ||
-        ((host_addr >> 24) & 0xFF) == 127 ||
-        (((host_addr >> 24) & 0xFF) == 169 && ((host_addr >> 16) & 0xFF) == 254)) {
-        return false;
-    }
-
-    return true;
+    return !(host_addr == 0 || ((host_addr >> 24) & 0xFF) == 127 ||
+        (((host_addr >> 24) & 0xFF) == 169 && ((host_addr >> 16) & 0xFF) == 254));
 }
 
 /** Comparison function for qsort to sort adapters by priority.
