@@ -205,6 +205,16 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
         return pbtlsResourceFailure;
     }
 
+    /** Enable SNI (Server Name Indication) for virtual hosting support. */
+    if (!SSL_set_tlsext_host_name(ssl, pb->origin)) {
+        PUBNUB_LOG_WARNING(
+            "pb=%p: SSL_set_tlsext_host_name() failed to set SNI hostname '%s'\n",
+            pb,
+            pb->origin);
+        ERR_print_errors_cb(print_to_pubnub_log, pb);
+        return pbtlsFailed;
+    }
+
     /** Enable hostname verification. */
     X509_VERIFY_PARAM *param = SSL_get0_param(ssl);
     if (param != NULL) {

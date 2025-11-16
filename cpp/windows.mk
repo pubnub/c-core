@@ -5,9 +5,9 @@
 # Making CPP version of the PubNub SDK.
 WITH_CPP = 1
 
-include ../make/posix_preprocessing.mk
-include ../make/posix_source_files.mk
-include ../make/posix_compiler_linker_flags.mk
+!include <../make/windows_preprocessing.mk>
+!include <../make/windows_source_files.mk>
+!include <../make/windows_compiler_linker_flags.mk>
 
 
 ###############################################################################
@@ -16,7 +16,7 @@ include ../make/posix_compiler_linker_flags.mk
 
 TARGET_BUILD_PATH =
 
-include ../make/windows_cpp_targets.mk
+!include <../make/windows_cpp_targets.mk>
 
 
 all: \

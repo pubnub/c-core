@@ -10,17 +10,16 @@
  * - Edge cases with VPN/virtual adapters
  */
 
-extern "C" {
-    #include "core/pubnub_dns_servers.h"
-    #include "core/pubnub_log.h"
-    #include "core/pubnub_assert.h"
-}
-
-#include <windows.h>
-#include <iphlpapi.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
+#include <iphlpapi.h>
 #include <windns.h>
+
+#include "core/pubnub_dns_servers.h"
+#include "core/pubnub_log.h"
+#include "core/pubnub_assert.h"
+
 #include <iostream>
 #include <vector>
 #include <thread>
