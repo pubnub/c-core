@@ -7,9 +7,9 @@ changelog:
     version: v6.1.0
     changes:
       - type: feature
-        text: "Add SNI support for TLS connections."
+        text: "Added SNI (Server Name Indication) support for TLS connections."
       - type: feature
-        text: "Added SNI (Server Name Indication) support for TLS connections.           Added hostname verification for SSL/TLS certificates to prevent MITM attacks."
+        text: "Added hostname verification for SSL/TLS certificates to prevent MITM attacks."
       - type: improvement
         text: "Update bundled certificates (added Amazon Root CA 1) which is used for secured connection and peers verification."
       - type: improvement

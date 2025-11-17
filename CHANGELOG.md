@@ -2,8 +2,8 @@
 November 17 2025
 
 #### Added
-- Add SNI support for TLS connections.
-- Added SNI (Server Name Indication) support for TLS connections.           Added hostname verification for SSL/TLS certificates to prevent MITM attacks.
+- Added SNI (Server Name Indication) support for TLS connections.
+- Added hostname verification for SSL/TLS certificates to prevent MITM attacks.
 
 #### Modified
 - Update bundled certificates (added Amazon Root CA 1) which is used for secured connection and peers verification.
