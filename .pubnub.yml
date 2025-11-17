@@ -1,8 +1,21 @@
 name: c-core
 schema: 1
-version: "6.0.0"
+version: "6.1.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-11-17
+    version: v6.1.0
+    changes:
+      - type: feature
+        text: "Added SNI (Server Name Indication) support for TLS connections."
+      - type: feature
+        text: "Added hostname verification for SSL/TLS certificates to prevent MITM attacks."
+      - type: improvement
+        text: "Update bundled certificates (added Amazon Root CA 1) which is used for secured connection and peers verification."
+      - type: improvement
+        text: "Filter out DNS servers received from disconnected adapters, loopback, and APIPA addresses."
+      - type: improvement
+        text: "Added tests to test DNS server discovery in a controlled Windows environment (manual)."
   - date: 2025-11-07
     version: v6.0.0
     changes:
@@ -1052,7 +1065,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1118,7 +1131,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1184,7 +1197,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1246,7 +1259,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1307,7 +1320,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1363,7 +1376,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"
@@ -1416,7 +1429,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.0.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
             requires:
               -
                 name: "miniz"

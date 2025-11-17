@@ -5,13 +5,19 @@
 # Making CPP version of the PubNub SDK with OpenSSL support.
 WITH_CPP = 1
 OPENSSL = 1
-USE_CRYPTO_API ?= 1
-USE_GRANT_TOKEN ?= 1
-USE_REVOKE_TOKEN ?= 1
+!ifndef USE_CRYPTO_API
+USE_CRYPTO_API = 1
+!endif
+!ifndef USE_GRANT_TOKEN
+USE_GRANT_TOKEN = 1
+!endif
+!ifndef USE_REVOKE_TOKEN
+USE_REVOKE_TOKEN = 1
+!endif
 
-include ../make/posix_preprocessing.mk
-include ../make/posix_source_files.mk
-include ../make/posix_compiler_linker_flags.mk
+!include <../make/windows_preprocessing.mk>
+!include <../make/windows_source_files.mk>
+!include <../make/windows_compiler_linker_flags.mk>
 
 
 ###############################################################################
@@ -20,7 +26,7 @@ include ../make/posix_compiler_linker_flags.mk
 
 TARGET_BUILD_PATH = openssl$(PATH_SEP)
 
-include ../make/windows_cpp_targets.mk
+!include <../make/windows_cpp_targets.mk>
 
 
 all: \
