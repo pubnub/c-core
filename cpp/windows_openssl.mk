@@ -15,9 +15,9 @@ USE_GRANT_TOKEN = 1
 USE_REVOKE_TOKEN = 1
 !endif
 
-!include <../make/posix_preprocessing.mk>
-!include <../make/posix_source_files.mk>
-!include <../make/posix_compiler_linker_flags.mk>
+!include <../make/windows_preprocessing.mk>
+!include <../make/windows_source_files.mk>
+!include <../make/windows_compiler_linker_flags.mk>
 
 
 ###############################################################################

@@ -300,6 +300,8 @@ bool test_custom_ca_certificate() {
     }
 
     // With invalid CA, connection might fail (or succeed if it falls back to hardcoded certs)
+    TEST_ASSERT(conn_res != PNR_OK,
+                "Connection should fail with invalid CA file (no fallback to bundled certs)");
     TEST_LOG("Connection result with invalid CA: " << pubnub_res_2_string(conn_res));
 
     pubnub_free(pb);
