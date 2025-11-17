@@ -41,11 +41,57 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
     return 0;
 }
 
-/* Starfields Inc (Class 2) Root certificate.
-   It was used to sign the server certificate of https://pubsub.pubnub.com.
-   (at the time of writing this, 2015-06-04).
+/* Amazon Root CA 1
+   Used by PubNub domains: ps.pndsn.com, *.pubnubapi.com
 
+   Subject: C=US, O=Amazon, CN=Amazon Root CA 1
+   Issuer: C=US, O=Amazon, CN=Amazon Root CA 1
+
+   Valid from: May 26, 2015
+   Valid to: January 17, 2038
+
+   Key: RSA 2048-bit
+   Source: https://www.amazontrust.com/repository/AmazonRootCA1.pem
+ */
+static char pubnub_cert_Amazon_Root_CA_1[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\n"
+    "ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\n"
+    "b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\n"
+    "MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\n"
+    "b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\n"
+    "ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n"
+    "9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\n"
+    "IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\n"
+    "VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n"
+    "93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\n"
+    "jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\n"
+    "AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\n"
+    "A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\n"
+    "U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\n"
+    "N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\n"
+    "o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n"
+    "5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\n"
+    "rqXRfboQnoZsG4q5WTP468SQvvG5\n"
+    "-----END CERTIFICATE-----\n";
+
+
+/* Starfield Class 2 Certification Authority
+   Used by PubNub domains: pubsub.pubnub.com, pubnub.pubnub.com, *.pubnub.com
+   Validates certificates issued by Starfield Root Certificate Authority - G2
+   through cross-certification.
+
+   Subject: C=US, O=Starfield Technologies, Inc.,
+            OU=Starfield Class 2 Certification Authority
+   Issuer: C=US, O=Starfield Technologies, Inc.,
+           OU=Starfield Class 2 Certification Authority
+
+   Valid from: June 29, 2004
    Valid to: June 29, 2034
+
+   Key: RSA 2048-bit
+   Source: Extracted from pubsub.pubnub.com certificate chain (2015-06-04)
+           Available at https://certs.starfieldtech.com/repository/
  */
 static char pubnub_cert_Starfield[] =
     "-----BEGIN CERTIFICATE-----\n"
@@ -72,39 +118,6 @@ static char pubnub_cert_Starfield[] =
     "VSJYACPq4xJDKVtHCN2MQWplBqjlIapBtJUhlbl90TSrE9atvNziPTnNvT51cKEY\n"
     "WQPJIrSPnNVeKtelttQKbfi3QBFGmh95DmK/D5fs4C8fF5Q=\n"
     "-----END CERTIFICATE-----\n";
-
-
-/* GlobalSign Root class 2 Certificate, used at the time of this
-   writing (2016-11-26):
-
- 2 s:/C=BE/O=GlobalSign nv-sa/OU=Root CA/CN=GlobalSign Root CA
-   i:/C=BE/O=GlobalSign nv-sa/OU=Root CA/CN=GlobalSign Root CA
-
- Valid to: January 28, 2028
- */
-static char pubnub_cert_GlobalSign[] =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIDdTCCAl2gAwIBAgILBAAAAAABFUtaw5QwDQYJKoZIhvcNAQEFBQAwVzELMAkG\n"
-    "A1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv\n"
-    "b3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw05ODA5MDExMjAw\n"
-    "MDBaFw0yODAxMjgxMjAwMDBaMFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i\n"
-    "YWxTaWduIG52LXNhMRAwDgYDVQQLEwdSb290IENBMRswGQYDVQQDExJHbG9iYWxT\n"
-    "aWduIFJvb3QgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDaDuaZ\n"
-    "jc6j40+Kfvvxi4Mla+pIH/EqsLmVEQS98GPR4mdmzxzdzxtIK+6NiY6arymAZavp\n"
-    "xy0Sy6scTHAHoT0KMM0VjU/43dSMUBUc71DuxC73/OlS8pF94G3VNTCOXkNz8kHp\n"
-    "1Wrjsok6Vjk4bwY8iGlbKk3Fp1S4bInMm/k8yuX9ifUSPJJ4ltbcdG6TRGHRjcdG\n"
-    "snUOhugZitVtbNV4FpWi6cgKOOvyJBNPc1STE4U6G7weNLWLBYy5d4ux2x8gkasJ\n"
-    "U26Qzns3dLlwR5EiUWMWea6xrkEmCMgZK9FGqkjWZCrXgzT/LCrBbBlDSgeF59N8\n"
-    "9iFo7+ryUp9/k5DPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8E\n"
-    "BTADAQH/MB0GA1UdDgQWBBRge2YaRQ2XyolQL30EzTSo//z9SzANBgkqhkiG9w0B\n"
-    "AQUFAAOCAQEA1nPnfE920I2/7LqivjTFKDK1fPxsnCwrvQmeU79rXqoRSLblCKOz\n"
-    "yj1hTdNGCbM+w6DjY1Ub8rrvrTnhQ7k4o+YviiY776BQVvnGCv04zcQLcFGUl5gE\n"
-    "38NflNUVyRRBnMRddWQVDf9VMOyGj/8N7yy5Y0b2qvzfvGn9LhJIZJrglfCm7ymP\n"
-    "AbEVtQwdpf5pLGkkeB6zpxxxYu7KyJesF12KwvhHhm4qxFYxldBniYUr+WymXUad\n"
-    "DKqC5JlR3XC321Y9YeRq4VzW9v493kHMB65jUr9TU/Qr6cf9tveCX4XSQRjbgbME\n"
-    "HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==\n"
-    "-----END CERTIFICATE-----\n";
-
 
 static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
 {
@@ -137,8 +150,13 @@ static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
 
 static int add_pubnub_cert(SSL_CTX* sslCtx)
 {
-    int rslt = add_pem_cert(sslCtx, pubnub_cert_Starfield);
-    return rslt || add_pem_cert(sslCtx, pubnub_cert_GlobalSign);
+    /* Load certificates in priority order:
+       1. Amazon Root CA 1 - Primary for PubNub domains (ps.pndsn.com, *.pubnubapi.com)
+       2. Starfield Root CA G2 - For pubsub.pubnub.com
+     */
+    int rslt = add_pem_cert(sslCtx, pubnub_cert_Amazon_Root_CA_1);
+    rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_Starfield);
+    return rslt;
 }
 
 
