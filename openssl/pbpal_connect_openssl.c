@@ -121,8 +121,8 @@ static char pubnub_cert_Starfield[] =
 
 #if defined(PUBNUB_USE_LETS_ENCRYPT_CERTIFICATE) || defined(_WIN32)
 /* ISRG Root X1 (Let's Encrypt)
-   Used for testing and validation purposes with badssl.com and other Let's Encrypt domains.
-   Note: This is NOT used by PubNub production infrastructure.
+   Used for testing and validation purposes with badssl.com and other Let's
+   Encrypt domains. Note: This is NOT used by PubNub production infrastructure.
 
    Subject: C=US, O=Internet Security Research Group, CN=ISRG Root X1
    Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
@@ -204,7 +204,7 @@ static int add_pubnub_cert(SSL_CTX* sslCtx)
        3. ISRG Root X1 - For testing with Let's Encrypt domains (badssl.com, etc.)
      */
     int rslt = add_pem_cert(sslCtx, pubnub_cert_Amazon_Root_CA_1);
-    rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_Starfield);
+    rslt     = rslt || add_pem_cert(sslCtx, pubnub_cert_Starfield);
 #if defined(PUBNUB_USE_LETS_ENCRYPT_CERTIFICATE) || defined(_WIN32)
     rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_ISRG_Root_X1);
 #endif
@@ -277,27 +277,27 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 
     /** Enable SNI (Server Name Indication) for virtual hosting support. */
     if (!SSL_set_tlsext_host_name(ssl, pb->origin)) {
-        PUBNUB_LOG_WARNING(
-            "pb=%p: SSL_set_tlsext_host_name() failed to set SNI hostname '%s'\n",
-            pb,
-            pb->origin);
+        PUBNUB_LOG_WARNING("pb=%p: SSL_set_tlsext_host_name() failed to set "
+                           "SNI hostname '%s'\n",
+                           pb,
+                           pb->origin);
         ERR_print_errors_cb(print_to_pubnub_log, pb);
         return pbtlsFailed;
     }
 
     /** Enable hostname verification. */
-    X509_VERIFY_PARAM *param = SSL_get0_param(ssl);
+    X509_VERIFY_PARAM* param = SSL_get0_param(ssl);
     if (param != NULL) {
         char const* hostname = pb->origin;
         if (!X509_VERIFY_PARAM_set1_host(param, hostname, 0)) {
-            PUBNUB_LOG_WARNING(
-                "pb=%p: X509_VERIFY_PARAM_set1_host() failed to set hostname '%s' for verification\n",
-                pb,
-                hostname);
+            PUBNUB_LOG_WARNING("pb=%p: X509_VERIFY_PARAM_set1_host() failed to "
+                               "set hostname '%s' for verification\n",
+                               pb,
+                               hostname);
             return pbtlsFailed;
         }
-        PUBNUB_LOG_DEBUG("pb=%p: Hostname verification configured for '%s'\n",
-                         pb, hostname);
+        PUBNUB_LOG_TRACE(
+            "pb=%p: Hostname verification configured for '%s'\n", pb, hostname);
     }
     PUBNUB_LOG_TRACE("pb=%p: Got SSL\n", pb);
     SSL_set_fd(ssl, pb->pal.socket);
@@ -318,8 +318,8 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 */
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 {
-    SSL* ssl;
-    int  rslt;
+    SSL*  ssl;
+    int   rslt;
     X509* cert;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
@@ -331,19 +331,23 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 
     bool needRead = false, needWrite = false;
     rslt = SSL_connect(ssl);
-    rslt = pbpal_handle_socket_condition(rslt, pb, __FILE__, __LINE__, &needRead, &needWrite);
+    rslt = pbpal_handle_socket_condition(
+        rslt, pb, __FILE__, __LINE__, &needRead, &needWrite);
     if (PNR_OK != rslt) {
-        if (rslt != PNR_IN_PROGRESS) return pbtlsFailed;
-        return needRead ? pbtlsStartedWaitRead : needWrite ? pbtlsStartedWaitWrite : pbtlsStarted;
+        if (rslt != PNR_IN_PROGRESS)
+            return pbtlsFailed;
+        return needRead    ? pbtlsStartedWaitRead
+               : needWrite ? pbtlsStartedWaitWrite
+                           : pbtlsStarted;
     }
     PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
-    #if OPENSSL_VERSION_NUMBER < 0x30000000L
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     cert = SSL_get_peer_certificate(ssl);
-    #else
+#else
     cert = SSL_get1_peer_certificate(ssl);
-    #endif
+#endif
     if (cert != NULL) {
         rslt = SSL_get_verify_result(ssl);
         X509_free(cert);

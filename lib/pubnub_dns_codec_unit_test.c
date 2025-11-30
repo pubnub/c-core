@@ -303,6 +303,7 @@ Ensure(pubnub_dns_codec, decodes_strange_response_2_questions_3_answers)
     uint8_t data_2[] = {5,6,7,8};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
     /* Assembling test message(response from DNS server) with 2 questions and 2 answers.
@@ -315,13 +316,14 @@ Ensure(pubnub_dns_codec, decodes_strange_response_2_questions_3_answers)
     append_answer_M(encoded_piece2, RecordTypeTXT, data, 10);
     append_answer_M(encoded_domain_name, RecordTypeA, data_2, 100);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv4_addresses[0].ipv4,
                   data,
@@ -351,6 +353,7 @@ Ensure(pubnub_dns_codec, decodes_response_1_question_3_answers_no_ssl_fallback)
 
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
 
@@ -367,13 +370,14 @@ Ensure(pubnub_dns_codec, decodes_response_1_question_3_answers_no_ssl_fallback)
     append_answer_M(encoded_domain_name, RecordTypeA, data_2, 65536);
     append_answer_M(encoded_domain_name, RecordTypeA, data_3, 2);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv4_addresses[0].ipv4,
                   data,
@@ -400,26 +404,27 @@ Ensure(pubnub_dns_codec, decodes_strange_response_wrong_answers)
     uint8_t data[] = {1,2,3,4};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     make_dns_header_M(RESPONSE, 1, 2);
     append_question_M(just_offset);
     append_answer_M(encoded_domain_name, RecordTypeSRV, data, 7000);
     append_answer_M(encoded_abc_domain_name, RecordTypeTXT, data, 65000);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
 
     /* Message shortened to finish within last answers label */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - 20,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - 20,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 }
 
@@ -429,6 +434,7 @@ Ensure(pubnub_dns_codec, decodes_label_too_long_to_fit_in_modules_buffer)
     uint8_t data[] = {10,20,30,40};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
 
@@ -438,20 +444,21 @@ Ensure(pubnub_dns_codec, decodes_label_too_long_to_fit_in_modules_buffer)
     append_question_M(encoded_long_piece21);
     append_answer_M(encoded_long_piece21, RecordTypeA, data, 5);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 
     /* Message shortened to end within the question label */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         280,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               280,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv4_addresses[0].ipv4,
@@ -473,6 +480,7 @@ Ensure(pubnub_dns_codec, decodes_name_too_long_for_modules_buffer_ending_with_ba
     /* Resolved Ipv4 address */
     uint8_t data[] = {100,200,30,40};
     struct pubnub_ipv4_address resolved_addr_ipv4;
+    enum DNSqueryType          o_query_type;
 
     make_dns_header_M(RESPONSE, 1, 1);
     /* Label finishes with bad offset format */
@@ -480,11 +488,11 @@ Ensure(pubnub_dns_codec, decodes_name_too_long_for_modules_buffer_ending_with_ba
     append_question_M(encoded_long_piece21);
     append_answer_M(encoded_long_piece21, RecordTypeA, data, 3);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 }
 
@@ -494,6 +502,7 @@ Ensure(pubnub_dns_codec, decodes_name_too_long_for_modules_buffer_finishing_with
     uint8_t data[] = {100,200,30,40};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
 
@@ -506,13 +515,14 @@ Ensure(pubnub_dns_codec, decodes_name_too_long_for_modules_buffer_finishing_with
     append_question_M(encoded_long_piece21);
     append_answer_M(encoded_long_piece21, RecordTypeA, data, 4);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
     /* Returning previous length of the last label stretch */
     encoded_long_piece21[length_M(encoded_long_piece21) - 37] = '\42';
 }
@@ -523,6 +533,7 @@ Ensure(pubnub_dns_codec, decodes_another_spooky_response)
     uint8_t data[] = {4,3,2,1};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
     /* Assembling test message(response from DNS server).
@@ -534,13 +545,14 @@ Ensure(pubnub_dns_codec, decodes_another_spooky_response)
     append_answer_M(encoded_domain_name, RecordTypeA, data, 60);
     append_answer_M(encoded_piece2, RecordTypePTR, data, 87);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 }
 
 Ensure(pubnub_dns_codec, decodes_response_encoded_label_splitted)
@@ -549,6 +561,7 @@ Ensure(pubnub_dns_codec, decodes_response_encoded_label_splitted)
     uint8_t data[] = {192,168,40,37};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
     /* Ignores the fact that response has no questions */
@@ -562,13 +575,14 @@ Ensure(pubnub_dns_codec, decodes_response_encoded_label_splitted)
     PUBNUB_LOG_TRACE("------->encoded label formed:\n");
     resize_msg();
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv4_addresses[0].ipv4,
                   data,
@@ -591,99 +605,92 @@ Ensure(pubnub_dns_codec, handles_response_no_usable_answer)
     uint8_t data2[] = {192,168,1,2};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     make_dns_header_M(RESPONSE, 1, 2);
     /* Message shorter than its header?! */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         DNS_MESSAGE_HEADER_SIZE - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               DNS_MESSAGE_HEADER_SIZE - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Reducing the offset to contaminate second answers label
      */
     encoded_piece21[length_M(encoded_piece21) - 2] = '\300';
     append_question_M(encoded_piece21);
     /* Message doesn't contain its first question?! */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         DNS_MESSAGE_HEADER_SIZE + TYPE_AND_CLASS_FIELDS_SIZE - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               DNS_MESSAGE_HEADER_SIZE + TYPE_AND_CLASS_FIELDS_SIZE - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Message doesn't contain type, nor class question fields?!
-    */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+     */
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Message doesn't contain complete question name(offset incomplete(1))?!
-    */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+     */
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Message doesn't contain complete question name(offset missing(2))?!
-    */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 2,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+     */
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 2,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
-    /* Message doesn't contain complete question name(offset missing(2) and last character in
-       label stretch(1))?!
+    /* Message doesn't contain complete question name(offset missing(2) and last
+       character in label stretch(1))?!
     */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 3,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - TYPE_AND_CLASS_FIELDS_SIZE - 3,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Message doesn't contain its first answer?! */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size +
-                                         TYPE_AND_CLASS_FIELDS_SIZE +
-                                         TTL_FIELD_SIZE +
-                                         RECORD_DATA_LENGTH_FIELD_SIZE - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size + TYPE_AND_CLASS_FIELDS_SIZE + TTL_FIELD_SIZE
+                   + RECORD_DATA_LENGTH_FIELD_SIZE - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 
     append_answer_M(encoded_long_piece1, RecordTypeAAAA, data, 11);
     /* Message doesn't contain complete answer name?! */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size
-                                         - sizeof data
-                                         - TYPE_AND_CLASS_FIELDS_SIZE
-                                         - TTL_FIELD_SIZE
-                                         - RECORD_DATA_LENGTH_FIELD_SIZE - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - sizeof data - TYPE_AND_CLASS_FIELDS_SIZE
+                   - TTL_FIELD_SIZE - RECORD_DATA_LENGTH_FIELD_SIZE - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* answer doesn't contain resource data fields */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size
-                                         - sizeof data
-                                         - TYPE_AND_CLASS_FIELDS_SIZE
-                                         - TTL_FIELD_SIZE
-                                         - RECORD_DATA_LENGTH_FIELD_SIZE,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - sizeof data - TYPE_AND_CLASS_FIELDS_SIZE
+                   - TTL_FIELD_SIZE - RECORD_DATA_LENGTH_FIELD_SIZE,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     /* Message doesn't contain complete answer?! */
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size - 1,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size - 1,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
     place_encoded_label_piece_M(offset_within_header);
     /* Won't find the answer due to contaminated answers label */
@@ -691,13 +698,14 @@ Ensure(pubnub_dns_codec, handles_response_no_usable_answer)
     place_encoded_label_piece_M(bad_offset_format);
     resize_msg();
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 
     /* returning to safe offset value */
     encoded_piece21[length_M(encoded_piece21) - 2] = '\301';
@@ -709,6 +717,7 @@ Ensure(pubnub_dns_codec, handles_label_offset_to_itself_preventing_infinite_loop
     uint8_t data[] = {192,168,1,1};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
 
@@ -721,59 +730,64 @@ Ensure(pubnub_dns_codec, handles_label_offset_to_itself_preventing_infinite_loop
     PUBNUB_LOG_TRACE("------->encoded label formed:\n");
     resize_msg();
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 }
 
 Ensure(pubnub_dns_codec, handles_response_with_0_answers)
 {
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     make_dns_header_M(RESPONSE, 1, 0);
     append_question_M(encoded_piece31);
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 }
 
 Ensure(pubnub_dns_codec, handles_response_reporting_error)
 {
     struct pubnub_ipv4_address resolved_addr_ipv4;
+    enum DNSqueryType          o_query_type;
 
     /* This kind of response header reports en issue: RCODE != 0 */
     make_dns_header_M(QUERY, 1, 0);
     append_question_M(encoded_piece31);
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 }
 
 Ensure(pubnub_dns_codec, handles_response_with_no_QR_flag_set)
 {
     struct pubnub_ipv4_address resolved_addr_ipv4;
+    enum DNSqueryType          o_query_type;
 
     make_dns_header_M(RESPONSE, 1, 0);
     m_buf[OFFSET_FLAGS] ^= ResponseQueryFlagMask >> 8;
     append_question_M(offset_beyond_boudary);
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 }
 
@@ -783,6 +797,7 @@ Ensure(pubnub_dns_codec, handles_splitted_label_too_long_for_modules_buffer)
     uint8_t data[] = {192,168,2,5};
     struct pubnub_ipv4_address key_addr = {{0}};
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv4, data, sizeof key_addr.ipv4);
 
@@ -802,13 +817,14 @@ Ensure(pubnub_dns_codec, handles_splitted_label_too_long_for_modules_buffer)
     append_answer_M(encoded_long_piece1, RecordTypeA, data, 0);
     resize_msg();
 
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv4, &key_addr, sizeof resolved_addr_ipv4),
+           equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(bp.spare_addresses.n_ipv4, equals(0));
     attest(bp.spare_addresses.ipv4_index, equals(0));
@@ -826,14 +842,15 @@ Ensure(pubnub_dns_codec, handles_response_label_encoded_badly)
     /* Resolved Ipv4 address */
     uint8_t data[] = {192,168,0,0};
     struct pubnub_ipv4_address resolved_addr_ipv4;
+    enum DNSqueryType          o_query_type;
     make_dns_header_M(RESPONSE, 1, 1);
     append_question_M(label_start_encoded_badly_with_offset_to_itself);
     append_answer_M(encoded_piece31, RecordTypeA, data, 19);
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 }
 
@@ -842,16 +859,17 @@ Ensure(pubnub_dns_codec, handles_response_RecordType_and_DataLength_mismatch)
     /* Resolved IpvX address */
     uint8_t data[]  = {255,255,0,0,0};
     uint8_t data_2[] = {255,255,0,0};
+    enum DNSqueryType          o_query_type;
     struct pubnub_ipv4_address resolved_addr_ipv4;
     make_dns_header_M(RESPONSE, 1, 2);
     append_question_M(encoded_abc_domain_name);
     append_answer_M(encoded_piece3, RecordTypeA, data, 47);
     append_answer_M(encoded_piece3, RecordTypeA, data_2, 123);
-    attest(pbdns_pick_resolved_addresses(m_buf,
-                                         m_msg_size,
-                                         &resolved_addr_ipv4
-                                         IPV6_NULL_ARGUMENT
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+    attest(pbdns_pick_resolved_addresses(
+               m_buf,
+               m_msg_size,
+               &o_query_type,
+               &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv4_addresses[0].ipv4,
@@ -944,6 +962,7 @@ Ensure(pubnub_dns_codec, handles_response_RecordType_and_DataLength_mismatch_on_
     /* Resolved IpvX address */
     uint8_t data[]  = {255,255,0,0,0};
     uint8_t data_2[] = {0xAB,0xCD,0x02,0x55,0,0,0,0,0x32};
+    enum DNSqueryType o_query_type;
     struct pubnub_ipv6_address resolved_addr_ipv6;
     make_dns_header_M(RESPONSE, 1, 2);
     append_question_M(encoded_abc_domain_name);
@@ -951,9 +970,9 @@ Ensure(pubnub_dns_codec, handles_response_RecordType_and_DataLength_mismatch_on_
     append_answer_M(encoded_piece3, RecordTypeA, data, 54);
     attest(pbdns_pick_resolved_addresses(m_buf,
                                          m_msg_size,
+                                         &o_query_type,
                                          NULL,
-                                         &resolved_addr_ipv6
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+                                         &resolved_addr_ipv6 PBDNS_OPTIONAL_PARAMS_BP),
            equals(-1));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(bp.spare_addresses.n_ipv4, equals(0));
@@ -973,6 +992,7 @@ Ensure(pubnub_dns_codec, handles_response_RecordTypeAAAA_and_RecordTypeA)
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
     struct pubnub_ipv6_address resolved_addr_ipv6 = {{0}};
     struct pubnub_ipv6_address key_addr = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv6, data_2, sizeof key_addr.ipv6);
     
@@ -983,12 +1003,15 @@ Ensure(pubnub_dns_codec, handles_response_RecordTypeAAAA_and_RecordTypeA)
     append_answer_M(encoded_piece3, RecordTypeA, data, 58);
     attest(pbdns_pick_resolved_addresses(m_buf,
                                          m_msg_size,
+                                         &o_query_type,
                                          &resolved_addr_ipv4,
-                                         &resolved_addr_ipv6
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+                                         &resolved_addr_ipv6 PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv6, &key_addr, sizeof resolved_addr_ipv6), equals(0));
-    attest(memcmp(&resolved_addr_ipv4.ipv4, data_zeros, sizeof resolved_addr_ipv4.ipv4), equals(0));
+    attest(memcmp(&resolved_addr_ipv6, &key_addr, sizeof resolved_addr_ipv6),
+           equals(0));
+    attest(
+        memcmp(&resolved_addr_ipv4.ipv4, data_zeros, sizeof resolved_addr_ipv4.ipv4),
+        equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv6_addresses[0].ipv6,
                   data_2,
@@ -1023,6 +1046,7 @@ Ensure(pubnub_dns_codec, handles_response_with_RecordTypeAAAA_no_ssl_fallback)
     struct pubnub_ipv4_address resolved_addr_ipv4 = {{0}};
     struct pubnub_ipv6_address resolved_addr_ipv6 = {{0}};
     struct pubnub_ipv6_address key_addr = {{0}};
+    enum DNSqueryType          o_query_type;
 
     memcpy(key_addr.ipv6, data_1, sizeof key_addr.ipv6);
 
@@ -1041,12 +1065,14 @@ Ensure(pubnub_dns_codec, handles_response_with_RecordTypeAAAA_no_ssl_fallback)
     append_answer_M(encoded_piece3, RecordTypeAAAA, data_2, 30);
     attest(pbdns_pick_resolved_addresses(m_buf,
                                          m_msg_size,
+                                         &o_query_type,
                                          &resolved_addr_ipv4,
-                                         &resolved_addr_ipv6
-                                         PBDNS_OPTIONAL_PARAMS_BP),
+                                         &resolved_addr_ipv6 PBDNS_OPTIONAL_PARAMS_BP),
            equals(0));
-    attest(memcmp(&resolved_addr_ipv4.ipv4, data_zeros, sizeof resolved_addr_ipv4), equals(0));
-    attest(memcmp(&resolved_addr_ipv6, &key_addr, sizeof resolved_addr_ipv6), equals(0));
+    attest(memcmp(&resolved_addr_ipv4.ipv4, data_zeros, sizeof resolved_addr_ipv4),
+           equals(0));
+    attest(memcmp(&resolved_addr_ipv6, &key_addr, sizeof resolved_addr_ipv6),
+           equals(0));
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     attest(memcmp(bp.spare_addresses.ipv6_addresses[0].ipv6,
                   data_1,
@@ -1079,23 +1105,27 @@ Ensure(pubnub_dns_codec, fires_asserts_on_illegal_parameters)
 {
     int to_send;
     struct pubnub_ipv4_address resolved_addr_ipv4;
+    enum DNSqueryType          o_query_type;
     pubnub_assert_set_handler((pubnub_assert_handler_t)test_assert_handler);
-    expect_assert_in(pbdns_prepare_dns_request(NULL, 10, "pubsub.pubnub.com", &to_send, dnsA),
-                     "pubnub_dns_codec.c");
+    expect_assert_in(
+        pbdns_prepare_dns_request(NULL, 10, "pubsub.pubnub.com", &to_send, dnsA),
+        "pubnub_dns_codec.c");
     expect_assert_in(pbdns_prepare_dns_request(m_buf, 3, NULL, &to_send, dnsA),
                      "pubnub_dns_codec.c");
-    expect_assert_in(pbdns_prepare_dns_request(m_buf, 5, "pubsub.pubnub.com", NULL, dnsA),
-                     "pubnub_dns_codec.c");
-    expect_assert_in(pbdns_pick_resolved_addresses(NULL,
-                                                   m_msg_size,
-                                                   &resolved_addr_ipv4
-                                                   IPV6_NULL_ARGUMENT
-                                                   PBDNS_OPTIONAL_PARAMS_BP),
-                     "pubnub_dns_codec.c");
-    expect_assert_in(pbdns_pick_resolved_addresses(m_buf,
-                                                   m_msg_size,
-                                                   NULL
-                                                   IPV6_NULL_ARGUMENT
-                                                   PBDNS_OPTIONAL_PARAMS_BP),
+    expect_assert_in(
+        pbdns_prepare_dns_request(m_buf, 5, "pubsub.pubnub.com", NULL, dnsA),
+        "pubnub_dns_codec.c");
+    expect_assert_in(
+        pbdns_pick_resolved_addresses(
+            NULL,
+            m_msg_size,
+            &o_query_type,
+            &resolved_addr_ipv4 IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
+        "pubnub_dns_codec.c");
+    expect_assert_in(pbdns_pick_resolved_addresses(
+                         m_buf,
+                         m_msg_size,
+                         &o_query_type,
+                         NULL IPV6_NULL_ARGUMENT PBDNS_OPTIONAL_PARAMS_BP),
                      "pubnub_dns_codec.c");
 }

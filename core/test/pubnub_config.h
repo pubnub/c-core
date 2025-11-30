@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CONFIG
-#define      INC_PUBNUB_CONFIG
+#define INC_PUBNUB_CONFIG
 
 
 /* -- Next few definitions can be tweaked by the user, but with care -- */
@@ -46,7 +46,7 @@
 
 /** If defined, the PubNub implementation will not try to catch-up on
  * messages it could miss while subscribe failed with an IO error or
- * such.  Use this if missing some messages is not a problem.  
+ * such.  Use this if missing some messages is not a problem.
  *
  * @note messages may sometimes still be lost due to potential @ref
  * PUBNUB_REPLY_MAXLEN overrun issue */
@@ -55,7 +55,7 @@
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN  "pubsub.pubnub.com"
+#define PUBNUB_ORIGIN "pubsub.pubnub.com"
 
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
@@ -72,6 +72,9 @@
 */
 #define PUBNUB_USE_MDNS 1
 #endif
+
+#define PUBNUB_DEFAULT_IPV4_DNS_SERVER "8.8.8.8"
+#define PUBNUB_DEFAULT_IPV6_DNS_SERVER "2001:4860:4860:0000:0000:0000:0000:8888"
 
 #if defined(PUBNUB_CALLBACK_API)
 #if !defined(PUBNUB_USE_IPV6)
@@ -103,13 +106,16 @@
 #define PUBNUB_CHANGE_DNS_SERVERS 1
 #endif
 
-#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
-
 /** Maximum number of consecutive retries when sending DNS query in a single transaction */
 #define PUBNUB_MAX_DNS_QUERIES 3
 #if PUBNUB_CHANGE_DNS_SERVERS
+#if PUBNUB_USE_IPV6
+/** Maximum number of DNS servers list rotation in a single transaction */
+#define PUBNUB_MAX_DNS_ROTATION 5
+#else /* PUBNUB_USE_IPV6 */
 /** Maximum number of DNS servers list rotation in a single transaction */
 #define PUBNUB_MAX_DNS_ROTATION 3
+#endif /* !PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
@@ -122,14 +128,14 @@
 #define PUBNUB_USE_LOG_CALLBACK 0
 #endif
 
-#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+#define PUBNUB_DEFAULT_TRANSACTION_TIMER 310000
 
 #define PUBNUB_MIN_TRANSACTION_TIMER 200
 
 /** Duration of the 'wait_connect_TCP_socket' timeout set during context
     initialization, in milliseconds. Can be changed later by the user.
     */
-#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER 10000
 
 /** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
  *  You can't set less than this.

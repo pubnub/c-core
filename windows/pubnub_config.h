@@ -58,7 +58,7 @@
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN "pubsub.pubnub.com"
+#define PUBNUB_ORIGIN "ps.pndsn.com"
 
 /** Set to 0 to disable changing the origin from the default
     #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
@@ -75,7 +75,7 @@
 /** Duration of the 'wait_connect_TCP_socket' timeout set during context
     initialization, in milliseconds. Can be changed later by the user.
     */
-#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER    10000
+#define PUBNUB_DEFAULT_WAIT_CONNECT_TIMER 10000
 
 /** Mininmal duration of the 'wait_connect_TCP_socket' timer, in milliseconds.
  *  You can't set less than this.
@@ -88,6 +88,9 @@
 /** If true (!=0), enable support for (HTTP/S) proxy */
 #define PUBNUB_PROXY_API 1
 #endif
+
+#define PUBNUB_DEFAULT_IPV4_DNS_SERVER "8.8.8.8"
+#define PUBNUB_DEFAULT_IPV6_DNS_SERVER "2001:4860:4860:0000:0000:0000:0000:8888"
 
 #if defined(PUBNUB_CALLBACK_API)
 /** The size of the stack (in kilobytes) for the "polling" thread, when using
@@ -125,13 +128,16 @@
 #define PUBNUB_CHANGE_DNS_SERVERS 1
 #endif
 
-#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
-
 /** Maximum number of consecutive retries when sending DNS query in a single transaction */
 #define PUBNUB_MAX_DNS_QUERIES 3
 #if PUBNUB_CHANGE_DNS_SERVERS
+#if PUBNUB_USE_IPV6
+/** Maximum number of DNS servers list rotation in a single transaction */
+#define PUBNUB_MAX_DNS_ROTATION 5
+#else /* PUBNUB_USE_IPV6 */
 /** Maximum number of DNS servers list rotation in a single transaction */
 #define PUBNUB_MAX_DNS_ROTATION 3
+#endif /* !PUBNUB_USE_IPV6 */
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
@@ -148,7 +154,7 @@
 
 /** If true (!=0) will use Windows SSPI (for NTLM and such).
     Otherwise, will use own implementation, if available. */
-#ifndef PUBNUB_USE_WIN_SSPI 
+#ifndef PUBNUB_USE_WIN_SSPI
 #define PUBNUB_USE_WIN_SSPI 1
 #endif
 
@@ -158,7 +164,7 @@
 #define PUBNUB_MAX_PROXY_HOSTNAME_LENGTH 63
 
 /** If true (!=0), enable support for message encryption/decryption */
-#ifndef PUBNUB_CRYPTO_API 
+#ifndef PUBNUB_CRYPTO_API
 #define PUBNUB_CRYPTO_API 0
 #endif
 
@@ -200,9 +206,9 @@
 #define PUBNUB_USE_FETCH_HISTORY 1
 
 /** If true (!=0) will enable using the objects API, which is a
-    collection of rest API features that enables "CRUD"(Create, Read, Update and Delete)
-    on two new pubnub objects: User and Space, as well as manipulating connections
-    between them. */
+    collection of rest API features that enables "CRUD"(Create, Read, Update and
+   Delete) on two new pubnub objects: User and Space, as well as manipulating
+   connections between them. */
 #define PUBNUB_USE_OBJECTS_API 1
 
 /** If true (!=0) will enable using the Actions API, which is a collection

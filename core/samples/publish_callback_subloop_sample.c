@@ -128,13 +128,13 @@ static void callback_sample_free(pubnub_t* pb)
 
 int main()
 {
-    const unsigned    minutes_in_loop = 1;
-    char const*       chan            = "hello_world";
-    pubnub_t*         pbp             = pubnub_alloc();
-    pubnub_t*         pbp_2           = pubnub_alloc();
-    enum pubnub_res   result;
+    const unsigned             minutes_in_loop = 1;
+    char const*                chan            = "hello_world";
+    pubnub_t*                  pbp             = pubnub_alloc();
+    pubnub_t*                  pbp_2           = pubnub_alloc();
+    enum pubnub_res            result;
     struct pubnub_ipv4_address o_ipv4[3];
-    pubnub_subloop_t* pbsld;
+    pubnub_subloop_t*          pbsld;
 
     if (NULL == pbp) {
         printf("Failed to allocate Pubnub context!\n");
@@ -148,7 +148,7 @@ int main()
 
     pubnub_register_callback(pbp_2, publish_callback, (void*)chan);
 
-	paint_text_white();
+    paint_text_white();
     //! [Define subscribe loop]
     pbsld = pubnub_subloop_define(
         pbp, chan, pubnub_subscribe_defopts(), subloop_callback);
