@@ -121,8 +121,6 @@ static char pubnub_cert_Starfield[] =
 
 #if defined(PUBNUB_USE_LETS_ENCRYPT_CERTIFICATE) || defined(_WIN32)
 /* ISRG Root X1 (Let's Encrypt)
-   Used for testing and validation purposes with badssl.com and other Let's
-   Encrypt domains. Note: This is NOT used by PubNub production infrastructure.
 
    Subject: C=US, O=Internet Security Research Group, CN=ISRG Root X1
    Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
