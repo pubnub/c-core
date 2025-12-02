@@ -73,9 +73,6 @@
 #define PUBNUB_USE_MDNS 1
 #endif
 
-#define PUBNUB_DEFAULT_IPV4_DNS_SERVER "8.8.8.8"
-#define PUBNUB_DEFAULT_IPV6_DNS_SERVER "2001:4860:4860:0000:0000:0000:0000:8888"
-
 #if defined(PUBNUB_CALLBACK_API)
 #if !defined(PUBNUB_USE_IPV6)
 /** If true (!=0), enable support for Ipv6 network addresses */
@@ -105,6 +102,8 @@
 /** If true (!=0), enable support for switching between DNS servers */
 #define PUBNUB_CHANGE_DNS_SERVERS 1
 #endif
+
+#define PUBNUB_DEFAULT_DNS_SERVER "8.8.8.8"
 
 /** Maximum number of consecutive retries when sending DNS query in a single transaction */
 #define PUBNUB_MAX_DNS_QUERIES 3

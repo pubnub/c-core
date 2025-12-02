@@ -22,6 +22,8 @@
 #include <netinet/tcp.h>
 #endif
 
+#define PUBNUB_DEFAULT_IPV4_DNS_SERVER "8.8.8.8"
+#define PUBNUB_DEFAULT_IPV6_DNS_SERVER "2001:4860:4860:0000:0000:0000:0000:8888"
 #define HTTP_PORT 80
 #define TLS_PORT 443
 
