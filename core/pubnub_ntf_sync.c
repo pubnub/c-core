@@ -256,6 +256,7 @@ enum pubnub_res pubnub_await(pubnub_t* pb)
     }
 #endif /* PUBNUB_NTF_RUNTIME_SELECTION */
 
+    pb->should_stop_await = false;
     t0 = pbms_start();
     while (!pbnc_can_start_transaction(pb)) {
         // Checking whether await cycle should be stopped or not.

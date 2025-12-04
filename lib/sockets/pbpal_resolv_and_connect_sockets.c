@@ -156,9 +156,8 @@ static void prepare_port_and_hostname(const pubnub_t* pb,
 #ifdef PUBNUB_CALLBACK_API
 static void get_default_ipv4_dns_ip(struct pubnub_ipv4_address* addr)
 {
-    if (pubnub_dns_read_system_servers_ipv4(addr, 1) != 1) {
+    if (pubnub_dns_read_system_servers_ipv4(addr, 1) != 1)
         inet_pton(AF_INET, PUBNUB_DEFAULT_IPV4_DNS_SERVER, addr);
-    }
 }
 
 #if PUBNUB_USE_IPV6
@@ -222,6 +221,7 @@ static void get_dns_ip(sa_family_t                 family,
                 if (AF_INET == family) {
                     // If only IPv4 supported we don't have to fall back to the IPv6.
                     get_default_ipv4_dns_ip((struct pubnub_ipv4_address*)p);
+                    addr->sa_family = AF_INET;
                 }
             }
         }
@@ -233,6 +233,7 @@ static void get_dns_ip(sa_family_t                 family,
             && 0 == ((struct sockaddr_in*)addr)->sin_addr.s_addr)) {
         void* pv6 = ((struct sockaddr_in6*)addr)->sin6_addr.s6_addr;
         get_default_ipv6_dns_ip((struct pubnub_ipv6_address*)pv6);
+        addr->sa_family = AF_INET6;
 
         if (is_ipv4_mapped_ipv6(addr))
             remap_ipv6_to_ipv4(addr);
@@ -275,6 +276,7 @@ static void get_dns_ip(sa_family_t family, struct sockaddr* addr)
             && AF_INET == family) {
             // If only IPv4 supported we don't have to fall back to the IPv6.
             get_default_ipv4_dns_ip((struct pubnub_ipv4_address*)p);
+            addr->sa_family = AF_INET;
         }
 #if PUBNUB_USE_IPV6
     }
@@ -284,6 +286,7 @@ static void get_dns_ip(sa_family_t family, struct sockaddr* addr)
             && 0 == ((struct sockaddr_in*)addr)->sin_addr.s_addr)) {
         struct in6_addr* pv6 = &((struct sockaddr_in6*)addr)->sin6_addr;
         get_default_ipv6_dns_ip((struct pubnub_ipv6_address*)pv6->s6_addr);
+        addr->sa_family = AF_INET6;
 
         if (is_ipv4_mapped_ipv6(addr))
             remap_ipv6_to_ipv4(addr);
@@ -305,11 +308,13 @@ static void get_dns_ip(sa_family_t family, struct sockaddr* addr)
         struct pubnub_ipv4_address* p = (struct pubnub_ipv4_address*)&(
             ((struct sockaddr_in*)addr)->sin_addr.s_addr);
         get_default_ipv4_dns_ip(p);
+        addr->sa_family = AF_INET;
     }
 #if PUBNUB_USE_IPV6
     else {
         struct in6_addr* pv6 = &((struct sockaddr_in6*)addr)->sin6_addr;
         get_default_ipv6_dns_ip((struct pubnub_ipv6_address*)pv6->s6_addr);
+        addr->sa_family = AF_INET6;
 
         if (is_ipv4_mapped_ipv6(addr))
             remap_ipv6_to_ipv4(addr);

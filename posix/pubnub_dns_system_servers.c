@@ -32,7 +32,17 @@ int pubnub_dns_read_system_servers_ipv4(struct pubnub_ipv4_address* o_ipv4, size
         /* Reads new line */
         fgets(buffer, sizeof buffer, fp);
         if (strncmp(buffer, "nameserver", 10) == 0) {
-            if (pubnub_parse_ipv4_addr(buffer + 10, &o_ipv4[i]) != 0) {
+            char* addr_start = buffer + 10;
+            while (*addr_start == ' ' || *addr_start == '\t') {
+                addr_start++;
+            }
+            char* end = addr_start;
+            while (*end && *end != ' ' && *end != '\n' && *end != '\r' && *end != '\t') {
+                end++;
+            }
+            *end = '\0';
+
+            if (pubnub_parse_ipv4_addr(addr_start, &o_ipv4[i]) != 0) {
                 PUBNUB_LOG_ERROR(
                     "pubnub_dns_read_system_servers_ipv4():"
                     "- ipv4 'numbers-and-dots' notation string(%s)"
@@ -86,6 +96,12 @@ int pubnub_dns_read_system_servers_ipv6(struct pubnub_ipv6_address* o_ipv6, size
             while (*addr_start == ' ' || *addr_start == '\t') {
                 addr_start++;
             }
+
+            char* end = addr_start;
+            while (*end && *end != ' ' && *end != '\n' && *end != '\r' && *end != '\t') {
+                end++;
+            }
+            *end = '\0';
 
             /* Try parsing as IPv6 first */
             if (pubnub_parse_ipv6_addr(addr_start, &o_ipv6[dns_count]) == 0) {
