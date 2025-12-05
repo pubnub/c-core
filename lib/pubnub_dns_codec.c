@@ -704,11 +704,11 @@ static int find_the_answer(uint8_t const* reader,
     return address_found ? 0 : -1;
 }
 
-int pbdns_pick_resolved_addresses(uint8_t const* buf,
-                                  size_t msg_size,
-                                  struct pubnub_ipv4_address* resolved_addr_ipv4
-                                  IPV6_ADDR_ARGUMENT_DECLARATION
-                                  PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
+int pbdns_pick_resolved_addresses(uint8_t const*     buf,
+                                  size_t             msg_size,
+                                  enum DNSqueryType* o_query_type,
+                                  struct pubnub_ipv4_address* resolved_addr_ipv4 IPV6_ADDR_ARGUMENT_DECLARATION
+                                      PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
 {
     size_t         q_count;
     size_t         ans_count;
@@ -725,6 +725,30 @@ int pbdns_pick_resolved_addresses(uint8_t const* buf,
     if (read_header(buf, msg_size, &q_count, &ans_count) != 0) {
         return -1;
     }
+
+    if (q_count > 0) {
+        uint8_t const* type_reader = buf + HEADER_SIZE;
+        uint8_t const* _end        = buf + msg_size;
+
+        uint8_t name[256];
+        size_t  to_skip;
+
+        // Decode the question name
+        if (dns_label_decode(name, sizeof name, type_reader, buf, msg_size, &to_skip)
+            == 0) {
+            type_reader += to_skip;
+
+            // Check if we have enough space to read query type
+            if (type_reader + 2 <= _end) {
+                unsigned query_type = type_reader[0] * 256 + type_reader[1];
+                PUBNUB_LOG_TRACE("DNS question type: %u\n", query_type);
+
+                if (o_query_type != NULL)
+                    *o_query_type = (enum DNSqueryType)query_type;
+            }
+        }
+    }
+
     if (0 == ans_count) {
         return -1;
     }

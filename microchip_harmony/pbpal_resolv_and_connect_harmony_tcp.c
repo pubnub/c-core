@@ -95,7 +95,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 #if PUBNUB_USE_SSL
     bool connected = !NET_PRES_SocketIsNegotiatingEncryption(pb->pal.socket) &&
             NET_PRES_SocketIsSecure(pb->pal.socket);
-    return bool ? pbpal_connect_success : pbpal_connect_wouldblock;
+    return connected ? pbpal_connect_success : pbpal_connect_wouldblock;
 #else
     return TCPIP_TCP_IsConnected(pb->pal.socket) ? pbpal_connect_success : pbpal_connect_wouldblock;
 #endif
@@ -105,7 +105,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t *pb)
 #if PUBNUB_CHANGE_DNS_SERVERS
 int pbpal_dns_rotate_server(pubnub_t *pb)
 {
-    return (pbp->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES ? 0 : 1)
+    return (pb->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES ? 0 : 1)
 }
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif /* defined(PUBNUB_CALLBACK_API) */

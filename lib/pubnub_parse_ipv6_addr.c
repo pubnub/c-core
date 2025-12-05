@@ -94,12 +94,12 @@ int pubnub_parse_ipv6_addr(char const* addr, struct pubnub_ipv6_address* p)
             previous_colon = true;
             continue;
         }
-        else if (isdigit(*pos)) {
+        else if (isdigit((unsigned char)*pos)) {
             digit_value = *pos - '0';
         }
         else if ((('a' <= *pos) && (*pos <= 'f'))
                  || (('A' <= *pos) && (*pos <= 'F'))) {
-            digit_value = toupper(*pos) - 'A' + 10;
+            digit_value = toupper((unsigned char)*pos) - 'A' + 10;
         }
         else {
             PUBNUB_LOG_ERROR("Error :pubnub_parse_ipv6_addr('%s') - "

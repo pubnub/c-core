@@ -40,15 +40,15 @@
 #include <string.h>
 
 
-#define WATCH_ENUM_RESOLV_N_CONNECT(X)                                        \
-    do {                                                                      \
-       enum pbpal_resolv_n_connect_result x_ = (X);                           \
-       PUBNUB_LOG(PUBNUB_LOG_LEVEL_DEBUG,                                     \
-                  __FILE__ "(%d) in %s: `" #X "` = %d (%s)\n",                \
-                  __LINE__,                                                   \
-                  __FUNCTION__,                                               \
-                  x_,                                                         \
-                  pbpal_resolv_n_connect_res_2_string(x_));                   \
+#define WATCH_ENUM_RESOLV_N_CONNECT(X)                                         \
+    do {                                                                       \
+        enum pbpal_resolv_n_connect_result x_ = (X);                           \
+        PUBNUB_LOG(PUBNUB_LOG_LEVEL_DEBUG,                                     \
+                   __FILE__ "(%d) in %s: `" #X "` = %d (%s)\n",                \
+                   __LINE__,                                                   \
+                   __FUNCTION__,                                               \
+                   x_,                                                         \
+                   pbpal_resolv_n_connect_res_2_string(x_));                   \
     } while (0)
 
 /** Each HTTP chunk has a trailining CRLF ("\r\n" in C-speak).  That's
@@ -78,7 +78,7 @@
 
 bool HTTP_request_has_body(uint8_t method)
 {
-    switch(method) {
+    switch (method) {
     case pubnubSendViaGET:
     case pubnubUseDELETE:
         return false;
@@ -90,8 +90,8 @@ bool HTTP_request_has_body(uint8_t method)
 #endif
         return true;
     default:
-        PUBNUB_LOG_ERROR("Error: HTTP_message_has_body(method): unhandled method: %u\n",
-                         method);
+        PUBNUB_LOG_ERROR(
+            "Error: HTTP_message_has_body(method): unhandled method: %u\n", method);
         return false;
     }
 }
@@ -99,7 +99,7 @@ bool HTTP_request_has_body(uint8_t method)
 
 static char const* get_method_verb_string(uint8_t method)
 {
-    switch(method) {
+    switch (method) {
     case pubnubSendViaGET:
         return "GET ";
     case pubnubSendViaPOST:
@@ -115,8 +115,8 @@ static char const* get_method_verb_string(uint8_t method)
     case pubnubUseDELETE:
         return "DELETE ";
     default:
-        PUBNUB_LOG_ERROR("Error: get_method_verb_string(method): unhandled method: %u\n",
-                         method);
+        PUBNUB_LOG_ERROR(
+            "Error: get_method_verb_string(method): unhandled method: %u\n", method);
         return "UNKOWN ";
     }
 }
@@ -142,11 +142,12 @@ static int send_fin_head(struct pubnub_* pb)
 
 static bool should_keep_alive(struct pubnub_* pb, enum pubnub_res rslt)
 {
-    PUBNUB_LOG_DEBUG("should_keep_alive(pb=%p, rslt=%d('%s')) pb->flags.should_close = %d\n",
-                     pb,
-                     rslt,
-                     pubnub_res_2_string(rslt),
-                     (int)pb->flags.should_close);
+    PUBNUB_LOG_DEBUG(
+        "should_keep_alive(pb=%p, rslt=%d('%s')) pb->flags.should_close = %d\n",
+        pb,
+        rslt,
+        pubnub_res_2_string(rslt),
+        (int)pb->flags.should_close);
     if (!pb->flags.should_close) {
 #if PUBNUB_ADVANCED_KEEP_ALIVE
         time_t tt = time(NULL);
@@ -261,40 +262,41 @@ static enum pubnub_res dont_parse(struct pbcc_context* p)
 }
 
 
-static PFpbcc_parse_response_T m_aParseResponse[] = { dont_parse,
-                                                      pbcc_parse_subscribe_response,
-                                                      pbcc_parse_publish_response,
-                                                      pbcc_parse_publish_response, /* PBTT_SIGNAL */
+static PFpbcc_parse_response_T m_aParseResponse[] = {
+    dont_parse,
+    pbcc_parse_subscribe_response,
+    pbcc_parse_publish_response,
+    pbcc_parse_publish_response, /* PBTT_SIGNAL */
 #if PUBNUB_ONLY_PUBSUB_API
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse,
-                                                      dont_parse
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse,
+    dont_parse
 #else
     pbcc_parse_presence_response, /* PBTT_LEAVE */
     pbcc_parse_time_response,
     pbcc_parse_history_response,
-    pbcc_parse_presence_response, /* PBTT_HERENOW */
-    pbcc_parse_presence_response, /* PBTT_GLOBAL_HERENOW */
-    pbcc_parse_presence_response, /* PBTT_WHERENOW */
-    pbcc_parse_presence_response, /* PBTT_SET_STATE */
-    pbcc_parse_presence_response, /* PBTT_STATE_GET */
+    pbcc_parse_presence_response,         /* PBTT_HERENOW */
+    pbcc_parse_presence_response,         /* PBTT_GLOBAL_HERENOW */
+    pbcc_parse_presence_response,         /* PBTT_WHERENOW */
+    pbcc_parse_presence_response,         /* PBTT_SET_STATE */
+    pbcc_parse_presence_response,         /* PBTT_STATE_GET */
     pbcc_parse_channel_registry_response, /* PBTT_REMOVE_CHANNEL_GROUP */
     pbcc_parse_channel_registry_response, /* PBTT_REMOVE_CHANNEL_FROM_GROUP */
     pbcc_parse_channel_registry_response, /* PBTT_ADD_CHANNEL_TO_GROUP */
     pbcc_parse_channel_registry_response, /* PBTT_LIST_CHANNEL_GROUP */
-    pbcc_parse_presence_response /* PBTT_HEARTBEAT */
+    pbcc_parse_presence_response          /* PBTT_HEARTBEAT */
 #if PUBNUB_USE_SUBSCRIBE_V2
     , pbcc_parse_subscribe_v2_response /* PBTT_SUBSCRIBE_V2 */
 #endif
@@ -356,7 +358,7 @@ static enum pubnub_res parse_pubnub_result(struct pubnub_* pb)
     else {
         pbauto_heartbeat_start_timer(pb);
     }
-    
+
     return pbres;
 }
 
@@ -575,7 +577,7 @@ next_state:
             pb->state = PBS_WAIT_CONNECT;
             break;
         case pbpal_connect_success:
-            i = pbntf_got_socket(pb);
+            i         = pbntf_got_socket(pb);
             pb->state = PBS_CONNECTED;
             break;
         default:
@@ -724,8 +726,10 @@ next_state:
             case pbtlsStartedWaitRead:
             case pbtlsStartedWaitWrite:
                 pb->state = PBS_WAIT_TLS_CONNECT;
-                if (pbtlsStartedWaitWrite == res) pbntf_watch_out_events(pb);
-                if (pbtlsStartedWaitRead == res) pbntf_watch_in_events(pb);
+                if (pbtlsStartedWaitWrite == res)
+                    pbntf_watch_out_events(pb);
+                if (pbtlsStartedWaitRead == res)
+                    pbntf_watch_in_events(pb);
                 return 0;
             case pbtlsFailed:
                 if (pb->options.fallbackSSL) {
@@ -891,7 +895,7 @@ next_state:
             }
             else {
                 char const* o = PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN;
-                pb->state     = PBS_TX_HOST;
+                pb->state = PBS_TX_HOST;
                 if ((i < 0) || (-1 == pbpal_send_str(pb, o))) {
                     outcome_detected(pb, PNR_IO_ERROR);
                     break;
@@ -985,8 +989,7 @@ next_state:
 #endif
             ) {
                 char hedr[128] = "\r\n";
-                pbcc_via_post_headers(
-                    &(pb->core), hedr + 2, sizeof hedr - 2);
+                pbcc_via_post_headers(&(pb->core), hedr + 2, sizeof hedr - 2);
                 PUBNUB_LOG_TRACE(
                     "Sending HTTP 'via POST, or PATCH' headers: '%s'\n", hedr);
                 pb->state = PBS_TX_EXTRA_HEADERS;
@@ -1079,8 +1082,8 @@ next_state:
             /** Reset failed request `Retry-After` HTTP header value. */
             pb->http_header_retry_after = 0;
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
-            pb->http_chunked          = false;
-            pb->state                 = PBS_RX_HEADERS;
+            pb->http_chunked = false;
+            pb->state        = PBS_RX_HEADERS;
             goto next_state;
         case PNR_CONNECTION_TIMEOUT:
         case PNR_IO_ERROR:
@@ -1162,10 +1165,12 @@ next_state:
                 }
                 goto next_state;
             }
-            if (pb_strncasecmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1) == 0) {
+            if (pb_strncasecmp(pb->core.http_buf, h_chunked, sizeof h_chunked - 1)
+                == 0) {
                 pb->http_chunked = true;
             }
-            else if (pb_strncasecmp(pb->core.http_buf, h_length, sizeof h_length - 1) == 0) {
+            else if (pb_strncasecmp(pb->core.http_buf, h_length, sizeof h_length - 1)
+                     == 0) {
                 size_t len = atoi(pb->core.http_buf + sizeof h_length - 1);
                 if (0 != pbcc_realloc_reply_buffer(&pb->core, len)) {
                     outcome_detected(pb, PNR_REPLY_TOO_BIG);
@@ -1174,15 +1179,20 @@ next_state:
                 pb->core.http_content_len = len;
             }
 #if PUBNUB_USE_RETRY_CONFIGURATION
-            else if (pb_strncasecmp(pb->core.http_buf, h_retry_after, sizeof h_retry_after - 1) == 0) {
-                pb->http_header_retry_after = atoi(pb->core.http_buf + sizeof h_retry_after - 1);
+            else if (pb_strncasecmp(
+                         pb->core.http_buf, h_retry_after, sizeof h_retry_after - 1)
+                     == 0) {
+                pb->http_header_retry_after =
+                    atoi(pb->core.http_buf + sizeof h_retry_after - 1);
             }
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
-            else if (pb_strncasecmp(pb->core.http_buf, h_close, sizeof h_close - 1) == 0) {
+            else if (pb_strncasecmp(pb->core.http_buf, h_close, sizeof h_close - 1)
+                     == 0) {
                 pb->flags.should_close = true;
             }
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
-            else if (pb_strncasecmp(pb->core.http_buf, h_encoding, sizeof h_encoding - 1)
+            else if (pb_strncasecmp(
+                         pb->core.http_buf, h_encoding, sizeof h_encoding - 1)
                      == 0) {
                 pb->data_compressed = compressionGZIP;
             }
@@ -1260,7 +1270,7 @@ next_state:
             }
             else if (0
                      != pbcc_realloc_reply_buffer(
-                            &pb->core, pb->core.http_buf_len + chunk_length)) {
+                         &pb->core, pb->core.http_buf_len + chunk_length)) {
                 outcome_detected(pb, PNR_REPLY_TOO_BIG);
             }
             else {
@@ -1379,7 +1389,7 @@ next_state:
             break;
         }
         pb->state = PBS_TX_GET;
-        i = pbpal_send_str(pb, get_method_verb_string(pb->method));
+        i         = pbpal_send_str(pb, get_method_verb_string(pb->method));
         if (i < 0) {
             pb->state = close_kept_alive_connection(pb);
         }
@@ -1434,27 +1444,27 @@ void pbnc_stop(struct pubnub_* pbp, enum pubnub_res outcome_to_report)
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
         if (PNA_CALLBACK == pbp->api_policy) {
 #endif
-        if (PNR_TIMEOUT == outcome_to_report) {
-            if ((pbp->state != PBS_WAIT_CONNECT) &&
+            if (PNR_TIMEOUT == outcome_to_report) {
+                if ((pbp->state != PBS_WAIT_CONNECT) &&
 #if PUBNUB_CHANGE_DNS_SERVERS
-                (pbpal_dns_rotate_server(pbp) == 0)
+                    (pbpal_dns_rotate_server(pbp) == 0)
 #else
                 (pbp->flags.sent_queries < PUBNUB_MAX_DNS_QUERIES)
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
-            ) {
-                pbp->state = PBS_WAIT_CANCEL_DNS;
+                ) {
+                    pbp->state = PBS_WAIT_CANCEL_DNS;
+                }
+                else {
+                    pbp->core.last_result = (PBS_WAIT_CONNECT == pbp->state)
+                                                ? PNR_WAIT_CONNECT_TIMEOUT
+                                                : PNR_ADDR_RESOLUTION_FAILED;
+                    pbp->state            = PBS_WAIT_CANCEL;
+                }
             }
             else {
-                pbp->core.last_result = (PBS_WAIT_CONNECT == pbp->state)
-                                        ? PNR_WAIT_CONNECT_TIMEOUT
-                                        : PNR_ADDR_RESOLUTION_FAILED;
                 pbp->state = PBS_WAIT_CANCEL;
             }
-        }
-        else {
-            pbp->state = PBS_WAIT_CANCEL;
-        }
-        pbntf_requeue_for_processing(pbp);
+            pbntf_requeue_for_processing(pbp);
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
         } /* if api_policy */
 #endif

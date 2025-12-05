@@ -33,7 +33,7 @@
 #define PUBNUB_CHANGE_DNS_SERVERS 0
 #endif
 
-#define PUBNUB_ADNS_RETRY_AFTER_CLOSE                               \
+#define PUBNUB_ADNS_RETRY_AFTER_CLOSE                                          \
     (PUBNUB_CHANGE_DNS_SERVERS || PUBNUB_USE_MULTIPLE_ADDRESSES)
 
 #if !defined(PUBNUB_ONLY_PUBSUB_API)
@@ -118,7 +118,7 @@
 /* Maximum object length that will be sent via PATCH, or POST methods */
 #define PUBNUB_MAX_OBJECT_LENGTH 30000
 
-/* Default value port is initialized with in case of settable origin. Only 
+/* Default value port is initialized with in case of settable origin. Only
    values different than this are taken into account when making connections */
 #define INITIAL_PORT_VALUE 0
 
@@ -205,18 +205,43 @@ typedef struct pubnub_tcp_keepalive_ {
     /** The time in seconds a socket needs to be @c idle before the first
         keep-alive probe is sent.
      */
-    uint8_t             time;
+    uint8_t time;
 
     /** The number of seconds that should pass between sends of
         keep-alive probes if the last one wasn't acknowledged.
     */
-    uint8_t             interval;
+    uint8_t interval;
 
     /** The number of times a probe will be sent and not acknowledged
         before the connection is deemed broken.
     */
-    uint8_t             probes;
+    uint8_t probes;
 } pubnub_tcp_keepalive;
+
+#ifdef PUBNUB_CALLBACK_API
+/** DNS resolution query tracking object. */
+struct dns_queries_tracking {
+    /* @c A record query has been sent. */
+    bool sent_a;
+#if PUBNUB_USE_IPV6
+    /* @c AAAA record query has been sent. */
+    bool sent_aaaa;
+#endif /* PUBNUB_USE_IPV6 */
+    /** Whether query should be retried in case of partial completion. */
+    bool need_retry;
+
+    /* @c A record response received. */
+    bool received_a;
+    /* Temporarily storage until @c AAAA record response will be received. */
+    struct sockaddr_in dns_a_addr;
+#if PUBNUB_USE_IPV6
+    /* @c AAAA record response received. */
+    bool received_aaaa;
+    /* Temporarily storage until @c A record response will be received. */
+    struct sockaddr_storage dns_aaaa_addr;
+#endif /* PUBNUB_USE_IPV6 */
+};
+#endif /* PUBNUB_CALLBACK_API */
 
 struct pubnub_options {
 #if PUBNUB_BLOCKING_IO_SETTABLE
@@ -244,12 +269,12 @@ struct pubnub_options {
 #endif
 #if PUBNUB_USE_SSL
     /** Should the PubNub client establish the connection to
-      * PubNub using SSL? */
+     * PubNub using SSL? */
     bool useSSL : 1;
     /** When SSL is enabled, should the client fallback to a
-      * non-SSL connection if it experiences issues handshaking
-      * across local proxies, firewalls, etc?
-      */
+     * non-SSL connection if it experiences issues handshaking
+     * across local proxies, firewalls, etc?
+     */
     bool fallbackSSL : 1;
     /** Use system certificate store (if available) */
     bool use_system_certificate_store : 1;
@@ -291,11 +316,11 @@ struct pubnub_flags {
 #define ROTATIONS_COUNT_SIZE_IN_BITS 3
     /** Number of full DNS servers list rotations in single transaction to a single DNS
         server.
-        Important when DNS server doesn't answer and transaction timeout. List of DNS 
+        Important when DNS server doesn't answer and transaction timeout. List of DNS
         servers should rotate to find the one which is able to respond on DNS query.
         Macro constant limiting number of full DNS servers list rotations.
      */
-    int rotations_count: ROTATIONS_COUNT_SIZE_IN_BITS;
+    int rotations_count : ROTATIONS_COUNT_SIZE_IN_BITS;
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif
 };
@@ -306,8 +331,8 @@ struct pbdns_servers_check {
     uint8_t dns_mask;
     /* dns server condition bit indicators(0 - OK, 1 - Error on server).
        Set to zeros indicates no issues encountered while sending, or receiving
-       valid response from any of available dns servers(up to 8 of them, as 'uint8_t'
-       conains 8 bits. In practise there is up to 5 dns servers). 
+       valid response from any of available dns servers(up to 8 of them, as
+       'uint8_t' conains 8 bits. In practise there is up to 5 dns servers).
      */
     uint8_t dns_server_check;
 };
@@ -315,7 +340,7 @@ struct pbdns_servers_check {
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
 struct pubnub_multi_addresses {
-    time_t time_of_the_last_dns_query; 
+    time_t time_of_the_last_dns_query;
     /* Number of spare ipv4 addresses */
     int n_ipv4;
     /* ipv4 address index(from the array) currently used */
@@ -398,7 +423,7 @@ struct pubnub_ {
 
 #if defined PUBNUB_ORIGIN_SETTABLE
     char const* origin;
-    
+
     uint16_t port;
 #endif
 
@@ -413,7 +438,7 @@ struct pubnub_ {
         Takes values from enum 'pubnub_method' defined in 'pubnub_api_types.h'.
       */
     uint8_t method;
-    
+
 #if PUBNUB_ADVANCED_KEEP_ALIVE
     struct pubnub_keep_alive_data {
         time_t   timeout;
@@ -466,28 +491,34 @@ struct pubnub_ {
     pubnub_callback_t cb;
     void*             user_data;
 
+    struct dns_queries_tracking dns_queries;
 #if PUBNUB_CHANGE_DNS_SERVERS
     struct pbdns_servers_check dns_check;
-#endif    
+#endif
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     struct pubnub_multi_addresses spare_addresses;
 #endif
+#if PUBNUB_USE_IPV6
+    struct sockaddr_storage dns_addr;
+#else  /* PUBNUB_USE_IPV6 */
+    struct sockaddr_in dns_addr;
+#endif /* !PUBNUB_USE_IPV6 */
 #endif /* defined(PUBNUB_CALLBACK_API) */
 
     /** Subscribed channels and channel groups saved.
         Exist when auto heartbeat support is enabled.
       */
     M_channelInfo()
-    
-    /** Pubnub context fields for heartbeat info used by the module for keeping presence.
-        Exist when auto heartbeat support is enabled.
-      */
-    M_heartbeatInfo()
+
+        /** Pubnub context fields for heartbeat info used by the module for
+           keeping presence. Exist when auto heartbeat support is enabled.
+          */
+        M_heartbeatInfo()
 
 #if PUBNUB_PROXY_API
 
-    /** The type (protocol) of the proxy to use */
-    enum pubnub_proxy_type proxy_type;
+        /** The type (protocol) of the proxy to use */
+        enum pubnub_proxy_type proxy_type;
 
     /** Hostname (address) of the proxy server to use */
     char proxy_hostname[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
@@ -507,7 +538,7 @@ struct pubnub_ {
     struct pubnub_ipv6_address proxy_ipv6_address;
 #endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
-    
+
     /** The (TCP) port to use on the proxy. */
     uint16_t proxy_port;
 
@@ -547,17 +578,17 @@ struct pubnub_ {
     /** Authentication realm - received from the server */
     char realm[PUBNUB_MAX_HTTP_AUTH_REALM + 1];
 
-    /** Proxy 'authentication required' response message counter for repeating realm
-        within a single transaction.
-        At this point this field is of importance for Digest proxy authentication sheme.
-        See RFC 7616 - 5.4. Limited-Use Nonce Values :
-        ...For example, a server MAY choose to allow each nonce value to be used only once by
-        maintaining a record of whether, or not each recently issued nonce has been returned
-        and sending a next-nonce parameter in the Authentication-Info header field of every
-        response...
+    /** Proxy 'authentication required' response message counter for repeating
+       realm within a single transaction. At this point this field is of
+       importance for Digest proxy authentication sheme. See RFC 7616 - 5.4.
+       Limited-Use Nonce Values :
+        ...For example, a server MAY choose to allow each nonce value to be used
+       only once by maintaining a record of whether, or not each recently issued
+       nonce has been returned and sending a next-nonce parameter in the
+       Authentication-Info header field of every response...
 
-        Doing it (within the same transaction)repeatedly, without restrictions, would be a sign
-        of irregular behaviour.
+        Doing it (within the same transaction)repeatedly, without restrictions,
+       would be a sign of irregular behaviour.
      */
     uint8_t auth_msg_count;
 
@@ -569,7 +600,7 @@ struct pubnub_ {
 
 #endif /* PUBNUB_PROXY_API */
     /** Crypto module for encryption and decryption */
-    struct pubnub_crypto_provider_t *crypto_module;
+    struct pubnub_crypto_provider_t* crypto_module;
 
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
     /** The PubNub API enforcement policy. */
