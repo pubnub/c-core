@@ -17,6 +17,7 @@
 #include "windows/pubnub_get_native_socket.h"
 #include <mstcpip.h>
 #include <winsock2.h>
+typedef ADDRESS_FAMILY sa_family_t;
 #else
 #include "posix/pubnub_get_native_socket.h"
 #include <netinet/tcp.h>
@@ -367,7 +368,7 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(pubnub_t* pb,
     }
 #if defined(_WIN32)
     const BOOL enabled =
-        pbccTrue == options->tcp_keepalive.keepalive.enabled ? TRUE : FALSE;
+        pbccTrue == options->tcp_keepalive.enabled ? TRUE : FALSE;
     (void)setsockopt(
         *skt, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enabled, sizeof(enabled));
     // The most reliable time to set idle/interval/count
