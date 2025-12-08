@@ -613,15 +613,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             memcpy(dest.sin6_addr.s6_addr,
                    pb->proxy_ipv6_address.ipv6,
                    sizeof dest.sin6_addr.s6_addr);
-#if defined(_WIN32)
             enum pbpal_resolv_n_connect_result rslt =
                 connect_TCP_socket(pb, (struct sockaddr*)&dest, port);
+#if defined(_WIN32)
             // Complete TCP Keep-Alive configuration if connection established.
             if (pbpal_connect_success == rslt)
                 pbpal_set_tcp_keepalive(pb);
-#else  /* defined(_WIN32) */
-            return connect_TCP_socket(pb, (struct sockaddr*)&dest, port);
-#endif /* !defined(_WIN32) */
+#endif /* defined(_WIN32) */
+            return rslt;
         }
 #endif /* PUBNUB_USE_IPV6 */
         if (0 != pb->proxy_ipv4_address.ipv4[0]
@@ -632,15 +631,14 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             memcpy(&(dest.sin_addr.s_addr),
                    pb->proxy_ipv4_address.ipv4,
                    sizeof dest.sin_addr.s_addr);
-#if defined(_WIN32)
             enum pbpal_resolv_n_connect_result rslt =
                 connect_TCP_socket(pb, (struct sockaddr*)&dest, port);
+#if defined(_WIN32)
             // Complete TCP Keep-Alive configuration if connection established.
             if (pbpal_connect_success == rslt)
                 pbpal_set_tcp_keepalive(pb);
-#else
-            return connect_TCP_socket(pb, (struct sockaddr*)&dest, port);
-#endif
+#endif /* defined(_WIN32) */
+            return rslt;
         }
 #endif /* PUBNUB_PROXY_API */
 #if PUBNUB_USE_MULTIPLE_ADDRESSES

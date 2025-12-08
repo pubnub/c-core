@@ -1,5 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if PUBNUB_USE_SSL
+#include "openssl/pubnub_internal.h"
+#else
 #include "pubnub_internal.h"
+#endif
 
 #include "core/pubnub_ntf_callback.h"
 #include "pbtimespec_elapsed_ms.h"

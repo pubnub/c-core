@@ -12,7 +12,11 @@
  * Minimum Windows version: Windows 8 (NT 6.2)
  */
 
+#if PUBNUB_USE_SSL
+#include "openssl/pubnub_internal.h"
+#else
 #include "pubnub_internal.h"
+#endif
 #include "core/pubnub_dns_servers.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_log.h"

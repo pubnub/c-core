@@ -233,6 +233,14 @@
 #define PUBNUB_USE_AUTO_HEARTBEAT 1
 #endif
 
+#if !defined(PUBNUB_ADVANCED_KEEP_ALIVE)
+/** If true (!=0) will enable use of advanced keep-alive parameters,
+    see pubnub_set_keep_alive_param() and will observe the
+    `Connection: close` if received from server or proxy.
+*/
+#define PUBNUB_ADVANCED_KEEP_ALIVE 1
+#endif
+
 #define PUBNUB_MAX_URL_PARAMS 12
 
 #ifndef PUBNUB_RAND_INIT_VECTOR
