@@ -152,8 +152,6 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
 {
     PUBNUB_ASSERT_OPT(p != NULL);
 
-    check_struct_layout_windows();
-
     switch (protocol) {
     case pbproxyHTTP_GET:
     case pbproxyHTTP_CONNECT:
