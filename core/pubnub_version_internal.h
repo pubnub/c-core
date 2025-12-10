@@ -3,7 +3,7 @@
 #define INC_PUBNUB_VERSION_INTERNAL
 
 
-#define PUBNUB_SDK_VERSION "6.1.0"
+#define PUBNUB_SDK_VERSION "6.2.0"
 
 
 #endif /* !defined INC_PUBNUB_VERSION_INTERNAL */
