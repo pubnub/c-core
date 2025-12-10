@@ -158,7 +158,7 @@ int read_dns_response(pb_socket_t      skt,
     if (responses_received >= expected_responses) {
         PUBNUB_LOG_WARNING(
             "read_dns_response: Already received all responses\n");
-        goto select_address;
+        return 0;
     }
 
     PUBNUB_LOG_TRACE("Expecting %d response(s), already received %d\n",
@@ -258,7 +258,6 @@ int read_dns_response(pb_socket_t      skt,
         }
     }
 
-select_address:
     PUBNUB_LOG_TRACE("All %d DNS responses received\n", expected_responses);
 
     return 0;
