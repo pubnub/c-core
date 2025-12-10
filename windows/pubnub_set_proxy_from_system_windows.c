@@ -1,7 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "core/pubnub_proxy.h"
 
+/* When building with OpenSSL, we need the OpenSSL version of pubnub_internal.h
+   because it has a different struct pubnub_pal definition. The build system
+   should define PUBNUB_USE_SSL=1 for OpenSSL builds. */
+#if PUBNUB_USE_SSL
+#include "openssl/pubnub_internal.h"
+#else
 #include "pubnub_internal.h"
+#endif
+#include "core/pubnub_proxy.h"
 #include "core/pubnub_log.h"
 #include "core/pubnub_assert.h"
 
@@ -45,40 +52,93 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
     PUBNUB_LOG_TRACE("set_from_url4proxy(url4proxy=%S)\n", url4proxy);
     for (it = url4proxy; *end != '\0'; it = end + 1) {
         wchar_t *port;
-        size_t separator_position = wcscspn(it, L"; ");
+        wchar_t *hostname_start;
+        wchar_t *hostname_end;
+        const size_t separator_position = wcscspn(it, L"; ");
 
         end = it + separator_position;
-        port = wmemchr(it, L':', end - it);
-        if (port != NULL) {
-            if (port[1] == L'/') {
-                it = port + 3;
-                port = wmemchr(it, L':', end - it);
-                if (NULL == port) {
-                    port = end;
-                }
-            }
+
+        // Check for protocol prefix format (e.g., "http=127.0.0.1:8888" or "https=[::1]:8888")
+        wchar_t *equals_sign = wmemchr(it, L'=', end - it);
+        if (equals_sign != NULL) {
+            // Skip the protocol prefix (e.g., "http=" or "https=")
+            it = equals_sign + 1;
         }
-        else {
-            port = end;
+
+        // Skipping schema (if 'http://' or 'https://' is present).
+        if (end - it > 3 && it[0] != L'[') {
+            wchar_t *scheme_end = wmemchr(it, L':', end - it);
+            if (scheme_end != NULL && scheme_end[1] == L'/')
+                it = scheme_end + 3;
         }
-        if (0 == WideCharToMultiByte(
-                     CP_UTF8, 0, it, port - it, p->proxy_hostname,
-                     sizeof p->proxy_hostname / sizeof p->proxy_hostname[0],
-                     NULL, NULL)) {
-            continue;
-        }
-        p->proxy_hostname[port - it] = '\0';
-        PUBNUB_LOG_TRACE("Set proxy_hostname = %s\n", p->proxy_hostname);
-        if (port != end) {
-            *end = L'\0';
-            p->proxy_port = (uint16_t)wcstol(port + 1, NULL, 10);
-            PUBNUB_LOG_TRACE("Set proxy_port = %hu\n", p->proxy_port);
-            if (0 == p->proxy_port) {
+
+        if (it[0] == L'[') {
+            // IPv6 format: [2001:db8::1]:8080 or [2001:db8::1]
+            hostname_start = it + 1;
+            hostname_end = wmemchr(hostname_start, L']', end - hostname_start);
+
+            if (hostname_end == NULL) {
+                PUBNUB_LOG_WARNING("Malformed IPv6 proxy address (missing ']'): %S\n", it);
                 continue;
             }
+
+            if (hostname_end < end && hostname_end[1] == L':')
+                port = hostname_end + 1;
+            else
+                port = end;
+        } else {
+            // IPv4 or hostname format: 192.168.1.1:8080 or test.proxy.com:3128
+            hostname_start = it;
+            port = NULL;
+
+            for (wchar_t *p_scan = it; p_scan < end; p_scan++) {
+                if (*p_scan == L':')
+                    port = p_scan;
+            }
+
+            hostname_end = (port != NULL) ? port : end;
+        }
+
+        int bytes_written = WideCharToMultiByte(CP_UTF8,
+                                                0,
+                                                hostname_start,
+                                                hostname_end - hostname_start,
+                                                p->proxy_hostname,
+                                                sizeof(p->proxy_hostname) - 1,
+                                                NULL,
+                                                NULL);
+
+        if (bytes_written == 0) {
+            PUBNUB_LOG_WARNING("WideCharToMultiByte failed for proxy hostname: %lu\n",
+                             GetLastError());
+            continue;
+        }
+        if (bytes_written >= sizeof(p->proxy_hostname)) {
+            PUBNUB_LOG_WARNING("Proxy hostname too long (needs %d bytes)\n",
+                             bytes_written);
+            continue;
+        }
+
+        p->proxy_hostname[bytes_written] = '\0';
+
+        PUBNUB_LOG_TRACE("Set proxy_hostname = %s\n", p->proxy_hostname);
+
+        if (port != NULL && port < end) {
+            const wchar_t saved_char = *end;
+            *end = L'\0';
+            p->proxy_port = (uint16_t)wcstol(port + 1, NULL, 10);
+            *end = saved_char;
+
+            PUBNUB_LOG_TRACE("Set proxy_port = %hu\n", p->proxy_port);
+            if (0 == p->proxy_port)
+                continue;
         }
         else {
+#if PUBNUB_USE_SSL
+            p->proxy_port = p->options.useSSL ? 443 : 80;
+#else  /* PUBNUB_USE_SSL */
             p->proxy_port = 80;
+#endif /* !PUBNUB_USE_SSL */
         }
 
         return 0;
@@ -90,6 +150,17 @@ static int set_from_url4proxy(pubnub_t *p, wchar_t *url4proxy)
 
 int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
 {
+    PUBNUB_ASSERT_OPT(p != NULL);
+
+    switch (protocol) {
+    case pbproxyHTTP_GET:
+    case pbproxyHTTP_CONNECT:
+        break;
+    default:
+        /* other proxy protocols not yet supported */
+        return -1;
+    }
+
     WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ie_proxy_cfg = {0};
     WINHTTP_AUTOPROXY_OPTIONS autoproxy_opts = {0};
     WINHTTP_PROXY_INFO proxy_info = {0};
@@ -99,7 +170,7 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
 
     if (WinHttpGetIEProxyConfigForCurrentUser(&ie_proxy_cfg)) {
         if (ie_proxy_cfg.lpszProxy != NULL) {
-            PUBNUB_LOG_INFO("Found proxy in Registry: %S",
+            PUBNUB_LOG_INFO("Found proxy in Registry: %S\n",
                             ie_proxy_cfg.lpszProxy);
             url4proxy = ie_proxy_cfg.lpszProxy;
             /* This may be overriden if auto-detect is also on */
@@ -116,15 +187,34 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
         }
     }
 
+    pubnub_mutex_lock(p->monitor);
     if (use_auto_proxy) {
         char const *origin = PUBNUB_ORIGIN_SETTABLE ? p->origin : PUBNUB_ORIGIN;
-        wchar_t wide_origin[PUBNUB_MAX_PROXY_HOSTNAME_LENGTH + 1];
+        char url_for_proxy[256];
+        wchar_t wide_origin[256];
         HINTERNET winhttp;
+        int url_len;
+
+#if PUBNUB_USE_SSL
+        char const *scheme = p->options.useSSL ? "https" : "http";
+#else /* PUBNUB_USE_SSL */
+        char const *scheme = "http";
+#endif /* !PUBNUB_USE_SSL */
+
+        url_len = snprintf(url_for_proxy, sizeof(url_for_proxy),
+                           "%s://%s", scheme, origin);
+        if (url_len < 0 || url_len >= sizeof(url_for_proxy)) {
+            PUBNUB_LOG_ERROR("Origin URL too long: '%s'\n", origin);
+            pubnub_mutex_unlock(p->monitor);
+            return -1;
+        }
 
         if (0 ==
-            MultiByteToWideChar(CP_UTF8, 0, origin, -1, wide_origin,
+            MultiByteToWideChar(CP_UTF8, 0, url_for_proxy, -1, wide_origin,
                                 sizeof wide_origin / sizeof wide_origin[0])) {
-            PUBNUB_LOG_ERROR("Origin '%s' to wide string failed\n", origin);
+            PUBNUB_LOG_ERROR("Origin '%s' to wide string failed: %lu\n",
+                             url_for_proxy, GetLastError());
+            pubnub_mutex_unlock(p->monitor);
             return -1;
         }
         winhttp = WinHttpOpen(L"C-core", WINHTTP_ACCESS_TYPE_NO_PROXY,
@@ -165,8 +255,32 @@ int pubnub_set_proxy_from_system(pubnub_t *p, enum pubnub_proxy_type protocol)
     WATCH_INT(rslt);
     if (0 == rslt) {
         p->proxy_type = protocol;
+#if defined(PUBNUB_CALLBACK_API)
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        if (PNA_CALLBACK == p->api_policy) {
+#endif
+        /* If we haven't got numerical address for proxy we'll have to do DNS resolution(from proxy
+           host name) later on, but in order to do that we have to have all proxy addresses(on the
+           given context) set to zeros.
+         */
+        if (0 != pubnub_parse_ipv4_addr(p->proxy_hostname, &(p->proxy_ipv4_address))) {
+            memset(&(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
+#if PUBNUB_USE_IPV6
+            if (0 != pubnub_parse_ipv6_addr(p->proxy_hostname, &(p->proxy_ipv6_address))) {
+                memset(&(p->proxy_ipv6_address), 0, sizeof p->proxy_ipv6_address);
+            }
+#endif
+        }
+#if PUBNUB_USE_MULTIPLE_ADDRESSES
+        pbpal_multiple_addresses_reset_counters(&p->spare_addresses);
+#endif
+#if defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        } /* if (PNA_CALLBACK == p->api_policy) */
+#endif
+#endif /* defined(PUBNUB_CALLBACK_API) */
     }
     free_winhttp_stuff(&ie_proxy_cfg, &proxy_info);
+    pubnub_mutex_unlock(p->monitor);
 
     return rslt;
 }

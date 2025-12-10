@@ -27,7 +27,7 @@ static char const* m_chan = "hello_world";
 
 static void wait_seconds(double time_in_seconds)
 {
-    time_t  start = time(NULL);
+    time_t start = time(NULL);
     double time_passed_in_seconds;
     do {
         time_passed_in_seconds = difftime(time(NULL), start);
@@ -36,7 +36,7 @@ static void wait_seconds(double time_in_seconds)
 
 static void wait_useconds(unsigned long time_in_microseconds)
 {
-    clock_t  start = clock();
+    clock_t       start = clock();
     unsigned long time_passed_in_microseconds;
     do {
         time_passed_in_microseconds = clock() - start;
@@ -257,7 +257,7 @@ int main()
         printf("Failed to read system DNS server, will use default %s\n",
                PUBNUB_DEFAULT_DNS_SERVER);
     }
-    
+
     pubnub_mutex_init_static(m_lock);
     pubnub_set_transaction_timeout(pbp, 5000);
 
@@ -278,7 +278,7 @@ int main()
     /* Awaiting subscribe/connect */
     do {
         pubnub_mutex_lock(m_lock);
-        if(m_first_subscribe_done) {
+        if (m_first_subscribe_done) {
             pubnub_mutex_unlock(m_lock);
             break;
         }
@@ -291,9 +291,8 @@ int main()
         puts("-----------------------");
         puts("Publishing1...");
         puts("-----------------------");
-        res = pubnub_publish(pbp_2,
-                             chan1,
-                             "\"[1]Hello world from 'subscribe-publish from callback' sample!\"");
+        res = pubnub_publish(
+            pbp_2, chan1, "\"[1]Hello world from 'subscribe-publish from callback' sample!\"");
         if (res != PNR_STARTED) {
             printf("pubnub_publish1() returned unexpected: %d('%s')\n",
                    res,
@@ -303,8 +302,8 @@ int main()
     }
 
     /* Time to play. Turning internet connection 'off' and then back 'on'.
-       Starting everything disconnected and then connecting to internet at some point,
-       and so on...
+       Starting everything disconnected and then connecting to internet at some
+       point, and so on...
      */
     wait_seconds(200);
 

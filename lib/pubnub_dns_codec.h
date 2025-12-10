@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_DNS_HANDLER
-#define      INC_PUBNUB_DNS_HANDLER
+#define INC_PUBNUB_DNS_HANDLER
 
 #include "pubnub_internal.h"
 #include "core/pubnub_dns_servers.h"
@@ -32,7 +32,8 @@ enum DNSqueryType {
 };
 
 #if PUBNUB_USE_IPV6
-#define IPV6_ADDR_ARGUMENT_DECLARATION , struct pubnub_ipv6_address* resolved_addr_ipv6
+#define IPV6_ADDR_ARGUMENT_DECLARATION                                         \
+    , struct pubnub_ipv6_address* resolved_addr_ipv6
 #define IPV6_ADDR_ARGUMENT , resolved_addr_ipv6
 #else
 #define IPV6_ADDR_ARGUMENT_DECLARATION
@@ -40,13 +41,14 @@ enum DNSqueryType {
 #endif /* PUBNUB_USE_IPV6 */
 
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
-#define PBDNS_OPTIONAL_PARAMS_DECLARATIONS , struct pubnub_multi_addresses* spare_addresses \
-                                           , struct pubnub_options const* options
+#define PBDNS_OPTIONAL_PARAMS_DECLARATIONS                                     \
+    , struct pubnub_multi_addresses *spare_addresses,                          \
+        struct pubnub_options const *options
 #define PBDNS_OPTIONAL_PARAMS , spare_addresses, options
-#else
+#else /* PUBNUB_USE_MULTIPLE_ADDRESSES */
 #define PBDNS_OPTIONAL_PARAMS_DECLARATIONS
 #define PBDNS_OPTIONAL_PARAMS
-#endif
+#endif /* !PUBNUB_USE_MULTIPLE_ADDRESSES */
 
 
 /** Prepares DNS @p query_type query request for @p host(name) in @p buf whose maximum available
@@ -54,13 +56,13 @@ enum DNSqueryType {
     If function succeedes, @p to_send 'carries' the length of prepared message.
     If function reports en error, @p to_send 'keeps' the length of successfully prepared segment
     before error occurred.
-    
+
     @retval 0 success, -1 on error
  */
-int pbdns_prepare_dns_request(uint8_t* buf,
-                              size_t buf_size,
-                              char const* host,
-                              int *to_send,
+int pbdns_prepare_dns_request(uint8_t*          buf,
+                              size_t            buf_size,
+                              char const*       host,
+                              int*              to_send,
                               enum DNSqueryType query_type);
 
 /** Picks valid resolved(Ipv4, or Ipv6) domain name addresses from the response from DNS server.
@@ -72,11 +74,11 @@ int pbdns_prepare_dns_request(uint8_t* buf,
 
     @retval 0 success, -1 on error
  */
-int pbdns_pick_resolved_addresses(uint8_t const* buf,
-                                  size_t msg_size,
-                                  struct pubnub_ipv4_address* resolved_addr_ipv4
-                                  IPV6_ADDR_ARGUMENT_DECLARATION
-                                  PBDNS_OPTIONAL_PARAMS_DECLARATIONS);
+int pbdns_pick_resolved_addresses(uint8_t const*     buf,
+                                  size_t             msg_size,
+                                  enum DNSqueryType* o_query_type,
+                                  struct pubnub_ipv4_address* resolved_addr_ipv4 IPV6_ADDR_ARGUMENT_DECLARATION
+                                      PBDNS_OPTIONAL_PARAMS_DECLARATIONS);
 
 
 #endif /* defined INC_PUBNUB_DNS_HANDLER */

@@ -1,8 +1,33 @@
 name: c-core
 schema: 1
-version: "6.1.0"
+version: "6.2.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2025-12-10
+    version: v6.2.0
+    changes:
+      - type: feature
+        text: "Add working IPv6 route detection to decide the preferable connection interface."
+      - type: feature
+        text: "When built with `PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT` set to delay in milliseconds, system DNS servers' discovery will make an actual DNS query, and the value will be used as a request timeout."
+      - type: feature
+        text: "Add handling of the IPv6 proxy address provided by automated (or PAC) proxy discovery API."
+      - type: bug
+        text: "Fix issue because of which `pubnub_await` wasn't waiting after `pubnub_cancel` has been called."
+      - type: bug
+        text: "Fix `WinHttpGetProxyForUrl` usage with URL with schema instead of domain only."
+      - type: bug
+        text: "Fix issue with `/etc/resolv.conf` parsing where untrimmed string produced wrong address."
+      - type: bug
+        text: "Some Windows-related interfaces, because of different `pubnub_` struct layouts caused by different  `pubnub_config.h` type aliases and pre-processing macros, accessed and modified wrong fields."
+      - type: bug
+        text: "Fix `set_from_url4proxy` for proper `lpszProxy` parsing."
+      - type: improvement
+        text: "Add defaults for `PUBNUB_ADVANCED_KEEP_ALIVE` in all related `pubnub_config.h` files."
+      - type: improvement
+        text: "When built with IPv6 support, first try to use any of the user-provided IPv6 DNS servers before falling back to the user-provided IPv4 before falling back to the address provided by a well-known DNS provider."
+      - type: improvement
+        text: "When built with IPv6 support, SDK will send two queries to receive both records and decide which will be most suitable for currently available routing."
   - date: 2025-11-17
     version: v6.1.0
     changes:
@@ -1065,7 +1090,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1131,7 +1156,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1197,7 +1222,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1259,7 +1284,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1320,7 +1345,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1376,7 +1401,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"
@@ -1429,7 +1454,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
             requires:
               -
                 name: "miniz"

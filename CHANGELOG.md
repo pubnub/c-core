@@ -1,3 +1,23 @@
+## v6.2.0
+December 10 2025
+
+#### Added
+- Add working IPv6 route detection to decide the preferable connection interface.
+- When built with `PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT` set to delay in milliseconds, system DNS servers' discovery will make an actual DNS query, and the value will be used as a request timeout.
+- Add handling of the IPv6 proxy address provided by automated (or PAC) proxy discovery API.
+
+#### Fixed
+- Fix issue because of which `pubnub_await` wasn't waiting after `pubnub_cancel` has been called.
+- Fix `WinHttpGetProxyForUrl` usage with URL with schema instead of domain only.
+- Fix issue with `/etc/resolv.conf` parsing where untrimmed string produced wrong address.
+- Some Windows-related interfaces, because of different `pubnub_` struct layouts caused by different  `pubnub_config.h` type aliases and pre-processing macros, accessed and modified wrong fields.
+- Fix `set_from_url4proxy` for proper `lpszProxy` parsing.
+
+#### Modified
+- Add defaults for `PUBNUB_ADVANCED_KEEP_ALIVE` in all related `pubnub_config.h` files.
+- When built with IPv6 support, first try to use any of the user-provided IPv6 DNS servers before falling back to the user-provided IPv4 before falling back to the address provided by a well-known DNS provider.
+- When built with IPv6 support, SDK will send two queries to receive both records and decide which will be most suitable for currently available routing.
+
 ## v6.1.0
 November 17 2025
 
