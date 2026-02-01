@@ -176,7 +176,6 @@ bool pubnub_subscription_free(pubnub_subscription_t** sub)
     if (pubnub_subscription_free_(*sub)) {
         pubnub_mutex_unlock((*sub)->mutw);
         pubnub_mutex_destroy((*sub)->mutw);
-        free(*sub);
         *sub = NULL;
         return true;
     }
@@ -190,7 +189,9 @@ bool pubnub_subscription_free_(pubnub_subscription_t* sub)
     if (NULL == sub) { return false; }
 
     if (0 == pbref_counter_free(sub->counter)) {
-        pubnub_entity_free((void**)&sub->entity);
+        if (NULL != sub->entity)
+            pubnub_entity_free((void**)&sub->entity);
+        free(sub);
         return true;
     }
 
@@ -495,19 +496,12 @@ enum pubnub_res pubnub_unsubscribe_with_subscription(
 {
     if (NULL == sub || NULL == *sub) { return PNR_INVALID_PARAMETERS; }
 
+    const size_t ref_counter = pbref_counter_value((*sub)->counter);
+    pubnub_subscription_t* sub_ref = *sub;
     const enum pubnub_res rslt =
         pbcc_subscribe_ee_unsubscribe_with_subscription((*sub)->ee, *sub);
 
-    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND == rslt) {
-        /**
-         * Decrease subscription reference counter only if it has been used for
-         * previous subscriptions.
-         */
-        if (PNR_OK == rslt)
-            subscription_reference_count_update_(*sub, false);
-
-        pubnub_subscription_free(sub);
-    }
+    if (ref_counter > 1) *sub = sub_ref;
 
     return rslt;
 }
@@ -539,21 +533,17 @@ enum pubnub_res pubnub_unsubscribe_with_subscription_set(
 {
     if (NULL == set || NULL == *set) { return PNR_INVALID_PARAMETERS; }
 
+    const size_t ref_counter = pbref_counter_value((*set)->counter);
+    pubnub_subscription_set_t* set_ref = *set;
     const enum pubnub_res rslt =
         pbcc_subscribe_ee_unsubscribe_with_subscription_set((*set)->ee, *set);
 
-    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND == rslt) {
-        /**
-         * Decrease subscription set reference counter only if it has been used
-         * for previous subscriptions.
-         */
-        if (PNR_OK == rslt)
-            subscription_set_reference_count_update_(*set, false);
+    if (ref_counter > 1)  *set = set_ref;
 
+    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND != rslt) {
         pubnub_mutex_lock((*set)->mutw);
         (*set)->subscribed = false;
         pubnub_mutex_unlock((*set)->mutw);
-        pubnub_subscription_set_free(set);
     }
 
     return rslt;
@@ -694,7 +684,6 @@ void subscription_reference_count_update_(
     const bool             increase)
 {
     PUBNUB_ASSERT_OPT(NULL != subscription);
-
     pubnub_mutex_lock(subscription->mutw);
     if (increase) { pbref_counter_increment(subscription->counter); }
     else { pbref_counter_decrement(subscription->counter); }
