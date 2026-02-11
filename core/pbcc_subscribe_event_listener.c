@@ -337,18 +337,18 @@ enum pubnub_res pbcc_event_listener_remove_status_listener(
         return PNR_OK;
     }
 
-    pbcc_status_listener_t* _listener = pbcc_status_listener_alloc_(cb, user_data);
-    if (NULL == _listener) {
-        pubnub_mutex_unlock(listener->mutw);
-        return PNR_OUT_OF_MEMORY;
+    /* Match by (callback, user_data); pbarray_remove uses pointer equality so we remove by index. */
+    for (size_t i = 0; i < pbarray_count(listener->global_status);) {
+        pbcc_status_listener_t* sl = (pbcc_status_listener_t*)
+            pbarray_element_at(listener->global_status, i);
+
+        if (sl->callback == cb && sl->user_data == user_data) {
+            pbarray_remove_element_at(listener->global_status, i);
+            /* Don't increment i - array elements shifted after removal */
+        }
+        else { i++; }
     }
 
-    pbarray_remove(listener->global_status, (void**)&_listener, true);
-
-    /**
-     * It is safe to release temporarily object which used only to match object.
-     */
-    pbcc_status_listener_free_(_listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return PNR_OK;

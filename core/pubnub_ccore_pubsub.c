@@ -58,6 +58,10 @@ void pbcc_init(struct pbcc_context* p,
     p->crypto_module = NULL;
     p->decrypted_message_count = 0;
 #endif
+#if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
+    /* Defined state before alloc; pbcc_deinit and others read it. */
+    p->subscribe_ee = NULL;
+#endif
 }
 
 

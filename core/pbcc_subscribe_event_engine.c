@@ -286,6 +286,11 @@ void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t** ee)
 {
     if (NULL == ee || NULL == *ee) { return; }
 
+    /* Unregister callback so late async completions don't invoke it with freed ee as user_data. */
+    if (NULL != (*ee)->pb) {
+        pubnub_register_callback((*ee)->pb, NULL, NULL);
+    }
+
     pubnub_mutex_lock((*ee)->mutw);
     if (NULL != (*ee)->subscription_sets)
         pbarray_free(&(*ee)->subscription_sets);
