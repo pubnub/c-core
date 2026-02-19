@@ -66,7 +66,7 @@ enum pubnub_res pbcc_fetch_history_prep(
     }
     char max_per_ch_cnt_buf[sizeof(int) * 4 + 1];
     snprintf(
-        max_per_ch_cnt_buf, sizeof(max_per_ch_cnt_buf), "%d", max_per_channel);
+        max_per_ch_cnt_buf, sizeof(max_per_ch_cnt_buf), "%u", max_per_channel);
     if (max_per_channel) { ADD_URL_PARAM(qparam, max, max_per_ch_cnt_buf); }
 
     if (include_meta != pbccNotSet) {

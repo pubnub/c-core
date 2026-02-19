@@ -150,7 +150,7 @@ static int run_tests(
             }
             monotonic_clock_get_time(&timspec);
             printf(
-                "%d.test lasted %d milliseconds.\n",
+                "%u.test lasted %d milliseconds.\n",
                 i + 1,
                 elapsed_ms(prev_timspec[i], timspec));
             switch (aTest[i].result) {

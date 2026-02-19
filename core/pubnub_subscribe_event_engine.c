@@ -591,12 +591,11 @@ enum pubnub_res pubnub_subscription_set_remove_(
     pubnub_subscription_t**          sub,
     const bool                       notify_change)
 {
-    const bool      subscribed = set->subscribed;
-    const pubnub_t* pb         = set->ee->pb;
+    const bool subscribed = set->subscribed;
 
     if (!pbhash_set_contains(set->subscriptions, (*sub)->entity->id.ptr)) {
         PUBNUB_LOG_DEBUG(
-            pb,
+            set->ee->pb,
             "%s entity subscription is not in the set.",
             (*sub)->entity->id.ptr);
         return PNR_SUB_NOT_FOUND;
