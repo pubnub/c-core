@@ -7,7 +7,6 @@
 #include "core/pubnub_alloc.h"
 #include "core/pubnub_pubsubapi.h"
 #include "core/srand_from_pubnub_time.h"
-#include "core/pubnub_log.h"
 
 #include <windows.h>
 
@@ -26,10 +25,7 @@ struct TestData {
 };
 
 
-#define LIST_TEST(tstname)                                                     \
-    {                                                                          \
-        pnfn_test_##tstname, #tstname                                          \
-    }
+#define LIST_TEST(tstname) { pnfn_test_##tstname, #tstname }
 
 
 static struct TestData m_aTest[] = {
@@ -37,14 +33,19 @@ static struct TestData m_aTest[] = {
     LIST_TEST(connect_and_send_over_several_channels_simultaneously),
     LIST_TEST(simple_connect_and_send_over_single_channel_in_group),
     LIST_TEST(connect_and_send_over_several_channels_in_group_simultaneously),
-    LIST_TEST(connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
-    LIST_TEST(connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
+    LIST_TEST(
+        connect_and_send_over_channel_in_group_and_single_channel_simultaneously),
+    LIST_TEST(
+        connect_and_send_over_channel_in_group_and_multi_channel_simultaneously),
     LIST_TEST(simple_connect_and_receiver_over_single_channel),
     LIST_TEST(connect_and_receive_over_several_channels_simultaneously),
     LIST_TEST(simple_connect_and_receiver_over_single_channel_in_group),
-    LIST_TEST(connect_and_receive_over_several_channels_in_group_simultaneously),
-    LIST_TEST(connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
-    LIST_TEST(connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
+    LIST_TEST(
+        connect_and_receive_over_several_channels_in_group_simultaneously),
+    LIST_TEST(
+        connect_and_receive_over_channel_in_group_and_single_channel_simultaneously),
+    LIST_TEST(
+        connect_and_receive_over_channel_in_group_and_multi_channel_simultaneously),
 
     LIST_TEST(complex_send_and_receive_over_several_channels_simultaneously),
     LIST_TEST(complex_send_and_receive_over_channel_plus_group_simultaneously),
@@ -81,7 +82,7 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
         pubnub_init(pbp, pubkey, keysub);
         pubnub_set_user_id(pbp, "test_id");
         if (srand_from_pubnub_time(pbp) != 0) {
-            PUBNUB_LOG_ERROR("Error :could not 'srand()' from PubNub time.\n");
+            printf("Error :could not 'srand()' from PubNub time.\n");
         }
         pubnub_free(pbp);
     }
@@ -94,12 +95,13 @@ static bool is_appveyor_pull_request_build(void)
 }
 
 
-static int run_tests(struct TestData aTest[],
-                     unsigned        test_count,
-                     unsigned        max_conc_thread,
-                     char const*     pubkey,
-                     char const*     keysub,
-                     char const*     origin)
+static int run_tests(
+    struct TestData aTest[],
+    unsigned        test_count,
+    unsigned        max_conc_thread,
+    char const*     pubkey,
+    char const*     keysub,
+    char const*     origin)
 {
     unsigned                   next_test    = 0;
     unsigned                   failed_count = 0;
@@ -140,9 +142,10 @@ static int run_tests(struct TestData aTest[],
           launch the next test (thread) "in its place". That's a TODO for
           next version.
          */
-        if (WAIT_OBJECT_0
-            != WaitForMultipleObjects(in_this_pass, aHa, TRUE, INFINITE)) {
-            SetConsoleTextAttribute(hstdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
+        if (WAIT_OBJECT_0 !=
+            WaitForMultipleObjects(in_this_pass, aHa, TRUE, INFINITE)) {
+            SetConsoleTextAttribute(
+                hstdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
             printf("\n ! WaitForMultipleObjects failed abandonding tests!\n\n");
             SetConsoleTextAttribute(hstdout, wOldColorAttrs);
             return -1;
@@ -150,8 +153,8 @@ static int run_tests(struct TestData aTest[],
         for (i = next_test; i < next_test + in_this_pass; ++i) {
             switch (aTest[i].result) {
             case trFail:
-                SetConsoleTextAttribute(hstdout,
-                                        FOREGROUND_RED | FOREGROUND_INTENSITY);
+                SetConsoleTextAttribute(
+                    hstdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
                 printf(
                     "\n\x1b[41m!!!!!!! The %u. test ('%s') failed!\x1b[m\n\n",
                     i + 1,
@@ -164,13 +167,14 @@ static int run_tests(struct TestData aTest[],
                 break;
             case trIndeterminate:
                 ++indete_count;
-                SetConsoleTextAttribute(hstdout,
-                                        FOREGROUND_RED | FOREGROUND_GREEN
-                                            | FOREGROUND_INTENSITY);
-                printf(" Indeterminate %u. test ('%s') of %u\t",
-                       i + 1,
-                       aTest[i].name,
-                       test_count);
+                SetConsoleTextAttribute(
+                    hstdout,
+                    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+                printf(
+                    " Indeterminate %u. test ('%s') of %u\t",
+                    i + 1,
+                    aTest[i].name,
+                    test_count);
                 SetConsoleTextAttribute(hstdout, wOldColorAttrs);
                 /* Should restart the test... */
                 // printf("\x1b[33m ReStarting %d. test of %ld\x1b[m\t", i + 1,
@@ -211,11 +215,14 @@ static char const* getenv_ex(char const* env, char const* dflt)
 
 int main(int argc, char* argv[])
 {
-    char const* pubkey = getenv_ex("PUBNUB_PUBKEY", (argc > 1) ? argv[1] : "demo");
-    char const* keysub = getenv_ex("PUBNUB_KEYSUB", (argc > 2) ? argv[2] : "demo");
-    char const* origin =
-        getenv_ex("PUBNUB_ORIGIN", (argc > 3) ? argv[3] : "pubsub.pubnub.com");
+    char const* pubkey = getenv_ex(
+        "PUBNUB_PUBKEY", (argc > 1) ? argv[1] : "demo");
+    char const* keysub = getenv_ex(
+        "PUBNUB_KEYSUB", (argc > 2) ? argv[2] : "demo");
+    char const* origin = getenv_ex(
+        "PUBNUB_ORIGIN", (argc > 3) ? argv[3] : "pubsub.pubnub.com");
     unsigned max_conc_thread = (argc > 4) ? atoi(argv[4]) : 1;
 
-    return run_tests(m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
+    return run_tests(
+        m_aTest, TEST_COUNT, max_conc_thread, pubkey, keysub, origin);
 }

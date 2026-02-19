@@ -13,13 +13,12 @@
 
 pbmsref_t pbms_start(void)
 {
-  pbmsref_t rslt = {(clock() * 1000) / CLOCKS_PER_SEC } ;
-  return rslt;
+    pbmsref_t rslt = { (clock() * 1000) / CLOCKS_PER_SEC };
+    return rslt;
 }
 
 
-pbms_t pbms_elapsed(pobmsref_t since)
+pbms_t pbms_elapsed(pbmsref_t since)
 {
-  return (clock() * 1000) / CLOCKS_PER_SEC - since.t_ref;
+    return (clock() * 1000) / CLOCKS_PER_SEC - since.t_ref;
 }
-

@@ -8,7 +8,6 @@
 #include "core/pbcc_memory_utils.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_mutex.h"
-#include "core/pubnub_log.h"
 #include "pubnub_internal.h"
 #include "lib/pbhash_set.h"
 #include "core/pubnub_helper.h"
@@ -40,8 +39,8 @@
  */
 static enum pubnub_res pubnub_subscription_set_add_(
     const pubnub_subscription_set_t* set,
-    pubnub_subscription_t*     sub,
-    bool                       notify_change);
+    pubnub_subscription_t*           sub,
+    bool                             notify_change);
 
 /**
  * @brief Remove subscription from subscription set.
@@ -115,7 +114,7 @@ static pubnub_subscription_set_t* subscription_set_alloc_(
     int                                  length);
 
 /**
-* @brief Update the number of subscription set which refer to `subscription`.
+ * @brief Update the number of subscription set which refer to `subscription`.
  *
  * \b Warning: Application execution will be terminated if `set` is `NULL`.
  *
@@ -189,8 +188,7 @@ bool pubnub_subscription_free_(pubnub_subscription_t* sub)
     if (NULL == sub) { return false; }
 
     if (0 == pbref_counter_free(sub->counter)) {
-        if (NULL != sub->entity)
-            pubnub_entity_free((void**)&sub->entity);
+        if (NULL != sub->entity) pubnub_entity_free((void**)&sub->entity);
         free(sub);
         return true;
     }
@@ -202,25 +200,23 @@ pubnub_subscription_t** pubnub_subscriptions(const pubnub_t* pb, size_t* count)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
-    size_t                  cnt           = 0;
-    pubnub_subscription_t** subscriptions = pbcc_subscribe_ee_subscriptions(
-        pb->core.subscribe_ee,
-        &cnt);
+    size_t                  cnt = 0;
+    pubnub_subscription_t** subscriptions =
+        pbcc_subscribe_ee_subscriptions(pb->core.subscribe_ee, &cnt);
 
     if (NULL != count) { *count = cnt; }
     if (NULL == subscriptions) {
-        PUBNUB_LOG_ERROR("pubnub_subscriptions: failed to allocate memory for "
-            "subscriptions list\n");
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to allocate memory for subscriptions list.");
     }
     else if (0 == cnt) {
-        PUBNUB_LOG_INFO("pubnub_subscriptions: subscriptions list is empty");
+        PUBNUB_LOG_DEBUG(pb, "Subscriptions list is empty.");
     }
 
     return subscriptions;
 }
 
-pubnub_subscription_set_t*
-pubnub_subscription_set_alloc_with_entities(
+pubnub_subscription_set_t* pubnub_subscription_set_alloc_with_entities(
     pubnub_entity_t**                    entities,
     const int                            entities_count,
     const pubnub_subscription_options_t* options)
@@ -235,8 +231,7 @@ pubnub_subscription_set_alloc_with_entities(
 
     for (int i = 0; i < entities_count; ++i) {
         pubnub_entity_t*       entity = entities[i];
-        pubnub_subscription_t* sub    =
-            pubnub_subscription_alloc_(entity, NULL);
+        pubnub_subscription_t* sub = pubnub_subscription_alloc_(entity, NULL);
 
         if (NULL == pb) { pb = entity->pb; }
         if (NULL == sub ||
@@ -250,9 +245,6 @@ pubnub_subscription_set_alloc_with_entities(
 
     if (pb) { set->ee = pb->core.subscribe_ee; }
     else {
-        PUBNUB_LOG_ERROR(
-            "pubnub_subscription_set_alloc_with_entities: invalid PubNub "
-            "context\n");
         pubnub_subscription_set_free(&set);
         return NULL;
     }
@@ -260,8 +252,7 @@ pubnub_subscription_set_alloc_with_entities(
     return set;
 }
 
-pubnub_subscription_set_t*
-pubnub_subscription_set_alloc_with_subscriptions(
+pubnub_subscription_set_t* pubnub_subscription_set_alloc_with_subscriptions(
     pubnub_subscription_t*               sub1,
     pubnub_subscription_t*               sub2,
     const pubnub_subscription_options_t* options)
@@ -269,9 +260,8 @@ pubnub_subscription_set_alloc_with_subscriptions(
     PUBNUB_ASSERT_OPT(NULL != sub1);
     PUBNUB_ASSERT_OPT(NULL != sub2);
 
-    pubnub_subscription_set_t* set = subscription_set_alloc_(
-        options,
-        SUBSCRIPTIONS_LENGTH);
+    pubnub_subscription_set_t* set =
+        subscription_set_alloc_(options, SUBSCRIPTIONS_LENGTH);
     if (NULL == set) { return NULL; }
 
     if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub1) ||
@@ -324,14 +314,12 @@ enum pubnub_res pubnub_subscription_set_union(
 
     pubnub_mutex_lock(other_set->mutw);
     size_t                  count;
-    pubnub_subscription_t** subs = (pubnub_subscription_t**)
-        pbhash_set_elements(set->subscriptions, &count);
+    pubnub_subscription_t** subs = (pubnub_subscription_t**)pbhash_set_elements(
+        set->subscriptions, &count);
 
     for (int i = 0; i < count; ++i) {
-        if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add_(
-                set,
-                subs[i],
-                i + 1 == count)) {
+        if (PNR_OUT_OF_MEMORY ==
+            pubnub_subscription_set_add_(set, subs[i], i + 1 == count)) {
             pubnub_mutex_unlock(other_set->mutw);
             if (NULL != subs) { free(subs); }
             return PNR_OUT_OF_MEMORY;
@@ -352,8 +340,8 @@ void pubnub_subscription_set_subtract(
 
     pubnub_mutex_lock(other_set->mutw);
     size_t                  count;
-    pubnub_subscription_t** subs = (pubnub_subscription_t**)
-        pbhash_set_elements(set->subscriptions, &count);
+    pubnub_subscription_t** subs = (pubnub_subscription_t**)pbhash_set_elements(
+        set->subscriptions, &count);
 
     for (int i = 0; i < count; ++i) {
         pubnub_subscription_set_remove_(set, &subs[i], i + 1 == count);
@@ -367,18 +355,15 @@ pubnub_subscription_set_t** pubnub_subscription_sets(
     size_t*         count)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    size_t                      cnt  = 0;
-    pubnub_subscription_set_t** sets = pbcc_subscribe_ee_subscription_sets(
-        pb->core.subscribe_ee,
-        &cnt);
+    size_t                      cnt = 0;
+    pubnub_subscription_set_t** sets =
+        pbcc_subscribe_ee_subscription_sets(pb->core.subscribe_ee, &cnt);
 
     if (NULL != count) { *count = cnt; }
-    if (0 == cnt) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_sets: subscriptions list is empty");
-    }
+    if (0 == cnt) { PUBNUB_LOG_DEBUG(pb, "Subscriptions list is empty."); }
     else if (NULL == sets) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_sets: failed to allocate memory");
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to allocate memory for subscription sets.");
     }
 
     return sets;
@@ -392,18 +377,17 @@ pubnub_subscription_t** pubnub_subscription_set_subscriptions(
 
     pubnub_mutex_lock(set->mutw);
     size_t                  cnt;
-    pubnub_subscription_t** subs = (pubnub_subscription_t**)
-        pbhash_set_elements(set->subscriptions, &cnt);
+    pubnub_subscription_t** subs =
+        (pubnub_subscription_t**)pbhash_set_elements(set->subscriptions, &cnt);
+    pubnub_t* pb = set->ee->pb;
 
     if (NULL != count) { *count = cnt; }
     if (NULL == subs) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_set_subscriptions: failed to "
-            "allocate memory for subscriptions list\n");
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to allocate memory for subscriptions list.");
     }
     else if (0 == cnt) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_set_subscriptions: subscriptions list is "
-            "empty");
+        PUBNUB_LOG_DEBUG(pb, "Subscriptions list is empty.");
     }
     pubnub_mutex_unlock(set->mutw);
 
@@ -431,8 +415,7 @@ bool pubnub_subscription_set_free_(pubnub_subscription_set_t* set)
     if (NULL == set) { return false; }
 
     if (0 == pbref_counter_free(set->counter)) {
-        if (NULL != set->subscriptions)
-            pbhash_set_free(&set->subscriptions);
+        if (NULL != set->subscriptions) pbhash_set_free(&set->subscriptions);
         free(set);
         return true;
     }
@@ -480,10 +463,8 @@ enum pubnub_res pubnub_subscribe_with_subscription(
 {
     if (NULL == sub) { return PNR_INVALID_PARAMETERS; }
 
-    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_with_subscription(
-        sub->ee,
-        sub,
-        cursor);
+    const enum pubnub_res rslt =
+        pbcc_subscribe_ee_subscribe_with_subscription(sub->ee, sub, cursor);
 
     if (PNR_OUT_OF_MEMORY != rslt)
         subscription_reference_count_update_(sub, true);
@@ -496,9 +477,9 @@ enum pubnub_res pubnub_unsubscribe_with_subscription(
 {
     if (NULL == sub || NULL == *sub) { return PNR_INVALID_PARAMETERS; }
 
-    const size_t ref_counter = pbref_counter_value((*sub)->counter);
-    pubnub_subscription_t* sub_ref = *sub;
-    const enum pubnub_res rslt =
+    const size_t           ref_counter = pbref_counter_value((*sub)->counter);
+    pubnub_subscription_t* sub_ref     = *sub;
+    const enum pubnub_res  rslt =
         pbcc_subscribe_ee_unsubscribe_with_subscription((*sub)->ee, *sub);
 
     if (ref_counter > 1) *sub = sub_ref;
@@ -513,10 +494,7 @@ enum pubnub_res pubnub_subscribe_with_subscription_set(
     if (NULL == set) { return PNR_INVALID_PARAMETERS; }
 
     const enum pubnub_res rslt =
-        pbcc_subscribe_ee_subscribe_with_subscription_set(
-            set->ee,
-            set,
-            cursor);
+        pbcc_subscribe_ee_subscribe_with_subscription_set(set->ee, set, cursor);
 
     if (PNR_OUT_OF_MEMORY != rslt) {
         subscription_set_reference_count_update_(set, true);
@@ -533,12 +511,12 @@ enum pubnub_res pubnub_unsubscribe_with_subscription_set(
 {
     if (NULL == set || NULL == *set) { return PNR_INVALID_PARAMETERS; }
 
-    const size_t ref_counter = pbref_counter_value((*set)->counter);
+    const size_t ref_counter           = pbref_counter_value((*set)->counter);
     pubnub_subscription_set_t* set_ref = *set;
-    const enum pubnub_res rslt =
+    const enum pubnub_res      rslt =
         pbcc_subscribe_ee_unsubscribe_with_subscription_set((*set)->ee, *set);
 
-    if (ref_counter > 1)  *set = set_ref;
+    if (ref_counter > 1) *set = set_ref;
 
     if (PNR_OK == rslt || PNR_SUB_NOT_FOUND != rslt) {
         pubnub_mutex_lock((*set)->mutw);
@@ -576,27 +554,24 @@ enum pubnub_res pubnub_unsubscribe_all(const pubnub_t* pb)
 
 enum pubnub_res pubnub_subscription_set_add_(
     const pubnub_subscription_set_t* set,
-    pubnub_subscription_t*     sub,
-    const bool                 notify_change)
+    pubnub_subscription_t*           sub,
+    const bool                       notify_change)
 {
     const bool      subscribed = set->subscribed;
     enum pubnub_res rslt       = PNR_OK;
+    const pubnub_t* pb         = set->ee->pb;
 
     if (pbhash_set_contains(set->subscriptions, sub->entity->id.ptr)) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_set_add: subscription (sub=%p) for entity "
-            "('%s') already added into set",
-            sub,
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "%s entity subscription already added to the set.",
             sub->entity->id.ptr);
         return PNR_SUB_ALREADY_ADDED;
     }
 
-    if (PBHSR_OUT_OF_MEMORY == pbhash_set_add(set->subscriptions,
-                                              sub->entity->id.ptr,
-                                              sub)) {
-        PUBNUB_LOG_ERROR(
-            "pubnub_subscription_set_add: failed to allocate memory "
-            "for subscription\n");
+    if (PBHSR_OUT_OF_MEMORY ==
+        pbhash_set_add(set->subscriptions, sub->entity->id.ptr, sub)) {
+        PUBNUB_LOG_ERROR(pb, "Failed to allocate memory for subscription.");
         return PNR_OUT_OF_MEMORY;
     }
 
@@ -605,10 +580,7 @@ enum pubnub_res pubnub_subscription_set_add_(
     if (subscribed && notify_change) {
         /** Notify changes in active subscription set. */
         rslt = pbcc_subscribe_ee_change_subscription_with_subscription_set(
-            set->ee,
-            NULL,
-            NULL,
-            true);
+            set->ee, NULL, NULL, true);
     }
 
     return rslt;
@@ -617,36 +589,35 @@ enum pubnub_res pubnub_subscription_set_add_(
 enum pubnub_res pubnub_subscription_set_remove_(
     const pubnub_subscription_set_t* set,
     pubnub_subscription_t**          sub,
-    const bool                             notify_change)
+    const bool                       notify_change)
 {
-    const bool subscribed = set->subscribed;
+    const bool      subscribed = set->subscribed;
+    const pubnub_t* pb         = set->ee->pb;
 
     if (!pbhash_set_contains(set->subscriptions, (*sub)->entity->id.ptr)) {
-        PUBNUB_LOG_INFO(
-            "pubnub_subscription_set_remove: subscription (sub=%p) for entity "
-            "('%s') not found",
-            *sub,
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "%s entity subscription is not in the set.",
             (*sub)->entity->id.ptr);
         return PNR_SUB_NOT_FOUND;
     }
 
     /** Preventing `pbhash_set` (set->subscriptions) from freeing `sub`. */
-    pubnub_subscription_t* stored_subscription = (pubnub_subscription_t*)
-        pbhash_set_element(set->subscriptions, (*sub)->entity->id.ptr);
+    pubnub_subscription_t* stored_subscription =
+        (pubnub_subscription_t*)pbhash_set_element(
+            set->subscriptions, (*sub)->entity->id.ptr);
     const bool same_object = stored_subscription == *sub;
     subscription_reference_count_update_(stored_subscription, true);
-    pbhash_set_remove(set->subscriptions,
-                      (void**)&stored_subscription->entity->id.ptr,
-                      (void**)&stored_subscription);
+    pbhash_set_remove(
+        set->subscriptions,
+        (void**)&stored_subscription->entity->id.ptr,
+        (void**)&stored_subscription);
 
     enum pubnub_res rslt = PNR_OK;
     if (subscribed && notify_change) {
         /** Notify changes in active subscription set. */
         rslt = pbcc_subscribe_ee_change_subscription_with_subscription_set(
-            set->ee,
-            set,
-            *sub,
-            false);
+            set->ee, set, *sub, false);
     }
 
     /** Trying to free up memory used for `sub`. */
@@ -686,7 +657,9 @@ void subscription_reference_count_update_(
     PUBNUB_ASSERT_OPT(NULL != subscription);
     pubnub_mutex_lock(subscription->mutw);
     if (increase) { pbref_counter_increment(subscription->counter); }
-    else { pbref_counter_decrement(subscription->counter); }
+    else {
+        pbref_counter_decrement(subscription->counter);
+    }
     pubnub_mutex_unlock(subscription->mutw);
 }
 
@@ -695,6 +668,8 @@ pbhash_set_t* pubnub_subscription_subscribables_(
     const pubnub_subscription_options_t* options)
 {
     pubnub_subscription_options_t opts = sub->options;
+    const pubnub_t*               pb   = sub->entity->pb;
+
     if (NULL != options) {
         opts.receive_presence_events = sub->options.receive_presence_events;
     }
@@ -708,18 +683,18 @@ pbhash_set_t* pubnub_subscription_subscribables_(
         PBHASH_SET_CHAR_CONTENT_TYPE,
         NULL);
     if (NULL == hash) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-            " memory for subscription's subscribable list\n");
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Failed to allocate memory for subscription's subscribable list.");
         return hash;
     }
 
-    pubnub_subscribable_t* regular = pubnub_subscribable_alloc_(
-        location,
-        &sub->entity->id,
-        false);
+    pubnub_subscribable_t* regular =
+        pubnub_subscribable_alloc_(location, &sub->entity->id, false);
     if (NULL == regular) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-            " memory for regular subscribable identifier\n");
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Failed to allocate memory for regular subscribable identifier.");
         pbhash_set_free(&hash);
         return hash;
     }
@@ -727,8 +702,9 @@ pbhash_set_t* pubnub_subscription_subscribables_(
     if (PBHSR_OUT_OF_MEMORY ==
         pbhash_set_add(hash, regular->id->ptr, regular)) {
         PUBNUB_LOG_ERROR(
-            "pubnub_subscription_subscribables: failed to allocate memory "
-            "for node to store regular subscribable identifier in hash set\n");
+            pb,
+            "Failed to allocate memory for node to store regular subscribable "
+            "identifier in hash set.");
         pubnub_subscribable_free_(regular);
         pbhash_set_free(&hash);
         return hash;
@@ -736,29 +712,25 @@ pbhash_set_t* pubnub_subscription_subscribables_(
 
     if (!opts.receive_presence_events) { return hash; }
 
-    pubnub_subscribable_t* presence = pubnub_subscribable_alloc_(
-        location,
-        &sub->entity->id,
-        true);
+    pubnub_subscribable_t* presence =
+        pubnub_subscribable_alloc_(location, &sub->entity->id, true);
     if (NULL == presence) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_subscribables: failed to allocate"
-            " memory for presence subscribable identifier\n");
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Failed to allocate memory for presence subscribable identifier.");
         pbhash_set_free_with_destructor(
-            &hash,
-            (pbhash_set_element_free)pubnub_subscribable_free_);
+            &hash, (pbhash_set_element_free)pubnub_subscribable_free_);
         return hash;
     }
 
-    if (PBHSR_OUT_OF_MEMORY == pbhash_set_add(
-            hash,
-            presence->id->ptr,
-            presence)) {
+    if (PBHSR_OUT_OF_MEMORY ==
+        pbhash_set_add(hash, presence->id->ptr, presence)) {
         PUBNUB_LOG_ERROR(
-            "pubnub_subscription_subscribables: failed to allocate memory for "
-            "node to store presence subscribable identifier in hash set\n");
+            pb,
+            "Failed to allocate memory for node to store presence "
+            "subscribable identifier in hash set.");
         pbhash_set_free_with_destructor(
-            &hash,
-            (pbhash_set_element_free)pubnub_subscribable_free_);
+            &hash, (pbhash_set_element_free)pubnub_subscribable_free_);
         pubnub_subscribable_free_(presence);
     }
 
@@ -783,8 +755,6 @@ pubnub_subscription_set_t* subscription_set_alloc_(
         (pbhash_set_element_free)pubnub_subscription_set_subscription_free_);
 
     if (NULL == subscription_set->subscriptions) {
-        PUBNUB_LOG_ERROR("subscription_set_alloc: failed to allocate memory for"
-            " subscriptions\n");
         pubnub_subscription_set_free(&subscription_set);
         return NULL;
     }
@@ -801,7 +771,9 @@ void subscription_set_reference_count_update_(
 {
     pubnub_mutex_lock(set->mutw);
     if (increase) { pbref_counter_increment(set->counter); }
-    else { pbref_counter_decrement(set->counter); }
+    else {
+        pbref_counter_decrement(set->counter);
+    }
     pubnub_mutex_unlock(set->mutw);
 }
 
@@ -813,27 +785,28 @@ bool pubnub_subscription_set_subscription_free_(pubnub_subscription_t* sub)
 pbhash_set_t* pubnub_subscription_set_subscribables_(
     const pubnub_subscription_set_t* set)
 {
+    const pubnub_t*               pb = set->ee->pb;
     size_t                        count;
-    const pubnub_subscription_t** subs = (const pubnub_subscription_t**)
-        pbhash_set_elements(set->subscriptions, &count);
+    const pubnub_subscription_t** subs =
+        (const pubnub_subscription_t**)pbhash_set_elements(
+            set->subscriptions, &count);
 
     if (NULL == subs) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_set_subscribables: failed to "
-            "allocate memory for subscriptions list\n");
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to allocate memory for subscriptions list");
     }
     else if (0 == count) {
-        PUBNUB_LOG_INFO("pubnub_subscription_set_subscribables: subscriptions "
-            "list is empty");
+        PUBNUB_LOG_DEBUG(pb, "Subscriptions list is empty.");
     }
 
     pbhash_set_t* hash = pbhash_set_alloc(
-        (0 == count ? 1 : count) * (
-            set->options.receive_presence_events ? 2 : 1),
+        (0 == count ? 1 : count) *
+            (set->options.receive_presence_events ? 2 : 1),
         PBHASH_SET_CHAR_CONTENT_TYPE,
         NULL);
     if (NULL == hash) {
-        PUBNUB_LOG_ERROR("pubnub_subscription_set_get_subscribable: failed to "
-            "allocate memory for subscribables list\n");
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to allocate memory for subscribables list.");
         if (NULL != subs) { free(subs); }
         return hash;
     }
@@ -841,29 +814,25 @@ pbhash_set_t* pubnub_subscription_set_subscribables_(
     if (NULL == subs) { return hash; }
 
     for (int i = 0; i < count; ++i) {
-        pbhash_set_t* subsc = pubnub_subscription_subscribables_(
-            subs[i],
-            &set->options);
+        pbhash_set_t* subsc =
+            pubnub_subscription_subscribables_(subs[i], &set->options);
 
         if (NULL == subsc) {
             pbhash_set_free_with_destructor(
-                &hash,
-                (pbhash_set_element_free)pubnub_subscribable_free_);
+                &hash, (pbhash_set_element_free)pubnub_subscribable_free_);
             free(subs);
             return hash;
         }
 
         if (PBHSR_OUT_OF_MEMORY == pbhash_set_union(hash, subsc, NULL)) {
             PUBNUB_LOG_ERROR(
-                "pubnub_subscription_set_get_subscribable: failed to allocate "
-                "memory for nodes to store subscribable identifiers from other "
-                "hash set\n");
+                pb,
+                "Failed to allocate memory for nodes to store subscribable "
+                "identifiers from other hash set.");
             pbhash_set_free_with_destructor(
-                &hash,
-                (pbhash_set_element_free)pubnub_subscribable_free_);
+                &hash, (pbhash_set_element_free)pubnub_subscribable_free_);
             pbhash_set_free_with_destructor(
-                &subsc,
-                (pbhash_set_element_free)pubnub_subscribable_free_);
+                &subsc, (pbhash_set_element_free)pubnub_subscribable_free_);
             free(subs);
             return hash;
         }

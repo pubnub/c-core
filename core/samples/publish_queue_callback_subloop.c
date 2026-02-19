@@ -5,7 +5,6 @@
 #include "core/pubnub_coreapi.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
-#include "core/pubnub_log.h"
 #include "core/pubnub_free_with_timeout.h"
 #include "core/pubnub_mutex.h"
 #include "core/pubnub_dns_servers.h"
@@ -202,8 +201,8 @@ int main()
         return -1;
     }
 
-    if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
-        if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+    if (pubnub_dns_read_system_servers_ipv4(pbp, o_ipv4, 3) > 0) {
+        if (pubnub_dns_set_primary_server_ipv4(pbp, o_ipv4[0]) != 0) {
             paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             return -1;

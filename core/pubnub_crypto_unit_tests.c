@@ -16,7 +16,6 @@
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 #include "pubnub_coreapi.h"
 #include "pubnub_crypto.h"
 #include "pbcc_crypto.h"

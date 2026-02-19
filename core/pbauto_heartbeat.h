@@ -87,7 +87,7 @@ void pbauto_heartbeat_read_channelInfo(pubnub_t* pb,
 pubnub_watcher_t pbauto_heartbeat_watcher_thread(void* arg);
 
 /** Initializes and starts auto heartbeat watcher thread. Different on different platforms */
-int pbauto_heartbeat_init(struct HeartbeatWatcherData* m_watcher);
+int pbauto_heartbeat_init(pubnub_t* pb, struct HeartbeatWatcherData* m_watcher);
 
 /** Gives notice to auto heartbeat module that subscribe, or heartbeat transaction has begun */
 void pbauto_heartbeat_transaction_ongoing(pubnub_t const* pb);
@@ -115,7 +115,7 @@ void pbauto_heartbeat_stop(void);
 #define M_heartbeatInfo()
 #define pbauto_heartbeat_read_channelInfo(pb, channel, channel_group)
 #define pbauto_heartbeat_watcher_thread(arg)
-#define pbauto_heartbeat_init(m_watcher)
+#define pbauto_heartbeat_init(pb, m_watcher)
 #define pbauto_heartbeat_transaction_ongoing(pb)
 #define pbauto_heartbeat_start_timer(pb)
 #define pbauto_heartbeat_free_channelInfo(pb)

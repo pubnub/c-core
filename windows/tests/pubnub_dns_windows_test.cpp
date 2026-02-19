@@ -17,7 +17,6 @@
 #include <windns.h>
 
 #include "core/pubnub_dns_servers.h"
-#include "core/pubnub_log.h"
 #include "core/pubnub_assert.h"
 
 #include <iostream>
@@ -140,7 +139,7 @@ bool test_dns_enumeration_basic() {
     pubnub_ipv4_address servers[10];
     memset(servers, 0, sizeof(servers));
 
-    int count = pubnub_dns_read_system_servers_ipv4(servers, 10);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 10);
 
     TEST_ASSERT(count >= 0, "DNS enumeration should not fail");
     TEST_ASSERT(count <= 10, "Should not exceed array bounds");
@@ -166,7 +165,7 @@ bool test_dns_no_duplicates() {
     pubnub_ipv4_address servers[16];
     memset(servers, 0, sizeof(servers));
 
-    int count = pubnub_dns_read_system_servers_ipv4(servers, 16);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 16);
     TEST_ASSERT(count >= 0, "DNS enumeration should succeed");
 
     // Check for duplicates
@@ -189,7 +188,7 @@ bool test_dns_only_up_adapters() {
     // Get DNS servers from our function
     pubnub_ipv4_address our_servers[16];
     memset(our_servers, 0, sizeof(our_servers));
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     // Manually enumerate all adapters including DOWN ones
     ULONG buflen = 0;
@@ -253,7 +252,7 @@ bool test_dns_thread_safety() {
     auto worker = [&]() {
         for (int i = 0; i < iterations; i++) {
             pubnub_ipv4_address servers[16];
-            int count = pubnub_dns_read_system_servers_ipv4(servers, 16);
+            int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 16);
             if (count < 0) {
                 failures++;
             }
@@ -279,7 +278,7 @@ bool test_dns_no_invalid_adapter_types() {
     TEST_LOG("Test 5: Verify no loopback/tunnel adapter DNS servers");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     ULONG buflen = 0;
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
@@ -332,7 +331,7 @@ bool test_dns_reachability() {
     TEST_LOG("This is the PRIMARY test - we should NOT return unreachable DNS servers");
 
     pubnub_ipv4_address servers[10];
-    int count = pubnub_dns_read_system_servers_ipv4(servers, 10);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 10);
 
     TEST_ASSERT(count > 0, "Should have at least one DNS server");
 
@@ -380,17 +379,17 @@ bool test_dns_boundary_conditions() {
     TEST_LOG("Test 7: Boundary conditions");
 
     // Test with n=0
-    int count = pubnub_dns_read_system_servers_ipv4(NULL, 0);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, NULL, 0);
     TEST_ASSERT(count == 0, "Should return 0 for n=0");
 
     // Test with n=1
     pubnub_ipv4_address one_server[1];
-    count = pubnub_dns_read_system_servers_ipv4(one_server, 1);
+    count = pubnub_dns_read_system_servers_ipv4(NULL, one_server, 1);
     TEST_ASSERT(count <= 1, "Should return at most 1 server");
 
     // Test with large n
     pubnub_ipv4_address many_servers[100];
-    count = pubnub_dns_read_system_servers_ipv4(many_servers, 100);
+    count = pubnub_dns_read_system_servers_ipv4(NULL, many_servers, 100);
     TEST_ASSERT(count >= 0 && count <= 100, "Should respect array bounds");
 
     TEST_PASS("test_dns_boundary_conditions");
@@ -402,7 +401,7 @@ bool test_dns_ipv4_enabled_only() {
     TEST_LOG("Test 8: Verify DNS servers only from IPv4-enabled adapters");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     ULONG buflen = 0;
     GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST,
@@ -478,7 +477,7 @@ bool test_dns_only_adapters_with_gateway() {
     TEST_LOG("This test verifies we filter based on actual reachability, not just gateway presence");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     // Use GAA_FLAG_INCLUDE_GATEWAYS to get actual gateway information
     ULONG buflen = 0;
@@ -591,7 +590,7 @@ bool test_dns_no_loopback_or_apipa() {
     TEST_LOG("Test 10: Verify no loopback (127.x.x.x) or APIPA (169.254.x.x) DNS servers");
 
     pubnub_ipv4_address servers[16];
-    int count = pubnub_dns_read_system_servers_ipv4(servers, 16);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 16);
 
     for (int i = 0; i < count; i++) {
         std::string ip = format_ipv4(servers[i]);
@@ -616,7 +615,7 @@ bool test_dns_metric_prioritization() {
     TEST_LOG("Lower metric adapters should have their DNS servers returned first");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     if (our_count == 0) {
         TEST_LOG("INFO: No DNS servers found (this is OK for testing)");
@@ -698,7 +697,7 @@ bool test_dns_best_interface_prioritization() {
     TEST_LOG("This tests that GetBestInterface logic is working");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     if (our_count == 0) {
         TEST_LOG("INFO: No DNS servers found");
@@ -797,7 +796,7 @@ bool test_dns_subnet_reachability() {
     TEST_LOG("This tests the DNS reachability validation logic");
 
     pubnub_ipv4_address our_servers[16];
-    int our_count = pubnub_dns_read_system_servers_ipv4(our_servers, 16);
+    int our_count = pubnub_dns_read_system_servers_ipv4(NULL, our_servers, 16);
 
     if (our_count == 0) {
         TEST_LOG("INFO: No DNS servers found");
@@ -919,7 +918,7 @@ bool test_no_dnsqueryconfig_crashes() {
     auto worker = [&]() {
         for (int i = 0; i < iterations; i++) {
             pubnub_ipv4_address servers[16];
-            int count = pubnub_dns_read_system_servers_ipv4(servers, 16);
+            int count = pubnub_dns_read_system_servers_ipv4(NULL, servers, 16);
             if (count < 0) {
                 failures++;
             } else {

@@ -198,6 +198,18 @@ SOURCE_FILES_ = \
     $(SUBSCRIBE_V2_SOURCE_FILES)
 !endif
 
+# Advanced logger feature source files.
+!if $(USE_LOGGER)
+SOURCE_FILES_ = \
+    $(SOURCE_FILES_)        \
+    $(LOGGER_SOURCE_FILES)
+!if $(USE_DEFAULT_LOGGER)
+SOURCE_FILES_ = \
+    $(SOURCE_FILES_)                      \
+    $(LOGGER_DEFAULT_STDIO_SOURCE_FILES)
+!endif
+!endif
+
 # There is no suitable functions available in nmake to strip file path,
 # so it needs to be done manually.
 SOURCE_OBJECT_FILES_NAMES = $(SOURCE_FILES_:../core/c99/=)

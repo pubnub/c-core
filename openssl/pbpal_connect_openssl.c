@@ -1,4 +1,5 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#include "core/pubnub_helper.h"
 #include "core/pbpal.h"
 
 #ifdef _WIN32
@@ -12,7 +13,9 @@
 #include "pbpal_add_system_certs.h"
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 #include "lib/sockets/pbpal_adns_sockets.h"
 #include "lib/sockets/pbpal_socket_blocking_io.h"
 #include "core/pubnub_dns_servers.h"
@@ -36,7 +39,7 @@ static int print_to_pubnub_log(const char* s, size_t len, void* p)
 {
     PUBNUB_UNUSED(len);
 
-    PUBNUB_LOG_ERROR("From OpenSSL: pb=%p '%s'", p, s);
+    PUBNUB_LOG_ERROR((pubnub_t*)p, "%s", s);
 
     return 0;
 }
@@ -165,26 +168,26 @@ static char pubnub_cert_ISRG_Root_X1[] =
     "-----END CERTIFICATE-----\n";
 #endif
 
-static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
+static int add_pem_cert(pubnub_t* pb, SSL_CTX* sslCtx, char const* pem_cert)
 {
     X509* cert;
     BIO*  mem = BIO_new(BIO_s_mem());
     if (NULL == mem) {
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed BIO_new for PEM certificate\n", sslCtx);
+        PUBNUB_LOG_ERROR(pb, "BIO_new() failed for PEM certificate.");
         return -1;
     }
     BIO_puts(mem, pem_cert);
     cert = PEM_read_bio_X509(mem, NULL, 0, NULL);
     BIO_free(mem);
     if (NULL == cert) {
-        ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed to read PEM certificate\n", sslCtx);
+        ERR_print_errors_cb(print_to_pubnub_log, pb);
+        PUBNUB_LOG_ERROR(pb, "Failed to read PEM certificate.");
         return -1;
     }
 
     if (0 == X509_STORE_add_cert(SSL_CTX_get_cert_store(sslCtx), cert)) {
-        ERR_print_errors_cb(print_to_pubnub_log, NULL);
-        PUBNUB_LOG_ERROR("SSL_CTX=%p: Failed to add PEM certificate\n", sslCtx);
+        ERR_print_errors_cb(print_to_pubnub_log, pb);
+        PUBNUB_LOG_ERROR(pb, "Failed to add PEM certificate to store.");
         X509_free(cert);
         return -1;
     }
@@ -194,17 +197,19 @@ static int add_pem_cert(SSL_CTX* sslCtx, char const* pem_cert)
 }
 
 
-static int add_pubnub_cert(SSL_CTX* sslCtx)
+static int add_pubnub_cert(pubnub_t* pb, SSL_CTX* sslCtx)
 {
     /* Load certificates in priority order:
-       1. Amazon Root CA 1 - Primary for PubNub domains (ps.pndsn.com, *.pubnubapi.com)
+       1. Amazon Root CA 1 - Primary for PubNub domains (ps.pndsn.com,
+       *.pubnubapi.com)
        2. Starfield Root CA G2 - For pubsub.pubnub.com
-       3. ISRG Root X1 - For testing with Let's Encrypt domains (badssl.com, etc.)
+       3. ISRG Root X1 - For testing with Let's Encrypt domains (badssl.com,
+       etc.)
      */
-    int rslt = add_pem_cert(sslCtx, pubnub_cert_Amazon_Root_CA_1);
-    rslt     = rslt || add_pem_cert(sslCtx, pubnub_cert_Starfield);
+    int rslt = add_pem_cert(pb, sslCtx, pubnub_cert_Amazon_Root_CA_1);
+    rslt     = rslt || add_pem_cert(pb, sslCtx, pubnub_cert_Starfield);
 #if defined(PUBNUB_USE_LETS_ENCRYPT_CERTIFICATE) || defined(_WIN32)
-    rslt = rslt || add_pem_cert(sslCtx, pubnub_cert_ISRG_Root_X1);
+    rslt = rslt || add_pem_cert(pb, sslCtx, pubnub_cert_ISRG_Root_X1);
 #endif
     return rslt;
 }
@@ -212,35 +217,54 @@ static int add_pubnub_cert(SSL_CTX* sslCtx)
 
 static void add_certs(pubnub_t* pb)
 {
-    PUBNUB_LOG_TRACE(
-        "add_certs(pb=%p): pb->options.use_system_certificate_store=%d, "
-        "pb->ssl_userPEMcert=%p, pb->ssl_CAfile='%s', pb->ssl_CApath='%s'.\n",
-        pb,
-        pb->options.use_system_certificate_store,
-        pb->ssl_userPEMcert,
-        pb->ssl_CAfile,
-        pb->ssl_CApath);
+#if PUBNUB_LOG_ENABLED(TRACE)
+    if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_TRACE)) {
+        pubnub_log_value_t data = pubnub_log_value_map_init();
+        PUBNUB_LOG_MAP_SET_BOOL(
+            &data,
+            pb->options.use_system_certificate_store,
+            use_system_certificate_store)
+        PUBNUB_LOG_MAP_SET_STRING(&data, pb->ssl_userPEMcert, PEMcert)
+        PUBNUB_LOG_MAP_SET_STRING(&data, pb->ssl_CAfile, CAfile)
+        PUBNUB_LOG_MAP_SET_STRING(&data, pb->ssl_CApath, CApath)
+        pubnub_log_object(
+            pb,
+            PUBNUB_LOG_LEVEL_TRACE,
+            PUBNUB_LOG_LOCATION,
+            &data,
+            "Add certificates with parameters:");
+    }
+#endif // PUBNUB_LOG_ENABLED(TRACE)
 
-    if (pb->options.use_system_certificate_store
-        && (0 == pbpal_add_system_certs(pb))) {
+    if (pb->options.use_system_certificate_store &&
+        (0 == pbpal_add_system_certs(pb))) {
         return;
     }
 
     if (NULL != pb->ssl_userPEMcert) {
-        add_pem_cert(pb->pal.ctx, pb->ssl_userPEMcert);
+        add_pem_cert(pb, pb->pal.ctx, pb->ssl_userPEMcert);
     }
 
     if ((NULL == pb->ssl_CAfile) && (NULL == pb->ssl_CApath)) {
-        add_pubnub_cert(pb->pal.ctx);
+        add_pubnub_cert(pb, pb->pal.ctx);
     }
     else {
         if (!SSL_CTX_load_verify_locations(
                 pb->pal.ctx, pb->ssl_CAfile, pb->ssl_CApath)) {
-            ERR_print_errors_cb(print_to_pubnub_log, NULL);
-            PUBNUB_LOG_ERROR(
-                "SSL_CTX_load_verify_locations(CAfile=%s, CApath=%s) failed",
-                pb->ssl_CAfile,
-                pb->ssl_CApath);
+            ERR_print_errors_cb(print_to_pubnub_log, pb);
+#if PUBNUB_LOG_ENABLED(ERROR)
+            if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_ERROR)) {
+                pubnub_log_value_t data = pubnub_log_value_map_init();
+                PUBNUB_LOG_MAP_SET_STRING(&data, pb->ssl_CAfile, CAfile)
+                PUBNUB_LOG_MAP_SET_STRING(&data, pb->ssl_CApath, CApath)
+                pubnub_log_object(
+                    pb,
+                    PUBNUB_LOG_LEVEL_ERROR,
+                    PUBNUB_LOG_LOCATION,
+                    &data,
+                    "Load verify location failed:");
+            }
+#endif // PUBNUB_LOG_ENABLED(TRACE)
         }
     }
 }
@@ -254,31 +278,31 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     ssl = pb->pal.ssl;
     PUBNUB_ASSERT(NULL == ssl);
+    PUBNUB_LOG_TRACE(
+        pb, "Establishing TLS/SSL over existing TCP/IP connection.");
 
     if (NULL == pb->pal.ctx) {
-        PUBNUB_LOG_TRACE("pb=%p: Don't have SSL_CTX\n", pb);
+        PUBNUB_LOG_TRACE(pb, "There is no SSL context. Creating...");
         pb->pal.ctx = SSL_CTX_new(SSLv23_client_method());
         if (NULL == pb->pal.ctx) {
             ERR_print_errors_cb(print_to_pubnub_log, pb);
-            PUBNUB_LOG_ERROR("pb=%p SSL_CTX_new failed\n", pb);
+            PUBNUB_LOG_ERROR(pb, "New SSL context creation failed,");
             return pbtlsResourceFailure;
         }
-        PUBNUB_LOG_TRACE("pb=%p: Got SSL_CTX\n", pb);
+        PUBNUB_LOG_TRACE(pb, "SSL context created.");
         add_certs(pb);
     }
     ssl = pb->pal.ssl = SSL_new(pb->pal.ctx);
     if (NULL == ssl) {
         ERR_print_errors_cb(print_to_pubnub_log, pb);
-        PUBNUB_LOG_ERROR("pb=%p SSL_new failed\n", pb);
+        PUBNUB_LOG_ERROR(pb, "SSL initialization failed.");
         return pbtlsResourceFailure;
     }
 
     /** Enable SNI (Server Name Indication) for virtual hosting support. */
     if (!SSL_set_tlsext_host_name(ssl, pb->origin)) {
-        PUBNUB_LOG_WARNING("pb=%p: SSL_set_tlsext_host_name() failed to set "
-                           "SNI hostname '%s'\n",
-                           pb,
-                           pb->origin);
+        PUBNUB_LOG_WARNING(
+            pb, "Failed to set SNI hostname to: '%s'", pb->origin);
         ERR_print_errors_cb(print_to_pubnub_log, pb);
         return pbtlsFailed;
     }
@@ -288,24 +312,27 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
     if (param != NULL) {
         char const* hostname = pb->origin;
         if (!X509_VERIFY_PARAM_set1_host(param, hostname, 0)) {
-            PUBNUB_LOG_WARNING("pb=%p: X509_VERIFY_PARAM_set1_host() failed to "
-                               "set hostname '%s' for verification\n",
-                               pb,
-                               hostname);
+            PUBNUB_LOG_WARNING(
+                pb, "Failed to set hostname for verification: '%s'", hostname);
             return pbtlsFailed;
         }
         PUBNUB_LOG_TRACE(
-            "pb=%p: Hostname verification configured for '%s'\n", pb, hostname);
+            pb, "Hostname verification configured for: '%s'", hostname);
     }
-    PUBNUB_LOG_TRACE("pb=%p: Got SSL\n", pb);
+    PUBNUB_LOG_TRACE(pb, "SSL configuration completed.");
     SSL_set_fd(ssl, pb->pal.socket);
-    WATCH_ENUM(pb->options.use_blocking_io);
+    PUBNUB_LOG_DEBUG(
+        pb,
+        pb->options.use_blocking_io ? "Using blocking IO"
+                                    : "Using non-blocking IO");
     pb->pal.tryconn = pbms_start();
     if (pb->options.reuse_SSL_session && (pb->pal.session != NULL)) {
         if (!SSL_set_session(ssl, pb->pal.session)) {
-            ERR_print_errors_cb(print_to_pubnub_log, NULL);
+            ERR_print_errors_cb(print_to_pubnub_log, pb);
         }
     }
+
+    pb->pal.tls_connect_last_error = 0;
 
     return pbpal_check_tls(pb);
 }
@@ -321,24 +348,73 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     X509* cert;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT_OPT((PBS_CONNECTED == pb->state)
-                      || (PBS_WAIT_TLS_CONNECT == pb->state));
+    PUBNUB_ASSERT_OPT(
+        (PBS_CONNECTED == pb->state) || (PBS_WAIT_TLS_CONNECT == pb->state));
     PUBNUB_ASSERT(SOCKET_INVALID != pb->pal.socket);
     ssl = pb->pal.ssl;
     PUBNUB_ASSERT(NULL != ssl);
+
+    /* On repeat poll (already in PBS_WAIT_TLS_CONNECT), wait for socket
+       readiness with select() before calling SSL_connect(). This prevents
+       busy-wait spinning in sync mode. Mirrors what pbpal_check_connect()
+       does for TCP connect. In callback mode the socket is already ready
+       when the FSM fires, so select() returns immediately. */
+    if (PBS_WAIT_TLS_CONNECT == pb->state
+        && 0 != pb->pal.tls_connect_last_error) {
+        fd_set         read_set, write_set;
+        struct timeval timev     = { 0, 300000 };
+        const bool     want_read =
+            (SSL_ERROR_WANT_READ == pb->pal.tls_connect_last_error);
+
+        FD_ZERO(&read_set);
+        FD_ZERO(&write_set);
+        FD_SET(pb->pal.socket, want_read ? &read_set : &write_set);
+
+        rslt = select(
+            pb->pal.socket + 1,
+            want_read ? &read_set : NULL,
+            want_read ? NULL : &write_set,
+            NULL,
+            &timev);
+        if (SOCKET_ERROR == rslt) {
+            PUBNUB_LOG_ERROR(pb, "TLS select() error during handshake.");
+            pb->pal.tls_connect_last_error = 0;
+            return pbtlsFailed;
+        }
+        if (0 == rslt) {
+            /* select() timed out — socket not ready yet. Return the
+               same wait direction without calling SSL_connect(). */
+            return want_read ? pbtlsStartedWaitRead : pbtlsStartedWaitWrite;
+        }
+        PUBNUB_LOG_TRACE(pb, "TLS select() event, resuming handshake.");
+    }
 
     bool needRead = false, needWrite = false;
     rslt = SSL_connect(ssl);
     rslt = pbpal_handle_socket_condition(
         rslt, pb, __FILE__, __LINE__, &needRead, &needWrite);
     if (PNR_OK != rslt) {
-        if (rslt != PNR_IN_PROGRESS)
+        /* Log socket condition only on first entry (from PBS_CONNECTED).
+           On repeat polls the traces inside pbpal_handle_socket_condition
+           already provide the needed info when the error type changes. */
+        if (PBS_CONNECTED == pb->state) {
+            PUBNUB_LOG_TRACE(
+                pb,
+                "Socket condition: %d (%s)",
+                rslt,
+                pubnub_res_2_string(rslt));
+        }
+        if (rslt != PNR_IN_PROGRESS) {
+            pb->pal.tls_connect_last_error = 0;
             return pbtlsFailed;
+        }
         return needRead    ? pbtlsStartedWaitRead
                : needWrite ? pbtlsStartedWaitWrite
                            : pbtlsStarted;
     }
-    PUBNUB_LOG_TRACE("pb=%p: SSL connected\n", pb);
+
+    pb->pal.tls_connect_last_error = 0;
+    PUBNUB_LOG_DEBUG(pb, "TLS connection established.");
     socket_set_rcv_timeout(pb->pal.socket, pb->transaction_timeout_ms);
 
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
@@ -350,32 +426,34 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
         rslt = SSL_get_verify_result(ssl);
         X509_free(cert);
         if (rslt != X509_V_OK) {
-            PUBNUB_LOG_WARNING(
-                "pb=%p: SSL_get_verify_result() failed == %d(%s)\n",
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
                 pb,
+                PUBNUB_LOG_LOCATION,
                 rslt,
+                "SSL verification failed",
                 X509_verify_cert_error_string(rslt));
-            ERR_print_errors_cb(print_to_pubnub_log, NULL);
+#endif // PUBNUB_LOG_ENABLED(ERROR)
+            ERR_print_errors_cb(print_to_pubnub_log, pb);
 
             return pbtlsFailed;
         }
+        PUBNUB_LOG_DEBUG(pb, "TLS Certificate verification passed.");
     }
     else {
-        PUBNUB_LOG_WARNING(
-            "pb=%p: SSL -the peer certificate was not presented.\n", pb);
+        PUBNUB_LOG_WARNING(pb, "The peer certificate was not presented.");
     }
 
     if (pb->options.reuse_SSL_session) {
-        PUBNUB_LOG_INFO("pb=%p: SSL session reused: %s\n",
-                        pb,
-                        SSL_session_reused(pb->pal.ssl) ? "yes" : "no");
-        if (pb->pal.session != NULL) {
-            SSL_SESSION_free(pb->pal.session);
-        }
+        PUBNUB_LOG_DEBUG(
+            pb,
+            SSL_session_reused(pb->pal.ssl) ? "SSL session reused."
+                                            : "SSL session not reused.");
+        if (pb->pal.session != NULL) { SSL_SESSION_free(pb->pal.session); }
         pb->pal.session = SSL_get1_session(pb->pal.ssl);
         if (0 == pb->pal.ip_timeout) {
-            pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session)
-                                 + SSL_SESSION_get_timeout(pb->pal.session);
+            pb->pal.ip_timeout = SSL_SESSION_get_time(pb->pal.session) +
+                                 SSL_SESSION_get_timeout(pb->pal.session);
         }
     }
 

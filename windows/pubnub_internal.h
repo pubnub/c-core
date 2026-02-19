@@ -39,7 +39,7 @@ int socket_platform_init(void);
 
 
 /* Winsock never raises SIGPIPE, so, we're good. */
-#define socket_disable_SIGPIPE(socket)
+#define socket_disable_SIGPIPE(pb, socket)
 
 
 /** The Pubnub Windows context */

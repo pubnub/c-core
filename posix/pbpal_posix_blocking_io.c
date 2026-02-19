@@ -9,5 +9,5 @@
 int pbpal_set_blocking_io(pubnub_t* pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    return pbpal_set_socket_blocking_io(pb->pal.socket, pb->options.use_blocking_io);
+    return pbpal_set_socket_blocking_io(pb, pb->pal.socket, pb->options.use_blocking_io);
 }

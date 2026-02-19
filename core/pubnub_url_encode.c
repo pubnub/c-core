@@ -3,12 +3,40 @@
 #include "pubnub_url_encode.h"
 
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 #include "pubnub_api_types.h"
+#if PUBNUB_USE_LOGGER
+#include "pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include <string.h>
 
-int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum pubnub_trans pt)
+
+#if PUBNUB_LOG_ENABLED(ERROR)
+static void log_buffer_overflow_(struct pbcc_context* pb,
+                                 char const*          buffer,
+                                 size_t               buffer_size,
+                                 char const*          remaining)
+{
+    if (!pbcc_logger_manager_should_log(pb->logger_manager,
+                                        PUBNUB_LOG_LEVEL_ERROR))
+        return;
+
+    pubnub_log_value_t data = pubnub_log_value_map_init();
+    PUBNUB_LOG_MAP_SET_NUMBER(&data, (double)buffer_size, buffer_size)
+    PUBNUB_LOG_MAP_SET_STRING(&data, buffer, encoded_so_far)
+    PUBNUB_LOG_MAP_SET_NUMBER(&data, (double)strlen(buffer), encoded_length)
+    PUBNUB_LOG_MAP_SET_STRING(&data, remaining, remaining_input)
+    PUBNUB_LOG_MAP_SET_NUMBER(&data, (double)strlen(remaining), remaining_length)
+    pbcc_logger_manager_log_object(pb->logger_manager,
+                                   PUBNUB_LOG_LEVEL_ERROR,
+                                   PUBNUB_LOG_LOCATION,
+                                   &data,
+                                   "URL-encoded string exceeded buffer capacity");
+}
+#endif // PUBNUB_USE_LOGGER && PUBNUB_LOG_ENABLED(ERROR)
+
+
+int pubnub_url_encode(struct pbcc_context* pb, char* buffer, char const* what, size_t buffer_size, enum pubnub_trans pt)
 {
     char *okSpanChars;
     int i = 0;
@@ -54,17 +82,11 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum p
 
         if (okspan > 0) {
             if (okspan >= (unsigned)(buffer_size - i - 1)) {
-                PUBNUB_LOG_ERROR("Error:|Url-encoded string is longer than permited.\n"
-                                 "      |buffer_size = %u\n"
-                                 "      |url-encoded_stretch = \"%s\"\n"
-                                 "      |url-encoded-stretch_length = %u\n"
-                                 "      |rest_of_the_string_to_be_encoded = \"%s\"\n"
-                                 "      |length_of_the_rest_of_the_string_to_be_encoded = %u\n",
-                                 (unsigned)buffer_size,
-                                 buffer,
-                                 (unsigned)strlen(buffer),
-                                 what,
-                                 (unsigned)strlen(what));
+#if PUBNUB_LOG_ENABLED(ERROR)
+                log_buffer_overflow_(pb, buffer, buffer_size, what);
+#else
+                (void)pb;
+#endif
                 return -1;
             }
             memcpy(buffer + i, what, okspan);
@@ -78,17 +100,11 @@ int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum p
             enc[1]      = "0123456789ABCDEF"[(unsigned char)what[0] / 16];
             enc[2]      = "0123456789ABCDEF"[(unsigned char)what[0] % 16];
             if (3 > buffer_size - i - 1) {
-                PUBNUB_LOG_ERROR("Error:|Url-encoded string is longer than permited.\n"
-                                 "      |buffer_size = %u\n"
-                                 "      |url-encoded_stretch = \"%s\"\n"
-                                 "      |url-encoded-stretch_length = %u\n"
-                                 "      |rest_of_the_string_to_be_encoded = \"%s\"\n"
-                                 "      |length_of_the_rest_of_the_string_to_be_encoded = %u\n",
-                                 (unsigned)buffer_size,
-                                 buffer,
-                                 (unsigned)strlen(buffer),
-                                 what,
-                                 (unsigned)strlen(what));
+#if PUBNUB_LOG_ENABLED(ERROR)
+                log_buffer_overflow_(pb, buffer, buffer_size, what);
+#else
+                (void)pb;
+#endif
                 return -1;
             }
             /* Last copied character is '\0' */

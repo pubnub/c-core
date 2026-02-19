@@ -3,7 +3,11 @@
 #include "pubnub_fntest_medium.hpp"
 
 #include "core/srand_from_pubnub_time.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+extern "C" {
+#include "core/pubnub_logger_internal.h"
+}
+#endif
 #if defined _WIN32
 #include "windows/console_subscribe_paint.h"
 #else
@@ -98,7 +102,7 @@ static void srand_from_pubnub(char const* pubkey, char const* keysub)
         pubnub_init(pbp, pubkey, keysub);
         pubnub_set_user_id(pbp, "test_id");
         if (srand_from_pubnub_time(pbp) != 0) {
-            PUBNUB_LOG_ERROR("Error :could not srand from PubNub time.\n");
+            PUBNUB_LOG_ERROR(pbp, "Error: could not srand from PubNub time.");
         }
         pubnub_free(pbp);
     }
