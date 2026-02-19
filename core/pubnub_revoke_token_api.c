@@ -6,7 +6,6 @@
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timers.h"
 #include "core/pubnub_helper.h"
-#include "core/pubnub_log.h"
 #include "lib/pb_strnlen_s.h"
 #include "pbcc_revoke_token_api.h"
 #include "pubnub_revoke_token_api.h"
@@ -18,9 +17,15 @@
 enum pubnub_res pubnub_revoke_token(pubnub_t* pb, char const* token)
 {
     enum pubnub_res rslt;
-    
+
+    PUBNUB_LOG_DEBUG(pb, "Revoke access token: %s", token);
+
     pubnub_mutex_lock(pb->monitor);
-    if(!pbnc_can_start_transaction(pb)) {
+    if (!pbnc_can_start_transaction(pb)) {
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "Unable to start transaction. PubNub context is in %s state",
+            pbcc_state_2_string(pb->state));
         pubnub_mutex_unlock(pb->monitor);
         return PNR_IN_PROGRESS;
     }
@@ -50,14 +55,13 @@ pubnub_chamebl_t pubnub_get_revoke_token_response(pubnub_t* pb)
 
     pubnub_mutex_lock(pb->monitor);
     if (pb->trans != PBTT_REVOKE_TOKEN) {
-        PUBNUB_LOG_ERROR("pubnub_get_revoke_token(pb=%p) can be called only if "
-                         "previous transaction is PBTT_REVOKE_TOKEN(%d). "
-                         "Previous transaction was: %d\n",
-                         pb,
-                         PBTT_REVOKE_TOKEN,
-                         pb->trans);
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Unexpected previous transaction (%d) when PBTT_REVOKE_TOKEN is "
+            "expected.",
+            pb->trans);
         pubnub_mutex_unlock(pb->monitor);
-        result.ptr = NULL;
+        result.ptr  = NULL;
         result.size = 0;
         return result;
     }

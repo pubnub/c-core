@@ -10,15 +10,15 @@
 #include "pubnub_memory_block.h"
 
 
-void pbntlm_packer_init(pbntlm_ctx_t *pb);
+void pbntlm_packer_init(pubnub_t* context, pbntlm_ctx_t *pb);
 
-int pbntlm_pack_type_one(pbntlm_ctx_t *pb, char const* username, char const* password, pubnub_bymebl_t* msg);
+int pbntlm_pack_type_one(pubnub_t* context, pbntlm_ctx_t *pb, char const* username, char const* password, pubnub_bymebl_t* msg);
 
-int pbntlm_unpack_type2(pbntlm_ctx_t *pb, pubnub_bymebl_t msg);
+int pbntlm_unpack_type2(pubnub_t* context, pbntlm_ctx_t *pb, pubnub_bymebl_t msg);
 
-int pbntlm_pack_type3(pbntlm_ctx_t *pb, char const* username, char const* password, pubnub_bymebl_t* msg);
+int pbntlm_pack_type3(pubnub_t* context, pbntlm_ctx_t *pb, char const* username, char const* password, pubnub_bymebl_t* msg);
 
-void pbntlm_packer_deinit(pbntlm_ctx_t *pb);
+void pbntlm_packer_deinit(pubnub_t* context, pbntlm_ctx_t *pb);
 
 
 #endif /* !defined INC_PBNTLM_PACKER */

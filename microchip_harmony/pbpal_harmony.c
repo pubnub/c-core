@@ -5,14 +5,16 @@
 #include "pubnub_netcore.h"
 #include "pubnub_internal.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include <string.h>
 
 
-static void buf_setup(pubnub_t *pb)
+static void buf_setup(pubnub_t* pb)
 {
-    pb->ptr = (uint8_t*)pb->core.http_buf;
+    pb->ptr  = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf;
 }
 
@@ -28,26 +30,27 @@ static int pal_init(pubnub_t* pb)
 }
 
 
-void pbpal_init(pubnub_t *pb)
+void pbpal_init(pubnub_t* pb)
 {
     pal_init(pb);
     pb->options.use_blocking_io = false;
-    pb->pal.socket = SOCKET_INVALID;
+    pb->pal.socket              = SOCKET_INVALID;
 #if PUBNUB_USE_SSL
     pb->options.useSSL = pb->options.fallbackSSL = true;
-    pb->options.use_system_certificate_store = false;
-    pb->options.reuse_SSL_session = false;
+    pb->options.use_system_certificate_store     = false;
+    pb->options.reuse_SSL_session                = false;
 #endif
     pb->sock_state = STATE_NONE;
-    pb->readlen = 0;
+    pb->readlen    = 0;
     buf_setup(pb);
 }
 
 
-int pbpal_send(pubnub_t *pb, void const *data, size_t n)
+int pbpal_send(pubnub_t* pb, void const* data, size_t n)
 {
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_send(): pb->sock_state != STATE_NONE (=%d)\n", pb->sock_state);
+        PUBNUB_LOG_ERROR(
+            pb, "Socket is in unexpected state: %d", pb->sock_state);
         return -1;
     }
     pb->sendptr = (uint8_t*)data;
@@ -57,21 +60,19 @@ int pbpal_send(pubnub_t *pb, void const *data, size_t n)
 }
 
 
-int pbpal_send_str(pubnub_t *pb, char const *s)
+int pbpal_send_str(pubnub_t* pb, char const* s)
 {
     return pbpal_send(pb, s, strlen(s));
 }
 
 
-int pbpal_send_status(pubnub_t *pb)
+int pbpal_send_status(pubnub_t* pb)
 {
     uint16_t r;
-    if (0 == pb->sendlen) {
-        return 0;
-    }
+    if (0 == pb->sendlen) { return 0; }
     r = socket_send(pb->pal.socket, pb->sendptr, pb->sendlen);
     if (r > pb->sendlen) {
-        PUBNUB_LOG_WARNING("That's some over-achieving Harmony!\n");
+        PUBNUB_LOG_WARNING(pb, "Socket sent more bytes than available.");
         r = pb->sendlen;
     }
     pb->sendptr += r;
@@ -80,10 +81,11 @@ int pbpal_send_status(pubnub_t *pb)
 }
 
 
-int pbpal_start_read_line(pubnub_t *pb)
+int pbpal_start_read_line(pubnub_t* pb)
 {
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read_line(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
+        PUBNUB_LOG_ERROR(
+            pb, "Socket is in unexpected state: %d", pb->sock_state);
         return -1;
     }
 
@@ -106,29 +108,48 @@ int pbpal_start_read_line(pubnub_t *pb)
 }
 
 
-enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 {
     uint8_t c;
 
     if (pb->readlen == 0) {
         uint16_t recvres = socket_recv(pb->pal.socket, pb->ptr, pb->left);
         if (0 == recvres) {
+            PUBNUB_LOG_WARNING(pb, "No data received.");
             return PNR_IN_PROGRESS;
         }
-        PUBNUB_LOG_TRACE("have new data of length=%d: %s\n", recvres, pb->ptr);
+#if PUBNUB_LOG_ENABLED(TRACE)
+        if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_TRACE)) {
+            pubnub_log_value_t data = pubnub_log_value_map_init();
+            PUBNUB_LOG_MAP_SET_NUMBER(&data, (double)recvres, length)
+            pubnub_log_value_t content_val =
+                pubnub_log_value_string((char const*)pb->ptr);
+            pubnub_log_value_map_set(&data, "content", &content_val);
+            pubnub_log_object(
+                pb,
+                PUBNUB_LOG_LEVEL_TRACE,
+                PUBNUB_LOG_LOCATION,
+                &data,
+                "Received data:");
+        }
+#endif
         pb->sock_state = STATE_READ_LINE;
-        pb->readlen = recvres;
-    } 
+        pb->readlen    = recvres;
+    }
 
     while (pb->left > 0 && pb->readlen > 0) {
         c = *pb->ptr++;
 
         --pb->readlen;
         --pb->left;
-        
+
         if (c == '\n') {
             int pbpal_read_len_ = pbpal_read_len(pb);
-            PUBNUB_LOG_TRACE("\\n found: "); WATCH_INT(pbpal_read_len_); WATCH_USHORT(pb->readlen);
+            PUBNUB_LOG_TRACE(
+                pb,
+                "Newline found after %d bytes (%hu read total)",
+                pbpal_read_len_,
+                pb->readlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
@@ -149,20 +170,22 @@ enum pubnub_res pbpal_line_read_status(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
+    PUBNUB_LOG_WARNING(pb, "Line read incomplete: new line not found.");
     return PNR_IN_PROGRESS;
 }
 
 
-int pbpal_read_len(pubnub_t *pb)
+int pbpal_read_len(pubnub_t* pb)
 {
     return sizeof pb->core.http_buf - pb->left;
 }
 
 
-int pbpal_start_read(pubnub_t *pb, size_t n)
+int pbpal_start_read(pubnub_t* pb, size_t n)
 {
     if (pb->sock_state != STATE_NONE) {
-        PUBNUB_LOG_ERROR("pbpal_start_read(): pb->sock_state != STATE_NONE: "); WATCH_ENUM(pb->sock_state);
+        PUBNUB_LOG_ERROR(
+            pb, "Socket is in unexpected state: %d", pb->sock_state);
         return -1;
     }
     if (pb->ptr > (uint8_t*)pb->core.http_buf) {
@@ -179,37 +202,34 @@ int pbpal_start_read(pubnub_t *pb, size_t n)
         }
     }
     pb->sock_state = STATE_READ;
-    pb->len = n;
+    pb->len        = n;
     return +1;
 }
 
 
-enum pubnub_res pbpal_read_status(pubnub_t *pb)
+enum pubnub_res pbpal_read_status(pubnub_t* pb)
 {
     unsigned to_read = 0;
-    WATCH_ENUM(pb->sock_state);
-    WATCH_USHORT(pb->readlen);
-    WATCH_USHORT(pb->left);
-    WATCH_UINT(pb->len);
+    PUBNUB_LOG_TRACE(pb, "Socket state: %d", pb->sock_state);
+    PUBNUB_LOG_TRACE(pb, "%hu bytes has been read.", pb->readlen);
+    PUBNUB_LOG_TRACE(pb, "Read buffer size left: %hu bytes", pb->left);
+    PUBNUB_LOG_TRACE(pb, "Number of bytes to read or send: %u bytes", pb->len);
 
     if (pb->readlen == 0) {
         uint16_t recvres;
-        to_read =  pb->len - pbpal_read_len(pb);
-        if (to_read > pb->left) {
-            to_read = pb->left;
-        }
+        to_read = pb->len - pbpal_read_len(pb);
+        if (to_read > pb->left) { to_read = pb->left; }
         recvres = socket_recv(pb->pal.socket, pb->ptr, to_read);
         if (0 == recvres) {
+            PUBNUB_LOG_WARNING(pb, "No data received.");
             return PNR_IN_PROGRESS;
         }
         pb->sock_state = STATE_READ;
-        pb->readlen = recvres;
-    } 
+        pb->readlen    = recvres;
+    }
 
     to_read = pb->len;
-    if (pb->readlen < to_read) {
-        to_read = pb->readlen;
-    }
+    if (pb->readlen < to_read) { to_read = pb->readlen; }
     pb->ptr += to_read;
     pb->readlen -= to_read;
     PUBNUB_ASSERT_OPT(pb->left >= to_read);
@@ -236,39 +256,36 @@ enum pubnub_res pbpal_read_status(pubnub_t *pb)
         pb->sock_state = STATE_NEWDATA_EXHAUSTED;
     }
 
+    PUBNUB_LOG_WARNING(pb, "Block read incomplete.");
     return PNR_IN_PROGRESS;
 }
 
 
-bool pbpal_closed(pubnub_t *pb)
+bool pbpal_closed(pubnub_t* pb)
 {
     if (pb->pal.socket != SOCKET_INVALID) {
-        if (socket_close(pb->pal.socket)) {
-            pb->pal.socket = SOCKET_INVALID;
-        }
+        if (socket_close(pb->pal.socket)) { pb->pal.socket = SOCKET_INVALID; }
     }
     return SOCKET_INVALID == pb->pal.socket;
 }
 
 
-void pbpal_forget(pubnub_t *pb)
+void pbpal_forget(pubnub_t* pb)
 {
     /* a no-op under Harmony */
 }
 
 
-int pbpal_close(pubnub_t *pb)
+int pbpal_close(pubnub_t* pb)
 {
-    pb->readlen = 0;
+    pb->readlen    = 0;
     pb->sock_state = STATE_NONE;
     if (pb->pal.socket != SOCKET_INVALID) {
         pbntf_lost_socket(pb, pb->pal.socket);
-        if (socket_close(pb->pal.socket)) {
-            pb->pal.socket = SOCKET_INVALID;
-        }
+        if (socket_close(pb->pal.socket)) { pb->pal.socket = SOCKET_INVALID; }
     }
 
-    PUBNUB_LOG_TRACE("pbpal_close() returning 0\n");
+    PUBNUB_LOG_TRACE(pb, "Socket closed.");
 
     return 0;
 }

@@ -11,7 +11,6 @@
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 
 static pubnub_t* pbp;
 

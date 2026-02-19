@@ -167,6 +167,14 @@ ifeq ($(USE_SUBSCRIBE_V2), 1)
     SOURCE_FILES += $(SUBSCRIBE_V2_SOURCE_FILES)
 endif
 
+# Advanced logger feature source files.
+ifeq ($(USE_LOGGER), 1)
+    SOURCE_FILES += $(LOGGER_SOURCE_FILES)
+    ifeq ($(USE_DEFAULT_LOGGER), 1)
+        SOURCE_FILES += $(LOGGER_DEFAULT_STDIO_SOURCE_FILES)
+    endif
+endif
+
 
 # Resulting set of the compiled objects.
 OBJECT_FILES = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(notdir $(SOURCE_FILES))))

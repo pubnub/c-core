@@ -159,8 +159,8 @@ int main()
         return -1;
     }
 
-    if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
-        if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+    if (pubnub_dns_read_system_servers_ipv4(pbp, o_ipv4, 3) > 0) {
+        if (pubnub_dns_set_primary_server_ipv4(pbp, o_ipv4[0]) != 0) {
             paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             return -1;

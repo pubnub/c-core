@@ -15,7 +15,6 @@
 #include "core/pubnub_ssl.h"
 #include "core/pubnub_helper.h"
 #include "core/pubnub_timers.h"
-#include "core/pubnub_log.h"
 
 #include <iostream>
 #include <string>

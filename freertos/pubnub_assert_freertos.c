@@ -1,10 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_assert.h"
 
-//#include <stdlib.h>
-//#include <stdio.h>
+// #include <stdlib.h>
+// #include <stdio.h>
 #include <FreeRTOS.h>
-#include "pubnub_log.h"
 #include "task.h"
 #ifndef ESP_PLATFORM
 #include "FreeRTOS_IP.h"
@@ -16,40 +15,36 @@ static pubnub_assert_handler_t m_handler;
 
 void pubnub_assert_set_handler(pubnub_assert_handler_t handler)
 {
-    if (handler == NULL) {
-        handler = pubnub_assert_handler_abort;
-    }
+    if (handler == NULL) { handler = pubnub_assert_handler_abort; }
     m_handler = handler;
 }
 
 
-void pubnub_assert_failed(char const *s, char const *file, long line)
+void pubnub_assert_failed(char const* s, char const* file, long line)
 {
-    if (m_handler == NULL) {
-        m_handler = pubnub_assert_handler_abort;
-    }
+    if (m_handler == NULL) { m_handler = pubnub_assert_handler_abort; }
     m_handler(s, file, line);
 }
 
 
-static void report(char const *s, char const *file, long line)
+static void report(char const* s, char const* file, long line)
 {
 #ifndef ESP_PLATFORM
-    FreeRTOS_printf(("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, line));
-#else
-    PUBNUB_LOG_ERROR("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, line);
+    FreeRTOS_printf(
+        ("Pubnub assert failed '%s', file '%s', line %ld\n", s, file, line));
 #endif
 }
 
 
-void pubnub_assert_handler_loop(char const *s, char const *file, long line)
+void pubnub_assert_handler_loop(char const* s, char const* file, long line)
 {
     report(s, file, line);
-    for (;;) continue;
+    for (;;)
+        continue;
 }
 
 
-void pubnub_assert_handler_abort(char const *s, char const *file, long line)
+void pubnub_assert_handler_abort(char const* s, char const* file, long line)
 {
     report(s, file, line);
 
@@ -58,17 +53,17 @@ void pubnub_assert_handler_abort(char const *s, char const *file, long line)
         processing.
         */
     taskDISABLE_INTERRUPTS();
-	{
+    {
         for (;;) {
 #if INCLUDE_vTaskDelay
             vTaskDelay(pdMS_TO_TICKS(1000));
 #endif
         }
-	}
-	taskENABLE_INTERRUPTS();
+    }
+    taskENABLE_INTERRUPTS();
 }
 
-void pubnub_assert_handler_printf(char const *s, char const *file, long line)
+void pubnub_assert_handler_printf(char const* s, char const* file, long line)
 {
     report(s, file, line);
 }

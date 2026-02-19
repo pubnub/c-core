@@ -75,7 +75,7 @@ typedef int pb_socket_t;
 
 
 /* FreeRTOS+TCP never raises SIGPIPE, so, we're good. */
-#define socket_disable_SIGPIPE(socket)
+#define socket_disable_SIGPIPE(pb, socket)
 
 
 #ifndef PUBNUB_MBEDTLS

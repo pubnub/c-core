@@ -11,6 +11,14 @@
 #include "core/pbcc_request_retry_timer.h"
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
 
+#if PUBNUB_USE_LOGGER
+#include "core/pbcc_logger_manager.h"
+#include "core/pubnub_logger_internal.h"
+#if PUBNUB_USE_DEFAULT_LOGGER
+#include "core/pubnub_default_logger.h"
+#endif /* PUBNUB_USE_DEFAULT_LOGGER */
+#endif /* PUBNUB_USE_LOGGER */
+
 #include "pubnub_config.h"
 #include "pubnub_api_types.h"
 #include "pubnub_generate_uuid.h"
@@ -82,6 +90,9 @@ struct pbcc_context
         or reply, depending on the state).
      */
     size_t http_buf_len;
+
+    /** Unique PubNub client identifier. */
+    char id[UUID_SIZE];
 
 #if PUBNUB_CRYPTO_API
     /** Holds encrypted message */
@@ -157,8 +168,57 @@ struct pbcc_context
     size_t decrypted_message_count;
 
 #endif // PUBNUB_CRYPTO_API
+
+#if PUBNUB_USE_LOGGER
+    /** Registered loggers manager. */
+    pbcc_logger_manager_t* logger_manager;
+    /** Buffer to store the last request URL for logging purposes. */
+    char last_request_url[PUBNUB_BUF_MAXLEN + 300];
+
+    /** Buffer that accumulates raw HTTP response header lines for logging.
+     *
+     * Each header is stored as `"Key: Value\n"`. Filled during
+     * `PBS_RX_HEADER_LINE` and consumed by `log_http_response`.
+     */
+    char   last_response_headers[PUBNUB_BUF_MAXLEN];
+    size_t last_response_headers_len;
+#endif
 };
 
+
+/* When PUBNUB_USE_LOGGER is enabled, PUBNUB_LOG_ENABLED is defined in
+ * pubnub_logger.h (included via pbcc_logger_manager.h above).
+ * When disabled, fall back to compile-time zero so all log blocks are stripped.
+ */
+#if !PUBNUB_USE_LOGGER
+#define PUBNUB_LOG_ENABLED(level_suffix) 0
+#define PUBNUB_LOG_TRACE(pb, ...)   ((void)(pb))
+#define PUBNUB_LOG_DEBUG(pb, ...)   ((void)(pb))
+#define PUBNUB_LOG_INFO(pb, ...)    ((void)(pb))
+#define PUBNUB_LOG_WARNING(pb, ...) ((void)(pb))
+#define PUBNUB_LOG_ERROR(pb, ...)   ((void)(pb))
+#define PBCC_LOG_TRACE(mgr, ...)    ((void)0)
+#define PBCC_LOG_DEBUG(mgr, ...)    ((void)0)
+#define PBCC_LOG_INFO(mgr, ...)     ((void)0)
+#define PBCC_LOG_WARNING(mgr, ...)  ((void)0)
+#define PBCC_LOG_ERROR(mgr, ...)    ((void)0)
+#endif // !PUBNUB_USE_LOGGER
+
+
+/* Internal logging helpers for URL macros — no-ops when logger is disabled. */
+#if PUBNUB_USE_LOGGER
+#define PBCC_URL_LOG_ERROR_FMT_(pbc, ...)                                      \
+    pbcc_logger_manager_log_text_formatted((pbc)->logger_manager,              \
+                                           PUBNUB_LOG_LEVEL_ERROR,             \
+                                           PUBNUB_LOG_LOCATION,                \
+                                           __VA_ARGS__)
+#define PBCC_URL_LOG_ERROR_(pbc, msg)                                          \
+    pbcc_logger_manager_log_text(                                              \
+        (pbc)->logger_manager, PUBNUB_LOG_LEVEL_ERROR, PUBNUB_LOG_LOCATION, msg)
+#else
+#define PBCC_URL_LOG_ERROR_FMT_(pbc, ...)
+#define PBCC_URL_LOG_ERROR_(pbc, msg)
+#endif
 
 #define APPEND_URL_PARAM_M(pbc, name, var, separator)                          \
     if ((var) != NULL) {                                                       \
@@ -173,11 +233,15 @@ struct pbcc_context
 #define APPEND_URL_LITERAL_M_IMP(pbc, string_literal)                          \
     do {                                                                       \
         if ((pbc)->http_buf_len + sizeof(string_literal) > sizeof (pbc)->http_buf) {\
-            PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url literal:\n"\
+            /* PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url literal:\n" \
                              "current_buffer_size = %lu\n"                     \
                              "required_buffer_size = %lu\n",                   \
                              (unsigned long)(sizeof (pbc)->http_buf),          \
-                             (unsigned long)((pbc)->http_buf_len + 1 + sizeof(string_literal)));\
+                             (unsigned long)((pbc)->http_buf_len + 1 + sizeof(string_literal))); */ \
+            PBCC_LOG_ERROR((pbc)->logger_manager,                              \
+                           "URL buffer overflow: literal append (have=%lu, need=%lu)", \
+                           (unsigned long)(sizeof (pbc)->http_buf),            \
+                           (unsigned long)((pbc)->http_buf_len + 1 + sizeof(string_literal))); \
             return PNR_TX_BUFF_TOO_SMALL;                                      \
         }                                                                      \
         strcpy((pbc)->http_buf + (pbc)->http_buf_len, (string_literal));       \
@@ -193,11 +257,15 @@ struct pbcc_context
             struct pbcc_context* M_pbc_ = pbc;                                 \
             size_t M_n_ = n;                                                   \
             if (M_pbc_->http_buf_len + M_n_ > sizeof M_pbc_->http_buf) {       \
-                PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url string:\n"\
+                /* PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot append url string:\n" \
                                  "current_buffer_size = %lu\n"                 \
                                  "required_buffer_size = %lu\n",               \
                                  (unsigned long)(sizeof M_pbc_->http_buf),     \
-                                 (unsigned long)(M_pbc_->http_buf_len + 1 + M_n_));\
+                                 (unsigned long)(M_pbc_->http_buf_len + 1 + M_n_)); */ \
+                PBCC_LOG_ERROR(M_pbc_->logger_manager,                         \
+                               "URL buffer overflow: string append (have=%lu, need=%lu)", \
+                               (unsigned long)(sizeof M_pbc_->http_buf),       \
+                               (unsigned long)(M_pbc_->http_buf_len + 1 + M_n_)); \
                 return PNR_TX_BUFF_TOO_SMALL;                                  \
             }                                                                  \
             M_pbc_->http_buf_len += snprintf(M_pbc_->http_buf + M_pbc_->http_buf_len,\
@@ -297,12 +365,17 @@ struct pbcc_context
     if ((PNR_OK == (rslt)) && ((message) != NULL)) {                           \
         if (NOT_COMPRESSED_AND(pbc)(pb_strnlen_s(message, PUBNUB_MAX_OBJECT_LENGTH) >\
                                     sizeof (pbc)->http_buf - (pbc)->http_buf_len - 2)) {\
-            PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot pack the message body:\n"\
+            /* PUBNUB_LOG_ERROR("Error: Request buffer too small - cannot pack the message body:\n" \
                              "current_buffer_size = %lu\n"                     \
                              "required_buffer_size = %lu\n",                   \
                              (unsigned long)(sizeof (pbc)->http_buf),          \
-                             (unsigned long)((pbc)->http_buf_len + 2 + pb_strnlen_s(message,\
-                                                                                    PUBNUB_MAX_OBJECT_LENGTH)));\
+                             (unsigned long)((pbc)->http_buf_len + 2 + pb_strnlen_s(message, \
+                                                                                    PUBNUB_MAX_OBJECT_LENGTH))); */ \
+            PBCC_LOG_ERROR((pbc)->logger_manager,                              \
+                           "URL buffer overflow: message body (have=%lu, need=%lu)", \
+                           (unsigned long)(sizeof (pbc)->http_buf),            \
+                           (unsigned long)((pbc)->http_buf_len + 2 + pb_strnlen_s(message, \
+                                                                                   PUBNUB_MAX_OBJECT_LENGTH))); \
             return PNR_TX_BUFF_TOO_SMALL;                                      \
         }                                                                      \
         (pbc)->http_buf[(pbc)->http_buf_len] = '\0';                           \
@@ -332,10 +405,12 @@ struct pbcc_context
         if (pb->auth_token != NULL) { ADD_URL_PARAM(name, key, pb->auth_token); } \
         else if (pb->auth != NULL) { ADD_URL_PARAM(name, key, pb->auth); }
 
-#define ADD_URL_PARAM_SIZET(name, key, value)                               \
+#define ADD_URL_PARAM_SIZET(pbc, name, key, value)                           \
     int val_len = snprintf(NULL, 0, "%lu", (long unsigned int)value);       \
     if (val_len >= 21) {                                                    \
-        PUBNUB_LOG_ERROR("Error: in ADD_URL_PARAM_SIZET:\n");               \
+        /* PUBNUB_LOG_ERROR("Error: in ADD_URL_PARAM_SIZET:\n"); */         \
+        PBCC_LOG_ERROR((pbc)->logger_manager,                               \
+                       "URL param value too large for buffer");             \
         return PNR_TX_BUFF_TOO_SMALL;                                       \
     }                                                                       \
     snprintf(name##_val_str, val_len + 1, "%lu", (long unsigned int)value); \

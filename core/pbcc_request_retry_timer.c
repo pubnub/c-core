@@ -2,7 +2,7 @@
 #include "pbcc_request_retry_timer.h"
 
 #include <stdbool.h>
-#ifdef _WIN3
+#ifdef _WIN32
 // cppcheck-suppress missingIncludeSystem
 #include <windows.h>
 #else
@@ -35,7 +35,7 @@
 //                     Types
 // ----------------------------------------------
 
-#if defined      _WIN32
+#if defined _WIN32
 typedef DWORD    pubnub_thread_t;
 typedef FILETIME pubnub_timespec_t;
 typedef void     pubnub_watcher_t;
@@ -130,30 +130,31 @@ void pbcc_request_retry_timer_start(
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
     if (PNA_SYNC == timer->pb->api_policy) {
         pbcc_request_retry_timer_run_(timer);
-    } else {
+    }
+    else {
 #endif
 #if defined(PUBNUB_CALLBACK_API)
-    if (pthread_create(&timer->timer_thread,
-                       NULL,
-                       (void*(*)(void*))pbcc_request_retry_timer_run_,
-                       timer)) {
-        PUBNUB_LOG_ERROR(
-            "pbcc_request_retry_timer_start: unable to create thread");
+        if (pthread_create(
+                &timer->timer_thread,
+                NULL,
+                (void* (*)(void*))pbcc_request_retry_timer_run_,
+                timer)) {
+            PUBNUB_LOG_ERROR(timer->pb, "Unable to create thread");
 
-        /**
-         * To not stall FSM we let it retry request right away if thread can't
-         * be created.
-        */
-        pubnub_mutex_lock(timer->mutw);
-        timer->running = false;
-        pubnub_mutex_unlock(timer->mutw);
-        pubnub_mutex_lock(timer->pb->monitor);
-        if (PBS_WAIT_RETRY == timer->pb->state) {
-            timer->pb->state = PBS_RETRY;
-            pbnc_fsm(timer->pb);
+            /**
+             * To not stall FSM we let it retry request right away if thread
+             * can't be created.
+             */
+            pubnub_mutex_lock(timer->mutw);
+            timer->running = false;
+            pubnub_mutex_unlock(timer->mutw);
+            pubnub_mutex_lock(timer->pb->monitor);
+            if (PBS_WAIT_RETRY == timer->pb->state) {
+                timer->pb->state = PBS_RETRY;
+                pbnc_fsm(timer->pb);
+            }
+            pubnub_mutex_unlock(timer->pb->monitor);
         }
-        pubnub_mutex_unlock(timer->pb->monitor);
-    }
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
     } /* if (PNA_SYNC == timer->pb->api_policy) */
 #endif

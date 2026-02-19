@@ -3,7 +3,10 @@
 
 #include <string.h>
 
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pbcc_logger_manager.h"
+#include "core/pubnub_helper.h"
+#endif // PUBNUB_USE_LOGGER
 
 
 // ----------------------------------------------
@@ -65,7 +68,7 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
 
 /**
  * @brief Copy source context with `channels` and `channel_groups` override.
-*
+ *
  * @param pb                      PubNub context, which should be used for
  *                                effects execution by Subscribe Event Engine
  *                                effects dispatcher.
@@ -124,13 +127,8 @@ pbcc_ee_event_t* pbcc_subscription_changed_event_alloc(
 
     const pbcc_subscribe_ee_event type =
         SUBSCRIBE_EE_EVENT_SUBSCRIPTION_CHANGED;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          channels,
-                                          channel_groups,
-                                          NULL,
-                                          NULL,
-                                          sent_by_ee);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, channels, channel_groups, NULL, NULL, sent_by_ee);
 }
 
 pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
@@ -152,13 +150,8 @@ pbcc_ee_event_t* pbcc_subscription_restored_event_alloc(
 
     const pbcc_subscribe_ee_event type =
         SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          channels,
-                                          channel_groups,
-                                          &cursor,
-                                          NULL,
-                                          sent_by_ee);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, channels, channel_groups, &cursor, NULL, sent_by_ee);
 }
 
 pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
@@ -166,13 +159,8 @@ pbcc_ee_event_t* pbcc_handshake_success_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_HANDSHAKE_SUCCESS;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          &cursor,
-                                          NULL,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, &cursor, NULL, true);
 }
 
 pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
@@ -180,13 +168,8 @@ pbcc_ee_event_t* pbcc_handshake_failure_event_alloc(
     const enum pubnub_res reason)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_HANDSHAKE_FAILURE;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          &reason,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, NULL, &reason, true);
 }
 
 pbcc_ee_event_t* pbcc_receive_success_event_alloc(
@@ -194,13 +177,8 @@ pbcc_ee_event_t* pbcc_receive_success_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECEIVE_SUCCESS;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          &cursor,
-                                          NULL,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, &cursor, NULL, true);
 }
 
 pbcc_ee_event_t* pbcc_receive_failure_event_alloc(
@@ -208,25 +186,15 @@ pbcc_ee_event_t* pbcc_receive_failure_event_alloc(
     const enum pubnub_res reason)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECEIVE_FAILURE;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          &reason,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, NULL, &reason, true);
 }
 
 pbcc_ee_event_t* pbcc_disconnect_event_alloc(pbcc_subscribe_ee_t* ee)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_DISCONNECT;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, NULL, NULL, true);
 }
 
 pbcc_ee_event_t* pbcc_reconnect_event_alloc(
@@ -234,13 +202,8 @@ pbcc_ee_event_t* pbcc_reconnect_event_alloc(
     const pubnub_subscribe_cursor_t cursor)
 {
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_RECONNECT;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          NULL,
-                                          NULL,
-                                          &cursor,
-                                          NULL,
-                                          true);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, NULL, NULL, &cursor, NULL, true);
 }
 
 pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
@@ -259,13 +222,8 @@ pbcc_ee_event_t* pbcc_unsubscribe_all_event_alloc(
     }
 
     const pbcc_subscribe_ee_event type = SUBSCRIBE_EE_EVENT_UNSUBSCRIBE_ALL;
-    return pbcc_subscribe_ee_event_alloc_(ee,
-                                          type,
-                                          channels,
-                                          channel_groups,
-                                          NULL,
-                                          NULL,
-                                          false);
+    return pbcc_subscribe_ee_event_alloc_(
+        ee, type, channels, channel_groups, NULL, NULL, false);
 }
 
 pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
@@ -287,11 +245,7 @@ pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
         event != SUBSCRIBE_EE_EVENT_SUBSCRIPTION_RESTORED;
 
     pbcc_subscribe_ee_context_t* ctx = pbcc_subscribe_ee_context_copy_(
-        ee->pb,
-        current_context,
-        channels,
-        channel_groups,
-        copy_subscribables);
+        ee->pb, current_context, channels, channel_groups, copy_subscribables);
     /** For subscription change / restore we need to send heartbeat. */
     ctx->send_heartbeat = !copy_subscribables && !sent_by_ee;
     pbcc_ee_data_free(current_state_data);
@@ -304,8 +258,7 @@ pbcc_ee_event_t* pbcc_subscribe_ee_event_alloc_(
     if (NULL != reason) { ctx->reason = *reason; }
 
     pbcc_ee_data_t* data = pbcc_ee_data_alloc(
-        ctx,
-        (pbcc_ee_data_free_function_t)pbcc_subscribe_ee_context_free_);
+        ctx, (pbcc_ee_data_free_function_t)pbcc_subscribe_ee_context_free_);
     if (NULL == data) {
         pubnub_mutex_unlock(ee->mutw);
         pbcc_subscribe_ee_context_free_(ctx);
@@ -330,8 +283,15 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
     pbcc_subscribe_ee_context_t* context =
         malloc(sizeof(pbcc_subscribe_ee_context_t));
     if (NULL == context) {
-        PUBNUB_LOG_ERROR(
-            "pbcc_subscribe_ee_context_alloc_: failed to allocate memory\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pbcc_logger_manager_log_error(
+            pb->core.logger_manager,
+            PUBNUB_LOG_LEVEL_ERROR,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Subscribe EE context allocation failed",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         if (NULL != channels && NULL != *channels) {
             free(*channels);
             *channels = NULL;
@@ -348,12 +308,11 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_alloc_(
     context->channels       = NULL;
     context->channel_groups = NULL;
     context->send_heartbeat = false;
-    context->cursor = pubnub_subscribe_cursor(NULL);
+    context->cursor         = pubnub_subscribe_cursor(NULL);
     if (NULL != channels && NULL != *channels)
         context->channels = pbcc_ee_data_alloc(*channels, free);
     if (NULL != channel_groups && NULL != *channel_groups) {
-        context->channel_groups =
-            pbcc_ee_data_alloc(*channel_groups, free);
+        context->channel_groups = pbcc_ee_data_alloc(*channel_groups, free);
     }
 
     return context;
@@ -366,10 +325,8 @@ pbcc_subscribe_ee_context_t* pbcc_subscribe_ee_context_copy_(
     char**                             channel_groups,
     const bool                         copy_subscribables)
 {
-    pbcc_subscribe_ee_context_t* context = pbcc_subscribe_ee_context_alloc_(
-        pb,
-        channels,
-        channel_groups);
+    pbcc_subscribe_ee_context_t* context =
+        pbcc_subscribe_ee_context_alloc_(pb, channels, channel_groups);
     if (NULL == context) { return NULL; }
     if (NULL == ctx) { return context; }
 

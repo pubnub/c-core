@@ -3,7 +3,9 @@
 
 #include "pubnub_fntest.h"
 #include "core/pubnub_blocking_io.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger_internal.h"
+#endif
 
 #include <stdlib.h>
 
@@ -83,7 +85,7 @@ TEST_DEF_NEED_CHGROUP(simple_connect_and_send_over_single_channel_in_group)
             rslt = pubnub_await(pbp);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp, tries);
+    PUBNUB_LOG_TRACE(pbp, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp, tries);
     expect(PNR_OK == rslt);
 //    expect_PNR_OK(pbp, pubnub_subscribe(pbp, NULL, chgrp), 10 * SECONDS);
     expect_PNR_OK(pbp, pubnub_publish(pbp, chan, "\"Test 2\""), 10 * SECONDS);
@@ -127,7 +129,7 @@ TEST_DEF_NEED_CHGROUP(connect_and_send_over_several_channels_in_group_simultaneo
             rslt = pubnub_await(pbp);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp, tries);
+    PUBNUB_LOG_TRACE(pbp, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp, tries);
     expect(PNR_OK == rslt);
 //    expect_PNR_OK(pbp, pubnub_subscribe(pbp, NULL, chgrp), 10 * SECONDS);
     expect_PNR_OK(pbp, pubnub_publish(pbp, "ch", "\"Test M2\""), 10 * SECONDS);
@@ -294,7 +296,7 @@ TEST_DEF_NEED_CHGROUP(simple_connect_and_receiver_over_single_channel_in_group)
             rslt = pubnub_await(pbp_2);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp_2, tries);
+    PUBNUB_LOG_TRACE(pbp_2, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp_2, tries);
     expect(PNR_OK == rslt);
 //    expect_PNR_OK(pbp_2, pubnub_subscribe(pbp_2, NULL, chgrp), 10 * SECONDS);
     expect_pnr(pubnub_subscribe(pbp_2, NULL, chgrp), PNR_STARTED);
@@ -347,7 +349,7 @@ TEST_DEF_NEED_CHGROUP(connect_and_receive_over_several_channels_in_group_simulta
             rslt = pubnub_await(pbp_2);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp_2, tries);
+    PUBNUB_LOG_TRACE(pbp_2, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp_2, tries);
     expect(PNR_OK == rslt);
 //    expect_PNR_OK(pbp_2, pubnub_subscribe(pbp_2, NULL, chgrp), 10 * SECONDS);
     expect_PNR_OK(pbp, pubnub_publish(pbp, "ch", "\"Test M6\""), 10 * SECONDS);

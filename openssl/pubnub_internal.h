@@ -65,15 +65,15 @@ typedef int pb_socket_t;
    what's the status of this support across various BSDs... So, for
    now, we only do this for MacOS.
 */
-#define socket_disable_SIGPIPE(socket)                                             \
+#define socket_disable_SIGPIPE(pb, socket)                                          \
     do {                                                                           \
         int on = 1;                                                                \
         if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
-            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
+            PUBNUB_LOG_WARNING(pb, "Failed to set SO_NOSIGPIPE, errno=%d\n", errno); \
         }                                                                          \
     } while (0)
 #else
-#define socket_disable_SIGPIPE(socket)
+#define socket_disable_SIGPIPE(pb, socket)
 #endif
 
 #else
@@ -90,7 +90,7 @@ typedef SOCKET pb_socket_t;
 #define socket_timed_out() (WSAGetLastError() == WSAETIMEDOUT)
 
 /* Winsock never raises SIGPIPE, so, we're good. */
-#define socket_disable_SIGPIPE(socket)
+#define socket_disable_SIGPIPE(pb, socket)
 
 #endif
 
@@ -116,6 +116,11 @@ struct pubnub_pal {
     int          ip_family;
     time_t       ip_timeout;
     pbmsref_t    tryconn;
+    /** Last SSL_get_error() result during TLS handshake. Used to:
+        1) determine select() direction (WANT_READ vs WANT_WRITE)
+        2) suppress repeated identical TRACE log messages.
+        Reset to 0 when TLS connect completes or fails. */
+    int          tls_connect_last_error;
 };
 
 #ifdef _WIN32

@@ -7,23 +7,39 @@
 #include "pbsha256.h"
 #include "pbaes256.h"
 #include "pubnub_crypto.h"
-#include "pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 #include "pubnub_memory_block.h"
 #include "pubnub_assert.h"
 #include <string.h>
 #include <openssl/rand.h>
 
-int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
+int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash)
+{
     uint8_t digest[32];
     pbsha256_digest_str((char*)cipher_key, digest);
 
-    snprintf((char*)hash, 33,
+    snprintf(
+        (char*)hash,
+        33,
         "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-        digest[0], digest[1], digest[2], digest[3],
-        digest[4], digest[5], digest[6], digest[7],
-        digest[8], digest[9], digest[10], digest[11],
-        digest[12], digest[13], digest[14], digest[15]
-    );
+        digest[0],
+        digest[1],
+        digest[2],
+        digest[3],
+        digest[4],
+        digest[5],
+        digest[6],
+        digest[7],
+        digest[8],
+        digest[9],
+        digest[10],
+        digest[11],
+        digest[12],
+        digest[13],
+        digest[14],
+        digest[15]);
 
     return 0;
 }
@@ -33,7 +49,10 @@ int pbcc_cipher_key_hash(const uint8_t* cipher_key, uint8_t* hash) {
 
 #define SENTINEL "PNED"
 
-struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifier[4], struct pubnub_byte_mem_block metadata) {
+struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(
+    uint8_t                      identifier[4],
+    struct pubnub_byte_mem_block metadata)
+{
     struct pubnub_cryptor_header_v1 header;
     memset(&header, 0, sizeof header);
 
@@ -41,36 +60,44 @@ struct pubnub_cryptor_header_v1 pbcc_prepare_cryptor_header_v1(uint8_t identifie
     header.data_length = metadata.ptr != NULL ? metadata.size : 0;
 
     return header;
-
 }
 
-size_t pbcc_cryptor_header_v1_size(struct pubnub_cryptor_header_v1 *cryptor_header) {
-    return NULL == cryptor_header || memcmp(cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, 4) == 0
-        ? 0 
-        : (strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH 
-            + (cryptor_header->data_length < 255 ? 1 : 3) 
-            + cryptor_header->data_length); 
+size_t pbcc_cryptor_header_v1_size(
+    struct pubnub_cryptor_header_v1* cryptor_header)
+{
+    return NULL == cryptor_header || memcmp(
+                                         cryptor_header->identifier,
+                                         PUBNUB_LEGACY_CRYPTO_IDENTIFIER,
+                                         4) == 0
+               ? 0
+               : (strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH +
+                  (cryptor_header->data_length < 255 ? 1 : 3) +
+                  cryptor_header->data_length);
 }
 
-struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnub_cryptor_header_v1 *cryptor_header) {
-    if (0 == memcmp((char*)cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, IDENTIFIER_LENGTH)) {
-        PUBNUB_LOG_WARNING("pbcc_cryptor_header_v1_to_alloc_block: Legacy encryption. No header created!\n");
-        pubnub_bymebl_t* result = (pubnub_bymebl_t*)malloc(sizeof(pubnub_bymebl_t));
-        result->ptr = NULL;
+struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(
+    struct pubnub_cryptor_header_v1* cryptor_header)
+{
+    if (0 == memcmp(
+                 (char*)cryptor_header->identifier,
+                 PUBNUB_LEGACY_CRYPTO_IDENTIFIER,
+                 IDENTIFIER_LENGTH)) {
+        pubnub_bymebl_t* result =
+            (pubnub_bymebl_t*)malloc(sizeof(pubnub_bymebl_t));
+        result->ptr  = NULL;
         result->size = 0;
 
         return result;
     }
 
-    uint8_t version = 1;
-    struct pubnub_byte_mem_block* result = (struct pubnub_byte_mem_block*)malloc(sizeof(struct pubnub_byte_mem_block));
-    if (NULL == result) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_to_alloc_block: failed to allocate memory\n");
-        return NULL;
-    }
+    uint8_t                       version = 1;
+    struct pubnub_byte_mem_block* result =
+        (struct pubnub_byte_mem_block*)malloc(
+            sizeof(struct pubnub_byte_mem_block));
+    if (NULL == result) { return NULL; }
 
     if (NULL == cryptor_header) {
-        result->ptr = NULL;
+        result->ptr  = NULL;
         result->size = 0;
 
         return result;
@@ -80,7 +107,6 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
 
     result->ptr = (uint8_t*)malloc(header_size);
     if (NULL == result->ptr) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_to_alloc_block: failed to allocate memory\n");
         free(result);
         return NULL;
     }
@@ -96,15 +122,22 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
     memcpy(result->ptr + offset, &version, 1);
     offset += 1;
 
-    if (0 != memcmp((char*)cryptor_header->identifier, PUBNUB_LEGACY_CRYPTO_IDENTIFIER, IDENTIFIER_LENGTH)) {
-        memcpy(result->ptr + offset, cryptor_header->identifier, IDENTIFIER_LENGTH);
+    if (0 != memcmp(
+                 (char*)cryptor_header->identifier,
+                 PUBNUB_LEGACY_CRYPTO_IDENTIFIER,
+                 IDENTIFIER_LENGTH)) {
+        memcpy(
+            result->ptr + offset,
+            cryptor_header->identifier,
+            IDENTIFIER_LENGTH);
         offset += IDENTIFIER_LENGTH;
     }
 
     if (cryptor_header->data_length < 255) {
         uint8_t data_length = (uint8_t)cryptor_header->data_length;
         memcpy(result->ptr + offset, &data_length, 1);
-    } else {
+    }
+    else {
         uint8_t data_length = 255;
         memcpy(result->ptr + offset, &data_length, 1);
         offset += 1;
@@ -120,27 +153,26 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(struct pubnu
     return result;
 }
 
-struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub_byte_mem_block *cryptor_header) {
-    if (NULL == cryptor_header || NULL == cryptor_header->ptr || 0 == cryptor_header->size) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: invalid argument\n");
+struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(
+    struct pubnub_byte_mem_block* cryptor_header)
+{
+    if (NULL == cryptor_header || NULL == cryptor_header->ptr ||
+        0 == cryptor_header->size) {
         return NULL;
     }
 
     if (cryptor_header->size < strlen(SENTINEL) + 1 + IDENTIFIER_LENGTH + 1) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: invalid header size\n");
         return NULL;
     }
 
-    struct pubnub_cryptor_header_v1* result = (struct pubnub_cryptor_header_v1*)malloc(sizeof(struct pubnub_cryptor_header_v1));
-    if (NULL == result) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: failed to allocate memory\n");
-        return NULL;
-    }
+    struct pubnub_cryptor_header_v1* result =
+        (struct pubnub_cryptor_header_v1*)malloc(
+            sizeof(struct pubnub_cryptor_header_v1));
+    if (NULL == result) { return NULL; }
 
     size_t offset = 0;
 
     if (0 != memcmp(cryptor_header->ptr + offset, SENTINEL, strlen(SENTINEL))) {
-        PUBNUB_LOG_WARNING("pbcc_cryptor_header_v1_from_block: invalid header sentinel - assuming legacy crypto\n");
         free(result);
         return NULL;
     }
@@ -151,7 +183,6 @@ struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub
     offset += 1;
 
     if (version == 0 || version > PUBNUB_MAXIMUM_HEADER_VERSION) {
-        PUBNUB_LOG_ERROR("pbcc_cryptor_header_v1_from_block: unknown header version\n");
         free(result);
         return NULL;
     }
@@ -173,16 +204,19 @@ struct pubnub_cryptor_header_v1* pbcc_cryptor_header_v1_from_block(struct pubnub
         offset += 1;
 
         result->data_length = (header_size_high << 8) + header_size_low;
-    } else {
+    }
+    else {
         result->data_length = data_length;
     }
 
     return result;
 }
 
-pubnub_bymebl_t pbcc_legacy_encrypt(uint8_t const* cipher_key, pubnub_bymebl_t msg)
+pubnub_bymebl_t pbcc_legacy_encrypt(
+    uint8_t const*  cipher_key,
+    pubnub_bymebl_t msg)
 {
-    uint8_t key[33];
+    uint8_t       key[33];
     unsigned char iv[17] = "0123456789012345";
 #if PUBNUB_RAND_INIT_VECTOR
     int rand_status = RAND_bytes(iv, 16);
@@ -192,17 +226,21 @@ pubnub_bymebl_t pbcc_legacy_encrypt(uint8_t const* cipher_key, pubnub_bymebl_t m
     pbcc_cipher_key_hash((uint8_t*)cipher_key, key);
     pubnub_bymebl_t result = pbaes256_encrypt_alloc(msg, key, iv);
 
-    #if PUBNUB_RAND_INIT_VECTOR
-        memmove(result.ptr + 16, result.ptr, result.size);
-        memcpy(result.ptr, iv, 16);
-        result.size += 16;
-        result.ptr[result.size] = '\0';
-    #endif
+#if PUBNUB_RAND_INIT_VECTOR
+    memmove(result.ptr + 16, result.ptr, result.size);
+    memcpy(result.ptr, iv, 16);
+    result.size += 16;
+    result.ptr[result.size] = '\0';
+#endif
 
     return result;
 }
 
-int pbcc_memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* iv, size_t* n) 
+int pbcc_memory_encode(
+    pubnub_bymebl_t buffer,
+    char*           base64_str,
+    unsigned char*  iv,
+    size_t*         n)
 {
 #if PUBNUB_RAND_INIT_VECTOR
     memmove(buffer.ptr + 16, buffer.ptr, buffer.size);
@@ -211,42 +249,32 @@ int pbcc_memory_encode(pubnub_bymebl_t buffer, char* base64_str, unsigned char* 
     buffer.ptr[buffer.size] = '\0';
 #endif
 
-#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_DEBUG
-    PUBNUB_LOG_DEBUG("\nbytes before encoding iv + encrypted msg = [");
-    for (int i = 0; i < (int)buffer.size; i++) {
-        PUBNUB_LOG_DEBUG("%d ", buffer.ptr[i]);
-    }
-    PUBNUB_LOG_DEBUG("]\n");
-#endif
-
     int max_size = base64_max_size(buffer.size);
-    if (*n + 1 < (size_t)max_size) {
-        PUBNUB_LOG_DEBUG("base64encode needs %d bytes but only %zu bytes are available\n", max_size, *n);
-        return -1;
-    }
+    if (*n + 1 < (size_t)max_size) { return -1; }
     char* base64_output = (char*)malloc(max_size);
     if (base64encode(base64_output, max_size, buffer.ptr, buffer.size) != 0) {
-        PUBNUB_LOG_DEBUG("base64encode tried to use more than %d bytes to encode %zu bytes\n", max_size, buffer.size);
         free(base64_output);
         return -1;
     }
     int result = snprintf(base64_str, *n, "%s", base64_output);
-    *n = (size_t)strlen(base64_str);
+    *n         = (size_t)strlen(base64_str);
 
     free(base64_output);
 
-    return result >= 0 ? 0 : -1; 
-} 
+    return result >= 0 ? 0 : -1;
+}
 
-int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubnub_bymebl_t to_decrypt) {
+int pbcc_legacy_decrypt(
+    uint8_t const*   cipher_key,
+    pubnub_bymebl_t* result,
+    pubnub_bymebl_t  to_decrypt)
+{
     unsigned char iv[17] = "0123456789012345";
-    uint8_t key[33];
+    uint8_t       key[33];
 
     pbcc_cipher_key_hash(cipher_key, key);
 
     if (to_decrypt.ptr != NULL) {
-        PUBNUB_LOG_DEBUG("pbcc_legacy_decrypt: Decrypting data with size size = %zu\n", to_decrypt.size);
-
 #if PUBNUB_RAND_INIT_VECTOR
         memcpy(iv, to_decrypt.ptr, 16);
         memmove(to_decrypt.ptr, to_decrypt.ptr + 16, to_decrypt.size - 16);
@@ -259,17 +287,20 @@ int pbcc_legacy_decrypt(uint8_t const* cipher_key, pubnub_bymebl_t *result, pubn
     return -1;
 }
 
-const char* pbcc_base64_encode(pubnub_bymebl_t buffer) {
+const char* pbcc_base64_encode(struct pbcc_context* pb, pubnub_bymebl_t buffer)
+{
     int max_size = base64_max_size(buffer.size);
 
     char* result = (char*)malloc(max_size);
     if (result == NULL) {
-        PUBNUB_LOG_ERROR("pbcc_base64_encode: failed to allocate memory for result\n");
+        PBCC_LOG_ERROR(
+            pb->logger_manager, "Failed to allocate memory for result.");
         return NULL;
     }
 
     if (base64encode(result, max_size, buffer.ptr, buffer.size) != 0) {
-        PUBNUB_LOG_ERROR("pbcc_base64_encode: failed to encode %zu bytes\n", buffer.size);
+        PBCC_LOG_ERROR(
+            pb->logger_manager, "Failed to encode %zu bytes.", buffer.size);
         free(result);
         return NULL;
     }
@@ -277,23 +308,35 @@ const char* pbcc_base64_encode(pubnub_bymebl_t buffer) {
     return result;
 }
 
-pubnub_bymebl_t pbcc_base64_decode(const char* buffer) {
+pubnub_bymebl_t pbcc_base64_decode(const char* buffer)
+{
     return pbbase64_decode_alloc_std_str(buffer);
 }
 
-void pbcc_set_crypto_module(struct pbcc_context *ctx, struct pubnub_crypto_provider_t *crypto_provider) {
+void pbcc_set_crypto_module(
+    struct pbcc_context*             ctx,
+    struct pubnub_crypto_provider_t* crypto_provider)
+{
     ctx->crypto_module = crypto_provider;
 }
 
-pubnub_crypto_provider_t *pbcc_get_crypto_module(struct pbcc_context *ctx) {
+pubnub_crypto_provider_t* pbcc_get_crypto_module(struct pbcc_context* ctx)
+{
     return ctx->crypto_module;
 }
 
 #if PUBNUB_CRYPTO_API
-const char* pbcc_decrypt_message(struct pbcc_context *pb, const char* message, size_t len, size_t* out_len) {
+const char* pbcc_decrypt_message(
+    struct pbcc_context* pb,
+    const char*          message,
+    size_t               len,
+    size_t*              out_len)
+{
     char* trimmed = (char*)malloc(len + 1); // same length as message
     if (NULL == trimmed) {
-        PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - failed to allocate memory for trimmed string. Returning original message!\n", pb);
+        PBCC_LOG_ERROR(
+            pb->logger_manager,
+            "Failed to allocate memory for trimmed string.");
         return NULL;
     }
     snprintf(trimmed, len + 1, "%s", message);
@@ -304,37 +347,57 @@ const char* pbcc_decrypt_message(struct pbcc_context *pb, const char* message, s
     free(trimmed);
 
     if (NULL == encrypted.ptr) {
-        PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - base64 decoding failed. Returning original message!\n", pb);
-        if (NULL != out_len) {
-            *out_len = strlen(message);
-        }
+        PBCC_LOG_WARNING(
+            pb->logger_manager,
+            "Base64 decoding failed. Returning original message.");
+        if (NULL != out_len) { *out_len = strlen(message); }
         return message;
     }
 
-    pubnub_bymebl_t rslt_block = pb->crypto_module->decrypt(pb->crypto_module, encrypted);
+#if PUBNUB_USE_LOGGER
+    if (NULL == encrypted.ptr || encrypted.size == 0) {
+        PBCC_LOG_WARNING(pb->logger_manager, "Trying to decrypt empty data.");
+    }
+    else {
+#if PUBNUB_LOG_ENABLED(TRACE)
+        char dump[512];
+        int  pos = 0;
+        for (size_t i = 0; i < encrypted.size && pos < (int)sizeof(dump) - 4;
+             i++) {
+            pos += snprintf(
+                dump + pos, sizeof(dump) - pos, "%d ", encrypted.ptr[i]);
+        }
+        if (pos > 0) dump[pos - 1] = '\0';
+        PBCC_LOG_DEBUG(
+            pb->logger_manager, "Bytes to decrypt\n  - data: %s", dump);
+#endif // PUBNUB_LOG_ENABLED(TRACE)
+    }
+#endif // PUBNUB_USE_LOGGER
+
+
+    pubnub_bymebl_t rslt_block =
+        pb->crypto_module->decrypt(pb->crypto_module, encrypted);
     free(encrypted.ptr);
     if (NULL == rslt_block.ptr) {
-        PUBNUB_LOG_WARNING("pbcc_get_msg(pbcc=%p) - decryption failed. Returning original message!\n", pb);
-        if (NULL != out_len) {
-            *out_len = strlen(message);
-        }
+        PBCC_LOG_WARNING(
+            pb->logger_manager,
+            "Decryption failed. Returning original message.");
+        if (NULL != out_len) { *out_len = strlen(message); }
         return message;
     }
 
     if (pb->decrypted_message_count >= PUBNUB_MAX_DECRYPTED_MESSAGES) {
-        PUBNUB_LOG_ERROR("pbcc_get_msg(pbcc=%p) - maximum number of decrypted messages reached. Returning original message!\n", pb);
-        if (NULL != out_len) {
-            *out_len = 0;
-        }
+        PBCC_LOG_ERROR(
+            pb->logger_manager,
+            "Maximum number of decrypted messages reached.");
+        if (NULL != out_len) { *out_len = 0; }
         return NULL;
     }
 
     pb->decrypted_messages[pb->decrypted_message_count] = rslt_block.ptr;
     pb->decrypted_message_count++;
 
-    if (NULL != out_len) {
-        *out_len = rslt_block.size;
-    }
+    if (NULL != out_len) { *out_len = rslt_block.size; }
 
     return (char*)rslt_block.ptr;
 }

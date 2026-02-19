@@ -4,6 +4,9 @@
 
 #include "core/pubnub_helper.h"
 #include "posix/monotonic_clock_get_time.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger_internal.h"
+#endif
 
 #include <pthread.h>
 
@@ -120,7 +123,7 @@
         expect(pnfntst_timer_is_running(tmr));                                 \
     } while (0)
 
-#define ELAPSED_MS(prev_timspec)                                               \
+#define ELAPSED_MS(prev_timspec, pb_)                                          \
     do {                                                                       \
         int M_s_diff;                                                          \
         int M_ms_diff;                                                         \
@@ -128,7 +131,8 @@
         monotonic_clock_get_time(&M_timspec);                                  \
         M_s_diff   = M_timspec.tv_sec - (prev_timspec).tv_sec;                 \
         M_ms_diff = (M_timspec.tv_nsec - (prev_timspec).tv_nsec) / MILLI_IN_NANO;\
-        PUBNUB_LOG_TRACE("-------->Extra waiting for transaction to finish took %d milliseconds.\n",\
+        PUBNUB_LOG_TRACE((pb_),                                                \
+                         "-------->Extra waiting for transaction to finish took %d milliseconds.",\
                          (M_s_diff * UNIT_IN_MILLI) + M_ms_diff);              \
     } while (0)
 
@@ -142,8 +146,8 @@
         monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (ms));                                       \
         await_w_timer(M_t_, M_rslt, pbp);                                      \
-        PUBNUB_LOG_TRACE("pbp=%p", pbp);                                       \
-        ELAPSED_MS(M_prev_timspec);                                            \
+        PUBNUB_LOG_TRACE(pbp, "pbp=%p", pbp);                                   \
+        ELAPSED_MS(M_prev_timspec, pbp);                                       \
         expect_last_result(pbp, M_rslt, exp_rslt);                             \
         TEST_POP_DEFERRED;                                                     \
     } while (0)
@@ -190,8 +194,8 @@
         monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (ms));                                       \
         await_w_timer_2(M_rslt_1, M_rslt_2, M_t_, pbp1, pbp2);                 \
-        PUBNUB_LOG_TRACE("pbp1=%p, pbp2=%p", pbp1, pbp2);                      \
-        ELAPSED_MS(M_prev_timspec);                                            \
+        PUBNUB_LOG_TRACE(pbp1, "pbp1=%p, pbp2=%p", pbp1, pbp2);                 \
+        ELAPSED_MS(M_prev_timspec, pbp1);                                      \
         expect_last_result_2(pbp1, M_rslt_1, exp_rslt1, pbp2, M_rslt_2, exp_rslt2);\
         TEST_POP_DEFERRED;                                                     \
     } while (0)
@@ -209,8 +213,8 @@
         monotonic_clock_get_time(&M_prev_timspec);                             \
         pnfntst_start_timer(M_t_, (time_ms));                                  \
         await_w_timer_2(M_rslt_1, M_rslt_2, M_t_, pbp1, pbp2);                 \
-        PUBNUB_LOG_TRACE("pbp1=%p, pbp2=%p", pbp1, pbp2);                      \
-        ELAPSED_MS(M_prev_timspec);                                            \
+        PUBNUB_LOG_TRACE(pbp1, "pbp1=%p, pbp2=%p", pbp1, pbp2);                 \
+        ELAPSED_MS(M_prev_timspec, pbp1);                                      \
         expect_last_result_2(pbp1, M_rslt_1, exp_rslt1, pbp2, M_rslt_2, exp_rslt2);\
         TEST_POP_DEFERRED;                                                     \
     } while (0)

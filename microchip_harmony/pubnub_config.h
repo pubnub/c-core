@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #if !defined INC_PUBNUB_CONFIG
-#define      INC_PUBNUB_CONFIG
+#define INC_PUBNUB_CONFIG
 
 
 /* -- Next few definitions can be tweaked by the user, but with care -- */
@@ -58,7 +58,7 @@
 /** This is the URL of the Pubnub server. Change only for testing
     purposes.
 */
-#define PUBNUB_ORIGIN  "pubsub.pubnub.com"
+#define PUBNUB_ORIGIN "pubsub.pubnub.com"
 
 /** Set to 0 to disable changing the origin from the default
     #PUBNUB_ORIGIN.  Set to anything != 0 to enable changing the
@@ -67,10 +67,10 @@
 #define PUBNUB_ORIGIN_SETTABLE 1
 
 /** Duration of the transaction timeout set during context initialization,
-    in milliseconds. Timeout dration in the context can be changed by the 
+    in milliseconds. Timeout dration in the context can be changed by the
     user after initialization.
     */
-#define PUBNUB_DEFAULT_TRANSACTION_TIMER    310000
+#define PUBNUB_DEFAULT_TRANSACTION_TIMER 310000
 
 
 /** Mininmal duration of the transaction timer, in milliseconds. You
@@ -89,6 +89,15 @@
 */
 #define PUBNUB_USE_MDNS 1
 #endif
+
+#if !defined(PUBNUB_USE_LOGGER)
+/** Enable built-in logger by default. */
+#define PUBNUB_USE_LOGGER 1
+#endif // !defined(PUBNUB_USE_LOGGER)
+#if !defined(PUBNUB_USE_DEFAULT_LOGGER)
+/** Whether built-in stdout/stderr logger should be used or not. */
+#define PUBNUB_USE_DEFAULT_LOGGER 1
+#endif // !defined(PUBNUB_USE_DEFAULT_LOGGER)
 
 
 #endif /* !defined INC_PUBNUB_CONFIG */

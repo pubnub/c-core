@@ -19,7 +19,6 @@
 #include "lib/pb_strnlen_s.h"
 #include "core/pb_sleep_ms.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
 #include "core/pbpal.h"
 #include "core/pubnub_helper.h"
 
@@ -27,7 +26,7 @@
 #include <string.h>
 
 
-#define PUBNUB_MIN_HEARTBEAT_PERIOD                  \
+#define PUBNUB_MIN_HEARTBEAT_PERIOD                                            \
     (PUBNUB_MIN_TRANSACTION_TIMER / UNIT_IN_MILLI)
 
 
@@ -38,17 +37,17 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb);
 static void start_heartbeat_timer(unsigned thumper_index)
 {
     pubnub_mutex_lock(m_watcher.mutw);
-    struct pubnub_heartbeat_data* thumper =
-        &m_watcher.heartbeat_data[thumper_index];
+    struct pubnub_heartbeat_data* thumper = &m_watcher
+                                                 .heartbeat_data[thumper_index];
     pubnub_mutex_lock(m_watcher.timerlock);
     bool const is_started = m_watcher.heartbeat_timers[thumper_index] > 0;
     pubnub_mutex_unlock(m_watcher.timerlock);
-    pubnub_t* pb = thumper->pb;
-    pubnub_t* heartbeat_pb = thumper->heartbeat_pb;
-    bool announce_presence = false;
+    pubnub_t* pb                = thumper->pb;
+    pubnub_t* heartbeat_pb      = thumper->heartbeat_pb;
+    bool      announce_presence = false;
     if (NULL != pb) {
         pubnub_mutex_lock(pb->thumper_monitor);
-        announce_presence = pb->should_announce_presence;
+        announce_presence            = pb->should_announce_presence;
         pb->should_announce_presence = false;
         if (announce_presence) pb->waiting_announce_presence = true;
         pubnub_mutex_unlock(pb->thumper_monitor);
@@ -60,14 +59,15 @@ static void start_heartbeat_timer(unsigned thumper_index)
         heartbeat_thump(pb, heartbeat_pb);
 
     if (is_started && NULL != pb && !pb->use_smart_heartbeat) {
-        PUBNUB_LOG_TRACE("--->start_heartbeat_timer(%u). Already started, Skip.\n",
-            thumper_index);
+        PUBNUB_LOG_TRACE(
+            pb, "Heartbeat timer (%u) already started. Skip.", thumper_index);
         return;
     }
 
     PUBNUB_ASSERT_OPT(thumper_index < PUBNUB_MAX_HEARTBEAT_THUMPERS);
 
-    PUBNUB_LOG_TRACE("--->start_heartbeat_timer(%u). Start.\n", thumper_index);
+    PUBNUB_LOG_TRACE(
+        pb, "There is no heartbeat timer (%u). Starting...", thumper_index);
     pubnub_mutex_lock(m_watcher.mutw);
     const size_t period_sec = thumper->period_sec;
     pubnub_mutex_unlock(m_watcher.mutw);
@@ -87,21 +87,21 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
 
     pubnub_mutex_lock(pb_clone->monitor);
     pb_clone->core.auth_token = pb->core.auth_token;
-    pb_clone->core.auth = pb->core.auth;
+    pb_clone->core.auth       = pb->core.auth;
     if (pb_clone->core.user_id_len != pb->core.user_id_len) {
         if (NULL != pb_clone->core.user_id) free(pb_clone->core.user_id);
         pb_clone->core.user_id_len = pb->core.user_id_len;
-        pb_clone->core.user_id = (char*)malloc((pb->core.user_id_len + 1) * sizeof(char));
+        pb_clone->core.user_id     = (char*)malloc(
+            (pb->core.user_id_len + 1) * sizeof(char));
     }
     strcpy(pb_clone->core.user_id, pb->core.user_id);
-    if (PUBNUB_ORIGIN_SETTABLE) {
-        pb_clone->origin = pb->origin;
-    }
-    pb_clone->options.use_http_keep_alive = pb->options.use_http_keep_alive;
-    pb_clone->options.tcp_keepalive.enabled  = pb->options.tcp_keepalive.enabled;
-    pb_clone->options.tcp_keepalive.time     = pb->options.tcp_keepalive.time;
-    pb_clone->options.tcp_keepalive.interval = pb->options.tcp_keepalive.interval;
-    pb_clone->options.tcp_keepalive.probes   = pb->options.tcp_keepalive.probes;
+    if (PUBNUB_ORIGIN_SETTABLE) { pb_clone->origin = pb->origin; }
+    pb_clone->options.use_http_keep_alive   = pb->options.use_http_keep_alive;
+    pb_clone->options.tcp_keepalive.enabled = pb->options.tcp_keepalive.enabled;
+    pb_clone->options.tcp_keepalive.time    = pb->options.tcp_keepalive.time;
+    pb_clone->options.tcp_keepalive.interval = pb->options.tcp_keepalive
+                                                   .interval;
+    pb_clone->options.tcp_keepalive.probes = pb->options.tcp_keepalive.probes;
 #if PUBNUB_USE_IPV6 && defined(PUBNUB_CALLBACK_API)
     pb_clone->options.ipv6_connectivity = pb->options.ipv6_connectivity;
 #endif
@@ -113,13 +113,15 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
     pb_clone->proxy_type = pb->proxy_type;
     strcpy(pb_clone->proxy_hostname, pb->proxy_hostname);
 #if defined(PUBNUB_CALLBACK_API)
-    memcpy(&(pb_clone->proxy_ipv4_address),
-           &(pb->proxy_ipv4_address),
-           sizeof pb->proxy_ipv4_address);
+    memcpy(
+        &(pb_clone->proxy_ipv4_address),
+        &(pb->proxy_ipv4_address),
+        sizeof pb->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
-    memcpy(&(pb_clone->proxy_ipv6_address),
-           &(pb->proxy_ipv6_address),
-           sizeof pb->proxy_ipv6_address);
+    memcpy(
+        &(pb_clone->proxy_ipv6_address),
+        &(pb->proxy_ipv6_address),
+        sizeof pb->proxy_ipv6_address);
 #endif
 #endif /* defined(PUBNUB_CALLBACK_API) */
     pb_clone->proxy_port          = pb->proxy_port;
@@ -128,6 +130,9 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
     pb_clone->proxy_auth_password = pb->proxy_auth_password;
     strcpy(pb_clone->realm, pb->realm);
 #endif /* PUBNUB_PROXY_API */
+#if PUBNUB_USE_LOGGER
+    pubnub_logger_set_log_level(pb_clone, pubnub_logger_log_level(pb));
+#endif // PUBNUB_USE_LOGGER
     pubnub_mutex_unlock(pb_clone->monitor);
 
     return 0;
@@ -135,8 +140,8 @@ static int copy_context_settings(pubnub_t* pb_clone, pubnub_t const* pb)
 
 static bool pubsub_keys_changed(pubnub_t const* pb_clone, pubnub_t const* pb)
 {
-    return (pb_clone->core.publish_key != pb->core.publish_key)
-           || (pb_clone->core.subscribe_key != pb->core.subscribe_key);
+    return (pb_clone->core.publish_key != pb->core.publish_key) ||
+           (pb_clone->core.subscribe_key != pb->core.subscribe_key);
 }
 
 #if defined(PUBNUB_CALLBACK_API) && !defined(PUBNUB_NTF_RUNTIME_SELECTION)
@@ -145,7 +150,8 @@ static bool pubsub_keys_changed(pubnub_t const* pb_clone, pubnub_t const* pb)
 static void add_heartbeat_in_progress(unsigned thumper_index)
 {
     pubnub_mutex_lock(m_watcher.mutw);
-    m_watcher.heartbeat_in_progress_index_array[m_watcher.heartbeats_in_progress++] = thumper_index;
+    m_watcher.heartbeat_in_progress_index_array
+        [m_watcher.heartbeats_in_progress++] = thumper_index;
     pubnub_mutex_unlock(m_watcher.mutw);
 }
 #endif
@@ -179,23 +185,25 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
     }
     channel       = pb->channelInfo.channel;
     channel_group = pb->channelInfo.channel_group;
-    if (((channel != NULL) && (pb_strnlen_s(channel, PUBNUB_MAX_OBJECT_LENGTH) > 0))
-        || ((channel_group != NULL)
-            && (pb_strnlen_s(channel_group, PUBNUB_MAX_OBJECT_LENGTH) > 0))) {
+    if (((channel != NULL) &&
+         (pb_strnlen_s(channel, PUBNUB_MAX_OBJECT_LENGTH) > 0)) ||
+        ((channel_group != NULL) &&
+         (pb_strnlen_s(channel_group, PUBNUB_MAX_OBJECT_LENGTH) > 0))) {
         enum pubnub_res res;
         PUBNUB_LOG_TRACE(
-            "--->heartbeat_thump(pb=%p, heartbeat_pb=%p).\n", pb, heartbeat_pb);
+            pb, "Sending heartbeat for '%s' PubNub context.", pb->core.id);
         copy_context_settings(heartbeat_pb, pb);
         res = pubnub_heartbeat(heartbeat_pb, channel, channel_group);
+#if PUBNUB_LOG_ENABLED(ERROR)
         if ((res != PNR_STARTED) && (res != PNR_OK)) {
-            PUBNUB_LOG_ERROR("heartbeat_thump(pb=%p, heartbeat_pb) - "
-                             "pubnub_heartbeat(heartbeat_pb=%p) returned "
-                             "unexpected: %d('%s')\n",
-                             pb,
-                             heartbeat_pb,
-                             res,
-                             pubnub_res_2_string(res));
+            pubnub_log_error(
+                heartbeat_pb,
+                PUBNUB_LOG_LOCATION,
+                res,
+                "Unexpected heartbeat result",
+                pubnub_res_2_string(res));
         }
+#endif  // PUBNUB_LOG_ENABLED(ERROR)
         /** Used in sync environment while for callback it's an empty macro */
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
         if (PNA_SYNC == pb->api_policy) {
@@ -209,10 +217,11 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
 }
 
 
-static void auto_heartbeat_callback(pubnub_t*         heartbeat_pb,
-                                    enum pubnub_trans trans,
-                                    enum pubnub_res   result,
-                                    void*             user_data)
+static void auto_heartbeat_callback(
+    pubnub_t*         heartbeat_pb,
+    enum pubnub_trans trans,
+    enum pubnub_res   result,
+    void*             user_data)
 {
     unsigned thumper_index = heartbeat_pb->thumperIndex;
 
@@ -222,9 +231,11 @@ static void auto_heartbeat_callback(pubnub_t*         heartbeat_pb,
     pubnub_get(heartbeat_pb);
 
     pubnub_mutex_lock(m_watcher.mutw);
-    struct pubnub_heartbeat_data thumper = m_watcher.heartbeat_data[thumper_index];
-    pubnub_t *pb = thumper.pb;
-    // Check whether this is awaited announce on channels / groups change or not.
+    struct pubnub_heartbeat_data thumper = m_watcher
+                                               .heartbeat_data[thumper_index];
+    pubnub_t* pb = thumper.pb;
+    // Check whether this is awaited announce on channels / groups change or
+    // not.
     if (NULL != pb && !pb->use_smart_heartbeat) {
         pubnub_mutex_lock(pb->thumper_monitor);
         if (pb->waiting_announce_presence) {
@@ -243,12 +254,21 @@ static void auto_heartbeat_callback(pubnub_t*         heartbeat_pb,
     }
     else {
         if (result != PNR_CANCELLED) {
-            PUBNUB_LOG_WARNING("punbub_heartbeat(heartbeat_pb=%p) failed with "
-                               "code: %d('%s') - "
-                               "will try again.\n",
-                               heartbeat_pb,
-                               result,
-                               pubnub_res_2_string(result));
+#if PUBNUB_LOG_ENABLED(WARNING)
+            if (pubnub_logger_should_log(
+                    heartbeat_pb, PUBNUB_LOG_LEVEL_WARNING)) {
+                pubnub_log_value_t data = pubnub_log_value_map_init();
+                PUBNUB_LOG_MAP_SET_NUMBER(&data, result, code)
+                PUBNUB_LOG_MAP_SET_STRING(
+                    &data, pubnub_res_2_string(result), reason)
+                pubnub_log_object(
+                    heartbeat_pb,
+                    PUBNUB_LOG_LEVEL_WARNING,
+                    PUBNUB_LOG_LOCATION,
+                    &data,
+                    "Unexpected heartbeat result. Retrying...");
+            }
+#endif
             /* Depending on the kind of error try thumping again */
             heartbeat_thump(pb, heartbeat_pb);
         }
@@ -262,7 +282,8 @@ static void auto_heartbeat_callback(pubnub_t*         heartbeat_pb,
                         pb->options.tcp_keepalive.time,
                         pb->options.tcp_keepalive.interval,
                         pb->options.tcp_keepalive.probes);
-                } else if (pbccFalse == pb->options.tcp_keepalive.enabled)
+                }
+                else if (pbccFalse == pb->options.tcp_keepalive.enabled)
                     pubnub_dont_use_tcp_keep_alive(heartbeat_pb);
 
                 heartbeat_thump(pb, heartbeat_pb);
@@ -280,9 +301,7 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
 
     pb_new = pubnub_alloc();
     if (NULL == pb_new) {
-        PUBNUB_LOG_ERROR("init_new_thumper_pb(pb = %p) - "
-                         "Failed to allocate clone heartbeat context!\n",
-                         pb);
+        PUBNUB_LOG_ERROR(pb, "Failed to allocate clone heartbeat context");
         return NULL;
     }
     pubnub_mutex_lock(pb->monitor);
@@ -293,7 +312,8 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
             pb->options.tcp_keepalive.time,
             pb->options.tcp_keepalive.interval,
             pb->options.tcp_keepalive.probes);
-    } else if (pbccFalse == pb->options.tcp_keepalive.enabled)
+    }
+    else if (pbccFalse == pb->options.tcp_keepalive.enabled)
         pubnub_dont_use_tcp_keep_alive(pb_new);
     pubnub_mutex_unlock(pb->monitor);
 
@@ -306,7 +326,10 @@ static pubnub_t* init_new_thumper_pb(pubnub_t* pb, unsigned i)
 }
 
 
-void pbauto_take_the_node_out(unsigned* indexes, unsigned i, unsigned* dimension)
+void pbauto_take_the_node_out(
+    unsigned* indexes,
+    unsigned  i,
+    unsigned* dimension)
 {
     unsigned* node_out = indexes + i;
     --*dimension;
@@ -318,21 +341,25 @@ void pbauto_take_the_node_out(unsigned* indexes, unsigned i, unsigned* dimension
 #else
 static void handle_heartbeats_in_progress(void)
 {
-    unsigned  i;
-    enum pubnub_res result;
+    unsigned                      i;
+    enum pubnub_res               result;
     struct pubnub_heartbeat_data* heartbeat_data = m_watcher.heartbeat_data;
     unsigned* heartbeat_indexes = m_watcher.heartbeat_in_progress_index_array;
 
     pubnub_mutex_lock(m_watcher.mutw);
     for (i = 0; i < m_watcher.heartbeats_in_progress;) {
-        pubnub_t* heartbeat_pb = heartbeat_data[heartbeat_indexes[i]].heartbeat_pb;
+        pubnub_t* heartbeat_pb = heartbeat_data[heartbeat_indexes[i]]
+                                     .heartbeat_pb;
         result = pubnub_last_result(heartbeat_pb);
         if (result != PNR_STARTED) {
-            /** auto heartbeat transaction is finished(not in progress any more) */
-            pbauto_take_the_node_out(heartbeat_indexes, i, &m_watcher.heartbeats_in_progress);
+            /** auto heartbeat transaction is finished(not in progress any more)
+             */
+            pbauto_take_the_node_out(
+                heartbeat_indexes, i, &m_watcher.heartbeats_in_progress);
 
             pubnub_mutex_lock(heartbeat_pb->monitor);
-            auto_heartbeat_callback(heartbeat_pb, heartbeat_pb->trans, result, NULL);
+            auto_heartbeat_callback(
+                heartbeat_pb, heartbeat_pb->trans, result, NULL);
             pubnub_mutex_unlock(heartbeat_pb->monitor);
         }
         else {
@@ -354,8 +381,8 @@ static void handle_heartbeat_timers(int elapsed_ms)
         int remains_ms = m_watcher.heartbeat_timers[thumper_index] - elapsed_ms;
         if (remains_ms <= 0) {
             m_watcher.heartbeat_timers[thumper_index] = 0;
-            struct pubnub_heartbeat_data* thumper =
-                &m_watcher.heartbeat_data[thumper_index];
+            struct pubnub_heartbeat_data*
+                      thumper = &m_watcher.heartbeat_data[thumper_index];
             pubnub_t* pb;
             pubnub_t* heartbeat_pb;
 
@@ -369,11 +396,10 @@ static void handle_heartbeat_timers(int elapsed_ms)
 
             if (NULL == heartbeat_pb) {
                 heartbeat_pb = init_new_thumper_pb(pb, thumper_index);
-                if (NULL == heartbeat_pb) {
-                    continue;
-                }
+                if (NULL == heartbeat_pb) { continue; }
 #if defined(PUBNUB_CALLBACK_API)
-                pubnub_register_callback(heartbeat_pb, auto_heartbeat_callback, NULL);
+                pubnub_register_callback(
+                    heartbeat_pb, auto_heartbeat_callback, NULL);
 #endif
                 pubnub_mutex_lock(m_watcher.mutw);
                 thumper->heartbeat_pb = heartbeat_pb;
@@ -408,9 +434,7 @@ pubnub_watcher_t pbauto_heartbeat_watcher_thread(void* arg)
         pubnub_mutex_lock(m_watcher.stoplock);
         stop_thread = m_watcher.stop_heartbeat_watcher_thread;
         pubnub_mutex_unlock(m_watcher.stoplock);
-        if (stop_thread) {
-            break;
-        }
+        if (stop_thread) { break; }
         /** Used in sync environment while in callback it is an empty macro */
         handle_heartbeats_in_progress();
         pb_sleep_ms(1);
@@ -447,18 +471,24 @@ static int form_heartbeat_thumper(pubnub_t* pb)
     PUBNUB_ASSERT_OPT(pb_valid_ctx_ptr(pb));
 
     if (!s_began) {
-        pbauto_heartbeat_init(&m_watcher);
+        pbauto_heartbeat_init(pb, &m_watcher);
         s_began = true;
     }
     pubnub_mutex_lock(m_watcher.mutw);
     if (m_watcher.thumpers_in_use >= PUBNUB_MAX_HEARTBEAT_THUMPERS) {
-        PUBNUB_LOG_WARNING(
-            "form_heartbeat_thumper(pb=%p) - No more heartbeat thumpers left: "
-            "PUBNUB_MAX_HEARTBEAT_THUMPERS = %d\n"
-            "thumpers_in_use = %u\n",
-            pb,
-            PUBNUB_MAX_HEARTBEAT_THUMPERS,
-            m_watcher.thumpers_in_use);
+#if PUBNUB_LOG_ENABLED(WARNING)
+        if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_WARNING)) {
+            pubnub_log_value_t data = pubnub_log_value_map_init();
+            PUBNUB_LOG_MAP_SET_NUMBER(&data, PUBNUB_MAX_HEARTBEAT_THUMPERS, max)
+            PUBNUB_LOG_MAP_SET_NUMBER(&data, m_watcher.thumpers_in_use, in_use)
+            pubnub_log_object(
+                pb,
+                PUBNUB_LOG_LEVEL_WARNING,
+                PUBNUB_LOG_LOCATION,
+                &data,
+                "No more heartbeat thumpers seats left");
+        }
+#endif
         pubnub_mutex_unlock(m_watcher.mutw);
 
         return -1;
@@ -474,7 +504,8 @@ static int form_heartbeat_thumper(pubnub_t* pb)
                     return -1;
                 }
 #if defined(PUBNUB_CALLBACK_API)
-                pubnub_register_callback(heartbeat_pb, auto_heartbeat_callback, NULL);
+                pubnub_register_callback(
+                    heartbeat_pb, auto_heartbeat_callback, NULL);
 #endif
                 thumper->heartbeat_pb = heartbeat_pb;
             }
@@ -495,13 +526,13 @@ int pubnub_set_heartbeat_period(pubnub_t* pb, size_t period_sec)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT(period_sec > 0);
+    PUBNUB_LOG_DEBUG(
+        pb, "Setting heartbeat period: %lu sec", (unsigned long)period_sec);
 
     pubnub_mutex_lock(pb->thumper_monitor);
     if (UNASSIGNED == pb->thumperIndex) {
         pubnub_mutex_unlock(pb->thumper_monitor);
-        PUBNUB_LOG_ERROR("Error: pubnub_set_heartbeat_period(pb=%p) - "
-                         "Auto heartbeat is desabled.\n",
-                         pb);
+        PUBNUB_LOG_ERROR(pb, "Auto heartbeat is disabled");
         return -1;
     }
     pubnub_mutex_lock(m_watcher.mutw);
@@ -516,11 +547,14 @@ int pubnub_set_heartbeat_period(pubnub_t* pb, size_t period_sec)
 int pubnub_enable_auto_heartbeat(pubnub_t* pb, size_t period_sec)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_DEBUG(
+        pb, "Enabling auto heartbeat: %lu sec", (unsigned long)period_sec);
 
     pubnub_mutex_lock(pb->thumper_monitor);
     if (UNASSIGNED == pb->thumperIndex) {
         if (form_heartbeat_thumper(pb) != 0) {
             pubnub_mutex_unlock(pb->thumper_monitor);
+            PUBNUB_LOG_ERROR(pb, "Auto heartbeat is disabled");
 
             return -1;
         }
@@ -585,16 +619,14 @@ static void release_thumper(unsigned thumper_index)
     }
 }
 
-/** If it is a thumper pubnub context, or one that doesn't have thumper assigned, it is
-    exempted from auto heartbeat procedures.
+/** If it is a thumper pubnub context, or one that doesn't have thumper
+   assigned, it is exempted from auto heartbeat procedures.
   */
 static bool is_exempted(pubnub_t const* pb, unsigned thumper_index)
 {
     pubnub_t const* pb_exempted;
 
-    if (UNASSIGNED == thumper_index) {
-        return true;
-    }
+    if (UNASSIGNED == thumper_index) { return true; }
     pubnub_mutex_lock(m_watcher.mutw);
     pb_exempted = m_watcher.heartbeat_data[thumper_index].heartbeat_pb;
     pubnub_mutex_unlock(m_watcher.mutw);
@@ -606,6 +638,7 @@ static bool is_exempted(pubnub_t const* pb, unsigned thumper_index)
 void pubnub_disable_auto_heartbeat(pubnub_t* pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_DEBUG(pb, "Disable auto heartbeat");
 
     pubnub_mutex_lock(pb->thumper_monitor);
     if (is_exempted(pb, pb->thumperIndex)) {
@@ -624,6 +657,8 @@ bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb)
 
     pubnub_mutex_lock(pb->thumper_monitor);
     bool rslt = (pb->thumperIndex != UNASSIGNED);
+    PUBNUB_LOG_DEBUG(
+        pb, "Check auto heartbeat enabled: %s", rslt ? "enabled" : "disabled");
     pubnub_mutex_unlock(pb->thumper_monitor);
 
     return rslt;
@@ -632,6 +667,7 @@ bool pubnub_is_auto_heartbeat_enabled(pubnub_t* pb)
 void pubnub_enable_smart_heartbeat(pubnub_t* pb)
 {
     PUBNUB_ASSERT_OPT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_DEBUG(pb, "Enable smart heartbeat");
 
     pubnub_mutex_lock(pb->thumper_monitor);
     pb->use_smart_heartbeat = true;
@@ -641,6 +677,7 @@ void pubnub_enable_smart_heartbeat(pubnub_t* pb)
 void pubnub_disable_smart_heartbeat(pubnub_t* pb)
 {
     PUBNUB_ASSERT_OPT(pb_valid_ctx_ptr(pb));
+    PUBNUB_LOG_DEBUG(pb, "Disable smart heartbeat");
 
     pubnub_mutex_lock(pb->thumper_monitor);
     pb->use_smart_heartbeat = false;
@@ -665,9 +702,10 @@ void pbauto_heartbeat_free_channelInfo(pubnub_t* pb)
 }
 
 
-void pbauto_heartbeat_read_channelInfo(pubnub_t* pb,
-                                       char const**    channel,
-                                       char const**    channel_group)
+void pbauto_heartbeat_read_channelInfo(
+    pubnub_t*    pb,
+    char const** channel,
+    char const** channel_group)
 {
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(channel_group != NULL);
@@ -678,7 +716,7 @@ void pbauto_heartbeat_read_channelInfo(pubnub_t* pb,
     pubnub_mutex_unlock(pb->thumper_monitor);
 }
 
-#if defined _WIN32
+#if defined(_WIN32)
 static char* strndup(char const* str, size_t max_size)
 {
     size_t len = pb_strnlen_s(str, PUBNUB_MAX_OBJECT_LENGTH);
@@ -686,57 +724,54 @@ static char* strndup(char const* str, size_t max_size)
     len = (len > max_size) ? max_size : len;
     /* Adding the space for NUL character */
     rslt = (char*)malloc((++len) * sizeof(char));
-    if (NULL == rslt) {
-        return NULL;
-    }
+    if (NULL == rslt) { return NULL; }
     strncpy(rslt, str, len);
     rslt[len - 1] = '\0';
 
     return rslt;
 }
-#endif
+#endif // defined(_WIN32)
 
-static enum pubnub_res write_auto_heartbeat_channelInfo(pubnub_t*   pb,
-                                                        char const* channel,
-                                                        char const* channel_group)
+static enum pubnub_res write_auto_heartbeat_channelInfo(
+    pubnub_t*   pb,
+    char const* channel,
+    char const* channel_group)
 {
     PUBNUB_ASSERT_OPT((channel != NULL) || (channel_group != NULL));
 
     pubnub_mutex_lock(pb->thumper_monitor);
     if (channel != NULL) {
-        if (NULL == pb->channelInfo.channel
-            || 0 != strcmp(pb->channelInfo.channel, channel))
+        if (NULL == pb->channelInfo.channel ||
+            0 != strcmp(pb->channelInfo.channel, channel))
             pb->should_announce_presence = true;
     }
     if (channel_group != NULL) {
-        if (NULL == pb->channelInfo.channel_group
-            || 0 != strcmp(pb->channelInfo.channel_group, channel_group))
+        if (NULL == pb->channelInfo.channel_group ||
+            0 != strcmp(pb->channelInfo.channel_group, channel_group))
             pb->should_announce_presence = true;
     }
 
     pbauto_heartbeat_free_channelInfo(pb);
     if (channel != NULL) {
-        pb->channelInfo.channel = strndup(channel, PUBNUB_MAX_OBJECT_LENGTH - 1);
+        pb->channelInfo.channel = strndup(
+            channel, PUBNUB_MAX_OBJECT_LENGTH - 1);
         if (NULL == pb->channelInfo.channel) {
             PUBNUB_LOG_ERROR(
-                "Error: write_auto_heartbeat_info(pb=%p) - "
-                "Failed to allocate memory for channel string duplicate: "
-                "channel = '%s'\n",
                 pb,
+                "Failed to allocate memory for channel string duplicate: '%s'",
                 channel);
             pubnub_mutex_unlock(pb->thumper_monitor);
             return PNR_OUT_OF_MEMORY;
         }
     }
     if (channel_group != NULL) {
-        pb->channelInfo.channel_group =
-            strndup(channel_group, PUBNUB_MAX_OBJECT_LENGTH - 1);
+        pb->channelInfo.channel_group = strndup(
+            channel_group, PUBNUB_MAX_OBJECT_LENGTH - 1);
         if (NULL == pb->channelInfo.channel_group) {
             PUBNUB_LOG_ERROR(
-                "Error: write_auto_heartbeat_info(pb=%p) - "
-                "Failed to allocate memory for channel_group string duplicate: "
-                "channel_group = '%s'\n",
                 pb,
+                "Failed to allocate memory for channel_group string duplicate: "
+                "%s",
                 channel_group);
             if (channel != NULL) {
                 free(pb->channelInfo.channel);
@@ -751,9 +786,10 @@ static enum pubnub_res write_auto_heartbeat_channelInfo(pubnub_t*   pb,
 }
 
 
-enum pubnub_res pbauto_heartbeat_prepare_channels_and_ch_groups(pubnub_t* pb,
-                                                                char const** channel,
-                                                                char const** channel_group)
+enum pubnub_res pbauto_heartbeat_prepare_channels_and_ch_groups(
+    pubnub_t*    pb,
+    char const** channel,
+    char const** channel_group)
 {
     PUBNUB_ASSERT_OPT(channel != NULL);
     PUBNUB_ASSERT_OPT(channel_group != NULL);
@@ -774,14 +810,12 @@ void pbauto_heartbeat_start_timer(pubnub_t const* pb)
     if (pb->thumperIndex != UNASSIGNED) {
         switch (pb->trans) {
         case PBTT_HEARTBEAT:
-            if (is_exempted(pb, pb->thumperIndex)) {
-                break;
-            }
+            if (is_exempted(pb, pb->thumperIndex)) { break; }
             /*FALLTHRU*/
         case PBTT_SUBSCRIBE:
 #if PUBNUB_USE_SUBSCRIBE_V2
         case PBTT_SUBSCRIBE_V2:
-#endif // #if PUBNUB_USE_SUBSCRIBE_V2
+#endif // PUBNUB_USE_SUBSCRIBE_V2
             start_heartbeat_timer(pb->thumperIndex);
             break;
         default:
@@ -806,17 +840,11 @@ void pubnub_heartbeat_free_thumpers(void)
         if (heartbeat_pb != NULL) {
             if (pubnub_free_with_timeout(heartbeat_pb, 1000) != 0) {
                 PUBNUB_LOG_ERROR(
-                    "Error: pbauto_heartbeat_free_thumpers() - "
-                    "Failed to free the Pubnub heartbeat %u. thumper context: "
-                    "heartbeat_pb=%p\n",
-                    i,
-                    heartbeat_pb);
+                    heartbeat_pb, "Failed to free heartbeat thumper (%u)", i);
             }
             else {
-                PUBNUB_LOG_TRACE("pubnub_heartbeat_free_thumpers() - "
-                                 "%u. thumper(heartbeat_pb=%p) freed.\n",
-                                 i + 1,
-                                 heartbeat_pb);
+                PUBNUB_LOG_TRACE(
+                    heartbeat_pb, "Heartbeat thumper (%u) freed", i + 1);
                 pubnub_mutex_lock(m_watcher.mutw);
                 heartbeat_data[i].heartbeat_pb = NULL;
                 pubnub_mutex_unlock(m_watcher.mutw);
@@ -831,7 +859,8 @@ void pubnub_heartbeat_free_thumpers(void)
 static void stop_auto_heartbeat(const unsigned thumper_index)
 {
     pubnub_mutex_lock(m_watcher.mutw);
-    pubnub_t* heartbeat_pb = m_watcher.heartbeat_data[thumper_index].heartbeat_pb;
+    pubnub_t* heartbeat_pb = m_watcher.heartbeat_data[thumper_index]
+                                 .heartbeat_pb;
     pubnub_mutex_unlock(m_watcher.mutw);
 
     stop_heartbeat(heartbeat_pb, thumper_index);
@@ -845,15 +874,13 @@ void pbauto_heartbeat_transaction_ongoing(pubnub_t const* pb)
     if (pb->thumperIndex != UNASSIGNED) {
         switch (pb->trans) {
         case PBTT_HEARTBEAT:
-            if (is_exempted(pb, pb->thumperIndex)) {
-                break;
-            }
+            if (is_exempted(pb, pb->thumperIndex)) { break; }
             /*FALLTHRU*/
         case PBTT_SUBSCRIBE:
 #if PUBNUB_USE_SUBSCRIBE_V2
         case PBTT_SUBSCRIBE_V2:
-#endif // #if PUBNUB_USE_SUBSCRIBE_V2
-            // Ignore implicit heartbeat if "smart heartbeat" is disabled.
+#endif // PUBNUB_USE_SUBSCRIBE_V2
+       // Ignore implicit heartbeat if "smart heartbeat" is disabled.
             if (!pb->use_smart_heartbeat) return;
 
             stop_auto_heartbeat(pb->thumperIndex);
@@ -872,4 +899,4 @@ void pbauto_heartbeat_stop(void)
     pubnub_mutex_unlock(m_watcher.stoplock);
 }
 
-#endif /* PUBNUB_USE_AUTO_HEARTBEAT */
+#endif // PUBNUB_USE_AUTO_HEARTBEAT

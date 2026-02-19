@@ -4,7 +4,6 @@
 #include "pubnub_version.h"
 #include "pubnub_assert.h"
 #include "pubnub_json_parse.h"
-#include "pubnub_log.h"
 #include "pubnub_url_encode.h"
 #include "lib/pb_strnlen_s.h"
 #include "pubnub_ccore_pubsub.h"
@@ -15,6 +14,11 @@
 #include "pubnub_crypto.h"
 #endif
 
+#if PUBNUB_USE_LOGGER
+#include "core/pbcc_logger_manager.h"
+#include "pubnub_helper.h"
+#endif // PUBNUB_USE_LOGGER
+
 #if PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
 #include "core/pbcc_subscribe_event_engine.h"
 #endif // PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE
@@ -23,9 +27,10 @@
 #include <stdlib.h>
 
 
-void pbcc_init(struct pbcc_context* p,
-               const char*          publish_key,
-               const char*          subscribe_key)
+void pbcc_init(
+    struct pbcc_context* p,
+    const char*          publish_key,
+    const char*          subscribe_key)
 {
     p->publish_key   = publish_key;
     p->subscribe_key = subscribe_key;
@@ -35,7 +40,7 @@ void pbcc_init(struct pbcc_context* p,
     p->user_id_len   = 0;
     p->auth          = NULL;
     p->auth_token    = NULL;
-    p->msg_ofs       = p->msg_end = 0;
+    p->msg_ofs = p->msg_end = 0;
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     p->http_reply = NULL;
 #if PUBNUB_RECEIVE_GZIP_RESPONSE
@@ -54,10 +59,26 @@ void pbcc_init(struct pbcc_context* p,
     p->gzip_msg_len = 0;
 #endif
 #if PUBNUB_CRYPTO_API
-    p->secret_key = NULL;
-    p->crypto_module = NULL;
+    p->secret_key              = NULL;
+    p->crypto_module           = NULL;
     p->decrypted_message_count = 0;
 #endif
+
+    // Prepare unique PubNub client identifier.
+    struct Pubnub_UUID uuid;
+
+    if (0 != pubnub_generate_uuid_v4_random(&uuid)) bzero(p->id, sizeof(p->id));
+    else {
+        const struct Pubnub_UUID_String str_uuid = pubnub_uuid_to_string(&uuid);
+        memcpy(p->id, str_uuid.uuid, sizeof(p->id));
+    }
+#if PUBNUB_USE_LOGGER
+    p->logger_manager = pbcc_logger_manager_alloc(p->id);
+#if PUBNUB_USE_DEFAULT_LOGGER
+    pbcc_logger_manager_set_default_logger(
+        p->logger_manager, pubnub_default_logger_alloc());
+#endif
+#endif // #if PUBNUB_USE_LOGGER
 }
 
 
@@ -98,6 +119,10 @@ void pbcc_deinit(struct pbcc_context* p)
     if (NULL != p->retry_configuration)
         pubnub_retry_configuration_free(&p->retry_configuration);
 #endif // #if PUBNUB_USE_RETRY_CONFIGURATION
+#if PUBNUB_USE_LOGGER
+    if (NULL != p->logger_manager) pbcc_logger_manager_free(p->logger_manager);
+    p->logger_manager = NULL;
+#endif // #if PUBNUB_USE_LOGGER
 }
 
 
@@ -105,15 +130,11 @@ int pbcc_realloc_reply_buffer(struct pbcc_context* p, unsigned bytes)
 {
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     char* newbuf = (char*)realloc(p->http_reply, bytes + 1);
-    if (NULL == newbuf) {
-        return -1;
-    }
+    if (NULL == newbuf) { return -1; }
     p->http_reply = newbuf;
     return 0;
 #else
-    if (bytes < sizeof p->http_reply / sizeof p->http_reply[0]) {
-        return 0;
-    }
+    if (bytes < sizeof p->http_reply / sizeof p->http_reply[0]) { return 0; }
     return -1;
 #endif
 }
@@ -125,9 +146,7 @@ bool pbcc_ensure_reply_buffer(struct pbcc_context* p)
     if (NULL == p->http_reply) {
         /* Need just one byte for string end */
         p->http_reply = (char*)malloc(1);
-        if (NULL == p->http_reply) {
-            return false;
-        }
+        if (NULL == p->http_reply) { return false; }
     }
 #endif
     return true;
@@ -140,13 +159,12 @@ char const* pbcc_get_msg(struct pbcc_context* pb)
     size_t len;
 #endif // PUBNUB_CRYPTO_API
     if (pb->msg_ofs < pb->msg_end) {
-        PUBNUB_LOG_DEBUG("RESPONSE = %s\n", pb->http_reply);
         char const* rslt = pb->http_reply + pb->msg_ofs;
         pb->msg_ofs += strlen(rslt);
         if (pb->msg_ofs++ <= pb->msg_end) {
 #if PUBNUB_CRYPTO_API
             if (pb->crypto_module != NULL) {
-                len = strlen(rslt);
+                len  = strlen(rslt);
                 rslt = pbcc_decrypt_message(pb, rslt, len, NULL);
             }
 #endif // PUBNUB_CRYPTO_API
@@ -163,9 +181,7 @@ char const* pbcc_get_channel(struct pbcc_context* pb)
     if (pb->chan_ofs < pb->chan_end) {
         char const* rslt = pb->http_reply + pb->chan_ofs;
         pb->chan_ofs += strlen(rslt);
-        if (pb->chan_ofs++ <= pb->chan_end) {
-            return rslt;
-        }
+        if (pb->chan_ofs++ <= pb->chan_end) { return rslt; }
     }
 
     return NULL;
@@ -175,6 +191,8 @@ char const* pbcc_get_channel(struct pbcc_context* pb)
 enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id)
 {
     if (pb->user_id_len > 0) {
+        PBCC_LOG_DEBUG(
+            pb->logger_manager, "Unset previous user ID: %s", pb->user_id);
         free(pb->user_id);
         pb->user_id = NULL;
     }
@@ -183,12 +201,15 @@ enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id)
         /** Alloc additional space for NULL character */
         pb->user_id = (char*)malloc((pb->user_id_len + 1) * sizeof(char));
         if (NULL == pb->user_id) {
-            PUBNUB_LOG_ERROR(
-                "Error: pbcc_set_user_id(pb=%p) - "
-                "Failed to allocate memory for user_id: "
-                "user_id = '%s'\n",
-                pb,
-                user_id);
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pbcc_logger_manager_log_error(
+                pb->logger_manager,
+                PUBNUB_LOG_LEVEL_ERROR,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory for user ID",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             pb->user_id_len = 0;
             return PNR_OUT_OF_MEMORY;
         }
@@ -221,9 +242,7 @@ static int find_string_start(char const* buf, int len)
 {
     int i;
     for (i = len - 1; i > 0; --i) {
-        if (buf[i] == '"') {
-            return (buf[i - 1] == ',') ? i : -1;
-        }
+        if (buf[i] == '"') { return (buf[i - 1] == ',') ? i : -1; }
     }
     return -1;
 }
@@ -236,9 +255,7 @@ bool pbcc_split_array(char* buf)
     int  bracket_level = 0;
 
     for (; *buf != '\0'; ++buf) {
-        if (escaped) {
-            escaped = false;
-        }
+        if (escaped) { escaped = false; }
         else if ('"' == *buf) {
             in_string = !in_string;
         }
@@ -257,9 +274,7 @@ bool pbcc_split_array(char* buf)
                 break;
             /* if at root, split! */
             case ',':
-                if (bracket_level == 0) {
-                    *buf = '\0';
-                }
+                if (bracket_level == 0) { *buf = '\0'; }
                 break;
             default:
                 break;
@@ -274,30 +289,26 @@ bool pbcc_split_array(char* buf)
 enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 {
     struct pbjson_elem el;
-    char*              reply = p->http_reply;
-    PUBNUB_LOG_DEBUG("\n%s\n", reply);
-    int replylen = p->http_buf_len;
-    if (replylen < 2) {
-        return PNR_FORMAT_ERROR;
-    }
+    char*              reply    = p->http_reply;
+    int                replylen = p->http_buf_len;
+    if (replylen < 2) { return PNR_FORMAT_ERROR; }
 
     el.start = reply;
     el.end   = reply + replylen;
     if (pbjson_value_for_field_found(&el, "status", "403")) {
-        PUBNUB_LOG_ERROR("pbcc_parse_publish_response(pbcc=%p) - AccessDenied: "
-                         "response from server - response='%s'\n",
-                         p,
-                         reply);
+        PBCC_LOG_ERROR(
+            p->logger_manager,
+            "Publish access denied:\n  - response: %.*s",
+            replylen,
+            reply);
         return PNR_ACCESS_DENIED;
     }
 
     p->chan_ofs = p->chan_end = 0;
-    p->msg_ofs  = p->msg_end  = 0;
+    p->msg_ofs = p->msg_end = 0;
 
     if ((reply[0] != '[') || (reply[replylen - 1] != ']')) {
-        if (reply[0] != '{') {
-            return PNR_FORMAT_ERROR;
-        }
+        if (reply[0] != '{') { return PNR_FORMAT_ERROR; }
         /* If we got a JSON object in response, publish certainly
            didn't succeed. No need to parse further. */
         return PNR_PUBLISH_FAILED;
@@ -305,9 +316,7 @@ enum pubnub_res pbcc_parse_publish_response(struct pbcc_context* p)
 
     reply[replylen - 1] = '\0';
     if (pbcc_split_array(reply + 1)) {
-        if (1 != strtol(reply + 1, NULL, 10)) {
-            return PNR_PUBLISH_FAILED;
-        }
+        if (1 != strtol(reply + 1, NULL, 10)) { return PNR_PUBLISH_FAILED; }
         return PNR_OK;
     }
     else {
@@ -322,28 +331,26 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
     int                i;
     int                previous_i;
     unsigned           time_token_length;
-    char*              reply = p->http_reply;
-    PUBNUB_LOG_DEBUG("\n%s\n", reply);
-    int replylen = p->http_buf_len;
-    if (replylen < 2) {
-        return PNR_FORMAT_ERROR;
-    }
+    char*              reply    = p->http_reply;
+    int                replylen = p->http_buf_len;
+    if (replylen < 2) { return PNR_FORMAT_ERROR; }
     el.start = reply;
     el.end   = reply + replylen;
     if (pbjson_value_for_field_found(&el, "status", "403")) {
-        PUBNUB_LOG_ERROR(
-            "pbcc_parse_subscribe_response(pbcc=%p) - AccessDenied: "
-            "response from server - response='%s'\n",
-            p,
+        PBCC_LOG_ERROR(
+            p->logger_manager,
+            "Subscribe access denied:\n  - response: %.*s",
+            replylen,
             reply);
         return PNR_ACCESS_DENIED;
     }
 
     if (pbjson_value_for_field_found(&el, "status", "400")) {
         char* msgtext = (char*)pbjson_get_status_400_message_value(&el);
-        if (msgtext != NULL && strcmp(msgtext,
-                                      "\"Channel group or groups result in empty subscription set\"")
-            == 0) {
+        if (msgtext != NULL && strcmp(
+                                   msgtext,
+                                   "\"Channel group or groups result in empty "
+                                   "subscription set\"") == 0) {
             return PNR_GROUP_EMPTY;
         }
         else {
@@ -354,17 +361,15 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
     if (reply[replylen - 1] != ']' && replylen > 2) {
         replylen -= 2; /* XXX: this seems required by Manxiang */
     }
-    if ((reply[0] != '[') || (reply[replylen - 1] != ']')
-        || (reply[replylen - 2] != '"')) {
+    if ((reply[0] != '[') || (reply[replylen - 1] != ']') ||
+        (reply[replylen - 2] != '"')) {
         return PNR_FORMAT_ERROR;
     }
 
     /* Extract the last argument. */
     previous_i = replylen - 2;
     i          = find_string_start(reply, previous_i);
-    if (i < 0) {
-        return PNR_FORMAT_ERROR;
-    }
+    if (i < 0) { return PNR_FORMAT_ERROR; }
     reply[replylen - 2] = 0;
 
     /* Now, the last argument may either be a timetoken, a channel group list
@@ -374,9 +379,7 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
         /* It is a channel list, there is another string argument in front
          * of us. Process the channel list ... */
         for (k = replylen - 2; k > i + 1; --k) {
-            if (reply[k] == ',') {
-                reply[k] = '\0';
-            }
+            if (reply[k] == ',') { reply[k] = '\0'; }
         }
 
         /* The previous argument is either a timetoken or a channel group
@@ -399,9 +402,7 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
             reply[i - 2] = '\0';
             previous_i   = i - 2;
             i            = find_string_start(reply, previous_i);
-            if (i < 0) {
-                return PNR_FORMAT_ERROR;
-            }
+            if (i < 0) { return PNR_FORMAT_ERROR; }
         }
     }
     else {
@@ -435,15 +436,16 @@ enum pubnub_res pbcc_parse_subscribe_response(struct pbcc_context* p)
 }
 
 
-enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
-                                      char const*          param_name,
-                                      size_t               param_name_len,
-                                      char const*          param_val,
-                                      char                 separator)
+enum pubnub_res pbcc_append_url_param(
+    struct pbcc_context* pb,
+    char const*          param_name,
+    size_t               param_name_len,
+    char const*          param_val,
+    char                 separator)
 {
     size_t param_val_len = strlen(param_val);
-    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len + 1
-        > sizeof pb->http_buf) {
+    if (pb->http_buf_len + 1 + param_name_len + 1 + param_val_len + 1 >
+        sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
     }
 
@@ -458,9 +460,10 @@ enum pubnub_res pbcc_append_url_param(struct pbcc_context* pb,
 }
 
 
-void pbcc_via_post_headers(struct pbcc_context* pb,
-                           char*                header,
-                           size_t               max_length)
+void pbcc_via_post_headers(
+    struct pbcc_context* pb,
+    char*                header,
+    size_t               max_length)
 {
     char     lines[] = "Content-Type: application/json\r\nContent-Length: ";
     unsigned length;
@@ -475,35 +478,35 @@ void pbcc_via_post_headers(struct pbcc_context* pb,
 #if PUBNUB_USE_GZIP_COMPRESSION
     if (pb->gzip_msg_len != 0) {
         char h_encoding[] = "Content-Encoding: gzip\0";
-        length            = snprintf(header,
-                          max_length,
-                          "%lu\r\n",
-                          (unsigned long)pb->gzip_msg_len);
+        length            = snprintf(
+            header, max_length, "%lu\r\n", (unsigned long)pb->gzip_msg_len);
         PUBNUB_ASSERT_OPT(max_length > length + sizeof h_encoding - 1);
         memcpy(header + length, h_encoding, sizeof h_encoding - 1);
         return;
     }
 #endif
-    length = snprintf(header,
-                      max_length,
-                      "%lu",
-                      (unsigned long)pb_strnlen_s(
-                          pb->message_to_send,
-                          PUBNUB_MAX_OBJECT_LENGTH));
+    length = snprintf(
+        header,
+        max_length,
+        "%lu",
+        (unsigned long)pb_strnlen_s(
+            pb->message_to_send, PUBNUB_MAX_OBJECT_LENGTH));
     PUBNUB_ASSERT_OPT(max_length > length);
 }
 
 
-enum pubnub_res pbcc_url_encode(struct pbcc_context* pb,
-                                char const*          what,
-                                enum pubnub_trans    pt)
+enum pubnub_res pbcc_url_encode(
+    struct pbcc_context* pb,
+    char const*          what,
+    enum pubnub_trans    pt)
 {
     int url_encoded_length;
-    url_encoded_length = pubnub_url_encode(pb->http_buf + pb->http_buf_len,
-                                           what,
-                                           sizeof pb->http_buf - pb->
-                                           http_buf_len,
-                                           pt);
+    url_encoded_length = pubnub_url_encode(
+        pb,
+        pb->http_buf + pb->http_buf_len,
+        what,
+        sizeof pb->http_buf - pb->http_buf_len,
+        pt);
     if (url_encoded_length < 0) {
         pb->http_buf_len = 0;
         return PNR_TX_BUFF_TOO_SMALL;
@@ -514,12 +517,13 @@ enum pubnub_res pbcc_url_encode(struct pbcc_context* pb,
 }
 
 
-enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
-                                              char const* param_name,
-                                              size_t param_name_len,
-                                              char const* param_val,
-                                              char separator,
-                                              enum pubnub_trans pt)
+enum pubnub_res pbcc_append_url_param_encoded(
+    struct pbcc_context* pb,
+    char const*          param_name,
+    size_t               param_name_len,
+    char const*          param_val,
+    char                 separator,
+    enum pubnub_trans    pt)
 {
     if (pb->http_buf_len + 1 + param_name_len + 1 > sizeof pb->http_buf) {
         return PNR_TX_BUFF_TOO_SMALL;
@@ -532,15 +536,16 @@ enum pubnub_res pbcc_append_url_param_encoded(struct pbcc_context* pb,
     return pbcc_url_encode(pb, param_val, pt);
 }
 
-enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
-                                  const char*          channel,
-                                  const char*          message,
-                                  const char*          custom_message_type,
-                                  bool                 store_in_history,
-                                  bool                 norep,
-                                  char const*          meta,
-                                  const size_t         ttl,
-                                  enum pubnub_method   method)
+enum pubnub_res pbcc_publish_prep(
+    struct pbcc_context* pb,
+    const char*          channel,
+    const char*          message,
+    const char*          custom_message_type,
+    bool                 store_in_history,
+    bool                 norep,
+    char const*          meta,
+    const size_t         ttl,
+    enum pubnub_method   method)
 {
     char const* const uname   = pubnub_uname();
     char const*       user_id = pbcc_user_id_get(pb);
@@ -550,11 +555,12 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
-    pb->http_buf_len     = snprintf(pb->http_buf,
-                                sizeof pb->http_buf,
-                                "/publish/%s/%s/0/",
-                                pb->publish_key,
-                                pb->subscribe_key);
+    pb->http_buf_len     = snprintf(
+        pb->http_buf,
+        sizeof pb->http_buf,
+        "/publish/%s/%s/0/",
+        pb->publish_key,
+        pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0");
 
@@ -568,28 +574,37 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
             pb->crypto_module->encrypt(pb->crypto_module, message_block);
 
         if (NULL == encrypted.ptr) {
-            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - encryption failed\n", pb);
+            PBCC_LOG_ERROR(
+                pb->logger_manager, "Unable to encrypt message for publish.");
             free(message_block.ptr);
 
             return PNR_INTERNAL_ERROR;
         }
 
-        message = pbcc_base64_encode(encrypted);
+        message = pbcc_base64_encode(pb, encrypted);
 
         free(encrypted.ptr);
 
         if (NULL == message) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_publish_prep(pbcc=%p) - base64 encoding failed\n", pb);
+            PBCC_LOG_ERROR(
+                pb->logger_manager,
+                "Unable to base64-encode encrypted message for publish.");
             return PNR_INTERNAL_ERROR;
         }
 
         char* quoted_message =
             (char*)malloc(strlen(message) + 3); // quotes + null-terminator
         if (NULL == quoted_message) {
-            PUBNUB_LOG_ERROR("pbcc_publish_prep(pbcc=%p) - failed to allocate "
-                             "memory for quoted message\n",
-                             pb);
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pbcc_logger_manager_log_error(
+                pb->logger_manager,
+                PUBNUB_LOG_LEVEL_ERROR,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate for quoted base64-encoded encrypted message "
+                "for publish",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             free((void*)message);
             return PNR_OUT_OF_MEMORY;
         }
@@ -607,7 +622,9 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     ADD_URL_PARAM(qparam, uuid, user_id);
-    if (ttl != 0 && ttl != SIZE_MAX) { ADD_URL_PARAM_SIZET(qparam, ttl, ttl); }
+    if (ttl != 0 && ttl != SIZE_MAX) {
+        ADD_URL_PARAM_SIZET(pb, qparam, ttl, ttl);
+    }
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key == NULL) { ADD_URL_AUTH_PARAM(pb, qparam, auth); }
     ADD_TS_TO_URL_PARAM();
@@ -629,8 +646,15 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     if (pb->secret_key != NULL) {
         rslt = pbcc_sign_url(pb, message, method, false);
         if (rslt != PNR_OK) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, message, method);
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pbcc_logger_manager_log_error(
+                pb->logger_manager,
+                PUBNUB_LOG_LEVEL_ERROR,
+                PUBNUB_LOG_LOCATION,
+                rslt,
+                "Publish URL signing failed",
+                pubnub_res_2_string(rslt));
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         }
     }
 #endif
@@ -638,7 +662,6 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     if (method != pubnubSendViaGET) {
         APPEND_MESSAGE_BODY_M(rslt, pb, message);
     }
-    PUBNUB_LOG_DEBUG("pbcc_publish_prep. REQUEST =%s\n", pb->http_buf);
 #if PUBNUB_CRYPTO_API
     if (NULL != pb->crypto_module) { free((void*)message); }
 #endif
@@ -646,10 +669,11 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
-enum pubnub_res pbcc_sign_url(struct pbcc_context* pc,
-                              const char*          msg,
-                              enum pubnub_method   method,
-                              bool                 v3sign)
+enum pubnub_res pbcc_sign_url(
+    struct pbcc_context* pc,
+    const char*          msg,
+    enum pubnub_method   method,
+    bool                 v3sign)
 {
     enum pubnub_res rslt_         = PNR_INTERNAL_ERROR;
     char*           url           = (char*)malloc(sizeof(pc->http_buf));
@@ -662,35 +686,40 @@ enum pubnub_res pbcc_sign_url(struct pbcc_context* pc,
 #if PUBNUB_CRYPTO_API
         char* query_str = ques + 1;
         if (v3sign) {
-            rslt_ = pn_gen_pam_v3_sign((pubnub_t *)pc, query_str, url, msg, final_signature, sizeof(final_signature));
+            rslt_ = pn_gen_pam_v3_sign(
+                (pubnub_t*)pc,
+                query_str,
+                url,
+                msg,
+                final_signature,
+                sizeof(final_signature));
         }
         else {
-            rslt_ = pn_gen_pam_v2_sign((pubnub_t *)pc, query_str, url, final_signature, sizeof(final_signature));
+            rslt_ = pn_gen_pam_v2_sign(
+                (pubnub_t*)pc,
+                query_str,
+                url,
+                final_signature,
+                sizeof(final_signature));
         }
 #endif
         if (rslt_ == PNR_OK) {
             const char* param_ = "signature";
             rslt_              = pbcc_append_url_param(
-                (pc),
-                param_,
-                strlen(param_),
-                (final_signature),
-                ('&'));
-            if (rslt_ != PNR_OK) {
-                return rslt_;
-            }
+                (pc), param_, strlen(param_), (final_signature), ('&'));
+            if (rslt_ != PNR_OK) { return rslt_; }
         }
     }
     free(url);
-    PUBNUB_LOG_DEBUG("\nREQUEST = %s\n", pc->http_buf);
     return rslt_;
 }
 
 
-enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
-                                 const char*          channel,
-                                 const char*          message,
-                                 const char*          custom_message_type)
+enum pubnub_res pbcc_signal_prep(
+    struct pbcc_context* pb,
+    const char*          channel,
+    const char*          message,
+    const char*          custom_message_type)
 {
     enum pubnub_res   rslt    = PNR_OK;
     char const* const uname   = pubnub_uname();
@@ -700,11 +729,12 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
     PUBNUB_ASSERT_OPT(message != NULL);
 
     pb->http_content_len = 0;
-    pb->http_buf_len     = snprintf(pb->http_buf,
-                                sizeof pb->http_buf,
-                                "/signal/%s/%s/0/",
-                                pb->publish_key,
-                                pb->subscribe_key);
+    pb->http_buf_len     = snprintf(
+        pb->http_buf,
+        sizeof pb->http_buf,
+        "/signal/%s/%s/0/",
+        pb->publish_key,
+        pb->subscribe_key);
     APPEND_URL_ENCODED_M(pb, channel);
     APPEND_URL_LITERAL_M(pb, "/0/");
     APPEND_URL_ENCODED_M(pb, message);
@@ -723,26 +753,34 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
 #endif
 
 #if PUBNUB_CRYPTO_API
-  SORT_URL_PARAMETERS(qparam);
+    SORT_URL_PARAMETERS(qparam);
 #endif
     ENCODE_URL_PARAMETERS(pb, qparam);
 #if PUBNUB_CRYPTO_API
     if (pb->secret_key != NULL) {
         rslt = pbcc_sign_url(pb, "", pubnubSendViaGET, true);
         if (rslt != PNR_OK) {
-            PUBNUB_LOG_ERROR("pbcc_sign_url failed. pb=%p, message=%s, method=%d", pb, "", pubnubSendViaGET);
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pbcc_logger_manager_log_error(
+                pb->logger_manager,
+                PUBNUB_LOG_LEVEL_ERROR,
+                PUBNUB_LOG_LOCATION,
+                rslt,
+                "Signal URL signing failed",
+                pubnub_res_2_string(rslt));
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         }
     }
 #endif
-    PUBNUB_LOG_DEBUG("pbcc_signal_prep. REQUEST =%s\n", pb->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }
 
 
-enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
-                                    char const*          channel,
-                                    char const*          channel_group,
-                                    const unsigned*      heartbeat)
+enum pubnub_res pbcc_subscribe_prep(
+    struct pbcc_context* p,
+    char const*          channel,
+    char const*          channel_group,
+    const unsigned*      heartbeat)
 {
     char const*       user_id = pbcc_user_id_get(p);
     char const* const uname   = pubnub_uname();
@@ -752,17 +790,13 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
     enum pubnub_res rslt = PNR_OK;
 
     if (NULL == channel) {
-        if (NULL == channel_group) {
-            return PNR_INVALID_CHANNEL;
-        }
+        if (NULL == channel_group) { return PNR_INVALID_CHANNEL; }
         channel = ",";
     }
-    if (p->msg_ofs < p->msg_end) {
-        return PNR_RX_BUFF_NOT_EMPTY;
-    }
+    if (p->msg_ofs < p->msg_end) { return PNR_RX_BUFF_NOT_EMPTY; }
 
     p->http_content_len = 0;
-    p->msg_ofs          = p->msg_end = 0;
+    p->msg_ofs = p->msg_end = 0;
 
 #if PUBNUB_CRYPTO_API
     for (size_t i = 0; i < p->decrypted_message_count; i++) {
@@ -772,18 +806,18 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
 #endif
 
     p->http_buf_len = snprintf(
-        p->http_buf,
-        sizeof p->http_buf,
-        "/subscribe/%s/",
-        p->subscribe_key);
+        p->http_buf, sizeof p->http_buf, "/subscribe/%s/", p->subscribe_key);
     APPEND_URL_ENCODED_M(p, channel);
-    p->http_buf_len += snprintf(p->http_buf + p->http_buf_len,
-                                sizeof p->http_buf - p->http_buf_len,
-                                "/0/%s",
-                                p->timetoken);
+    p->http_buf_len += snprintf(
+        p->http_buf + p->http_buf_len,
+        sizeof p->http_buf - p->http_buf_len,
+        "/0/%s",
+        p->timetoken);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
-    if (channel_group) { ADD_URL_PARAM(qparam, channel-group, channel_group); }
+    if (channel_group) {
+        ADD_URL_PARAM(qparam, channel - group, channel_group);
+    }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
     if (p->secret_key == NULL) { ADD_URL_AUTH_PARAM(p, qparam, auth); }
@@ -793,11 +827,11 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
 #endif
 
     if (heartbeat) {
-        ADD_URL_PARAM_SIZET(qparam, heartbeat, (unsigned long)(*heartbeat));
+        ADD_URL_PARAM_SIZET(p, qparam, heartbeat, (unsigned long)(*heartbeat));
     }
 
 #if PUBNUB_CRYPTO_API
-  SORT_URL_PARAMETERS(qparam);
+    SORT_URL_PARAMETERS(qparam);
 #endif
     ENCODE_URL_PARAMETERS(p, qparam);
 #if PUBNUB_CRYPTO_API
@@ -805,6 +839,5 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
         rslt = pbcc_sign_url(p, "", pubnubSendViaGET, true);
     }
 #endif
-    PUBNUB_LOG_DEBUG("pbcc_subscribe_prep. REQUEST =%s\n", p->http_buf);
     return (rslt != PNR_OK) ? rslt : PNR_STARTED;
 }

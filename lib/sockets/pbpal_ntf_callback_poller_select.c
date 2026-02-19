@@ -4,7 +4,9 @@
 #include "lib/sockets/pbpal_ntf_callback_poller_select.h"
 
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include <stdlib.h>
 
@@ -14,9 +16,7 @@ struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void)
     struct pbpal_poll_data* rslt;
 
     rslt = (struct pbpal_poll_data*)malloc(sizeof *rslt);
-    if (NULL == rslt) {
-        return NULL;
-    }
+    if (NULL == rslt) { return NULL; }
     FD_ZERO(&rslt->readfds);
     FD_ZERO(&rslt->writefds);
     FD_ZERO(&rslt->exceptfds);
@@ -30,9 +30,7 @@ static bool we_ve_got_ya(struct pbpal_poll_data const* data, pubnub_t const* pb)
 {
     size_t i;
     for (i = 0; i < data->size; ++i) {
-        if (data->apb[i] == pb) {
-            return true;
-        }
+        if (data->apb[i] == pb) { return true; }
     }
     return false;
 }
@@ -44,17 +42,13 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 
     PUBNUB_ASSERT_OPT(data != NULL);
 
-    if (INVALID_SOCKET == sockt) {
-        return;
-    }
+    if (INVALID_SOCKET == sockt) { return; }
     PUBNUB_ASSERT(!FD_ISSET(sockt, &data->exceptfds));
     PUBNUB_ASSERT(!FD_ISSET(sockt, &data->writefds));
     PUBNUB_ASSERT(!FD_ISSET(sockt, &data->readfds));
     PUBNUB_ASSERT_EX(!we_ve_got_ya(data, pb));
 
-    if ((int)sockt > data->nfds) {
-        data->nfds = sockt;
-    }
+    if ((int)sockt > data->nfds) { data->nfds = sockt; }
     FD_SET(sockt, &data->exceptfds);
     FD_SET(sockt, &data->writefds);
     data->apb[data->size]     = pb;
@@ -63,7 +57,9 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 }
 
 
-void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb)
+void pbpal_ntf_callback_remove_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t*               pb)
 {
     size_t                i;
     int                   new_nfds = 0;
@@ -71,25 +67,26 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
 
     PUBNUB_ASSERT_OPT(data != NULL);
 
-    if (INVALID_SOCKET == sockt) {
-        return;
-    }
+    if (INVALID_SOCKET == sockt) { return; }
     PUBNUB_ASSERT(FD_ISSET(sockt, &data->exceptfds));
     PUBNUB_ASSERT_EX(we_ve_got_ya(data, pb));
 
     for (i = 0; i < data->size; ++i) {
         pbpal_native_socket_t i_sckt = data->asocket[i];
-        PUBNUB_ASSERT(pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
-        if ((int)i_sckt > new_nfds) {
-            new_nfds = i_sckt;
-        }
+        PUBNUB_ASSERT(
+            pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
+        if ((int)i_sckt > new_nfds) { new_nfds = i_sckt; }
         if (data->apb[i] == pb) {
             size_t to_move = data->size - i - 1;
             if (to_move > 0) {
-                memmove(data->apb + i, data->apb + i + 1, sizeof data->apb[0] * to_move);
-                memmove(data->asocket + i,
-                        data->asocket + i + 1,
-                        sizeof data->asocket[0] * to_move);
+                memmove(
+                    data->apb + i,
+                    data->apb + i + 1,
+                    sizeof data->apb[0] * to_move);
+                memmove(
+                    data->asocket + i,
+                    data->asocket + i + 1,
+                    sizeof data->asocket[0] * to_move);
             }
             --data->size;
             break;
@@ -102,16 +99,17 @@ void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb
 
     for (; i < data->size; ++i) {
         pbpal_native_socket_t i_sckt = data->asocket[i];
-        PUBNUB_ASSERT(pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
-        if ((int)i_sckt > new_nfds) {
-            new_nfds = i_sckt;
-        }
+        PUBNUB_ASSERT(
+            pubnub_get_native_socket(data->apb[i]) == data->asocket[i]);
+        if ((int)i_sckt > new_nfds) { new_nfds = i_sckt; }
     }
     data->nfds = new_nfds;
 }
 
 
-void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb)
+void pbpal_ntf_callback_update_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t*               pb)
 {
     size_t i;
 
@@ -140,9 +138,7 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
     pbpal_native_socket_t scket = pubnub_get_native_socket(pbp);
 
     PUBNUB_ASSERT_OPT(data != NULL);
-    if (!we_ve_got_ya(data, pbp)) {
-        return -1;
-    }
+    if (!we_ve_got_ya(data, pbp)) { return -1; }
 
     FD_CLR(scket, &data->readfds);
     FD_SET(scket, &data->writefds);
@@ -156,9 +152,7 @@ int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
     pbpal_native_socket_t scket = pubnub_get_native_socket(pbp);
 
     PUBNUB_ASSERT_OPT(data != NULL);
-    if (!we_ve_got_ya(data, pbp)) {
-        return -1;
-    }
+    if (!we_ve_got_ya(data, pbp)) { return -1; }
 
     FD_SET(scket, &data->readfds);
     FD_CLR(scket, &data->writefds);
@@ -176,9 +170,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
     fd_set         exceptfds;
     struct timeval timeout;
 
-    if (0 == data->size) {
-        return 0;
-    }
+    if (0 == data->size) { return 0; }
 
     timeout.tv_sec  = ms / 1000;
     timeout.tv_usec = (ms % 1000) * 1000;
@@ -195,9 +187,10 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
             errno
 #endif
             ;
-        /* error? what to do about it? */
-        PUBNUB_LOG_WARNING(
-            "poll size = %u, error = %d\n", (unsigned)data->size, last_err);
+        PUBNUB_LOG_WARNING(data->apb[0],
+                           "select() failed with error %d (%u sockets polled)",
+                           last_err,
+                           (unsigned)data->size);
         return -1;
     }
     for (i = 0; (i < (int)data->size) && (rslt > 0); ++i) {
@@ -216,9 +209,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
             --rslt;
             PUBNUB_ASSERT_OPT(rslt >= 0);
         }
-        if (should_process) {
-            pbntf_requeue_for_processing(data->apb[i]);
-        }
+        if (should_process) { pbntf_requeue_for_processing(data->apb[i]); }
     }
     PUBNUB_ASSERT_OPT(0 == rslt);
 

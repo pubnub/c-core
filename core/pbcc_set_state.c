@@ -1,6 +1,8 @@
 #include "core/pubnub_ccore_pubsub.h"
 #include "pubnub_internal.h"
-#include "pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 #include <string.h>
 #include <stdlib.h>
 
@@ -25,10 +27,11 @@ static int json_kvp_builder(char* jsonbuilder, int pos, char* key, char* val)
 }
 
 
-void pbcc_adjust_state(struct pbcc_context* core,
-                       char const*          channel,
-                       char const*          channel_group,
-                       char const*          state)
+void pbcc_adjust_state(
+    struct pbcc_context* core,
+    char const*          channel,
+    char const*          channel_group,
+    char const*          state)
 {
     int ch_cnt = 0, cg_cnt = 0, tot_ch = 0, tot_cg = 0;
     if (channel) {
@@ -55,8 +58,8 @@ void pbcc_adjust_state(struct pbcc_context* core,
         // tot_ch * (dq_len * 2) - double-quotes around channel name
         // (tot_ch - 1) * (co_len + cm_len) - how many commas and colons
         // we need for channels key-value pairs
-        ch_keys_len = strlen(channel) + tot_ch * (dq_len * 2 + co_len)
-                      + ((tot_ch - 1) * cm_len);
+        ch_keys_len = strlen(channel) + tot_ch * (dq_len * 2 + co_len) +
+                      ((tot_ch - 1) * cm_len);
     }
 
     if (tot_cg >= 1) {
@@ -64,8 +67,8 @@ void pbcc_adjust_state(struct pbcc_context* core,
         // tot_cg * (dq_len * 2) - double-quotes around channel group name
         // (tot_cg - 1) * (co_len + cm_len) - how many commas and colons
         // we need for channel groups key-value pairs
-        chg_keys_len = strlen(channel_group) + tot_cg * (dq_len * 2 + co_len)
-                       + ((tot_cg - 1) * cm_len);
+        chg_keys_len = strlen(channel_group) + tot_cg * (dq_len * 2 + co_len) +
+                       ((tot_cg - 1) * cm_len);
     }
 
     // 2 is our {} and 1 is our \0
@@ -125,7 +128,8 @@ void pbcc_adjust_state(struct pbcc_context* core,
             bool  end = false;
             do {
                 cg_temp = strchr(str_cg, ',');
-                if ((ch_cnt > 0 || cg_cnt > 0) && json_state[mem_len - 1] != ',') {
+                if ((ch_cnt > 0 || cg_cnt > 0) &&
+                    json_state[mem_len - 1] != ',') {
                     memcpy(json_state + mem_len, ",", cm_len);
                     mem_len += cm_len;
                 }
@@ -158,6 +162,7 @@ void pbcc_adjust_state(struct pbcc_context* core,
         memcpy(json_state + mem_len - trim_comma, "}", cb_len);
         mem_len += cb_len - trim_comma;
         json_state[mem_len] = '\0';
-        PUBNUB_LOG_DEBUG("formatted state is %s\n", json_state);
+        PBCC_LOG_DEBUG(
+            core->logger_manager, "Formatted presence state: %s", json_state);
     }
 }

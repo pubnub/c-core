@@ -16,7 +16,6 @@
 #endif
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
-#include "pubnub_log.h"
 
 #include "pbpal.h"
 #include "pubnub_version_internal.h"

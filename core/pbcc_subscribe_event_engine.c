@@ -14,7 +14,9 @@
 #include "core/pbcc_event_engine.h"
 #include "core/pbcc_memory_utils.h"
 #include "core/pubnub_mutex.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 #include "pubnub_callback.h"
 #include "pubnub_internal.h"
 #include "lib/pbhash_set.h"
@@ -86,7 +88,8 @@ static enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
  * unsubscribe for later time because there is ongoing request. Saved
  * information will be used in this function to complete `leave` operation.
  *
- * @param ee Pointer to the Subscribe Event Engine, which may have information for `leave` request.
+ * @param ee Pointer to the Subscribe Event Engine, which may have information
+ * for `leave` request.
  * @return `true` in case if `leave` request sending has been scheduled.
  */
 static bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee);
@@ -217,26 +220,50 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
     pubnub_mutex_init(ee->mutw);
 
     if (NULL == ee->subscriptions) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for subscriptions list\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscriptions list",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
     if (NULL == ee->subscription_sets) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for subscription sets list\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscriptions set list",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
     if (NULL == ee->leave_channels) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for unsubscribed channels\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for unsubscribed channels",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
     if (NULL == ee->leave_channel_groups) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for unsubscribed channel groups\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for unsubscribed channel groups",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
@@ -247,8 +274,14 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
         PBHASH_SET_CHAR_CONTENT_TYPE,
         (pbhash_set_element_free)pubnub_subscribable_free_);
     if (NULL == ee->subscribables) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for subscribable objects\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscribable objects",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
@@ -260,8 +293,14 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
     /** Setup event engine */
     ee->ee = pbcc_ee_alloc(pbcc_unsubscribed_state_alloc());
     if (NULL == ee->ee) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for event engine with initial state\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for event engine with initial state",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
@@ -269,15 +308,20 @@ pbcc_subscribe_ee_t* pbcc_subscribe_ee_alloc(pubnub_t* pb)
     /** Setup event listener */
     ee->event_listener = pbcc_event_listener_alloc(pb);
     if (NULL == ee->ee) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_alloc: failed to allocate memory "
-            "for event listener\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for event listener",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pbcc_subscribe_ee_free(&ee);
         return NULL;
     }
 
-    pubnub_register_callback(pb,
-                             (pubnub_callback_t)pbcc_subscribe_callback_,
-                             ee);
+    pubnub_register_callback(
+        pb, (pubnub_callback_t)pbcc_subscribe_callback_, ee);
 
     return ee;
 }
@@ -290,8 +334,7 @@ void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t** ee)
     if (NULL != (*ee)->subscription_sets)
         pbarray_free(&(*ee)->subscription_sets);
     if (NULL != (*ee)->subscriptions) { pbarray_free(&(*ee)->subscriptions); }
-    if (NULL != (*ee)->subscribables)
-        pbhash_set_free(&(*ee)->subscribables);
+    if (NULL != (*ee)->subscribables) pbhash_set_free(&(*ee)->subscribables);
     if (NULL != (*ee)->leave_channel_groups)
         pbarray_free(&(*ee)->leave_channel_groups);
     if (NULL != (*ee)->leave_channels) { pbarray_free(&(*ee)->leave_channels); }
@@ -332,7 +375,9 @@ void pbcc_subscribe_ee_set_filter_expression(
     pubnub_mutex_lock(ee->mutw);
     if (NULL != ee->filter_expr) { free(ee->filter_expr); }
     if (NULL == filter_expr) { ee->filter_expr = NULL; }
-    else { ee->filter_expr = pbstrdup(filter_expr); }
+    else {
+        ee->filter_expr = pbstrdup(filter_expr);
+    }
     pubnub_mutex_unlock(ee->mutw);
 }
 
@@ -358,17 +403,20 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription(
 
     pubnub_mutex_lock(ee->mutw);
     if (PBAR_OK != pbarray_add(ee->subscriptions, sub)) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_subscribe_with_subscription: failed"
-            " to allocate memory to store subscription\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscription",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(
-        ee,
-        cursor,
-        true,
-        false);
+    const enum pubnub_res rslt =
+        pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -389,8 +437,14 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
     pbhash_set_t* subs = pubnub_subscription_subscribables_(sub, NULL);
 
     if (NULL == subs) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_unsubscribe_with_subscription: "
-            "failed to allocate memory for subscribables\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscribables",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -404,8 +458,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
      * `pbcc_subscribe_ee_unsubscribe_`.
      */
     pbhash_set_free_with_destructor(
-        &subs,
-        (pbhash_set_element_free)pubnub_subscribable_free_);
+        &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -420,18 +473,20 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
 
     pubnub_mutex_lock(ee->mutw);
     if (PBAR_OK != pbarray_add(ee->subscription_sets, set)) {
-        PUBNUB_LOG_ERROR(
-            "pbcc_subscribe_ee_subscribe_with_subscription_set: failed to "
-            "allocate memory to store subscription set\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscription set",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt = pbcc_subscribe_ee_subscribe_(
-        ee,
-        cursor,
-        true,
-        false);
+    const enum pubnub_res rslt =
+        pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -452,8 +507,14 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
     pbhash_set_t* subs = pubnub_subscription_set_subscribables_(set);
 
     if (NULL == subs) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_unsubscribe_with_subscription_set: "
-            "failed to allocate memory for subscribables\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscribables",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -467,8 +528,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
      * `pbcc_subscribe_ee_unsubscribe_`.
      */
     pbhash_set_free_with_destructor(
-        &subs,
-        (pbhash_set_element_free)pubnub_subscribable_free_);
+        &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
     pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
@@ -492,9 +552,14 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
         pbhash_set_t* subs = pubnub_subscription_subscribables_(sub, &options);
 
         if (NULL == subs) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_subscribe_ee_change_subscription_with_subscription_set: "
-                "failed to allocate memory for subscribables\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                ee->pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory for subscribables",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             pubnub_mutex_unlock(ee->mutw);
             return PNR_OUT_OF_MEMORY;
         }
@@ -506,8 +571,7 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
          * `pbcc_subscribe_ee_unsubscribe_`.
          */
         pbhash_set_free_with_destructor(
-            &subs,
-            (pbhash_set_element_free)pubnub_subscribable_free_);
+            &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
     }
     pubnub_mutex_unlock(ee->mutw);
 
@@ -521,7 +585,8 @@ enum pubnub_res pbcc_subscribe_ee_disconnect(pbcc_subscribe_ee_t* ee)
     pubnub_mutex_lock(ee->mutw);
     pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
     if (NULL != current_state_obj) {
-        pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_subscribe_ee_state current_state_type =
+            (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
         pbcc_ee_state_free(&current_state_obj);
         if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
             current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKE_FAILED ||
@@ -529,15 +594,24 @@ enum pubnub_res pbcc_subscribe_ee_disconnect(pbcc_subscribe_ee_t* ee)
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_FAILED ||
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVE_STOPPED) {
             pubnub_mutex_unlock(ee->mutw);
-            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_disconnect: called while already in a disconnected/terminal state. Skipping disconnect.\n");
+            PUBNUB_LOG_WARNING(
+                ee->pb,
+                "Called while already in a disconnected/terminal state. "
+                "Skipping disconnect.");
             return PNR_OK;
         }
     }
 
     pbcc_ee_event_t* event = pbcc_disconnect_event_alloc(ee);
     if (NULL == event) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_disconnect: failed to allocate "
-            "memory for event\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for event",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -555,21 +629,31 @@ enum pubnub_res pbcc_subscribe_ee_reconnect(
     pubnub_mutex_lock(ee->mutw);
     pbcc_ee_state_t* current_state_obj = pbcc_ee_current_state(ee->ee);
     if (NULL != current_state_obj) {
-        pbcc_subscribe_ee_state current_state_type = (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
+        pbcc_subscribe_ee_state current_state_type =
+            (pbcc_subscribe_ee_state)pbcc_ee_state_type(current_state_obj);
         pbcc_ee_state_free(&current_state_obj);
         if (current_state_type == SUBSCRIBE_EE_STATE_UNSUBSCRIBED ||
             current_state_type == SUBSCRIBE_EE_STATE_HANDSHAKING ||
             current_state_type == SUBSCRIBE_EE_STATE_RECEIVING) {
             pubnub_mutex_unlock(ee->mutw);
-            PUBNUB_LOG_WARNING("pbcc_subscribe_ee_reconnect: called in state that can't be reconnected. Skipping reconnect.\n");
+            PUBNUB_LOG_WARNING(
+                ee->pb,
+                "Called in state that can't be reconnected. Skipping "
+                "reconnect.");
             return PNR_OK;
         }
     }
 
     pbcc_ee_event_t* event = pbcc_reconnect_event_alloc(ee, cursor);
     if (NULL == event) {
-        PUBNUB_LOG_ERROR("pbcc_subscribe_ee_reconnect: failed to allocate "
-            "memory for event\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for event",
+            "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -584,17 +668,20 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
 
     pubnub_mutex_lock(ee->mutw);
     char *          ch, *cg;
-    enum pubnub_res rslt = pbcc_subscribe_ee_subscribables_(ee->subscribables,
-        &ch,
-        &cg,
-        false);
+    enum pubnub_res rslt =
+        pbcc_subscribe_ee_subscribables_(ee->subscribables, &ch, &cg, false);
 
     if (PNR_OK == rslt) {
-        pbcc_ee_event_t* event =
-            pbcc_unsubscribe_all_event_alloc(ee, &ch, &cg);
+        pbcc_ee_event_t* event = pbcc_unsubscribe_all_event_alloc(ee, &ch, &cg);
         if (NULL == event) {
-            PUBNUB_LOG_ERROR("pbcc_subscribe_ee_reconnect: failed to allocate "
-                "memory for event\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                ee->pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory for event",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             rslt = PNR_OUT_OF_MEMORY;
 
             if (NULL != ch) { free(ch); }
@@ -613,7 +700,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
                 pubnub_mutex_lock(ee->pb->monitor);
                 if (!pbnc_can_start_transaction(ee->pb)) {
                     pubnub_mutex_unlock(ee->pb->monitor);
-                    /** Using array to handle consequencive call to unsubscribe. */
+                    /** Using array to handle consequencive call to unsubscribe.
+                     */
                     pubnub_mutex_lock(ee->mutw);
                     if (NULL != ch && strlen(ch) > 0)
                         pbarray_add(ee->leave_channels, ch);
@@ -628,9 +716,10 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
                     ee->current_transaction = PBTT_LEAVE;
                     pubnub_mutex_unlock(ee->mutw);
 
-                    pubnub_leave(ee->pb,
-                                 NULL == ch || 0 == strlen(ch) ? NULL : ch,
-                                 NULL == cg || 0 == strlen(cg) ? NULL : cg);
+                    pubnub_leave(
+                        ee->pb,
+                        NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                        NULL == cg || 0 == strlen(cg) ? NULL : cg);
                 }
             }
 
@@ -668,8 +757,8 @@ pubnub_subscription_t** pbcc_subscribe_ee_subscriptions(
     PUBNUB_ASSERT_OPT(NULL != ee);
 
     pubnub_mutex_lock(ee->mutw);
-    pubnub_subscription_t** subs = (pubnub_subscription_t**)
-        pbarray_elements(ee->subscriptions, count);
+    pubnub_subscription_t** subs =
+        (pubnub_subscription_t**)pbarray_elements(ee->subscriptions, count);
     pubnub_mutex_unlock(ee->mutw);
 
     return subs;
@@ -682,8 +771,9 @@ pubnub_subscription_set_t** pbcc_subscribe_ee_subscription_sets(
     PUBNUB_ASSERT_OPT(NULL != ee);
 
     pubnub_mutex_lock(ee->mutw);
-    pubnub_subscription_set_t** subs = (pubnub_subscription_set_t**)
-        pbarray_elements(ee->subscription_sets, count);
+    pubnub_subscription_set_t** subs =
+        (pubnub_subscription_set_t**)pbarray_elements(
+            ee->subscription_sets, count);
     pubnub_mutex_unlock(ee->mutw);
 
     return subs;
@@ -693,8 +783,7 @@ void pbcc_subscribe_callback_(
     pubnub_t*               pb,
     const enum pubnub_trans trans,
     const enum pubnub_res   result,
-    const void*             user_data
-    )
+    const void*             user_data)
 {
     pbcc_subscribe_ee_t* ee = (pbcc_subscribe_ee_t*)user_data;
 
@@ -744,11 +833,15 @@ void pbcc_subscribe_callback_(
 
     if (SUBSCRIBE_EE_STATE_HANDSHAKING == pbcc_ee_state_type(state_object)) {
         if (!error) { event = pbcc_handshake_success_event_alloc(ee, cursor); }
-        else { event = pbcc_handshake_failure_event_alloc(ee, result); }
+        else {
+            event = pbcc_handshake_failure_event_alloc(ee, result);
+        }
     }
     else if (SUBSCRIBE_EE_STATE_RECEIVING == pbcc_ee_state_type(state_object)) {
         if (!error) { event = pbcc_receive_success_event_alloc(ee, cursor); }
-        else { event = pbcc_receive_failure_event_alloc(ee, result); }
+        else {
+            event = pbcc_receive_failure_event_alloc(ee, result);
+        }
     }
 
     if (NULL != event) { pbcc_ee_handle_event(ee->ee, event); }
@@ -762,15 +855,13 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
     const bool                       sent_by_ee)
 {
     pbcc_ee_event_t* event = NULL;
-    char *           ch    = NULL, *cg = NULL;
-    enum pubnub_res  rslt  = PNR_OK;
+    char *           ch = NULL, *cg = NULL;
+    enum pubnub_res  rslt = PNR_OK;
 
     if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee); }
     if (PNR_OK == rslt) {
-        rslt = pbcc_subscribe_ee_subscribables_(ee->subscribables,
-                                                &ch,
-                                                &cg,
-                                                true);
+        rslt =
+            pbcc_subscribe_ee_subscribables_(ee->subscribables, &ch, &cg, true);
 
         /**
          * Empty list allowed and will mean that event engine should transit to
@@ -789,22 +880,20 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
         const bool restore = NULL != cursor && '0' != cursor->timetoken[0];
 
         if (NULL == cursor || !restore)
-            event = pbcc_subscription_changed_event_alloc(
-                ee,
-                &ch,
-                &cg,
-                sent_by_ee);
+            event =
+                pbcc_subscription_changed_event_alloc(ee, &ch, &cg, sent_by_ee);
         else
             event = pbcc_subscription_restored_event_alloc(
-                ee,
-                &ch,
-                &cg,
-                *cursor,
-                sent_by_ee);
+                ee, &ch, &cg, *cursor, sent_by_ee);
         if (NULL == event) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_subscribe_ee_subscribe: failed to allocate memory for "
-                "event\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                ee->pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory for event",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             if (NULL != ch) { free(ch); }
             if (NULL != cg) { free(cg); }
             rslt = PNR_OUT_OF_MEMORY;
@@ -824,12 +913,12 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     pbcc_subscribe_ee_t* ee,
     pbhash_set_t*        subscribables)
 {
-    char *ch         = NULL, *cg = NULL;
+    char *ch = NULL, *cg = NULL;
     bool  send_leave = false;
 
     size_t                  count = 0;
-    pubnub_subscribable_t** subs  = (pubnub_subscribable_t**)
-        pbhash_set_elements(subscribables, &count);
+    pubnub_subscribable_t** subs =
+        (pubnub_subscribable_t**)pbhash_set_elements(subscribables, &count);
     if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
 
     /**
@@ -847,9 +936,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
         pubnub_subscribable_t* sub = subs[i];
 
         if (pbhash_set_contains(ee->subscribables, sub->id->ptr)) {
-            pbhash_set_remove(subscribables,
-                              (void**)&sub->id->ptr,
-                              (void**)&sub);
+            pbhash_set_remove(
+                subscribables, (void**)&sub->id->ptr, (void**)&sub);
             pubnub_subscribable_free_(sub);
         }
     }
@@ -886,9 +974,10 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
             pubnub_mutex_unlock(ee->mutw);
             sending_leave = true;
 
-            pubnub_leave(ee->pb,
-                         NULL == ch || 0 == strlen(ch) ? NULL : ch,
-                         NULL == cg || 0 == strlen(cg) ? NULL : cg);
+            pubnub_leave(
+                ee->pb,
+                NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                NULL == cg || 0 == strlen(cg) ? NULL : cg);
         }
     }
 
@@ -939,9 +1028,10 @@ bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee)
     ee->current_transaction = PBTT_LEAVE;
     pubnub_mutex_unlock(ee->mutw);
 
-    pubnub_leave(ee->pb,
-                 NULL == ch || 0 == strlen(ch) ? NULL : ch,
-                 NULL == cg || 0 == strlen(cg) ? NULL : cg);
+    pubnub_leave(
+        ee->pb,
+        NULL == ch || 0 == strlen(ch) ? NULL : ch,
+        NULL == cg || 0 == strlen(cg) ? NULL : cg);
     if (NULL != ch) { free(ch); }
     if (NULL != cg) { free(cg); }
 
@@ -962,7 +1052,7 @@ enum pubnub_res pbcc_subscribe_ee_update_subscribables_(
     for (int i = 0; i < pbarray_count(subs); ++i) {
         const pubnub_subscription_t* sub = pbarray_element_at(subs, i);
         pbhash_set_t* subc = pubnub_subscription_subscribables_(sub, NULL);
-        rslt = pbcc_subscribe_ee_add_subscribables_(ee, subc);
+        rslt               = pbcc_subscribe_ee_add_subscribables_(ee, subc);
         pbhash_set_free(&subc);
         if (PNR_OK != rslt) { return rslt; }
     }
@@ -970,7 +1060,7 @@ enum pubnub_res pbcc_subscribe_ee_update_subscribables_(
     for (int i = 0; i < pbarray_count(sets); ++i) {
         const pubnub_subscription_set_t* sub = pbarray_element_at(sets, i);
         pbhash_set_t* subc = pubnub_subscription_set_subscribables_(sub);
-        rslt = pbcc_subscribe_ee_add_subscribables_(ee, subc);
+        rslt               = pbcc_subscribe_ee_add_subscribables_(ee, subc);
         pbhash_set_free(&subc);
         if (PNR_OK != rslt) { return rslt; }
     }
@@ -989,19 +1079,27 @@ enum pubnub_res pbcc_subscribe_ee_add_subscribables_(
     pbhash_set_t*   dups = NULL;
 
     if (NULL == subscribables ||
-        PBHSR_OUT_OF_MEMORY == pbhash_set_union(
-            ee->subscribables,
-            subscribables,
-            &dups)) {
+        PBHSR_OUT_OF_MEMORY ==
+            pbhash_set_union(ee->subscribables, subscribables, &dups)) {
         if (NULL == subscribables) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_subscribe_ee_add_subscribables: failed to allocate "
-                "memory for subscription's subscribables\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                ee->pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory for subscription's subscribables",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         }
         else {
-            PUBNUB_LOG_ERROR(
-                "pbcc_subscribe_ee_add_subscribables: failed to allocate "
-                "memory to store subscribables\n");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                ee->pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Unable allocate memory to store subscribables",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
         }
 
         rslt = PNR_OUT_OF_MEMORY;
@@ -1011,14 +1109,13 @@ enum pubnub_res pbcc_subscribe_ee_add_subscribables_(
 
     /** Make sure that duplicates will be freed. */
     size_t                  dups_count = 0;
-    pubnub_subscribable_t** elms       = (pubnub_subscribable_t**)
-        pbhash_set_elements(dups, &dups_count);
+    pubnub_subscribable_t** elms =
+        (pubnub_subscribable_t**)pbhash_set_elements(dups, &dups_count);
     for (size_t j = 0; j < dups_count; ++j) {
         pubnub_subscribable_t* elm = elms[j];
 
-        if (PBHSR_VALUE_EXISTS == pbhash_set_match_element(
-                ee->subscribables,
-                elm)) {
+        if (PBHSR_VALUE_EXISTS ==
+            pbhash_set_match_element(ee->subscribables, elm)) {
             pubnub_subscribable_free_(elm);
         }
     }
@@ -1042,8 +1139,9 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
     size_t cg_list_length = 0, cg_count = 0, cg_offset = 0;
 
     size_t                        count;
-    const pubnub_subscribable_t** subs = (const pubnub_subscribable_t**)
-        pbhash_set_elements(subscribables, &count);
+    const pubnub_subscribable_t** subs =
+        (const pubnub_subscribable_t**)pbhash_set_elements(
+            subscribables, &count);
 
     for (int i = 0; i < count; ++i) {
         const pubnub_subscribable_t* sub = subs[i];
@@ -1068,9 +1166,6 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
     *channel_groups     = calloc(cg_len, sizeof(char));
 
     if (NULL == *channels || NULL == *channel_groups) {
-        PUBNUB_LOG_ERROR(
-            "pbcc_subscribe_ee_subscribables: failed to allocate memory to "
-            "store subscription channels / channel groups\n");
         if (NULL != *channel_groups) {
             free(*channel_groups);
             *channel_groups = NULL;
@@ -1093,25 +1188,26 @@ enum pubnub_res pbcc_subscribe_ee_subscribables_(
             continue;
 
         if (!pubnub_subscribable_is_cg_(sub)) {
-            ch_offset += snprintf(*channels + ch_offset,
-                                  ch_len - ch_offset,
-                                  "%s%s",
-                                  ch_offset > 0 ? "," : "",
-                                  sub->id->ptr);
+            ch_offset += snprintf(
+                *channels + ch_offset,
+                ch_len - ch_offset,
+                "%s%s",
+                ch_offset > 0 ? "," : "",
+                sub->id->ptr);
         }
         else {
-            cg_offset += snprintf(*channel_groups + cg_offset,
-                                  cg_len - cg_offset,
-                                  "%s%s",
-                                  cg_offset > 0 ? "," : "",
-                                  sub->id->ptr);
+            cg_offset += snprintf(
+                *channel_groups + cg_offset,
+                cg_len - cg_offset,
+                "%s%s",
+                cg_offset > 0 ? "," : "",
+                sub->id->ptr);
         }
     }
     if (NULL != subs) { free(subs); }
 
-    return ch_list_length == 0 && cg_list_length == 0
-               ? PNR_INVALID_PARAMETERS
-               : PNR_OK;
+    return ch_list_length == 0 && cg_list_length == 0 ? PNR_INVALID_PARAMETERS
+                                                      : PNR_OK;
 }
 
 char* pbcc_subscribe_ee_joined_array_elements_(
@@ -1125,7 +1221,9 @@ char* pbcc_subscribe_ee_joined_array_elements_(
 
     /** Extra byte for null-terminator. */
     size_t len = (count > 0 ? (count - 1) * strlen(separator) : 0) + 1;
-    for (size_t i = 0; i < count; ++i) { len += strlen(elements[i]); }
+    for (size_t i = 0; i < count; ++i) {
+        len += strlen(elements[i]);
+    }
 
     char* joined_str = malloc(len * sizeof(char));
     if (NULL == joined_str || 0 == count) {
@@ -1135,11 +1233,12 @@ char* pbcc_subscribe_ee_joined_array_elements_(
     }
 
     for (int i = 0; i < count; ++i) {
-        offset += snprintf(joined_str + offset,
-                           len - offset,
-                           "%s%s",
-                           offset > 0 ? separator : "",
-                           elements[i]);
+        offset += snprintf(
+            joined_str + offset,
+            len - offset,
+            "%s%s",
+            offset > 0 ? separator : "",
+            elements[i]);
     }
 
     return joined_str;

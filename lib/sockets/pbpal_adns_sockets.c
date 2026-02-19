@@ -3,7 +3,7 @@
 
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#include "core/pubnub_logger_internal.h"
 
 #if !defined(_WIN32)
 #include <arpa/inet.h>
@@ -20,29 +20,32 @@
 
 #define DNS_PORT 53
 
-#if PUBNUB_LOG_LEVEL >= PUBNUB_LOG_LEVEL_TRACE
-#define TRACE_SOCKADDR(str, addr, sockaddr_size)                               \
+#if PUBNUB_LOG_ENABLED(TRACE)
+#define TRACE_SOCKADDR(pb, str, addr, sockaddr_size)                           \
     do {                                                                       \
         char M_h_[50];                                                         \
         char M_s_[20];                                                         \
-        getnameinfo(addr,                                                      \
-                    sockaddr_size,                                             \
-                    M_h_,                                                      \
-                    sizeof M_h_,                                               \
-                    M_s_,                                                      \
-                    sizeof M_s_,                                               \
-                    NI_NUMERICHOST | NI_NUMERICSERV);                          \
-        PUBNUB_LOG_TRACE(str "%s-port:%s\n", M_h_, M_s_);                      \
+        getnameinfo(                                                           \
+            (addr),                                                            \
+            (sockaddr_size),                                                   \
+            M_h_,                                                              \
+            sizeof M_h_,                                                       \
+            M_s_,                                                              \
+            sizeof M_s_,                                                       \
+            NI_NUMERICHOST | NI_NUMERICSERV);                                  \
+        PUBNUB_LOG_TRACE((pb), str "%s:%s", M_h_, M_s_);                       \
     } while (0)
 #else
-#define TRACE_SOCKADDR(str, addr)
+#define TRACE_SOCKADDR(pb, str, addr, sockaddr_size) ((void)(pb))
 #endif
 
 
-int send_dns_query(pb_socket_t                  skt,
-                   struct sockaddr const*       dest,
-                   char const*                  host,
-                   struct dns_queries_tracking* tracking)
+int send_dns_query(
+    pubnub_t*                    pb,
+    pb_socket_t                  skt,
+    struct sockaddr const*       dest,
+    char const*                  host,
+    struct dns_queries_tracking* tracking)
 {
     uint8_t buf[4096];
     int     to_send;
@@ -51,7 +54,7 @@ int send_dns_query(pb_socket_t                  skt,
     bool    any_blocked = false;
 
     if (!tracking) {
-        PUBNUB_LOG_ERROR("send_dns_query: tracking required\n");
+        PUBNUB_LOG_ERROR(pb, "DNS queries tracking required");
         return -1;
     }
 
@@ -67,38 +70,34 @@ int send_dns_query(pb_socket_t                  skt,
         break;
 #endif /* PUBNUB_USE_IPV6 */
     default:
-        PUBNUB_LOG_ERROR("send_dns_query(socket=%d): invalid address family "
-                         "dest->sa_family=%u\n",
-                         skt,
-                         dest->sa_family);
+        PUBNUB_LOG_ERROR(pb, "Invalid address family: %u", dest->sa_family);
         return -1;
     }
 
     if (!tracking->sent_a) {
-        if (pbdns_prepare_dns_request(buf, sizeof buf, host, &to_send, dnsA) == 0) {
-            TRACE_SOCKADDR("Sending DNS A query to: ", dest, sockaddr_size);
+        if (pbdns_prepare_dns_request(
+                pb, buf, sizeof buf, host, &to_send, dnsA) == 0) {
+            TRACE_SOCKADDR(pb, "Sending DNS A query to ", dest, sockaddr_size);
             sent_to = sendto(skt, (char*)buf, to_send, 0, dest, sockaddr_size);
-            if (sent_to > 0 && to_send == sent_to)
-                tracking->sent_a = true;
-            else if (sent_to <= 0 && socket_would_block())
-                any_blocked = true;
+            if (sent_to > 0 && to_send == sent_to) tracking->sent_a = true;
+            else if (sent_to <= 0 && socket_would_block()) any_blocked = true;
             else
-                PUBNUB_LOG_WARNING("Failed to send A query: %d\n", sent_to);
+                PUBNUB_LOG_WARNING(
+                    pb, "Failed to send DNS A query: %d", sent_to);
         }
     }
 
 #if PUBNUB_USE_IPV6
     if (!tracking->sent_aaaa) {
-        if (pbdns_prepare_dns_request(buf, sizeof buf, host, &to_send, dnsAAAA)
-            == 0) {
-            TRACE_SOCKADDR("Sending DNS AAAA query to: ", dest, sockaddr_size);
+        if (pbdns_prepare_dns_request(
+                pb, buf, sizeof buf, host, &to_send, dnsAAAA) == 0) {
+            TRACE_SOCKADDR(pb, "Sending DNS AAAA query to: ", dest, sockaddr_size);
             sent_to = sendto(skt, (char*)buf, to_send, 0, dest, sockaddr_size);
-            if (sent_to > 0 && to_send == sent_to)
-                tracking->sent_aaaa = true;
-            else if (sent_to <= 0 && socket_would_block())
-                any_blocked = true;
+            if (sent_to > 0 && to_send == sent_to) tracking->sent_aaaa = true;
+            else if (sent_to <= 0 && socket_would_block()) any_blocked = true;
             else
-                PUBNUB_LOG_WARNING("Failed to send AAAA query: %d\n", sent_to);
+                PUBNUB_LOG_WARNING(
+                    pb, "Failed to send DNS AAAA query: %d", sent_to);
         }
     }
 #endif /* PUBNUB_USE_IPV6 */
@@ -114,8 +113,7 @@ int send_dns_query(pb_socket_t                  skt,
 #endif
     )
         return any_blocked ? +1 : -1;
-    if (tracking->need_retry && any_blocked)
-        return +1;
+    if (tracking->need_retry && any_blocked) return +1;
 
     return 0;
 }
@@ -127,9 +125,11 @@ int send_dns_query(pb_socket_t                  skt,
 #endif
 
 
-int read_dns_response(pb_socket_t      skt,
-                      struct sockaddr* dest,
-                      struct dns_queries_tracking* tracking PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
+int read_dns_response(
+    pubnub_t*                             pb,
+    pb_socket_t                           skt,
+    struct sockaddr*                      dest,
+    struct dns_queries_tracking* tracking PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
 {
     uint8_t  buf[8192];
     int      msg_size;
@@ -139,31 +139,28 @@ int read_dns_response(pb_socket_t      skt,
 
     PUBNUB_ASSERT(SOCKET_INVALID != skt);
 
-    if (tracking->sent_a)
-        expected_responses++;
-    if (tracking->received_a)
-        responses_received++;
+    if (tracking->sent_a) expected_responses++;
+    if (tracking->received_a) responses_received++;
 #if PUBNUB_USE_IPV6
-    if (tracking->sent_aaaa)
-        expected_responses++;
-    if (tracking->received_aaaa)
-        responses_received++;
+    if (tracking->sent_aaaa) expected_responses++;
+    if (tracking->received_aaaa) responses_received++;
 #endif /* PUBNUB_USE_IPV6 */
 
     if (expected_responses == 0) {
-        PUBNUB_LOG_ERROR("read_dns_response: No queries were sent!\n");
+        PUBNUB_LOG_ERROR(pb, "No queries were sent");
         return -1;
     }
 
     if (responses_received >= expected_responses) {
-        PUBNUB_LOG_WARNING(
-            "read_dns_response: Already received all responses\n");
+        PUBNUB_LOG_WARNING(pb, "Already received all responses");
         return 0;
     }
 
-    PUBNUB_LOG_TRACE("Expecting %d response(s), already received %d\n",
-                     expected_responses,
-                     responses_received);
+    PUBNUB_LOG_TRACE(
+        pb,
+        "Expecting %d DNS response(s), %d already has been received.",
+        expected_responses,
+        responses_received);
 
     switch (dest->sa_family) {
     case AF_INET:
@@ -177,19 +174,16 @@ int read_dns_response(pb_socket_t      skt,
         break;
 #endif /* PUBNUB_USE_IPV6 */
     default:
-        PUBNUB_LOG_ERROR("read_dns_response(socket=%d): invalid address family "
-                         "dest->sa_family =%u\n",
-                         skt,
-                         dest->sa_family);
+        PUBNUB_LOG_ERROR(pb, "Invalid address family: %u", dest->sa_family);
         return -1;
     }
     while (responses_received < expected_responses) {
-        msg_size =
-            recvfrom(skt, (char*)buf, sizeof buf, 0, dest, CAST & sockaddr_size);
-        if (msg_size <= 0)
-            return socket_would_block() ? +1 : -1;
+        msg_size = recvfrom(
+            skt, (char*)buf, sizeof buf, 0, dest, CAST & sockaddr_size);
+        if (msg_size <= 0) return socket_would_block() ? +1 : -1;
 
-        PUBNUB_LOG_TRACE("Received DNS response packet (%d bytes)\n", msg_size);
+        PUBNUB_LOG_TRACE(
+            pb, "Received DNS response packet (%d bytes)", msg_size);
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
         if (responses_received == 0)
             time(&spare_addresses->time_of_the_last_dns_query);
@@ -200,21 +194,23 @@ int read_dns_response(pb_socket_t      skt,
         struct pubnub_ipv6_address this_ipv6 = { { 0 } };
 #endif
 
-        if (pbdns_pick_resolved_addresses(buf,
-                                          (size_t)msg_size,
-                                          &question_type,
-                                          &this_ipv4
+        if (pbdns_pick_resolved_addresses(
+                pb,
+                buf,
+                (size_t)msg_size,
+                &question_type,
+                &this_ipv4
 #if PUBNUB_USE_IPV6
-                                          ,
-                                          &this_ipv6
+                ,
+                &this_ipv6
 #endif
-                                              PBDNS_OPTIONAL_PARAMS)
-            == 0) {
+                    PBDNS_OPTIONAL_PARAMS) == 0) {
             if (dnsA == question_type && !tracking->received_a) {
                 if (this_ipv4.ipv4[0] != 0) {
-                    memcpy(&tracking->dns_a_addr.sin_addr.s_addr,
-                           this_ipv4.ipv4,
-                           sizeof this_ipv4.ipv4);
+                    memcpy(
+                        &tracking->dns_a_addr.sin_addr.s_addr,
+                        this_ipv4.ipv4,
+                        sizeof this_ipv4.ipv4);
                     tracking->dns_a_addr.sin_family = AF_INET;
                 }
                 tracking->received_a = true;
@@ -225,9 +221,10 @@ int read_dns_response(pb_socket_t      skt,
                 if (this_ipv6.ipv6[0] != 0 || this_ipv6.ipv6[1] != 0) {
                     struct sockaddr_in6* sin6 =
                         (struct sockaddr_in6*)&tracking->dns_aaaa_addr;
-                    memcpy(sin6->sin6_addr.s6_addr,
-                           this_ipv6.ipv6,
-                           sizeof this_ipv6.ipv6);
+                    memcpy(
+                        sin6->sin6_addr.s6_addr,
+                        this_ipv6.ipv6,
+                        sizeof this_ipv6.ipv6);
                     sin6->sin6_family = AF_INET6;
                 }
                 tracking->received_aaaa = true;
@@ -236,29 +233,27 @@ int read_dns_response(pb_socket_t      skt,
 #endif
             else {
                 PUBNUB_LOG_WARNING(
-                    "Received duplicate or unexpected DNS response\n");
+                    pb, "Received duplicate or unexpected DNS response.");
             }
         }
         else {
             responses_received++;
             if (dnsA == question_type) {
                 tracking->received_a = true;
-                PUBNUB_LOG_WARNING(
-                    "There are no 'A' records for requested domain.\n");
+                PUBNUB_LOG_WARNING(pb, "No 'A' records for requested domain.");
             }
 #if PUBNUB_USE_IPV6
             else if (dnsAAAA == question_type) {
                 tracking->received_aaaa = true;
                 PUBNUB_LOG_WARNING(
-                    "There are no 'AAAA' records for requested domain.\n");
+                    pb, "No 'AAAA' records for requested domain.");
             }
 #endif /* PUBNUB_USE_IPV6 */
-            else
-                PUBNUB_LOG_WARNING("Failed to parse DNS response.\n");
+            else PUBNUB_LOG_WARNING(pb, "Failed to parse DNS response.");
         }
     }
 
-    PUBNUB_LOG_TRACE("All %d DNS responses received\n", expected_responses);
+    PUBNUB_LOG_TRACE(pb, "All %d DNS responses received.", expected_responses);
 
     return 0;
 }
@@ -296,7 +291,6 @@ int main()
 
     pb_socket_t skt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (SOCKET_INVALID == skt) {
-        PUBNUB_LOG_ERROR("Error: Couldnt't get Ipv4 socket.\n");
         return -1;
     }
 
@@ -308,8 +302,7 @@ int main()
     dest.sin_port        = htons(53);
     inet_pton(AF_INET, "208.67.222.222", &(dest.sin_addr.s_addr));
 
-    if (-1 == send_dns_query(skt, (struct sockaddr*)&dest, "facebook.com", &tracking)) {
-        PUBNUB_LOG_ERROR("Error: Couldn't send datagram(Ipv4).\n");
+    if (-1 == send_dns_query(NULL, skt, (struct sockaddr*)&dest, "facebook.com", &tracking)) {
         return -1;
     }
 
@@ -332,7 +325,7 @@ int main()
                timev.tv_sec,
                timev.tv_usec);
 #endif
-        read_dns_response(skt, (struct sockaddr*)&dest, &tracking);
+        read_dns_response(NULL, skt, (struct sockaddr*)&dest, &tracking);
 #if !defined(_WIN32)
     }
     else {
@@ -345,7 +338,6 @@ int main()
 
     skt   = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (SOCKET_INVALID == skt) {
-        PUBNUB_LOG_ERROR("Error: Didn't get Ipv6 socket.\n");
         return -1;
     }
 #if !defined(_WIN32)
@@ -358,9 +350,7 @@ int main()
     dest6.sin6_port   = htons(53);
     inet_pton(AF_INET6, "2001:470:20::2", dest6.sin6_addr.s6_addr);
 
-    if (-1 == send_dns_query(skt, (struct sockaddr*)&dest6, "facebook.com", &tracking)) {
-        PUBNUB_LOG_ERROR("Error: Couldn't send datagram(Ipv6).\n");
-        
+    if (-1 == send_dns_query(NULL, skt, (struct sockaddr*)&dest6, "facebook.com", &tracking)) {
         return -1;
     }
 
@@ -379,7 +369,7 @@ int main()
                timev.tv_sec,
                timev.tv_usec);
 #endif
-        read_dns_response(skt, (struct sockaddr*)&dest6, &tracking);
+        read_dns_response(NULL, skt, (struct sockaddr*)&dest6, &tracking);
 #if !defined(_WIN32)
     }
     else {

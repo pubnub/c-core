@@ -1,13 +1,14 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_event_engine.h"
 
+#include "pubnub_logger_internal.h"
+
 #include <stdlib.h>
 
 #include "core/pbcc_memory_utils.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_mutex.h"
 #include "lib/pbref_counter.h"
-#include "core/pubnub_log.h"
 
 
 // ----------------------------------------------
@@ -222,14 +223,12 @@ pbcc_event_engine_t* pbcc_ee_alloc(pbcc_ee_state_t* initial_state)
     PBCC_ALLOCATE_TYPE(ee, pbcc_event_engine_t, true, NULL);
     ee->current_state = initial_state;
     pubnub_mutex_init(ee->mutw);
-
-    ee->invocations = pbarray_alloc(5,
-                                    PBARRAY_RESIZE_BALANCED,
-                                    PBARRAY_GENERIC_CONTENT_TYPE,
-                                    (pbarray_element_free)
-                                    pbcc_ee_invocation_free);
+    ee->invocations = pbarray_alloc(
+        5,
+        PBARRAY_RESIZE_BALANCED,
+        PBARRAY_GENERIC_CONTENT_TYPE,
+        (pbarray_element_free)pbcc_ee_invocation_free);
     if (NULL == ee->invocations) {
-        PUBNUB_LOG_ERROR("pbcc_ee_alloc: failed to allocate memory\n");
         pbcc_ee_free(&ee);
         return NULL;
     }
@@ -243,8 +242,7 @@ void pbcc_ee_free(pbcc_event_engine_t** ee)
 
     pubnub_mutex_lock((*ee)->mutw);
     if (NULL != (*ee)->invocations) { pbarray_free(&(*ee)->invocations); }
-    if (NULL != (*ee)->current_state)
-        pbcc_ee_state_free(&(*ee)->current_state);
+    if (NULL != (*ee)->current_state) pbcc_ee_state_free(&(*ee)->current_state);
     pubnub_mutex_unlock((*ee)->mutw);
     pubnub_mutex_destroy((*ee)->mutw);
     free(*ee);
@@ -267,16 +265,13 @@ enum pubnub_res pbcc_ee_handle_event(
     PUBNUB_ASSERT_OPT(NULL != ee->current_state);
 
     pubnub_mutex_lock(ee->mutw);
-    pbcc_ee_state_t*      state      = pbcc_ee_state_copy_(ee->current_state);
-    pbcc_ee_transition_t* transition = ee->current_state->transition(
-        ee,
-        state,
-        event);
+    pbcc_ee_state_t*      state = pbcc_ee_state_copy_(ee->current_state);
+    pbcc_ee_transition_t* transition =
+        ee->current_state->transition(ee, state, event);
     pbcc_ee_state_free(&state);
     pbcc_ee_event_free(&event);
 
     if (NULL == transition) {
-        PUBNUB_LOG_ERROR("pbcc_ee_handle_event: failed to allocate memory\n");
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
@@ -312,14 +307,12 @@ enum pubnub_res pbcc_ee_handle_event(
     const size_t      count       = pbarray_count(invocations);
     const pbarray_res merge_rslt  = pbarray_merge(ee->invocations, invocations);
     if (PBAR_OK != merge_rslt) {
-        rslt = PBAR_OUT_OF_MEMORY == merge_rslt
-                   ? PNR_OUT_OF_MEMORY
-                   : PNR_INVALID_PARAMETERS;
+        rslt = PBAR_OUT_OF_MEMORY == merge_rslt ? PNR_OUT_OF_MEMORY
+                                                : PNR_INVALID_PARAMETERS;
     }
 
     if (PNR_OK != rslt || 0 == count) {
-        if (0 != count)
-            pbarray_subtract(ee->invocations, invocations, true);
+        if (0 != count) pbarray_subtract(ee->invocations, invocations, true);
         if (PNR_OK == rslt)
             pbcc_ee_current_state_set_(ee, transition->target_state);
         pubnub_mutex_unlock(ee->mutw);
@@ -334,8 +327,8 @@ enum pubnub_res pbcc_ee_handle_event(
     pubnub_mutex_unlock(ee->mutw);
 
     for (size_t i = 0; i < count; ++i) {
-        pbcc_ee_invocation_t* inv = (pbcc_ee_invocation_t*)
-            pbarray_element_at(invocations, i);
+        pbcc_ee_invocation_t* inv =
+            (pbcc_ee_invocation_t*)pbarray_element_at(invocations, i);
         /**
          * Make sure that invocation has proper ref count after addition to the
          * Event Engine invocations queue from transition.
@@ -347,7 +340,9 @@ enum pubnub_res pbcc_ee_handle_event(
     pbcc_ee_invocation_t* inv =
         (pbcc_ee_invocation_t*)pbarray_first(invocations);
     if (inv->immediate) { pbcc_ee_invocation_exec_(inv); }
-    else { pbcc_ee_process_next_invocation(ee); }
+    else {
+        pbcc_ee_process_next_invocation(ee);
+    }
 
     pbcc_ee_transition_free(&transition);
 
@@ -364,8 +359,8 @@ size_t pbcc_ee_process_next_invocation(pbcc_event_engine_t* ee)
         return count;
     }
 
-    pbcc_ee_invocation_t* invocation = (pbcc_ee_invocation_t*)
-        pbarray_first(ee->invocations);
+    pbcc_ee_invocation_t* invocation =
+        (pbcc_ee_invocation_t*)pbarray_first(ee->invocations);
     pubnub_mutex_unlock(ee->mutw);
     pbcc_ee_invocation_exec_(invocation);
 
@@ -469,16 +464,16 @@ enum pubnub_res pbcc_ee_state_add_on_enter_invocation(
     pbcc_ee_state_t*      state,
     pbcc_ee_invocation_t* invocation)
 {
-    return pbcc_ee_state_add_invocation_(&state->on_enter_invocations,
-                                         invocation);
+    return pbcc_ee_state_add_invocation_(
+        &state->on_enter_invocations, invocation);
 }
 
 enum pubnub_res pbcc_ee_state_add_on_exit_invocation(
     pbcc_ee_state_t*      state,
     pbcc_ee_invocation_t* invocation)
 {
-    return pbcc_ee_state_add_invocation_(&state->on_exit_invocations,
-                                         invocation);
+    return pbcc_ee_state_add_invocation_(
+        &state->on_exit_invocations, invocation);
 }
 
 pbcc_ee_event_t* pbcc_ee_event_alloc(const int type, pbcc_ee_data_t* data)
@@ -570,13 +565,13 @@ pbcc_ee_transition_t* pbcc_ee_transition_alloc(
         invocations_count += pbarray_count(state->on_enter_invocations);
 
     if (invocations_count > 0) {
-        transition->invocations = pbarray_alloc(invocations_count,
-                                                PBARRAY_RESIZE_NONE,
-                                                PBARRAY_GENERIC_CONTENT_TYPE,
-                                                (pbarray_element_free)
-                                                pbcc_ee_invocation_free);
+        transition->invocations = pbarray_alloc(
+            invocations_count,
+            PBARRAY_RESIZE_NONE,
+            PBARRAY_GENERIC_CONTENT_TYPE,
+            (pbarray_element_free)pbcc_ee_invocation_free);
 
-        pbarray_t* on_exit  = current_state->on_exit_invocations;
+        pbarray_t* on_exit = current_state->on_exit_invocations;
         pbarray_t* on_enter =
             NULL != state ? state->on_enter_invocations : NULL;
 
@@ -590,9 +585,6 @@ pbcc_ee_transition_t* pbcc_ee_transition_alloc(
             !pbcc_ee_transition_add_invocations_(transition, invocations) ||
             !pbcc_ee_transition_add_invocations_(transition, on_exit) ||
             !pbcc_ee_transition_add_invocations_(transition, on_enter)) {
-            PUBNUB_LOG_ERROR(
-                "pbcc_ee_transition_alloc: failed to allocate memory "
-                "for transition invocations\n");
             if (NULL != invocations) { pbarray_free(&invocations); }
             pbcc_ee_transition_free(&transition);
             pubnub_mutex_unlock(ee->mutw);
@@ -600,7 +592,9 @@ pbcc_ee_transition_t* pbcc_ee_transition_alloc(
             return NULL;
         }
     }
-    else { transition->invocations = NULL; }
+    else {
+        transition->invocations = NULL;
+    }
     if (NULL != invocations) { pbarray_free(&invocations); }
     pubnub_mutex_unlock(ee->mutw);
 
@@ -642,16 +636,12 @@ enum pubnub_res pbcc_ee_state_add_invocation_(
     pbcc_ee_invocation_t* invocation)
 {
     if (NULL == *invocations) {
-        *invocations = pbarray_alloc(1,
-                                     PBARRAY_RESIZE_CONSERVATIVE,
-                                     PBARRAY_GENERIC_CONTENT_TYPE,
-                                     (pbarray_element_free)
-                                     pbcc_ee_invocation_free);
-        if (NULL == *invocations) {
-            PUBNUB_LOG_ERROR("pbcc_ee_state_add_invocation: failed to allocate "
-                "memory for invocations\n");
-            return PNR_OUT_OF_MEMORY;
-        }
+        *invocations = pbarray_alloc(
+            1,
+            PBARRAY_RESIZE_CONSERVATIVE,
+            PBARRAY_GENERIC_CONTENT_TYPE,
+            (pbarray_element_free)pbcc_ee_invocation_free);
+        if (NULL == *invocations) { return PNR_OUT_OF_MEMORY; }
     }
 
     const pbarray_res result = pbarray_add(*invocations, invocation);

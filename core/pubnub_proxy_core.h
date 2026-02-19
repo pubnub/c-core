@@ -47,10 +47,13 @@ int pbproxy_handle_http_header(pubnub_t *p, char const* header);
 char const* pbproxy_get_next_key_value(char const* s, pubnub_chamebl_t *key, pubnub_chamebl_t *val);
 
 
-/** Checks the validity of received realm @p value
+/** Checks the validity of received realm @p value.
+
+    @param pb    Pointer to the PubNub context (for logging).
+    @param value The realm value to check.
     @return 0 realm valid, -1 invalid
  */
-int pbproxy_check_realm(pubnub_chamebl_t const* value);
+int pbproxy_check_realm(pubnub_t* pb, pubnub_chamebl_t const* value);
 
 
 /** Will put string to send as HTTP header in @p header, which is

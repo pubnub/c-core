@@ -2,7 +2,6 @@
 #include "pubnub_internal.h"
 #include "pubnub_auto_heartbeat.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "pubnub_ntf_enforcement.h"
 #endif
@@ -12,7 +11,7 @@
 #include <string.h>
 
 
-#if defined       PUBNUB_ASSERT_LEVEL_EX
+#if defined PUBNUB_ASSERT_LEVEL_EX
 static pubnub_t** m_allocated;
 static unsigned   m_n;
 static unsigned   m_cap;
@@ -29,7 +28,14 @@ static void save_allocated(pubnub_t* pb)
         pubnub_t** npalloc =
             (pubnub_t**)realloc(m_allocated, sizeof m_allocated[0] * (m_n + 1));
         if (NULL == npalloc) {
-            PUBNUB_LOG_WARNING("Couldn't allocate memory for pubnub_alloc_std bookkeeping");
+#if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_log_error(
+                pb,
+                PUBNUB_LOG_LOCATION,
+                PNR_OUT_OF_MEMORY,
+                "Allocated PubNub context bookkeeping allocation failed",
+                "Insufficient memory error");
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             pubnub_mutex_unlock(m_lock);
             return;
         }
@@ -52,14 +58,15 @@ static void remove_allocated(pubnub_t* pb)
     for (i = 0; i < m_n; ++i) {
         if (m_allocated[i] == pb) {
             if (i != m_n - 1) {
-                memmove(m_allocated + i,
-                        m_allocated + i + 1,
-                        sizeof m_allocated[0] * (m_n - i - 1));
+                memmove(
+                    m_allocated + i,
+                    m_allocated + i + 1,
+                    sizeof m_allocated[0] * (m_n - i - 1));
             }
             if (0 == --m_n) {
                 free(m_allocated);
                 m_allocated = NULL;
-                m_cap = 0;
+                m_cap       = 0;
             }
             break;
         }
@@ -73,9 +80,7 @@ static bool check_ctx_ptr(pubnub_t const* pb)
 #if defined PUBNUB_ASSERT_LEVEL_EX
     size_t i;
     for (i = 0; i < m_n; ++i) {
-        if (m_allocated[i] == pb) {
-            return true;
-        }
+        if (m_allocated[i] == pb) { return true; }
     }
     return false;
 #else
@@ -104,20 +109,16 @@ bool pb_valid_ctx_ptr(pubnub_t const* pb)
 pubnub_t* pubnub_alloc(void)
 {
     pubnub_t* pb = (pubnub_t*)malloc(sizeof(pubnub_t));
-    if (pb != NULL) {
-        save_allocated(pb);
-    }
+    if (pb != NULL) { save_allocated(pb); }
     return pb;
 }
 
 
 void pballoc_free_at_last(pubnub_t* pb)
 {
-    PUBNUB_LOG_TRACE("pballoc_free_at_last(%p)\n", pb);
+    PUBNUB_LOG_TRACE(pb, "Freeing PubNub context (final)");
 
     PUBNUB_ASSERT_OPT(pb != NULL);
-
-    PUBNUB_LOG_TRACE("pubnub_free_at_last(%p)\n", pb);
 
     pubnub_mutex_lock(pb->monitor);
     pubnub_mutex_init_static(m_lock);
@@ -145,10 +146,10 @@ int pubnub_free(pubnub_t* pb)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
 
-    PUBNUB_LOG_TRACE("pubnub_free(%p)\n", pb);
+    PUBNUB_LOG_TRACE(pb, "Try to free PubNub context");
 
     if (pb->state == PBS_NULL) {
-        PUBNUB_LOG_TRACE("pubnub_free(%p) not initialized - freeing...\n", pb);
+        PUBNUB_LOG_TRACE(pb, "PubNub context not initialized. Freeing...");
         remove_allocated(pb);
         free(pb);
 
@@ -158,15 +159,20 @@ int pubnub_free(pubnub_t* pb)
     pubnub_mutex_lock(pb->monitor);
     pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
-        PUBNUB_LOG_TRACE("pubnub_free(%p) PBS_IDLE\n", pb);
+        PUBNUB_LOG_TRACE(pb, "PubNub context is in idle state. Freeing...");
         pubnub_disable_auto_heartbeat(pb);
         pbauto_heartbeat_free_channelInfo(pb);
         pb->state = PBS_NULL;
+#if PUBNUB_USE_LOGGER
+        pb->previous_state     = pb->state;
+        pb->previous_io_result = PB_IO_RESULT_NONE;
+#endif // #if PUBNUB_USE_LOGGER
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
         if (PNA_CALLBACK == pb->api_policy) {
             pbntf_requeue_for_processing(pb);
             pubnub_mutex_unlock(pb->monitor);
-        } else {
+        }
+        else {
             pubnub_mutex_unlock(pb->monitor);
             pballoc_free_at_last(pb);
         }
@@ -181,7 +187,10 @@ int pubnub_free(pubnub_t* pb)
         return 0;
     }
 
-    PUBNUB_LOG_TRACE("pubnub_free(%p) pb->state=%d\n", pb, pb->state);
+    PUBNUB_LOG_TRACE(
+        pb,
+        "PubNub context is still busy in %s state.,",
+        pbcc_state_2_string(pb->state));
     pubnub_mutex_unlock(pb->monitor);
 
     return -1;

@@ -38,6 +38,14 @@ typedef struct pbref_counter pbref_counter_t;
 pbref_counter_t* pbref_counter_alloc(void);
 
 /**
+ * @brief Retrieve current reference counter value.
+ *
+ * @param counter Counter for which value should be retrieved.
+ * @return Current number of references.
+ */
+size_t pbref_counter_value(pbref_counter_t* counter);
+
+/**
  * @brief Increase number of references.
  *
  * @param counter Pointer to the counter, which should increase the number of

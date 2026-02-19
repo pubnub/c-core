@@ -3,12 +3,17 @@
 
 #include "core/pbpal.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include <string.h>
 
 
-void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+void pbpal_report_error_from_environment(
+    pubnub_t*   pb,
+    char const* file,
+    int         line)
 {
     char const* err_str;
 
@@ -23,42 +28,52 @@ void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int lin
 #else
     err_str = strerror(errno);
 #endif
-    PUBNUB_LOG_WARNING(
-        "%s:%d: pbpal_report_error_from_environment(pb=%p): errno=%d('%s')",
-        file,
-        line,
-        pb,
-        errno,
-        err_str);
+#if PUBNUB_LOG_ENABLED(WARNING)
+    if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_WARNING)) {
+        pubnub_log_value_t data = pubnub_log_value_map_init();
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, errno, code)
+        PUBNUB_LOG_MAP_SET_STRING(&data, err_str, details)
+        pubnub_log_object(
+            pb,
+            PUBNUB_LOG_LEVEL_WARNING,
+            PUBNUB_LOG_LOCATION,
+            &data,
+            "Error from environment:");
+    }
+#endif
     if (pb != NULL) {
 #if PUBNUB_BLOCKING_IO_SETTABLE
-        PUBNUB_LOG_DEBUG(" use_blocking_io=%d\n", (int)pb->options.use_blocking_io);
-#else
-        PUBNUB_LOG_DEBUG("\n");
+        PUBNUB_LOG_DEBUG(
+            pb,
+            pb->options.use_blocking_io ? "Using blocking IO"
+                                        : "Using non-blocking IO");
 #endif // PUBNUB_BLOCKING_IO_SETTABLE
     }
-    else {
-        PUBNUB_LOG_DEBUG("\n");
-    }
 #if defined(_WIN32)
-    PUBNUB_LOG_DEBUG("%s:%d: pbpal_report_error_from_environment(pb=%p): errno=%d('%s') "
-                     "GetLastError()=%lu "
-                     "WSAGetLastError()=%d\n",
-                     file,
-                     line,
-                     pb,
-                     errno,
-                     err_str,
-                     GetLastError(),
-                     WSAGetLastError());
+#if PUBNUB_LOG_ENABLED(WARNING)
+    if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_WARNING)) {
+        pubnub_log_value_t data = pubnub_log_value_map_init();
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, errno, code)
+        PUBNUB_LOG_MAP_SET_STRING(&data, err_str, details)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, GetLastError(), get_last_error)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, WSAGetLastError(), wsa_get_last_error)
+        pubnub_log_object(
+            pb,
+            PUBNUB_LOG_LEVEL_WARNING,
+            PUBNUB_LOG_LOCATION,
+            &data,
+            "Error from environment:");
+    }
+#endif
 #endif
 }
 
 
-enum pubnub_res pbpal_handle_socket_error(int socket_result,
-                                          pubnub_t* pb,
-                                          char const* file,
-                                          int line)
+enum pubnub_res pbpal_handle_socket_error(
+    int         socket_result,
+    pubnub_t*   pb,
+    char const* file,
+    int         line)
 {
     PUBNUB_ASSERT_INT_OPT(socket_result, <=, 0);
     if (socket_result < 0) {
@@ -69,16 +84,19 @@ enum pubnub_res pbpal_handle_socket_error(int socket_result,
                 return PNR_TIMEOUT;
             }
 #endif
+            PUBNUB_LOG_TRACE(pb, "Socket would block.");
             return PNR_IN_PROGRESS;
         }
         else {
-            // Whether socket already in use for data sending / receiving or not.
+            // Whether socket already in use for data sending / receiving or
+            // not.
             const bool handles_data = STATE_READ == pb->sock_state ||
-                STATE_NEWDATA_EXHAUSTED == pb->sock_state ||
-                STATE_READ_LINE == pb->sock_state ||
-                STATE_SENDING_DATA == pb->sock_state;
+                                      STATE_NEWDATA_EXHAUSTED ==
+                                          pb->sock_state ||
+                                      STATE_READ_LINE == pb->sock_state ||
+                                      STATE_SENDING_DATA == pb->sock_state;
             const bool timed_out = socket_timed_out();
-            pb->sock_state = STATE_NONE;
+            pb->sock_state       = STATE_NONE;
             pbpal_report_error_from_environment(pb, file, line);
 
             // Report data sending / receive timeout, which happened in the

@@ -243,8 +243,8 @@ int main()
     pubnub_set_user_id(pbp_2, "demo_2");
     pubnub_register_callback(pbp_2, publish_callback, "CH1");
 
-    if (pubnub_dns_read_system_servers_ipv4(o_ipv4, 3) > 0) {
-        if (pubnub_dns_set_primary_server_ipv4(o_ipv4[0]) != 0) {
+    if (pubnub_dns_read_system_servers_ipv4(pbp, o_ipv4, 3) > 0) {
+        if (pubnub_dns_set_primary_server_ipv4(pbp, o_ipv4[0]) != 0) {
             paint_text_red();
             printf("Failed to set DNS server from the sistem register!\n");
             callback_sample_free(pbp_2);
