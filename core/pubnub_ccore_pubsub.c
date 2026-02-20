@@ -27,14 +27,15 @@ void pbcc_init(struct pbcc_context* p,
                const char*          publish_key,
                const char*          subscribe_key)
 {
-    p->publish_key   = publish_key;
-    p->subscribe_key = subscribe_key;
-    p->timetoken[0]  = '0';
-    p->timetoken[1]  = '\0';
-    p->user_id       = NULL;
-    p->user_id_len   = 0;
-    p->auth          = NULL;
-    p->auth_token    = NULL;
+    p->publish_key        = publish_key;
+    p->subscribe_key      = subscribe_key;
+    p->timetoken[0]       = '0';
+    p->timetoken[1]       = '\0';
+    p->user_id            = NULL;
+    p->user_id_len        = 0;
+    p->auth               = NULL;
+    p->auth_token         = NULL;
+    p->sdk_version_suffix = NULL;
     p->msg_ofs       = p->msg_end = 0;
 #if PUBNUB_DYNAMIC_REPLY_BUFFER
     p->http_reply = NULL;
@@ -58,6 +59,23 @@ void pbcc_init(struct pbcc_context* p,
     p->crypto_module = NULL;
     p->decrypted_message_count = 0;
 #endif
+}
+
+
+char const* pbcc_uname(struct pbcc_context* p)
+{
+    if (p->sdk_version_suffix != NULL) {
+        /* Everything after PUBNUB_SDK_NAME comes from Unreal (runtime). */
+        int n = snprintf(p->sdk_uname_buf,
+                        sizeof p->sdk_uname_buf,
+                        "%s%s",
+                        pubnub_sdk_name(),
+                        p->sdk_version_suffix);
+        if (n > 0 && (size_t)n < sizeof p->sdk_uname_buf) {
+            return p->sdk_uname_buf;
+        }
+    }
+    return pubnub_uname();
 }
 
 
@@ -542,7 +560,7 @@ enum pubnub_res pbcc_publish_prep(struct pbcc_context* pb,
                                   const size_t         ttl,
                                   enum pubnub_method   method)
 {
-    char const* const uname   = pubnub_uname();
+    char const* const uname   = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt    = PNR_OK;
 
@@ -693,7 +711,7 @@ enum pubnub_res pbcc_signal_prep(struct pbcc_context* pb,
                                  const char*          custom_message_type)
 {
     enum pubnub_res   rslt    = PNR_OK;
-    char const* const uname   = pubnub_uname();
+    char const* const uname   = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
@@ -745,7 +763,7 @@ enum pubnub_res pbcc_subscribe_prep(struct pbcc_context* p,
                                     const unsigned*      heartbeat)
 {
     char const*       user_id = pbcc_user_id_get(p);
-    char const* const uname   = pubnub_uname();
+    char const* const uname   = pbcc_uname(p);
 
     PUBNUB_ASSERT_OPT(user_id != NULL);
 

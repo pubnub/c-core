@@ -15,7 +15,7 @@
 
 enum pubnub_res pbcc_revoke_token_prep(struct pbcc_context* pb, char const* token, enum pubnub_trans pt)
 {
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt = PNR_OK;
 
