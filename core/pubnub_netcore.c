@@ -124,10 +124,15 @@ static char const* get_method_verb_string(uint8_t method)
 static int send_fin_head(struct pubnub_* pb)
 {
     char s[200];
+    /* Use context-specific identification when runtime suffix is set;
+       otherwise preserve default (pubnub_uagent). */
+    char const* uagent = (pb->core.sdk_version_suffix != NULL)
+        ? pbcc_uname(&pb->core)
+        : pubnub_uagent();
     snprintf(s,
              sizeof s,
              "\r\nUser-Agent: %s%s",
-             pbcc_uname(&pb->core),
+             uagent,
              "\r\n" ACCEPT_ENCODING "\r\n");
     return pbpal_send_str(pb, s);
 }
