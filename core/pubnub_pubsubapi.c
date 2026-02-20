@@ -348,6 +348,16 @@ char const* pubnub_auth_token_get(pubnub_t* pb)
     return result;
 }
 
+
+void pubnub_set_sdk_version_suffix(pubnub_t* p, char const* suffix)
+{
+    PUBNUB_ASSERT(pb_valid_ctx_ptr(p));
+    pubnub_mutex_lock(p->monitor);
+    p->core.sdk_version_suffix = suffix;
+    pubnub_mutex_unlock(p->monitor);
+}
+
+
 int pubnub_last_http_code(pubnub_t* pb)
 {
     int result;

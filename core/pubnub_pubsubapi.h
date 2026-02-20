@@ -129,6 +129,13 @@ PUBNUB_EXTERN void pubnub_set_auth_token(pubnub_t* pb, const char* token);
 */
 PUBNUB_EXTERN char const* pubnub_auth_token_get(pubnub_t* pb);
 
+/** Set the SDK identification for context @p p. Everything after the platform
+    name (e.g. "Windows") comes from @p suffix.
+    Pass NULL to use the compile-time identification (pubnub_uname).
+    @note The @p suffix pointer must remain valid for the context lifetime.
+*/
+PUBNUB_EXTERN void pubnub_set_sdk_version_suffix(pubnub_t* p, char const* suffix);
+
 PUBNUB_EXTERN enum pubnub_cancel_res pubnub_cancel(pubnub_t* p);
 
 /** Publish the @p message (in JSON format) on @p p channel, using the

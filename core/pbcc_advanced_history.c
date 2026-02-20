@@ -494,7 +494,7 @@ enum pubnub_res pbcc_message_counts_prep(
                                          char const*          timetoken,
                                          char const*          channel_timetokens)
 {
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(p);
     char const*       user_id  = pbcc_user_id_get(p);
     enum pubnub_res   rslt = PNR_OK;
 
@@ -550,7 +550,7 @@ enum pubnub_res pbcc_delete_messages_prep(struct pbcc_context* pb,
                                           char const*          start,
                                           char const*          end)
 {
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const* user_id = pbcc_user_id_get(pb);
 #if PUBNUB_CRYPTO_API
     enum pubnub_res rslt = PNR_OK;

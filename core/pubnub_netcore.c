@@ -127,7 +127,7 @@ static int send_fin_head(struct pubnub_* pb)
     snprintf(s,
              sizeof s,
              "\r\nUser-Agent: %s%s",
-             pubnub_uagent(),
+             pbcc_uname(&pb->core),
              "\r\n" ACCEPT_ENCODING "\r\n");
     return pbpal_send_str(pb, s);
 }
