@@ -1,4 +1,4 @@
-PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c pubnub_logger.c pbcc_logger_manager.c pubnub_log_value.c pubnub_stdio_logger.c
+PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c pubnub_generate_uuid.c pubnub_generate_uuid_v4_random_std.c pubnub_logger.c pbcc_logger_manager.c pubnub_log_value.c pubnub_stdio_logger.c
 # TODO: move coreapi_ex to new module
 
 all: pubnub_crypto_unittest pubnub_subscribe_v2_unittest pbcc_crypto_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
