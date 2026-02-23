@@ -459,7 +459,6 @@ BeforeEach(single_context_pubnub)
     m_i           = 0;
     pbp           = pubnub_alloc();
     attest(pbp, differs(NULL));
-    srand(1);
 }
 
 void free_m_msgs(char** msg_array)
@@ -699,6 +698,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_GET_Basic)
     proxy_hostname_to_long[sizeof proxy_hostname_to_long - 1] = '\0';
 
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
     /* Some proxy_type(enum) not yet supported */
     attest(
@@ -798,6 +798,7 @@ Ensure(
     uint16_t proxy_port = 500;
     time_t   await_time;
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -962,6 +963,7 @@ Ensure(
 {
     uint16_t proxy_port = 500;
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1189,6 +1191,7 @@ Ensure(
                              "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1488,6 +1491,7 @@ Ensure(
                              "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1696,6 +1700,7 @@ Ensure(single_context_pubnub, try_to_establish_proxy_connection_GET_No_response)
 {
     uint16_t port = 500;
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1721,6 +1726,7 @@ Ensure(
 {
     uint16_t port = 500;
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1769,6 +1775,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Basic)
 {
     uint16_t proxy_port = 500;
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
@@ -1879,6 +1886,7 @@ Ensure(single_context_pubnub, establishes_proxy_connection_CONNECT_Digest)
                             "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
 #endif
     pubnub_init(pbp, "publ-key", "sub-key");
+    srand(1);
     pubnub_set_user_id(pbp, "test_id");
 
     attest(
