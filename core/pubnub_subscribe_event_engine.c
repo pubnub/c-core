@@ -318,16 +318,18 @@ enum pubnub_res pubnub_subscription_set_union(
     pubnub_subscription_t** subs = (pubnub_subscription_t**)pbhash_set_elements(
         set->subscriptions, &count);
 
-    for (int i = 0; i < count; ++i) {
-        if (PNR_OUT_OF_MEMORY ==
-            pubnub_subscription_set_add_(set, subs[i], i + 1 == count)) {
-            pubnub_mutex_unlock(other_set->mutw);
-            if (NULL != subs) { free(subs); }
-            return PNR_OUT_OF_MEMORY;
+    if (NULL != subs) {
+        for (int i = 0; i < count; ++i) {
+            if (PNR_OUT_OF_MEMORY ==
+                pubnub_subscription_set_add_(set, subs[i], i + 1 == count)) {
+                pubnub_mutex_unlock(other_set->mutw);
+                free(subs);
+                return PNR_OUT_OF_MEMORY;
+            }
         }
+        free(subs);
     }
     pubnub_mutex_unlock(other_set->mutw);
-    if (NULL != subs) { free(subs); }
 
     return PNR_OK;
 }
@@ -344,11 +346,13 @@ void pubnub_subscription_set_subtract(
     pubnub_subscription_t** subs = (pubnub_subscription_t**)pbhash_set_elements(
         set->subscriptions, &count);
 
-    for (int i = 0; i < count; ++i) {
-        pubnub_subscription_set_remove_(set, &subs[i], i + 1 == count);
+    if (NULL != subs) {
+        for (int i = 0; i < count; ++i) {
+            pubnub_subscription_set_remove_(set, &subs[i], i + 1 == count);
+        }
+        free(subs);
     }
     pubnub_mutex_unlock(other_set->mutw);
-    if (NULL != subs) { free(subs); }
 }
 
 pubnub_subscription_set_t** pubnub_subscription_sets(

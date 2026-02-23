@@ -78,6 +78,15 @@ size_t pbcc_cryptor_header_v1_size(
 struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(
     struct pubnub_cryptor_header_v1* cryptor_header)
 {
+    if (NULL == cryptor_header) {
+        pubnub_bymebl_t* result =
+            (pubnub_bymebl_t*)malloc(sizeof(pubnub_bymebl_t));
+        result->ptr  = NULL;
+        result->size = 0;
+
+        return result;
+    }
+
     if (0 == memcmp(
                  (char*)cryptor_header->identifier,
                  PUBNUB_LEGACY_CRYPTO_IDENTIFIER,
@@ -95,13 +104,6 @@ struct pubnub_byte_mem_block* pbcc_cryptor_header_v1_to_alloc_block(
         (struct pubnub_byte_mem_block*)malloc(
             sizeof(struct pubnub_byte_mem_block));
     if (NULL == result) { return NULL; }
-
-    if (NULL == cryptor_header) {
-        result->ptr  = NULL;
-        result->size = 0;
-
-        return result;
-    }
 
     size_t header_size = pbcc_cryptor_header_v1_size(cryptor_header);
 
