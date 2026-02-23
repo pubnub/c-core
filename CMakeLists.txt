@@ -85,7 +85,6 @@ num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
-num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" OFF)
 num_option(USE_LOGGER "Use advanced logger" ON)
 num_option(USE_DEFAULT_LOGGER "Use default (stdio/platform) logger [USE_LOGGER=ON needed]" ON)
 log_option(COMPILE_COMMANDS "Generate compile_commands.json" OFF)
@@ -135,7 +134,6 @@ set(FLAGS "\
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
     -D PUBNUB_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
-    -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
     -D PUBNUB_MBEDTLS=${MBEDTLS} \
     -D PUBNUB_USE_LOGGER=${USE_LOGGER} \
     -D PUBNUB_USE_DEFAULT_LOGGER=${USE_DEFAULT_LOGGER}")

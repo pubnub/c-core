@@ -143,9 +143,6 @@ USE_SUBSCRIBE_EVENT_ENGINE ?= $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 # Whether subscribe v2 feature should be enabled or not.
 USE_SUBSCRIBE_V2 ?= $(DEFAULT_USE_SUBSCRIBE_V2)
 
-# Whether user defined callback for logging should be enabled or not.
-USE_LOG_CALLBACK ?= $(DEFAULT_USE_LOG_CALLBACK)
-
 # Whether advanced logger should be enabled or not.
 USE_LOGGER ?= $(DEFAULT_USE_LOGGER)
 

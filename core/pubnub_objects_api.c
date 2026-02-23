@@ -18,40 +18,53 @@
 #include <string.h>
 
 
+#if PUBNUB_LOG_ENABLED(ERROR)
 #define FORM_THE_OBJECT(pbcc, monitor, obj_buffer, key_literal, json)          \
     do {                                                                       \
         if (sizeof(obj_buffer) <                                               \
             sizeof(key_literal) +                                              \
                 pb_strnlen_s(json, PUBNUB_MAX_OBJECT_LENGTH) + 1) {            \
-            if (PUBNUB_LOG_ENABLED(ERROR)) {                                   \
-                if (pbcc_logger_manager_should_log(                            \
-                        (pbcc)->logger_manager, PUBNUB_LOG_LEVEL_ERROR)) {     \
-                    unsigned long current_sz_ =                                \
-                        (unsigned long)sizeof(obj_buffer);                     \
-                    unsigned long required_sz_ =                               \
-                        (unsigned long)(sizeof(key_literal) +                  \
-                                        pb_strnlen_s(                          \
-                                            json, PUBNUB_MAX_OBJECT_LENGTH));  \
-                    pubnub_log_value_t data_ = pubnub_log_value_map_init();    \
-                    PUBNUB_LOG_MAP_SET_NUMBER(                                 \
-                        &data_, current_sz_, current_buffer_size)              \
-                    PUBNUB_LOG_MAP_SET_NUMBER(                                 \
-                        &data_, required_sz_, required_buffer_size)            \
-                    pbcc_logger_manager_log_object(                            \
-                        (pbcc)->logger_manager,                                \
-                        PUBNUB_LOG_LEVEL_ERROR,                                \
-                        PUBNUB_LOG_LOCATION,                                   \
-                        &data_,                                                \
-                        "Buffer too small:");                                  \
-                }                                                              \
+            if (pbcc_logger_manager_should_log(                                \
+                    (pbcc)->logger_manager, PUBNUB_LOG_LEVEL_ERROR)) {         \
+                unsigned long current_sz_ =                                    \
+                    (unsigned long)sizeof(obj_buffer);                         \
+                unsigned long required_sz_ =                                   \
+                    (unsigned long)(sizeof(key_literal) +                      \
+                                    pb_strnlen_s(                              \
+                                        json, PUBNUB_MAX_OBJECT_LENGTH));      \
+                pubnub_log_value_t data_ = pubnub_log_value_map_init();        \
+                PUBNUB_LOG_MAP_SET_NUMBER(                                     \
+                    &data_, current_sz_, current_buffer_size)                   \
+                PUBNUB_LOG_MAP_SET_NUMBER(                                     \
+                    &data_, required_sz_, required_buffer_size)                 \
+                pbcc_logger_manager_log_object(                                \
+                    (pbcc)->logger_manager,                                     \
+                    PUBNUB_LOG_LEVEL_ERROR,                                     \
+                    PUBNUB_LOG_LOCATION,                                        \
+                    &data_,                                                     \
+                    "Buffer too small:");                                       \
             }                                                                  \
-            pubnub_mutex_unlock(monitor);                                      \
+            pubnub_mutex_unlock(monitor);                                       \
             return PNR_TX_BUFF_TOO_SMALL;                                      \
         }                                                                      \
         snprintf(                                                              \
             obj_buffer, sizeof(obj_buffer), "%s%s%c", key_literal, json, '}'); \
         json = (obj_buffer);                                                   \
     } while (0)
+#else /* !PUBNUB_LOG_ENABLED(ERROR) */
+#define FORM_THE_OBJECT(pbcc, monitor, obj_buffer, key_literal, json)          \
+    do {                                                                       \
+        if (sizeof(obj_buffer) <                                               \
+            sizeof(key_literal) +                                              \
+                pb_strnlen_s(json, PUBNUB_MAX_OBJECT_LENGTH) + 1) {            \
+            pubnub_mutex_unlock(monitor);                                       \
+            return PNR_TX_BUFF_TOO_SMALL;                                      \
+        }                                                                      \
+        snprintf(                                                              \
+            obj_buffer, sizeof(obj_buffer), "%s%s%c", key_literal, json, '}'); \
+        json = (obj_buffer);                                                   \
+    } while (0)
+#endif /* PUBNUB_LOG_ENABLED(ERROR) */
 
 const struct pubnub_page_object pubnub_null_page = { NULL, NULL };
 

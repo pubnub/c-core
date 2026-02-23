@@ -218,11 +218,6 @@ USE_SUBSCRIBE_EVENT_ENGINE = $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 USE_SUBSCRIBE_V2 = $(DEFAULT_USE_SUBSCRIBE_V2)
 !endif
 
-# Whether user defined callback for logging should be enabled or not.
-!ifndef USE_LOG_CALLBACK
-USE_LOG_CALLBACK = $(DEFAULT_USE_LOG_CALLBACK)
-!endif
-
 # Whether advanced logger should be enabled or not.
 !ifndef USE_LOGGER
 USE_LOGGER = $(DEFAULT_USE_LOGGER)

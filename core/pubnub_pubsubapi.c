@@ -298,7 +298,7 @@ pubnub_t* pubnub_init(
         pubnub_log_object(
             p,
             PUBNUB_LOG_LEVEL_DEBUG,
-            "PubNub",
+            PUBNUB_LOG_LOCATION,
             &comp_flags,
             "PubNub SDK built with:");
     }

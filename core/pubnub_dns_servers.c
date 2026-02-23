@@ -265,7 +265,7 @@ int pubnub_dns_set_primary_server_ipv6_str(pubnub_t* pb, char const* ipv6_str)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
-    ret = pubnub_parse_ipv6_addr(NULL, ipv6_str, &m_primary_dns_server_ipv6);
+    ret = pubnub_parse_ipv6_addr(pb, ipv6_str, &m_primary_dns_server_ipv6);
     pubnub_mutex_unlock(m_lock);
 
     return ret;
@@ -320,7 +320,7 @@ int pubnub_dns_set_secondary_server_ipv6_str(pubnub_t* pb, char const* ipv6_str)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
-    ret = pubnub_parse_ipv6_addr(ipv6_str, &m_secondary_dns_server_ipv6);
+    ret = pubnub_parse_ipv6_addr(pb, ipv6_str, &m_secondary_dns_server_ipv6);
     pubnub_mutex_unlock(m_lock);
 
     return ret;

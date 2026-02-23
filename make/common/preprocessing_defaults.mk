@@ -83,9 +83,6 @@ DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE = 0
 # Whether subscribe v2 feature should be enabled or not.
 DEFAULT_USE_SUBSCRIBE_V2 = 1
 
-# Whether user defined callback for logging should be enabled or not.
-DEFAULT_USE_LOG_CALLBACK = 0
-
 # Whether advanced logger should be enabled or not.
 DEFAULT_USE_LOGGER = 1
 

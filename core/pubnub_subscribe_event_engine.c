@@ -171,14 +171,15 @@ bool pubnub_subscription_free(pubnub_subscription_t** sub)
 {
     if (NULL == sub || NULL == *sub) { return false; }
 
-    pubnub_mutex_lock((*sub)->mutw);
+    pubnub_mutex_t mutw = (*sub)->mutw;
+    pubnub_mutex_lock(mutw);
     if (pubnub_subscription_free_(*sub)) {
-        pubnub_mutex_unlock((*sub)->mutw);
-        pubnub_mutex_destroy((*sub)->mutw);
+        pubnub_mutex_unlock(mutw);
+        pubnub_mutex_destroy(mutw);
         *sub = NULL;
         return true;
     }
-    pubnub_mutex_unlock((*sub)->mutw);
+    pubnub_mutex_unlock(mutw);
 
     return false;
 }
@@ -398,14 +399,15 @@ bool pubnub_subscription_set_free(pubnub_subscription_set_t** set)
 {
     if (NULL == set || NULL == *set) { return false; }
 
-    pubnub_mutex_lock((*set)->mutw);
+    pubnub_mutex_t mutw = (*set)->mutw;
+    pubnub_mutex_lock(mutw);
     if (pubnub_subscription_set_free_(*set)) {
-        pubnub_mutex_unlock((*set)->mutw);
-        pubnub_mutex_destroy((*set)->mutw);
+        pubnub_mutex_unlock(mutw);
+        pubnub_mutex_destroy(mutw);
         *set = NULL;
         return true;
     }
-    pubnub_mutex_unlock((*set)->mutw);
+    pubnub_mutex_unlock(mutw);
 
     return false;
 }

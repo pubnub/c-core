@@ -75,8 +75,11 @@ void pbcc_init(
 #if PUBNUB_USE_LOGGER
     p->logger_manager = pbcc_logger_manager_alloc(p->id);
 #if PUBNUB_USE_DEFAULT_LOGGER
-    pbcc_logger_manager_set_default_logger(
-        p->logger_manager, pubnub_default_logger_alloc());
+    pubnub_logger_t* default_logger = pubnub_default_logger_alloc();
+    if (NULL != default_logger) {
+        pbcc_logger_manager_set_default_logger(
+            p->logger_manager, default_logger);
+    }
 #endif
 #endif // #if PUBNUB_USE_LOGGER
 }

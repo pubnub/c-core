@@ -48,8 +48,5 @@
 /* The Pubnub task to be called from the main loop of the application */
 void pubnub_task(void);
 
-/** For logging, we use the Harmony Console module */
-#define PUBNUB_LOG_PRINTF   SYS_CONSOLE_PRINT
-
 
 #endif /* !defined INC_PUBNUB_FREERTOS_CALLBACK */

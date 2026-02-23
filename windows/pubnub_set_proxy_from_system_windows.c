@@ -299,7 +299,7 @@ int pubnub_set_proxy_from_system(pubnub_t* p, enum pubnub_proxy_type protocol)
                     &(p->proxy_ipv4_address), 0, sizeof p->proxy_ipv4_address);
 #if PUBNUB_USE_IPV6
                 if (0 != pubnub_parse_ipv6_addr(
-                             p->proxy_hostname, &(p->proxy_ipv6_address))) {
+                             p, p->proxy_hostname, &(p->proxy_ipv6_address))) {
                     memset(
                         &(p->proxy_ipv6_address),
                         0,

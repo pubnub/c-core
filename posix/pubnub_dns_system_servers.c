@@ -131,7 +131,7 @@ int pubnub_dns_read_system_servers_ipv6(
             *end = '\0';
 
             /* Try parsing as IPv6 first */
-            if (pubnub_parse_ipv6_addr(addr_start, &o_ipv6[dns_count]) == 0) {
+            if (pubnub_parse_ipv6_addr(pb, addr_start, &o_ipv6[dns_count]) == 0) {
                 dns_bytes = o_ipv6[dns_count].ipv6;
                 ++dns_count;
             }

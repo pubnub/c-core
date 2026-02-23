@@ -73,7 +73,7 @@ Ensure(pubnub_parse_ipv6_addr, parses_local_host)
     /* Resolved Ipv6 address */
     uint8_t key[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
     struct pubnub_ipv6_address resolved_addr_ipv6;
-    attest(pubnub_parse_ipv6_addr("::1", &resolved_addr_ipv6), equals(0));
+    attest(pubnub_parse_ipv6_addr(NULL, "::1", &resolved_addr_ipv6), equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
@@ -96,29 +96,29 @@ Ensure(pubnub_parse_ipv6_addr, parses_some_Ipv6_addresses)
     uint8_t                    key5[16] = { 0, 0, 0, 0xf, 0 };
     struct pubnub_ipv6_address resolved_addr_ipv6;
     attest(
-        pubnub_parse_ipv6_addr("2620:119:1:35::Af00:35", &resolved_addr_ipv6),
+        pubnub_parse_ipv6_addr(NULL, "2620:119:1:35::Af00:35", &resolved_addr_ipv6),
         equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key1, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
     attest(
         pubnub_parse_ipv6_addr(
-            "2620:119:1:35:Af00:35:0:e", &resolved_addr_ipv6),
+            NULL, "2620:119:1:35:Af00:35:0:e", &resolved_addr_ipv6),
         equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key2, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
     attest(
-        pubnub_parse_ipv6_addr("2620:119:1:35:Af00:35:0:", &resolved_addr_ipv6),
+        pubnub_parse_ipv6_addr(NULL, "2620:119:1:35:Af00:35:0:", &resolved_addr_ipv6),
         equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key3, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
-    attest(pubnub_parse_ipv6_addr("a::", &resolved_addr_ipv6), equals(0));
+    attest(pubnub_parse_ipv6_addr(NULL, "a::", &resolved_addr_ipv6), equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key4, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
-    attest(pubnub_parse_ipv6_addr(":f::", &resolved_addr_ipv6), equals(0));
+    attest(pubnub_parse_ipv6_addr(NULL, ":f::", &resolved_addr_ipv6), equals(0));
     attest(
         memcmp(resolved_addr_ipv6.ipv6, key5, sizeof resolved_addr_ipv6.ipv6),
         equals(0));
@@ -128,28 +128,28 @@ Ensure(pubnub_parse_ipv6_addr, parses_incomplete_Ipv6_address)
 {
     struct pubnub_ipv6_address resolved_addr_ipv6;
     attest(
-        pubnub_parse_ipv6_addr("2C2f:119:35:35", &resolved_addr_ipv6),
+        pubnub_parse_ipv6_addr(NULL, "2C2f:119:35:35", &resolved_addr_ipv6),
         equals(-1));
 }
 
 Ensure(pubnub_parse_ipv6_addr, parses_something_thats_not_Ipv6_address)
 {
     struct pubnub_ipv6_address resolved_addr_ipv6;
-    attest(pubnub_parse_ipv6_addr("::E:", &resolved_addr_ipv6), equals(-1));
+    attest(pubnub_parse_ipv6_addr(NULL, "::E:", &resolved_addr_ipv6), equals(-1));
     attest(
-        pubnub_parse_ipv6_addr("A1.B2.c3.d4", &resolved_addr_ipv6), equals(-1));
-    attest(pubnub_parse_ipv6_addr("1234", &resolved_addr_ipv6), equals(-1));
-    attest(pubnub_parse_ipv6_addr("12345:", &resolved_addr_ipv6), equals(-1));
-    attest(pubnub_parse_ipv6_addr("1234:g5:", &resolved_addr_ipv6), equals(-1));
+        pubnub_parse_ipv6_addr(NULL, "A1.B2.c3.d4", &resolved_addr_ipv6), equals(-1));
+    attest(pubnub_parse_ipv6_addr(NULL, "1234", &resolved_addr_ipv6), equals(-1));
+    attest(pubnub_parse_ipv6_addr(NULL, "12345:", &resolved_addr_ipv6), equals(-1));
+    attest(pubnub_parse_ipv6_addr(NULL, "1234:g5:", &resolved_addr_ipv6), equals(-1));
     attest(
-        pubnub_parse_ipv6_addr("F234:::37", &resolved_addr_ipv6), equals(-1));
-    attest(pubnub_parse_ipv6_addr("F234:.37", &resolved_addr_ipv6), equals(-1));
+        pubnub_parse_ipv6_addr(NULL, "F234:::37", &resolved_addr_ipv6), equals(-1));
+    attest(pubnub_parse_ipv6_addr(NULL, "F234:.37", &resolved_addr_ipv6), equals(-1));
     attest(
         pubnub_parse_ipv6_addr(
-            "1B3C:01:0:0:1234:FDCA:37:9032:15", &resolved_addr_ipv6),
+            NULL, "1B3C:01:0:0:1234:FDCA:37:9032:15", &resolved_addr_ipv6),
         equals(-1));
     attest(
-        pubnub_parse_ipv6_addr("2620:119:1:35:", &resolved_addr_ipv6),
+        pubnub_parse_ipv6_addr(NULL, "2620:119:1:35:", &resolved_addr_ipv6),
         equals(-1));
 }
 
@@ -160,8 +160,8 @@ Ensure(pubnub_parse_ipv6_addr, fires_asserts_on_illegal_parameters)
     struct pubnub_ipv6_address resolved_addr_ipv6;
     pubnub_assert_set_handler((pubnub_assert_handler_t)test_assert_handler);
     expect_assert_in(
-        pubnub_parse_ipv6_addr(NULL, &resolved_addr_ipv6),
+        pubnub_parse_ipv6_addr(NULL, NULL, &resolved_addr_ipv6),
         "pubnub_parse_ipv6_addr.c");
     expect_assert_in(
-        pubnub_parse_ipv6_addr("::1", NULL), "pubnub_parse_ipv6_addr.c");
+        pubnub_parse_ipv6_addr(NULL, "::1", NULL), "pubnub_parse_ipv6_addr.c");
 }

@@ -158,7 +158,7 @@ int pbcc_logger_manager_logger_remove(
 
     pubnub_mutex_lock(manager->mutw);
     pubnub_logger_t** current = &manager->loggers;
-    while (NULL != current) {
+    while (NULL != *current) {
         if (*current == logger) {
             *current     = logger->next;
             logger->next = NULL;

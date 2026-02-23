@@ -419,9 +419,18 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
 //            Convenience Macros
 // ----------------------------------------------
 
-/** Macro overloading helpers - count number of arguments */
+/**
+ * Macro overloading helpers - count number of arguments.
+ *
+ * @note PUBNUB_LOG_EXPAND_ is required as a workaround for the MSVC
+ *       preprocessor which treats __VA_ARGS__ as a single token instead of
+ *       expanding it into individual arguments. The extra indirection forces
+ *       a rescan so that the argument list is properly separated.
+ */
+#define PUBNUB_LOG_EXPAND_(...) __VA_ARGS__
 #define PUBNUB_LOG_GET_4TH_ARG_(arg1, arg2, arg3, arg4, ...) arg4
-#define PUBNUB_LOG_NARG_(...) PUBNUB_LOG_GET_4TH_ARG_(__VA_ARGS__, 3, 2, 1, 0)
+#define PUBNUB_LOG_NARG_(...)                                                  \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_GET_4TH_ARG_(__VA_ARGS__, 3, 2, 1, 0))
 #define PUBNUB_LOG_CONCAT_IMPL_(a, b) a##b
 #define PUBNUB_LOG_CONCAT_(a, b) PUBNUB_LOG_CONCAT_IMPL_(a, b)
 #define PUBNUB_LOG_DISPATCH_(func, nargs) PUBNUB_LOG_CONCAT_(func, nargs)
@@ -463,9 +472,9 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     }
 
 #define PUBNUB_LOG_MAP_SET_STRING(...)                                         \
-    PUBNUB_LOG_DISPATCH_(                                                      \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
         _PUBNUB_LOG_MAP_SET_STRING_,                                           \
-        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 
 /**
  * @brief Add a `number` value to a `map`.
@@ -491,9 +500,9 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     pubnub_log_value_map_set(map, #key, &key##_val);
 
 #define PUBNUB_LOG_MAP_SET_NUMBER(...)                                         \
-    PUBNUB_LOG_DISPATCH_(                                                      \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
         _PUBNUB_LOG_MAP_SET_NUMBER_,                                           \
-        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 
 /**
  * @brief Add a `boolean` value to a `map`.
@@ -519,8 +528,9 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     pubnub_log_value_map_set(map, #key, &key##_val);
 
 #define PUBNUB_LOG_MAP_SET_BOOL(...)                                           \
-    PUBNUB_LOG_DISPATCH_(                                                      \
-        _PUBNUB_LOG_MAP_SET_BOOL_, PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
+        _PUBNUB_LOG_MAP_SET_BOOL_,                                             \
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 
 /**
  * @brief Append a `string` value to an `array` with automatic `NULL` checking.
@@ -554,9 +564,9 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     }
 
 #define PUBNUB_LOG_ARRAY_APPEND_STRING(...)                                    \
-    PUBNUB_LOG_DISPATCH_(                                                      \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
         _PUBNUB_LOG_ARRAY_APPEND_STRING_,                                      \
-        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 
 /**
  * @brief Append a `number` value to an `array`.
@@ -582,9 +592,9 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     pubnub_log_value_array_append(array, &name##_elm);
 
 #define PUBNUB_LOG_ARRAY_APPEND_NUMBER(...)                                    \
-    PUBNUB_LOG_DISPATCH_(                                                      \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
         _PUBNUB_LOG_ARRAY_APPEND_NUMBER_,                                      \
-        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 
 /**
  * @brief Append a `boolean` value to an `array`.
@@ -610,7 +620,7 @@ PUBNUB_EXTERN pubnub_log_value_t const* pubnub_log_value_next(
     pubnub_log_value_array_append(array, &name##_elm);
 
 #define PUBNUB_LOG_ARRAY_APPEND_BOOL(...)                                      \
-    PUBNUB_LOG_DISPATCH_(                                                      \
+    PUBNUB_LOG_EXPAND_(PUBNUB_LOG_DISPATCH_(                                   \
         _PUBNUB_LOG_ARRAY_APPEND_BOOL_,                                        \
-        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__)
+        PUBNUB_LOG_NARG_(__VA_ARGS__))(__VA_ARGS__))
 #endif // PUBNUB_PUBNUB_LOG_VALUE_H

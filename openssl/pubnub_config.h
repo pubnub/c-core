@@ -164,10 +164,6 @@
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
 
-#if !defined(PUBNUB_USE_LOG_CALLBACK)
-#define PUBNUB_USE_LOG_CALLBACK 1
-#endif
-
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
