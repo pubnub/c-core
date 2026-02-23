@@ -104,12 +104,12 @@ static void freertos_logger_print_body_(pubnub_log_value_t const* headers,
 // ----------------------------------------------
 
 static struct pubnub_logger_interface const g_freertos_logger_vtable = {
-    .trace   = freertos_logger_trace_,
-    .debug   = freertos_logger_debug_,
-    .info    = freertos_logger_info_,
-    .warn    = freertos_logger_warn_,
-    .error   = freertos_logger_error_,
-    .destroy = freertos_logger_destroy_
+    freertos_logger_trace_,
+    freertos_logger_debug_,
+    freertos_logger_info_,
+    freertos_logger_warn_,
+    freertos_logger_error_,
+    freertos_logger_destroy_
 };
 
 

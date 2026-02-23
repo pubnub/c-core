@@ -28,7 +28,7 @@ pubnub_logger_t* pubnub_logger_alloc(
 {
     if (NULL == vtable) return NULL;
 
-    pubnub_logger_t* logger = malloc(sizeof(pubnub_logger_t));
+    pubnub_logger_t* logger = (pubnub_logger_t*)malloc(sizeof(pubnub_logger_t));
     if (NULL == logger) { return NULL; }
 
     logger->user_data = user_data;

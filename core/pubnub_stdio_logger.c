@@ -204,12 +204,12 @@ static void stdio_logger_print_body_(FILE*                     stream,
 
 /* Default logger vtable */
 static struct pubnub_logger_interface const g_stdio_logger_vtable = {
-    .trace   = stdio_logger_trace_,
-    .debug   = stdio_logger_debug_,
-    .info    = stdio_logger_info_,
-    .warn    = stdio_logger_warn_,
-    .error   = stdio_logger_error_,
-    .destroy = stdio_logger_destroy_
+    stdio_logger_trace_,
+    stdio_logger_debug_,
+    stdio_logger_info_,
+    stdio_logger_warn_,
+    stdio_logger_error_,
+    stdio_logger_destroy_
 };
 
 
@@ -390,7 +390,7 @@ void stdio_logger_stringify_value_(FILE*                     stream,
         snprintf(new_indent, sizeof(new_indent), "%s  ", indent);
 
         while (element) {
-            char elem_indent[256];
+            char elem_indent[260];
             snprintf(elem_indent, sizeof(elem_indent), "%s- ", new_indent);
 
             stdio_logger_stringify_value_(stream, element, elem_indent, depth + 1);
@@ -425,7 +425,7 @@ void stdio_logger_stringify_value_(FILE*                     stream,
                         stream, element, new_indent, depth + 1);
                 }
                 else {
-                    char kv_indent[256];
+                    char kv_indent[512];
                     snprintf(kv_indent, sizeof(kv_indent), "%s%s: ", new_indent, key);
                     stdio_logger_stringify_value_(
                         stream, element, kv_indent, depth + 1);

@@ -10,56 +10,52 @@
 
 pubnub_log_value_t pubnub_log_value_null(void)
 {
-    const pubnub_log_value_t value = { .type = PUBNUB_LOG_VALUE_NULL,
-                                       .key  = NULL,
-                                       .next = NULL };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type = PUBNUB_LOG_VALUE_NULL;
     return value;
 }
 
 pubnub_log_value_t pubnub_log_value_bool(bool val)
 {
-    const pubnub_log_value_t value = { .type          = PUBNUB_LOG_VALUE_BOOL,
-                                       .key           = NULL,
-                                       .next          = NULL,
-                                       .data.bool_val = val };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type          = PUBNUB_LOG_VALUE_BOOL;
+    value.data.bool_val = val;
     return value;
 }
 
 pubnub_log_value_t pubnub_log_value_number(double val)
 {
-    const pubnub_log_value_t value = { .type = PUBNUB_LOG_VALUE_NUMBER,
-                                       .key  = NULL,
-                                       .next = NULL,
-                                       .data.number_val = val };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type            = PUBNUB_LOG_VALUE_NUMBER;
+    value.data.number_val = val;
     return value;
 }
 
 pubnub_log_value_t pubnub_log_value_string(char const* val)
 {
-    const pubnub_log_value_t value = { .type = PUBNUB_LOG_VALUE_STRING,
-                                       .key  = NULL,
-                                       .next = NULL,
-                                       .data.string_val = val };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type            = PUBNUB_LOG_VALUE_STRING;
+    value.data.string_val = val;
     return value;
 }
 
 pubnub_log_value_t pubnub_log_value_array_init(void)
 {
-    const pubnub_log_value_t value = { .type = PUBNUB_LOG_VALUE_ARRAY,
-                                       .key  = NULL,
-                                       .next = NULL,
-                                       .data.container.first = NULL,
-                                       .data.container.last  = NULL };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type = PUBNUB_LOG_VALUE_ARRAY;
     return value;
 }
 
 pubnub_log_value_t pubnub_log_value_map_init(void)
 {
-    const pubnub_log_value_t value = { .type = PUBNUB_LOG_VALUE_MAP,
-                                       .key  = NULL,
-                                       .next = NULL,
-                                       .data.container.first = NULL,
-                                       .data.container.last  = NULL };
+    pubnub_log_value_t value;
+    memset(&value, 0, sizeof(value));
+    value.type = PUBNUB_LOG_VALUE_MAP;
     return value;
 }
 

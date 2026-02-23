@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <time.h>
 #if defined(_WIN32)
@@ -240,11 +241,11 @@ void pbcc_logger_manager_log_text(
     /* Check if message should be logged based on minimum level */
     if (NULL == manager || level < manager->minimum_level) return;
 
-    const struct pubnub_log_message_text log = {
-        .base = pbcc_logger_manager_message_init(
-            manager, PUBNUB_LOG_MESSAGE_TYPE_TEXT, level, location),
-        .message = message,
-    };
+    struct pubnub_log_message_text log;
+    memset(&log, 0, sizeof(log));
+    log.base = pbcc_logger_manager_message_init(
+        manager, PUBNUB_LOG_MESSAGE_TYPE_TEXT, level, location);
+    log.message = message;
 
     pbcc_logger_manager_log_message(manager, (const pubnub_log_message_t*)&log);
 }
@@ -279,12 +280,12 @@ void pbcc_logger_manager_log_object(
     /* Check if message should be logged based on minimum level */
     if (NULL == manager || level < manager->minimum_level) return;
 
-    const struct pubnub_log_message_object log = {
-        .base = pbcc_logger_manager_message_init(
-            manager, PUBNUB_LOG_MESSAGE_TYPE_OBJECT, level, location),
-        .message = message,
-        .details = details
-    };
+    struct pubnub_log_message_object log;
+    memset(&log, 0, sizeof(log));
+    log.base = pbcc_logger_manager_message_init(
+        manager, PUBNUB_LOG_MESSAGE_TYPE_OBJECT, level, location);
+    log.message = message;
+    log.details = details;
 
     pbcc_logger_manager_log_message(manager, (const pubnub_log_message_t*)&log);
 }
@@ -299,13 +300,13 @@ void pbcc_logger_manager_log_error(
 {
     /* Check if message should be logged based on minimum level */
     if (NULL == manager || level < manager->minimum_level) return;
-    const struct pubnub_log_message_error log = {
-        .base = pbcc_logger_manager_message_init(
-            manager, PUBNUB_LOG_MESSAGE_TYPE_ERROR, level, location),
-        .error_code    = error_code,
-        .error_message = error_message,
-        .details       = details
-    };
+    struct pubnub_log_message_error log;
+    memset(&log, 0, sizeof(log));
+    log.base = pbcc_logger_manager_message_init(
+        manager, PUBNUB_LOG_MESSAGE_TYPE_ERROR, level, location);
+    log.error_code    = error_code;
+    log.error_message = error_message;
+    log.details       = details;
 
     pbcc_logger_manager_log_message(manager, (const pubnub_log_message_t*)&log);
 }
@@ -325,17 +326,17 @@ void pbcc_logger_manager_log_network_request(
     /* Check if message should be logged based on minimum level */
     if (NULL == manager || level < manager->minimum_level) return;
 
-    const struct pubnub_log_message_network_request log = {
-        .base = pbcc_logger_manager_message_init(
-            manager, PUBNUB_LOG_MESSAGE_TYPE_NETWORK_REQUEST, level, location),
-        .method   = method,
-        .url      = url,
-        .headers  = headers,
-        .body     = body,
-        .details  = details,
-        .canceled = canceled,
-        .failed   = failed
-    };
+    struct pubnub_log_message_network_request log;
+    memset(&log, 0, sizeof(log));
+    log.base = pbcc_logger_manager_message_init(
+        manager, PUBNUB_LOG_MESSAGE_TYPE_NETWORK_REQUEST, level, location);
+    log.method   = method;
+    log.url      = url;
+    log.headers  = headers;
+    log.body     = body;
+    log.details  = details;
+    log.canceled = canceled;
+    log.failed   = failed;
 
     pbcc_logger_manager_log_message(manager, (const pubnub_log_message_t*)&log);
 }
@@ -352,14 +353,14 @@ void pbcc_logger_manager_log_network_response(
     /* Check if message should be logged based on minimum level */
     if (NULL == manager || level < manager->minimum_level) return;
 
-    const struct pubnub_log_message_network_response log = {
-        .base = pbcc_logger_manager_message_init(
-            manager, PUBNUB_LOG_MESSAGE_TYPE_NETWORK_RESPONSE, level, location),
-        .url         = url,
-        .status_code = status_code,
-        .headers     = headers,
-        .body        = body
-    };
+    struct pubnub_log_message_network_response log;
+    memset(&log, 0, sizeof(log));
+    log.base = pbcc_logger_manager_message_init(
+        manager, PUBNUB_LOG_MESSAGE_TYPE_NETWORK_RESPONSE, level, location);
+    log.url         = url;
+    log.status_code = status_code;
+    log.headers     = headers;
+    log.body        = body;
 
     pbcc_logger_manager_log_message(manager, (const pubnub_log_message_t*)&log);
 }
@@ -447,14 +448,15 @@ pubnub_log_message_t pbcc_logger_manager_message_init(
     msec = 0;
 #endif
 
-    const pubnub_log_message_t message = {
-        .message_type  = message_type,
-        .level         = level,
-        .pubnub_id     = manager->pubnub_id,
-        .timestamp     = { sec, msec },
-        .location      = location,
-        .minimum_level = manager->minimum_level,
-    };
+    pubnub_log_message_t message;
+    memset(&message, 0, sizeof(message));
+    message.message_type          = message_type;
+    message.level                 = level;
+    message.pubnub_id             = manager->pubnub_id;
+    message.timestamp.seconds     = sec;
+    message.timestamp.milliseconds = msec;
+    message.location              = location;
+    message.minimum_level         = manager->minimum_level;
 
     return message;
 }

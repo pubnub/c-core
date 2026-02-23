@@ -91,12 +91,12 @@ static void harmony_logger_print_body_(pubnub_log_value_t const* headers,
 // ----------------------------------------------
 
 static struct pubnub_logger_interface const g_harmony_logger_vtable = {
-    .trace   = harmony_logger_trace_,
-    .debug   = harmony_logger_debug_,
-    .info    = harmony_logger_info_,
-    .warn    = harmony_logger_warn_,
-    .error   = harmony_logger_error_,
-    .destroy = harmony_logger_destroy_
+    harmony_logger_trace_,
+    harmony_logger_debug_,
+    harmony_logger_info_,
+    harmony_logger_warn_,
+    harmony_logger_error_,
+    harmony_logger_destroy_
 };
 
 
