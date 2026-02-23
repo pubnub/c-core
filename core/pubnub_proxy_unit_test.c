@@ -459,6 +459,7 @@ BeforeEach(single_context_pubnub)
     m_i           = 0;
     pbp           = pubnub_alloc();
     attest(pbp, differs(NULL));
+    srand(1);
 }
 
 void free_m_msgs(char** msg_array)
