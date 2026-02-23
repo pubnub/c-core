@@ -59,6 +59,10 @@ unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 
 TIMER_LIST_SOURCEFILES = pubnub_alloc_static.c pubnub_assert_std.c pubnub_timers.c pubnub_logger.c pbcc_logger_manager.c pubnub_log_value.c pubnub_stdio_logger.c
 
+ifeq ($(RECEIVE_GZIP_RESPONSE), 1)
+TIMER_LIST_SOURCEFILES += ../lib/miniz/miniz_tinfl.c pbgzip_decompress.c
+endif
+
 pubnub_timer_list_unittest: pubnub_timer_list.c pubnub_timer_list_unit_test.c
 	gcc -o pubnub_timer_list_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -D PUBNUB_CALLBACK_API -D PUBNUB_ASSERT_LEVEL_NONE -Wall $(COVERAGE_FLAGS) -fPIC $(TIMER_LIST_SOURCEFILES) pubnub_timer_list.c pubnub_timer_list_unit_test.c -lcgreen -lm
 #	gcc -o pubnub_timer_list_unit_testo  $(CFLAGS) -D PUBNUB_CALLBACK_API -Wall $(COVERAGE_FLAGS) $(TIMER_LIST_SOURCEFILES) pubnub_timer_list.c pubnub_timer_list_unit_test.c -lcgreen -lm
