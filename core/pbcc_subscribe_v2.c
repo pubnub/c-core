@@ -90,7 +90,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(
     if (tr) { ADD_URL_PARAM(qparam, tr, tr); }
 
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (p->user_id) {
         ADD_URL_PARAM(qparam, uuid, p->user_id);
@@ -102,7 +102,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(
     ADD_URL_AUTH_PARAM(p, qparam, auth);
 #endif
 
-    if (filter_expr) { ADD_URL_PARAM(qparam, filter - expr, filter_expr); }
+    if (filter_expr) { ADD_URL_PARAM_TRUE_KEY(qparam, "filter-expr", filter_expr); }
     if (heartbeat) {
         ADD_URL_PARAM_SIZET(p, qparam, heartbeat, (size_t)*heartbeat);
     }

@@ -819,7 +819,7 @@ enum pubnub_res pbcc_subscribe_prep(
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API

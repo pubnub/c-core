@@ -196,7 +196,7 @@ enum pubnub_res pbcc_leave_prep(
     ADD_URL_AUTH_PARAM(pb, qparam, auth);
 #endif
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
 
 #if PUBNUB_CRYPTO_API
@@ -345,7 +345,7 @@ enum pubnub_res pbcc_heartbeat_prep(
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
     if (pb->state) { ADD_URL_PARAM(qparam, state, pb->state); }
@@ -403,7 +403,7 @@ enum pubnub_res pbcc_here_now_prep(
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
 #if PUBNUB_CRYPTO_API
@@ -527,7 +527,7 @@ enum pubnub_res pbcc_set_state_prep(
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (pb_user_id) { ADD_URL_PARAM(qparam, uuid, pb_user_id); }
 #if PUBNUB_CRYPTO_API
@@ -585,7 +585,7 @@ enum pubnub_res pbcc_state_get_prep(
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) {
-        ADD_URL_PARAM(qparam, channel - group, channel_group);
+        ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group);
     }
     if (pb_user_id) { ADD_URL_PARAM(qparam, uuid, pb_user_id); }
 #if PUBNUB_CRYPTO_API
