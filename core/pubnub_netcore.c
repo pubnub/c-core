@@ -546,6 +546,10 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
         pb->flags.started_while_kept_alive = false;
         close_connection(pb);
     }
+
+#if PUBNUB_USE_LOGGER
+    pb->core.last_request_url[0] = '\0';
+#endif
 }
 
 
