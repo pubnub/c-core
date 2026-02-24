@@ -11,6 +11,7 @@
 #include "core/pbntlm_core.h"
 #include "core/pbhttp_digest.h"
 
+#include <stdio.h>
 #include <string.h>
 
 

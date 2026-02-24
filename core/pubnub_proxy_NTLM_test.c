@@ -18,6 +18,7 @@
 #include "pubnub_keep_alive.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>

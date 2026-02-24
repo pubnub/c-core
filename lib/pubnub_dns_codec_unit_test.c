@@ -10,6 +10,7 @@
 #include "cgreen/mocks.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include <setjmp.h>
 

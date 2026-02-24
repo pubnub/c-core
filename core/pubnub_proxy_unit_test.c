@@ -19,6 +19,7 @@
 #include "pubnub_proxy.h"
 #include "pubnub_json_parse.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>

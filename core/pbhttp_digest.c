@@ -12,6 +12,7 @@
 #include "core/pubnub_assert.h"
 #include "core/pubnub_generate_uuid.h"
 
+#include <stdio.h>
 #include <string.h>
 
 

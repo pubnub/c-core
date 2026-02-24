@@ -12,6 +12,7 @@
 #include "core/pubnub_ntf_enforcement.h"
 #endif
 
+#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 

@@ -2,6 +2,7 @@
 
 #include "pubnub_subscribe_event_engine_internal.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "core/pubnub_entities_internal.h"

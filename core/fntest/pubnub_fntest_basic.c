@@ -7,6 +7,7 @@
 #include "core/pubnub_logger_internal.h"
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 
 

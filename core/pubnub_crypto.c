@@ -15,6 +15,8 @@
 #include "pbcc_logger_manager.h"
 #endif // PUBNUB_USE_LOGGER
 #include "pubnub_memory_block.h"
+
+#include <stdio.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>

@@ -1,5 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_memory_block.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #if defined PUBNUB_USE_SUBSCRIBE_V2
 

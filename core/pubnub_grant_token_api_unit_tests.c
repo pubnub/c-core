@@ -12,6 +12,8 @@
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
 
+#include <stdio.h>
+
 static pubnub_t* pbp;
 
 Describe(token_parsing);

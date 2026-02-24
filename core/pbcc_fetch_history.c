@@ -14,6 +14,8 @@
 #if PUBNUB_USE_LOGGER
 #include "pbcc_logger_manager.h"
 #endif // PUBNUB_USE_LOGGER
+
+#include <stdio.h>
 #else
 #error this module can only be used if PUBNUB_USE_FETCH_HISTORY is defined and set to 1
 #endif

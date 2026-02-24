@@ -41,6 +41,7 @@
 #endif
 #include "core/pubnub_proxy_core.h"
 
+#include <stdio.h>
 #include <string.h>
 
 

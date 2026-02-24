@@ -16,6 +16,7 @@
 #include "lib/cbor/cbor.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lib/base64/pbbase64.h"
