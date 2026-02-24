@@ -113,8 +113,7 @@ void pubnub_log_network_response(
  * **Default:** `DEBUG` (`TRACE` stripped, everything else compiled in).
  */
 #ifndef PUBNUB_LOG_MIN_LEVEL
-// TODO: CHANGE BACK TO DEBUG
-#define PUBNUB_LOG_MIN_LEVEL TRACE
+#define PUBNUB_LOG_MIN_LEVEL DEBUG
 #endif // PUBNUB_LOG_MIN_LEVEL
 
 /* Token-paste helpers (double indirection for macro expansion). */
