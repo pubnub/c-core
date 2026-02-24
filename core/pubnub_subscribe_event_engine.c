@@ -525,7 +525,7 @@ enum pubnub_res pubnub_unsubscribe_with_subscription_set(
 
     if (ref_counter > 1) *set = set_ref;
 
-    if (PNR_OK == rslt || PNR_SUB_NOT_FOUND != rslt) {
+    if (PNR_SUB_NOT_FOUND != rslt) {
         pubnub_mutex_lock((*set)->mutw);
         (*set)->subscribed = false;
         pubnub_mutex_unlock((*set)->mutw);
