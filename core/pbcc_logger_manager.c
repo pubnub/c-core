@@ -72,7 +72,7 @@ pbcc_logger_manager_t* pbcc_logger_manager_alloc(const char* pubnub_id)
         return NULL;
     }
 
-    manager->minimum_level = PUBNUB_LOG_MIN_LEVEL_VALUE_;
+    manager->minimum_level = (enum pubnub_log_level)PUBNUB_LOG_MIN_LEVEL_VALUE_;
 #if PUBNUB_USE_DEFAULT_LOGGER
     manager->default_logger = NULL;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
