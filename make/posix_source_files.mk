@@ -113,7 +113,7 @@ ifeq ($(USE_DNS_SERVERS), 1)
         $(DNS_SERVERS_SOURCE_FILES)         \
         $(DNS_SERVERS_SOURCE_FILES_POSIX)
 endif
-ifeq ($(or $(USE_DNS_SERVERS),$(USE_PROXY)), 1)
+ifneq ($(filter 1,$(USE_DNS_SERVERS) $(USE_PROXY)),)
     CALLBACK_SOURCE_FILES += $(IPV4_SOURCE_FILES)
     ifeq ($(USE_IPV6), 1)
         CALLBACK_SOURCE_FILES += $(IPV6_SOURCE_FILES)

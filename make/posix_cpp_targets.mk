@@ -45,7 +45,7 @@ $(TARGET_BUILD_PATH)pubnub_callback_subloop_sample$(APP_EXT): \
     ../cpp/samples/pubnub_subloop_sample.cpp \
     $(SOURCE_FILES)                          \
     $(CALLBACK_SOURCE_FILES)                 \
-    $(PUBNUB_FUTRES_SYNC_SOURCE_FILE)
+    $(PUBNUB_FUTRES_SOURCE_FILE)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS)  $(CALLBACK_CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
 $(TARGET_BUILD_PATH)pubnub_callback_cpp11_subloop_sample$(APP_EXT): \

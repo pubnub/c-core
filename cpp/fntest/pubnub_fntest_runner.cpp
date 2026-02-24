@@ -4,9 +4,13 @@
 
 #include "core/srand_from_pubnub_time.h"
 #if PUBNUB_USE_LOGGER
+#if PUBNUB_USE_EXTERN_C
 extern "C" {
+#endif
 #include "core/pubnub_logger_internal.h"
+#if PUBNUB_USE_EXTERN_C
 }
+#endif
 #endif
 #if defined _WIN32
 #include "windows/console_subscribe_paint.h"
