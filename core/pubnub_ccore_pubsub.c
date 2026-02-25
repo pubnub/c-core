@@ -710,9 +710,10 @@ enum pubnub_res pbcc_sign_url(
             const char* param_ = "signature";
             rslt_              = pbcc_append_url_param(
                 (pc), param_, strlen(param_), (final_signature), ('&'));
-            if (rslt_ != PNR_OK) { return rslt_; }
+            if (rslt_ != PNR_OK) { goto cleanup; }
         }
     }
+    cleanup:
     free(url);
     return rslt_;
 }
