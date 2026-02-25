@@ -89,10 +89,7 @@ enum pubnub_res pubnub_add_message_action_str(
         pubnub_mutex_unlock(pb->monitor);
         return rslt;
     }
-#if PUBNUB_USE_GZIP_COMPRESSION
-    value =
-        (pbgzip_compress(pb, value) == PNR_OK) ? pb->core.gzip_msg_buf : value;
-#endif
+
     pb->method = pubnubSendViaPOST;
     rslt = pbcc_add_action_prep(&pb->core, channel, message_timetoken, value);
     if (PNR_STARTED == rslt) {
