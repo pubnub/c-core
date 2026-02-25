@@ -49,7 +49,7 @@ endfunction()
 
 message(STATUS "Options (Enabled *):")
 
-log_option(OPENSSL "Use OpenSSL" ON)
+log_option(OPENSSL "Use OpenSSL" OFF)
 num_option(MBEDTLS "Use mbedTLS" OFF)
 log_option(EXAMPLES "Build all examples" OFF)
 log_option(SHARED_LIB "Library type. [SHARED=ON STATIC=OFF]" OFF)
@@ -68,17 +68,17 @@ num_option(ONLY_PUBSUB_API "Only pubsub API" OFF)
 num_option(USE_PROXY "Use proxy" ON)
 num_option(USE_GZIP_COMPRESSION "Use gzip compression" ON)
 num_option(RECEIVE_GZIP_RESPONSE "Use gzip decompression" ON)
-num_option(USE_RETRY_CONFIGURATION "Use requests retry" ON)
+num_option(USE_RETRY_CONFIGURATION "Use requests retry" OFF)
 num_option(USE_SUBSCRIBE_V2 "Use subscribe v2" ON)
-num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine [USE_SUBSCRIBE_V2=ON needed]" ON)
+num_option(USE_SUBSCRIBE_EVENT_ENGINE "Use Subscribe Event Engine [USE_SUBSCRIBE_V2=ON needed]" OFF)
 num_option(USE_ADVANCED_HISTORY "Use advanced history" ON)
 num_option(USE_OBJECTS_API "Use objects API" ON)
 num_option(USE_AUTO_HEARTBEAT "Use auto heartbeat" ON)
 num_option(USE_ACTIONS_API "Use actions API" ON)
-num_option(USE_REVOKE_TOKEN_API "Use revoke token API [OPENSSL ONLY]" ON)
-num_option(USE_GRANT_TOKEN_API "Use grant token API [OPENSSL ONLY]" ON)
+num_option(USE_REVOKE_TOKEN_API "Use revoke token API [OPENSSL ONLY]" OFF)
+num_option(USE_GRANT_TOKEN_API "Use grant token API [OPENSSL ONLY]" OFF)
 num_option(USE_FETCH_HISTORY "Use fetch history" ON)
-num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" ON)
+num_option(USE_CRYPTO_API "Use crypto API [OPENSSL ONLY]" OFF)
 num_option(USE_NTF_RUNTIME_SELECTION "Use runtime NTF API selection" OFF)
 num_option(USE_CALLBACK_API "Use callback API" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_IPV6 "Use IPv6" ON)
@@ -579,10 +579,6 @@ if (${OPENSSL})
             message(STATUS "OpenSSL ready!")
         endif ()
     endif ()
-
-    set(FEATURE_SOURCEFILES
-            ${OPENSSL_LIBRARIES}
-            ${FEATURE_SOURCEFILES})
 
     set(LIB_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
