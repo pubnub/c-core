@@ -183,6 +183,15 @@ struct pbcc_context
     char   last_response_headers[PUBNUB_BUF_MAXLEN];
     size_t last_response_headers_len;
 #endif
+    
+    /** Optional runtime SDK identification. When set, everything after
+     * PUBNUB_SDK_NAME comes from here.
+     * Caller must keep the string valid for the context lifetime.
+     */
+    char const* sdk_version_suffix;
+
+    /** Buffer for full SDK uname when sdk_version_suffix is set. */
+    char sdk_uname_buf[128];
 };
 
 
@@ -508,6 +517,12 @@ enum pubnub_res pbcc_set_user_id(struct pbcc_context* pb, const char* user_id);
 
 /** Returns the user_id for the context */
 char const* pbcc_user_id_get(struct pbcc_context* pb);
+
+/** Returns SDK identification string for the context (pnsdk/User-Agent).
+    Uses runtime sdk_version_suffix if set, else compile-time version.
+    May use pb's sdk_uname_buf when building the string.
+*/
+char const* pbcc_uname(struct pbcc_context* pb);
 
 /** Sets the `auth` for the context */
 void pbcc_set_auth(struct pbcc_context* pb, const char* auth);

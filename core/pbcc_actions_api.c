@@ -118,7 +118,7 @@ enum pubnub_res pbcc_add_action_prep(
     char const*          message_timetoken,
     char const*          value)
 {
-    char const* const uname   = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt    = PNR_OK;
 
@@ -273,7 +273,7 @@ enum pubnub_res pbcc_remove_action_prep(
     pubnub_chamebl_t     message_timetoken,
     pubnub_chamebl_t     action_timetoken)
 {
-    char const* const uname   = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt    = PNR_OK;
 
@@ -352,7 +352,7 @@ enum pubnub_res pbcc_get_actions_prep(
     char const*          end,
     size_t               limit)
 {
-    char const* const uname   = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt    = PNR_OK;
 
@@ -410,7 +410,7 @@ enum pubnub_res pbcc_get_actions_prep(
 enum pubnub_res pbcc_get_actions_more_prep(struct pbcc_context* pb)
 {
     enum pubnub_res                      rslt     = PNR_OK;
-    char const* const                    uname    = pubnub_uname();
+    char const* const                    uname    = pbcc_uname(pb);
     char const*                          user_id  = pbcc_user_id_get(pb);
     char const*                          reply    = pb->http_reply;
     int                                  replylen = pb->http_buf_len;
@@ -506,7 +506,7 @@ enum pubnub_res pbcc_history_with_actions_prep(
     char const*          end,
     size_t               limit)
 {
-    char const* const uname   = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt    = PNR_OK;
 

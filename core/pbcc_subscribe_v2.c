@@ -81,7 +81,7 @@ enum pubnub_res pbcc_subscribe_v2_prep(
         sizeof p->http_buf - p->http_buf_len,
         "/0");
 
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(p);
     char*             tt    = p->timetoken;
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);

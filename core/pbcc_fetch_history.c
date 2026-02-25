@@ -34,7 +34,7 @@ enum pubnub_res pbcc_fetch_history_prep(
     char const*          start,
     char const*          end)
 {
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     enum pubnub_res   rslt  = PNR_OK;
 
     pb->http_content_len = 0;

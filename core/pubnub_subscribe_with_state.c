@@ -38,7 +38,7 @@ static enum pubnub_res pbcc_subscribe_with_state_prep(struct pbcc_context *p,
                                 "/0/%s",
                                 p->timetoken);
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
-    char const* const uname = pubnub_uname();
+    char const* const uname = pbcc_uname(pb);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (channel_group) { ADD_URL_PARAM_TRUE_KEY(qparam, "channel-group", channel_group); }
     if (p->user_id) { ADD_URL_PARAM(qparam, uuid, p->user_id); }
