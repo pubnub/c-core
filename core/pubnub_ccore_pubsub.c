@@ -67,7 +67,7 @@ void pbcc_init(
     // Prepare unique PubNub client identifier.
     struct Pubnub_UUID uuid;
 
-    if (0 != pubnub_generate_uuid_v4_random(&uuid)) bzero(p->id, sizeof(p->id));
+    if (0 != pubnub_generate_uuid_v4_random(&uuid)) memset(p->id, 0, sizeof(p->id));
     else {
         const struct Pubnub_UUID_String str_uuid = pubnub_uuid_to_string(&uuid);
         memcpy(p->id, str_uuid.uuid, sizeof(p->id));
