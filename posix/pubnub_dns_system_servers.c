@@ -57,7 +57,7 @@ int pubnub_dns_read_system_servers_ipv4(
                     addr_start);
             }
             else {
-                dns_bytes = o_ipv4[i];
+                dns_bytes = o_ipv4[i].ipv4;
                 found     = true;
                 ++i;
             }

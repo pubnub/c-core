@@ -474,52 +474,54 @@ static void outcome_detected(struct pubnub_* pb, enum pubnub_res rslt)
 #if PUBNUB_LOG_ENABLED(ERROR)
     if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_ERROR) &&
         rslt != PNR_OK && rslt != PNR_STARTED) {
-        char const* error_msg                 = NULL;
-        bool        should_log_failed_request = false;
+        char const* error_msg = NULL;
 
         switch (rslt) {
         case PNR_ADDR_RESOLUTION_FAILED:
-            error_msg                 = "DNS resolution failed";
-            should_log_failed_request = true;
+            error_msg = "DNS resolution failed";
             break;
         case PNR_CONNECT_FAILED:
-            error_msg                 = "Connection failed";
-            should_log_failed_request = true;
+            error_msg = "Connection failed";
             break;
         case PNR_CONNECTION_TIMEOUT:
-            error_msg                 = "Connection timeout";
-            should_log_failed_request = true;
+            error_msg = "Connection timeout";
             break;
         case PNR_TIMEOUT:
-            error_msg                 = "Transaction timeout";
-            should_log_failed_request = true;
+            error_msg = "Transaction timeout";
             break;
         case PNR_WAIT_CONNECT_TIMEOUT:
-            error_msg                 = "Wait connect timeout";
-            should_log_failed_request = true;
+            error_msg = "Wait connect timeout";
             break;
         case PNR_IO_ERROR:
-            error_msg                 = "I/O error";
-            should_log_failed_request = true;
+            error_msg = "I/O error";
             break;
         case PNR_HTTP_ERROR:
             error_msg = "HTTP error";
-            /* HTTP errors are logged with response, not as failed request */
-            should_log_failed_request = false;
             break;
         case PNR_AUTHENTICATION_FAILED:
-            error_msg                 = "Authentication failed";
-            should_log_failed_request = false;
+            error_msg = "Authentication failed";
             break;
         default:
             break;
         }
 
         /* Log the failed network request if we have stored URL and appropriate
-         * error type */
+         * error type (not HTTP/auth errors which are logged differently) */
 #if PUBNUB_LOG_ENABLED(DEBUG)
-        if (should_log_failed_request && pb->core.last_request_url[0] != '\0') {
-            log_http_request(pb, PUBNUB_LOG_LOCATION, false, true, error_msg);
+        if (pb->core.last_request_url[0] != '\0') {
+            switch (rslt) {
+            case PNR_ADDR_RESOLUTION_FAILED:
+            case PNR_CONNECT_FAILED:
+            case PNR_CONNECTION_TIMEOUT:
+            case PNR_TIMEOUT:
+            case PNR_WAIT_CONNECT_TIMEOUT:
+            case PNR_IO_ERROR:
+                log_http_request(
+                    pb, PUBNUB_LOG_LOCATION, false, true, error_msg);
+                break;
+            default:
+                break;
+            }
         }
 #endif /* PUBNUB_LOG_ENABLED(DEBUG) */
 

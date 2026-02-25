@@ -100,6 +100,8 @@ void pubnub_log_network_response(
     char const*               body);
 
 
+#if PUBNUB_USE_LOGGER
+
 // ----------------------------------------------
 //         Compile-time log level stripping
 // ----------------------------------------------
@@ -145,12 +147,12 @@ void pubnub_log_network_response(
 #define PUBNUB_LOG_ENABLED(level_suffix)                                       \
     (PBLOG_LEVEL_VAL_(level_suffix) >= PUBNUB_LOG_MIN_LEVEL_VALUE_)
 
-/** Helper to create location string from file and line. */
-#define PUBNUB_LOG_LOCATION __FILE__ ":" PUBNUB_STRINGIFY(__LINE__)
-
 /** Stringify macro helper. */
 #define PUBNUB_STRINGIFY(x) PUBNUB_STRINGIFY_IMPL(x)
 #define PUBNUB_STRINGIFY_IMPL(x) #x
+
+/** Helper to create location string from file and line. */
+#define PUBNUB_LOG_LOCATION __FILE__ ":" PUBNUB_STRINGIFY(__LINE__)
 
 
 // ----------------------------------------------
@@ -303,4 +305,30 @@ void pubnub_log_network_response(
  */
 #define PUBNUB_LOG_ERROR(pb, ...) ((void)(pb))
 #endif // PUBNUB_LOG_ENABLED(ERROR)
+
+#else // !PUBNUB_USE_LOGGER
+
+/* When logger is disabled, provide no-op fallbacks.
+ * Use #ifndef guards to avoid redefinition if pubnub_ccore_pubsub.h already
+ * defined them. */
+#ifndef PUBNUB_LOG_ENABLED
+#define PUBNUB_LOG_ENABLED(level_suffix) 0
+#endif
+#ifndef PUBNUB_LOG_TRACE
+#define PUBNUB_LOG_TRACE(pb, ...)   ((void)(pb))
+#endif
+#ifndef PUBNUB_LOG_DEBUG
+#define PUBNUB_LOG_DEBUG(pb, ...)   ((void)(pb))
+#endif
+#ifndef PUBNUB_LOG_INFO
+#define PUBNUB_LOG_INFO(pb, ...)    ((void)(pb))
+#endif
+#ifndef PUBNUB_LOG_WARNING
+#define PUBNUB_LOG_WARNING(pb, ...) ((void)(pb))
+#endif
+#ifndef PUBNUB_LOG_ERROR
+#define PUBNUB_LOG_ERROR(pb, ...)   ((void)(pb))
+#endif
+
+#endif // PUBNUB_USE_LOGGER
 #endif // #ifndef PUBNUB_LOGGER_INTERNAL_H

@@ -151,6 +151,14 @@ if (WIN32 OR WIN64 OR MSVC)
 	-D _WINSOCKAPI_")
 endif ()
 
+# Strip the absolute source directory prefix from __FILE__ on MSVC so that
+# log locations show project-relative paths (e.g. core\file.c:123 instead of
+# C:\Users\...\core\file.c:123).  POSIX compilers already receive relative
+# paths from Make so __FILE__ is short there by default.
+if (MSVC)
+    add_compile_options("/d1trimfile:${CMAKE_SOURCE_DIR}/")
+endif ()
+
 
 set(LDLIBS)
 set(OS_SOURCEFILES)

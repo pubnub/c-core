@@ -180,16 +180,13 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
 
     rslt = poll(data->apoll, data->size, ms);
     if (SOCKET_ERROR == rslt) {
-        int last_err =
-#if defined(_WIN32)
-            WSAGetLastError()
-#else
-            errno
-#endif
-            ;
         PUBNUB_LOG_WARNING(data->apb[0],
                            "poll() failed with error %d (%u sockets polled)",
-                           last_err,
+#if defined(_WIN32)
+                           WSAGetLastError(),
+#else
+                           errno,
+#endif
                            (unsigned)data->size);
         return -1;
     }

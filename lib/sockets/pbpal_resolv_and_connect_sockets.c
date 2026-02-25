@@ -19,7 +19,7 @@
 #if defined(_WIN32)
 #include "windows/pubnub_get_native_socket.h"
 #include <mstcpip.h>
-#include <winsock2.h>
+#include <winsock2.h>Issue
 typedef ADDRESS_FAMILY sa_family_t;
 #else
 #include "posix/pubnub_get_native_socket.h"
@@ -58,10 +58,30 @@ typedef struct sockaddr_in sockaddr_inX_t;
 #endif /* PUBNUB_CALLBACK_API */
 
 #if PUBNUB_USE_IPV6
-/** Check whether kernel has any IPv6 routing data or not.
+/** Check whether the source address is a Global Unicast address (2000::/3).
  *
- *  @return @c true if kernel knows about routing for @c AF_INET6, @c false
- *          otherwise.
+ *  Only addresses in this range are routable on the public IPv6 internet.
+ *  Everything else — loopback (::1), link-local (fe80::/10),
+ *  ULA (fc00::/7), site-local (fec0::/10, deprecated), multicast (ff00::/8),
+ *  unspecified (::) — cannot reach global destinations.
+ */
+static bool is_global_unicast_ipv6(const struct in6_addr* addr)
+{
+    return (addr->s6_addr[0] & 0xe0) == 0x20;
+}
+
+/** Check whether the host has a usable global IPv6 route.
+ *
+ *  Creates a UDP socket, connects it to a well-known global IPv6 address and
+ *  inspects the source address the kernel selects via getsockname().
+ *
+ *  On Windows the IPv6 stack is always enabled and connect() on a UDP socket
+ *  can succeed even without real connectivity (e.g. routed through loopback
+ *  by a VPN). The getsockname() check catches this: the kernel will select a
+ *  ULA (fd..) or loopback (::1) source address instead of a global one.
+ *
+ *  @return @c true if the host can likely reach global IPv6 addresses,
+ *          @c false otherwise.
  */
 static bool is_ipv6_supported(void)
 {
@@ -73,10 +93,21 @@ static bool is_ipv6_supported(void)
     const pb_socket_t udp_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (SOCKET_INVALID == udp_socket) return false;
 
-    int result = connect(udp_socket, (struct sockaddr*)&sin6, sizeof(sin6));
+    if (0 != connect(udp_socket, (struct sockaddr*)&sin6, sizeof(sin6))) {
+        socket_close(udp_socket);
+        return false;
+    }
+
+    /* Ask the kernel which source address it chose for this destination. */
+    struct sockaddr_in6 local = { 0 };
+    socklen_t           len   = sizeof(local);
+    if (0 != getsockname(udp_socket, (struct sockaddr*)&local, &len)) {
+        socket_close(udp_socket);
+        return false;
+    }
     socket_close(udp_socket);
 
-    return 0 == result;
+    return is_global_unicast_ipv6(&local.sin6_addr);
 }
 
 #ifdef PUBNUB_CALLBACK_API
@@ -367,17 +398,21 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(
         break;
 #if PUBNUB_USE_IPV6
     case AF_INET6: {
-        char str[INET6_ADDRSTRLEN];
         sockaddr_size                           = sizeof(struct sockaddr_in6);
         ((struct sockaddr_in6*)dest)->sin6_port = htons(port);
-        PUBNUB_LOG_TRACE(
-            pb,
-            "Connect to IPv6: %s",
-            inet_ntop(
-                AF_INET6,
-                &(((struct sockaddr_in6*)dest)->sin6_addr),
-                str,
-                INET6_ADDRSTRLEN));
+#if PUBNUB_LOG_ENABLED(TRACE)
+        {
+            char str[INET6_ADDRSTRLEN];
+            PUBNUB_LOG_TRACE(
+                pb,
+                "Connect to IPv6: %s",
+                inet_ntop(
+                    AF_INET6,
+                    &(((struct sockaddr_in6*)dest)->sin6_addr),
+                    str,
+                    INET6_ADDRSTRLEN));
+        }
+#endif
     } break;
 #endif
     default:
@@ -560,16 +595,16 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
 #endif /* defined(_WIN32) */
             }
             else {
+#if PUBNUB_LOG_ENABLED(TRACE)
                 char     str[INET6_ADDRSTRLEN];
                 uint8_t* ipv6 =
                     spare_addresses->ipv6_addresses[spare_addresses->ipv6_index]
                         .ipv6;
-#if PUBNUB_USE_LOGGER
                 PUBNUB_LOG_TRACE(
                     pb,
                     "Spare IPv6 address expired: %s",
                     inet_ntop(AF_INET6, ipv6, str, INET6_ADDRSTRLEN));
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
                 rslt = pbpal_connect_failed;
             }
 
@@ -642,16 +677,16 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
 #endif /* defined(_WIN32) */
         }
         else {
+#if PUBNUB_LOG_ENABLED(TRACE)
             char     str[INET_ADDRSTRLEN];
             uint8_t* ipv4 =
                 spare_addresses->ipv4_addresses[spare_addresses->ipv4_index]
                     .ipv4;
-#if PUBNUB_USE_LOGGER
             PUBNUB_LOG_TRACE(
                 pb,
                 "Spare IPv4 address expired: %s",
                 inet_ntop(AF_INET, ipv4, str, INET_ADDRSTRLEN));
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
             rslt = pbpal_connect_failed;
         }
 

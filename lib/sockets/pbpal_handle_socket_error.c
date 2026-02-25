@@ -15,8 +15,8 @@ void pbpal_report_error_from_environment(
     char const* file,
     int         line)
 {
+#if PUBNUB_LOG_ENABLED(WARNING)
     char const* err_str;
-
 #if HAVE_STRERROR_R
     char errstr_r[1024];
     strerror_r(errno, errstr_r, sizeof errstr_r / sizeof errstr_r[0]);
@@ -28,7 +28,6 @@ void pbpal_report_error_from_environment(
 #else
     err_str = strerror(errno);
 #endif
-#if PUBNUB_LOG_ENABLED(WARNING)
     if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_WARNING)) {
         pubnub_log_value_t data = pubnub_log_value_map_init();
         PUBNUB_LOG_MAP_SET_NUMBER(&data, errno, code)

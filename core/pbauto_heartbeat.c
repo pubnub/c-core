@@ -189,20 +189,24 @@ static void heartbeat_thump(pubnub_t* pb, pubnub_t* heartbeat_pb)
          (pb_strnlen_s(channel, PUBNUB_MAX_OBJECT_LENGTH) > 0)) ||
         ((channel_group != NULL) &&
          (pb_strnlen_s(channel_group, PUBNUB_MAX_OBJECT_LENGTH) > 0))) {
-        enum pubnub_res res;
         PUBNUB_LOG_TRACE(
             pb, "Sending heartbeat for '%s' PubNub context.", pb->core.id);
         copy_context_settings(heartbeat_pb, pb);
-        res = pubnub_heartbeat(heartbeat_pb, channel, channel_group);
 #if PUBNUB_LOG_ENABLED(ERROR)
-        if ((res != PNR_STARTED) && (res != PNR_OK)) {
-            pubnub_log_error(
-                heartbeat_pb,
-                PUBNUB_LOG_LOCATION,
-                res,
-                "Unexpected heartbeat result",
-                pubnub_res_2_string(res));
+        {
+            enum pubnub_res res =
+                pubnub_heartbeat(heartbeat_pb, channel, channel_group);
+            if ((res != PNR_STARTED) && (res != PNR_OK)) {
+                pubnub_log_error(
+                    heartbeat_pb,
+                    PUBNUB_LOG_LOCATION,
+                    res,
+                    "Unexpected heartbeat result",
+                    pubnub_res_2_string(res));
+            }
         }
+#else
+        pubnub_heartbeat(heartbeat_pb, channel, channel_group);
 #endif  // PUBNUB_LOG_ENABLED(ERROR)
         /** Used in sync environment while for callback it's an empty macro */
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
