@@ -17,7 +17,7 @@ changelog:
       - type: feature
         text: "Added way to set pn_sdk in runtime."
       - type: bug
-        text: "Fix issue because of which `pubnub_unsubscribe_with_subscription` and `pubnub_unsubscribe_with_subscription_set` nullified passed pointer even if "user" code still owns it."
+        text: "Fix issue because of which `pubnub_unsubscribe_with_subscription` and `pubnub_unsubscribe_with_subscription_set` nullified passed pointer even if 'user' code still owns it."
       - type: bug
         text: "Save mutex to local variable before freeing subscription and subscription_set to avoid dereferencing freed memory on unlock/destroy."
       - type: bug
