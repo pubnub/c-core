@@ -17,10 +17,6 @@
 #define PUBNUB_USE_IPV6 0
 #endif
 
-#if !defined(PUBNUB_USE_LOG_CALLBACK)
-#define PUBNUB_USE_LOG_CALLBACK 0
-#endif
-
 #if !defined(PUBNUB_SET_DNS_SERVERS)
 #define PUBNUB_SET_DNS_SERVERS 0
 #endif
@@ -606,6 +602,20 @@ struct pubnub_ {
     /** The PubNub API enforcement policy. */
     enum pubnub_api_enforcement api_policy;
 #endif
+#if PUBNUB_USE_LOGGER
+    /** Previous FSM state.
+        Value is used to prevent too frequent trace output if the state didn't
+        change.
+     */
+    enum pubnub_state previous_state;
+    /** Previous I/O result from polling functions.
+        Used to suppress repetitive trace logs when the result hasn't changed
+        within the same FSM state.
+     */
+    int previous_io_result;
+/** Sentinel value for previous_io_result: no result recorded yet. */
+#define PB_IO_RESULT_NONE ((int)-99999)
+#endif // #if PUBNUB_USE_LOGGER
 };
 
 
@@ -637,6 +647,11 @@ int pbntf_requeue_for_processing(pubnub_t* pb);
 int pbntf_watch_in_events(pubnub_t* pb);
 int pbntf_watch_out_events(pubnub_t* pb);
 
+
+/** Returns a string representation of the @p state enum value.
+    Used for debugging / logging.
+ */
+char const* pbcc_state_2_string(enum pubnub_state state);
 
 /** Internal function. Checks if the given pubnub context pointer
     is valid.

@@ -59,7 +59,8 @@ enum DNSqueryType {
 
     @retval 0 success, -1 on error
  */
-int pbdns_prepare_dns_request(uint8_t*          buf,
+int pbdns_prepare_dns_request(pubnub_t*         pb,
+                              uint8_t*          buf,
                               size_t            buf_size,
                               char const*       host,
                               int*              to_send,
@@ -74,7 +75,8 @@ int pbdns_prepare_dns_request(uint8_t*          buf,
 
     @retval 0 success, -1 on error
  */
-int pbdns_pick_resolved_addresses(uint8_t const*     buf,
+int pbdns_pick_resolved_addresses(pubnub_t*          pb,
+                                  uint8_t const*     buf,
                                   size_t             msg_size,
                                   enum DNSqueryType* o_query_type,
                                   struct pubnub_ipv4_address* resolved_addr_ipv4 IPV6_ADDR_ARGUMENT_DECLARATION

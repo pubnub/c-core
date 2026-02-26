@@ -9,8 +9,8 @@ include ../make/common/preprocessing_defaults.mk
 #                      Default preprocessor flag values                       #
 ###############################################################################
 
-# Logger level.
-LOG_LEVEL ?= $(DEFAULT_LOG_LEVEL)
+# Minimum logger level.
+LOG_MIN_LEVEL ?= $(DEFAULT_LOG_MIN_LEVEL)
 
 # Whether address sanitizer should be enabled or not.
 ASAN ?= $(DEFAULT_ASAN)
@@ -143,8 +143,18 @@ USE_SUBSCRIBE_EVENT_ENGINE ?= $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 # Whether subscribe v2 feature should be enabled or not.
 USE_SUBSCRIBE_V2 ?= $(DEFAULT_USE_SUBSCRIBE_V2)
 
-# Whether user defined callback for logging should be enabled or not.
-USE_LOG_CALLBACK ?= $(DEFAULT_USE_LOG_CALLBACK)
+# Whether advanced logger should be enabled or not.
+USE_LOGGER ?= $(DEFAULT_USE_LOGGER)
+
+# Whether default (stdio/platform) logger should be enabled or not.
+#
+# Important: USE_LOGGER must be enabled to use this.
+USE_DEFAULT_LOGGER ?= $(DEFAULT_USE_DEFAULT_LOGGER)
+ifeq ($(USE_DEFAULT_LOGGER), 1)
+	ifeq ($(USE_LOGGER), 0)
+    	$(error "You must enable USE_LOGGER to use USE_DEFAULT_LOGGER!")
+	endif
+endif
 
 # Additional user-provided compiler flags (C/C++).
 USER_C_FLAGS ?=

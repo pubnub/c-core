@@ -9,10 +9,17 @@
 
 #include "lib/pb_extern.h"
 
+struct pbcc_context;
+
 /** Url-encodes string @p what to user provided @p buffer which has its @p buffer_size.
+    @param pb          Pointer to the PubNub internal context (for logging).
+    @param buffer      Destination buffer.
+    @param what        String to URL-encode.
+    @param buffer_size Size of the destination buffer.
+    @param pt          Transaction type (affects which characters are encoded).
     @retval length of url-encoded string on success,
     @retval -1 on error(url-encoded string too long for buffer provided)
  */
-PUBNUB_EXTERN int pubnub_url_encode(char* buffer, char const* what, size_t buffer_size, enum pubnub_trans pt);
+PUBNUB_EXTERN int pubnub_url_encode(struct pbcc_context* pb, char* buffer, char const* what, size_t buffer_size, enum pubnub_trans pt);
 
 #endif /* !defined INC_PUBNUB_URL_ENCODE */

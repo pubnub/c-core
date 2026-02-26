@@ -10,7 +10,6 @@
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 
 #include "pbpal.h"
 #include "pubnub_version_internal.h"
@@ -18,6 +17,7 @@
 #include "test/pubnub_test_helper.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -334,7 +334,7 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
         PUBNUB_LOG_TRACE(
-            "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
+            pb, "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
         pb->unreadlen = recvres;
         pb->left -= recvres;
     }
@@ -344,17 +344,17 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
         c = *pb->ptr++;
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
+            PUBNUB_LOG_TRACE(pb, "pb=%p, newline found, line length: %d, ",
                              pb,
                              pbpal_read_len(pb));
-            WATCH_USHORT(pb->unreadlen);
+            PUBNUB_LOG_DEBUG(pb, "%hu bytes received.\n", pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
     }
 
     if (pb->left == 0) {
-        PUBNUB_LOG_ERROR(
+        PUBNUB_LOG_ERROR(pb,
             "pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
         pb->sock_state = STATE_NONE;
         return PNR_TX_BUFF_TOO_SMALL;
@@ -370,15 +370,15 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
     PUBNUB_ASSERT_UINT_OPT(n, >, 0);
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
-    WATCH_USHORT(pb->unreadlen);
-    WATCH_USHORT(pb->left);
+    PUBNUB_LOG_DEBUG(pb, "%hu bytes received.\n", pb->unreadlen);
+    PUBNUB_LOG_DEBUG(pb, "Read buffer size left: %hu bytes\n", pb->left);
     if (pb->unreadlen > 0) {
         PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->unreadlen)
                           <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    WATCH_UINT(distance);
+    PUBNUB_LOG_DEBUG(pb, "%u bytes is left to read.\n", distance);
     PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
                        ==,
                        sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);

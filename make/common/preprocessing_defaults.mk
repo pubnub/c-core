@@ -11,8 +11,8 @@
 # By default used GCC/Clang-compatible.
 DEFAULT_COMPILER_TYPE = $(CC)
 
-# Logger level.
-DEFAULT_LOG_LEVEL = WARNING
+# Minimum logger level.
+DEFAULT_LOG_MIN_LEVEL = WARNING
 
 # Whether address sanitizer should be enabled or not.
 DEFAULT_ASAN = 0
@@ -83,5 +83,10 @@ DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE = 0
 # Whether subscribe v2 feature should be enabled or not.
 DEFAULT_USE_SUBSCRIBE_V2 = 1
 
-# Whether user defined callback for logging should be enabled or not.
-DEFAULT_USE_LOG_CALLBACK = 0
+# Whether advanced logger should be enabled or not.
+DEFAULT_USE_LOGGER = 1
+
+# Whether default (stdio/platform) logger should be enabled or not.
+#
+# Important: USE_LOGGER must be enabled to use this.
+DEFAULT_USE_DEFAULT_LOGGER = 1

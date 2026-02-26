@@ -1,8 +1,41 @@
 name: c-core
 schema: 1
-version: "6.2.0"
+version: "7.0.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-02-26
+    version: v7.0.0
+    changes:
+      - type: feature
+        text: "BREAKING CHANGES: Added support for extendable logging, which can log structured data and allow to register customer loggers."
+      - type: feature
+        text: "Added default logger for POSIX/Windows (`stdio`), and separate for FreeRTOS and Harmony."
+      - type: feature
+        text: "Now request / response is logged as single log entries."
+      - type: feature
+        text: "Added mechanism to drastically reduce the amount of logs generated with `sync` await interface."
+      - type: feature
+        text: "Added way to set pn_sdk in runtime."
+      - type: bug
+        text: "Fix issue because of which `pubnub_unsubscribe_with_subscription` and `pubnub_unsubscribe_with_subscription_set` nullified passed pointer even if 'user' code still owns it."
+      - type: bug
+        text: "Save mutex to local variable before freeing subscription and subscription_set to avoid dereferencing freed memory on unlock/destroy."
+      - type: bug
+        text: "Unregister PubNub callback in `pbcc_subscribe_ee_free()` so late async completions do not invoke it with freed `ee` as user_data."
+      - type: bug
+        text: "`pbarray_remove()` uses pointer equality; match by (callback, user_data) and remove by index with `pbarray_remove_element_at()` so the intended listener is actually removed."
+      - type: bug
+        text: "Move NULL check for `cryptor_header` before the first dereference in `pbcc_cryptor_header_v1_to_alloc_block` and remove the redundant check."
+      - type: bug
+        text: "Guard `subs` dereference in `pubnub_subscription_set_union` and `pubnub_subscription_set_subtract` with a NULL check before the loop."
+      - type: bug
+        text: "Fix adding long message actions by disabling Gzip compression."
+      - type: bug
+        text: "Access `.ipv4` member when assigning parsed address to `dns_bytes`."
+      - type: bug
+        text: "Use `getsockname()` to verify a Global Unicast source (2000::/3) instead of trusting `connect()`."
+      - type: improvement
+        text: "Fixed issues because of which TLS read returned right away to the state machine without even waiting for `select`."
   - date: 2025-12-10
     version: v6.2.0
     changes:
@@ -1090,7 +1123,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1156,7 +1189,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1222,7 +1255,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1284,7 +1317,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1345,7 +1378,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1401,7 +1434,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"
@@ -1454,7 +1487,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v6.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.0
             requires:
               -
                 name: "miniz"

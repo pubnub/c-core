@@ -6,7 +6,6 @@
 
 #include "pubnub_internal.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
 #include "core/pubnub_timer_list.h"
 #include "core/pbpal.h"
 
@@ -21,12 +20,12 @@
 
 
 struct SocketWatcherData {
-    struct pbpal_poll_data* poll pubnub_guarded_by(mutw);
+    struct pbpal_poll_data* poll    pubnub_guarded_by(mutw);
     bool stop_socket_watcher_thread pubnub_guarded_by(stoplock);
-    pthread_mutex_t mutw;
-    pthread_mutex_t timerlock;
-    pthread_mutex_t stoplock;
-    pthread_t       thread_id;
+    pthread_mutex_t                 mutw;
+    pthread_mutex_t                 timerlock;
+    pthread_mutex_t                 stoplock;
+    pthread_t                       thread_id;
 #if PUBNUB_TIMERS_API
     pubnub_t* timer_head pubnub_guarded_by(timerlock);
 #endif
@@ -38,12 +37,12 @@ static struct SocketWatcherData m_watcher;
 
 
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
-#define MAYBE_INLINE 
-#else 
-#if __STDC_VERSION__ >= 199901L 
-#define MAYBE_INLINE static inline 
+#define MAYBE_INLINE
 #else
-#define MAYBE_INLINE static 
+#if __STDC_VERSION__ >= 199901L
+#define MAYBE_INLINE static inline
+#else
+#define MAYBE_INLINE static
 #endif
 #endif // PUBNUB_NTF_RUNTIME_SELECTION
 
@@ -58,25 +57,23 @@ MAYBE_INLINE int pbntf_watch_out_events_callback(pubnub_t* pbp)
 {
     return pbpal_ntf_watch_out_events(m_watcher.poll, pbp);
 }
-   
+
 
 void* socket_watcher_thread(void* arg)
 {
-    const int max_poll_ms = 100;
+    const int       max_poll_ms = 100;
     struct timespec prev_timspec;
     monotonic_clock_get_time(&prev_timspec);
 
     for (;;) {
         struct timespec timspec;
-        bool stop_thread;
-        
+        bool            stop_thread;
+
         pthread_mutex_lock(&m_watcher.stoplock);
         stop_thread = m_watcher.stop_socket_watcher_thread;
         pthread_mutex_unlock(&m_watcher.stoplock);
-        if (stop_thread) {
-            break;
-        }
-        
+        if (stop_thread) { break; }
+
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
         monotonic_clock_get_time(&timspec);
@@ -88,14 +85,6 @@ void* socket_watcher_thread(void* arg)
         if (PUBNUB_TIMERS_API) {
             int elapsed = pbtimespec_elapsed_ms(prev_timspec, timspec);
             if (elapsed > 0) {
-                if (elapsed > max_poll_ms + 5) {
-                    PUBNUB_LOG_TRACE("elapsed = %d: prev_timspec={%ld, %ld}, timspec={%ld,%ld}\n",
-                                     elapsed,
-                                     prev_timspec.tv_sec, prev_timspec.tv_nsec,
-                                     timspec.tv_sec, timspec.tv_nsec
-                                     
-                        );
-                }
                 pthread_mutex_lock(&m_watcher.timerlock);
                 pbntf_handle_timer_list(elapsed, &m_watcher.timer_head);
                 pthread_mutex_unlock(&m_watcher.timerlock);
@@ -112,14 +101,14 @@ void* socket_watcher_thread(void* arg)
 void pubnub_stop(void)
 {
     pbauto_heartbeat_stop();
-    
+
     pthread_mutex_lock(&m_watcher.stoplock);
     m_watcher.stop_socket_watcher_thread = true;
     pthread_mutex_unlock(&m_watcher.stoplock);
 }
-    
 
-MAYBE_INLINE int pbntf_init_callback(void)
+
+MAYBE_INLINE int pbntf_init_callback(pubnub_t* pb)
 {
     int                 rslt;
     pthread_mutexattr_t attr;
@@ -127,32 +116,41 @@ MAYBE_INLINE int pbntf_init_callback(void)
     rslt = pthread_mutexattr_init(&attr);
     if (rslt != 0) {
         PUBNUB_LOG_ERROR(
-            "Failed to initialize mutex attributes, error code: %d", rslt);
+            pb,
+            "Mutex attributes initialization failed with error code: %d",
+            rslt);
         return -1;
     }
     rslt = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("Failed to set mutex attribute type, error code: %d",
-                         rslt);
+        PUBNUB_LOG_ERROR(
+            pb, "Mutex attribute type set failed with error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher.stoplock, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("Failed to initialize 'stoplock' mutex, error code: %d", rslt);
+        PUBNUB_LOG_ERROR(
+            pb,
+            "'stoplock' mutex initialization failed with error code: %d",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher.mutw, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("Failed to initialize mutex, error code: %d", rslt);
+        PUBNUB_LOG_ERROR(
+            pb, "Mutex initialization failed with error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.stoplock);
         return -1;
     }
     rslt = pthread_mutex_init(&m_watcher.timerlock, &attr);
     if (rslt != 0) {
-        PUBNUB_LOG_ERROR("Failed to initialize mutex for timers, error code: %d", rslt);
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Timer's mutex initialization failed with error code: %d",
+            rslt);
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
         pthread_mutex_destroy(&m_watcher.stoplock);
@@ -170,15 +168,17 @@ MAYBE_INLINE int pbntf_init_callback(void)
     pbpal_ntf_callback_queue_init(&m_watcher.queue);
     m_watcher.stop_socket_watcher_thread = false;
 
-#if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB)                              \
-    && (PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB > 0)
+#if defined(PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB) &&                           \
+    (PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB > 0)
     {
         pthread_attr_t thread_attr;
 
         rslt = pthread_attr_init(&thread_attr);
         if (rslt != 0) {
             PUBNUB_LOG_ERROR(
-                "Failed to initialize thread attributes, error code: %d\n", rslt);
+                pb,
+                "Thread attributes initialization failed with error code: %d",
+                rslt);
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
@@ -191,9 +191,10 @@ MAYBE_INLINE int pbntf_init_callback(void)
             &thread_attr, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024);
         if (rslt != 0) {
             PUBNUB_LOG_ERROR(
-                "Failed to set thread stack size to %d kb, error code: %d\n",
+                pb,
+                "Thread stack size change to %d kb failed with error code: %d",
                 PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB,
-                rslt);
+                error);
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
@@ -207,7 +208,7 @@ MAYBE_INLINE int pbntf_init_callback(void)
             &m_watcher.thread_id, &thread_attr, socket_watcher_thread, NULL);
         if (rslt != 0) {
             PUBNUB_LOG_ERROR(
-                "Failed to create the polling thread, error code: %d\n", rslt);
+                pb, "Polling thread create failed with error code: %d", rslt);
             pthread_mutexattr_destroy(&attr);
             pthread_mutex_destroy(&m_watcher.mutw);
             pthread_mutex_destroy(&m_watcher.timerlock);
@@ -219,11 +220,11 @@ MAYBE_INLINE int pbntf_init_callback(void)
         }
     }
 #else
-    rslt =
-        pthread_create(&m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
+    rslt = pthread_create(
+        &m_watcher.thread_id, NULL, socket_watcher_thread, NULL);
     if (rslt != 0) {
         PUBNUB_LOG_ERROR(
-            "Failed to create the polling thread, error code: %d\n", rslt);
+            pb, "Polling thread create failed with error code: %d", rslt);
         pthread_mutexattr_destroy(&attr);
         pthread_mutex_destroy(&m_watcher.mutw);
         pthread_mutex_destroy(&m_watcher.timerlock);
@@ -258,9 +259,8 @@ MAYBE_INLINE int pbntf_got_socket_callback(pubnub_t* pb)
 
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->transaction_timeout_ms);
         pthread_mutex_unlock(&m_watcher.timerlock);
     }
 
@@ -287,9 +287,8 @@ MAYBE_INLINE void pbntf_start_wait_connect_timer_callback(pubnub_t* pb)
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->wait_connect_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->wait_connect_timeout_ms);
         pthread_mutex_unlock(&m_watcher.timerlock);
     }
 }
@@ -300,9 +299,8 @@ MAYBE_INLINE void pbntf_start_transaction_timer_callback(pubnub_t* pb)
     if (PUBNUB_TIMERS_API) {
         pthread_mutex_lock(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->transaction_timeout_ms);
         pthread_mutex_unlock(&m_watcher.timerlock);
     }
 }
@@ -328,10 +326,10 @@ int pbntf_watch_out_events(pubnub_t* pbp)
     return pbntf_watch_out_events_callback(pbp);
 }
 
- 
+
 int pbntf_init(pubnub_t* pb)
 {
-    return pbntf_init_callback();
+    return pbntf_init_callback(pb);
 }
 
 
@@ -347,7 +345,7 @@ int pbntf_requeue_for_processing(pubnub_t* pb)
 }
 
 
-int pbntf_got_socket(pubnub_t* pb) 
+int pbntf_got_socket(pubnub_t* pb)
 {
     return pbntf_got_socket_callback(pb);
 }
@@ -365,7 +363,7 @@ void pbntf_start_wait_connect_timer(pubnub_t* pb)
 }
 
 
-void pbntf_start_transaction_timer(pubnub_t* pb) 
+void pbntf_start_transaction_timer(pubnub_t* pb)
 {
     pbntf_start_transaction_timer_callback(pb);
 }
@@ -377,5 +375,3 @@ void pbntf_update_socket(pubnub_t* pb)
 }
 
 #endif // !PUBNUB_NTF_RUNTIME_SELECTION
-
-

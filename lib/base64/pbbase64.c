@@ -2,15 +2,15 @@
 #include "lib/base64/pbbase64.h"
 
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
 
 #include <string.h>
 
 
-int pbbase64_encode(pubnub_bymebl_t                data,
-                    char*                          s,
-                    size_t*                        n,
-                    struct pbbase64_options const* options)
+int pbbase64_encode(
+    pubnub_bymebl_t                data,
+    char*                          s,
+    size_t*                        n,
+    struct pbbase64_options const* options)
 {
     size_t         i;
     char*          out    = s;
@@ -23,9 +23,7 @@ int pbbase64_encode(pubnub_bymebl_t                data,
     PUBNUB_ASSERT_OPT(options != NULL);
     PUBNUB_ASSERT_OPT(options->alphabet != NULL);
 
-    if (*n < pbbase64_char_array_size_for_encoding(length)) {
-        return -1;
-    }
+    if (*n < pbbase64_char_array_size_for_encoding(length)) { return -1; }
 
     for (i = 0; i < length; i += 3) {
         uint8_t b = (in[0] & 0x0FC) >> 2;
@@ -43,9 +41,7 @@ int pbbase64_encode(pubnub_bymebl_t                data,
             }
             else {
                 *out++ = options->alphabet[b];
-                if (options->separator) {
-                    *out++ = options->separator;
-                }
+                if (options->separator) { *out++ = options->separator; }
             }
         }
         else {
@@ -76,8 +72,9 @@ size_t pbbase64_char_array_size_for_encoding(size_t length)
 }
 
 
-pubnub_bymebl_t pbbase64_encode_alloc(pubnub_bymebl_t                data,
-                                      struct pbbase64_options const* options)
+pubnub_bymebl_t pbbase64_encode_alloc(
+    pubnub_bymebl_t                data,
+    struct pbbase64_options const* options)
 {
     pubnub_bymebl_t result;
     result.size = pbbase64_char_array_size_for_encoding(data.size);
@@ -88,7 +85,7 @@ pubnub_bymebl_t pbbase64_encode_alloc(pubnub_bymebl_t                data,
     }
     if (0 != pbbase64_encode(data, (char*)result.ptr, &result.size, options)) {
         free(result.ptr);
-        result.ptr = NULL;
+        result.ptr  = NULL;
         result.size = 0;
     }
     return result;
@@ -136,10 +133,11 @@ size_t pbbase64_decoded_length(size_t n)
 }
 
 
-int pbbase64_decode(char const*                    s,
-                    size_t                         n,
-                    pubnub_bymebl_t*               data,
-                    struct pbbase64_options const* options)
+int pbbase64_decode(
+    char const*                    s,
+    size_t                         n,
+    pubnub_bymebl_t*               data,
+    struct pbbase64_options const* options)
 {
     size_t      i;
     char const* alphabet;
@@ -153,17 +151,11 @@ int pbbase64_decode(char const*                    s,
     alphabet = options->alphabet;
     PUBNUB_ASSERT_OPT(alphabet != NULL);
     PUBNUB_ASSERT(
-        0 == strncmp(alphabet, COMMON_BASE64_ABC, sizeof COMMON_BASE64_ABC - 1));
+        0 ==
+        strncmp(alphabet, COMMON_BASE64_ABC, sizeof COMMON_BASE64_ABC - 1));
 
     out = data->ptr;
-    if (pbbase64_decoded_length(n) > data->size) {
-        PUBNUB_LOG_ERROR("pbbase64_decode(): Buffer to decode too small, n = "
-                         "%u, data->size = %u, decoded_length = %u\n",
-                         (unsigned)n,
-                         (unsigned)data->size,
-                         (unsigned)pbbase64_decoded_length(n));
-        return -1;
-    }
+    if (pbbase64_decoded_length(n) > data->size) { return -1; }
 
     memcpy(decode_tab, decode_tab_C, sizeof decode_tab);
     decode_tab[(int)alphabet[62]] = 62;
@@ -172,30 +164,25 @@ int pbbase64_decode(char const*                    s,
     for (i = 0; i < n; i += 4) {
         uint8_t word[4];
         word[0] = decode_tab[(int)*s++];
-        if ((word[0] == 64) && !options->ignore_invalid_char) {
-            return -12;
-        }
+        if ((word[0] == 64) && !options->ignore_invalid_char) { return -12; }
         word[1] = decode_tab[(int)*s++];
-        if ((word[1] == 64) && !options->ignore_invalid_char) {
-            return -13;
-        }
+        if ((word[1] == 64) && !options->ignore_invalid_char) { return -13; }
         *out++  = (word[0] << 2) | (word[1] >> 4);
         word[2] = decode_tab[(int)*s++];
         word[3] = decode_tab[(int)*s++];
         if (word[2] < 64) {
             *out++ = (word[1] << 4) | (word[2] >> 2);
-            if (word[3] < 64) {
-                *out++ = (word[2] << 6) | word[3];
-            }
+            if (word[3] < 64) { *out++ = (word[2] << 6) | word[3]; }
             else {
-                if ((s[-1] != options->separator)
-                    && !options->ignore_invalid_char) {
+                if ((s[-1] != options->separator) &&
+                    !options->ignore_invalid_char) {
                     return -14;
                 }
             }
         }
         else {
-            if ((s[-2] != options->separator) && !options->ignore_invalid_char) {
+            if ((s[-2] != options->separator) &&
+                !options->ignore_invalid_char) {
                 return -15;
             }
         }
@@ -207,17 +194,19 @@ int pbbase64_decode(char const*                    s,
 }
 
 
-int pbbase64_decode_str(char const*                    s,
-                        pubnub_bymebl_t*               data,
-                        struct pbbase64_options const* options)
+int pbbase64_decode_str(
+    char const*                    s,
+    pubnub_bymebl_t*               data,
+    struct pbbase64_options const* options)
 {
     return pbbase64_decode(s, strlen(s), data, options);
 }
 
 
-pubnub_bymebl_t pbbase64_decode_alloc(char const*                    s,
-                                      size_t                         n,
-                                      struct pbbase64_options const* options)
+pubnub_bymebl_t pbbase64_decode_alloc(
+    char const*                    s,
+    size_t                         n,
+    struct pbbase64_options const* options)
 {
     pubnub_bymebl_t result;
     result.size = pbbase64_decoded_length(n) + 1; /* +1 "just in case" */
@@ -229,14 +218,15 @@ pubnub_bymebl_t pbbase64_decode_alloc(char const*                    s,
     if (0 != pbbase64_decode(s, n, &result, options)) {
         free(result.ptr);
         result.size = 0;
-        result.ptr = NULL;
+        result.ptr  = NULL;
     }
     return result;
 }
 
 
-pubnub_bymebl_t pbbase64_decode_alloc_str(char const*                    s,
-                                          struct pbbase64_options const* options)
+pubnub_bymebl_t pbbase64_decode_alloc_str(
+    char const*                    s,
+    struct pbbase64_options const* options)
 {
     return pbbase64_decode_alloc(s, strlen(s), options);
 }

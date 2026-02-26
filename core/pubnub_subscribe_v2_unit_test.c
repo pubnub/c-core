@@ -1,5 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pubnub_memory_block.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #if defined PUBNUB_USE_SUBSCRIBE_V2
 
@@ -14,7 +16,6 @@
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
-#include "pubnub_log.h"
 #include "pubnub_subscribe_v2_message.h"
 #include "pubnub_subscribe_v2.h"
 #include "test/pubnub_test_mocks.h"

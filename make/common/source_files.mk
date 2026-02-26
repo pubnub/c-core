@@ -22,7 +22,6 @@ CORE_SOURCE_FILES = \
     ../core/pubnub_generate_uuid_v3_md5.c             \
     ../core/pubnub_helper.c                           \
     ../core/pubnub_json_parse.c                       \
-    ../core/pubnub_log.c                              \
     ../core/pubnub_memory_block.c                     \
     ../core/pubnub_netcore.c                          \
     ../core/pubnub_pubsubapi.c                        \
@@ -354,3 +353,14 @@ SUBSCRIBE_EVENT_ENGINE_SOURCE_FILES = \
 SUBSCRIBE_V2_SOURCE_FILES = \
     ../core/pbcc_subscribe_v2.c   \
     ../core/pubnub_subscribe_v2.c
+
+
+# Advanced logger core source files.
+LOGGER_SOURCE_FILES = \
+    ../core/pbcc_logger_manager.c \
+    ../core/pubnub_log_value.c    \
+    ../core/pubnub_logger.c
+
+# `LOGGER_SOURCE_FILES` extension for default POSIX / Windows logger.
+LOGGER_DEFAULT_STDIO_SOURCE_FILES = \
+    ../core/pubnub_stdio_logger.c

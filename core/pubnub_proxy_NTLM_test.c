@@ -6,7 +6,9 @@
 #include "pubnub_coreapi.h"
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
-#include "pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "pubnub_logger_internal.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include "pbpal.h"
 #include "pubnub_test_helper.h"
@@ -16,6 +18,7 @@
 #include "pubnub_keep_alive.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -74,11 +77,16 @@ static void wait_milliseconds(unsigned time_in_milliseconds)
     clock_t  start = clock();
     unsigned time_passed_in_milliseconds;
     do {
-        time_passed_in_milliseconds = (clock() - start) / (CLOCKS_PER_SEC/1000);
+        time_passed_in_milliseconds = (clock() - start) /
+                                      (CLOCKS_PER_SEC / 1000);
     } while (time_passed_in_milliseconds < time_in_milliseconds);
 }
 
-void expect(const char* function_name, pubnub_t* pb, const char* data, int return_value)
+void expect(
+    const char* function_name,
+    pubnub_t*   pb,
+    const char* data,
+    int         return_value)
 {
     mock_node_t* new_node_mocked = (mock_node_t*)malloc(sizeof(mock_node_t));
 
@@ -107,38 +115,36 @@ int mock(const char* function_name, pubnub_t* pb, const char* data)
     int          return_value;
     bool         rslt;
 
-    while ((node_mocked != NULL)
-           && (strcmp(node_mocked->function_name, function_name) != 0)) {
+    while ((node_mocked != NULL) &&
+           (strcmp(node_mocked->function_name, function_name) != 0)) {
         node_mocked = node_mocked->next;
     }
     if (node_mocked == NULL) {
-        printf("----->Mocked function [%s] did not have an expectation that it "
-               "would be called!\n",
-               function_name);
+        printf(
+            "----->Mocked function [%s] did not have an expectation that it "
+            "would be called!\n",
+            function_name);
         m_failures++;
         return 0;
     }
     return_value = node_mocked->return_value;
     if (node_mocked->next == NULL) {
         m_list_tail_mocked = node_mocked->previous;
-        if (m_list_tail_mocked != NULL) {
-            m_list_tail_mocked->next = NULL;
-        }
+        if (m_list_tail_mocked != NULL) { m_list_tail_mocked->next = NULL; }
     }
     else {
         node_mocked->next->previous = node_mocked->previous;
     }
     if (node_mocked->previous == NULL) {
         m_list_head_mocked = node_mocked->next;
-        if (m_list_head_mocked != NULL) {
-            m_list_head_mocked->previous = NULL;
-        }
+        if (m_list_head_mocked != NULL) { m_list_head_mocked->previous = NULL; }
     }
     else {
         node_mocked->previous->next = node_mocked->next;
     }
 
-    PUBNUB_LOG_TRACE("[%s][%s]\nexpected:[%s]\n", function_name, data, node_mocked->data);
+    PUBNUB_LOG_TRACE(
+        pb, "[%s][%s]\nexpected: [%s]", function_name, data, node_mocked->data);
     assert(node_mocked->pb == pbp);
     if (MIN_LEN_WITH_ENCODED_CREDENTIALS > strlen(node_mocked->data)) {
         attest(strlen(node_mocked->data) == strlen(data));
@@ -159,12 +165,11 @@ void check_residual_mocks(void)
 
     while (m_list_head_mocked != NULL) {
         strcpy(function_name, m_list_head_mocked->function_name);
-        printf("-----> Expected function [%s] was not called!\n", function_name);
+        printf(
+            "-----> Expected function [%s] was not called!\n", function_name);
         m_failures++;
         node_mocked = m_list_head_mocked;
-        if (node_mocked->next != NULL) {
-            node_mocked->next->previous = NULL;
-        }
+        if (node_mocked->next != NULL) { node_mocked->next->previous = NULL; }
         m_list_head_mocked = node_mocked->next;
         free(node_mocked);
     }
@@ -178,8 +183,8 @@ static void buf_setup(pubnub_t* pb)
 {
     pb->ptr  = (uint8_t*)pb->core.http_buf;
     pb->left = sizeof pb->core.http_buf;
-    PUBNUB_LOG_TRACE("\n PUBNUB_BUF_MAXLEN= %d\n", PUBNUB_BUF_MAXLEN);
-    PUBNUB_LOG_TRACE(" sizeof pb->core.http_buf= %d\n\n", pb->left);
+    PUBNUB_LOG_TRACE(pb, "PUBNUB_BUF_MAXLEN= %d", PUBNUB_BUF_MAXLEN);
+    PUBNUB_LOG_TRACE(pb, "sizeof pb->core.http_buf= %d", pb->left);
 }
 
 void pbpal_init(pubnub_t* pb)
@@ -201,7 +206,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 
 #if defined(PUBNUB_CALLBACK_API)
 #if PUBNUB_CHANGE_DNS_SERVERS
-int pbpal_dns_rotate_server(pubnub_t *pb)
+int pbpal_dns_rotate_server(pubnub_t* pb)
 {
     return mock("pbpal_dns_rotate_server", pb, "");
 }
@@ -218,14 +223,18 @@ void pbpal_free(pubnub_t* pb)
     mock("pbpal_free", pb, "");
 }
 
-void pbpal_report_error_from_environment(pubnub_t* pb, char const* file, int line)
+void pbpal_report_error_from_environment(
+    pubnub_t*   pb,
+    char const* file,
+    int         line)
 {
     mock("pbpal_report_error_from_environment", pb, "");
 }
 
 enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
 {
-    return (enum pbpal_resolv_n_connect_result)mock("pbpal_check_connect", pb, "");
+    return (enum pbpal_resolv_n_connect_result)mock(
+        "pbpal_check_connect", pb, "");
 }
 
 int pbpal_send(pubnub_t* pb, void const* data, size_t n)
@@ -251,14 +260,16 @@ int pbpal_start_read_line(pubnub_t* pb)
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->unreadlen)
-                          <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->unreadlen) <=
+            (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    PUBNUB_ASSERT_UINT((distance + pb->left + pb->unreadlen),
-                       ==,
-                       (sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]));
+    PUBNUB_ASSERT_UINT(
+        (distance + pb->left + pb->unreadlen),
+        ==,
+        (sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]));
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -312,12 +323,10 @@ static int my_recv(void* p, size_t n)
         }
     }
     to_read = strlen(m_read);
-    if (to_read > n) {
-        to_read = n;
-    }
+    if (to_read > n) { to_read = n; }
     memcpy(p, m_read, to_read);
     m_read += to_read;
-    PUBNUB_LOG_TRACE("\n to_read = %d\n", to_read);
+    PUBNUB_LOG_TRACE((pubnub_t*)p, "to_read = %d", to_read);
 
     return to_read;
 }
@@ -328,19 +337,22 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
     if (pb->unreadlen == 0) {
         int recvres;
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->left)
-                          == (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->left) ==
+            (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         recvres = my_recv((char*)pb->ptr, pb->left);
-        if (recvres < 0) {
-            return PNR_IN_PROGRESS;
-        }
+        if (recvres < 0) { return PNR_IN_PROGRESS; }
         else if (0 == recvres) {
             pb->sock_state = STATE_NONE;
             return PNR_TIMEOUT;
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
         PUBNUB_LOG_TRACE(
-            "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
+            pb,
+            "Have new data of length=%d: %.*s\n",
+            recvres,
+            recvres,
+            pb->ptr);
         pb->unreadlen = recvres;
         pb->left -= recvres;
     }
@@ -350,18 +362,16 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
         --pb->unreadlen;
 
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
-                             pb,
-                             pbpal_read_len(pb));
-            WATCH_USHORT(pb->unreadlen);
+            PUBNUB_LOG_TRACE(
+                pb, "Newline found, line length: %d", pbpal_read_len(pb));
+            PUBNUB_LOG_TRACE(pb, "%hu bytes received.", pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
     }
 
     if (pb->left == 0) {
-        PUBNUB_LOG_ERROR(
-            "pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
+        PUBNUB_LOG_ERROR(pb, "Buffer full but newline not found");
         pb->sock_state = STATE_NONE;
         return PNR_TX_BUFF_TOO_SMALL;
     }
@@ -376,18 +386,20 @@ int pbpal_start_read(pubnub_t* pb, size_t n)
     PUBNUB_ASSERT_UINT_OPT(n, >, 0);
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
-    WATCH_USHORT(pb->unreadlen);
-    WATCH_USHORT(pb->left);
+    PUBNUB_LOG_TRACE(pb, "%hu bytes received.", pb->unreadlen);
+    PUBNUB_LOG_TRACE(pb, "Read buffer size left: %hu bytes", pb->left);
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)(pb->ptr + pb->unreadlen)
-                          <= (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
+        PUBNUB_ASSERT_OPT(
+            (char*)(pb->ptr + pb->unreadlen) <=
+            (char*)(pb->core.http_buf + PUBNUB_BUF_MAXLEN));
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    WATCH_UINT(distance);
-    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
-                       ==,
-                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_LOG_TRACE(pb, "%u bytes is left to read.", distance);
+    PUBNUB_ASSERT_UINT(
+        distance + pb->unreadlen + pb->left,
+        ==,
+        sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -405,14 +417,10 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
 
     if (0 == pb->unreadlen) {
         unsigned to_recv = pb->len;
-        if (to_recv > pb->left) {
-            to_recv = pb->left;
-        }
+        if (to_recv > pb->left) { to_recv = pb->left; }
         PUBNUB_ASSERT_OPT(to_recv > 0);
         have_read = my_recv((char*)pb->ptr, to_recv);
-        if (have_read < 0) {
-            return PNR_IN_PROGRESS;
-        }
+        if (have_read < 0) { return PNR_IN_PROGRESS; }
         else if (0 == have_read) {
             pb->sock_state = STATE_NONE;
             return PNR_TIMEOUT;
@@ -538,7 +546,7 @@ static char const* m_expect_assert_file;
 
 void assert_handler(char const* s, const char* file, long i)
 {
-    PUBNUB_LOG_TRACE("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
+    printf("%s:%ld: Pubnub assert failed '%s'\n", file, i, s);
 
     attest(m_expect_assert);
     attest(strcmp(m_expect_assert_file, file) == 0);
@@ -553,8 +561,7 @@ void assert_handler(char const* s, const char* file, long i)
         m_expect_assert      = true;                                           \
         m_expect_assert_file = file;                                           \
         int val              = setjmp(m_assert_exp_jmpbuf);                    \
-        if (0 == val)                                                          \
-            expr;                                                              \
+        if (0 == val) expr;                                                    \
         attest(!m_expect_assert);                                              \
     }
 
@@ -568,7 +575,7 @@ void free_m_msgs(char** msg_array)
     for (i = 0; i < m_num_msgrcvd; i++) {
         assert(m_msg_array[i] != NULL);
         free(m_msg_array[i]);
-        PUBNUB_LOG_TRACE("\n free(m_msg_array[%d])\n", i);
+        printf("\n free(m_msg_array[%d])\n", i);
     }
 }
 
@@ -579,7 +586,8 @@ static void expect_have_dns_for_proxy_server(void)
     expect("pbntf_got_socket", pbp, "", 0);
 }
 
-static void expect_have_dns_for_proxy_server_without_enqueue_for_processing(void)
+static void expect_have_dns_for_proxy_server_without_enqueue_for_processing(
+    void)
 {
     expect("pbpal_resolv_and_connect", pbp, "", pbpal_connect_success);
     expect("pbntf_got_socket", pbp, "", 0);
@@ -599,11 +607,12 @@ static void expect_first_outgoing_GET(const char* url)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send_str",
-           pbp,
-           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
-           "\r\n" ACCEPT_ENCODING "\r\n",
-           0);
+    expect(
+        "pbpal_send_str",
+        pbp,
+        "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
+        "\r\n" ACCEPT_ENCODING "\r\n",
+        0);
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbntf_watch_in_events", pbp, "", 0);
 }
@@ -621,18 +630,20 @@ static void expect_first_outgoing_CONNECT(void)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send_str",
-           pbp,
-           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
-           "\r\n" ACCEPT_ENCODING "\r\n",
-           0);
+    expect(
+        "pbpal_send_str",
+        pbp,
+        "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
+        "\r\n" ACCEPT_ENCODING "\r\n",
+        0);
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbntf_watch_in_events", pbp, "", 0);
 }
 
 
-static void expect_outgoing_with_encoded_credentials_GET(char const* url,
-                                                         char const* HTTP_proxy_header)
+static void expect_outgoing_with_encoded_credentials_GET(
+    char const* url,
+    char const* HTTP_proxy_header)
 {
     expect("pbpal_send_str", pbp, "GET ", 0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -648,17 +659,19 @@ static void expect_outgoing_with_encoded_credentials_GET(char const* url,
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, HTTP_proxy_header, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send_str",
-           pbp,
-           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
-           "\r\n" ACCEPT_ENCODING "\r\n",
-           0);
+    expect(
+        "pbpal_send_str",
+        pbp,
+        "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
+        "\r\n" ACCEPT_ENCODING "\r\n",
+        0);
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbntf_watch_in_events", pbp, "", 0);
 }
 
-static void expect_outgoing_with_encoded_credentials_CONNECT(char const* url,
-                                                             char const* HTTP_proxy_header)
+static void expect_outgoing_with_encoded_credentials_CONNECT(
+    char const* url,
+    char const* HTTP_proxy_header)
 {
     expect("pbpal_send", pbp, "CONNECT ", 0);
     expect("pbpal_send_status", pbp, "", 0);
@@ -673,11 +686,12 @@ static void expect_outgoing_with_encoded_credentials_CONNECT(char const* url,
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, HTTP_proxy_header, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send_str",
-           pbp,
-           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
-           "\r\n" ACCEPT_ENCODING "\r\n",
-           0);
+    expect(
+        "pbpal_send_str",
+        pbp,
+        "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
+        "\r\n" ACCEPT_ENCODING "\r\n",
+        0);
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbntf_watch_in_events", pbp, "", 0);
 }
@@ -695,11 +709,12 @@ static void expect_outgoing_with_url(char const* url)
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbpal_send_str", pbp, PUBNUB_ORIGIN, 0);
     expect("pbpal_send_status", pbp, "", 0);
-    expect("pbpal_send_str",
-           pbp,
-           "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
-           "\r\n" ACCEPT_ENCODING "\r\n",
-           0);
+    expect(
+        "pbpal_send_str",
+        pbp,
+        "\r\nUser-Agent: Windows-PubNub-C-core/" PUBNUB_SDK_VERSION
+        "\r\n" ACCEPT_ENCODING "\r\n",
+        0);
     expect("pbpal_send_status", pbp, "", 0);
     expect("pbntf_watch_in_events", pbp, "", 0);
 }
@@ -713,9 +728,7 @@ static void incoming(char const* str)
 
     strcpy(pmsg, str);
     m_msg_array[m_num_msgrcvd++] = pmsg;
-    if (m_num_msgrcvd == 1) {
-        m_read = pmsg;
-    }
+    if (m_num_msgrcvd == 1) { m_read = pmsg; }
 }
 
 
@@ -769,43 +782,47 @@ static void proxy_establishes_GET_NTLM_connection(void)
     int proxy_port = 500;
     BeforeEach();
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_GET, "proxy_server_url", proxy_port)
-           == 0);
-    attest(pubnub_set_proxy_authentication_username_password(pbp, "serious", "password")
-           == 0);
+    attest(
+        pubnub_set_proxy_manual(
+            pbp, pbproxyHTTP_GET, "proxy_server_url", proxy_port) == 0);
+    attest(
+        pubnub_set_proxy_authentication_username_password(
+            pbp, "serious", "password") == 0);
     expect_have_dns_for_proxy_server();
 
     expect_first_outgoing_GET(
         "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_GET(
         "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
-        "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -834,11 +851,12 @@ static void proxy_establishes_GET_NTLM_connection(void)
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 26\r\n"
-             "\r\n"
-             "[[],\"1516014978925123457\"]");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "[[],\"1516014978925123457\"]");
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);
@@ -856,34 +874,37 @@ static void proxy_establishes_GET_NTLM_connection(void)
     expect("pbntf_got_socket", pbp, "", 0);
     expect_first_outgoing_GET(
         "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_GET(
-        "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1", "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -912,10 +933,11 @@ static void proxy_establishes_GET_NTLM_connection(void)
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200\r\n"
-             "Content-Length: 56\r\n"
-             "\r\n"
-             "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
+    incoming(
+        "HTTP/1.1 200\r\n"
+        "Content-Length: 56\r\n"
+        "\r\n"
+        "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);
@@ -944,41 +966,46 @@ static void proxy_establishes_CONNECT_NTLM_connection(void)
     int proxy_port = 500;
     BeforeEach();
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port)
-           == 0);
-    attest(pubnub_set_proxy_authentication_username_password(pbp, "serious", "password")
-           == 0);
+    attest(
+        pubnub_set_proxy_manual(
+            pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port) == 0);
+    attest(
+        pubnub_set_proxy_authentication_username_password(
+            pbp, "serious", "password") == 0);
     expect_have_dns_for_proxy_server();
 
     expect_first_outgoing_CONNECT();
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_CONNECT(
-        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1", "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -1007,18 +1034,20 @@ static void proxy_establishes_CONNECT_NTLM_connection(void)
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Expires: 7200\r\n"
-             "Content-Length: 0\r\n"
-             "\r\n");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Expires: 7200\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n");
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 26\r\n"
-             "\r\n"
-             "[[],\"1516014978925123457\"]");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "[[],\"1516014978925123457\"]");
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);
@@ -1036,11 +1065,12 @@ static void proxy_establishes_CONNECT_NTLM_connection(void)
     expect("pbntf_got_socket", pbp, "", 0);
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 56\r\n"
-             "\r\n"
-             "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
+    incoming(
+        "HTTP/1.1 200\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 56\r\n"
+        "\r\n"
+        "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
     expect("pbntf_lost_socket", pbp, "", 0);
     expect("pbntf_trans_outcome", pbp, "", 0);
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_OK);
@@ -1062,41 +1092,46 @@ static void CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues(void)
     int proxy_port = 500;
     BeforeEach();
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port)
-           == 0);
-    attest(pubnub_set_proxy_authentication_username_password(pbp, "serious", "password")
-           == 0);
+    attest(
+        pubnub_set_proxy_manual(
+            pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port) == 0);
+    attest(
+        pubnub_set_proxy_authentication_username_password(
+            pbp, "serious", "password") == 0);
     expect_have_dns_for_proxy_server();
 
     expect_first_outgoing_CONNECT();
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_CONNECT(
-        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1", "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -1127,18 +1162,20 @@ static void CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues(void)
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Expires: 7200\r\n"
-             "Content-Length: 0\r\n"
-             "\r\n");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Expires: 7200\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n");
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 26\r\n"
-             "\r\n"
-             "[[],\"1516014978925123457\"]");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "[[],\"1516014978925123457\"]");
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);
@@ -1156,11 +1193,12 @@ static void CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues(void)
     expect("pbntf_got_socket", pbp, "", 0);
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 56\r\n"
-             "\r\n"
-             "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
+    incoming(
+        "HTTP/1.1 200\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 56\r\n"
+        "\r\n"
+        "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
     expect("pbntf_lost_socket", pbp, "", 0);
     expect("pbntf_trans_outcome", pbp, "", 0);
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_OK);
@@ -1177,16 +1215,19 @@ static void CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues(void)
     AfterEach();
 }
 
-static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_alive(void)
+static void
+proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_alive(void)
 {
-    int    proxy_port = 500;
+    int proxy_port = 500;
 
     BeforeEach();
     pubnub_init(pbp, "publ-key", "sub-key");
-    attest(pubnub_set_proxy_manual(pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port)
-           == 0);
-    attest(pubnub_set_proxy_authentication_username_password(pbp, "serious", "password")
-           == 0);
+    attest(
+        pubnub_set_proxy_manual(
+            pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port) == 0);
+    attest(
+        pubnub_set_proxy_authentication_username_password(
+            pbp, "serious", "password") == 0);
 
     /* Has less than a second to finish up to 3 operations in 'keep_alive'
      * connection*/
@@ -1194,34 +1235,37 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
 
     expect_have_dns_for_proxy_server();
     expect_first_outgoing_CONNECT();
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_CONNECT(
-        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1", "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -1250,18 +1294,20 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Expires: 7200\r\n"
-             "Content-Length: 0\r\n"
-             "\r\n");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Expires: 7200\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n");
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 26\r\n"
-             "\r\n"
-             "[[],\"1516014978925123457\"]");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "[[],\"1516014978925123457\"]");
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);
@@ -1282,11 +1328,12 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
     expect("pbntf_got_socket", pbp, "", 0);
     expect_outgoing_with_url(
         "/subscribe/sub-key/health/0/1516014978925123457?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 56\r\n"
-             "\r\n"
-             "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
+    incoming(
+        "HTTP/1.1 200\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 56\r\n"
+        "\r\n"
+        "[[pomegranate_juice,papaya,mango],\"1516714978925123457\"]");
     expect("pbntf_lost_socket", pbp, "", 0);
     expect("pbntf_trans_outcome", pbp, "", 0);
     attest(pubnub_subscribe(pbp, "health", NULL) == PNR_OK);
@@ -1304,48 +1351,52 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
     expect("pbntf_got_socket", pbp, "", 0);
     expect_outgoing_with_url(
         "/publish/publ-key/sub-key/0/panama/0/%22ship%22?pnsdk=unit-test-0.1");
-    incoming_and_close("HTTP/1.1 200\r\n"
-                       "Via: 1.1 SPIRIT1B\r\n"
-                       "Transfer-Encoding: chunked\r\n"
-                       "\r\n"
-                       "12\r\n"
-                       "[1,\"Sent\",\"1417894\r\n"
-                       "0C\r\n"
-                       "0800777403\"]\r\n"
-                       "0\r\n");
+    incoming_and_close(
+        "HTTP/1.1 200\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n"
+        "12\r\n"
+        "[1,\"Sent\",\"1417894\r\n"
+        "0C\r\n"
+        "0800777403\"]\r\n"
+        "0\r\n");
     attest(pubnub_publish(pbp, "panama", "\"ship\"") == PNR_OK);
     attest(pubnub_last_http_code(pbp) == 200);
 
     expect_have_dns_for_proxy_server();
     expect_first_outgoing_CONNECT();
-    incoming("HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
-             "requires authorization to fulfill the request. Access to the Web "
-             "proxy service is denied. )\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Proxy-Authenticate: Negotiate\r\n"
-             "Proxy-Authenticate: Kerberos\r\n"
-             "Proxy-Authenticate: NTLM\r\n"
-             "Connection: close\r\n"
-             "Proxy-Connection: keep-alive\r\n"
-             "Pragma: no-cache\r\n"
-             "Cache-Control: no-cache\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 169\r\n"
-             "\r\n"
-             "<!DOCTYPE html>\r\n"
-             "<html>\r\n"
-             " <head>\r\n"
-             "  <meta charset=\"UTF-8\" />\r\n"
-             "  <title>Error</title>\r\n"
-             " </head>\r\n"
-             " <body>\r\n"
-             "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
-             " </body>\r\n"
-             "</html>\n");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( The ISA Server "
+        "requires authorization to fulfill the request. Access to the Web "
+        "proxy service is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: Negotiate\r\n"
+        "Proxy-Authenticate: Kerberos\r\n"
+        "Proxy-Authenticate: NTLM\r\n"
+        "Connection: close\r\n"
+        "Proxy-Connection: keep-alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 169\r\n"
+        "\r\n"
+        "<!DOCTYPE html>\r\n"
+        "<html>\r\n"
+        " <head>\r\n"
+        "  <meta charset=\"UTF-8\" />\r\n"
+        "  <title>Error</title>\r\n"
+        " </head>\r\n"
+        " <body>\r\n"
+        "  <h1>407 ProxyAuthentication Required.</h1>\r\n"
+        " </body>\r\n"
+        "</html>\n");
     expect("pbpal_close", pbp, "", 0);
     expect_have_dns_for_proxy_server_without_enqueue_for_processing();
     expect_outgoing_with_encoded_credentials_CONNECT(
-        "/subscribe/sub-key/panama/0/1516714978925123457?pnsdk=unit-test-0.1", "\r\nProxy-Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+        "/subscribe/sub-key/panama/0/1516714978925123457?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
     incoming(
         "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
         "Via: 1.1 SPIRIT1B\r\n"
@@ -1374,18 +1425,20 @@ static void proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_ali
         "AAAEAAAAAIAAAptCBZNmwVx+"
         "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
         "AAAAA==");
-    incoming("HTTP/1.1 200 Connection established\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Expires: 7200\r\n"
-             "Content-Length: 0\r\n"
-             "\r\n");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Expires: 7200\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n");
     expect_outgoing_with_url(
         "/subscribe/sub-key/panama/0/1516714978925123457?pnsdk=unit-test-0.1");
-    incoming("HTTP/1.1 200\r\n"
-             "Via: 1.1 SPIRIT1B\r\n"
-             "Content-Length: 44\r\n"
-             "\r\n"
-             "[[\"ship\",boat,tanker],\"1516714978925123458\"]");
+    incoming(
+        "HTTP/1.1 200\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 44\r\n"
+        "\r\n"
+        "[[\"ship\",boat,tanker],\"1516714978925123458\"]");
     attest(pubnub_subscribe(pbp, "panama", NULL) == PNR_STARTED);
 
     attest(pbnc_fsm(pbp) == 0);

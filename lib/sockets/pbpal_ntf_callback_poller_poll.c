@@ -7,7 +7,9 @@
 #include "core/pb_sleep_ms.h"
 
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include <string.h>
 
@@ -34,9 +36,7 @@ struct pbpal_poll_data* pbpal_ntf_callback_poller_init(void)
     struct pbpal_poll_data* rslt;
 
     rslt = (struct pbpal_poll_data*)malloc(sizeof *rslt);
-    if (NULL == rslt) {
-        return NULL;
-    }
+    if (NULL == rslt) { return NULL; }
     rslt->size = rslt->cap = 0;
     rslt->apoll            = NULL;
     rslt->apb              = NULL;
@@ -49,23 +49,19 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 {
     size_t                i;
     pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
-    if (INVALID_SOCKET == sockt) {
-        return;
-    }
+    if (INVALID_SOCKET == sockt) { return; }
     for (i = 0; i < data->size; ++i) {
         PUBNUB_ASSERT_OPT(data->apoll[i].fd != sockt);
         PUBNUB_ASSERT_OPT(data->apb[i] != pb);
     }
     if (data->size == data->cap) {
-        size_t const   newcap = data->size + 2;
-        struct pollfd* npalloc =
-            (struct pollfd*)realloc(data->apoll, sizeof data->apoll[0] * newcap);
-        pubnub_t** npapb =
-            (pubnub_t**)realloc(data->apb, sizeof data->apb[0] * newcap);
+        size_t const   newcap  = data->size + 2;
+        struct pollfd* npalloc = (struct pollfd*)realloc(
+            data->apoll, sizeof data->apoll[0] * newcap);
+        pubnub_t** npapb = (pubnub_t**)realloc(
+            data->apb, sizeof data->apb[0] * newcap);
         if (NULL == npalloc) {
-            if (npapb != NULL) {
-                data->apb = npapb;
-            }
+            if (npapb != NULL) { data->apb = npapb; }
             return;
         }
         else if (NULL == npapb) {
@@ -84,40 +80,46 @@ void pbpal_ntf_callback_save_socket(struct pbpal_poll_data* data, pubnub_t* pb)
 }
 
 
-void pbpal_ntf_callback_remove_socket(struct pbpal_poll_data* data, pubnub_t* pb)
+void pbpal_ntf_callback_remove_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t*               pb)
 {
     size_t                i;
     pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
-    if (INVALID_SOCKET == sockt) {
-        return;
-    }
+    if (INVALID_SOCKET == sockt) { return; }
     for (i = 0; i < data->size; ++i) {
         if (data->apoll[i].fd == sockt) {
             size_t to_move = data->size - i - 1;
             PUBNUB_ASSERT(data->apb[i] == pb);
             if (to_move > 0) {
-                memmove(data->apoll + i,
-                        data->apoll + i + 1,
-                        sizeof data->apoll[0] * to_move);
-                memmove(data->apb + i, data->apb + i + 1, sizeof data->apb[0] * to_move);
+                memmove(
+                    data->apoll + i,
+                    data->apoll + i + 1,
+                    sizeof data->apoll[0] * to_move);
+                memmove(
+                    data->apb + i,
+                    data->apb + i + 1,
+                    sizeof data->apb[0] * to_move);
             }
             --data->size;
             return;
         }
     }
     PUBNUB_LOG_DEBUG(
-        "pbpal_ntf_callback_remove_socket(pb=%p) sockt=%d: Not Found!\n", pb, sockt);
+        pb, "Unable to remove socket: %d not registered for polling.", sockt);
 }
 
 
-void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb)
+void pbpal_ntf_callback_update_socket(
+    struct pbpal_poll_data* data,
+    pubnub_t*               pb)
 {
     pbpal_native_socket_t sockt = pubnub_get_native_socket(pb);
     if (sockt != INVALID_SOCKET) {
         size_t i;
         for (i = 0; i < data->size; ++i) {
-            PUBNUB_ASSERT_OPT((data->apb[i] != pb) ? (data->apoll[i].fd != sockt)
-                                                   : true);
+            PUBNUB_ASSERT_OPT(
+                (data->apb[i] != pb) ? (data->apoll[i].fd != sockt) : true);
         }
         for (i = 0; i < data->size; ++i) {
             if (data->apb[i] == pb) {
@@ -127,7 +129,9 @@ void pbpal_ntf_callback_update_socket(struct pbpal_poll_data* data, pubnub_t* pb
         }
     }
     PUBNUB_LOG_WARNING(
-        "pbpal_ntf_callback_update_socket(pb=%p) sockt=%d: Not Found!\n", pb, sockt);
+        pb,
+        "Unable to update socket in poller: %d not registered for polling.",
+        sockt);
 }
 
 
@@ -140,7 +144,10 @@ int pbpal_ntf_watch_out_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
-    PUBNUB_LOG_WARNING("pbpal_ntf_watch_out_events(pbp=%p): Not Found!\n", pbp);
+    PUBNUB_LOG_WARNING(
+        pbp,
+        "Unable to watch for 'out' event: %d not registered for polling.",
+        pubnub_get_native_socket(pbp));
     return -1;
 }
 
@@ -154,7 +161,10 @@ int pbpal_ntf_watch_in_events(struct pbpal_poll_data* data, pubnub_t* pbp)
             return 0;
         }
     }
-    PUBNUB_LOG_WARNING("pbpal_ntf_watch_in_events(pbp=%p): Not Found!\n", pbp);
+    PUBNUB_LOG_WARNING(
+        pbp,
+        "Unable to watch for 'in' event: %d not registered for polling.",
+        pubnub_get_native_socket(pbp));
     return -1;
 }
 
@@ -170,23 +180,24 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
 
     rslt = poll(data->apoll, data->size, ms);
     if (SOCKET_ERROR == rslt) {
-        int last_err =
 #if defined(_WIN32)
-            WSAGetLastError()
+            int socket_error = WSAGetLastError();
 #else
-            errno
+            int socket_error = errno;
 #endif
-            ;
-        /* error? what to do about it? */
-        PUBNUB_LOG_WARNING(
-            "poll size = %ud, error = %d\n", (unsigned)data->size, last_err);
-        return -1;
-    }
+            PUBNUB_LOG_WARNING(
+                data->apb[0],
+                "poll() failed with error %d (%u sockets polled)",
+                socket_error,
+                (unsigned)data->size);
+            return -1;
+        }
     if (rslt > 0) {
         size_t i;
         size_t apoll_size = data->size;
         for (i = 0; i < apoll_size; ++i) {
-            if (data->apoll[i].revents & (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
+            if (data->apoll[i].revents &
+                (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
                 pbntf_requeue_for_processing(data->apb[i]);
             }
         }

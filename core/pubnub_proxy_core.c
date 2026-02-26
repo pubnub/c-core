@@ -3,12 +3,15 @@
 #include "core/pubnub_proxy_core.h"
 
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 
 #include "lib/base64/pbbase64.h"
 #include "core/pbntlm_core.h"
 #include "core/pbhttp_digest.h"
 
+#include <stdio.h>
 #include <string.h>
 
 
@@ -21,63 +24,64 @@
    header field */
 #define HTTP_CODE_PROXY_AUTH_REQ 407
 
-/* Maximum number of expected 'proxy auth required' mesages with valid credentials
-   for single realm in Digest sheme proxy protocol within a single transaction
-   It may be set to a higher value depending on chosen proxy behavior.
-   Set to one as default value.
-   (RFC 7616: See 5.4. Limited-Use Nonce Values)
+/* Maximum number of expected 'proxy auth required' mesages with valid
+   credentials for single realm in Digest sheme proxy protocol within a single
+   transaction It may be set to a higher value depending on chosen proxy
+   behavior. Set to one as default value. (RFC 7616: See 5.4. Limited-Use Nonce
+   Values)
  */
 #define NUM_EXPECTED_DIGEST_AUTH_MESSAGES 1
 
-char const* pbproxy_get_next_key_value(char const* s, pubnub_chamebl_t *key, pubnub_chamebl_t *val)
+char const* pbproxy_get_next_key_value(
+    char const*       s,
+    pubnub_chamebl_t* key,
+    pubnub_chamebl_t* val)
 {
     s += strspn(s, " \t");
-    key->ptr = (char*)s;
+    key->ptr  = (char*)s;
     key->size = strcspn(s, "= \t");
     s += key->size;
     s += strspn(s, " \t");
-    if (*s != '=') {
-        return NULL;
-    }
+    if (*s != '=') { return NULL; }
     s += 1 + strspn(s + 1, " \t");
     val->ptr = (char*)s;
     if ('"' == *s) {
         char const* esc;
         char const* end = s + 1;
-        for (esc = strstr(end, "\\\""); esc != NULL; esc = strstr(end, "\\\"")) {
+        for (esc = strstr(end, "\\\""); esc != NULL;
+             esc = strstr(end, "\\\"")) {
             end = esc + 2;
         }
         val->size = end - s + strcspn(end, "\"") + 1;
         s += val->size;
-        if (*(s - 1) != '"') {
-            return NULL;
-        }
+        if (*(s - 1) != '"') { return NULL; }
     }
     else {
         val->size = strcspn(s, " \t");
         s += val->size;
     }
     s += strspn(s, " \t");
-    if (*s == ',') {
-        ++s;
-    }
+    if (*s == ',') { ++s; }
     return ('\0' == *s) ? NULL : s;
 }
 
 
-int pbproxy_check_realm(pubnub_chamebl_t const* value)
+int pbproxy_check_realm(pubnub_t* pb, pubnub_chamebl_t const* value)
 {
     if (value->size > PUBNUB_MAX_HTTP_AUTH_REALM + 1) {
-        PUBNUB_LOG_ERROR("Received `realm` too long: %zu, maximum possible %d\n",
-                         value->size, PUBNUB_MAX_HTTP_AUTH_REALM + 1);
+        PUBNUB_LOG_ERROR(
+            pb,
+            "Received `realm` is too long: %zu bytes, %d bytes maximum.",
+            value->size,
+            PUBNUB_MAX_HTTP_AUTH_REALM + 1);
         return -1;
     }
     if ('"' != *(value->ptr)) {
-        PUBNUB_LOG_ERROR("Received 'realm' is not quoted\n");
+        PUBNUB_LOG_ERROR(pb, "Received 'realm' is not quoted.");
         return -1;
     }
     if (value->size <= 2) {
-        PUBNUB_LOG_ERROR("Received 'realm' is too short (length = %zu)\n", value->size);
+        PUBNUB_LOG_ERROR(pb, "Received 'realm' is too short: %zu", value->size);
         return -1;
     }
     return 0;
@@ -106,32 +110,29 @@ static int process_digest_header_line(pubnub_t* p, char const* header)
 {
     enum pbhttp_digest_parse_header_rslt rslt;
 
-    rslt = pbhttp_digest_parse_header(&p->digest_context, header, p->realm);
-    if (pbhtdig_EqualConsecutiveRealms == rslt) {
-        ++p->auth_msg_count;
-    }
+    rslt = pbhttp_digest_parse_header(p, &p->digest_context, header, p->realm);
+    if (pbhtdig_EqualConsecutiveRealms == rslt) { ++p->auth_msg_count; }
     else if (pbhtdig_DifferentConsecutiveRealms == rslt) {
         p->auth_msg_count = 1;
     }
     if ((pbhtdig_ParameterError == rslt) ||
         ((pbhtdig_EqualConsecutiveRealms == rslt) &&
-         (p->auth_msg_count > NUM_EXPECTED_DIGEST_AUTH_MESSAGES))
-       ) {
+         (p->auth_msg_count > NUM_EXPECTED_DIGEST_AUTH_MESSAGES))) {
         return -1;
     }
     return 0;
 }
 
-void pbproxy_handle_connection_close(pubnub_t *pb)
+void pbproxy_handle_connection_close(pubnub_t* pb)
 {
     /* Invalidate current NTLM proxy context state. */
     if (pbhtauNTLM == pb->proxy_auth_scheme &&
         (pb->ntlm_context.state != pbntlmSendNegotiate &&
-            pb->ntlm_context.state != pbntlmDone)) {
+         pb->ntlm_context.state != pbntlmDone)) {
         pbntlm_core_deinit(pb);
     }
 }
-    
+
 int pbproxy_handle_http_header(pubnub_t* p, char const* header)
 {
     char        scheme_basic[]  = "Basic";
@@ -150,12 +151,8 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
            headers for Digest proxy. In practice, Basic and NTLM never
            use multi-line headers.
         */
-        if (p->proxy_auth_scheme != pbhtauDigest) {
-            return 0;
-        }
-        if (process_digest_header_line(p, header + 1) != 0) {
-            return -1;
-        }
+        if (p->proxy_auth_scheme != pbhtauDigest) { return 0; }
+        if (process_digest_header_line(p, header + 1) != 0) { return -1; }
         return 0;
     default:
         if (strncmp(header, proxy_auth, sizeof proxy_auth - 1) != 0) {
@@ -165,21 +162,33 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
     }
     contents = header + sizeof proxy_auth - 1;
 
-    PUBNUB_LOG_TRACE("pbproxy_handle_http_header(header='%s', contents='%s')\n",
-                     header,
-                     contents);
+#if PUBNUB_LOG_ENABLED(TRACE)
+    if (pubnub_logger_should_log(p, PUBNUB_LOG_LEVEL_TRACE)) {
+        pubnub_log_value_t data = pubnub_log_value_map_init();
+        PUBNUB_LOG_MAP_SET_STRING(&data, header, header)
+        PUBNUB_LOG_MAP_SET_STRING(&data, contents, value)
+        pubnub_log_object(
+            p,
+            PUBNUB_LOG_LEVEL_TRACE,
+            PUBNUB_LOG_LOCATION,
+            &data,
+            "Proxy HTTP header:");
+    }
+#endif
 
     if ((0 == strncmp(contents, scheme_basic, sizeof scheme_basic - 1)) &&
-        (auth_sheme_priority(p->proxy_auth_scheme) <= auth_sheme_priority(pbhtauBasic))) {
-        char empty_str[] = { '\0' };
-        pubnub_chamebl_t key = { empty_str, 0 };
-        pubnub_chamebl_t value = { empty_str, 0 };
-        char const *s = contents + sizeof scheme_basic;
+        (auth_sheme_priority(p->proxy_auth_scheme) <=
+         auth_sheme_priority(pbhtauBasic))) {
+        char             empty_str[] = { '\0' };
+        pubnub_chamebl_t key         = { empty_str, 0 };
+        pubnub_chamebl_t value       = { empty_str, 0 };
+        char const*      s           = contents + sizeof scheme_basic;
 
-        PUBNUB_LOG_TRACE("pbproxy_handle_http_header() Basic authentication\n");
+        PUBNUB_LOG_TRACE(p, "Basic authentication.");
         do {
             if (NULL == s) {
-                PUBNUB_LOG_WARNING("Warning: haven't got realm for basic authentication\n");
+                PUBNUB_LOG_WARNING(
+                    p, "Haven't got realm for basic authentication.");
                 if (p->proxy_authorization_sent && ('\0' == p->realm[0])) {
                     return -1;
                 }
@@ -188,9 +197,7 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
             }
             s = pbproxy_get_next_key_value(s, &key, &value);
             if (LIT_STR_EQ("realm", key.ptr)) {
-                if (pbproxy_check_realm(&value) != 0) {
-                    return -1;
-                }
+                if (pbproxy_check_realm(p, &value) != 0) { return -1; }
                 if (p->proxy_authorization_sent &&
                     (strncmp(p->realm, value.ptr + 1, value.size - 2) == 0) &&
                     (strlen(p->realm) == (value.size - 2))) {
@@ -206,21 +213,26 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
         } while (1);
 
         p->proxy_auth_scheme        = pbhtauBasic;
-        p->proxy_authorization_sent = false;         
+        p->proxy_authorization_sent = false;
     }
-    else if ((0 == strncmp(contents, scheme_digest, sizeof scheme_digest - 1)) &&
-             (auth_sheme_priority(p->proxy_auth_scheme) <= auth_sheme_priority(pbhtauDigest))) {
-        PUBNUB_LOG_TRACE("pbproxy_handle_http_header() Digest authentication\n");
+    else if (
+        (0 == strncmp(contents, scheme_digest, sizeof scheme_digest - 1)) &&
+        (auth_sheme_priority(p->proxy_auth_scheme) <=
+         auth_sheme_priority(pbhtauDigest))) {
+        PUBNUB_LOG_TRACE(p, "Digest authentication");
         p->proxy_auth_scheme = pbhtauDigest;
         pbhttp_digest_init(&p->digest_context);
-        if (process_digest_header_line(p, contents + sizeof scheme_digest) != 0) {
+        if (process_digest_header_line(p, contents + sizeof scheme_digest) !=
+            0) {
             return -1;
         }
         p->proxy_authorization_sent = false;
     }
-    else if ((0 == strncmp(contents, scheme_NTLM, sizeof scheme_NTLM - 1)) &&
-             (auth_sheme_priority(p->proxy_auth_scheme) <= auth_sheme_priority(pbhtauNTLM))) {
-        PUBNUB_LOG_TRACE("pbproxy_handle_http_header() NTLM authentication\n");
+    else if (
+        (0 == strncmp(contents, scheme_NTLM, sizeof scheme_NTLM - 1)) &&
+        (auth_sheme_priority(p->proxy_auth_scheme) <=
+         auth_sheme_priority(pbhtauNTLM))) {
+        PUBNUB_LOG_TRACE(p, "NTLM authentication");
         if (pbhtauNTLM != p->proxy_auth_scheme) {
             pbntlm_core_init(p);
             p->proxy_auth_scheme        = pbhtauNTLM;
@@ -232,9 +244,11 @@ int pbproxy_handle_http_header(pubnub_t* p, char const* header)
         }
     }
     else {
-        PUBNUB_LOG_WARNING("Warning: Proxy Authentication '%.*s' not supported\n",
-                           (int)strcspn(contents, " \t\r\n"),
-                           contents);
+        PUBNUB_LOG_WARNING(
+            p,
+            "Proxy Authentication '%.*s' not supported.",
+            (int)strcspn(contents, " \t\r\n"),
+            contents);
     }
 
     return 0;
@@ -281,48 +295,44 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
         PUBNUB_ASSERT_OPT(n > sizeof prefix);
         memcpy(header, prefix, sizeof prefix);
         n -= sizeof prefix;
-        data.size = snprintf(response,
-                             sizeof response,
-                             "%s:%s",
-                             figure_out_username(p),
-                             figure_out_password(p));
+        data.size = snprintf(
+            response,
+            sizeof response,
+            "%s:%s",
+            figure_out_username(p),
+            figure_out_password(p));
 
-        PUBNUB_LOG_TRACE("pbproxy_http_header_to_send(): Basic header (before "
-                         "Base64): '%s'\n",
-                         response);
+        PUBNUB_LOG_TRACE(p, "Basic header (before Base64): '%s'", response);
 
         i = pbbase64_encode_std(data, header + sizeof prefix - 1, &n);
         if (0 == i) {
-            PUBNUB_LOG_TRACE("pbproxy_http_header_to_send(): Basic header "
-                             "(after Base64): '%s'\n",
-                             header);
+            PUBNUB_LOG_TRACE(p, "Basic header (after Base64): '%s'", header);
             p->proxy_authorization_sent = true;
         }
         else {
-            PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): Basic Failed "
-                             "Base64 encoding of header\n");
+            PUBNUB_LOG_ERROR(p, "Basic Failed Base64 encoding of header.");
         }
         return i;
     }
     case pbhtauDigest: {
         char             prefix[] = "Proxy-Authorization: Digest ";
         pubnub_chamebl_t data     = { header + sizeof prefix - 1,
-                                  n - (sizeof prefix - 1) };
+                                      n - (sizeof prefix - 1) };
 
         memcpy(header, prefix, sizeof prefix);
 
-        if (0 == pbhttp_digest_prep_header_to_send(&p->digest_context,
-                                                   figure_out_username(p),
-                                                   figure_out_password(p),
-                                                   p->proxy_saved_path,
-                                                   p->realm,
-                                                   &data)) {
-            PUBNUB_LOG_TRACE(
-                "pbproxy_http_header_to_send(): Digest header: '%s'\n", header);
+        if (0 == pbhttp_digest_prep_header_to_send(
+                     &p->digest_context,
+                     figure_out_username(p),
+                     figure_out_password(p),
+                     p->proxy_saved_path,
+                     p->realm,
+                     &data)) {
+            PUBNUB_LOG_TRACE(p, "Digest header: '%s'", header);
             p->proxy_authorization_sent = true;
         }
         else {
-            PUBNUB_LOG_ERROR("Failed to prepare HTTP digest auth header\n");
+            PUBNUB_LOG_ERROR(p, "Failed to prepare HTTP digest auth header.");
             return -1;
         }
         return 0;
@@ -334,13 +344,10 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
         int             i    = pbntlm_core_prep_msg_to_send(p, &data);
 
         if (i != 0) {
-            PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): NTLM failed "
-                             "preparing message to send'\n");
+            PUBNUB_LOG_ERROR(p, "NTLM failed preparing message to send");
             return -1;
         }
-        if (0 == data.size) {
-            return -1;
-        }
+        if (0 == data.size) { return -1; }
 
         PUBNUB_ASSERT_OPT(n > sizeof prefix);
         memcpy(header, prefix, sizeof prefix);
@@ -348,13 +355,10 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
 
         i = pbbase64_encode_std(data, header + sizeof prefix - 1, &n);
         if (0 == i) {
-            PUBNUB_LOG_TRACE("pbproxy_http_header_to_send(): NTLM header "
-                             "(after Base64): '%s'\n",
-                             header);
+            PUBNUB_LOG_TRACE(p, "NTLM header (after Base64): '%s'", header);
         }
         else {
-            PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): NTLM Failed "
-                             "Base64 encoding of header\n");
+            PUBNUB_LOG_ERROR(p, "NTLM Failed Base64 encoding of header.");
         }
 
         return i;
@@ -362,9 +366,8 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
     case pbhtauNone:
         return -1;
     default:
-        PUBNUB_LOG_ERROR("pbproxy_http_header_to_send(): Proxy auth scheme %d "
-                         "not supported\n",
-                         p->proxy_auth_scheme);
+        PUBNUB_LOG_ERROR(
+            p, "Proxy auth scheme %d not supported.", p->proxy_auth_scheme);
         return -1;
     }
 }
@@ -373,7 +376,8 @@ int pbproxy_http_header_to_send(pubnub_t* p, char* header, size_t n)
 enum pbproxyFinInstruction pbproxy_handle_finish(pubnub_t* pb)
 {
     if (HTTP_CODE_PROXY_AUTH_REQ == pb->http_code) {
-        if (pb->proxy_authorization_sent || (pb->proxy_auth_scheme == pbhtauNone)) {
+        if (pb->proxy_authorization_sent ||
+            (pb->proxy_auth_scheme == pbhtauNone)) {
             return pbproxyFinError;
         }
         else {
@@ -389,4 +393,3 @@ enum pbproxyFinInstruction pbproxy_handle_finish(pubnub_t* pb)
 
     return pbproxyFinGoOn;
 }
-

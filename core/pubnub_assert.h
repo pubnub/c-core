@@ -3,6 +3,7 @@
 #define INC_PUBNUB_ASSERT
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "lib/pb_extern.h"
 
 

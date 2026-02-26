@@ -5,7 +5,9 @@
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
 #include "core/pubnub_ntf_enforcement.h"
 #endif
@@ -27,9 +29,7 @@ static int pal_init(pubnub_t* pb)
 {
     static bool s_init = false;
     if (!s_init) {
-        if (0 != socket_platform_init()) {
-            return -1;
-        }
+        if (0 != socket_platform_init()) { return -1; }
 
         pbntf_init(pb);
         s_init = true;
@@ -39,23 +39,21 @@ static int pal_init(pubnub_t* pb)
 #else
 static int pal_init(pubnub_t* pb)
 {
-    bool* s_init = NULL;
-    static bool s_init_sync = false;
+    bool*       s_init          = NULL;
+    static bool s_init_sync     = false;
     static bool s_init_callback = false;
 
-    switch(pb->api_policy) {
-        case PNA_SYNC:
-            s_init = &s_init_sync;
-            break;
-        case PNA_CALLBACK:
-            s_init = &s_init_callback;
-            break;
+    switch (pb->api_policy) {
+    case PNA_SYNC:
+        s_init = &s_init_sync;
+        break;
+    case PNA_CALLBACK:
+        s_init = &s_init_callback;
+        break;
     }
 
     if (!*s_init) {
-        if (0 != socket_platform_init()) {
-            return -1;
-        }
+        if (0 != socket_platform_init()) { return -1; }
 
         pbntf_init(pb);
         *s_init = true;
@@ -100,15 +98,16 @@ int pbpal_send_status(pubnub_t* pb)
 {
     int rslt;
 
-    if (0 == pb->len) {
-        return 0;
-    }
+    if (0 == pb->len) { return 0; }
 
     PUBNUB_ASSERT_OPT(pb->sock_state == STATE_SENDING_DATA);
 
     rslt = socket_send(pb->pal.socket, (char*)pb->ptr, pb->len);
     if (rslt <= 0) {
-        rslt = (pbpal_handle_socket_error(rslt, pb, __FILE__, __LINE__) == PNR_IN_PROGRESS) ? +1 : -1;
+        rslt = (pbpal_handle_socket_error(rslt, pb, __FILE__, __LINE__) ==
+                PNR_IN_PROGRESS)
+                   ? +1
+                   : -1;
     }
     else {
         PUBNUB_ASSERT_OPT((unsigned)rslt <= pb->len);
@@ -134,14 +133,16 @@ int pbpal_start_read_line(pubnub_t* pb)
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
-                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT(
+            (char*)pb->ptr + pb->unreadlen <=
+            pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    PUBNUB_ASSERT_UINT(distance + pb->left + pb->unreadlen,
-                       ==,
-                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_ASSERT_UINT(
+        distance + pb->left + pb->unreadlen,
+        ==,
+        sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -157,15 +158,28 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
     if (pb->unreadlen == 0) {
         int recvres;
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->left
-                          == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT(
+            (char*)pb->ptr + pb->left == pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         recvres = socket_recv(pb->pal.socket, (char*)pb->ptr, pb->left, 0);
         if (recvres <= 0) {
             return pbpal_handle_socket_error(recvres, pb, __FILE__, __LINE__);
         }
         PUBNUB_ASSERT_OPT(recvres <= pb->left);
-        PUBNUB_LOG_TRACE(
-            "pb=%p have new data of length=%d: %.*s\n", pb, recvres, recvres, pb->ptr);
+#if PUBNUB_LOG_ENABLED(TRACE)
+        if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_TRACE)) {
+            pubnub_log_value_t data = pubnub_log_value_map_init();
+            PUBNUB_LOG_MAP_SET_NUMBER(&data, (double)recvres, length)
+            pubnub_log_value_t content_val =
+                pubnub_log_value_string((char const*)pb->ptr);
+            pubnub_log_value_map_set(&data, "content", &content_val);
+            pubnub_log_object(
+                pb,
+                PUBNUB_LOG_LEVEL_TRACE,
+                PUBNUB_LOG_LOCATION,
+                &data,
+                "New data received:");
+        }
+#endif
         pb->unreadlen = recvres;
         pb->left -= recvres;
     }
@@ -177,22 +191,21 @@ enum pubnub_res pbpal_line_read_status(pubnub_t* pb)
 
         c = *pb->ptr++;
         if (c == '\n') {
-            PUBNUB_LOG_TRACE("pb=%p, newline found, line length: %d, ",
-                             pb,
-                             pbpal_read_len(pb));
-            WATCH_USHORT(pb->unreadlen);
+            PUBNUB_LOG_TRACE(
+                pb, "Newline found. Line length: %d", pbpal_read_len(pb));
+            PUBNUB_LOG_TRACE(pb, "%hu bytes received.", pb->unreadlen);
             pb->sock_state = STATE_NONE;
             return PNR_OK;
         }
     }
 
     if (pb->left == 0) {
-        PUBNUB_LOG_ERROR(
-            "pbpal_line_read_status(pb=%p): buffer full but newline not found", pb);
+        PUBNUB_LOG_ERROR(pb, "Read buffer full but newline not found.");
         pb->sock_state = STATE_NONE;
         return PNR_TX_BUFF_TOO_SMALL;
     }
 
+    PUBNUB_LOG_WARNING(pb, "Line read incomplete.");
     return PNR_IN_PROGRESS;
 }
 
@@ -206,22 +219,25 @@ int pbpal_read_len(pubnub_t* pb)
 int pbpal_start_read(pubnub_t* pb, size_t n)
 {
     unsigned distance;
+    PUBNUB_LOG_TRACE(pb, "Read %zu bytes", n);
 
     PUBNUB_ASSERT_UINT_OPT(n, >, 0);
     PUBNUB_ASSERT_INT_OPT(pb->sock_state, ==, STATE_NONE);
 
-    WATCH_USHORT(pb->unreadlen);
-    WATCH_USHORT(pb->left);
+    PUBNUB_LOG_TRACE(pb, "%hu bytes received.", pb->unreadlen);
+    PUBNUB_LOG_TRACE(pb, "Read buffer size left: %hu bytes", pb->left);
     if (pb->unreadlen > 0) {
-        PUBNUB_ASSERT_OPT((char*)pb->ptr + pb->unreadlen
-                          <= pb->core.http_buf + PUBNUB_BUF_MAXLEN);
+        PUBNUB_ASSERT_OPT(
+            (char*)pb->ptr + pb->unreadlen <=
+            pb->core.http_buf + PUBNUB_BUF_MAXLEN);
         memmove(pb->core.http_buf, pb->ptr, pb->unreadlen);
     }
     distance = pb->ptr - (uint8_t*)pb->core.http_buf;
-    WATCH_UINT(distance);
-    PUBNUB_ASSERT_UINT(distance + pb->unreadlen + pb->left,
-                       ==,
-                       sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
+    PUBNUB_LOG_TRACE(pb, "%u bytes is left to read.", distance);
+    PUBNUB_ASSERT_UINT(
+        distance + pb->unreadlen + pb->left,
+        ==,
+        sizeof pb->core.http_buf / sizeof pb->core.http_buf[0]);
     pb->ptr -= distance;
     pb->left += distance;
 
@@ -240,9 +256,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
 
     if (0 == pb->unreadlen) {
         unsigned to_recv = pb->len;
-        if (to_recv > pb->left) {
-            to_recv = pb->left;
-        }
+        if (to_recv > pb->left) { to_recv = pb->left; }
         PUBNUB_ASSERT_OPT(to_recv > 0);
         have_read = socket_recv(pb->pal.socket, (char*)pb->ptr, to_recv, 0);
         if (have_read <= 0) {
@@ -264,6 +278,7 @@ enum pubnub_res pbpal_read_status(pubnub_t* pb)
         return PNR_OK;
     }
 
+    PUBNUB_LOG_WARNING(pb, "Read incomplete.");
     return PNR_IN_PROGRESS;
 }
 
@@ -291,7 +306,7 @@ int pbpal_close(pubnub_t* pb)
         pb->sock_state = STATE_NONE;
     }
 
-    PUBNUB_LOG_TRACE("pbpal_close(pb=%p) returning 0\n", pb);
+    PUBNUB_LOG_TRACE(pb, "Socket closed.");
 
     return 0;
 }

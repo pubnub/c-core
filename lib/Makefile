@@ -17,7 +17,7 @@ generate_report: all
 	#$(GCOVR) -r . --html --html-details -o coverage.html
 	#$(GCOVR) -r . --xml -o coverage.xml
 
-CFLAGS +=-g -D PUBNUB_CALLBACK_API -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_NONE -I. -I.. -I../core -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
+CFLAGS +=-g -D PUBNUB_CALLBACK_API -D PUBNUB_USE_LOGGER=1 -D PUBNUB_USE_DEFAULT_LOGGER=1 -D PUBNUB_LOG_MIN_LEVEL=NONE -I. -I.. -I../core -I ../core/test -I../lib/base64 -I../lib/md5 -I../lib/miniz -I../cgreen/include
 
 LDFLAGS=-L../cgreen/build/src
 

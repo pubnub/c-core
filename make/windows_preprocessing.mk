@@ -9,9 +9,9 @@
 #                      Default preprocessor flag values                       #
 ###############################################################################
 
-# Logger level.
-!ifndef LOG_LEVEL
-LOG_LEVEL = $(DEFAULT_LOG_LEVEL)
+# Minimum logger level.
+!ifndef LOG_MIN_LEVEL
+LOG_MIN_LEVEL = $(DEFAULT_LOG_MIN_LEVEL)
 !endif
 
 # Whether address sanitizer should be enabled or not.
@@ -218,9 +218,21 @@ USE_SUBSCRIBE_EVENT_ENGINE = $(DEFAULT_USE_SUBSCRIBE_EVENT_ENGINE)
 USE_SUBSCRIBE_V2 = $(DEFAULT_USE_SUBSCRIBE_V2)
 !endif
 
-# Whether user defined callback for logging should be enabled or not.
-!ifndef USE_LOG_CALLBACK
-USE_LOG_CALLBACK = $(DEFAULT_USE_LOG_CALLBACK)
+# Whether advanced logger should be enabled or not.
+!ifndef USE_LOGGER
+USE_LOGGER = $(DEFAULT_USE_LOGGER)
+!endif
+
+# Whether default (stdio/platform) logger should be enabled or not.
+#
+# Important: USE_LOGGER must be enabled to use this.
+!ifndef USE_DEFAULT_LOGGER
+USE_DEFAULT_LOGGER = $(DEFAULT_USE_DEFAULT_LOGGER)
+!endif
+!if $(USE_DEFAULT_LOGGER)
+!if !$(USE_LOGGER)
+!error "You must enable USE_LOGGER to use USE_DEFAULT_LOGGER!"
+!endif
 !endif
 
 # Additional user-provided compiler flags (C/C++).

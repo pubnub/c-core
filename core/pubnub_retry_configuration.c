@@ -11,7 +11,9 @@
 #include "core/pubnub_pubsubapi.h"
 #include "core/pubnub_assert.h"
 #include "core/pubnub_mutex.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pbcc_logger_manager.h"
+#endif // PUBNUB_USE_LOGGER
 #include "pubnub_internal.h"
 
 #ifdef _WIN32
@@ -171,6 +173,33 @@ void pubnub_set_retry_configuration(
     pubnub_retry_configuration_t* configuration)
 {
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
+#if PUBNUB_LOG_ENABLED(DEBUG)
+    if (NULL == configuration)
+        PUBNUB_LOG_DEBUG(pb, "Disable request auto-retry.");
+    else {
+        if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_DEBUG)) {
+            const char* policy =
+                configuration->policy == PUBNUB_LINEAR_RETRY_POLICY
+                    ? "linear"
+                    : "exponential";
+            pubnub_log_value_t data = pubnub_log_value_map_init();
+            PUBNUB_LOG_MAP_SET_STRING(&data, policy)
+            PUBNUB_LOG_MAP_SET_NUMBER(
+                &data, configuration->max_retries, max_retries)
+            PUBNUB_LOG_MAP_SET_NUMBER(
+                &data, configuration->minimum_delay, minimum_delay)
+            PUBNUB_LOG_MAP_SET_NUMBER(
+                &data, configuration->maximum_delay, maximum_delay)
+            pubnub_log_object(
+                pb,
+                PUBNUB_LOG_LEVEL_DEBUG,
+                PUBNUB_LOG_LOCATION,
+                &data,
+                "Set request auto retry configuration:");
+        }
+    }
+#endif
+
     pubnub_mutex_lock(pb->monitor);
     if (NULL != pb->core.retry_configuration)
         pubnub_retry_configuration_free(&pb->core.retry_configuration);
@@ -184,9 +213,7 @@ pubnub_retry_configuration_t* pubnub_retry_configuration_linear_alloc(void)
 }
 
 pubnub_retry_configuration_t*
-pubnub_retry_configuration_linear_alloc_with_excluded(
-    const int excluded,
-    ...)
+pubnub_retry_configuration_linear_alloc_with_excluded(const int excluded, ...)
 {
     va_list args;
     va_start(args, excluded);
@@ -290,25 +317,21 @@ pubnub_retry_configuration_t* pubnub_retry_configuration_alloc_with_options_(
     const pubnub_endpoint_t     excluded,
     const va_list               endpoints)
 {
-    pubnub_retry_configuration_t* configuration = malloc(
-        sizeof(pubnub_retry_configuration_t));
-    if (NULL == configuration) {
-        PUBNUB_LOG_ERROR("pubnub_retry_configuration_linear_alloc: failed to "
-            "allocate memory\n");
-        return configuration;
-    }
+    pubnub_retry_configuration_t* configuration =
+        malloc(sizeof(pubnub_retry_configuration_t));
+    if (NULL == configuration) { return configuration; }
 
-    memset(configuration->excluded_endpoints,
-           false,
-           sizeof(configuration->excluded_endpoints));
+    memset(
+        configuration->excluded_endpoints,
+        false,
+        sizeof(configuration->excluded_endpoints));
     configuration->policy        = policy;
     configuration->minimum_delay = minimum_delay;
     configuration->maximum_delay = maximum_delay;
     configuration->max_retries   = maximum_retry;
 
-    pubnub_retry_configuration_set_excluded_(configuration,
-                                             excluded,
-                                             endpoints);
+    pubnub_retry_configuration_set_excluded_(
+        configuration, excluded, endpoints);
 
     return configuration;
 }
@@ -354,10 +377,8 @@ size_t pubnub_retry_configuration_delay_(pubnub_t* pb)
     const int retry_after   = pubnub_last_http_retry_header(pb);
 
     size_t delay = -1;
-    if (!pubnub_retry_configuration_retryable_(configuration,
-                                               pb->trans,
-                                               current_retry,
-                                               http_status))
+    if (!pubnub_retry_configuration_retryable_(
+            configuration, pb->trans, current_retry, http_status))
         return delay;
 
     if (retry_after > 0 && 429 == http_status) { delay = retry_after; }

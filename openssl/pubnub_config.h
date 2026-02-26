@@ -164,10 +164,6 @@
 #define PUBNUB_COMPRESSED_MAXLEN 32000
 #endif
 
-#if !defined(PUBNUB_USE_LOG_CALLBACK)
-#define PUBNUB_USE_LOG_CALLBACK 1
-#endif
-
 /** The maximum length (in characters) of the host name of the proxy
     that will be saved in the Pubnub context.
 */
@@ -255,5 +251,14 @@
 #ifndef PUBNUB_RAND_INIT_VECTOR
 #define PUBNUB_RAND_INIT_VECTOR 1
 #endif
+
+#if !defined(PUBNUB_USE_LOGGER)
+/** Enable built-in logger by default. */
+#define PUBNUB_USE_LOGGER 1
+#endif // !defined(PUBNUB_USE_LOGGER)
+#if !defined(PUBNUB_USE_DEFAULT_LOGGER)
+/** Whether built-in stdout/stderr logger should be used or not. */
+#define PUBNUB_USE_DEFAULT_LOGGER 1
+#endif // !defined(PUBNUB_USE_DEFAULT_LOGGER)
 
 #endif /* !defined INC_PUBNUB_CONFIG */

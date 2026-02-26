@@ -5,6 +5,7 @@
 #if !defined INC_PBHTTP_DIGEST
 #define      INC_PBHTTP_DIGEST
 
+#include "pubnub_api_types.h"
 #include "pubnub_memory_block.h"
 
 
@@ -121,9 +122,10 @@ void pbhttp_digest_init(struct pbhttp_digest_context *ctx);
                                                used,
     @retval pbhtdig_RealmNotFound realm is not discovered(yet) in digest 'auth-info' header line
  */
-enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(struct pbhttp_digest_context *ctx,
-                                                                char const* header,
-                                                                char* realm);
+enum pbhttp_digest_parse_header_rslt pbhttp_digest_parse_header(pubnub_t*                     pb,
+                                                                struct pbhttp_digest_context* ctx,
+                                                                char const*                  header,
+                                                                char*                        realm);
 
 /** Sets the contents of the string buffer to send as the header
     during HTTP Digest authentication.

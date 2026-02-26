@@ -8,7 +8,9 @@
 #include "core/pubnub_ntf_callback.h"
 #include "pbtimespec_elapsed_ms.h"
 #include "core/pubnub_assert.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger.h"
+#endif // PUBNUB_USE_LOGGER
 #include "core/pubnub_timer_list.h"
 #include "core/pbpal.h"
 
@@ -46,12 +48,12 @@ static struct SocketWatcherData m_watcher;
 
 
 #if defined(PUBNUB_NTF_RUNTIME_SELECTION)
-#define MAYBE_INLINE 
-#else 
-#if __STDC_VERSION__ >= 199901L 
-#define MAYBE_INLINE static inline 
+#define MAYBE_INLINE
 #else
-#define MAYBE_INLINE static 
+#if __STDC_VERSION__ >= 199901L
+#define MAYBE_INLINE static inline
+#else
+#define MAYBE_INLINE static
 #endif
 #endif // PUBNUB_NTF_RUNTIME_SELECTION
 
@@ -82,9 +84,7 @@ void socket_watcher_thread(void* arg)
         EnterCriticalSection(&m_watcher.stoplock);
         stop_thread = m_watcher.stop_socket_watcher_thread;
         LeaveCriticalSection(&m_watcher.stoplock);
-        if (stop_thread) {
-            break;
-        }
+        if (stop_thread) { break; }
 
         pbpal_ntf_callback_process_queue(&m_watcher.queue);
 
@@ -109,24 +109,24 @@ void socket_watcher_thread(void* arg)
 }
 
 
-MAYBE_INLINE int pbntf_init_callback(void)
+MAYBE_INLINE int pbntf_init_callback(pubnub_t* pb)
 {
     InitializeCriticalSection(&m_watcher.stoplock);
     InitializeCriticalSection(&m_watcher.mutw);
     InitializeCriticalSection(&m_watcher.timerlock);
 
     m_watcher.stop_socket_watcher_thread = false;
-    m_watcher.poll = pbpal_ntf_callback_poller_init();
-    if (NULL == m_watcher.poll) {
-        return -1;
-    }
+    m_watcher.poll                       = pbpal_ntf_callback_poller_init();
+    if (NULL == m_watcher.poll) { return -1; }
     pbpal_ntf_callback_queue_init(&m_watcher.queue);
 
     m_watcher.thread_handle = (HANDLE)_beginthread(
-        socket_watcher_thread, PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024, NULL);
+        socket_watcher_thread,
+        PUBNUB_CALLBACK_THREAD_STACK_SIZE_KB * 1024,
+        NULL);
     if ((HANDLE)-1L == m_watcher.thread_handle) {
-        PUBNUB_LOG_ERROR("Failed to start the polling thread, error code: %d\n",
-                         errno);
+        PUBNUB_LOG_ERROR(
+            pb, "Failed to start the polling thread. Error code: %d", errno);
         DeleteCriticalSection(&m_watcher.mutw);
         DeleteCriticalSection(&m_watcher.timerlock);
         DeleteCriticalSection(&m_watcher.stoplock);
@@ -170,9 +170,8 @@ MAYBE_INLINE int pbntf_got_socket_callback(pubnub_t* pb)
 
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 
@@ -199,9 +198,8 @@ MAYBE_INLINE void pbntf_start_wait_connect_timer_callback(pubnub_t* pb)
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->wait_connect_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->wait_connect_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 }
@@ -212,9 +210,8 @@ MAYBE_INLINE void pbntf_start_transaction_timer_callback(pubnub_t* pb)
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
         pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
-        m_watcher.timer_head = pubnub_timer_list_add(m_watcher.timer_head,
-                                                     pb,
-                                                     pb->transaction_timeout_ms);
+        m_watcher.timer_head = pubnub_timer_list_add(
+            m_watcher.timer_head, pb, pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
     }
 }
@@ -230,13 +227,13 @@ MAYBE_INLINE void pbntf_update_socket_callback(pubnub_t* pb)
 
 #if !defined(PUBNUB_NTF_RUNTIME_SELECTION)
 
-int pbntf_watch_in_events(pubnub_t* pbp) 
+int pbntf_watch_in_events(pubnub_t* pbp)
 {
     return pbntf_watch_in_events_callback(pbp);
 }
 
 
-int pbntf_watch_out_events(pubnub_t* pbp) 
+int pbntf_watch_out_events(pubnub_t* pbp)
 {
     return pbntf_watch_out_events_callback(pbp);
 }
@@ -244,11 +241,10 @@ int pbntf_watch_out_events(pubnub_t* pbp)
 
 int pbntf_init(pubnub_t* pb)
 {
-    PUBNUB_UNUSED(pb);
-    return pbntf_init_callback();
+    return pbntf_init_callback(pb);
 }
 
- 
+
 int pbntf_got_socket(pubnub_t* pb)
 {
     return pbntf_got_socket_callback(pb);
@@ -278,7 +274,7 @@ void pbntf_start_wait_connect_timer(pubnub_t* pb)
     return pbntf_start_wait_connect_timer_callback(pb);
 }
 
-   
+
 void pbntf_start_transaction_timer(pubnub_t* pb)
 {
     return pbntf_start_transaction_timer_callback(pb);

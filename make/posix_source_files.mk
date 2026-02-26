@@ -113,7 +113,7 @@ ifeq ($(USE_DNS_SERVERS), 1)
         $(DNS_SERVERS_SOURCE_FILES)         \
         $(DNS_SERVERS_SOURCE_FILES_POSIX)
 endif
-ifeq ($(or $(USE_DNS_SERVERS),$(USE_PROXY)), 1)
+ifneq ($(filter 1,$(USE_DNS_SERVERS) $(USE_PROXY)),)
     CALLBACK_SOURCE_FILES += $(IPV4_SOURCE_FILES)
     ifeq ($(USE_IPV6), 1)
         CALLBACK_SOURCE_FILES += $(IPV6_SOURCE_FILES)
@@ -165,6 +165,14 @@ endif
 # Subscribe v2 feature source files.
 ifeq ($(USE_SUBSCRIBE_V2), 1)
     SOURCE_FILES += $(SUBSCRIBE_V2_SOURCE_FILES)
+endif
+
+# Advanced logger feature source files.
+ifeq ($(USE_LOGGER), 1)
+    SOURCE_FILES += $(LOGGER_SOURCE_FILES)
+    ifeq ($(USE_DEFAULT_LOGGER), 1)
+        SOURCE_FILES += $(LOGGER_DEFAULT_STDIO_SOURCE_FILES)
+    endif
 endif
 
 

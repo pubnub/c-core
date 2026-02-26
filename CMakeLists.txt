@@ -85,14 +85,15 @@ num_option(USE_IPV6 "Use IPv6" ON)
 num_option(USE_SET_DNS_SERVERS "Use set DNS servers [CALLBACK=ON]" ${DEFAULT_USE_CALLBACK_API})
 num_option(USE_EXTERN_API "Use extern C API [WITH_CPP=ON]" ON)
 num_option(USE_LEGACY_CRYPTO_RANDOM_IV "Use random IV for legacy crypto module [OpenSSL only]" ON)
-num_option(USE_LOG_CALLBACK "Use possibility to replace default logging function with user provided callback" OFF)
+num_option(USE_LOGGER "Use advanced logger" ON)
+num_option(USE_DEFAULT_LOGGER "Use default (stdio/platform) logger [USE_LOGGER=ON needed]" ON)
 log_option(COMPILE_COMMANDS "Generate compile_commands.json" OFF)
 log_set(OPENSSL_ROOT_DIR "" "OpenSSL root directory (leave empty for find_package() defaults)[OPENSSL=ON needed]")
 log_set(CUSTOM_OPENSSL_LIB_DIR "lib" "OpenSSL lib directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(CUSTOM_OPENSSL_INCLUDE_DIR "include" "OpenSSL include directory relative to OPENSSL_ROOT_DIR [used only if find_package() failed]")
 log_set(EXAMPLE "all" "Build example with provided name (use 'all' for all examples) [EXAMPLES=ON needed]")
 log_set(CGREEN_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/cgreen" "CGreen root directory [UNIT_TEST=ON needed]")
-log_set(LOG_LEVEL "WARNING" "Log level [TRACE/DEBUG/INFO/WARNING/ERROR]")
+log_set(LOG_MIN_LEVEL "WARNING" "Minimum log level [TRACE/DEBUG/INFO/WARNING/ERROR/NONE]")
 log_set(CUSTOM_BOOL_TYPE "" "Type of bool for platform differences. Select whatever works for you that accepts 0/1 values")
 
 if (${OPENSSL} AND ${MBEDTLS})
@@ -103,17 +104,21 @@ if (${USE_NTF_RUNTIME_SELECTION} AND NOT ${USE_CALLBACK_API})
     message(FATAL_ERROR "You must enable callback API to use runtime NTF API selection!")
 endif ()
 
-if(${COMPILE_COMMANDS})
+if (${USE_DEFAULT_LOGGER} AND NOT ${USE_LOGGER})
+    message(FATAL_ERROR "You must enable USE_LOGGER to use USE_DEFAULT_LOGGER!")
+endif ()
+
+if (${COMPILE_COMMANDS})
     message(STATUS "Generating compile_commands.json")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
-endif()
+endif ()
 
 # Flags configuration
 
 set(FLAGS "\
     -Wall \
     -D PUBNUB_THREADSAFE \
-    -D PUBNUB_LOG_LEVEL=PUBNUB_LOG_LEVEL_${LOG_LEVEL} \
+    -D PUBNUB_LOG_MIN_LEVEL=${LOG_MIN_LEVEL} \
     -D PUBNUB_ONLY_PUBSUB_API=${ONLY_PUBSUB_API} \
     -D PUBNUB_PROXY_API=${USE_PROXY} \
     -D PUBNUB_USE_GZIP_COMPRESSION=${USE_GZIP_COMPRESSION} \
@@ -129,8 +134,9 @@ set(FLAGS "\
     -D PUBNUB_USE_FETCH_HISTORY=${USE_FETCH_HISTORY} \
     -D PUBNUB_CRYPTO_API=${USE_CRYPTO_API} \
     -D PUBNUB_RAND_INIT_VECTOR=${USE_LEGACY_CRYPTO_RANDOM_IV} \
-    -D PUBNUB_USE_LOG_CALLBACK=${USE_LOG_CALLBACK} \
-    -D PUBNUB_MBEDTLS=${MBEDTLS}")
+    -D PUBNUB_MBEDTLS=${MBEDTLS} \
+    -D PUBNUB_USE_LOGGER=${USE_LOGGER} \
+    -D PUBNUB_USE_DEFAULT_LOGGER=${USE_DEFAULT_LOGGER}")
 
 if (DEFINED SDK_VERSION_SUFFIX)
     set(FLAGS "\
@@ -143,6 +149,14 @@ if (WIN32 OR WIN64 OR MSVC)
     set(FLAGS "\
     ${FLAGS} \
 	-D _WINSOCKAPI_")
+endif ()
+
+# Strip the absolute source directory prefix from __FILE__ on MSVC so that
+# log locations show project-relative paths (e.g. core\file.c:123 instead of
+# C:\Users\...\core\file.c:123).  POSIX compilers already receive relative
+# paths from Make so __FILE__ is short there by default.
+if (MSVC)
+    add_compile_options("/d1trimfile:${CMAKE_SOURCE_DIR}/")
 endif ()
 
 
@@ -207,7 +221,6 @@ set(CORE_SOURCEFILES
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_netcore.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_blocking_io.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timers.c
-        ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_log.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_json_parse.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_helper.c
         ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_generate_uuid_v3_md5.c
@@ -314,33 +327,33 @@ if (${USE_CALLBACK_API})
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
                 ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c)
-		if (${OPENSSL})
+        if (${OPENSSL})
             set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_posix.c)
-		else ()
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                    ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_posix.c)
+        else ()
             set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-				${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c)
-		endif ()
-		
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_get_native_socket.c
+                    ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_ntf_callback_posix.c)
+        endif ()
+
     elseif (WIN32 OR WIN64 OR MSVC)
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
                 ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c)
-		if (${OPENSSL})
+        if (${OPENSSL})
             set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-				${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
-                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c)
-		else ()
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_get_native_socket.c
+                    ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_ntf_callback_windows.c)
+        else ()
             set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-				${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c)
-		endif ()
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_get_native_socket.c
+                    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_ntf_callback_windows.c)
+        endif ()
     endif ()
 
     if (UNIX OR WIN32 OR WIN64 OR MSVC)
@@ -503,6 +516,30 @@ if (${USE_REVOKE_TOKEN_API})
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_revoke_token_api.c)
 endif ()
 
+if (${USE_LOGGER})
+    set(FEATURE_SOURCEFILES
+            ${FEATURE_SOURCEFILES}
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_logger.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pbcc_logger_manager.c
+            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_log_value.c)
+    if (${USE_DEFAULT_LOGGER})
+        if (NOT UNIX AND NOT WIN32 AND NOT WIN64 AND NOT MSVC)
+            # FreeRTOS / embedded platforms
+            set(FEATURE_SOURCEFILES
+                    ${FEATURE_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/freertos/pubnub_freertos_logger.c)
+            # NOTE: Microchip Harmony has its own logger
+            # (microchip_harmony/pubnub_harmony_logger.c) but uses
+            # MPLAB X build system, not CMake.
+        else ()
+            # POSIX and Windows share the stdio-based logger
+            set(FEATURE_SOURCEFILES
+                    ${FEATURE_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_stdio_logger.c)
+        endif ()
+    endif ()
+endif ()
+
 set(SSL_LINK_LIBRARIES)
 if (${OPENSSL})
     message(STATUS "Using OpenSSL")
@@ -542,10 +579,6 @@ if (${OPENSSL})
             message(STATUS "OpenSSL ready!")
         endif ()
     endif ()
-
-    set(FEATURE_SOURCEFILES
-            ${OPENSSL_LIBRARIES}
-            ${FEATURE_SOURCEFILES})
 
     set(LIB_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/lib/base64/pbbase64.c
@@ -826,7 +859,7 @@ if (${EXAMPLES})
 
             if (NOT ${USE_CALLBACK_API})
                 set(EXAMPLE_LIST
-                    pubnub_sync_subloop_sample
+                        pubnub_sync_subloop_sample
                         ${EXAMPLE_LIST})
             endif ()
 
@@ -848,9 +881,9 @@ if (${EXAMPLES})
         endif ()
 
         if (${USE_NTF_RUNTIME_SELECTION})
-            set(EXAMPLE_LIST 
-                pubnub_api_enforcement_sample
-                ${EXAMPLE_LIST})
+            set(EXAMPLE_LIST
+                    pubnub_api_enforcement_sample
+                    ${EXAMPLE_LIST})
         endif ()
 
     else ()

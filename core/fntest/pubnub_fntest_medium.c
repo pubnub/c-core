@@ -3,7 +3,9 @@
 
 #include "pubnub_fntest.h"
 #include "core/pubnub_blocking_io.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger_internal.h"
+#endif
 
 #include <stdlib.h>
 
@@ -78,7 +80,7 @@ TEST_DEF_NEED_CHGROUP(complex_send_and_receive_over_channel_plus_group_simultane
             rslt = pubnub_await(pbp);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp, tries);
+    PUBNUB_LOG_TRACE(pbp, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp, tries);
     expect(PNR_OK == rslt);
 //    expect_PNR_OK(pbp, pubnub_subscribe(pbp, NULL, chgrp), 10 * SECONDS);
     expect_PNR_OK(pbp_2, pubnub_subscribe(pbp_2, "ch", NULL), 10 * SECONDS);
@@ -170,7 +172,7 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_group)
             rslt = pubnub_await(pbp);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp, tries);
+    PUBNUB_LOG_TRACE(pbp, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp, tries);
     expect(PNR_OK == rslt);
 //    expect_pnr_maybe_started(rslt, pbp, 10 * SECONDS, PNR_OK);
 
@@ -238,7 +240,7 @@ TEST_DEF_NEED_CHGROUP(connect_disconnect_and_connect_again_combo)
             rslt = pubnub_await(pbp);
         }
     } while ((++tries < 100) && (PNR_FORMAT_ERROR == rslt));
-    PUBNUB_LOG_TRACE("---->pubnub_subscribe(pb=%p, chgrp) tries %d times.\n", pbp, tries);
+    PUBNUB_LOG_TRACE(pbp, "---->pubnub_subscribe(pb=%p, chgrp) tries %d times.", pbp, tries);
     expect(PNR_OK == rslt);
 //    rslt = pubnub_subscribe(pbp, NULL, chgrp);
 //    expect_pnr_maybe_started(rslt, pbp, 10 * SECONDS, PNR_OK);

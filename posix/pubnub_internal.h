@@ -59,15 +59,15 @@ typedef int pb_socket_t;
    what's the status of this support across various BSDs... So, for
    now, we only do this for MacOS.
 */
-#define socket_disable_SIGPIPE(socket)                                             \
+#define socket_disable_SIGPIPE(pb, socket)                                          \
     do {                                                                           \
         int on = 1;                                                                \
         if (setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) { \
-            PUBNUB_LOG_WARNING("Failed to set SO_NOSIGPIPE, errno=%d\n", errno);   \
+            PUBNUB_LOG_WARNING(pb, "Failed to set SO_NOSIGPIPE, errno=%d\n", errno); \
         }                                                                          \
     } while (0)
 #else
-#define socket_disable_SIGPIPE(socket)
+#define socket_disable_SIGPIPE(pb, socket)
 #endif
 
 
