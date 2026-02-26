@@ -1,3 +1,10 @@
+## v7.0.1
+February 26 2026
+
+#### Fixed
+- Add `pubnub_internal.h` and `pubnub_logger_internal.h` includes to `pbcc_subscribe_event_engine_events.c` and `pbcc_crypto.c` for logger macro availability.
+- Move `set->ee` assignment before `pubnub_subscription_set_add` calls to prevent crash on uninitialized `set->ee->pb` dereference.
+
 ## v7.0.0
 February 26 2026
 
