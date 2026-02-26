@@ -3,7 +3,9 @@
 
 #include <string.h>
 
+#include "core/pubnub_logger_internal.h"
 #if PUBNUB_USE_LOGGER
+#include "pubnub_internal.h"
 #include "core/pbcc_logger_manager.h"
 #include "core/pubnub_helper.h"
 #endif // PUBNUB_USE_LOGGER

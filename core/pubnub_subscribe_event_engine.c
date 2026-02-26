@@ -224,18 +224,20 @@ pubnub_subscription_set_t* pubnub_subscription_set_alloc_with_entities(
     const pubnub_subscription_options_t* options)
 {
     PUBNUB_ASSERT_OPT(NULL != entities);
+    PUBNUB_ASSERT_OPT(entities_count > 0);
 
     const int length = entities_count - entities_count % SUBSCRIPTIONS_LENGTH +
                        SUBSCRIPTIONS_LENGTH;
-    const pubnub_t*            pb  = NULL;
     pubnub_subscription_set_t* set = subscription_set_alloc_(options, length);
     if (NULL == set) { return NULL; }
+
+    /** Resolve event engine early so `pubnub_subscription_set_add` can log. */
+    set->ee = entities[0]->pb->core.subscribe_ee;
 
     for (int i = 0; i < entities_count; ++i) {
         pubnub_entity_t*       entity = entities[i];
         pubnub_subscription_t* sub = pubnub_subscription_alloc_(entity, NULL);
 
-        if (NULL == pb) { pb = entity->pb; }
         if (NULL == sub ||
             PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub)) {
             pubnub_subscription_set_free(&set);
@@ -243,12 +245,6 @@ pubnub_subscription_set_t* pubnub_subscription_set_alloc_with_entities(
         }
         /** Release extra `subscription` reference because `set` retained it. */
         if (NULL != sub) { pubnub_subscription_free(&sub); }
-    }
-
-    if (pb) { set->ee = pb->core.subscribe_ee; }
-    else {
-        pubnub_subscription_set_free(&set);
-        return NULL;
     }
 
     return set;
@@ -266,13 +262,14 @@ pubnub_subscription_set_t* pubnub_subscription_set_alloc_with_subscriptions(
         subscription_set_alloc_(options, SUBSCRIPTIONS_LENGTH);
     if (NULL == set) { return NULL; }
 
+    /** Resolve event engine early so `pubnub_subscription_set_add` can log. */
+    set->ee = sub1->ee;
+
     if (PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub1) ||
         PNR_OUT_OF_MEMORY == pubnub_subscription_set_add(set, sub2)) {
         pubnub_subscription_set_free(&set);
         return NULL;
     }
-
-    set->ee = sub1->ee;
 
     return set;
 }
@@ -765,6 +762,7 @@ pubnub_subscription_set_t* subscription_set_alloc_(
         return NULL;
     }
 
+    subscription_set->ee         = NULL;
     subscription_set->subscribed = false;
     subscription_set->counter    = pbref_counter_alloc();
 
