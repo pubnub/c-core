@@ -7,6 +7,7 @@
 #include "pbsha256.h"
 #include "pbaes256.h"
 #include "pubnub_crypto.h"
+#include "pubnub_logger_internal.h"
 #if PUBNUB_USE_LOGGER
 #include "pbcc_logger_manager.h"
 #endif // PUBNUB_USE_LOGGER
