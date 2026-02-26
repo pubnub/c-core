@@ -1,3 +1,27 @@
+## v7.0.0
+February 26 2026
+
+#### Added
+- BREAKING CHANGES: Added support for extendable logging, which can log structured data and allow to register customer loggers.
+- Added default logger for POSIX/Windows (`stdio`), and separate for FreeRTOS and Harmony.
+- Now request / response is logged as single log entries.
+- Added mechanism to drastically reduce the amount of logs generated with `sync` await interface.
+- Added way to set pn_sdk in runtime.
+
+#### Fixed
+- Fix issue because of which `pubnub_unsubscribe_with_subscription` and `pubnub_unsubscribe_with_subscription_set` nullified passed pointer even if "user" code still owns it.
+- Save mutex to local variable before freeing subscription and subscription_set to avoid dereferencing freed memory on unlock/destroy.
+- Unregister PubNub callback in `pbcc_subscribe_ee_free()` so late async completions do not invoke it with freed `ee` as user_data.
+- `pbarray_remove()` uses pointer equality; match by (callback, user_data) and remove by index with `pbarray_remove_element_at()` so the intended listener is actually removed.
+- Move NULL check for `cryptor_header` before the first dereference in `pbcc_cryptor_header_v1_to_alloc_block` and remove the redundant check.
+- Guard `subs` dereference in `pubnub_subscription_set_union` and `pubnub_subscription_set_subtract` with a NULL check before the loop.
+- Fix adding long message actions by disabling Gzip compression.
+- Access `.ipv4` member when assigning parsed address to `dns_bytes`.
+- Use `getsockname()` to verify a Global Unicast source (2000::/3) instead of trusting `connect()`.
+
+#### Modified
+- Fixed issues because of which TLS read returned right away to the state machine without even waiting for `select`.
+
 ## v6.2.0
 December 10 2025
 
