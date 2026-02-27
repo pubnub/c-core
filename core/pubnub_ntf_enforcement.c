@@ -12,8 +12,6 @@
 
 void pubnub_enforce_api(pubnub_t* p, enum pubnub_api_enforcement policy)
 {
-    PUBNUB_LOG_DEBUG(
-        p, "Enforce %s API.", PNA_SYNC == policy ? "sync" : "callback");
     p->api_policy = policy;
 }
 
