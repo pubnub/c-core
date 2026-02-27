@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "7.0.1"
+version: "7.0.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-02-27
+    version: v7.0.2
+    changes:
+      - type: improvement
+        text: "Relocate debug log from `pubnub_enforce_api` setter to `pubnub_init` config output under runtime selection guards."
   - date: 2026-02-26
     version: v7.0.1
     changes:
@@ -1130,7 +1135,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1196,7 +1201,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1262,7 +1267,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1324,7 +1329,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1385,7 +1390,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1441,7 +1446,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
@@ -1494,7 +1499,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
             requires:
               -
                 name: "miniz"
