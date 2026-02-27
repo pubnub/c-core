@@ -185,6 +185,13 @@ pubnub_t* pubnub_init(
         pubnub_log_value_map_set(&config, "useSSL", &ssl);
 #endif
 
+#if defined(PUBNUB_CALLBACK_API) && defined(PUBNUB_NTF_RUNTIME_SELECTION)
+        PUBNUB_LOG_MAP_SET_STRING(
+            &config,
+            PNA_CALLBACK == p->api_policy ? "callback" : "sync",
+            enforced_api);
+#endif // defined(PUBNUB_CALLBACK_API) && defined(PUBNUB_NTF_RUNTIME_SELECTION)
+
         pubnub_log_object(
             p,
             PUBNUB_LOG_LEVEL_INFO,

@@ -1,3 +1,9 @@
+## v7.0.2
+February 27 2026
+
+#### Modified
+- Relocate debug log from `pubnub_enforce_api` setter to `pubnub_init` config output under runtime selection guards.
+
 ## v7.0.1
 February 26 2026
 
