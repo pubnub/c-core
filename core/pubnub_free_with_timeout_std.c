@@ -30,8 +30,8 @@ int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec)
     }
     PUBNUB_LOG_TRACE(
         pbp,
-        "Freed the context in %lf seconds",
-        ((float)clock() - t0) / CLOCKS_PER_SEC);
+        "Freed the context in %.3f seconds",
+        (double)pbms_elapsed(t0) / 1000.0);
 
     return 0;
 }
