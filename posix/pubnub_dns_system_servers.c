@@ -35,7 +35,6 @@ int pubnub_dns_read_system_servers_ipv4(
         return -1;
     }
     while ((i < n) && !feof(fp)) {
-        uint8_t* dns_bytes = NULL;
         /* Reads new line */
         fgets(buffer, sizeof buffer, fp);
         if (strncmp(buffer, "nameserver", 10) == 0) {
@@ -57,17 +56,18 @@ int pubnub_dns_read_system_servers_ipv4(
                     addr_start);
             }
             else {
-                dns_bytes = o_ipv4[i].ipv4;
-                found     = true;
+                found = true;
+#if PUBNUB_LOG_ENABLED(TRACE)
+                {
+                    char str[INET_ADDRSTRLEN];
+                    PUBNUB_LOG_TRACE(
+                        pb,
+                        "Added IPv4 DNS server address to the list: %s",
+                        inet_ntop(
+                            AF_INET, o_ipv4[i].ipv4, str, INET_ADDRSTRLEN));
+                }
+#endif
                 ++i;
-            }
-
-            if (NULL != dns_bytes) {
-                char str[INET_ADDRSTRLEN];
-                PUBNUB_LOG_TRACE(
-                    pb,
-                    "Added IPv4 DNS server address to the list: %s",
-                    inet_ntop(AF_INET, dns_bytes, str, INET_ADDRSTRLEN));
             }
         }
     }
@@ -116,8 +116,6 @@ int pubnub_dns_read_system_servers_ipv6(
         /* Reads new line */
         fgets(buffer, sizeof buffer, fp);
         if (strncmp(buffer, "nameserver", 10) == 0) {
-            bool     is_ipv4_address = false;
-            uint8_t* dns_bytes       = NULL;
             char*    addr_start      = buffer + 10;
             while (*addr_start == ' ' || *addr_start == '\t') {
                 addr_start++;
@@ -132,19 +130,42 @@ int pubnub_dns_read_system_servers_ipv6(
 
             /* Try parsing as IPv6 first */
             if (pubnub_parse_ipv6_addr(pb, addr_start, &o_ipv6[dns_count]) == 0) {
-                dns_bytes = o_ipv6[dns_count].ipv6;
+#if PUBNUB_LOG_ENABLED(TRACE)
+                {
+                    char str[INET6_ADDRSTRLEN];
+                    PUBNUB_LOG_TRACE(
+                        pb,
+                        "Added IPv6 DNS (%s).",
+                        inet_ntop(
+                            AF_INET6,
+                            o_ipv6[dns_count].ipv6,
+                            str,
+                            INET6_ADDRSTRLEN));
+                }
+#endif
                 ++dns_count;
             }
             else {
                 struct pubnub_ipv4_address ipv4_addr;
                 if (pubnub_parse_ipv4_addr(addr_start, &ipv4_addr) == 0) {
                     has_ipv4_addresses = true;
-                    is_ipv4_address    = true;
                     memset(o_ipv6[dns_count].ipv6, 0, 10);
                     o_ipv6[dns_count].ipv6[10] = 0xff;
                     o_ipv6[dns_count].ipv6[11] = 0xff;
                     memcpy(&o_ipv6[dns_count].ipv6[12], ipv4_addr.ipv4, 4);
-                    dns_bytes = o_ipv6[dns_count].ipv6;
+#if PUBNUB_LOG_ENABLED(TRACE)
+                    {
+                        char str[INET6_ADDRSTRLEN];
+                        PUBNUB_LOG_TRACE(
+                            pb,
+                            "Added IPv4-mapped IPv6 DNS (%s).",
+                            inet_ntop(
+                                AF_INET6,
+                                o_ipv6[dns_count].ipv6,
+                                str,
+                                INET6_ADDRSTRLEN));
+                    }
+#endif
                     ++dns_count;
                 }
                 else {
@@ -153,15 +174,6 @@ int pubnub_dns_read_system_servers_ipv6(
                         "Unable to parse malformed IPv6 address string: %s",
                         addr_start);
                 }
-            }
-
-            if (NULL != dns_bytes) {
-                char str[INET6_ADDRSTRLEN];
-                PUBNUB_LOG_TRACE(
-                    pb,
-                    "Added %s DNS (%s).",
-                    is_ipv4_address ? "IPv4-mapped IPv6" : "IPv6",
-                    inet_ntop(AF_INET6, dns_bytes, str, INET6_ADDRSTRLEN));
             }
         }
     }
@@ -183,6 +195,7 @@ int pubnub_dns_read_system_servers_ipv6(
         "Discovered %u %s DNS server addresses",
         dns_count,
         has_ipv4_addresses ? "IPv4-mapped IPv6/IPv6" : "IPv6");
+    PUBNUB_UNUSED(has_ipv4_addresses);
 
     return dns_count;
 }

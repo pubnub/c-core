@@ -43,20 +43,20 @@ int pubnub_dns_set_primary_server_ipv4(
     pubnub_t*                  pb,
     struct pubnub_ipv4_address ipv4_address)
 {
-    uint8_t* ipv4 = ipv4_address.ipv4;
-
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_DEBUG(
-        pb,
-        "Set primary IPv4 DNS server: %u.%u.%u.%u",
-        ipv4[0],
-        ipv4[1],
-        ipv4[2],
-        ipv4[3]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(DEBUG)
+    {
+        const uint8_t* ipv4 = ipv4_address.ipv4;
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "Set primary IPv4 DNS server: %u.%u.%u.%u",
+            ipv4[0],
+            ipv4[1],
+            ipv4[2],
+            ipv4[3]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(DEBUG)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv4);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(DEBUG)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
@@ -94,20 +94,20 @@ int pubnub_dns_set_secondary_server_ipv4(
     pubnub_t*                  pb,
     struct pubnub_ipv4_address ipv4_address)
 {
-    uint8_t* ipv4 = ipv4_address.ipv4;
-
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_DEBUG(
-        pb,
-        "Set secondary IPv4 DNS server: %u.%u.%u.%u",
-        ipv4[0],
-        ipv4[1],
-        ipv4[2],
-        ipv4[3]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(DEBUG)
+    {
+        const uint8_t* ipv4 = ipv4_address.ipv4;
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "Set secondary IPv4 DNS server: %u.%u.%u.%u",
+            ipv4[0],
+            ipv4[1],
+            ipv4[2],
+            ipv4[3]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(DEBUG)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv4);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(DEBUG)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
@@ -146,25 +146,25 @@ int pubnub_get_dns_primary_server_ipv4(
     struct pubnub_ipv4_address* o_ipv4)
 {
     int            ret;
-    const uint8_t* ipv4 = m_primary_dns_server_ipv4.ipv4;
-
     PUBNUB_ASSERT_OPT(o_ipv4 != NULL);
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
 
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_TRACE(
-        pb,
-        "Get primary IPv4 DNS server: %u.%u.%u.%u",
-        ipv4[0],
-        ipv4[1],
-        ipv4[2],
-        ipv4[3]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(TRACE)
+    {
+        const uint8_t* ipv4 = m_primary_dns_server_ipv4.ipv4;
+        PUBNUB_LOG_TRACE(
+            pb,
+            "Get primary IPv4 DNS server: %u.%u.%u.%u",
+            ipv4[0],
+            ipv4[1],
+            ipv4[2],
+            ipv4[3]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(TRACE)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv4);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
 
     if (0 == m_primary_dns_server_ipv4.ipv4[0]) { ret = -1; }
     else {
@@ -184,25 +184,25 @@ int pubnub_get_dns_secondary_server_ipv4(
     struct pubnub_ipv4_address* o_ipv4)
 {
     int            ret;
-    const uint8_t* ipv4 = m_secondary_dns_server_ipv4.ipv4;
-
     PUBNUB_ASSERT_OPT(o_ipv4 != NULL);
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
 
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_TRACE(
-        pb,
-        "Get secondary IPv4 DNS server: %u.%u.%u.%u",
-        ipv4[0],
-        ipv4[1],
-        ipv4[2],
-        ipv4[3]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(TRACE)
+    {
+        const uint8_t* ipv4 = m_secondary_dns_server_ipv4.ipv4;
+        PUBNUB_LOG_TRACE(
+            pb,
+            "Get secondary IPv4 DNS server: %u.%u.%u.%u",
+            ipv4[0],
+            ipv4[1],
+            ipv4[2],
+            ipv4[3]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(TRACE)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv4);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
 
     if (0 == m_secondary_dns_server_ipv4.ipv4[0]) { ret = -1; }
     else {
@@ -221,24 +221,24 @@ int pubnub_dns_set_primary_server_ipv6(
     pubnub_t*                  pb,
     struct pubnub_ipv6_address ipv6_address)
 {
-    uint8_t* ipv6 = ipv6_address.ipv6;
-
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_DEBUG(
-        pb,
-        "Set primary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
-        ipv6[0] * 256 + ipv6[1],
-        ipv6[2] * 256 + ipv6[3],
-        ipv6[4] * 256 + ipv6[5],
-        ipv6[6] * 256 + ipv6[7],
-        ipv6[8] * 256 + ipv6[9],
-        ipv6[10] * 256 + ipv6[11],
-        ipv6[12] * 256 + ipv6[13],
-        ipv6[14] * 256 + ipv6[15]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(DEBUG)
+    {
+        const uint8_t* ipv6 = ipv6_address.ipv6;
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "Set primary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
+            ipv6[0] * 256 + ipv6[1],
+            ipv6[2] * 256 + ipv6[3],
+            ipv6[4] * 256 + ipv6[5],
+            ipv6[6] * 256 + ipv6[7],
+            ipv6[8] * 256 + ipv6[9],
+            ipv6[10] * 256 + ipv6[11],
+            ipv6[12] * 256 + ipv6[13],
+            ipv6[14] * 256 + ipv6[15]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(DEBUG)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv6);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(DEBUG)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
@@ -276,24 +276,24 @@ int pubnub_dns_set_secondary_server_ipv6(
     pubnub_t*                  pb,
     struct pubnub_ipv6_address ipv6_address)
 {
-    uint8_t* ipv6 = ipv6_address.ipv6;
-
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_DEBUG(
-        pb,
-        "Set secondary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
-        ipv6[0] * 256 + ipv6[1],
-        ipv6[2] * 256 + ipv6[3],
-        ipv6[4] * 256 + ipv6[5],
-        ipv6[6] * 256 + ipv6[7],
-        ipv6[8] * 256 + ipv6[9],
-        ipv6[10] * 256 + ipv6[11],
-        ipv6[12] * 256 + ipv6[13],
-        ipv6[14] * 256 + ipv6[15]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(DEBUG)
+    {
+        const uint8_t* ipv6 = ipv6_address.ipv6;
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "Set secondary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
+            ipv6[0] * 256 + ipv6[1],
+            ipv6[2] * 256 + ipv6[3],
+            ipv6[4] * 256 + ipv6[5],
+            ipv6[6] * 256 + ipv6[7],
+            ipv6[8] * 256 + ipv6[9],
+            ipv6[10] * 256 + ipv6[11],
+            ipv6[12] * 256 + ipv6[13],
+            ipv6[14] * 256 + ipv6[15]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(DEBUG)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv6);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(DEBUG)
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
@@ -332,7 +332,6 @@ int pubnub_get_dns_primary_server_ipv6(
     struct pubnub_ipv6_address* o_ipv6)
 {
     int            ret;
-    const uint8_t* ipv6 = m_primary_dns_server_ipv6.ipv6;
     uint8_t        zero[sizeof m_primary_dns_server_ipv6.ipv6] = { 0 };
 
     PUBNUB_ASSERT_OPT(o_ipv6 != NULL);
@@ -340,22 +339,24 @@ int pubnub_get_dns_primary_server_ipv6(
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
 
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_TRACE(
-        pb,
-        "Get primary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
-        ipv6[0] * 256 + ipv6[1],
-        ipv6[2] * 256 + ipv6[3],
-        ipv6[4] * 256 + ipv6[5],
-        ipv6[6] * 256 + ipv6[7],
-        ipv6[8] * 256 + ipv6[9],
-        ipv6[10] * 256 + ipv6[11],
-        ipv6[12] * 256 + ipv6[13],
-        ipv6[14] * 256 + ipv6[15]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(TRACE)
+    {
+        const uint8_t* ipv6 = m_primary_dns_server_ipv6.ipv6;
+        PUBNUB_LOG_TRACE(
+            pb,
+            "Get primary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
+            ipv6[0] * 256 + ipv6[1],
+            ipv6[2] * 256 + ipv6[3],
+            ipv6[4] * 256 + ipv6[5],
+            ipv6[6] * 256 + ipv6[7],
+            ipv6[8] * 256 + ipv6[9],
+            ipv6[10] * 256 + ipv6[11],
+            ipv6[12] * 256 + ipv6[13],
+            ipv6[14] * 256 + ipv6[15]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(TRACE)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv6);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
 
     if (memcmp(
             m_primary_dns_server_ipv6.ipv6,
@@ -380,7 +381,6 @@ int pubnub_get_dns_secondary_server_ipv6(
     struct pubnub_ipv6_address* o_ipv6)
 {
     int            ret;
-    const uint8_t* ipv6 = m_secondary_dns_server_ipv6.ipv6;
     uint8_t        zero[sizeof m_secondary_dns_server_ipv6.ipv6] = { 0 };
 
     PUBNUB_ASSERT_OPT(o_ipv6 != NULL);
@@ -388,22 +388,24 @@ int pubnub_get_dns_secondary_server_ipv6(
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
 
-#if PUBNUB_USE_LOGGER
-    PUBNUB_LOG_TRACE(
-        pb,
-        "Get secondary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
-        ipv6[0] * 256 + ipv6[1],
-        ipv6[2] * 256 + ipv6[3],
-        ipv6[4] * 256 + ipv6[5],
-        ipv6[6] * 256 + ipv6[7],
-        ipv6[8] * 256 + ipv6[9],
-        ipv6[10] * 256 + ipv6[11],
-        ipv6[12] * 256 + ipv6[13],
-        ipv6[14] * 256 + ipv6[15]);
-#else  // !PUBNUB_USE_LOGGER
+#if PUBNUB_LOG_ENABLED(TRACE)
+    {
+        const uint8_t* ipv6 = m_secondary_dns_server_ipv6.ipv6;
+        PUBNUB_LOG_TRACE(
+            pb,
+            "Get secondary IPv6 DNS server: %u:%u:%u:%u:%u:%u:%u:%u",
+            ipv6[0] * 256 + ipv6[1],
+            ipv6[2] * 256 + ipv6[3],
+            ipv6[4] * 256 + ipv6[5],
+            ipv6[6] * 256 + ipv6[7],
+            ipv6[8] * 256 + ipv6[9],
+            ipv6[10] * 256 + ipv6[11],
+            ipv6[12] * 256 + ipv6[13],
+            ipv6[14] * 256 + ipv6[15]);
+    }
+#else  // !PUBNUB_LOG_ENABLED(TRACE)
     PUBNUB_UNUSED(pb);
-    PUBNUB_UNUSED(ipv6);
-#endif // PUBNUB_USE_LOGGER
+#endif // PUBNUB_LOG_ENABLED(TRACE)
 
     if (memcmp(
             m_secondary_dns_server_ipv6.ipv6,

@@ -1,3 +1,15 @@
+## v7.1.0
+March 03 2026
+
+#### Added
+- Add new logger API methods to C++ `pubnub::context`, Qt `pubnub_qt`, and Qt `pubnub::context` classes, guarded by `PUBNUB_USE_LOGGER`.
+
+#### Modified
+- Change `PUBNUB_LOG_MAP_SET_BOOL` to `PUBNUB_LOG_MAP_SET_NUMBER` for `opt.limit` and `opt.offset` (both `unsigned`) in `pubnub_here_now_ex` and `pubnub_global_here_now_ex` so the actual numeric values are logged instead of being truncated to `true`/`false`.
+- Use `pbms_start`/`pbms_elapsed` and `pb_sleep_ms` in `pubnub_free_with_timeout` to avoid a CPU-spinning loop and to fix portability issues with `clock()` on some platforms.
+- Add `PUBNUB_LOG_DEBUG` messages for hostname resolution, selected DNS server, resolved addresses, and address family across POSIX/Windows sockets, FreeRTOS, and Microchip Harmony platforms, and promote existing connect-address logs from `TRACE` to `DEBUG`.
+- Adjust log levels for missing DNS record messages to better match the severity of each event.
+
 ## v7.0.2
 February 27 2026
 

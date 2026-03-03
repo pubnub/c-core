@@ -514,7 +514,201 @@ namespace pubnub {
                 (options & ignoreSecureConnectionRequirement) != 0
                 );
         }
-#endif        
+#endif
+
+#if PUBNUB_USE_LOGGER
+        /** Add a custom logger to the context logging subsystem.
+         *
+         * Registers a custom logger that will receive log messages
+         * from this context. Multiple loggers can be registered.
+         *
+         * @param logger Pointer to the custom logger (created with
+         *               `pubnub_logger_alloc`).
+         * @retval 0 on success.
+         * @retval -1 on failure (NULL pointer or already added).
+         *
+         * @code
+         * static void my_info(const pubnub_logger_t*      logger,
+         *                     const pubnub_log_message_t* message) {
+         *     if (message->message_type == PUBNUB_LOG_MESSAGE_TYPE_TEXT) {
+         *         const pubnub_log_message_text_t* text =
+         *             (const pubnub_log_message_text_t*)message;
+         *         printf("[INFO] %s\n", text->message);
+         *     }
+         * }
+         *
+         * static const struct pubnub_logger_interface my_vtable = {
+         *     .trace = NULL, .debug = NULL, .info = my_info,
+         *     .warn = NULL, .error = NULL, .destroy = NULL,
+         * };
+         *
+         * pubnub_logger_t* logger = pubnub_logger_alloc(&my_vtable, NULL);
+         * ctx.logger_add(logger);
+         * // ... use PubNub context ...
+         * ctx.logger_remove(logger);
+         * pubnub_logger_free(&logger);
+         * @endcode
+         *
+         * @see pubnub_logger_alloc
+         */
+        int logger_add(pubnub_logger_t* logger) {
+            return d_pbqt.logger_add(logger);
+        }
+
+        /** Remove a custom logger from the context logging subsystem.
+         *
+         * @note It is the caller's responsibility to call
+         *       `pubnub_logger_free` after removing.
+         *
+         * @param logger Pointer to the custom logger to remove.
+         * @retval 0 on success.
+         * @retval -1 on failure (logger not found or NULL pointer).
+         *
+         * @code
+         * ctx.logger_remove(logger);
+         * pubnub_logger_free(&logger);
+         * @endcode
+         */
+        int logger_remove(pubnub_logger_t* logger) {
+            return d_pbqt.logger_remove(logger);
+        }
+
+        /** Remove all custom loggers from the context logging
+         * subsystem.
+         *
+         * @note It is the caller's responsibility to call
+         *       `pubnub_logger_free` for each logger after this call.
+         *
+         * @code
+         * ctx.logger_remove_all();
+         * pubnub_logger_free(&logger1);
+         * pubnub_logger_free(&logger2);
+         * @endcode
+         */
+        void logger_remove_all() {
+            d_pbqt.logger_remove_all();
+        }
+
+        /** Set the minimum log level for the context logging
+         * subsystem.
+         *
+         * Only messages with level >= @p level will be dispatched to
+         * registered loggers.
+         *
+         * @param level The minimum log level.
+         *
+         * @code
+         * // Only receive warning and error messages.
+         * ctx.set_log_level(PUBNUB_LOG_LEVEL_WARNING);
+         * @endcode
+         */
+        void set_log_level(pubnub_log_level level) {
+            d_pbqt.set_log_level(level);
+        }
+
+        /** Get the current minimum log level for the context logging
+         * subsystem.
+         *
+         * @b Default: `PUBNUB_LOG_LEVEL_DEBUG`.
+         *
+         * @return The current minimum log level.
+         *
+         * @code
+         * pubnub_log_level level = ctx.log_level();
+         * @endcode
+         */
+        pubnub_log_level log_level() const {
+            return d_pbqt.log_level();
+        }
+
+        /** Log a text message.
+         *
+         * @param level    Log entry log level.
+         * @param location Call site location string.
+         * @param message  Text message to log.
+         *
+         * @code
+         * ctx.log_text(PUBNUB_LOG_LEVEL_INFO,
+         *              "my_app.cpp:42",
+         *              "Subscription connected");
+         * @endcode
+         */
+        void log_text(pubnub_log_level level,
+                      char const* location,
+                      char const* message) {
+            d_pbqt.log_text(level, location, message);
+        }
+
+        /** Log a text message from a std::string.
+         *
+         * @param level    Log entry log level.
+         * @param location Call site location string.
+         * @param message  Text message to log.
+         *
+         * @code
+         * std::string msg = "Publishing to channel: " + channel;
+         * ctx.log_text(PUBNUB_LOG_LEVEL_DEBUG,
+         *              "my_app.cpp:55", msg);
+         * @endcode
+         */
+        void log_text(pubnub_log_level level,
+                      char const* location,
+                      std::string const& message) {
+            d_pbqt.log_text(level, location, message.c_str());
+        }
+
+        /** Log a structured object/data.
+         *
+         * @note The value is not freed by this function — caller
+         *       retains ownership.
+         *
+         * @param level    Log entry log level.
+         * @param location Call site location string.
+         * @param message  Structured value to log (map, array, or
+         *                 primitive).
+         * @param details  Optional description (can be NULL).
+         *
+         * @code
+         * pubnub_log_value_t params = pubnub_log_value_map_init();
+         * pubnub_log_value_t ch_val =
+         *     pubnub_log_value_string("my-channel");
+         * pubnub_log_value_map_set(&params, "channel", &ch_val);
+         * ctx.log_object(PUBNUB_LOG_LEVEL_DEBUG,
+         *                "my_app.cpp:70",
+         *                &params,
+         *                "publish parameters");
+         * @endcode
+         */
+        void log_object(pubnub_log_level level,
+                        char const* location,
+                        pubnub_log_value_t const* message,
+                        char const* details = NULL) {
+            d_pbqt.log_object(level, location, message, details);
+        }
+
+        /** Log an error with an error code and message.
+         *
+         * @note The log level is always `PUBNUB_LOG_LEVEL_ERROR`.
+         *
+         * @param location      Call site location string.
+         * @param error_code    Error code.
+         * @param error_message Error description.
+         * @param details       Additional error details (can be NULL).
+         *
+         * @code
+         * ctx.log_error("my_app.cpp:85", -1,
+         *               "Connection failed",
+         *               "Timeout after 30s");
+         * @endcode
+         */
+        void log_error(char const* location,
+                       int error_code,
+                       char const* error_message,
+                       char const* details = NULL) {
+            d_pbqt.log_error(location, error_code, error_message, details);
+        }
+#endif /* PUBNUB_USE_LOGGER */
+
         /// Frees the context and any other thing that needs to be
         /// freed/released.
         ~context() {}

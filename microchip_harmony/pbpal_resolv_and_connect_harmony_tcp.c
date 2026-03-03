@@ -19,11 +19,12 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t *pb)
 #else
     TCPIP_DNS_RESOLVE_TYPE query_type = TCPIP_DNS_TYPE_A;
 #endif
+    PUBNUB_LOG_DEBUG(pb, "Resolving '%s' via TCPIP_DNS_Resolve", origin);
     TCPIP_DNS_RESULT dns_result = TCPIP_DNS_Resolve(origin, query_type);
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
-    PUBNUB_ASSERT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS_SEND) 
+    PUBNUB_ASSERT((pb->state == PBS_IDLE) || (pb->state == PBS_WAIT_DNS_SEND)
             || (pb->state == PBS_WAIT_DNS_RCV));
-    
+
     switch (dns_result) {
         case TCPIP_DNS_RES_OK:
         case TCPIP_DNS_RES_NAME_IS_IPADDRESS:
@@ -56,6 +57,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
     IP_MULTI_ADDRESS ip_addr;
     TCPIP_DNS_RESULT dns_result = TCPIP_DNS_IsResolved(origin, &ip_addr, address_type);
 	PUBNUB_ASSERT_OPT(pb != NULL);
+    PUBNUB_LOG_DEBUG(pb, "DNS resolution status for '%s': %d", origin, (int)dns_result);
     switch (dns_result) {
         case TCPIP_DNS_RES_OK:
             if (SOCKET_INVALID == pb->pal.socket) {
@@ -72,6 +74,7 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t *pb)
 #endif
             }
             if (SOCKET_INVALID == pb->pal.socket) {
+                PUBNUB_LOG_ERROR(pb, "Failed to open TCP socket for '%s'", origin);
                 return pbpal_connect_resource_failure;
             }
             pbpal_set_tcp_keepalive(pb);

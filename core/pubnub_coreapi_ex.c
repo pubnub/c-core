@@ -277,8 +277,8 @@ enum pubnub_res pubnub_here_now_ex(
         PUBNUB_LOG_MAP_SET_STRING(&data, opt.channel_group, channel_group)
         PUBNUB_LOG_MAP_SET_BOOL(&data, opt.disable_uuids, disable_uuids)
         PUBNUB_LOG_MAP_SET_BOOL(&data, opt.state, include_state)
-        PUBNUB_LOG_MAP_SET_BOOL(&data, opt.limit, limit)
-        PUBNUB_LOG_MAP_SET_BOOL(&data, opt.offset, offset)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, opt.limit, limit)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, opt.offset, offset)
         pubnub_log_object(
             pb,
             PUBNUB_LOG_LEVEL_DEBUG,
@@ -332,8 +332,8 @@ enum pubnub_res pubnub_global_here_now_ex(
         pubnub_log_value_t data = pubnub_log_value_map_init();
         PUBNUB_LOG_MAP_SET_BOOL(&data, opt.disable_uuids, disable_uuids)
         PUBNUB_LOG_MAP_SET_BOOL(&data, opt.state, include_state)
-        PUBNUB_LOG_MAP_SET_BOOL(&data, opt.limit, limit)
-        PUBNUB_LOG_MAP_SET_BOOL(&data, opt.offset, offset)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, opt.limit, limit)
+        PUBNUB_LOG_MAP_SET_NUMBER(&data, opt.offset, offset)
         pubnub_log_object(
             pb,
             PUBNUB_LOG_LEVEL_DEBUG,
