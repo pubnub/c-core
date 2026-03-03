@@ -176,10 +176,9 @@ static void log_http_request(
     const bool      failed,
     char const*     details)
 {
-    enum pubnub_log_level level;
+    enum pubnub_log_level level = PUBNUB_LOG_LEVEL_DEBUG;
 
     if (!canceled && !failed) {
-        level              = PUBNUB_LOG_LEVEL_DEBUG;
         char const* scheme = "http://";
 #if PUBNUB_USE_SSL
         if (pb->options.useSSL) scheme = "https://";
