@@ -195,8 +195,7 @@ static void log_http_request(
             (int)pb->core.http_buf_len,
             pb->core.http_buf);
     }
-    else if (canceled) level = PUBNUB_LOG_LEVEL_WARNING;
-    else level = PUBNUB_LOG_LEVEL_ERROR;
+    else if (failed) level = PUBNUB_LOG_LEVEL_ERROR;
 
     char const* body = NULL;
     if (HTTP_request_has_body(pb) && pb->core.message_to_send)
@@ -328,13 +327,14 @@ static int send_fin_head(struct pubnub_* pb)
     /* Use context-specific identification when runtime suffix is set;
        otherwise preserve default (pubnub_uagent). */
     char const* uagent = (pb->core.sdk_version_suffix != NULL)
-        ? pbcc_uname(&pb->core)
-        : pubnub_uagent();
-    snprintf(s,
-             sizeof s,
-             "\r\nUser-Agent: %s%s",
-             uagent,
-             "\r\n" ACCEPT_ENCODING "\r\n");
+                             ? pbcc_uname(&pb->core)
+                             : pubnub_uagent();
+    snprintf(
+        s,
+        sizeof s,
+        "\r\nUser-Agent: %s%s",
+        uagent,
+        "\r\n" ACCEPT_ENCODING "\r\n");
     return pbpal_send_str(pb, s);
 }
 

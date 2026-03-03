@@ -102,7 +102,9 @@ enum pubnub_res pbcc_subscribe_v2_prep(
     ADD_URL_AUTH_PARAM(p, qparam, auth);
 #endif
 
-    if (filter_expr) { ADD_URL_PARAM_TRUE_KEY(qparam, "filter-expr", filter_expr); }
+    if (filter_expr) {
+        ADD_URL_PARAM_TRUE_KEY(qparam, "filter-expr", filter_expr);
+    }
     if (heartbeat) {
         ADD_URL_PARAM_SIZET(p, qparam, heartbeat, (size_t)*heartbeat);
     }
@@ -220,8 +222,7 @@ enum pubnub_res pbcc_parse_subscribe_v2_response(struct pbcc_context* p)
         p->msg_end = (unsigned)(found.end - reply - 1);
     }
     else {
-        PBCC_LOG_ERROR(
-            p->logger_manager, "No message array in response.", jpresult);
+        PBCC_LOG_ERROR(p->logger_manager, "No message array in response.");
         return PNR_FORMAT_ERROR;
     }
 

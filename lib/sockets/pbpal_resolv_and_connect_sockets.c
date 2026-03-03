@@ -72,6 +72,7 @@ static bool is_global_unicast_ipv6(const struct in6_addr* addr)
 
 /** Check whether the host has a usable global IPv6 route.
  *
+ *
  *  Creates a UDP socket, connects it to a well-known global IPv6 address and
  *  inspects the source address the kernel selects via getsockname().
  *
@@ -391,7 +392,7 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(
     case AF_INET:
         sockaddr_size                         = sizeof(struct sockaddr_in);
         ((struct sockaddr_in*)dest)->sin_port = htons(port);
-        PUBNUB_LOG_TRACE(
+        PUBNUB_LOG_DEBUG(
             pb,
             "Connect to IPv4: %s",
             inet_ntoa(((struct sockaddr_in*)dest)->sin_addr));
@@ -400,10 +401,10 @@ static enum pbpal_resolv_n_connect_result connect_TCP_socket(
     case AF_INET6: {
         sockaddr_size                           = sizeof(struct sockaddr_in6);
         ((struct sockaddr_in6*)dest)->sin6_port = htons(port);
-#if PUBNUB_LOG_ENABLED(TRACE)
+#if PUBNUB_LOG_ENABLED(DEBUG)
         {
             char str[INET6_ADDRSTRLEN];
-            PUBNUB_LOG_TRACE(
+            PUBNUB_LOG_DEBUG(
                 pb,
                 "Connect to IPv6: %s",
                 inet_ntop(
@@ -529,7 +530,6 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
     const uint16_t port)
 {
     struct pubnub_multi_addresses*     spare_addresses = &pb->spare_addresses;
-    struct pubnub_options*             options         = &pb->options;
     struct pubnub_flags*               flags           = &pb->flags;
     pb_socket_t*                       skt             = &pb->pal.socket;
     enum pbpal_resolv_n_connect_result rslt = pbpal_resolv_resource_failure;
@@ -613,7 +613,7 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
                     (++spare_addresses->ipv6_index < spare_addresses->n_ipv6);
                 if_no_retry_close_socket(skt, flags);
 #if PUBNUB_USE_SSL
-                flags->trySSL = options->useSSL;
+                flags->trySSL = pb->options.useSSL;
 #endif
             }
         }
@@ -695,7 +695,7 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
                 (++spare_addresses->ipv4_index < spare_addresses->n_ipv4);
             if_no_retry_close_socket(skt, flags);
 #if PUBNUB_USE_SSL
-            flags->trySSL = options->useSSL;
+            flags->trySSL = pb->options.useSSL;
 #endif
         }
     }
@@ -722,6 +722,8 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #else  /* PUBNUB_USE_IPV6 */
     sa_family_t family = AF_INET;
 #endif /* !PUBNUB_USE_IPV6 */
+    PUBNUB_LOG_DEBUG(pb, "Address family: %s",
+                     AF_INET6 == family ? "IPv6" : "IPv4");
 
 #ifdef PUBNUB_NTF_RUNTIME_SELECTION
     if (PNA_CALLBACK == pb->api_policy) { // if policy
@@ -800,6 +802,26 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
              * pbpal_check_resolv_and_connect */
             memcpy(&pb->dns_addr, &dest, sizeof(dest));
 
+#if PUBNUB_LOG_ENABLED(DEBUG)
+            if (AF_INET6 == ((struct sockaddr*)&dest)->sa_family) {
+                char dns_str[INET6_ADDRSTRLEN];
+                PUBNUB_LOG_DEBUG(
+                    pb,
+                    "Selected DNS server: %s",
+                    inet_ntop(
+                        AF_INET6,
+                        &((struct sockaddr_in6*)&dest)->sin6_addr,
+                        dns_str,
+                        sizeof dns_str));
+            }
+            else {
+                PUBNUB_LOG_DEBUG(
+                    pb,
+                    "Selected DNS server: %s",
+                    inet_ntoa(((struct sockaddr_in*)&dest)->sin_addr));
+            }
+#endif
+
             pb->pal.socket = socket(
                 ((struct sockaddr*)&dest)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
         }
@@ -846,8 +868,12 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 
         prepare_port_and_hostname(pb, &port, &origin);
         snprintf(port_string, sizeof port_string, "%hu", port);
+        PUBNUB_LOG_DEBUG(pb, "Resolving '%s:%s' via getaddrinfo", origin, port_string);
         error = getaddrinfo(origin, port_string, &hint, &result);
-        if (error != 0) { return pbpal_resolv_failed_processing; }
+        if (error != 0) {
+            PUBNUB_LOG_ERROR(pb, "getaddrinfo('%s') failed with error: %d", origin, error);
+            return pbpal_resolv_failed_processing;
+        }
 #if PUBNUB_USE_IPV6
         for (int pass = 0; pass < 2; ++pass) {
             bool prioritize_ipv6 = pass == 0 && AF_INET6 == family;
@@ -887,6 +913,26 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #endif /* !defined(_WIN32) */
 
                 pbpal_set_blocking_io(pb);
+#if PUBNUB_LOG_ENABLED(DEBUG)
+                if (AF_INET6 == it->ai_family) {
+                    char str[INET6_ADDRSTRLEN];
+                    PUBNUB_LOG_DEBUG(
+                        pb,
+                        "Connecting to resolved IPv6 address: %s",
+                        inet_ntop(
+                            AF_INET6,
+                            &((struct sockaddr_in6*)it->ai_addr)->sin6_addr,
+                            str,
+                            sizeof str));
+                }
+                else {
+                    PUBNUB_LOG_DEBUG(
+                        pb,
+                        "Connecting to resolved IPv4 address: %s",
+                        inet_ntoa(
+                            ((struct sockaddr_in*)it->ai_addr)->sin_addr));
+                }
+#endif
                 if (connect(pb->pal.socket, it->ai_addr, it->ai_addrlen) ==
                     SOCKET_ERROR) {
                     if (socket_would_block()) {

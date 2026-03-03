@@ -44,6 +44,7 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
         PUBNUB_LOG_ERROR(pb, "Unable to resolve hostname. No address found.");
         return pbpal_resolv_failed_processing;
     }
+    PUBNUB_LOG_DEBUG(pb, "Resolved to: %s", inet_ntoa(addr.sin_addr));
 
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
@@ -59,9 +60,16 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
 #else
     struct sockaddr addr;
     addr.sin_port = htons(HTTP_PORT);
+    PUBNUB_LOG_DEBUG(
+        pb,
+        "Resolving hostname: %s",
+        PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
     addr.sin_addr =
         gethostbyname(PUBNUB_ORIGIN_SETTABLE ? pb->origin : PUBNUB_ORIGIN);
-    if (addr.sin_addr == 0) { return pbpal_resolv_failed_processing; }
+    if (addr.sin_addr == 0) {
+        PUBNUB_LOG_ERROR(pb, "Hostname resolution failed.");
+        return pbpal_resolv_failed_processing;
+    }
 
     pb->pal.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pb->pal.socket == SOCKET_INVALID) {
