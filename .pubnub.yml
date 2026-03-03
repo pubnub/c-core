@@ -1,8 +1,21 @@
 name: c-core
 schema: 1
-version: "7.0.2"
+version: "7.1.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-03-03
+    version: v7.1.0
+    changes:
+      - type: feature
+        text: "Add new logger API methods to C++ `pubnub::context`, Qt `pubnub_qt`, and Qt `pubnub::context` classes, guarded by `PUBNUB_USE_LOGGER`."
+      - type: improvement
+        text: "Change `PUBNUB_LOG_MAP_SET_BOOL` to `PUBNUB_LOG_MAP_SET_NUMBER` for `opt.limit` and `opt.offset` (both `unsigned`) in `pubnub_here_now_ex` and `pubnub_global_here_now_ex` so the actual numeric values are logged instead of being truncated to `true`/`false`."
+      - type: improvement
+        text: "Use `pbms_start`/`pbms_elapsed` and `pb_sleep_ms` in `pubnub_free_with_timeout` to avoid a CPU-spinning loop and to fix portability issues with `clock()` on some platforms."
+      - type: improvement
+        text: "Add `PUBNUB_LOG_DEBUG` messages for hostname resolution, selected DNS server, resolved addresses, and address family across POSIX/Windows sockets, FreeRTOS, and Microchip Harmony platforms, and promote existing connect-address logs from `TRACE` to `DEBUG`."
+      - type: improvement
+        text: "Adjust log levels for missing DNS record messages to better match the severity of each event."
   - date: 2026-02-27
     version: v7.0.2
     changes:
@@ -1135,7 +1148,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1201,7 +1214,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1267,7 +1280,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1329,7 +1342,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1390,7 +1403,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1446,7 +1459,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
@@ -1499,7 +1512,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.0.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
             requires:
               -
                 name: "miniz"
