@@ -240,12 +240,12 @@ int read_dns_response(
             responses_received++;
             if (dnsA == question_type) {
                 tracking->received_a = true;
-                PUBNUB_LOG_WARNING(pb, "No 'A' records for requested domain.");
+                PUBNUB_LOG_ERROR(pb, "No 'A' records for requested domain.");
             }
 #if PUBNUB_USE_IPV6
             else if (dnsAAAA == question_type) {
                 tracking->received_aaaa = true;
-                PUBNUB_LOG_WARNING(
+                PUBNUB_LOG_DEBUG(
                     pb, "No 'AAAA' records for requested domain.");
             }
 #endif /* PUBNUB_USE_IPV6 */
