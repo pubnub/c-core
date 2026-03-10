@@ -295,6 +295,111 @@ static void test_no_duplicates(void)
     TEST_PASS(name, "");
 }
 
+static void test_software_loopback_filtered(void)
+{
+    const char* name = "software_loopback_filtered";
+
+    /* Enumerate all adapters and collect DNS from IF_TYPE_SOFTWARE_LOOPBACK
+       interfaces. Then verify none of those DNS addresses appear in our
+       discovery results. This tests the IfType filter against the real
+       Windows loopback pseudo-interface(s). */
+    IP_ADAPTER_ADDRESSES* all_addrs = NULL;
+    ULONG                 buflen = 15000;
+    DWORD                 ret;
+    ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
+
+    all_addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
+    if (!all_addrs) {
+        TEST_SKIP(name, "malloc failed");
+        return;
+    }
+
+    ret = GetAdaptersAddresses(AF_INET, flags, NULL, all_addrs, &buflen);
+    if (ret == ERROR_BUFFER_OVERFLOW) {
+        free(all_addrs);
+        all_addrs = (IP_ADAPTER_ADDRESSES*)malloc(buflen);
+        if (!all_addrs) { TEST_SKIP(name, "malloc failed"); return; }
+        ret = GetAdaptersAddresses(AF_INET, flags, NULL, all_addrs, &buflen);
+    }
+    if (ret != NO_ERROR) {
+        free(all_addrs);
+        TEST_SKIP(name, "GetAdaptersAddresses failed: %lu", (unsigned long)ret);
+        return;
+    }
+
+    /* Collect DNS addresses from software loopback interfaces. */
+    uint8_t loopback_dns[8][4];
+    int     loopback_dns_count = 0;
+    bool    found_loopback_iface = false;
+
+    for (IP_ADAPTER_ADDRESSES* aa = all_addrs; aa; aa = aa->Next) {
+        if (aa->IfType != 24 /* IF_TYPE_SOFTWARE_LOOPBACK */) continue;
+        found_loopback_iface = true;
+
+        {
+            char desc[256];
+            WideCharToMultiByte(
+                CP_UTF8, 0, aa->FriendlyName, -1, desc, sizeof(desc),
+                NULL, NULL);
+            printf("    Found loopback interface: %s (idx=%lu)\n",
+                   desc, (unsigned long)aa->IfIndex);
+        }
+
+        for (IP_ADAPTER_DNS_SERVER_ADDRESS* ds = aa->FirstDnsServerAddress;
+             ds && loopback_dns_count < 8;
+             ds = ds->Next) {
+            if (!ds->Address.lpSockaddr ||
+                ds->Address.lpSockaddr->sa_family != AF_INET) continue;
+            struct sockaddr_in* sin =
+                (struct sockaddr_in*)ds->Address.lpSockaddr;
+            memcpy(loopback_dns[loopback_dns_count],
+                   &sin->sin_addr.s_addr, 4);
+            char buf[20];
+            fmt_ipv4(loopback_dns[loopback_dns_count], buf, sizeof(buf));
+            printf("    Loopback DNS: %s\n", buf);
+            loopback_dns_count++;
+        }
+    }
+    free(all_addrs);
+
+    if (!found_loopback_iface) {
+        TEST_SKIP(name, "no IF_TYPE_SOFTWARE_LOOPBACK interface on system");
+        return;
+    }
+
+    printf("    Loopback interfaces found, %d DNS server(s) on them\n",
+           loopback_dns_count);
+
+    if (loopback_dns_count == 0) {
+        /* Loopback interface exists but has no DNS — the filter is still
+           exercised (adapter rejected before DNS enumeration). Pass. */
+        TEST_PASS(name, "(loopback interface present, no DNS to leak)");
+        return;
+    }
+
+    /* Verify none of the loopback DNS addresses appear in results. */
+    struct pubnub_ipv4_address result[8];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, result, 8);
+    if (count <= 0) {
+        TEST_PASS(name, "(no DNS returned, nothing leaked)");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        for (int j = 0; j < loopback_dns_count; j++) {
+            if (memcmp(result[i].ipv4, loopback_dns[j], 4) == 0) {
+                char buf[20];
+                fmt_ipv4(result[i].ipv4, buf, sizeof(buf));
+                TEST_FAIL(name,
+                          "DNS %s from loopback interface leaked into results",
+                          buf);
+                return;
+            }
+        }
+    }
+    TEST_PASS(name, "(loopback DNS correctly filtered)");
+}
+
 static void test_addresses_are_printable(void)
 {
     const char*                name = "addresses_printable";
@@ -324,47 +429,48 @@ static void run_baseline(void)
     test_no_zero_address();
     test_no_multicast_reserved();
     test_no_duplicates();
+    test_software_loopback_filtered();
     test_addresses_are_printable();
 }
 
 
 /* ------------------------------------------------------------------ */
-/*              Phase 2: Loopback adapter filtering                    */
+/*        Phase 2: Virtual adapter visibility                          */
 /* ------------------------------------------------------------------ */
 
-static void test_loopback_adapter_dns_not_returned(void)
+static void test_virtual_adapter_dns_visible(void)
 {
-    const char* name = "loopback_dns_filtered";
+    const char* name = "virtual_adapter_dns_visible";
 
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
     if (count <= 0) {
-        TEST_FAIL(name, "expected real DNS servers, got %d", count);
+        TEST_FAIL(name, "expected DNS servers, got %d", count);
         return;
     }
 
-    /* The loopback adapter setup script assigns DNS 10.255.255.1.
-       Verify it's NOT in the results. */
+    /* The Hyper-V adapter has Ethernet IfType with valid unicast IP and
+       DNS 10.255.255.1. It passes adapter suitability, so the DNS
+       SHOULD appear — proving our code sees virtual adapters. */
     for (int i = 0; i < count; i++) {
         if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
             addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
-            TEST_FAIL(name, "loopback adapter DNS 10.255.255.1 was returned");
+            TEST_PASS(name, "(10.255.255.1 found at [%d])", i);
             return;
         }
     }
-    TEST_PASS(name, "");
+    TEST_FAIL(name, "test adapter DNS 10.255.255.1 not found in results");
 }
 
 static void run_loopback(void)
 {
-    printf("\n=== Phase 2: Loopback adapter filtering ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("loopback_phase", "Loopback adapter not installed");
+    printf("\n=== Phase 2: Virtual adapter visibility ===\n");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("loopback_phase", "test adapter not installed");
         return;
     }
-    test_loopback_adapter_dns_not_returned();
-    /* Real DNS should still work */
+    test_virtual_adapter_dns_visible();
     test_basic_discovery();
 }
 
@@ -399,8 +505,8 @@ static void test_disabled_adapter_filtered(void)
 static void run_disabled(void)
 {
     printf("\n=== Phase 3: Disabled adapter ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("disabled_phase", "Loopback adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("disabled_phase", "test adapter not installed");
         return;
     }
     test_disabled_adapter_filtered();
@@ -442,8 +548,8 @@ static void test_metric_ordering(void)
 static void run_metric(void)
 {
     printf("\n=== Phase 5: Metric ordering ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("metric_phase", "Loopback adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("metric_phase", "test adapter not installed");
         return;
     }
     test_metric_ordering();
@@ -939,8 +1045,8 @@ static void test_no_dns_adapter_handled(void)
 static void run_no_dns(void)
 {
     printf("\n=== Phase 11: No-DNS adapter ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("no_dns_phase", "Loopback adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("no_dns_phase", "test adapter not installed");
         return;
     }
     test_no_dns_adapter_handled();
@@ -987,11 +1093,11 @@ static unsigned __stdcall flap_toggler(void* arg)
     /* Toggle loopback adapter state rapidly. */
     for (int i = 0; i < FLAP_ITERATIONS / 2; i++) {
         system(
-            "powershell -Command \"Disable-NetAdapter -Name 'Loopback'"
+            "powershell -Command \"Disable-NetAdapter -Name 'vEthernet (PNTestSwitch)'"
             " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
         Sleep(FLAP_TOGGLE_MS);
         system(
-            "powershell -Command \"Enable-NetAdapter -Name 'Loopback'"
+            "powershell -Command \"Enable-NetAdapter -Name 'vEthernet (PNTestSwitch)'"
             " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
         Sleep(FLAP_TOGGLE_MS);
     }
@@ -1066,8 +1172,8 @@ static void test_flapping_no_crash(void)
 static void run_flapping(void)
 {
     printf("\n=== Phase 12: Adapter flapping stress test ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("flapping_phase", "Loopback adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("flapping_phase", "test adapter not installed");
         return;
     }
     test_flapping_no_crash();
@@ -1078,40 +1184,44 @@ static void run_flapping(void)
 /*        Phase 13: Multiple DNS servers per adapter                   */
 /* ------------------------------------------------------------------ */
 
-static void test_multi_dns_all_filtered(void)
+static void test_multi_dns_both_visible(void)
 {
-    const char* name = "multi_dns_all_filtered";
-    /* The loopback adapter has DNS 10.255.255.1 and 10.255.255.2.
-       Both should be filtered since the adapter is software loopback. */
+    const char* name = "multi_dns_both_visible";
+    /* The Hyper-V adapter has DNS 10.255.255.1 and 10.255.255.2.
+       Both should be returned since it's an Ethernet-type adapter. */
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
     if (count <= 0) {
-        TEST_FAIL(name, "expected real DNS servers, got %d", count);
+        TEST_FAIL(name, "expected DNS servers, got %d", count);
         return;
     }
 
+    bool found1 = false, found2 = false;
     for (int i = 0; i < count; i++) {
         if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
-            addrs[i].ipv4[2] == 255 &&
-            (addrs[i].ipv4[3] == 1 || addrs[i].ipv4[3] == 2)) {
-            char buf[20];
-            fmt_ipv4(addrs[i].ipv4, buf, sizeof(buf));
-            TEST_FAIL(name, "loopback adapter DNS %s was returned", buf);
-            return;
+            addrs[i].ipv4[2] == 255) {
+            if (addrs[i].ipv4[3] == 1) found1 = true;
+            if (addrs[i].ipv4[3] == 2) found2 = true;
         }
     }
-    TEST_PASS(name, "(neither 10.255.255.1 nor 10.255.255.2 returned)");
+
+    if (!found1 || !found2) {
+        TEST_FAIL(name, "expected both 10.255.255.1 and .2 (got .1=%d .2=%d)",
+                  found1, found2);
+        return;
+    }
+    TEST_PASS(name, "(both 10.255.255.1 and 10.255.255.2 found)");
 }
 
 static void run_multi_dns(void)
 {
     printf("\n=== Phase 13: Multiple DNS per adapter ===\n");
-    if (!adapter_exists("Loopback")) {
-        TEST_SKIP("multi_dns_phase", "Loopback adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("multi_dns_phase", "test adapter not installed");
         return;
     }
-    test_multi_dns_all_filtered();
+    test_multi_dns_both_visible();
     test_basic_discovery();
 }
 

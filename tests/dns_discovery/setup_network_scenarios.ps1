@@ -1,5 +1,8 @@
 # setup_network_scenarios.ps1
-# Creates mock network adapters and configurations for DNS discovery testing.
+# Creates virtual network adapters for DNS discovery testing.
+#
+# Uses Hyper-V internal switch (available on GitHub runners with Docker)
+# to create a real Ethernet-type adapter visible to GetAdaptersAddresses.
 #
 # Usage: .\setup_network_scenarios.ps1 -Scenario <name>
 # Requires: Administrator privileges
@@ -12,6 +15,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+$SwitchName = "PNTestSwitch"
+$AdapterAlias = "vEthernet ($SwitchName)"
 
 
 # ──────────────────────────────────────────────
@@ -120,82 +126,40 @@ function Verify-Metric {
 
 
 # ──────────────────────────────────────────────
-#  Adapter install / helpers
+#  Adapter management via Hyper-V internal switch
 # ──────────────────────────────────────────────
 
-function Install-LoopbackAdapter {
-    Write-Host "  Installing Microsoft Loopback Adapter..."
+function Ensure-TestAdapter {
+    Write-Host "  Creating Hyper-V internal switch '$SwitchName'..."
 
-    # Check if already installed
-    $existing = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
+    # Check if already exists
+    $existing = Get-VMSwitch -Name $SwitchName -ErrorAction SilentlyContinue
     if ($existing) {
-        Write-Host "  Loopback adapter already exists (status: $($existing.Status))"
-        return $true
-    }
-
-    # Try devcon first (if available), then pnputil /add-device (Server 2025+),
-    # then legacy pnputil fallback.
-    $devcon = Get-Command devcon.exe -ErrorAction SilentlyContinue
-    if ($devcon) {
-        Write-Host "  Using devcon: $($devcon.Source)"
-        & devcon.exe install "$env:windir\INF\netloop.inf" "*MSLOOP" 2>&1
+        Write-Host "  Switch already exists"
     } else {
-        Write-Host "  Staging loopback driver..."
-        pnputil /add-driver "$env:windir\INF\netloop.inf" 2>&1
-
-        # Windows 11 / Server 2025+ supports pnputil /add-device
-        Write-Host "  Creating loopback device instance..."
-        $pnpResult = pnputil /add-device /instanceid "ROOT\MSLOOP\0000" 2>&1
-        Write-Host "  pnputil /add-device output: $pnpResult"
-
-        # Wait for PnP to enumerate the new device
-        $retries = 0
-        do {
-            Start-Sleep -Seconds 2
-            $retries++
-            $adapter = Get-NetAdapter | Where-Object {
-                $_.InterfaceDescription -like "*Loopback*" -or
-                $_.InterfaceDescription -like "*KM-TEST*"
-            }
-        } while (-not $adapter -and $retries -lt 10)
-
-        if ($adapter) {
-            Rename-NetAdapter -Name $adapter.Name -NewName "Loopback" -ErrorAction SilentlyContinue
-        }
+        New-VMSwitch -Name $SwitchName -SwitchType Internal | Out-Null
+        Start-Sleep -Seconds 3
     }
 
-    # Verify
-    Start-Sleep -Seconds 2
-    $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
+    # Verify the host adapter appeared
+    $adapter = Get-NetAdapter -Name $AdapterAlias -ErrorAction SilentlyContinue
     if (-not $adapter) {
-        $adapter = Get-NetAdapter | Where-Object { $_.InterfaceDescription -like "*Loopback*" -or $_.InterfaceDescription -like "*KM-TEST*" }
-        if ($adapter) {
-            Rename-NetAdapter -Name $adapter.Name -NewName "Loopback"
-        } else {
-            Write-Warning "  Could not install Loopback adapter"
-            return $false
-        }
-    }
-
-    Write-Host "  Loopback adapter installed: $($adapter.Name) ($($adapter.Status))"
-    return $true
-}
-
-function Ensure-LoopbackUp {
-    $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
-    if (-not $adapter) {
-        Write-Warning "Loopback adapter not found"
+        Write-Host "  [ERROR] Adapter '$AdapterAlias' did not appear after switch creation" -ForegroundColor Red
+        Get-NetAdapter | Format-Table Name, InterfaceDescription, Status -AutoSize
         return $false
     }
 
+    # Enable if needed
     if ($adapter.Status -ne "Up") {
-        Enable-NetAdapter -Name "Loopback" -Confirm:$false
+        Enable-NetAdapter -Name $AdapterAlias -Confirm:$false
         Start-Sleep -Seconds 2
     }
 
-    # Clean existing config
-    Remove-NetIPAddress -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
-    Remove-NetRoute -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
+    # Clean existing IP config
+    Remove-NetIPAddress -InterfaceAlias $AdapterAlias -Confirm:$false -ErrorAction SilentlyContinue
+    Remove-NetRoute -InterfaceAlias $AdapterAlias -Confirm:$false -ErrorAction SilentlyContinue
+
+    Write-Host "  Adapter '$AdapterAlias' ready (status: $((Get-NetAdapter -Name $AdapterAlias).Status))"
     return $true
 }
 
@@ -205,166 +169,134 @@ function Ensure-LoopbackUp {
 # ──────────────────────────────────────────────
 
 function Setup-Loopback {
-    Write-Host "Setting up loopback adapter with fake DNS..."
+    Write-Host "Setting up test adapter with fake DNS..."
 
-    $installed = Install-LoopbackAdapter
-    if (-not $installed) {
-        Write-Warning "Skipping loopback setup - adapter not available"
-        exit 0
-    }
+    if (-not (Ensure-TestAdapter)) { exit 1 }
 
-    if (-not (Ensure-LoopbackUp)) { exit 0 }
-
-    New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1"
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "10.255.255.1"
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-IpAddress "Loopback" "169.254.1.1") -and
-          (Verify-DnsServers "Loopback" @("10.255.255.1"))
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
+          (Verify-DnsServers $AdapterAlias @("10.255.255.1"))
     if (-not $ok) { exit 1 }
 }
 
 function Setup-Disable {
-    Write-Host "Disabling loopback adapter..."
+    Write-Host "Disabling test adapter..."
 
-    $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
+    $adapter = Get-NetAdapter -Name $AdapterAlias -ErrorAction SilentlyContinue
     if (-not $adapter) {
-        Write-Warning "Loopback adapter not found - skipping"
-        exit 0
+        Write-Warning "Test adapter not found - skipping"
+        exit 1
     }
 
-    Disable-NetAdapter -Name "Loopback" -Confirm:$false
+    Disable-NetAdapter -Name $AdapterAlias -Confirm:$false
     Start-Sleep -Seconds 2
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = Verify-AdapterStatus "Loopback" "Disabled"
+    $ok = Verify-AdapterStatus $AdapterAlias "Disabled"
     if (-not $ok) { exit 1 }
 }
 
 function Setup-Metric {
-    Write-Host "Setting high metric on loopback adapter..."
+    Write-Host "Setting high metric on test adapter..."
 
-    $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
+    $adapter = Get-NetAdapter -Name $AdapterAlias -ErrorAction SilentlyContinue
     if (-not $adapter) {
-        Write-Warning "Loopback adapter not found - skipping"
-        exit 0
+        Write-Warning "Test adapter not found - skipping"
+        exit 1
     }
 
     if ($adapter.Status -ne "Up") {
-        Enable-NetAdapter -Name "Loopback" -Confirm:$false
+        Enable-NetAdapter -Name $AdapterAlias -Confirm:$false
         Start-Sleep -Seconds 2
     }
 
-    Set-NetIPInterface -InterfaceAlias "Loopback" -InterfaceMetric 9999 -ErrorAction SilentlyContinue
+    Set-NetIPInterface -InterfaceAlias $AdapterAlias -InterfaceMetric 9999 -ErrorAction SilentlyContinue
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-Metric "Loopback" 9999)
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-Metric $AdapterAlias 9999)
     if (-not $ok) { exit 1 }
 }
 
 function Setup-Broadcast {
-    Write-Host "Setting up loopback adapter with broadcast/multicast DNS..."
+    Write-Host "Setting up test adapter with broadcast/multicast DNS..."
 
-    $installed = Install-LoopbackAdapter
-    if (-not $installed) {
-        Write-Warning "Skipping broadcast setup - adapter not available"
-        exit 0
-    }
+    if (-not (Ensure-TestAdapter)) { exit 1 }
 
-    if (-not (Ensure-LoopbackUp)) { exit 0 }
-
-    New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "255.255.255.255","239.255.255.250"
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "255.255.255.255","239.255.255.250"
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-IpAddress "Loopback" "169.254.1.1") -and
-          (Verify-DnsServers "Loopback" @("255.255.255.255", "239.255.255.250"))
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
+          (Verify-DnsServers $AdapterAlias @("255.255.255.255", "239.255.255.250"))
     if (-not $ok) { exit 1 }
 }
 
 function Setup-NoDns {
-    Write-Host "Setting up loopback adapter with IP but NO DNS..."
+    Write-Host "Setting up test adapter with IP but NO DNS..."
 
-    $installed = Install-LoopbackAdapter
-    if (-not $installed) {
-        Write-Warning "Skipping no-DNS setup - adapter not available"
-        exit 0
-    }
+    if (-not (Ensure-TestAdapter)) { exit 1 }
 
-    if (-not (Ensure-LoopbackUp)) { exit 0 }
-
-    New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ResetServerAddresses
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ResetServerAddresses
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-IpAddress "Loopback" "169.254.1.1") -and
-          (Verify-DnsServers "Loopback" @())
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
+          (Verify-DnsServers $AdapterAlias @())
     if (-not $ok) { exit 1 }
 }
 
 function Setup-MultiDns {
-    Write-Host "Setting up loopback adapter with multiple DNS servers..."
+    Write-Host "Setting up test adapter with multiple DNS servers..."
 
-    $installed = Install-LoopbackAdapter
-    if (-not $installed) {
-        Write-Warning "Skipping multi-DNS setup - adapter not available"
-        exit 0
-    }
+    if (-not (Ensure-TestAdapter)) { exit 1 }
 
-    if (-not (Ensure-LoopbackUp)) { exit 0 }
-
-    New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1","10.255.255.2"
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "10.255.255.1","10.255.255.2"
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-IpAddress "Loopback" "169.254.1.1") -and
-          (Verify-DnsServers "Loopback" @("10.255.255.1", "10.255.255.2"))
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
+          (Verify-DnsServers $AdapterAlias @("10.255.255.1", "10.255.255.2"))
     if (-not $ok) { exit 1 }
 }
 
 function Setup-FlappingSetup {
-    Write-Host "Setting up loopback adapter for flapping test..."
+    Write-Host "Setting up test adapter for flapping test..."
 
-    $installed = Install-LoopbackAdapter
-    if (-not $installed) {
-        Write-Warning "Skipping flapping setup - adapter not available"
-        exit 0
-    }
+    if (-not (Ensure-TestAdapter)) { exit 1 }
 
-    if (-not (Ensure-LoopbackUp)) { exit 0 }
-
-    New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1"
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "10.255.255.1"
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
-    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
-          (Verify-DnsServers "Loopback" @("10.255.255.1"))
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-DnsServers $AdapterAlias @("10.255.255.1"))
     if (-not $ok) { exit 1 }
 }
 
 function Teardown {
     Write-Host "Cleaning up network test state..."
 
-    $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
-    if ($adapter) {
-        Remove-NetIPAddress -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-NetRoute -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
-        Disable-NetAdapter -Name "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
-        Write-Host "  Loopback adapter disabled and cleaned up"
+    $switch = Get-VMSwitch -Name $SwitchName -ErrorAction SilentlyContinue
+    if ($switch) {
+        Remove-VMSwitch -Name $SwitchName -Force
+        Write-Host "  Removed Hyper-V switch '$SwitchName'"
     } else {
-        Write-Host "  No Loopback adapter found - nothing to clean"
+        Write-Host "  No test switch found - nothing to clean"
     }
 }
 
