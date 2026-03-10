@@ -28,7 +28,7 @@ function Run-Phase {
     if ($Setup) {
         Write-Host "Running setup..." -ForegroundColor Yellow
         try {
-            & $Setup
+            & $Setup | Out-Host
         } catch {
             Write-Host "  Setup failed: $_" -ForegroundColor Red
             Write-Host "  Skipping phase." -ForegroundColor Yellow
@@ -38,7 +38,7 @@ function Run-Phase {
 
     # Run test
     Write-Host "Running tests..." -ForegroundColor Yellow
-    & $TestExe $Scenario
+    & $TestExe $Scenario | Out-Host
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -eq 0) {
@@ -147,7 +147,7 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host " Teardown" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 try {
-    & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario teardown
+    & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario teardown | Out-Host
 } catch {
     Write-Host "  Teardown warning: $_" -ForegroundColor Yellow
 }
