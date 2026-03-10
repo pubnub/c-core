@@ -67,6 +67,10 @@ static bool is_valid_ipv4(const uint8_t addr[4])
     if (addr[0] == 0 || addr[0] == 127 || (addr[0] == 169 && addr[1] == 254))
         return false;
 
+    /* Multicast (224-239), reserved (240-254), broadcast (255) */
+    if (addr[0] >= 224)
+        return false;
+
     return true;
 }
 
