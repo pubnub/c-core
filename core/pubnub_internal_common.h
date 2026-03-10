@@ -226,6 +226,13 @@ struct dns_queries_tracking {
     /** Whether query should be retried in case of partial completion. */
     bool need_retry;
 
+    /** DNS transaction ID used for the @c A record query. */
+    uint16_t id_a;
+#if PUBNUB_USE_IPV6
+    /** DNS transaction ID used for the @c AAAA record query. */
+    uint16_t id_aaaa;
+#endif /* PUBNUB_USE_IPV6 */
+
     /* @c A record response received. */
     bool received_a;
     /* Temporarily storage until @c AAAA record response will be received. */

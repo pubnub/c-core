@@ -76,7 +76,8 @@ int send_dns_query(
 
     if (!tracking->sent_a) {
         if (pbdns_prepare_dns_request(
-                pb, buf, sizeof buf, host, &to_send, dnsA) == 0) {
+                pb, buf, sizeof buf, host, &to_send, dnsA, &tracking->id_a) ==
+            0) {
             TRACE_SOCKADDR(pb, "Sending DNS A query to ", dest, sockaddr_size);
             sent_to = sendto(skt, (char*)buf, to_send, 0, dest, sockaddr_size);
             if (sent_to > 0 && to_send == sent_to) tracking->sent_a = true;
@@ -90,8 +91,15 @@ int send_dns_query(
 #if PUBNUB_USE_IPV6
     if (!tracking->sent_aaaa) {
         if (pbdns_prepare_dns_request(
-                pb, buf, sizeof buf, host, &to_send, dnsAAAA) == 0) {
-            TRACE_SOCKADDR(pb, "Sending DNS AAAA query to: ", dest, sockaddr_size);
+                pb,
+                buf,
+                sizeof buf,
+                host,
+                &to_send,
+                dnsAAAA,
+                &tracking->id_aaaa) == 0) {
+            TRACE_SOCKADDR(
+                pb, "Sending DNS AAAA query to: ", dest, sockaddr_size);
             sent_to = sendto(skt, (char*)buf, to_send, 0, dest, sockaddr_size);
             if (sent_to > 0 && to_send == sent_to) tracking->sent_aaaa = true;
             else if (sent_to <= 0 && socket_would_block()) any_blocked = true;
@@ -178,12 +186,33 @@ int read_dns_response(
         return -1;
     }
     while (responses_received < expected_responses) {
+
         msg_size = recvfrom(
             skt, (char*)buf, sizeof buf, 0, dest, CAST & sockaddr_size);
         if (msg_size <= 0) return socket_would_block() ? +1 : -1;
 
         PUBNUB_LOG_TRACE(
             pb, "Received DNS response packet (%d bytes)", msg_size);
+
+        if (msg_size < 12) {
+            PUBNUB_LOG_WARNING(pb, "DNS response too short, skipping.");
+            continue;
+        }
+
+        uint16_t response_id = ((uint16_t)buf[0] << 8) | (uint16_t)buf[1];
+        if (response_id != tracking->id_a
+#if PUBNUB_USE_IPV6
+            && response_id != tracking->id_aaaa
+#endif
+        ) {
+            PUBNUB_LOG_WARNING(
+                pb,
+                "DNS response ID 0x%04X doesn't match any sent query ID, "
+                "skipping.",
+                response_id);
+            continue;
+        }
+
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
         if (responses_received == 0)
             time(&spare_addresses->time_of_the_last_dns_query);
@@ -245,8 +274,7 @@ int read_dns_response(
 #if PUBNUB_USE_IPV6
             else if (dnsAAAA == question_type) {
                 tracking->received_aaaa = true;
-                PUBNUB_LOG_DEBUG(
-                    pb, "No 'AAAA' records for requested domain.");
+                PUBNUB_LOG_DEBUG(pb, "No 'AAAA' records for requested domain.");
             }
 #endif /* PUBNUB_USE_IPV6 */
             else PUBNUB_LOG_WARNING(pb, "Failed to parse DNS response.");
