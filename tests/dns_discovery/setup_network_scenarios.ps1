@@ -133,28 +133,34 @@ function Install-LoopbackAdapter {
         return $true
     }
 
-    # Use devcon if available, otherwise pnputil
+    # Try devcon first (if available), then pnputil /add-device (Server 2025+),
+    # then legacy pnputil fallback.
     $devcon = Get-Command devcon.exe -ErrorAction SilentlyContinue
     if ($devcon) {
+        Write-Host "  Using devcon: $($devcon.Source)"
         & devcon.exe install "$env:windir\INF\netloop.inf" "*MSLOOP" 2>&1
     } else {
-        # Use pnputil + PowerShell approach
-        try {
-            $null = New-NetAdapter -Name "Loopback" -InterfaceDescription "Microsoft KM-TEST Loopback Adapter" -ErrorAction Stop
-        } catch {
-            Write-Host "  Trying alternative: installing via pnputil..."
-            pnputil /add-driver "$env:windir\INF\netloop.inf" /install 2>&1
+        Write-Host "  Staging loopback driver..."
+        pnputil /add-driver "$env:windir\INF\netloop.inf" 2>&1
 
-            $retries = 0
-            do {
-                Start-Sleep -Seconds 2
-                $retries++
-                $adapter = Get-NetAdapter | Where-Object { $_.InterfaceDescription -like "*Loopback*" -or $_.InterfaceDescription -like "*KM-TEST*" }
-            } while (-not $adapter -and $retries -lt 5)
+        # Windows 11 / Server 2025+ supports pnputil /add-device
+        Write-Host "  Creating loopback device instance..."
+        $pnpResult = pnputil /add-device /instanceid "ROOT\MSLOOP\0000" 2>&1
+        Write-Host "  pnputil /add-device output: $pnpResult"
 
-            if ($adapter) {
-                Rename-NetAdapter -Name $adapter.Name -NewName "Loopback" -ErrorAction SilentlyContinue
+        # Wait for PnP to enumerate the new device
+        $retries = 0
+        do {
+            Start-Sleep -Seconds 2
+            $retries++
+            $adapter = Get-NetAdapter | Where-Object {
+                $_.InterfaceDescription -like "*Loopback*" -or
+                $_.InterfaceDescription -like "*KM-TEST*"
             }
+        } while (-not $adapter -and $retries -lt 10)
+
+        if ($adapter) {
+            Rename-NetAdapter -Name $adapter.Name -NewName "Loopback" -ErrorAction SilentlyContinue
         }
     }
 
