@@ -29,6 +29,11 @@ function Run-Phase {
         Write-Host "Running setup..." -ForegroundColor Yellow
         try {
             & $Setup | Out-Host
+            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+                Write-Host "  Setup exited with code $LASTEXITCODE" -ForegroundColor Red
+                Write-Host "  Skipping phase." -ForegroundColor Yellow
+                return 0
+            }
         } catch {
             Write-Host "  Setup failed: $_" -ForegroundColor Red
             Write-Host "  Skipping phase." -ForegroundColor Yellow
@@ -89,10 +94,11 @@ $totalFailures += (Run-Phase `
     -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario metric } `
     -Scenario "metric")
 
-# Phase 6: IPv6
+# Phase 6: IPv6 (with injected IPv6 DNS on test adapter)
 $totalFailures += (Run-Phase `
     -Phase "6" `
     -Description "IPv6 discovery" `
+    -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario ipv6 } `
     -Scenario "ipv6")
 
 # Phase 7: Concurrency
@@ -140,6 +146,19 @@ $totalFailures += (Run-Phase `
     -Description "Multiple DNS servers per adapter" `
     -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario multi_dns } `
     -Scenario "multi_dns")
+
+# Phase 14: Boundary input tests (no network manipulation)
+$totalFailures += (Run-Phase `
+    -Phase "14" `
+    -Description "Boundary input tests" `
+    -Scenario "boundary")
+
+# Phase 15: Cross-adapter deduplication
+$totalFailures += (Run-Phase `
+    -Phase "15" `
+    -Description "Cross-adapter deduplication" `
+    -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario dedup } `
+    -Scenario "dedup")
 
 # Teardown
 Write-Host ""

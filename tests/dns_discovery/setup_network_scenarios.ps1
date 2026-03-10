@@ -10,7 +10,7 @@
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("loopback", "disable", "metric", "broadcast", "no_dns", "multi_dns", "flapping_setup", "teardown")]
+    [ValidateSet("loopback", "disable", "metric", "broadcast", "no_dns", "multi_dns", "flapping_setup", "ipv6", "dedup", "teardown")]
     [string]$Scenario
 )
 
@@ -231,13 +231,13 @@ function Setup-Broadcast {
     if (-not (Ensure-TestAdapter)) { exit 1 }
 
     New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "255.255.255.255","239.255.255.250"
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "255.255.255.255","239.255.255.250","240.0.0.1"
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
     $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
           (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
-          (Verify-DnsServers $AdapterAlias @("255.255.255.255", "239.255.255.250"))
+          (Verify-DnsServers $AdapterAlias @("255.255.255.255", "239.255.255.250", "240.0.0.1"))
     if (-not $ok) { exit 1 }
 }
 
@@ -288,6 +288,72 @@ function Setup-FlappingSetup {
     if (-not $ok) { exit 1 }
 }
 
+function Setup-Ipv6 {
+    Write-Host "Setting up test adapter with IPv6 DNS..."
+
+    if (-not (Ensure-TestAdapter)) { exit 1 }
+
+    # Ensure IPv4 config exists (adapter may have been reconfigured)
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+
+    # Add IPv6 unicast address (ULA range - passes is_valid_ipv6)
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "fd00::1" -PrefixLength 64 -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
+
+    # Set DNS with valid IPv6 (fd00::53) and link-local (fe80::dead:beef)
+    # The link-local address should be filtered by is_valid_ipv6
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "fd00::53","fe80::dead:beef","10.255.255.1"
+
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1")
+    if (-not $ok) { exit 1 }
+
+    # Verify IPv6 address
+    $ipv6 = Get-NetIPAddress -InterfaceAlias $AdapterAlias -AddressFamily IPv6 -ErrorAction SilentlyContinue |
+        Where-Object { $_.IPAddress -eq "fd00::1" }
+    if (-not $ipv6) {
+        Write-Host "  [VERIFY FAIL] IPv6 address fd00::1 not assigned" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "  [VERIFY OK] IPv6 address: fd00::1" -ForegroundColor Green
+
+    # Verify DNS includes our IPv6 entries
+    $dns = Get-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ErrorAction SilentlyContinue
+    $allDns = @()
+    if ($dns) { foreach ($d in $dns) { $allDns += $d.ServerAddresses } }
+    Write-Host "  [INFO] All DNS entries: $($allDns -join ', ')" -ForegroundColor Cyan
+}
+
+function Setup-Dedup {
+    Write-Host "Setting up test adapter with duplicate DNS..."
+
+    if (-not (Ensure-TestAdapter)) { exit 1 }
+
+    New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "192.168.200.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+
+    # Find a DNS server from another (real) adapter to create a duplicate
+    $dnsEntries = Get-DnsClientServerAddress -AddressFamily IPv4 |
+        Where-Object { $_.InterfaceAlias -ne $AdapterAlias -and $_.ServerAddresses.Count -gt 0 }
+
+    if (-not $dnsEntries -or $dnsEntries.Count -eq 0) {
+        Write-Warning "Could not find a real DNS server to duplicate"
+        exit 1
+    }
+
+    $realDns = $dnsEntries[0].ServerAddresses[0]
+    Write-Host "  Duplicating real DNS server: $realDns"
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses $realDns
+
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
+          (Verify-IpAddress $AdapterAlias "192.168.200.1") -and
+          (Verify-DnsServers $AdapterAlias @($realDns))
+    if (-not $ok) { exit 1 }
+}
+
 function Teardown {
     Write-Host "Cleaning up network test state..."
 
@@ -309,5 +375,7 @@ switch ($Scenario) {
     "no_dns"          { Setup-NoDns }
     "multi_dns"       { Setup-MultiDns }
     "flapping_setup"  { Setup-FlappingSetup }
+    "ipv6"            { Setup-Ipv6 }
+    "dedup"           { Setup-Dedup }
     "teardown"        { Teardown }
 }

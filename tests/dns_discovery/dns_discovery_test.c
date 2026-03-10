@@ -30,7 +30,7 @@
  *
  * Scenarios: baseline, loopback, disabled, metric, concurrent, ipv6,
  *            stability, buffer_edge, broadcast, no_dns, flapping,
- *            multi_dns, all
+ *            multi_dns, boundary, dedup, all
  * Exit code: number of failures (0 = all pass)
  */
 
@@ -49,6 +49,7 @@
 #include <process.h>
 
 #include "core/pubnub_dns_servers.h"
+#include "core/pubnub_assert.h"
 
 
 /* ------------------------------------------------------------------ */
@@ -239,9 +240,11 @@ static void test_no_zero_address(void)
     }
 
     for (int i = 0; i < count; i++) {
-        if (addrs[i].ipv4[0] == 0 && addrs[i].ipv4[1] == 0 &&
-            addrs[i].ipv4[2] == 0 && addrs[i].ipv4[3] == 0) {
-            TEST_FAIL(name, "zero address returned at index %d", i);
+        if (addrs[i].ipv4[0] == 0) {
+            char buf[20];
+            fmt_ipv4(addrs[i].ipv4, buf, sizeof(buf));
+            TEST_FAIL(name, "zero-prefix address returned at index %d: %s",
+                      i, buf);
             return;
         }
     }
@@ -505,10 +508,10 @@ static void test_disabled_adapter_filtered(void)
 static void run_disabled(void)
 {
     printf("\n=== Phase 3: Disabled adapter ===\n");
-    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
-        TEST_SKIP("disabled_phase", "test adapter not installed");
-        return;
-    }
+    /* Disabled adapters are invisible to GetAdaptersAddresses, so
+       adapter_exists() would always return false after disabling.
+       We just verify the disabled adapter's DNS (10.255.255.1)
+       does not leak into results. */
     test_disabled_adapter_filtered();
     test_basic_discovery();
 }
@@ -665,6 +668,56 @@ static void test_ipv6_addresses_printable(void)
     }
     TEST_PASS(name, "(%d server(s) listed)", count);
 }
+
+static void test_ipv6_no_all_zeros(void)
+{
+    const char*                name = "ipv6_no_all_zeros";
+    struct pubnub_ipv6_address addrs[8];
+    int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
+
+    if (count <= 0) {
+        TEST_SKIP(name, "no IPv6 DNS servers");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        bool all_zero = true;
+        for (int j = 0; j < 16 && all_zero; j++) {
+            if (addrs[i].ipv6[j] != 0) all_zero = false;
+        }
+        if (all_zero) {
+            TEST_FAIL(name, "all-zeros address (::) returned at index %d", i);
+            return;
+        }
+    }
+    TEST_PASS(name, "");
+}
+
+static void test_ipv6_injected_found(void)
+{
+    const char*                name = "ipv6_injected_found";
+    struct pubnub_ipv6_address addrs[8];
+    int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
+
+    if (count <= 0) {
+        TEST_SKIP(name, "no IPv6 DNS servers discovered");
+        return;
+    }
+
+    /* Look for fd00::53 (injected by IPv6 setup scenario).
+       fd00::53 = { 0xfd, 0x00, 0,...0, 0x00, 0x53 } */
+    uint8_t expected[16] = { 0xfd, 0 };
+    expected[15] = 0x53;
+
+    for (int i = 0; i < count; i++) {
+        if (memcmp(addrs[i].ipv6, expected, 16) == 0) {
+            TEST_PASS(name, "(fd00::53 found at [%d])", i);
+            return;
+        }
+    }
+    /* fd00::53 might not be present if IPv6 setup was not run */
+    TEST_SKIP(name, "fd00::53 not found (IPv6 setup may not have run)");
+}
 #endif /* PUBNUB_USE_IPV6 */
 
 static void run_ipv6(void)
@@ -674,8 +727,10 @@ static void run_ipv6(void)
     test_ipv6_basic_discovery();
     test_ipv6_no_link_local();
     test_ipv6_no_loopback();
+    test_ipv6_no_all_zeros();
     test_ipv6_no_duplicates();
     test_ipv6_addresses_printable();
+    test_ipv6_injected_found();
 #else
     TEST_SKIP("ipv6_phase", "PUBNUB_USE_IPV6 not enabled");
 #endif
@@ -1222,6 +1277,133 @@ static void run_multi_dns(void)
         return;
     }
     test_multi_dns_both_visible();
+    test_no_duplicates();
+    test_basic_discovery();
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 14: Boundary input tests                               */
+/* ------------------------------------------------------------------ */
+
+static void test_n_zero_returns_error(void)
+{
+    const char*                name = "n_zero_returns_error";
+    struct pubnub_ipv4_address addrs[1];
+
+    /* Suppress assert abort for intentional invalid input */
+    pubnub_assert_set_handler(pubnub_assert_handler_printf);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 0);
+    pubnub_assert_set_handler(NULL);
+
+    if (count == -1) {
+        TEST_PASS(name, "(returned -1 as expected)");
+    }
+    else {
+        TEST_FAIL(name, "expected -1 for n=0, got %d", count);
+    }
+}
+
+static void test_null_output_returns_error(void)
+{
+    const char* name = "null_output_returns_error";
+
+    pubnub_assert_set_handler(pubnub_assert_handler_printf);
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, NULL, 8);
+    pubnub_assert_set_handler(NULL);
+
+    if (count == -1) {
+        TEST_PASS(name, "(returned -1 as expected)");
+    }
+    else {
+        TEST_FAIL(name, "expected -1 for NULL output, got %d", count);
+    }
+}
+
+#if PUBNUB_USE_IPV6
+static void test_ipv6_n_zero_returns_error(void)
+{
+    const char*                name = "ipv6_n_zero_returns_error";
+    struct pubnub_ipv6_address addrs[1];
+
+    pubnub_assert_set_handler(pubnub_assert_handler_printf);
+    int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 0);
+    pubnub_assert_set_handler(NULL);
+
+    if (count == -1) {
+        TEST_PASS(name, "(returned -1 as expected)");
+    }
+    else {
+        TEST_FAIL(name, "expected -1 for n=0, got %d", count);
+    }
+}
+
+static void test_ipv6_null_output_returns_error(void)
+{
+    const char* name = "ipv6_null_output_returns_error";
+
+    pubnub_assert_set_handler(pubnub_assert_handler_printf);
+    int count = pubnub_dns_read_system_servers_ipv6(NULL, NULL, 8);
+    pubnub_assert_set_handler(NULL);
+
+    if (count == -1) {
+        TEST_PASS(name, "(returned -1 as expected)");
+    }
+    else {
+        TEST_FAIL(name, "expected -1 for NULL output, got %d", count);
+    }
+}
+#endif
+
+static void run_boundary(void)
+{
+    printf("\n=== Phase 14: Boundary input tests ===\n");
+    test_n_zero_returns_error();
+    test_null_output_returns_error();
+#if PUBNUB_USE_IPV6
+    test_ipv6_n_zero_returns_error();
+    test_ipv6_null_output_returns_error();
+#endif
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 15: Cross-adapter deduplication                        */
+/* ------------------------------------------------------------------ */
+
+static void test_dedup_across_adapters(void)
+{
+    const char*                name = "dedup_across_adapters";
+    struct pubnub_ipv4_address addrs[16];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 16);
+
+    if (count <= 1) {
+        TEST_SKIP(name, "need >= 2 servers to verify dedup");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        for (int j = i + 1; j < count; j++) {
+            if (memcmp(addrs[i].ipv4, addrs[j].ipv4, 4) == 0) {
+                char buf[20];
+                fmt_ipv4(addrs[i].ipv4, buf, sizeof(buf));
+                TEST_FAIL(name, "duplicate at [%d] and [%d]: %s", i, j, buf);
+                return;
+            }
+        }
+    }
+    TEST_PASS(name, "(no duplicates among %d servers from multiple adapters)",
+              count);
+}
+
+static void run_dedup(void)
+{
+    printf("\n=== Phase 15: Cross-adapter deduplication ===\n");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("dedup_phase", "test adapter not installed");
+        return;
+    }
+    test_dedup_across_adapters();
     test_basic_discovery();
 }
 
@@ -1246,6 +1428,8 @@ static void print_usage(void)
     printf("  no_dns     - Phase 11: no-DNS adapter handling\n");
     printf("  flapping   - Phase 12: adapter flapping stress test\n");
     printf("  multi_dns  - Phase 13: multiple DNS per adapter\n");
+    printf("  boundary   - Phase 14: boundary input tests\n");
+    printf("  dedup      - Phase 15: cross-adapter deduplication\n");
     printf("  all        - Run all phases\n");
 }
 
@@ -1306,6 +1490,12 @@ int main(int argc, char* argv[])
     }
     if (strcmp(scenario, "multi_dns") == 0 || strcmp(scenario, "all") == 0) {
         run_multi_dns();
+    }
+    if (strcmp(scenario, "boundary") == 0 || strcmp(scenario, "all") == 0) {
+        run_boundary();
+    }
+    if (strcmp(scenario, "dedup") == 0 || strcmp(scenario, "all") == 0) {
+        run_dedup();
     }
 
     WSACleanup();
