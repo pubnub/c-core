@@ -3,6 +3,7 @@
 #
 # Usage: .\setup_network_scenarios.ps1 -Scenario <name>
 # Requires: Administrator privileges
+# Exit code: 0 = success, 1 = verification failed
 
 param(
     [Parameter(Mandatory=$true)]
@@ -11,6 +12,116 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+
+# ──────────────────────────────────────────────
+#  Verification helpers
+# ──────────────────────────────────────────────
+
+function Verify-AdapterStatus {
+    param(
+        [string]$Name,
+        [string]$ExpectedStatus  # "Up" or "Disabled"
+    )
+
+    $adapter = Get-NetAdapter -Name $Name -ErrorAction SilentlyContinue
+    if (-not $adapter) {
+        Write-Host "  [VERIFY FAIL] Adapter '$Name' not found" -ForegroundColor Red
+        return $false
+    }
+
+    if ($adapter.Status -ne $ExpectedStatus) {
+        Write-Host "  [VERIFY FAIL] Adapter '$Name' status is '$($adapter.Status)', expected '$ExpectedStatus'" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "  [VERIFY OK] Adapter '$Name' status: $($adapter.Status)" -ForegroundColor Green
+    return $true
+}
+
+function Verify-DnsServers {
+    param(
+        [string]$InterfaceAlias,
+        [string[]]$ExpectedDns    # empty array = expect no DNS
+    )
+
+    $dns = Get-DnsClientServerAddress -InterfaceAlias $InterfaceAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+    $actual = @()
+    if ($dns -and $dns.ServerAddresses) {
+        $actual = @($dns.ServerAddresses)
+    }
+
+    if ($ExpectedDns.Count -eq 0) {
+        if ($actual.Count -eq 0) {
+            Write-Host "  [VERIFY OK] '$InterfaceAlias' DNS: (none, as expected)" -ForegroundColor Green
+            return $true
+        } else {
+            Write-Host "  [VERIFY FAIL] '$InterfaceAlias' DNS: expected none, got: $($actual -join ', ')" -ForegroundColor Red
+            return $false
+        }
+    }
+
+    $missing = @()
+    foreach ($expected in $ExpectedDns) {
+        if ($actual -notcontains $expected) {
+            $missing += $expected
+        }
+    }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "  [VERIFY FAIL] '$InterfaceAlias' DNS missing: $($missing -join ', ') (actual: $($actual -join ', '))" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "  [VERIFY OK] '$InterfaceAlias' DNS: $($actual -join ', ')" -ForegroundColor Green
+    return $true
+}
+
+function Verify-IpAddress {
+    param(
+        [string]$InterfaceAlias,
+        [string]$ExpectedIp
+    )
+
+    $ip = Get-NetIPAddress -InterfaceAlias $InterfaceAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        Where-Object { $_.IPAddress -eq $ExpectedIp }
+
+    if (-not $ip) {
+        $all = Get-NetIPAddress -InterfaceAlias $InterfaceAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+        $actual = if ($all) { ($all | ForEach-Object { $_.IPAddress }) -join ', ' } else { "(none)" }
+        Write-Host "  [VERIFY FAIL] '$InterfaceAlias' IP: expected $ExpectedIp, got: $actual" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "  [VERIFY OK] '$InterfaceAlias' IP: $ExpectedIp" -ForegroundColor Green
+    return $true
+}
+
+function Verify-Metric {
+    param(
+        [string]$InterfaceAlias,
+        [int]$ExpectedMetric
+    )
+
+    $iface = Get-NetIPInterface -InterfaceAlias $InterfaceAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+    if (-not $iface) {
+        Write-Host "  [VERIFY FAIL] '$InterfaceAlias' interface not found" -ForegroundColor Red
+        return $false
+    }
+
+    if ($iface.InterfaceMetric -ne $ExpectedMetric) {
+        Write-Host "  [VERIFY FAIL] '$InterfaceAlias' metric: expected $ExpectedMetric, got $($iface.InterfaceMetric)" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "  [VERIFY OK] '$InterfaceAlias' metric: $($iface.InterfaceMetric)" -ForegroundColor Green
+    return $true
+}
+
+
+# ──────────────────────────────────────────────
+#  Adapter install / helpers
+# ──────────────────────────────────────────────
 
 function Install-LoopbackAdapter {
     Write-Host "  Installing Microsoft Loopback Adapter..."
@@ -29,13 +140,11 @@ function Install-LoopbackAdapter {
     } else {
         # Use pnputil + PowerShell approach
         try {
-            # Add loopback adapter via WMI/CIM
             $null = New-NetAdapter -Name "Loopback" -InterfaceDescription "Microsoft KM-TEST Loopback Adapter" -ErrorAction Stop
         } catch {
             Write-Host "  Trying alternative: installing via pnputil..."
             pnputil /add-driver "$env:windir\INF\netloop.inf" /install 2>&1
 
-            # Wait for adapter to appear
             $retries = 0
             do {
                 Start-Sleep -Seconds 2
@@ -53,7 +162,6 @@ function Install-LoopbackAdapter {
     Start-Sleep -Seconds 2
     $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
     if (-not $adapter) {
-        # Try to find by description
         $adapter = Get-NetAdapter | Where-Object { $_.InterfaceDescription -like "*Loopback*" -or $_.InterfaceDescription -like "*KM-TEST*" }
         if ($adapter) {
             Rename-NetAdapter -Name $adapter.Name -NewName "Loopback"
@@ -85,6 +193,11 @@ function Ensure-LoopbackUp {
     return $true
 }
 
+
+# ──────────────────────────────────────────────
+#  Scenario setup + verification
+# ──────────────────────────────────────────────
+
 function Setup-Loopback {
     Write-Host "Setting up loopback adapter with fake DNS..."
 
@@ -96,14 +209,15 @@ function Setup-Loopback {
 
     if (-not (Ensure-LoopbackUp)) { exit 0 }
 
-    # Assign APIPA-range IP and unreachable DNS
     New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
     Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1"
 
-    Write-Host "  Loopback adapter configured:"
-    Write-Host "    IP: 169.254.1.1/16 (APIPA)"
-    Write-Host "    DNS: 10.255.255.1 (unreachable)"
-    Get-NetAdapter -Name "Loopback" | Format-Table Name, Status, InterfaceIndex -AutoSize
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-IpAddress "Loopback" "169.254.1.1") -and
+          (Verify-DnsServers "Loopback" @("10.255.255.1"))
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-Disable {
@@ -118,8 +232,10 @@ function Setup-Disable {
     Disable-NetAdapter -Name "Loopback" -Confirm:$false
     Start-Sleep -Seconds 2
 
-    $status = (Get-NetAdapter -Name "Loopback").Status
-    Write-Host "  Loopback adapter status: $status"
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = Verify-AdapterStatus "Loopback" "Disabled"
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-Metric {
@@ -131,15 +247,18 @@ function Setup-Metric {
         exit 0
     }
 
-    # Re-enable if disabled
     if ($adapter.Status -ne "Up") {
         Enable-NetAdapter -Name "Loopback" -Confirm:$false
         Start-Sleep -Seconds 2
     }
 
-    # Set very high metric so it sorts last
     Set-NetIPInterface -InterfaceAlias "Loopback" -InterfaceMetric 9999 -ErrorAction SilentlyContinue
-    Write-Host "  Loopback adapter metric set to 9999"
+
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-Metric "Loopback" 9999)
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-Broadcast {
@@ -153,14 +272,15 @@ function Setup-Broadcast {
 
     if (-not (Ensure-LoopbackUp)) { exit 0 }
 
-    # Assign APIPA-range IP and broadcast + multicast DNS
     New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
     Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "255.255.255.255","239.255.255.250"
 
-    Write-Host "  Loopback adapter configured:"
-    Write-Host "    IP: 169.254.1.1/16 (APIPA)"
-    Write-Host "    DNS: 255.255.255.255 (broadcast), 239.255.255.250 (multicast)"
-    Get-NetAdapter -Name "Loopback" | Format-Table Name, Status, InterfaceIndex -AutoSize
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-IpAddress "Loopback" "169.254.1.1") -and
+          (Verify-DnsServers "Loopback" @("255.255.255.255", "239.255.255.250"))
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-NoDns {
@@ -174,14 +294,15 @@ function Setup-NoDns {
 
     if (-not (Ensure-LoopbackUp)) { exit 0 }
 
-    # Assign IP but explicitly clear DNS
     New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
     Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ResetServerAddresses
 
-    Write-Host "  Loopback adapter configured:"
-    Write-Host "    IP: 169.254.1.1/16 (APIPA)"
-    Write-Host "    DNS: (none)"
-    Get-NetAdapter -Name "Loopback" | Format-Table Name, Status, InterfaceIndex -AutoSize
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-IpAddress "Loopback" "169.254.1.1") -and
+          (Verify-DnsServers "Loopback" @())
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-MultiDns {
@@ -195,14 +316,15 @@ function Setup-MultiDns {
 
     if (-not (Ensure-LoopbackUp)) { exit 0 }
 
-    # Assign APIPA-range IP and TWO unreachable DNS servers
     New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
     Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1","10.255.255.2"
 
-    Write-Host "  Loopback adapter configured:"
-    Write-Host "    IP: 169.254.1.1/16 (APIPA)"
-    Write-Host "    DNS: 10.255.255.1, 10.255.255.2"
-    Get-NetAdapter -Name "Loopback" | Format-Table Name, Status, InterfaceIndex -AutoSize
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-IpAddress "Loopback" "169.254.1.1") -and
+          (Verify-DnsServers "Loopback" @("10.255.255.1", "10.255.255.2"))
+    if (-not $ok) { exit 1 }
 }
 
 function Setup-FlappingSetup {
@@ -219,7 +341,11 @@ function Setup-FlappingSetup {
     New-NetIPAddress -InterfaceAlias "Loopback" -IPAddress "169.254.1.1" -PrefixLength 16 -ErrorAction SilentlyContinue
     Set-DnsClientServerAddress -InterfaceAlias "Loopback" -ServerAddresses "10.255.255.1"
 
-    Write-Host "  Loopback adapter ready for flapping test"
+    # Verify
+    Write-Host "  Verifying state..." -ForegroundColor Yellow
+    $ok = (Verify-AdapterStatus "Loopback" "Up") -and
+          (Verify-DnsServers "Loopback" @("10.255.255.1"))
+    if (-not $ok) { exit 1 }
 }
 
 function Teardown {
@@ -227,11 +353,8 @@ function Teardown {
 
     $adapter = Get-NetAdapter -Name "Loopback" -ErrorAction SilentlyContinue
     if ($adapter) {
-        # Remove IP addresses
         Remove-NetIPAddress -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
         Remove-NetRoute -InterfaceAlias "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
-
-        # Disable the adapter
         Disable-NetAdapter -Name "Loopback" -Confirm:$false -ErrorAction SilentlyContinue
         Write-Host "  Loopback adapter disabled and cleaned up"
     } else {

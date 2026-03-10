@@ -66,6 +66,8 @@ jobs:
           ref: v1
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
+      - name: Install devcon
+        run: choco install devcon.portable -y
       - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
       - name: Build DNS discovery test

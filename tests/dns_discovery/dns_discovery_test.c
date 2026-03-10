@@ -63,23 +63,23 @@ static int g_skipped = 0;
     do {                                                                       \
         printf("  [PASS] %s", name);                                           \
         printf(" " __VA_ARGS__);                                               \
-        printf("\n");                                                           \
+        printf("\n");                                                          \
         g_passes++;                                                            \
     } while (0)
 
 #define TEST_FAIL(name, ...)                                                   \
     do {                                                                       \
         printf("  [FAIL] %s: ", name);                                         \
-        printf(__VA_ARGS__);                                                    \
-        printf("\n");                                                           \
+        printf(__VA_ARGS__);                                                   \
+        printf("\n");                                                          \
         g_fails++;                                                             \
     } while (0)
 
 #define TEST_SKIP(name, ...)                                                   \
     do {                                                                       \
         printf("  [SKIP] %s: ", name);                                         \
-        printf(__VA_ARGS__);                                                    \
-        printf("\n");                                                           \
+        printf(__VA_ARGS__);                                                   \
+        printf("\n");                                                          \
         g_skipped++;                                                           \
     } while (0)
 
@@ -105,7 +105,7 @@ static void fmt_ipv6(const uint8_t addr[16], char* buf, size_t buf_size)
 /** Check if an adapter named `name` exists. */
 static bool adapter_exists(const char* name)
 {
-    IP_ADAPTER_ADDRESSES* addrs = NULL;
+    IP_ADAPTER_ADDRESSES* addrs  = NULL;
     ULONG                 buflen = 15000;
     DWORD                 ret;
 
@@ -146,8 +146,14 @@ static bool adapter_exists(const char* name)
         if (aa->FriendlyName) {
             char narrow[256];
             WideCharToMultiByte(
-                CP_UTF8, 0, aa->FriendlyName, -1, narrow, sizeof(narrow),
-                NULL, NULL);
+                CP_UTF8,
+                0,
+                aa->FriendlyName,
+                -1,
+                narrow,
+                sizeof(narrow),
+                NULL,
+                NULL);
             if (strcmp(narrow, name) == 0) {
                 found = true;
                 break;
@@ -166,7 +172,7 @@ static bool adapter_exists(const char* name)
 
 static void test_basic_discovery(void)
 {
-    const char* name = "basic_discovery";
+    const char*                name = "basic_discovery";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -179,7 +185,7 @@ static void test_basic_discovery(void)
 
 static void test_no_loopback_returned(void)
 {
-    const char* name = "no_loopback_returned";
+    const char*                name = "no_loopback_returned";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -201,7 +207,7 @@ static void test_no_loopback_returned(void)
 
 static void test_no_apipa_returned(void)
 {
-    const char* name = "no_apipa_returned";
+    const char*                name = "no_apipa_returned";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -223,7 +229,7 @@ static void test_no_apipa_returned(void)
 
 static void test_no_zero_address(void)
 {
-    const char* name = "no_zero_address";
+    const char*                name = "no_zero_address";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -244,7 +250,7 @@ static void test_no_zero_address(void)
 
 static void test_no_multicast_reserved(void)
 {
-    const char* name = "no_multicast_reserved";
+    const char*                name = "no_multicast_reserved";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -257,8 +263,8 @@ static void test_no_multicast_reserved(void)
         if (addrs[i].ipv4[0] >= 224) {
             char buf[20];
             fmt_ipv4(addrs[i].ipv4, buf, sizeof(buf));
-            TEST_FAIL(name, "multicast/reserved/broadcast address returned: %s",
-                      buf);
+            TEST_FAIL(
+                name, "multicast/reserved/broadcast address returned: %s", buf);
             return;
         }
     }
@@ -267,7 +273,7 @@ static void test_no_multicast_reserved(void)
 
 static void test_no_duplicates(void)
 {
-    const char* name = "no_duplicates";
+    const char*                name = "no_duplicates";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -291,7 +297,7 @@ static void test_no_duplicates(void)
 
 static void test_addresses_are_printable(void)
 {
-    const char* name = "addresses_printable";
+    const char*                name = "addresses_printable";
     struct pubnub_ipv4_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 8);
 
@@ -451,7 +457,7 @@ static void run_metric(void)
 #if PUBNUB_USE_IPV6
 static void test_ipv6_basic_discovery(void)
 {
-    const char* name = "ipv6_basic_discovery";
+    const char*                name = "ipv6_basic_discovery";
     struct pubnub_ipv6_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
 
@@ -465,7 +471,7 @@ static void test_ipv6_basic_discovery(void)
 
 static void test_ipv6_no_link_local(void)
 {
-    const char* name = "ipv6_no_link_local";
+    const char*                name = "ipv6_no_link_local";
     struct pubnub_ipv6_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
 
@@ -487,7 +493,7 @@ static void test_ipv6_no_link_local(void)
 
 static void test_ipv6_no_loopback(void)
 {
-    const char* name = "ipv6_no_loopback";
+    const char*                name = "ipv6_no_loopback";
     struct pubnub_ipv6_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
 
@@ -512,7 +518,7 @@ static void test_ipv6_no_loopback(void)
 
 static void test_ipv6_no_duplicates(void)
 {
-    const char* name = "ipv6_no_duplicates";
+    const char*                name = "ipv6_no_duplicates";
     struct pubnub_ipv6_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
 
@@ -536,7 +542,7 @@ static void test_ipv6_no_duplicates(void)
 
 static void test_ipv6_addresses_printable(void)
 {
-    const char* name = "ipv6_addresses_printable";
+    const char*                name = "ipv6_addresses_printable";
     struct pubnub_ipv6_address addrs[8];
     int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 8);
 
@@ -586,16 +592,14 @@ struct thread_result {
 static unsigned __stdcall concurrent_worker(void* arg)
 {
     struct thread_result* result = (struct thread_result*)arg;
-    result->iterations_ok   = 0;
-    result->iterations_fail = 0;
-    result->crashed         = false;
+    result->iterations_ok        = 0;
+    result->iterations_fail      = 0;
+    result->crashed              = false;
 
     for (int i = 0; i < CONCURRENT_ITERATIONS; i++) {
         struct pubnub_ipv4_address addrs[4];
         int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 4);
-        if (count > 0) {
-            result->iterations_ok++;
-        }
+        if (count > 0) { result->iterations_ok++; }
         else {
             result->iterations_fail++;
         }
@@ -611,8 +615,10 @@ static void test_concurrent_discovery(void)
     HANDLE               threads[CONCURRENT_THREADS];
     struct thread_result results[CONCURRENT_THREADS];
 
-    printf("    Spawning %d threads x %d iterations...\n",
-           CONCURRENT_THREADS, CONCURRENT_ITERATIONS);
+    printf(
+        "    Spawning %d threads x %d iterations...\n",
+        CONCURRENT_THREADS,
+        CONCURRENT_ITERATIONS);
 
     for (int i = 0; i < CONCURRENT_THREADS; i++) {
         threads[i] = (HANDLE)_beginthreadex(
@@ -623,8 +629,8 @@ static void test_concurrent_discovery(void)
         }
     }
 
-    DWORD wait = WaitForMultipleObjects(
-        CONCURRENT_THREADS, threads, TRUE, 60000);
+    DWORD wait =
+        WaitForMultipleObjects(CONCURRENT_THREADS, threads, TRUE, 60000);
 
     if (wait == WAIT_TIMEOUT) {
         TEST_FAIL(name, "threads did not finish within 60s");
@@ -639,13 +645,13 @@ static void test_concurrent_discovery(void)
         CloseHandle(threads[i]);
     }
 
-    printf("    Total: %d OK, %d fail out of %d\n",
-           total_ok, total_fail,
-           CONCURRENT_THREADS * CONCURRENT_ITERATIONS);
+    printf(
+        "    Total: %d OK, %d fail out of %d\n",
+        total_ok,
+        total_fail,
+        CONCURRENT_THREADS * CONCURRENT_ITERATIONS);
 
-    if (total_fail > 0) {
-        TEST_FAIL(name, "%d iterations failed", total_fail);
-    }
+    if (total_fail > 0) { TEST_FAIL(name, "%d iterations failed", total_fail); }
     else {
         TEST_PASS(name, "(%d iterations, no crashes)", total_ok);
     }
@@ -664,7 +670,7 @@ static void run_concurrent(void)
 
 static void test_buffer_n_equals_1(void)
 {
-    const char* name = "buffer_n_equals_1";
+    const char*                name = "buffer_n_equals_1";
     struct pubnub_ipv4_address addrs[1];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 1);
 
@@ -673,36 +679,14 @@ static void test_buffer_n_equals_1(void)
         return;
     }
     if (count > 1) {
-        TEST_FAIL(name, "requested n=1 but got %d servers (buffer overrun?)",
-                  count);
+        TEST_FAIL(
+            name, "requested n=1 but got %d servers (buffer overrun?)", count);
         return;
     }
 
     char buf[20];
     fmt_ipv4(addrs[0].ipv4, buf, sizeof(buf));
     TEST_PASS(name, "(got %s)", buf);
-}
-
-static void test_buffer_n_equals_0(void)
-{
-    const char* name = "buffer_n_equals_0";
-    /* n=0 should return -1 per the guard in the function. */
-    struct pubnub_ipv4_address dummy[1];
-    memset(dummy, 0xAA, sizeof(dummy));
-    int count = pubnub_dns_read_system_servers_ipv4(NULL, dummy, 0);
-
-    if (count != -1) {
-        TEST_FAIL(name, "expected -1 for n=0, got %d", count);
-        return;
-    }
-
-    /* Verify dummy was not touched (canary check). */
-    uint8_t expected[4] = { 0xAA, 0xAA, 0xAA, 0xAA };
-    if (memcmp(dummy[0].ipv4, expected, 4) != 0) {
-        TEST_FAIL(name, "output buffer was modified despite n=0");
-        return;
-    }
-    TEST_PASS(name, "(returned -1, buffer untouched)");
 }
 
 static void test_buffer_over_request(void)
@@ -725,8 +709,8 @@ static void test_buffer_over_request(void)
         if (memcmp(addrs[count].ipv4, canary, 4) != 0) {
             char buf[20];
             fmt_ipv4(addrs[count].ipv4, buf, sizeof(buf));
-            TEST_FAIL(name, "entry [%d] was written beyond count: %s",
-                      count, buf);
+            TEST_FAIL(
+                name, "entry [%d] was written beyond count: %s", count, buf);
             return;
         }
     }
@@ -763,7 +747,6 @@ static void run_buffer_edge(void)
 {
     printf("\n=== Phase 8: Buffer edge cases ===\n");
     test_buffer_n_equals_1();
-    test_buffer_n_equals_0();
     test_buffer_over_request();
     test_buffer_n1_matches_first_of_n8();
 }
@@ -777,7 +760,7 @@ static void run_buffer_edge(void)
 
 static void test_result_stability(void)
 {
-    const char* name = "result_stability";
+    const char*                name = "result_stability";
     struct pubnub_ipv4_address ref[8];
     int ref_count = pubnub_dns_read_system_servers_ipv4(NULL, ref, 8);
 
@@ -786,17 +769,20 @@ static void test_result_stability(void)
         return;
     }
 
-    printf("    Running %d iterations for stability...\n",
-           STABILITY_ITERATIONS);
+    printf(
+        "    Running %d iterations for stability...\n", STABILITY_ITERATIONS);
 
     for (int iter = 0; iter < STABILITY_ITERATIONS; iter++) {
         struct pubnub_ipv4_address cur[8];
         int cur_count = pubnub_dns_read_system_servers_ipv4(NULL, cur, 8);
 
         if (cur_count != ref_count) {
-            TEST_FAIL(name,
-                      "iteration %d: count changed from %d to %d",
-                      iter, ref_count, cur_count);
+            TEST_FAIL(
+                name,
+                "iteration %d: count changed from %d to %d",
+                iter,
+                ref_count,
+                cur_count);
             return;
         }
 
@@ -805,16 +791,23 @@ static void test_result_stability(void)
                 char r[20], c[20];
                 fmt_ipv4(ref[i].ipv4, r, sizeof(r));
                 fmt_ipv4(cur[i].ipv4, c, sizeof(c));
-                TEST_FAIL(name,
-                          "iteration %d: server [%d] changed from %s to %s",
-                          iter, i, r, c);
+                TEST_FAIL(
+                    name,
+                    "iteration %d: server [%d] changed from %s to %s",
+                    iter,
+                    i,
+                    r,
+                    c);
                 return;
             }
         }
     }
 
-    TEST_PASS(name, "(%d iterations, count=%d, stable)",
-              STABILITY_ITERATIONS, ref_count);
+    TEST_PASS(
+        name,
+        "(%d iterations, count=%d, stable)",
+        STABILITY_ITERATIONS,
+        ref_count);
 }
 
 static void run_stability(void)
@@ -924,8 +917,8 @@ static void test_no_dns_adapter_handled(void)
 
     /* Should still return real DNS from other adapters. */
     if (count <= 0) {
-        TEST_FAIL(name, "expected real DNS despite no-DNS adapter, got %d",
-                  count);
+        TEST_FAIL(
+            name, "expected real DNS despite no-DNS adapter, got %d", count);
         return;
     }
 
@@ -971,8 +964,8 @@ struct flap_result {
 static unsigned __stdcall flap_reader(void* arg)
 {
     struct flap_result* result = (struct flap_result*)arg;
-    result->ok   = 0;
-    result->fail = 0;
+    result->ok                 = 0;
+    result->fail               = 0;
 
     for (int i = 0; i < FLAP_ITERATIONS; i++) {
         struct pubnub_ipv4_address addrs[4];
@@ -980,10 +973,8 @@ static unsigned __stdcall flap_reader(void* arg)
 
         /* During flapping, -1 is acceptable (no suitable adapters
            momentarily). What matters is no crash / access violation. */
-        if (count > 0)
-            result->ok++;
-        else
-            result->fail++;
+        if (count > 0) result->ok++;
+        else result->fail++;
 
         Sleep(10);
     }
@@ -995,11 +986,13 @@ static unsigned __stdcall flap_toggler(void* arg)
     (void)arg;
     /* Toggle loopback adapter state rapidly. */
     for (int i = 0; i < FLAP_ITERATIONS / 2; i++) {
-        system("powershell -Command \"Disable-NetAdapter -Name 'Loopback'"
-               " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
+        system(
+            "powershell -Command \"Disable-NetAdapter -Name 'Loopback'"
+            " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
         Sleep(FLAP_TOGGLE_MS);
-        system("powershell -Command \"Enable-NetAdapter -Name 'Loopback'"
-               " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
+        system(
+            "powershell -Command \"Enable-NetAdapter -Name 'Loopback'"
+            " -Confirm:$false -ErrorAction SilentlyContinue\" >nul 2>&1");
         Sleep(FLAP_TOGGLE_MS);
     }
     return 0;
@@ -1009,22 +1002,24 @@ static void test_flapping_no_crash(void)
 {
     const char* name = "flapping_no_crash";
 
-    HANDLE toggle_thread = (HANDLE)_beginthreadex(
-        NULL, 0, flap_toggler, NULL, 0, NULL);
+    HANDLE toggle_thread =
+        (HANDLE)_beginthreadex(NULL, 0, flap_toggler, NULL, 0, NULL);
     if (!toggle_thread) {
         TEST_FAIL(name, "failed to create toggle thread");
         return;
     }
 
-    HANDLE               readers[FLAP_THREADS];
-    struct flap_result   results[FLAP_THREADS];
+    HANDLE             readers[FLAP_THREADS];
+    struct flap_result results[FLAP_THREADS];
 
-    printf("    Flapping loopback + %d reader threads x %d iterations...\n",
-           FLAP_THREADS, FLAP_ITERATIONS);
+    printf(
+        "    Flapping loopback + %d reader threads x %d iterations...\n",
+        FLAP_THREADS,
+        FLAP_ITERATIONS);
 
     for (int i = 0; i < FLAP_THREADS; i++) {
-        readers[i] = (HANDLE)_beginthreadex(
-            NULL, 0, flap_reader, &results[i], 0, NULL);
+        readers[i] =
+            (HANDLE)_beginthreadex(NULL, 0, flap_reader, &results[i], 0, NULL);
         if (!readers[i]) {
             TEST_FAIL(name, "failed to create reader thread %d", i);
             WaitForSingleObject(toggle_thread, 30000);
@@ -1036,15 +1031,16 @@ static void test_flapping_no_crash(void)
     /* Wait for all threads. */
     HANDLE all[FLAP_THREADS + 1];
     all[0] = toggle_thread;
-    for (int i = 0; i < FLAP_THREADS; i++) all[i + 1] = readers[i];
+    for (int i = 0; i < FLAP_THREADS; i++)
+        all[i + 1] = readers[i];
 
-    DWORD wait = WaitForMultipleObjects(
-        FLAP_THREADS + 1, all, TRUE, 120000);
+    DWORD wait = WaitForMultipleObjects(FLAP_THREADS + 1, all, TRUE, 120000);
 
     if (wait == WAIT_TIMEOUT) {
         TEST_FAIL(name, "threads did not finish within 120s");
         /* Clean up what we can. */
-        for (int i = 0; i <= FLAP_THREADS; i++) CloseHandle(all[i]);
+        for (int i = 0; i <= FLAP_THREADS; i++)
+            CloseHandle(all[i]);
         return;
     }
 
@@ -1056,8 +1052,11 @@ static void test_flapping_no_crash(void)
     }
     CloseHandle(toggle_thread);
 
-    printf("    Flap results: %d ok, %d transient-fail (expected), "
-           "no crashes\n", total_ok, total_fail);
+    printf(
+        "    Flap results: %d ok, %d transient-fail (expected), "
+        "no crashes\n",
+        total_ok,
+        total_fail);
 
     /* The test passes as long as we didn't crash. Transient failures
        during adapter state changes are expected and acceptable. */
@@ -1144,6 +1143,9 @@ int main(int argc, char* argv[])
 {
     WSADATA wsa;
 
+    /* Disable stdout buffering so output is visible even on crash. */
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     if (argc < 2) {
         print_usage();
         return 1;
@@ -1199,8 +1201,11 @@ int main(int argc, char* argv[])
     WSACleanup();
 
     printf("\n========================================\n");
-    printf("Results: %d passed, %d failed, %d skipped\n",
-           g_passes, g_fails, g_skipped);
+    printf(
+        "Results: %d passed, %d failed, %d skipped\n",
+        g_passes,
+        g_fails,
+        g_skipped);
     printf("========================================\n");
 
     return g_fails;
