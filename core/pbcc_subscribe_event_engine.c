@@ -420,10 +420,10 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription(
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
+    pubnub_mutex_unlock(ee->mutw);
 
     const enum pubnub_res rslt =
         pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -456,6 +456,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
     }
 
     pbarray_remove(ee->subscriptions, (void**)&sub, true);
+    pubnub_mutex_unlock(ee->mutw);
+
     const enum pubnub_res rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
 
     /**
@@ -465,7 +467,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
      */
     pbhash_set_free_with_destructor(
         &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -490,10 +491,10 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
         pubnub_mutex_unlock(ee->mutw);
         return PNR_OUT_OF_MEMORY;
     }
+    pubnub_mutex_unlock(ee->mutw);
 
     const enum pubnub_res rslt =
         pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -526,6 +527,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
     }
 
     pbarray_remove(ee->subscription_sets, (void**)&set, true);
+    pubnub_mutex_unlock(ee->mutw);
+
     const enum pubnub_res rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
 
     /**
@@ -535,7 +538,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
      */
     pbhash_set_free_with_destructor(
         &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -548,10 +550,11 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
 {
     PUBNUB_ASSERT_OPT(NULL != ee);
 
-    pubnub_mutex_lock(ee->mutw);
     enum pubnub_res rslt;
 
-    if (added) { rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, true, false); }
+    if (added) {
+        rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, true, false);
+    }
     else {
         const pubnub_subscription_options_t options =
             *(pubnub_subscription_options_t*)set;
@@ -559,14 +562,15 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
 
         if (NULL == subs) {
 #if PUBNUB_LOG_ENABLED(ERROR)
+            pubnub_mutex_lock(ee->mutw);
             pubnub_log_error(
                 ee->pb,
                 PUBNUB_LOG_LOCATION,
                 PNR_OUT_OF_MEMORY,
                 "Unable allocate memory for subscribables",
                 "Insufficient memory error");
-#endif // PUBNUB_LOG_ENABLED(ERROR)
             pubnub_mutex_unlock(ee->mutw);
+#endif // PUBNUB_LOG_ENABLED(ERROR)
             return PNR_OUT_OF_MEMORY;
         }
 
@@ -579,7 +583,6 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
         pbhash_set_free_with_destructor(
             &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
     }
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
