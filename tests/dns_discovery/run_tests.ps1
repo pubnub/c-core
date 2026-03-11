@@ -5,7 +5,9 @@
 # Exit code: total number of test failures (0 = all pass)
 
 param(
-    [string]$TestExe = ".\dns_discovery_test.exe"
+    [string]$TestExe = ".\dns_discovery_test.exe",
+    [string]$ValidatedTestExe = ".\dns_discovery_test_validated.exe",
+    [switch]$FailOnSetupError
 )
 
 $ErrorActionPreference = "Continue"
@@ -16,7 +18,8 @@ function Run-Phase {
         [string]$Phase,
         [string]$Description,
         [scriptblock]$Setup = $null,
-        [string]$Scenario
+        [string]$Scenario,
+        [string]$TestExeOverride = ""
     )
 
     Write-Host ""
@@ -31,19 +34,28 @@ function Run-Phase {
             & $Setup | Out-Host
             if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
                 Write-Host "  Setup exited with code $LASTEXITCODE" -ForegroundColor Red
+                if ($FailOnSetupError) {
+                    Write-Host "  Treating setup failure as phase failure." -ForegroundColor Red
+                    return 1
+                }
                 Write-Host "  Skipping phase." -ForegroundColor Yellow
                 return 0
             }
         } catch {
             Write-Host "  Setup failed: $_" -ForegroundColor Red
+            if ($FailOnSetupError) {
+                Write-Host "  Treating setup failure as phase failure." -ForegroundColor Red
+                return 1
+            }
             Write-Host "  Skipping phase." -ForegroundColor Yellow
             return 0
         }
     }
 
     # Run test
-    Write-Host "Running tests..." -ForegroundColor Yellow
-    & $TestExe $Scenario | Out-Host
+    $exe = if ($TestExeOverride) { $TestExeOverride } else { $TestExe }
+    Write-Host "Running tests ($exe)..." -ForegroundColor Yellow
+    & $exe $Scenario | Out-Host
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -eq 0) {
@@ -159,6 +171,43 @@ $totalFailures += (Run-Phase `
     -Description "Cross-adapter deduplication" `
     -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario dedup } `
     -Scenario "dedup")
+
+# Phase 16: APIPA unicast adapter filtering
+$totalFailures += (Run-Phase `
+    -Phase "16" `
+    -Description "APIPA unicast adapter filtering" `
+    -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario apipa_unicast } `
+    -Scenario "apipa_unicast")
+
+# Phase 17: DNS configured but no IPv4 unicast on adapter
+$totalFailures += (Run-Phase `
+    -Phase "17" `
+    -Description "DNS-without-unicast adapter filtering" `
+    -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario dns_no_ip } `
+    -Scenario "dns_no_ip")
+
+# Phase 18: Stale VPN control case on non-validated build
+$totalFailures += (Run-Phase `
+    -Phase "18" `
+    -Description "Stale VPN DNS visible (no validation build)" `
+    -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario stale_vpn } `
+    -Scenario "stale_vpn_no_validation")
+
+# Phase 19: Stale VPN DNS validation (uses validated exe with timeout)
+if (Test-Path $ValidatedTestExe) {
+    $totalFailures += (Run-Phase `
+        -Phase "19" `
+        -Description "Stale VPN DNS validation" `
+        -Setup { & powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\setup_network_scenarios.ps1" -Scenario stale_vpn } `
+        -Scenario "stale_vpn" `
+        -TestExeOverride $ValidatedTestExe)
+} else {
+    Write-Host ""
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host " Phase 19: Stale VPN DNS validation" -ForegroundColor Cyan
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host "  Skipped (validated exe not found: $ValidatedTestExe)" -ForegroundColor Yellow
+}
 
 # Teardown
 Write-Host ""

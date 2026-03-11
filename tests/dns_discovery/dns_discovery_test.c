@@ -30,7 +30,8 @@
  *
  * Scenarios: baseline, loopback, disabled, metric, concurrent, ipv6,
  *            stability, buffer_edge, broadcast, no_dns, flapping,
- *            multi_dns, boundary, dedup, all
+ *            multi_dns, boundary, dedup, apipa_unicast, dns_no_ip,
+ *            stale_vpn_no_validation, stale_vpn, all
  * Exit code: number of failures (0 = all pass)
  */
 
@@ -171,6 +172,11 @@ static bool adapter_exists(const char* name)
 /*                     Phase 1: Baseline tests                         */
 /* ------------------------------------------------------------------ */
 
+/* Verify that pubnub_dns_read_system_servers_ipv4() returns at least one DNS
+   server on a system with working network connectivity.
+   This is the fundamental smoke test — if this fails, the system has no
+   usable network adapters or GetAdaptersAddresses is broken.
+   Verification: count > 0 from the live system call. */
 static void test_basic_discovery(void)
 {
     const char*                name = "basic_discovery";
@@ -184,6 +190,11 @@ static void test_basic_discovery(void)
     TEST_PASS(name, "(found %d server(s))", count);
 }
 
+/* Verify that no 127.x.x.x loopback addresses appear in discovery results.
+   The production code's is_valid_ipv4() rejects first-octet == 127. This test
+   calls discovery on the live system and scans every returned address to
+   confirm none start with 127.
+   Verification: iterates all results checking ipv4[0] != 127. */
 static void test_no_loopback_returned(void)
 {
     const char*                name = "no_loopback_returned";
@@ -206,6 +217,11 @@ static void test_no_loopback_returned(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that no APIPA (169.254.x.x) addresses appear in discovery results.
+   APIPA addresses are auto-assigned when DHCP fails and are not valid DNS
+   servers. The production code's is_valid_ipv4() rejects 169.254.x.x.
+   Verification: iterates all results checking no address starts with
+   169.254. */
 static void test_no_apipa_returned(void)
 {
     const char*                name = "no_apipa_returned";
@@ -228,6 +244,11 @@ static void test_no_apipa_returned(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that no zero-prefix (0.x.x.x) addresses appear in results.
+   A first octet of 0 indicates "this network" (RFC 1122) and is never a
+   valid DNS server. The production code's is_valid_ipv4() rejects
+   first-octet == 0.
+   Verification: iterates all results checking ipv4[0] != 0. */
 static void test_no_zero_address(void)
 {
     const char*                name = "no_zero_address";
@@ -251,6 +272,10 @@ static void test_no_zero_address(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that no multicast (224-239), reserved (240-254), or broadcast (255)
+   addresses appear in results. The production code's is_valid_ipv4() rejects
+   any first-octet >= 224.
+   Verification: iterates all results checking ipv4[0] < 224. */
 static void test_no_multicast_reserved(void)
 {
     const char*                name = "no_multicast_reserved";
@@ -274,6 +299,10 @@ static void test_no_multicast_reserved(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that the result set contains no duplicate IPv4 addresses.
+   The production code deduplicates across adapters (inner loop in
+   pubnub_dns_read_system_servers checks all previously stored DNS entries).
+   Verification: O(n^2) pairwise memcmp of all returned 4-byte addresses. */
 static void test_no_duplicates(void)
 {
     const char*                name = "no_duplicates";
@@ -298,6 +327,15 @@ static void test_no_duplicates(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that DNS servers from IF_TYPE_SOFTWARE_LOOPBACK interfaces are not
+   leaked into discovery results. Unlike the simple 127.x.x.x check above,
+   this test enumerates the real system adapters via GetAdaptersAddresses,
+   collects DNS entries specifically from IfType == 24 (software loopback)
+   interfaces, and then cross-checks that none of those addresses appear in
+   the SDK's discovery output.
+   Organization: (1) enumerate adapters, collect loopback DNS; (2) call
+   discovery; (3) cross-compare the two sets.
+   Verification: memcmp of each loopback DNS entry against every result. */
 static void test_software_loopback_filtered(void)
 {
     const char* name = "software_loopback_filtered";
@@ -403,6 +441,10 @@ static void test_software_loopback_filtered(void)
     TEST_PASS(name, "(loopback DNS correctly filtered)");
 }
 
+/* Diagnostic helper: prints all discovered IPv4 DNS servers to stdout.
+   Always passes — its purpose is to provide human-readable output in CI
+   logs for debugging when other tests fail.
+   Verification: count > 0 and successful printf of each address. */
 static void test_addresses_are_printable(void)
 {
     const char*                name = "addresses_printable";
@@ -423,6 +465,10 @@ static void test_addresses_are_printable(void)
     TEST_PASS(name, "(%d server(s) listed)", count);
 }
 
+/* Phase 1: Baseline — no network manipulation needed.
+   Runs on the system's default network configuration. Tests fundamental
+   correctness: discovery finds servers, and filters out loopback, APIPA,
+   zero, multicast/reserved/broadcast addresses and duplicates. */
 static void run_baseline(void)
 {
     printf("\n=== Phase 1: Baseline ===\n");
@@ -441,6 +487,12 @@ static void run_baseline(void)
 /*        Phase 2: Virtual adapter visibility                          */
 /* ------------------------------------------------------------------ */
 
+/* Verify that DNS from a Hyper-V internal switch adapter is picked up by
+   discovery. Setup (PowerShell) creates "PNTestSwitch" with IP 192.168.200.1
+   and DNS 10.255.255.1. Because Hyper-V internal adapters have Ethernet
+   IfType and a valid unicast IP, is_adapter_suitable() should accept them.
+   Organization: calls discovery then scans results for 10.255.255.1.
+   Verification: exact byte match for {10, 255, 255, 1} in results. */
 static void test_virtual_adapter_dns_visible(void)
 {
     const char* name = "virtual_adapter_dns_visible";
@@ -466,6 +518,11 @@ static void test_virtual_adapter_dns_visible(void)
     TEST_FAIL(name, "test adapter DNS 10.255.255.1 not found in results");
 }
 
+/* Phase 2: Virtual adapter visibility.
+   Requires: setup_network_scenarios.ps1 -Scenario loopback (creates Hyper-V
+   internal switch "PNTestSwitch" with DNS 10.255.255.1 and verifies adapter
+   status + DNS assignment before the C test runs).
+   Guard: skips if the test adapter is not found on the system. */
 static void run_loopback(void)
 {
     printf("\n=== Phase 2: Virtual adapter visibility ===\n");
@@ -482,6 +539,13 @@ static void run_loopback(void)
 /*                 Phase 3: Disabled adapter                           */
 /* ------------------------------------------------------------------ */
 
+/* Verify that a disabled adapter's DNS does not leak into results.
+   Setup (PowerShell) disables the PNTestSwitch adapter (which had DNS
+   10.255.255.1). GetAdaptersAddresses omits disabled adapters entirely, and
+   is_adapter_suitable() also rejects OperStatus != IfOperStatusUp.
+   Organization: calls discovery then scans for the forbidden address.
+   Verification: 10.255.255.1 must NOT appear in results; real DNS must
+   still be returned from other active adapters. */
 static void test_disabled_adapter_filtered(void)
 {
     const char* name = "disabled_adapter_filtered";
@@ -505,6 +569,11 @@ static void test_disabled_adapter_filtered(void)
     TEST_PASS(name, "");
 }
 
+/* Phase 3: Disabled adapter filtering.
+   Requires: setup_network_scenarios.ps1 -Scenario disable (disables the
+   PNTestSwitch adapter and verifies its status is "Disabled").
+   No adapter_exists guard because disabled adapters are invisible to
+   GetAdaptersAddresses — we just verify the DNS doesn't leak. */
 static void run_disabled(void)
 {
     printf("\n=== Phase 3: Disabled adapter ===\n");
@@ -521,6 +590,13 @@ static void run_disabled(void)
 /*              Phase 5: Metric-based ordering                         */
 /* ------------------------------------------------------------------ */
 
+/* Verify that adapter metric affects DNS server ordering.
+   Setup (PowerShell) sets the test adapter's interface metric to 9999 (very
+   high / lowest priority). The production code sorts adapters by
+   (is_best_route DESC, metric ASC) via compare_adapter_priority(), so the
+   high-metric test adapter's DNS (10.255.255.1) should NOT be first.
+   Organization: calls discovery, checks that first result != 10.255.255.1.
+   Verification: byte comparison of addrs[0] against {10, 255, 255, 1}. */
 static void test_metric_ordering(void)
 {
     const char* name = "metric_ordering";
@@ -548,6 +624,10 @@ static void test_metric_ordering(void)
     TEST_PASS(name, "(first DNS: %s)", buf);
 }
 
+/* Phase 5: Metric-based ordering.
+   Requires: setup_network_scenarios.ps1 -Scenario metric (re-enables the
+   test adapter and sets its interface metric to 9999, then verifies).
+   Guard: skips if the test adapter is not found. */
 static void run_metric(void)
 {
     printf("\n=== Phase 5: Metric ordering ===\n");
@@ -564,6 +644,10 @@ static void run_metric(void)
 /* ------------------------------------------------------------------ */
 
 #if PUBNUB_USE_IPV6
+/* Verify that pubnub_dns_read_system_servers_ipv6() returns at least one
+   IPv6 DNS server. Skips (not fails) if none found — IPv6 DNS may
+   legitimately be unavailable on some CI runners.
+   Verification: count > 0 from the live system call. */
 static void test_ipv6_basic_discovery(void)
 {
     const char*                name = "ipv6_basic_discovery";
@@ -578,6 +662,12 @@ static void test_ipv6_basic_discovery(void)
     TEST_PASS(name, "(found %d server(s))", count);
 }
 
+/* Verify that no link-local (fe80::/10) IPv6 addresses appear in results.
+   Link-local addresses require a scope ID and are unsuitable for DNS.
+   The production code's is_valid_ipv6() rejects addr[0]==0xfe &&
+   (addr[1] & 0xc0)==0x80. Setup injects fe80::dead:beef on the test adapter
+   to confirm it is filtered.
+   Verification: checks first two bytes of each result against fe80::/10. */
 static void test_ipv6_no_link_local(void)
 {
     const char*                name = "ipv6_no_link_local";
@@ -600,6 +690,10 @@ static void test_ipv6_no_link_local(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that the IPv6 loopback address (::1) is not returned.
+   The production code's is_valid_ipv6() rejects the all-zeros-except-last-
+   byte-is-1 pattern.
+   Verification: checks each 16-byte result for the ::1 pattern. */
 static void test_ipv6_no_loopback(void)
 {
     const char*                name = "ipv6_no_loopback";
@@ -625,6 +719,9 @@ static void test_ipv6_no_loopback(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that the IPv6 result set contains no duplicate addresses.
+   Same deduplication logic as IPv4 but over 16-byte addresses.
+   Verification: O(n^2) pairwise memcmp of all returned 16-byte addresses. */
 static void test_ipv6_no_duplicates(void)
 {
     const char*                name = "ipv6_no_duplicates";
@@ -649,6 +746,9 @@ static void test_ipv6_no_duplicates(void)
     TEST_PASS(name, "");
 }
 
+/* Diagnostic helper: prints all discovered IPv6 DNS servers to stdout.
+   Always passes — provides human-readable CI log output for debugging.
+   Verification: count > 0 and successful inet_ntop for each address. */
 static void test_ipv6_addresses_printable(void)
 {
     const char*                name = "ipv6_addresses_printable";
@@ -669,6 +769,9 @@ static void test_ipv6_addresses_printable(void)
     TEST_PASS(name, "(%d server(s) listed)", count);
 }
 
+/* Verify that the all-zeros address (::) is not returned.
+   The production code's is_valid_ipv6() explicitly rejects all-zero.
+   Verification: checks each 16-byte result for all zeros. */
 static void test_ipv6_no_all_zeros(void)
 {
     const char*                name = "ipv6_no_all_zeros";
@@ -693,6 +796,12 @@ static void test_ipv6_no_all_zeros(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that the injected IPv6 DNS address fd00::53 from the test adapter
+   is picked up by discovery. Setup (PowerShell) assigns fd00::53 as a DNS
+   server on the PNTestSwitch adapter. fd00::/8 is a ULA range that passes
+   is_valid_ipv6() (not link-local, not loopback, not zero).
+   Skips (not fails) if not found — the IPv6 setup may not have run.
+   Verification: memcmp against the expected 16-byte pattern. */
 static void test_ipv6_injected_found(void)
 {
     const char*                name = "ipv6_injected_found";
@@ -720,6 +829,11 @@ static void test_ipv6_injected_found(void)
 }
 #endif /* PUBNUB_USE_IPV6 */
 
+/* Phase 6: IPv6 discovery.
+   Requires: setup_network_scenarios.ps1 -Scenario ipv6 (assigns fd00::1 IP
+   and DNS servers fd00::53, fe80::dead:beef, and 10.255.255.1 to the test
+   adapter, then verifies IPv6 address assignment).
+   Compiled only when PUBNUB_USE_IPV6=1. */
 static void run_ipv6(void)
 {
     printf("\n=== Phase 6: IPv6 ===\n");
@@ -769,6 +883,14 @@ static unsigned __stdcall concurrent_worker(void* arg)
     return 0;
 }
 
+/* Verify thread-safety of pubnub_dns_read_system_servers_ipv4() under
+   concurrent access. Spawns CONCURRENT_THREADS (8) threads, each calling
+   discovery CONCURRENT_ITERATIONS (100) times. No network manipulation is
+   needed — the test validates that the function uses no shared mutable state
+   and doesn't crash or return errors under contention.
+   Organization: spawn threads with _beginthreadex, wait with
+   WaitForMultipleObjects, aggregate per-thread ok/fail counts.
+   Verification: total_fail == 0 (all iterations returned count > 0). */
 static void test_concurrent_discovery(void)
 {
     const char* name = "concurrent_discovery";
@@ -818,6 +940,8 @@ static void test_concurrent_discovery(void)
     }
 }
 
+/* Phase 7: Concurrency stress test — no network manipulation needed.
+   Tests thread-safety on whatever network state exists. */
 static void run_concurrent(void)
 {
     printf("\n=== Phase 7: Concurrency stress test ===\n");
@@ -829,6 +953,10 @@ static void run_concurrent(void)
 /*             Phase 8: Buffer edge cases                              */
 /* ------------------------------------------------------------------ */
 
+/* Verify that requesting n=1 returns exactly 1 DNS server and does not
+   overrun the single-element output buffer. Tests the production code's
+   "total_dns_count < n" loop bound.
+   Verification: count must be exactly 1. */
 static void test_buffer_n_equals_1(void)
 {
     const char*                name = "buffer_n_equals_1";
@@ -850,6 +978,11 @@ static void test_buffer_n_equals_1(void)
     TEST_PASS(name, "(got %s)", buf);
 }
 
+/* Verify that requesting more servers than exist (n=32) returns only the
+   actual count and does not write beyond it. Pre-fills the buffer with a
+   0xBB canary pattern and checks that the entry at index [count] is still
+   untouched after the call.
+   Verification: canary byte check at addrs[count] after discovery. */
 static void test_buffer_over_request(void)
 {
     const char* name = "buffer_over_request";
@@ -879,6 +1012,11 @@ static void test_buffer_over_request(void)
     TEST_PASS(name, "(requested 32, got %d, no overrun)", count);
 }
 
+/* Verify that the server returned for n=1 is the same as the first server
+   returned for n=8 (deterministic priority ordering). Both calls use the
+   same GetBestRoute2 + metric sorting, so the highest-priority server must
+   be identical regardless of buffer size.
+   Verification: memcmp of the first 4-byte address from both calls. */
 static void test_buffer_n1_matches_first_of_n8(void)
 {
     const char* name = "buffer_n1_consistent";
@@ -904,6 +1042,9 @@ static void test_buffer_n1_matches_first_of_n8(void)
     TEST_PASS(name, "");
 }
 
+/* Phase 8: Buffer edge cases — no network manipulation needed.
+   Tests boundary conditions of the output buffer (n=1, n=32, n=1 vs n=8
+   consistency). */
 static void run_buffer_edge(void)
 {
     printf("\n=== Phase 8: Buffer edge cases ===\n");
@@ -919,6 +1060,12 @@ static void run_buffer_edge(void)
 
 #define STABILITY_ITERATIONS 50
 
+/* Verify that repeated calls to discovery return identical results.
+   Calls discovery once to capture a reference, then repeats
+   STABILITY_ITERATIONS (50) times comparing both count and every address
+   byte-for-byte. No network manipulation — tests determinism of the
+   sorting and enumeration logic.
+   Verification: count and memcmp match on every iteration. */
 static void test_result_stability(void)
 {
     const char*                name = "result_stability";
@@ -971,6 +1118,8 @@ static void test_result_stability(void)
         ref_count);
 }
 
+/* Phase 9: Result stability — no network manipulation needed.
+   Verifies deterministic ordering across 50 repeated calls. */
 static void run_stability(void)
 {
     printf("\n=== Phase 9: Result stability ===\n");
@@ -982,6 +1131,11 @@ static void run_stability(void)
 /*        Phase 10: Broadcast/multicast DNS filtering                  */
 /* ------------------------------------------------------------------ */
 
+/* Verify that the broadcast address 255.255.255.255 is filtered from results.
+   Setup (PowerShell) configures the test adapter's DNS to include
+   255.255.255.255. The production code's is_valid_ipv4() rejects
+   first-octet >= 224, which covers 255.
+   Verification: scans all results for exact 255.255.255.255 match. */
 static void test_broadcast_dns_filtered(void)
 {
     const char* name = "broadcast_dns_filtered";
@@ -1007,6 +1161,10 @@ static void test_broadcast_dns_filtered(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that multicast addresses (224.0.0.0 – 239.255.255.255) are filtered.
+   Setup (PowerShell) injects 239.255.255.250 as a DNS server on the test
+   adapter. The production code's is_valid_ipv4() rejects first-octet >= 224.
+   Verification: scans all results for any first-octet in 224-239 range. */
 static void test_multicast_dns_filtered(void)
 {
     const char* name = "multicast_dns_filtered";
@@ -1031,6 +1189,10 @@ static void test_multicast_dns_filtered(void)
     TEST_PASS(name, "");
 }
 
+/* Verify that reserved/future-use addresses (240.0.0.0 – 255.255.255.255)
+   are filtered. Setup (PowerShell) injects 240.0.0.1 as a DNS server.
+   The production code's is_valid_ipv4() rejects first-octet >= 224.
+   Verification: scans all results for any first-octet >= 240. */
 static void test_reserved_dns_filtered(void)
 {
     const char* name = "reserved_dns_filtered";
@@ -1055,6 +1217,10 @@ static void test_reserved_dns_filtered(void)
     TEST_PASS(name, "");
 }
 
+/* Phase 10: Broadcast/multicast DNS filtering.
+   Requires: setup_network_scenarios.ps1 -Scenario broadcast (assigns DNS
+   255.255.255.255, 239.255.255.250, and 240.0.0.1 to the test adapter and
+   verifies all three are set). */
 static void run_broadcast(void)
 {
     printf("\n=== Phase 10: Broadcast/multicast DNS filtering ===\n");
@@ -1069,6 +1235,13 @@ static void run_broadcast(void)
 /*        Phase 11: No-DNS adapter                                     */
 /* ------------------------------------------------------------------ */
 
+/* Verify that an adapter with IP but no DNS servers configured does not
+   cause discovery to fail or return garbage. Setup (PowerShell) configures
+   the test adapter with IP 192.168.200.1 but resets its DNS to empty. The
+   production code should skip it (no FirstDnsServerAddress) and still
+   return valid DNS from other adapters.
+   Verification: count > 0 and every returned address passes basic validity
+   checks (not 0.x, not 127.x, not 169.254.x, not >= 224). */
 static void test_no_dns_adapter_handled(void)
 {
     const char* name = "no_dns_adapter_handled";
@@ -1097,6 +1270,10 @@ static void test_no_dns_adapter_handled(void)
     TEST_PASS(name, "(got %d valid server(s))", count);
 }
 
+/* Phase 11: No-DNS adapter handling.
+   Requires: setup_network_scenarios.ps1 -Scenario no_dns (assigns IP but
+   resets DNS to empty on the test adapter, then verifies DNS list is empty).
+   Guard: skips if the test adapter is not found. */
 static void run_no_dns(void)
 {
     printf("\n=== Phase 11: No-DNS adapter ===\n");
@@ -1159,6 +1336,15 @@ static unsigned __stdcall flap_toggler(void* arg)
     return 0;
 }
 
+/* Stress-test discovery under rapid adapter state changes (flapping).
+   One thread repeatedly disables/enables the test adapter every 100ms.
+   Simultaneously, FLAP_THREADS (4) reader threads each call discovery
+   FLAP_ITERATIONS (50) times with 10ms sleep between calls.
+   The test passes as long as no thread crashes or causes an access violation.
+   Transient -1 returns during disable moments are expected and acceptable.
+   Organization: toggler thread + reader threads, all joined with
+   WaitForMultipleObjects (120s timeout).
+   Verification: no crash — the test always PASSes if threads complete. */
 static void test_flapping_no_crash(void)
 {
     const char* name = "flapping_no_crash";
@@ -1224,6 +1410,10 @@ static void test_flapping_no_crash(void)
     TEST_PASS(name, "(%d ok, %d transient-fail)", total_ok, total_fail);
 }
 
+/* Phase 12: Adapter flapping stress test.
+   Requires: setup_network_scenarios.ps1 -Scenario flapping_setup (creates
+   and configures the test adapter with DNS 10.255.255.1).
+   Guard: skips if the test adapter is not found. */
 static void run_flapping(void)
 {
     printf("\n=== Phase 12: Adapter flapping stress test ===\n");
@@ -1239,6 +1429,12 @@ static void run_flapping(void)
 /*        Phase 13: Multiple DNS servers per adapter                   */
 /* ------------------------------------------------------------------ */
 
+/* Verify that multiple DNS servers on a single adapter are all returned.
+   Setup (PowerShell) assigns two DNS servers (10.255.255.1 and 10.255.255.2)
+   to the test adapter. The production code's inner loop iterates
+   FirstDnsServerAddress->Next, collecting up to MAX_DNS_SERVERS_PER_ADAPTER.
+   Organization: calls discovery, scans for both specific addresses.
+   Verification: both 10.255.255.1 and 10.255.255.2 must appear. */
 static void test_multi_dns_both_visible(void)
 {
     const char* name = "multi_dns_both_visible";
@@ -1269,6 +1465,10 @@ static void test_multi_dns_both_visible(void)
     TEST_PASS(name, "(both 10.255.255.1 and 10.255.255.2 found)");
 }
 
+/* Phase 13: Multiple DNS servers per adapter.
+   Requires: setup_network_scenarios.ps1 -Scenario multi_dns (assigns two DNS
+   servers 10.255.255.1 and 10.255.255.2 to the test adapter, then verifies).
+   Guard: skips if the test adapter is not found. */
 static void run_multi_dns(void)
 {
     printf("\n=== Phase 13: Multiple DNS per adapter ===\n");
@@ -1286,6 +1486,10 @@ static void run_multi_dns(void)
 /*        Phase 14: Boundary input tests                               */
 /* ------------------------------------------------------------------ */
 
+/* Verify that passing n=0 returns -1 (error). The production code has
+   PUBNUB_ASSERT_OPT(n > 0) followed by an explicit `if (n == 0) return -1`.
+   We install pubnub_assert_handler_printf to prevent abort on the assert.
+   Verification: return value must be exactly -1. */
 static void test_n_zero_returns_error(void)
 {
     const char*                name = "n_zero_returns_error";
@@ -1304,6 +1508,11 @@ static void test_n_zero_returns_error(void)
     }
 }
 
+/* Verify that passing NULL output buffer returns -1 (error). The production
+   code has PUBNUB_ASSERT_OPT(o_ipv4 != NULL) followed by
+   `if (!o_ipv4) return -1`. We install pubnub_assert_handler_printf to
+   prevent abort.
+   Verification: return value must be exactly -1. */
 static void test_null_output_returns_error(void)
 {
     const char* name = "null_output_returns_error";
@@ -1321,6 +1530,10 @@ static void test_null_output_returns_error(void)
 }
 
 #if PUBNUB_USE_IPV6
+/* IPv6 variant: verify that passing n=0 to the IPv6 discovery returns -1.
+   Same boundary condition as test_n_zero_returns_error but for
+   pubnub_dns_read_system_servers_ipv6().
+   Verification: return value must be exactly -1. */
 static void test_ipv6_n_zero_returns_error(void)
 {
     const char*                name = "ipv6_n_zero_returns_error";
@@ -1338,6 +1551,10 @@ static void test_ipv6_n_zero_returns_error(void)
     }
 }
 
+/* IPv6 variant: verify that passing NULL output buffer returns -1.
+   Same boundary condition as test_null_output_returns_error but for
+   pubnub_dns_read_system_servers_ipv6().
+   Verification: return value must be exactly -1. */
 static void test_ipv6_null_output_returns_error(void)
 {
     const char* name = "ipv6_null_output_returns_error";
@@ -1355,6 +1572,9 @@ static void test_ipv6_null_output_returns_error(void)
 }
 #endif
 
+/* Phase 14: Boundary input tests — no network manipulation needed.
+   Tests API contract for invalid inputs (n=0, NULL output buffer) for both
+   IPv4 and IPv6 variants. */
 static void run_boundary(void)
 {
     printf("\n=== Phase 14: Boundary input tests ===\n");
@@ -1371,9 +1591,53 @@ static void run_boundary(void)
 /*        Phase 15: Cross-adapter deduplication                        */
 /* ------------------------------------------------------------------ */
 
-static void test_dedup_across_adapters(void)
+/* Verify cross-adapter deduplication: when two adapters (PNTestSwitch and
+   PNTestSwitch2) both have DNS 10.255.255.1, it must appear exactly once in
+   results. Setup (PowerShell) creates two Hyper-V internal switches and
+   assigns the same DNS to both, then verifies both adapters are Up with the
+   correct DNS before this test runs.
+   Organization: calls discovery with n=16, counts occurrences of 10.255.255.1.
+   Verification: target_count must be exactly 1. */
+static void test_dedup_target_appears_once(void)
 {
-    const char*                name = "dedup_across_adapters";
+    const char*                name = "dedup_target_appears_once";
+    struct pubnub_ipv4_address addrs[16];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 16);
+
+    if (count <= 0) {
+        TEST_FAIL(name, "expected DNS servers, got %d", count);
+        return;
+    }
+
+    /* 10.255.255.1 is configured on BOTH test adapters (PNTestSwitch
+       and PNTestSwitch2). It must appear exactly once after dedup. */
+    int target_count = 0;
+    for (int i = 0; i < count; i++) {
+        if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
+            target_count++;
+        }
+    }
+
+    if (target_count == 0) {
+        TEST_FAIL(name, "10.255.255.1 not found in results");
+        return;
+    }
+    if (target_count > 1) {
+        TEST_FAIL(name, "10.255.255.1 appeared %d times (expected 1)",
+                  target_count);
+        return;
+    }
+    TEST_PASS(name, "(10.255.255.1 appears exactly once)");
+}
+
+/* Broader duplicate check in the dedup scenario: verify that NO address
+   (not just 10.255.255.1) appears more than once. This covers the case
+   where the runner's real adapters might also share DNS entries.
+   Verification: O(n^2) pairwise memcmp of all 4-byte addresses. */
+static void test_dedup_no_duplicates(void)
+{
+    const char*                name = "dedup_no_duplicates";
     struct pubnub_ipv4_address addrs[16];
     int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 16);
 
@@ -1392,19 +1656,241 @@ static void test_dedup_across_adapters(void)
             }
         }
     }
-    TEST_PASS(name, "(no duplicates among %d servers from multiple adapters)",
-              count);
+    TEST_PASS(name, "(no duplicates among %d servers)", count);
 }
 
+/* Phase 15: Cross-adapter deduplication.
+   Requires: setup_network_scenarios.ps1 -Scenario dedup (creates two Hyper-V
+   internal switches "PNTestSwitch" and "PNTestSwitch2", both with DNS
+   10.255.255.1, and verifies both adapters are Up with correct DNS).
+   Guard: skips if either test adapter is missing. */
 static void run_dedup(void)
 {
     printf("\n=== Phase 15: Cross-adapter deduplication ===\n");
-    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
-        TEST_SKIP("dedup_phase", "test adapter not installed");
+    if (!adapter_exists("vEthernet (PNTestSwitch)") ||
+        !adapter_exists("vEthernet (PNTestSwitch2)")) {
+        TEST_SKIP("dedup_phase", "both test adapters required");
         return;
     }
-    test_dedup_across_adapters();
+    test_dedup_target_appears_once();
+    test_dedup_no_duplicates();
     test_basic_discovery();
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 16: APIPA unicast adapter filtering                    */
+/* ------------------------------------------------------------------ */
+
+/* Verify that adapters with APIPA unicast (169.254.x.x) are rejected even
+   if they have DNS servers configured. Setup injects DNS 10.255.255.1 on a
+   test adapter with unicast 169.254.200.1. is_adapter_suitable() should
+   reject the adapter because its only unicast address is invalid.
+   Verification: 10.255.255.1 must NOT appear in discovery results. */
+static void test_apipa_unicast_adapter_filtered(void)
+{
+    const char*                name = "apipa_unicast_adapter_filtered";
+    struct pubnub_ipv4_address addrs[16];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 16);
+
+    if (count <= 0) {
+        TEST_FAIL(name, "expected real DNS servers, got %d", count);
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
+            TEST_FAIL(name, "APIPA adapter DNS 10.255.255.1 leaked");
+            return;
+        }
+    }
+    TEST_PASS(name, "");
+}
+
+/* Phase 16: APIPA unicast adapter filtering.
+   Requires: setup_network_scenarios.ps1 -Scenario apipa_unicast. */
+static void run_apipa_unicast(void)
+{
+    printf("\n=== Phase 16: APIPA unicast filtering ===\n");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("apipa_unicast_phase", "test adapter not installed");
+        return;
+    }
+    test_apipa_unicast_adapter_filtered();
+    test_basic_discovery();
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 17: DNS-without-unicast filtering                      */
+/* ------------------------------------------------------------------ */
+
+/* Verify that adapters with DNS configured but no valid IPv4 unicast address
+   are rejected. Setup configures DNS 10.255.255.1 on the test adapter while
+   leaving it without a valid unicast (none or APIPA). is_adapter_suitable()
+   should reject it.
+   Verification: 10.255.255.1 must NOT appear in discovery results. */
+static void test_dns_without_unicast_filtered(void)
+{
+    const char*                name = "dns_without_unicast_filtered";
+    struct pubnub_ipv4_address addrs[16];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 16);
+
+    if (count <= 0) {
+        TEST_FAIL(name, "expected real DNS servers, got %d", count);
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
+            TEST_FAIL(name, "DNS-only adapter server 10.255.255.1 leaked");
+            return;
+        }
+    }
+    TEST_PASS(name, "");
+}
+
+/* Phase 17: DNS-without-unicast filtering.
+   Requires: setup_network_scenarios.ps1 -Scenario dns_no_ip. */
+static void run_dns_no_ip(void)
+{
+    printf("\n=== Phase 17: DNS-without-unicast filtering ===\n");
+    if (!adapter_exists("vEthernet (PNTestSwitch)")) {
+        TEST_SKIP("dns_no_ip_phase", "test adapter not installed");
+        return;
+    }
+    test_dns_without_unicast_filtered();
+    test_basic_discovery();
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 18: Stale VPN on non-validated build                   */
+/* ------------------------------------------------------------------ */
+
+/* Verify that stale VPN DNS is still returned when validation is disabled.
+   This is the control case for the validated build: with timeout == 0 the
+   unreachable DNS (10.255.255.1) should be present in discovered results if
+   adapter suitability accepts the test adapter. */
+static void test_stale_vpn_dns_visible_without_validation(void)
+{
+    const char*                name = "stale_vpn_dns_visible_without_validation";
+    struct pubnub_ipv4_address addrs[32];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 32);
+
+    if (count <= 0) {
+        TEST_FAIL(name, "expected DNS servers, got %d", count);
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
+            TEST_PASS(name, "(10.255.255.1 visible as expected)");
+            return;
+        }
+    }
+
+    TEST_FAIL(name, "expected stale DNS 10.255.255.1 to be visible");
+}
+
+/* Phase 18: Stale VPN without validation.
+   Requires: setup_network_scenarios.ps1 -Scenario stale_vpn. */
+static void run_stale_vpn_no_validation(void)
+{
+    printf("\n=== Phase 18: Stale VPN (no validation build) ===\n");
+#if PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT
+    TEST_SKIP("stale_vpn_no_validation_phase",
+              "Validation enabled in this binary");
+#else
+    test_stale_vpn_dns_visible_without_validation();
+#endif
+}
+
+
+/* ------------------------------------------------------------------ */
+/*        Phase 19: Stale VPN DNS validation                           */
+/* ------------------------------------------------------------------ */
+
+#if PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT
+/* Verify that an unreachable DNS server is filtered out when validation is
+   enabled. Setup (PowerShell) assigns DNS 10.255.255.1 to the test adapter
+   — no actual DNS server listens on that address, simulating a stale VPN.
+   The production code's validate_dns_server_udp() sends a minimal DNS probe
+   and times out after PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT ms.
+   This test is only compiled into the "validated" exe (built with
+   /DPUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT=2000).
+   Verification: 10.255.255.1 must NOT appear in results. */
+static void test_stale_vpn_dns_filtered(void)
+{
+    const char*                name = "stale_vpn_dns_filtered";
+    struct pubnub_ipv4_address addrs[32];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 32);
+
+    if (count <= 0) {
+        /* With validation, even the real DNS might fail if network is
+           flaky. But we expect at least the Azure DNS to respond. */
+        TEST_FAIL(name, "expected at least real DNS, got %d", count);
+        return;
+    }
+
+    /* 10.255.255.1 is on the test adapter but has no actual DNS server
+       listening. With validation enabled, it should be filtered out. */
+    for (int i = 0; i < count; i++) {
+        if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
+            TEST_FAIL(name, "stale DNS 10.255.255.1 was NOT filtered");
+            return;
+        }
+    }
+    TEST_PASS(name, "(unreachable DNS filtered, %d server(s) remaining)",
+              count);
+}
+
+/* Verify that real/working DNS servers survive the validation probe.
+   After the stale 10.255.255.1 is filtered, the runner's actual DNS
+   (e.g., Azure's 168.63.129.16) should still be returned. Ensures that
+   validation doesn't accidentally reject all servers.
+   Verification: count > 0 and first server is printed for CI logs. */
+static void test_real_dns_survives_validation(void)
+{
+    const char*                name = "real_dns_survives_validation";
+    struct pubnub_ipv4_address addrs[32];
+    int count = pubnub_dns_read_system_servers_ipv4(NULL, addrs, 32);
+
+    if (count <= 0) {
+        TEST_FAIL(name, "expected real DNS to survive validation, got %d",
+                  count);
+        return;
+    }
+
+    char buf[20];
+    fmt_ipv4(addrs[0].ipv4, buf, sizeof(buf));
+    TEST_PASS(name, "(%d server(s) survived, first: %s)", count, buf);
+}
+#endif /* PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT */
+
+/* Phase 19: Stale VPN DNS validation.
+   Requires: setup_network_scenarios.ps1 -Scenario stale_vpn (assigns DNS
+   10.255.255.1 — no server listens there — to simulate a disconnected VPN).
+   Only meaningful when built with PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT > 0
+   (the "validated" exe in CI). Uses the validated exe which sends a UDP probe
+   to each DNS server and filters those that don't respond. */
+static void run_stale_vpn(void)
+{
+    printf("\n=== Phase 19: Stale VPN DNS validation ===\n");
+#if PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT
+    printf("    Validation timeout: %d ms\n",
+           PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT);
+    test_stale_vpn_dns_filtered();
+    test_real_dns_survives_validation();
+#else
+    TEST_SKIP("stale_vpn_phase",
+              "PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT not enabled (built "
+              "with default=0)");
+#endif
 }
 
 
@@ -1430,6 +1916,10 @@ static void print_usage(void)
     printf("  multi_dns  - Phase 13: multiple DNS per adapter\n");
     printf("  boundary   - Phase 14: boundary input tests\n");
     printf("  dedup      - Phase 15: cross-adapter deduplication\n");
+    printf("  apipa_unicast - Phase 16: APIPA unicast adapter filtering\n");
+    printf("  dns_no_ip  - Phase 17: DNS-without-unicast filtering\n");
+    printf("  stale_vpn_no_validation - Phase 18: stale VPN control (no validation)\n");
+    printf("  stale_vpn  - Phase 19: stale VPN DNS validation\n");
     printf("  all        - Run all phases\n");
 }
 
@@ -1496,6 +1986,19 @@ int main(int argc, char* argv[])
     }
     if (strcmp(scenario, "dedup") == 0 || strcmp(scenario, "all") == 0) {
         run_dedup();
+    }
+    if (strcmp(scenario, "apipa_unicast") == 0 || strcmp(scenario, "all") == 0) {
+        run_apipa_unicast();
+    }
+    if (strcmp(scenario, "dns_no_ip") == 0 || strcmp(scenario, "all") == 0) {
+        run_dns_no_ip();
+    }
+    if (strcmp(scenario, "stale_vpn_no_validation") == 0 ||
+        strcmp(scenario, "all") == 0) {
+        run_stale_vpn_no_validation();
+    }
+    if (strcmp(scenario, "stale_vpn") == 0 || strcmp(scenario, "all") == 0) {
+        run_stale_vpn();
     }
 
     WSACleanup();
