@@ -1042,6 +1042,60 @@ static void test_buffer_n1_matches_first_of_n8(void)
     TEST_PASS(name, "");
 }
 
+#if PUBNUB_USE_IPV6
+/* Verify IPv6 call-site contract for n=1: with at least one available DNS
+   server, pubnub_dns_read_system_servers_ipv6(..., n=1) must return exactly 1
+   and never overrun the single-element output buffer. This mirrors how
+   get_default_ipv6_dns_ip() uses the API in resolver call-sites.
+   Verification: if count > 0 then count must be exactly 1. */
+static void test_ipv6_buffer_n_equals_1(void)
+{
+    const char*                name = "ipv6_buffer_n_equals_1";
+    struct pubnub_ipv6_address addrs[1];
+    int count = pubnub_dns_read_system_servers_ipv6(NULL, addrs, 1);
+
+    if (count == 0) {
+        TEST_SKIP(name, "no IPv6 DNS servers (fallback path may be used)");
+        return;
+    }
+    if (count < 0) {
+        TEST_FAIL(name, "unexpected negative count for n=1: %d", count);
+        return;
+    }
+    if (count != 1) {
+        TEST_FAIL(name, "requested n=1 but got %d servers", count);
+        return;
+    }
+    TEST_PASS(name, "");
+}
+
+/* Verify deterministic first-entry behavior for IPv6: first server returned
+   for n=1 should match first server returned for n=8. This validates the same
+   ordering contract relied upon by call-sites that query one server first.
+   Verification: first 16-byte address from both calls must match. */
+static void test_ipv6_buffer_n1_matches_first_of_n8(void)
+{
+    const char*                name = "ipv6_buffer_n1_consistent";
+    struct pubnub_ipv6_address one[1];
+    struct pubnub_ipv6_address eight[8];
+    int c1 = pubnub_dns_read_system_servers_ipv6(NULL, one, 1);
+    int c8 = pubnub_dns_read_system_servers_ipv6(NULL, eight, 8);
+
+    if (c1 <= 0 || c8 <= 0) {
+        TEST_SKIP(name, "need IPv6 DNS for both calls (c1=%d, c8=%d)", c1, c8);
+        return;
+    }
+    if (memcmp(one[0].ipv6, eight[0].ipv6, 16) != 0) {
+        char b1[INET6_ADDRSTRLEN], b8[INET6_ADDRSTRLEN];
+        fmt_ipv6(one[0].ipv6, b1, sizeof(b1));
+        fmt_ipv6(eight[0].ipv6, b8, sizeof(b8));
+        TEST_FAIL(name, "n=1 returned %s but n=8 first is %s", b1, b8);
+        return;
+    }
+    TEST_PASS(name, "");
+}
+#endif /* PUBNUB_USE_IPV6 */
+
 /* Phase 8: Buffer edge cases — no network manipulation needed.
    Tests boundary conditions of the output buffer (n=1, n=32, n=1 vs n=8
    consistency). */
@@ -1051,6 +1105,10 @@ static void run_buffer_edge(void)
     test_buffer_n_equals_1();
     test_buffer_over_request();
     test_buffer_n1_matches_first_of_n8();
+#if PUBNUB_USE_IPV6
+    test_ipv6_buffer_n_equals_1();
+    test_ipv6_buffer_n1_matches_first_of_n8();
+#endif
 }
 
 
@@ -1818,7 +1876,7 @@ static void run_stale_vpn_no_validation(void)
 /* Verify that an unreachable DNS server is filtered out when validation is
    enabled. Setup (PowerShell) assigns DNS 10.255.255.1 to the test adapter
    — no actual DNS server listens on that address, simulating a stale VPN.
-   The production code's validate_dns_server_udp() sends a minimal DNS probe
+   The production code's validate_dns_server_udp() sends a DNS A-query probe
    and times out after PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT ms.
    This test is only compiled into the "validated" exe (built with
    /DPUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT=2000).
