@@ -362,7 +362,7 @@ function Setup-Dedup {
 
     # Second adapter via second Hyper-V internal switch
     $Switch2 = "PNTestSwitch2"
-    $Adapter2 = "vEthernet ($Switch2)"
+    $Adapter2Alias = "vEthernet ($Switch2)"
 
     $existing = Get-VMSwitch -Name $Switch2 -ErrorAction SilentlyContinue
     if (-not $existing) {
@@ -373,30 +373,30 @@ function Setup-Dedup {
         Write-Host "  Second switch '$Switch2' already exists"
     }
 
-    $adapter2 = Get-NetAdapter -Name $Adapter2 -ErrorAction SilentlyContinue
-    if (-not $adapter2) {
-        Write-Host "  [ERROR] Adapter '$Adapter2' did not appear" -ForegroundColor Red
+    $Adapter2Object = Get-NetAdapter -Name $Adapter2Alias -ErrorAction SilentlyContinue
+    if (-not $Adapter2Object) {
+        Write-Host "  [ERROR] Adapter '$Adapter2Alias' did not appear" -ForegroundColor Red
         Get-NetAdapter | Format-Table Name, InterfaceDescription, Status -AutoSize
         exit 1
     }
 
-    if ($adapter2.Status -ne "Up") {
-        Enable-NetAdapter -Name $Adapter2 -Confirm:$false
+    if ($Adapter2Object.Status -ne "Up") {
+        Enable-NetAdapter -Name $Adapter2Alias -Confirm:$false
         Start-Sleep -Seconds 2
     }
 
-    Remove-NetIPAddress -InterfaceAlias $Adapter2 -Confirm:$false -ErrorAction SilentlyContinue
-    New-NetIPAddress -InterfaceAlias $Adapter2 -IPAddress "192.168.201.1" -PrefixLength 24 -ErrorAction SilentlyContinue
+    Remove-NetIPAddress -InterfaceAlias $Adapter2Alias -Confirm:$false -ErrorAction SilentlyContinue
+    New-NetIPAddress -InterfaceAlias $Adapter2Alias -IPAddress "192.168.201.1" -PrefixLength 24 -ErrorAction SilentlyContinue
     # Same DNS as first adapter — must be deduplicated
-    Set-DnsClientServerAddress -InterfaceAlias $Adapter2 -ServerAddresses "10.255.255.1"
+    Set-DnsClientServerAddress -InterfaceAlias $Adapter2Alias -ServerAddresses "10.255.255.1"
 
     # Verify both adapters
     Write-Host "  Verifying state..." -ForegroundColor Yellow
     $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
           (Verify-DnsServers $AdapterAlias @("10.255.255.1")) -and
-          (Verify-AdapterStatus $Adapter2 "Up") -and
-          (Verify-IpAddress $Adapter2 "192.168.201.1") -and
-          (Verify-DnsServers $Adapter2 @("10.255.255.1"))
+          (Verify-AdapterStatus $Adapter2Alias "Up") -and
+          (Verify-IpAddress $Adapter2Alias "192.168.201.1") -and
+          (Verify-DnsServers $Adapter2Alias @("10.255.255.1"))
     if (-not $ok) { exit 1 }
 
     Write-Host "  Both adapters configured with DNS 10.255.255.1" -ForegroundColor Green
