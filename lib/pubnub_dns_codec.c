@@ -5,7 +5,10 @@
 #include "core/pubnub_assert.h"
 #include "core/pubnub_logger_internal.h"
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 
 /** Size of DNS header, in octets */
@@ -150,16 +153,30 @@ static int dns_qname_encode(
 }
 
 
+/** Ensures srand() has been called at least once for DNS transaction ID
+    generation. Uses time(NULL) as seed, which is adequate for producing
+    unique (not cryptographic) IDs per RFC 5452. */
+static void ensure_srand_called(void)
+{
+    static bool srand_called = false;
+    if (!srand_called) {
+        srand_called = true;
+        srand((unsigned)time(NULL));
+    }
+}
+
 int pbdns_prepare_dns_request(
     pubnub_t*         pb,
     uint8_t*          buf,
     size_t            buf_size,
     char const*       host,
     int*              to_send,
-    enum DNSqueryType query_type)
+    enum DNSqueryType query_type,
+    uint16_t*         o_id)
 {
-    int qname_encoded_length;
-    int len = 0;
+    uint16_t id;
+    int      qname_encoded_length;
+    int      len = 0;
 
     PUBNUB_ASSERT_OPT(buf != NULL);
     PUBNUB_ASSERT_OPT(host != NULL);
@@ -176,8 +193,11 @@ int pbdns_prepare_dns_request(
             HEADER_SIZE + strlen((char*)host) + 2 + QUESTION_DATA_SIZE);
         return -1;
     }
-    buf[HEADER_ID_OFFSET]              = 0;
-    buf[HEADER_ID_OFFSET + 1]          = 33; /* in lack of a better ID */
+    ensure_srand_called();
+    id                        = (uint16_t)(rand() & 0xFFFF);
+    buf[HEADER_ID_OFFSET]     = (uint8_t)(id >> 8);
+    buf[HEADER_ID_OFFSET + 1] = (uint8_t)(id & 0xFF);
+    if (o_id != NULL) { *o_id = id; }
     buf[HEADER_OPTIONS_OFFSET]         = dnsoptRDmask >> 8;
     buf[HEADER_OPTIONS_OFFSET + 1]     = 0;
     buf[HEADER_QUERY_COUNT_OFFSET]     = 0;

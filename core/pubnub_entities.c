@@ -85,14 +85,8 @@ bool pubnub_entity_free(void** entity)
     PUBNUB_ASSERT_OPT(true == is_pubnub_entity_(*entity));
 
     pubnub_entity_t* _entity = *entity;
-    PUBNUB_LOG_DEBUG(
-        _entity->pb,
-        "Freeing %d entity with ID: %s",
-        _entity->type,
-        _entity->id.ptr);
     pubnub_mutex_lock(_entity->mutw);
     if (0 == pbref_counter_free(_entity->counter)) {
-        PUBNUB_LOG_DEBUG(_entity->pb, "%s has been freed", _entity->id.ptr);
         free(_entity->id.ptr);
         pubnub_mutex_unlock(_entity->mutw);
         pubnub_mutex_destroy(_entity->mutw);

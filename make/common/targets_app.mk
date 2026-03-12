@@ -97,6 +97,14 @@ subscribe_event_engine_sample$(APP_EXT): \
     pubnub_callback$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CALLBACK_CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
+CALLBACK_EE_DEADLOCK_TEST_SOURCES_ = ../core/samples/subscribe_ee_deadlock_test.c
+CALLBACK_EE_DEADLOCK_TEST_SOURCES = $(subst /,$(PATH_SEP),$(CALLBACK_EE_DEADLOCK_TEST_SOURCES_))
+subscribe_ee_deadlock_test$(APP_EXT): \
+    $(CALLBACK_EE_DEADLOCK_TEST_SOURCES) \
+    pubnub_ntf_runtime_selection$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(PREREQUISITES) $(LDLIBS) \
+    $(NTF_SELECTION_CPPFLAGS)
+
 CALLBACK_SUBSCRIBE_PUBLISH_SOURCES_ = ../core/samples/subscribe_publish_callback_sample.c
 CALLBACK_SUBSCRIBE_PUBLISH_SOURCES = $(subst /,$(PATH_SEP),$(CALLBACK_SUBSCRIBE_PUBLISH_SOURCES_))
 subscribe_publish_callback_sample$(APP_EXT): \

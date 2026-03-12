@@ -67,6 +67,9 @@ static bool is_valid_ipv4(const uint8_t addr[4])
     if (addr[0] == 0 || addr[0] == 127 || (addr[0] == 169 && addr[1] == 254))
         return false;
 
+    /* Multicast (224-239), reserved (240-254), broadcast (255) */
+    if (addr[0] >= 224) return false;
+
     return true;
 }
 
@@ -242,18 +245,24 @@ static IP_ADAPTER_ADDRESSES* get_adapter_addresses(pubnub_t* pb, ULONG family)
  *  @param addr_family Address family (@c AF_INET or @c AF_INET6).
  *  @param dns_addr DNS server address (4 bytes for @c IPv4, 16 bytes for
  *         @c IPv6, network order).
- *  @param if_index Interface index to bind query to (0 for any).
  *  @return @c true if DNS server responds successfully.
  */
 static bool validate_dns_server_udp(
     pubnub_t*     pb,
     int           addr_family,
-    const uint8_t dns_addr[],
-    DWORD         if_index)
+    const uint8_t dns_addr[])
 {
-    /* Minimal DNS query packet */
-    const uint8_t query[12] = { 0x00, 0x01, 0x01, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    /* Standard recursive DNS A-query for example.com.
+     * QDCOUNT=1 improves interoperability compared to header-only probes. */
+    uint8_t query[] = { 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x07, 'e',  'x',  'a',
+                        'm',  'p',  'l',  'e',  0x03, 'c',  'o',  'm',
+                        0x00, 0x00, 0x01, 0x00, 0x01 };
+    {
+        uint16_t txid = (uint16_t)GetTickCount();
+        query[0]      = (uint8_t)(txid >> 8);
+        query[1]      = (uint8_t)(txid & 0xff);
+    }
 
     SOCKET sock = socket(addr_family, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == INVALID_SOCKET) {
@@ -332,7 +341,7 @@ static bool validate_dns_server_udp(
         return false;
     }
 
-    /* Send minimal DNS query to probe server */
+    /* Send DNS query probe to server */
     int sent = sendto(
         sock,
         (char*)query,
@@ -350,30 +359,48 @@ static bool validate_dns_server_udp(
         return false;
     }
 
-    /* Try to receive any response (even error response means server is alive)
-     */
+    /* Try to receive any response with matching transaction ID.
+     * Even DNS error responses indicate a reachable resolver. */
     uint8_t response[512];
     int     recvd =
         recvfrom(sock, (char*)response, sizeof(response), 0, NULL, NULL);
 
-    if (recvd > 0) {
-        PUBNUB_LOG_TRACE(
-            pb,
-            "Received DNS server response (%d bytes): validation passed.",
-            recvd);
-        socket_close(sock);
-        return true;
-    }
+    if (recvd >= 2) {
+        if (response[0] == query[0] && response[1] == query[1]) {
+            PUBNUB_LOG_TRACE(
+                pb,
+                "Received DNS server response (%d bytes): validation passed.",
+                recvd);
+            socket_close(sock);
+            return true;
+        }
 
-    int err = WSAGetLastError();
-    if (err == WSAETIMEDOUT) {
-        PUBNUB_LOG_DEBUG(pb, "DNS validation timeout: server unreachable.");
-    }
-    else {
         PUBNUB_LOG_DEBUG(
             pb,
-            "recvfrom() for DNS validation failed with error code: %d",
-            err);
+            "DNS validation response txid mismatch (expected 0x%02x%02x, got "
+            "0x%02x%02x).",
+            query[0],
+            query[1],
+            response[0],
+            response[1]);
+    }
+    else if (recvd > 0) {
+        PUBNUB_LOG_DEBUG(
+            pb,
+            "DNS validation response too short (%d byte(s)).",
+            recvd);
+    }
+    else {
+        int err = WSAGetLastError();
+        if (err == WSAETIMEDOUT) {
+            PUBNUB_LOG_DEBUG(pb, "DNS validation timeout: server unreachable.");
+        }
+        else {
+            PUBNUB_LOG_DEBUG(
+                pb,
+                "recvfrom() for DNS validation failed with error code: %d",
+                err);
+        }
     }
 
     socket_close(sock);
@@ -615,8 +642,7 @@ struct adapter_info* pubnub_dns_read_system_servers(
             if (is_duplicate) continue;
 
 #if PUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT
-            if (!validate_dns_server_udp(
-                    pb, dns_family, dns_bytes, aa->IfIndex)) {
+            if (!validate_dns_server_udp(pb, dns_family, dns_bytes)) {
                 PUBNUB_LOG_WARNING(
                     pb,
                     "Skipping DNS - validation failed (%s)",

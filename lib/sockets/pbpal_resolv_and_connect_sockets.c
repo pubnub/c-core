@@ -19,7 +19,7 @@
 #if defined(_WIN32)
 #include "windows/pubnub_get_native_socket.h"
 #include <mstcpip.h>
-#include <winsock2.h>Issue
+#include <winsock2.h>
 typedef ADDRESS_FAMILY sa_family_t;
 #else
 #include "posix/pubnub_get_native_socket.h"

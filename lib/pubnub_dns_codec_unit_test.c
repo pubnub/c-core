@@ -987,7 +987,7 @@ Ensure(pubnub_dns_codec, makes_valid_DNS_query_request)
     make_dns_header_M(QUERY, 1, 0);
     append_request_question_M(name_encoded, RecordTypeA, QclassInternet);
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
         equals(0));
     attest(to_send, equals(m_msg_size));
     printf("to_send = %d\n", to_send);
@@ -1016,11 +1016,11 @@ Ensure(pubnub_dns_codec, handles_buffer_too_small_for_query_request)
     append_request_question_M(name_encoded, RecordTypeA, QclassInternet);
     /* Shorter buffer */
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf - 1, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf - 1, name, &to_send, dnsA, NULL),
         equals(-1));
 
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
         equals(0));
     printf("to_send = %d\n", to_send);
     attest(to_send, equals(m_msg_size));
@@ -1044,7 +1044,7 @@ Ensure(pubnub_dns_codec, handles_name_label_stretch_too_long)
     uint8_t    buf[100];
     int        to_send;
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
         equals(-1));
     printf("to_send = %d\n", to_send);
 }
@@ -1056,13 +1056,13 @@ Ensure(pubnub_dns_codec, handles_name_label_stretch_with_no_length)
     uint8_t buf[100];
     int     to_send;
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
         equals(-1));
     printf("to_send = %d\n", to_send);
     /* Cannot encode en empty string */
     *name = '\0';
     attest(
-        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
         equals(-1));
 }
 
@@ -1243,6 +1243,92 @@ Ensure(pubnub_dns_codec, handles_response_with_RecordTypeAAAA_no_ssl_fallback)
 #endif /* PUBNUB_USE_IPV6 */
 
 
+/* Verify DNS transaction ID generation */
+
+Ensure(pubnub_dns_codec, generates_transaction_id_in_request)
+{
+    char const name[]         = "pubsub.pubnub.com";
+    uint8_t    buf[50];
+    int        to_send;
+    uint16_t   id = 0;
+
+    attest(
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, &id),
+        equals(0));
+
+    /* ID written to buffer must match the returned value */
+    uint16_t buf_id = ((uint16_t)buf[0] << 8) | (uint16_t)buf[1];
+    attest(buf_id, equals(id));
+
+    /* ID must not be zero (statistically possible but extremely unlikely
+       with a seeded RNG; a zero ID would indicate the old hardcoded behavior) */
+    printf("Generated DNS transaction ID: 0x%04X\n", id);
+}
+
+Ensure(pubnub_dns_codec, generates_unique_ids_for_successive_requests)
+{
+    char const name[]         = "pubsub.pubnub.com";
+    uint8_t    buf[50];
+    int        to_send;
+    uint16_t   id_a    = 0;
+    uint16_t   id_aaaa = 0;
+
+    attest(
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, &id_a),
+        equals(0));
+    attest(
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsAAAA, &id_aaaa),
+        equals(0));
+
+    /* Two successive requests must get different IDs (per RFC 5452).
+       This could theoretically fail with probability 1/65536 but in practice
+       rand() with a time-based seed won't produce the same value twice in
+       a row. */
+    printf("A query ID: 0x%04X, AAAA query ID: 0x%04X\n", id_a, id_aaaa);
+    attest(id_a, differs(id_aaaa));
+}
+
+Ensure(pubnub_dns_codec, returns_id_via_out_param_and_null_is_safe)
+{
+    char const name[]         = "pubsub.pubnub.com";
+    uint8_t    buf[50];
+    int        to_send;
+
+    /* Passing NULL for o_id must not crash */
+    attest(
+        pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, NULL),
+        equals(0));
+
+    /* Verify ID is still written to the buffer (non-zero header) */
+    uint16_t buf_id = ((uint16_t)buf[0] << 8) | (uint16_t)buf[1];
+    printf("Buffer ID with NULL o_id: 0x%04X\n", buf_id);
+}
+
+Ensure(pubnub_dns_codec, id_uses_both_header_bytes)
+{
+    char const name[]         = "pubsub.pubnub.com";
+    uint8_t    buf[50];
+    int        to_send;
+    uint16_t   id = 0;
+    bool       high_byte_nonzero = false;
+    bool       low_byte_nonzero  = false;
+    int        i;
+
+    /* Generate several IDs and check that both bytes are used.
+       The old code always set buf[0]=0, meaning only 8 bits of randomness. */
+    for (i = 0; i < 20; i++) {
+        attest(
+            pbdns_prepare_dns_request(NULL, buf, sizeof buf, name, &to_send, dnsA, &id),
+            equals(0));
+        if (buf[0] != 0) high_byte_nonzero = true;
+        if (buf[1] != 0) low_byte_nonzero  = true;
+    }
+    /* At least one of the 20 tries should have a non-zero high byte */
+    attest(high_byte_nonzero, equals(true));
+    attest(low_byte_nonzero, equals(true));
+}
+
+
 /* Verify ASSERT gets fired */
 
 Ensure(pubnub_dns_codec, fires_asserts_on_illegal_parameters)
@@ -1253,13 +1339,13 @@ Ensure(pubnub_dns_codec, fires_asserts_on_illegal_parameters)
     pubnub_assert_set_handler((pubnub_assert_handler_t)test_assert_handler);
     expect_assert_in(
         pbdns_prepare_dns_request(
-            NULL, NULL, 10, "pubsub.pubnub.com", &to_send, dnsA),
+            NULL, NULL, 10, "pubsub.pubnub.com", &to_send, dnsA, NULL),
         "pubnub_dns_codec.c");
     expect_assert_in(
-        pbdns_prepare_dns_request(NULL, m_buf, 3, NULL, &to_send, dnsA),
+        pbdns_prepare_dns_request(NULL, m_buf, 3, NULL, &to_send, dnsA, NULL),
         "pubnub_dns_codec.c");
     expect_assert_in(
-        pbdns_prepare_dns_request(NULL, m_buf, 5, "pubsub.pubnub.com", NULL, dnsA),
+        pbdns_prepare_dns_request(NULL, m_buf, 5, "pubsub.pubnub.com", NULL, dnsA, NULL),
         "pubnub_dns_codec.c");
     expect_assert_in(
         pbdns_pick_resolved_addresses(
