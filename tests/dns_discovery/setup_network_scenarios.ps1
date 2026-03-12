@@ -18,6 +18,8 @@ $ErrorActionPreference = "Stop"
 
 $SwitchName = "PNTestSwitch"
 $AdapterAlias = "vEthernet ($SwitchName)"
+$ApipaSentinelDns = "10.255.255.16"
+$DnsNoIpSentinelDns = "10.255.255.17"
 
 
 # ──────────────────────────────────────────────
@@ -428,13 +430,13 @@ function Setup-ApipaUnicast {
 
     # APIPA source address should make adapter unsuitable for DNS extraction.
     New-NetIPAddress -InterfaceAlias $AdapterAlias -IPAddress "169.254.200.1" -PrefixLength 16 -ErrorAction SilentlyContinue
-    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "10.255.255.1"
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses $ApipaSentinelDns
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
     $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
           (Verify-IpAddress $AdapterAlias "169.254.200.1") -and
-          (Verify-DnsServers $AdapterAlias @("10.255.255.1"))
+          (Verify-DnsServers $AdapterAlias @($ApipaSentinelDns))
     if (-not $ok) { exit 1 }
 
     Write-Host "  APIPA scenario ready (adapter should be filtered by unicast validation)" -ForegroundColor Green
@@ -446,13 +448,13 @@ function Setup-DnsNoIp {
     if (-not (Ensure-TestAdapter)) { exit 1 }
 
     # Do NOT assign IPv4 address; keep DNS configured to verify adapter is excluded.
-    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses "10.255.255.1"
+    Set-DnsClientServerAddress -InterfaceAlias $AdapterAlias -ServerAddresses $DnsNoIpSentinelDns
 
     # Verify
     Write-Host "  Verifying state..." -ForegroundColor Yellow
     $ok = (Verify-AdapterStatus $AdapterAlias "Up") -and
           (Verify-NoValidIpv4Address $AdapterAlias) -and
-          (Verify-DnsServers $AdapterAlias @("10.255.255.1"))
+          (Verify-DnsServers $AdapterAlias @($DnsNoIpSentinelDns))
     if (-not $ok) { exit 1 }
 
     Write-Host "  DNS-without-IP scenario ready (adapter should be filtered)" -ForegroundColor Green

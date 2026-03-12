@@ -1683,10 +1683,10 @@ static void run_dedup(void)
 /* ------------------------------------------------------------------ */
 
 /* Verify that adapters with APIPA unicast (169.254.x.x) are rejected even
-   if they have DNS servers configured. Setup injects DNS 10.255.255.1 on a
+   if they have DNS servers configured. Setup injects DNS 10.255.255.16 on a
    test adapter with unicast 169.254.200.1. is_adapter_suitable() should
    reject the adapter because its only unicast address is invalid.
-   Verification: 10.255.255.1 must NOT appear in discovery results. */
+   Verification: 10.255.255.16 must NOT appear in discovery results. */
 static void test_apipa_unicast_adapter_filtered(void)
 {
     const char*                name = "apipa_unicast_adapter_filtered";
@@ -1700,8 +1700,8 @@ static void test_apipa_unicast_adapter_filtered(void)
 
     for (int i = 0; i < count; i++) {
         if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
-            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
-            TEST_FAIL(name, "APIPA adapter DNS 10.255.255.1 leaked");
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 16) {
+            TEST_FAIL(name, "APIPA adapter DNS 10.255.255.16 leaked");
             return;
         }
     }
@@ -1727,10 +1727,10 @@ static void run_apipa_unicast(void)
 /* ------------------------------------------------------------------ */
 
 /* Verify that adapters with DNS configured but no valid IPv4 unicast address
-   are rejected. Setup configures DNS 10.255.255.1 on the test adapter while
+   are rejected. Setup configures DNS 10.255.255.17 on the test adapter while
    leaving it without a valid unicast (none or APIPA). is_adapter_suitable()
    should reject it.
-   Verification: 10.255.255.1 must NOT appear in discovery results. */
+   Verification: 10.255.255.17 must NOT appear in discovery results. */
 static void test_dns_without_unicast_filtered(void)
 {
     const char*                name = "dns_without_unicast_filtered";
@@ -1744,8 +1744,8 @@ static void test_dns_without_unicast_filtered(void)
 
     for (int i = 0; i < count; i++) {
         if (addrs[i].ipv4[0] == 10 && addrs[i].ipv4[1] == 255 &&
-            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 1) {
-            TEST_FAIL(name, "DNS-only adapter server 10.255.255.1 leaked");
+            addrs[i].ipv4[2] == 255 && addrs[i].ipv4[3] == 17) {
+            TEST_FAIL(name, "DNS-only adapter server 10.255.255.17 leaked");
             return;
         }
     }

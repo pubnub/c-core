@@ -332,10 +332,9 @@ void pbcc_subscribe_ee_free(pbcc_subscribe_ee_t** ee)
 {
     if (NULL == ee || NULL == *ee) { return; }
 
-    /* Unregister callback so late async completions don't invoke it with freed ee as user_data. */
-    if (NULL != (*ee)->pb) {
-        pubnub_register_callback((*ee)->pb, NULL, NULL);
-    }
+    /* Unregister callback so late async completions don't invoke it with freed
+     * ee as user_data. */
+    if (NULL != (*ee)->pb) { pubnub_register_callback((*ee)->pb, NULL, NULL); }
 
     pubnub_mutex_lock((*ee)->mutw);
     if (NULL != (*ee)->subscription_sets)
@@ -696,10 +695,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
         /**
          * Update user presence information for channels which user actually
          * left.
-         *
-         * ee->mutw is released; acquire pb->monitor and ee->mutw
-         * independently (never nested) to avoid AB-BA with the IO
-         * callback thread.
          */
         if ((NULL != ch && 0 != strlen(ch)) ||
             (NULL != cg && 0 != strlen(cg))) {
@@ -864,11 +859,6 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
     char *           ch = NULL, *cg = NULL;
     enum pubnub_res  rslt = PNR_OK;
 
-    /**
-     * Protect EE state reads/updates with ee->mutw, then release before
-     * pbcc_ee_handle_event to avoid AB-BA deadlock with the IO callback
-     * thread (which acquires pb->monitor then ee->mutw).
-     */
     pubnub_mutex_lock(ee->mutw);
     if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee); }
     if (PNR_OK == rslt) {
@@ -929,11 +919,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     char *ch = NULL, *cg = NULL;
     bool  send_leave = false;
 
-    /**
-     * Protect EE state access with ee->mutw, then release before any
-     * PubNub API calls or event handling to prevent AB-BA deadlock with
-     * the IO callback thread (which acquires pb->monitor then ee->mutw).
-     */
     pubnub_mutex_lock(ee->mutw);
 
     size_t                  count = 0;
@@ -978,9 +963,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     /**
      * Update user presence information for channels which user actually
      * left.
-     *
-     * ee->mutw is released; acquire pb->monitor and ee->mutw independently
-     * (never nested) to avoid AB-BA with the IO callback thread.
      */
     bool sending_leave = false;
     if (PNR_OK == rslt && send_leave) {
@@ -1084,11 +1066,10 @@ bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee)
      * survives initialize_fields_in_state_IDLE() and is processed
      * normally by the FSM from the PBS_IDLE → PBS_READY path.
      */
-    pubnub_t*   pb          = ee->pb;
-    const char* leave_ch    = (NULL == ch || 0 == strlen(ch)) ? NULL : ch;
-    const char* leave_cg    = (NULL == cg || 0 == strlen(cg)) ? NULL : cg;
-    enum pubnub_res rslt    = pbcc_leave_prep(
-        &pb->core, leave_ch, leave_cg);
+    pubnub_t*       pb       = ee->pb;
+    const char*     leave_ch = (NULL == ch || 0 == strlen(ch)) ? NULL : ch;
+    const char*     leave_cg = (NULL == cg || 0 == strlen(cg)) ? NULL : cg;
+    enum pubnub_res rslt     = pbcc_leave_prep(&pb->core, leave_ch, leave_cg);
     if (PNR_STARTED == rslt) {
         pb->trans            = PBTT_LEAVE;
         pb->core.last_result = PNR_STARTED;
