@@ -1,8 +1,33 @@
 name: c-core
 schema: 1
-version: "7.1.0"
+version: "7.1.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-03-12
+    version: v7.1.1
+    changes:
+      - type: bug
+        text: "Move `offset_buf` declaration outside the `if` block so it remains in scope when `ENCODE_URL_PARAMETERS` reads the stored pointer."
+      - type: bug
+        text: "Initialize `part_sign` to `NULL` instead of `(char*)""` to avoid undefined behavior when `free()` is called in non-crypto builds."
+      - type: bug
+        text: "Each DNS query now gets a random 16-bit transaction ID via `rand()`, seeded once with `time(NULL)`. IDs are stored in `dns_queries_tracking` and validated on response to ensure concurrent A and AAAA queries have distinct IDs per RFC 5452."
+      - type: bug
+        text: "Filter DNS server addresses with first `octet >= 224` in `is_valid_ipv4`. Multicast, reserved/Class E, and broadcast ranges are not valid DNS server addresses."
+      - type: bug
+        text: "Release `ee->mutw` before calling PubNub APIs or `pbcc_ee_handle_event` to prevent lock-order inversion with the IO callback thread in both subscribe and unsubscribe paths. Add deadlock regression test covering all unsubscribe paths."
+      - type: bug
+        text: "Move `m_lock` acquisition after `pbcc_deinit()`/`pbpal_free()` because they don't need the global allocator lock and `pbcc_subscribe_ee_free` re-locks the non-recursive `m_lock` via `pubnub_register_callback` → `pb_valid_ctx_ptr`, causing self-deadlock on the same thread."
+      - type: bug
+        text: "Entity can outlive its parent `pubnub_t` context, so logging through `_entity->pb` is a use-after-free."
+      - type: bug
+        text: "Replace header-only probe (`QDCOUNT=0`) with a proper A-query for `example.com` and validate response transaction ID, fixing false negatives on resolvers that silently drop malformed packets."
+      - type: improvement
+        text: "Move `pubnub_internal.h` include above `windows.h` in `pbcc_logger_manager.c` so `winsock2.h` is included first, preventing redefinition errors in builds without `_WINSOCKAPI_` defined."
+      - type: improvement
+        text: "Use `%u` instead of `%d` for `unsigned int` `count` in `snprintf` to match the actual type."
+      - type: improvement
+        text: "Add buffer edge cases, result stability, broadcast/multicast filtering, no-DNS adapter handling, adapter flapping stress test, and multiple DNS per adapter phases. Extend baseline with multicast check and IPv6 with duplicate detection."
   - date: 2026-03-03
     version: v7.1.0
     changes:
@@ -1148,7 +1173,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1214,7 +1239,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1280,7 +1305,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1342,7 +1367,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1403,7 +1428,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1459,7 +1484,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"
@@ -1512,7 +1537,7 @@ sdks:
             distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
               -
                 name: "miniz"

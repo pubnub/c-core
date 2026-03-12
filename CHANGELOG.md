@@ -1,3 +1,21 @@
+## v7.1.1
+March 12 2026
+
+#### Fixed
+- Move `offset_buf` declaration outside the `if` block so it remains in scope when `ENCODE_URL_PARAMETERS` reads the stored pointer.
+- Initialize `part_sign` to `NULL` instead of `(char*)""` to avoid undefined behavior when `free()` is called in non-crypto builds.
+- Each DNS query now gets a random 16-bit transaction ID via `rand()`, seeded once with `time(NULL)`. IDs are stored in `dns_queries_tracking` and validated on response to ensure concurrent A and AAAA queries have distinct IDs per RFC 5452. Fixed the following issues reported by [@katzoded](https://github.com/katzoded): [#243](https://github.com/pubnub/c-core/issues/243).
+- Filter DNS server addresses with first `octet >= 224` in `is_valid_ipv4`. Multicast, reserved/Class E, and broadcast ranges are not valid DNS server addresses.
+- Release `ee->mutw` before calling PubNub APIs or `pbcc_ee_handle_event` to prevent lock-order inversion with the IO callback thread in both subscribe and unsubscribe paths. Add deadlock regression test covering all unsubscribe paths.
+- Move `m_lock` acquisition after `pbcc_deinit()`/`pbpal_free()` because they don't need the global allocator lock and `pbcc_subscribe_ee_free` re-locks the non-recursive `m_lock` via `pubnub_register_callback` → `pb_valid_ctx_ptr`, causing self-deadlock on the same thread.
+- Entity can outlive its parent `pubnub_t` context, so logging through `_entity->pb` is a use-after-free.
+- Replace header-only probe (`QDCOUNT=0`) with a proper A-query for `example.com` and validate response transaction ID, fixing false negatives on resolvers that silently drop malformed packets.
+
+#### Modified
+- Move `pubnub_internal.h` include above `windows.h` in `pbcc_logger_manager.c` so `winsock2.h` is included first, preventing redefinition errors in builds without `_WINSOCKAPI_` defined.
+- Use `%u` instead of `%d` for `unsigned int` `count` in `snprintf` to match the actual type.
+- Add buffer edge cases, result stability, broadcast/multicast filtering, no-DNS adapter handling, adapter flapping stress test, and multiple DNS per adapter phases. Extend baseline with multicast check and IPv6 with duplicate detection.
+
 ## v7.1.0
 March 03 2026
 
