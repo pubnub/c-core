@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "core/pubnub_helper.h"
+#include "core/pubnub_ccore.h"
 #include "core/pubnub_subscribe_event_engine_internal.h"
 #include "core/pbcc_subscribe_event_engine_states.h"
 #include "core/pbcc_subscribe_event_engine_events.h"
@@ -1056,10 +1057,43 @@ bool pbcc_subscribe_ee_postponed_unsubscribe_(pbcc_subscribe_ee_t* ee)
     ee->current_transaction = PBTT_LEAVE;
     pubnub_mutex_unlock(ee->mutw);
 
-    pubnub_leave(
-        ee->pb,
-        NULL == ch || 0 == strlen(ch) ? NULL : ch,
-        NULL == cg || 0 == strlen(cg) ? NULL : cg);
+    /**
+     * This function runs on the callback thread inside the
+     * pbntf_trans_outcome() callback, where pb->monitor is already
+     * held by pbpal_ntf_callback_process_queue().
+     *
+     * We MUST NOT call pubnub_leave() or pbnc_fsm() here because:
+     *
+     *  1. pubnub_leave() acquires the global allocator lock m_lock
+     *     (via pb_valid_ctx_ptr).  If the main thread simultaneously
+     *     holds m_lock in pballoc_free_at_last() and is blocked on
+     *     pb->monitor, the two threads deadlock.
+     *
+     *  2. Calling pbnc_fsm() re-enters the FSM, enqueues the context
+     *     back into the callback processing queue, and the subsequent
+     *     queue iteration processes DNS/TLS while pb->monitor is
+     *     still held — blocking pubnub_free_with_timeout() on the
+     *     main thread (whose timeout logic never executes because
+     *     pubnub_free blocks on the mutex).
+     *
+     * Instead, prepare the leave HTTP request and re-enqueue the
+     * context.  The queue processor will pick it up in a SUBSEQUENT
+     * iteration — after the current callback chain has fully unwound
+     * and pb->monitor has been released.  The prepared leave data
+     * (pb->core request buffer, pb->trans, pb->core.last_result)
+     * survives initialize_fields_in_state_IDLE() and is processed
+     * normally by the FSM from the PBS_IDLE → PBS_READY path.
+     */
+    pubnub_t*   pb          = ee->pb;
+    const char* leave_ch    = (NULL == ch || 0 == strlen(ch)) ? NULL : ch;
+    const char* leave_cg    = (NULL == cg || 0 == strlen(cg)) ? NULL : cg;
+    enum pubnub_res rslt    = pbcc_leave_prep(
+        &pb->core, leave_ch, leave_cg);
+    if (PNR_STARTED == rslt) {
+        pb->trans            = PBTT_LEAVE;
+        pb->core.last_result = PNR_STARTED;
+        pbntf_requeue_for_processing(pb);
+    }
     if (NULL != ch) { free(ch); }
     if (NULL != cg) { free(cg); }
 
