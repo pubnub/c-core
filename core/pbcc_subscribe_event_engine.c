@@ -421,11 +421,9 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription(
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt =
-        pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
     pubnub_mutex_unlock(ee->mutw);
 
-    return rslt;
+    return pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
 }
 
 enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
@@ -456,6 +454,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
     }
 
     pbarray_remove(ee->subscriptions, (void**)&sub, true);
+    pubnub_mutex_unlock(ee->mutw);
+
     const enum pubnub_res rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
 
     /**
@@ -465,7 +465,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription(
      */
     pbhash_set_free_with_destructor(
         &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -491,11 +490,9 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_with_subscription_set(
         return PNR_OUT_OF_MEMORY;
     }
 
-    const enum pubnub_res rslt =
-        pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
     pubnub_mutex_unlock(ee->mutw);
 
-    return rslt;
+    return pbcc_subscribe_ee_subscribe_(ee, cursor, true, false);
 }
 
 enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
@@ -526,6 +523,8 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
     }
 
     pbarray_remove(ee->subscription_sets, (void**)&set, true);
+    pubnub_mutex_unlock(ee->mutw);
+
     const enum pubnub_res rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
 
     /**
@@ -535,7 +534,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_with_subscription_set(
      */
     pbhash_set_free_with_destructor(
         &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
-    pubnub_mutex_unlock(ee->mutw);
 
     return rslt;
 }
@@ -548,38 +546,32 @@ enum pubnub_res pbcc_subscribe_ee_change_subscription_with_subscription_set(
 {
     PUBNUB_ASSERT_OPT(NULL != ee);
 
-    pubnub_mutex_lock(ee->mutw);
-    enum pubnub_res rslt;
+    if (added) { return pbcc_subscribe_ee_subscribe_(ee, NULL, true, false); }
 
-    if (added) { rslt = pbcc_subscribe_ee_subscribe_(ee, NULL, true, false); }
-    else {
-        const pubnub_subscription_options_t options =
-            *(pubnub_subscription_options_t*)set;
-        pbhash_set_t* subs = pubnub_subscription_subscribables_(sub, &options);
+    const pubnub_subscription_options_t options =
+        *(pubnub_subscription_options_t*)set;
+    pbhash_set_t* subs = pubnub_subscription_subscribables_(sub, &options);
 
-        if (NULL == subs) {
+    if (NULL == subs) {
 #if PUBNUB_LOG_ENABLED(ERROR)
-            pubnub_log_error(
-                ee->pb,
-                PUBNUB_LOG_LOCATION,
-                PNR_OUT_OF_MEMORY,
-                "Unable allocate memory for subscribables",
-                "Insufficient memory error");
+        pubnub_log_error(
+            ee->pb,
+            PUBNUB_LOG_LOCATION,
+            PNR_OUT_OF_MEMORY,
+            "Unable allocate memory for subscribables",
+            "Insufficient memory error");
 #endif // PUBNUB_LOG_ENABLED(ERROR)
-            pubnub_mutex_unlock(ee->mutw);
-            return PNR_OUT_OF_MEMORY;
-        }
-
-        rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
-        /**
-         * Subscribables list not needed anymore because channels / groups list
-         * already composed for presence leave REST API in
-         * `pbcc_subscribe_ee_unsubscribe_`.
-         */
-        pbhash_set_free_with_destructor(
-            &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
+        return PNR_OUT_OF_MEMORY;
     }
-    pubnub_mutex_unlock(ee->mutw);
+
+    const enum pubnub_res rslt = pbcc_subscribe_ee_unsubscribe_(ee, subs);
+    /**
+     * Subscribables list not needed anymore because channels / groups list
+     * already composed for presence leave REST API in
+     * `pbcc_subscribe_ee_unsubscribe_`.
+     */
+    pbhash_set_free_with_destructor(
+        &subs, (pbhash_set_element_free)pubnub_subscribable_free_);
 
     return rslt;
 }
@@ -688,51 +680,58 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_all(pbcc_subscribe_ee_t* ee)
                 "Unable allocate memory for event",
                 "Insufficient memory error");
 #endif // PUBNUB_LOG_ENABLED(ERROR)
-            rslt = PNR_OUT_OF_MEMORY;
+            pubnub_mutex_unlock(ee->mutw);
 
             if (NULL != ch) { free(ch); }
             if (NULL != cg) { free(cg); }
+
+            return PNR_OUT_OF_MEMORY;
         }
-        else {
-            pbarray_remove_all(ee->subscription_sets);
-            pbarray_remove_all(ee->subscriptions);
 
-            /**
-             * Update user presence information for channels which user actually
-             * left.
-             */
-            if ((NULL != ch && 0 != strlen(ch)) ||
-                (NULL != cg && 0 != strlen(cg))) {
-                pubnub_mutex_lock(ee->pb->monitor);
-                if (!pbnc_can_start_transaction(ee->pb)) {
-                    pubnub_mutex_unlock(ee->pb->monitor);
-                    /** Using array to handle consequencive call to unsubscribe.
-                     */
-                    pubnub_mutex_lock(ee->mutw);
-                    if (NULL != ch && strlen(ch) > 0)
-                        pbarray_add(ee->leave_channels, ch);
-                    if (NULL != cg && strlen(cg) > 0)
-                        pbarray_add(ee->leave_channel_groups, cg);
-                    pubnub_mutex_unlock(ee->mutw);
-                }
-                else {
-                    pubnub_mutex_unlock(ee->pb->monitor);
+        pbarray_remove_all(ee->subscription_sets);
+        pbarray_remove_all(ee->subscriptions);
+        pubnub_mutex_unlock(ee->mutw);
 
-                    pubnub_mutex_lock(ee->mutw);
-                    ee->current_transaction = PBTT_LEAVE;
-                    pubnub_mutex_unlock(ee->mutw);
+        /**
+         * Update user presence information for channels which user actually
+         * left.
+         *
+         * ee->mutw is released; acquire pb->monitor and ee->mutw
+         * independently (never nested) to avoid AB-BA with the IO
+         * callback thread.
+         */
+        if ((NULL != ch && 0 != strlen(ch)) ||
+            (NULL != cg && 0 != strlen(cg))) {
+            pubnub_mutex_lock(ee->pb->monitor);
+            const bool can_start = pbnc_can_start_transaction(ee->pb);
+            pubnub_mutex_unlock(ee->pb->monitor);
 
-                    pubnub_leave(
-                        ee->pb,
-                        NULL == ch || 0 == strlen(ch) ? NULL : ch,
-                        NULL == cg || 0 == strlen(cg) ? NULL : cg);
-                }
+            if (!can_start) {
+                /** Using array to handle consecutive call to unsubscribe. */
+                pubnub_mutex_lock(ee->mutw);
+                if (NULL != ch && strlen(ch) > 0)
+                    pbarray_add(ee->leave_channels, ch);
+                if (NULL != cg && strlen(cg) > 0)
+                    pbarray_add(ee->leave_channel_groups, cg);
+                pubnub_mutex_unlock(ee->mutw);
             }
+            else {
+                pubnub_mutex_lock(ee->mutw);
+                ee->current_transaction = PBTT_LEAVE;
+                pubnub_mutex_unlock(ee->mutw);
 
-            rslt = pbcc_ee_handle_event(ee->ee, event);
+                pubnub_leave(
+                    ee->pb,
+                    NULL == ch || 0 == strlen(ch) ? NULL : ch,
+                    NULL == cg || 0 == strlen(cg) ? NULL : cg);
+            }
         }
+
+        rslt = pbcc_ee_handle_event(ee->ee, event);
     }
-    pubnub_mutex_unlock(ee->mutw);
+    else {
+        pubnub_mutex_unlock(ee->mutw);
+    }
 
     /** Looks like there is nothing to unsubscribe from. */
     if (PNR_INVALID_PARAMETERS == rslt) { rslt = PNR_OK; }
@@ -864,6 +863,12 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
     char *           ch = NULL, *cg = NULL;
     enum pubnub_res  rslt = PNR_OK;
 
+    /**
+     * Protect EE state reads/updates with ee->mutw, then release before
+     * pbcc_ee_handle_event to avoid AB-BA deadlock with the IO callback
+     * thread (which acquires pb->monitor then ee->mutw).
+     */
+    pubnub_mutex_lock(ee->mutw);
     if (update) { rslt = pbcc_subscribe_ee_update_subscribables_(ee); }
     if (PNR_OK == rslt) {
         rslt =
@@ -881,6 +886,7 @@ enum pubnub_res pbcc_subscribe_ee_subscribe_(
             rslt = PNR_OK;
         }
     }
+    pubnub_mutex_unlock(ee->mutw);
 
     if (PNR_OK == rslt) {
         const bool restore = NULL != cursor && '0' != cursor->timetoken[0];
@@ -922,10 +928,20 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     char *ch = NULL, *cg = NULL;
     bool  send_leave = false;
 
+    /**
+     * Protect EE state access with ee->mutw, then release before any
+     * PubNub API calls or event handling to prevent AB-BA deadlock with
+     * the IO callback thread (which acquires pb->monitor then ee->mutw).
+     */
+    pubnub_mutex_lock(ee->mutw);
+
     size_t                  count = 0;
     pubnub_subscribable_t** subs =
         (pubnub_subscribable_t**)pbhash_set_elements(subscribables, &count);
-    if (NULL == subs) { return PNR_OUT_OF_MEMORY; }
+    if (NULL == subs) {
+        pubnub_mutex_unlock(ee->mutw);
+        return PNR_OUT_OF_MEMORY;
+    }
 
     /**
      * After subscription or subscription set removal we need to update
@@ -934,6 +950,7 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
     enum pubnub_res rslt = pbcc_subscribe_ee_update_subscribables_(ee);
     if (PNR_OK != rslt) {
         free(subs);
+        pubnub_mutex_unlock(ee->mutw);
         return rslt;
     }
 
@@ -955,16 +972,23 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
         rslt       = PNR_OK;
     }
 
+    pubnub_mutex_unlock(ee->mutw);
+
     /**
      * Update user presence information for channels which user actually
      * left.
+     *
+     * ee->mutw is released; acquire pb->monitor and ee->mutw independently
+     * (never nested) to avoid AB-BA with the IO callback thread.
      */
     bool sending_leave = false;
     if (PNR_OK == rslt && send_leave) {
         pubnub_mutex_lock(ee->pb->monitor);
-        if (!pbnc_can_start_transaction(ee->pb)) {
-            pubnub_mutex_unlock(ee->pb->monitor);
-            /** Using array to handle consequencive call to unsubscribe. */
+        const bool can_start = pbnc_can_start_transaction(ee->pb);
+        pubnub_mutex_unlock(ee->pb->monitor);
+
+        if (!can_start) {
+            /** Using array to handle consecutive call to unsubscribe. */
             pubnub_mutex_lock(ee->mutw);
             if (NULL != ch && strlen(ch) > 0)
                 pbarray_add(ee->leave_channels, ch);
@@ -973,8 +997,6 @@ enum pubnub_res pbcc_subscribe_ee_unsubscribe_(
             pubnub_mutex_unlock(ee->mutw);
         }
         else {
-            pubnub_mutex_unlock(ee->pb->monitor);
-
             pubnub_mutex_lock(ee->mutw);
             ee->current_transaction = PBTT_LEAVE;
             pubnub_mutex_unlock(ee->mutw);

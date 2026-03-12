@@ -154,7 +154,7 @@ void make_subscribe_request_(
 
     /**
      * Check whether there any request is in progress and postpone subscribe
-     * effect execution untill it will be completed.
+     * effect execution until it will be completed.
      */
     pubnub_mutex_lock(subscribe_ee->mutw);
     if (PBTT_NONE != subscribe_ee->current_transaction) {
@@ -166,6 +166,13 @@ void make_subscribe_request_(
     }
 
     if (ctx->send_heartbeat) {
+        /**
+         * Release subscribe_ee->mutw before acquiring pb->monitor to
+         * prevent AB-BA deadlock with the IO callback thread (which
+         * acquires pb->monitor first, then subscribe_ee->mutw).
+         */
+        pubnub_mutex_unlock(subscribe_ee->mutw);
+
         pubnub_mutex_lock(pb->monitor);
         if (!pbnc_can_start_transaction(pb)) {
             pubnub_mutex_unlock(pb->monitor);
@@ -176,16 +183,26 @@ void make_subscribe_request_(
 
             return;
         }
-
         pubnub_mutex_unlock(pb->monitor);
+
+        pubnub_mutex_lock(subscribe_ee->mutw);
+        /** Re-check after re-acquiring: another thread may have started. */
+        if (PBTT_NONE != subscribe_ee->current_transaction) {
+            pubnub_mutex_unlock(subscribe_ee->mutw);
+            cb(subscribe_ee->ee, invocation, true);
+            pbcc_ee_data_free(context_copy);
+
+            return;
+        }
         ctx->send_heartbeat               = false;
         subscribe_ee->current_transaction = PBTT_HEARTBEAT;
+        pubnub_mutex_unlock(subscribe_ee->mutw);
+
         pubnub_heartbeat(subscribe_ee->pb,
             pbcc_ee_data_value(ctx->channels),
             pbcc_ee_data_value(ctx->channel_groups));
-        pubnub_mutex_unlock(subscribe_ee->mutw);
 
-        /** Postpone invocation because there is ongoing heratbeat request. */
+        /** Postpone invocation because there is ongoing heartbeat request. */
         cb(subscribe_ee->ee, invocation, true);
         pbcc_ee_data_free(context_copy);
 
