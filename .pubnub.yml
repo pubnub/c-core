@@ -9,7 +9,7 @@ changelog:
       - type: bug
         text: "Move `offset_buf` declaration outside the `if` block so it remains in scope when `ENCODE_URL_PARAMETERS` reads the stored pointer."
       - type: bug
-        text: "Initialize `part_sign` to `NULL` instead of `(char*)""` to avoid undefined behavior when `free()` is called in non-crypto builds."
+        text: "Initialize `part_sign` to `NULL` instead of `(char*)\"\"` to avoid undefined behavior when `free()` is called in non-crypto builds."
       - type: bug
         text: "Each DNS query now gets a random 16-bit transaction ID via `rand()`, seeded once with `time(NULL)`. IDs are stored in `dns_queries_tracking` and validated on response to ensure concurrent A and AAAA queries have distinct IDs per RFC 5452."
       - type: bug
@@ -1109,58 +1109,48 @@ features:
   time:
     - TIME-TIME
 supported-platforms:
-  -
-    version: PubNub POSIX C SDK
+  - version: PubNub POSIX C SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doe snot wish to use TLS/SSL, she does not need OpenSSL at all.
-  -
-    version: PubNub POSIX C++ SDK
+  - version: PubNub POSIX C++ SDK
     platforms:
       - Most modern Unix-derived OSes support enough of POSIX to work. For some, like MacOS (OSX) we have special support to handle them not being fully POSIX compliant. Basically, if the OS is released in last 3/4 years, it will most probably work.
       - Some older OSes, like Ubuntu 12.04 or older, may need a few tweaks to work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user does not wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the POSIX C++ SDK)
-  -
-    version: PubNub Windows C SDK
+  - version: PubNub Windows C SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
-  -
-    version: PubNub Windows C++ SDK
+  - version: PubNub Windows C++ SDK
     platforms:
       - Windows 7 or newer with Visual Studio 2008 or newer should work. Newer versions of Clang for Windows and GCC (MINGW or Cygwin) should also work.
       - For TLS/SSL support, we use OpenSSL, and a recent version, 0.9.8 or higher should work. If the user doesn't wish to use TLS/SSL, she does not need OpenSSL at all.
       - Some features require C++11 or newer compliant compiler, if you do not have such a compiler you will not be able to use those features (but will be able to use the rest of the Windows C++ SDK)
-  -
-    version: PubNub FreeRTOS SDK
+  - version: PubNub FreeRTOS SDK
     platforms:
-      - FreeRTOS+ 150825 or newer is supported. 
-  -
-    version: PubNub Qt SDK
+      - FreeRTOS+ 150825 or newer is supported.
+  - version: PubNub Qt SDK
     platforms:
       - Qt5 is fully supported.
       - Qt4 is not supported, but 'C core' is known to build on Qt4 and some features work.
       - Older versions are not supported.
-  -
-    version: PubNub mBed SDK
+  - version: PubNub mBed SDK
     platforms:
       - mBed 2 is supported.
       - Newer versions should work, but are not supported out of the box.
-  -
-    version: PubNub ESP32 SDK 
+  - version: PubNub ESP32 SDK
     platforms:
-      - ESP-IDF 5.2.1 is supported 
+      - ESP-IDF 5.2.1 is supported
       - Newer versions should work, but are not supported out of the box.
 
 sdks:
-  -
-    full-name: PubNub POSIX C SDK
+  - full-name: PubNub POSIX C SDK
     short-name: POSIX C
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C
         tier: 1
         tags:
@@ -1169,64 +1159,57 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://www.pubnub.com/docs/sdks/c-core/posix-c
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Linux:
-                    target-architecture:
-                      - i386
-                      - amd64
-                    minimum-os-version:
-                      - Ubuntu 12.04
-                    maximum-os-version:
-                      - Ubuntu 20.04 LTS
-                  macOS:
-                    target-architecture:
-                      - x86-64
-                    minimum-os-version:
-                      - Mac OS X 10.8
-                    maximum-os-version:
-                      - macOS 11.3.1
-  -
-    full-name: PubNub POSIX C++ SDK
+              supported-operating-systems:
+                Linux:
+                  target-architecture:
+                    - i386
+                    - amd64
+                  minimum-os-version:
+                    - Ubuntu 12.04
+                  maximum-os-version:
+                    - Ubuntu 20.04 LTS
+                macOS:
+                  target-architecture:
+                    - x86-64
+                  minimum-os-version:
+                    - Mac OS X 10.8
+                  maximum-os-version:
+                    - macOS 11.3.1
+  - full-name: PubNub POSIX C++ SDK
     short-name: POSIX C++
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C/C++
         tier: 2
         tags:
@@ -1235,64 +1218,57 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://www.pubnub.com/docs/sdks/c-core/posix-cpp
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Linux:
-                    target-architecture:
-                      - i386
-                      - amd64
-                    minimum-os-version:
-                      - Ubuntu 12.04
-                    maximum-os-version:
-                      - Ubuntu 20.04 LTS
-                  macOS:
-                    target-architecture:
-                      - x86-64
-                    minimum-os-version:
-                      - Mac OS X 10.8
-                    maximum-os-version:
-                      - macOS 11.3.1
-  -
-    full-name: PubNub Windows C SDK
+              supported-operating-systems:
+                Linux:
+                  target-architecture:
+                    - i386
+                    - amd64
+                  minimum-os-version:
+                    - Ubuntu 12.04
+                  maximum-os-version:
+                    - Ubuntu 20.04 LTS
+                macOS:
+                  target-architecture:
+                    - x86-64
+                  minimum-os-version:
+                    - Mac OS X 10.8
+                  maximum-os-version:
+                    - macOS 11.3.1
+  - full-name: PubNub Windows C SDK
     short-name: Windows C
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C
         tier: 2
         tags:
@@ -1301,60 +1277,53 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://www.pubnub.com/docs/sdks/c-core/windows-c
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Windows:
-                    target-architecture:
-                      - i386
-                      - amd64
-                    minimum-os-version:
-                      - Windows 7 Professional
-                      - Windows 7 Enterprise
-                      - Windows 7 Ultimate
-                    maximum-os-version:
-                      - Windows 10 Pro
-                      - Windows 10 Enterprise
-  -
-    full-name: PubNub Windows C++ SDK
+              supported-operating-systems:
+                Windows:
+                  target-architecture:
+                    - i386
+                    - amd64
+                  minimum-os-version:
+                    - Windows 7 Professional
+                    - Windows 7 Enterprise
+                    - Windows 7 Ultimate
+                  maximum-os-version:
+                    - Windows 10 Pro
+                    - Windows 10 Enterprise
+  - full-name: PubNub Windows C++ SDK
     short-name: Windows C++
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C/C++
         tier: 2
         tags:
@@ -1363,60 +1332,53 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://www.pubnub.com/docs/sdks/c-core/windows-cpp
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Windows:
-                    target-architecture:
-                      - i386
-                      - amd64
-                    minimum-os-version:
-                      - Windows 7 Professional
-                      - Windows 7 Enterprise
-                      - Windows 7 Ultimate
-                    maximum-os-version:
-                      - Windows 10 Pro
-                      - Windows 10 Enterprise
-  -
-    full-name: PubNub FreeRTOS SDK
+              supported-operating-systems:
+                Windows:
+                  target-architecture:
+                    - i386
+                    - amd64
+                  minimum-os-version:
+                    - Windows 7 Professional
+                    - Windows 7 Enterprise
+                    - Windows 7 Ultimate
+                  maximum-os-version:
+                    - Windows 10 Pro
+                    - Windows 10 Enterprise
+  - full-name: PubNub FreeRTOS SDK
     short-name: FreeRTOS
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C
         tier: 2
         tags:
@@ -1424,55 +1386,48 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://www.pubnub.com/docs/sdks/c-core/freertos
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  FreeRTOS+:
-                    target-architecture:
-                      - i386
-                      - amd64
-                    minimum-os-version:
-                      - 150825
-  -
-    full-name: PubNub Qt SDK
+              supported-operating-systems:
+                FreeRTOS+:
+                  target-architecture:
+                    - i386
+                    - amd64
+                  minimum-os-version:
+                    - 150825
+  - full-name: PubNub Qt SDK
     short-name: Qt
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C
         tier: 2
         tags:
@@ -1480,52 +1435,45 @@ sdks:
         source-repository: https://github.com/pubnub/c-core
         documentation: https://github.com/pubnub/c-core-private/tree/master/qt
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Qt:
-                    minimum-os-version:
-                      - Qt5
-  -
-    full-name: PubNub Mbed SDK
+              supported-operating-systems:
+                Qt:
+                  minimum-os-version:
+                    - Qt5
+  - full-name: PubNub Mbed SDK
     short-name: mBed
-    artifacts:      
-      -
-        artifact-type: api-client
+    artifacts:
+      - artifact-type: api-client
         language: C
         tier: 2
         tags:
@@ -1533,43 +1481,38 @@ sdks:
         source-repository: https://os.mbed.com/users/sveljko/code/Pubnub_mbed2_sync/
         documentation: https://www.pubnub.com/docs/sdks/c-core/mbed
         distributions:
-          -
-            distribution-type: source code
+          - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
             location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
             requires:
-              -
-                name: "miniz"
+              - name: "miniz"
                 min-version: "2.0.8"
                 license: "MIT"
                 license-url: "https://github.com/richgel999/miniz"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "MD5"
+              - name: "MD5"
                 min-version: "1.0.0"
                 license: "heavily cut-down BSD license"
                 license-url: "https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5"
                 location: "Shipped with SDK"
                 is-required: "Required"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "0.9.8"
                 max-version: "1.1.1"
                 license: "Dual OpenSSL and SSLeay license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
-              -
-                name: "OpenSSL"
+              - name: "OpenSSL"
                 min-version: "3.0.0"
                 license: "Apache license"
                 license-url: "https://www.openssl.org/source/license.html"
                 location: "Installation required"
                 is-required: "Optional"
             supported-platforms:
-                supported-operating-systems:                  
-                  Mbed:
-                    minimum-os-version:
-                      - 2.0
+              supported-operating-systems:
+                Mbed:
+                  minimum-os-version:
+                    - 2.0
