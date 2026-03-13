@@ -58,21 +58,21 @@ void* pubnub_logger_user_data(pubnub_logger_t* logger)
 
 int pubnub_logger_add(const pubnub_t* pb, struct pubnub_logger* logger)
 {
-    if (NULL == logger || !pb_valid_ctx_ptr(pb)) return -1;
+    if (NULL == pb || NULL == logger) return -1;
 
     return pbcc_logger_manager_logger_add(pb->core.logger_manager, logger);
 }
 
 int pubnub_logger_remove(const pubnub_t* pb, struct pubnub_logger* logger)
 {
-    if (NULL == logger || !pb_valid_ctx_ptr(pb)) return -1;
+    if (NULL == pb || NULL == logger) return -1;
 
     return pbcc_logger_manager_logger_remove(pb->core.logger_manager, logger);
 }
 
 void pubnub_logger_remove_all(const pubnub_t* pb)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     return pbcc_logger_manager_logger_remove_all(pb->core.logger_manager);
 }
@@ -81,14 +81,14 @@ void pubnub_logger_set_log_level(
     const pubnub_t*             pb,
     const enum pubnub_log_level level)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_set_log_level(pb->core.logger_manager, level);
 }
 
 enum pubnub_log_level pubnub_logger_log_level(pubnub_t const* pb)
 {
-    if (!pb_valid_ctx_ptr(pb)) return PUBNUB_LOG_LEVEL_NONE;
+    if (NULL == pb) return PUBNUB_LOG_LEVEL_NONE;
 
     return pbcc_logger_manager_log_level(pb->core.logger_manager);
 }
@@ -97,7 +97,7 @@ bool pubnub_logger_should_log(
     const pubnub_t*             pb,
     const enum pubnub_log_level level)
 {
-    if (!pb_valid_ctx_ptr(pb)) return false;
+    if (NULL == pb) return false;
 
     return pbcc_logger_manager_should_log(pb->core.logger_manager, level);
 }
@@ -108,7 +108,7 @@ void pubnub_log_text(
     char const*                 location,
     char const*                 message)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_log_text(
         pb->core.logger_manager, level, location, message);
@@ -121,7 +121,7 @@ void pubnub_log_text_formatted(
     char const*                 format,
     ...)
 {
-    if (NULL == format || !pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb || NULL == format) return;
 
     char    buffer[1024];
     va_list args;
@@ -141,7 +141,7 @@ void pubnub_log_object(
     pubnub_log_value_t const*   message,
     char const*                 details)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_log_object(
         pb->core.logger_manager, level, location, message, details);
@@ -154,7 +154,7 @@ void pubnub_log_error(
     char const*     error_message,
     char const*     details)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_log_error(
         pb->core.logger_manager,
@@ -177,7 +177,7 @@ void pubnub_log_network_request(
     const bool                    canceled,
     const bool                    failed)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_log_network_request(
         pb->core.logger_manager,
@@ -201,7 +201,7 @@ void pubnub_log_network_response(
     pubnub_log_value_t const*   headers,
     char const*                 body)
 {
-    if (!pb_valid_ctx_ptr(pb)) return;
+    if (NULL == pb) return;
 
     pbcc_logger_manager_log_network_response(
         pb->core.logger_manager,
