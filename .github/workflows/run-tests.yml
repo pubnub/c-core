@@ -21,8 +21,8 @@ jobs:
         runner:
           - os: ubuntu-latest
             group: organization/Default
-#          - os: macos-13
-#            group: organization/macos-gh
+    #          - os: macos-13
+    #            group: organization/macos-gh
     steps:
       - name: Checkout project
         uses: actions/checkout@v5
@@ -44,6 +44,97 @@ jobs:
           version: 1.6.0
           pubNubPubKey: ${{ secrets.PUBNUB_PUBKEY }}
           pubNubSubKey: ${{ secrets.PUBNUB_KEYSUB }}
+      - name: Cancel workflow runs for commit on error
+        if: ${{ failure() }}
+        uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
+  dns-discovery-tests:
+    name: Windows DNS discovery tests
+    runs-on:
+      group: windows-gh
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Checkout actions
+        uses: actions/checkout@v5
+        with:
+          repository: pubnub/client-engineering-deployment-tools
+          ref: v1
+          token: ${{ secrets.GH_TOKEN }}
+          path: .github/.release/actions
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Build DNS discovery test
+        shell: cmd
+        run: |
+          cl /nologo /W3 /Fe:tests\dns_discovery\dns_discovery_test.exe ^
+            /DPUBNUB_CALLBACK_API ^
+            /DPUBNUB_USE_IPV6=1 ^
+            /DPUBNUB_USE_SSL=0 ^
+            /DPUBNUB_SET_DNS_SERVERS=1 ^
+            /DPUBNUB_CHANGE_DNS_SERVERS=0 ^
+            /DPUBNUB_USE_LOGGER=1 ^
+            /DPUBNUB_USE_DEFAULT_LOGGER=0 ^
+            /DPUBNUB_LOG_MIN_LEVEL=NONE ^
+            /DPUBNUB_DYNAMIC_REPLY_BUFFER=1 ^
+            /DPUBNUB_RECEIVE_GZIP_RESPONSE=0 ^
+            /DPUBNUB_ADVANCED_KEEP_ALIVE=0 ^
+            /DPUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=0 ^
+            /DPUBNUB_USE_SUBSCRIBE_V2=0 ^
+            /DPUBNUB_CRYPTO_API=0 ^
+            /DPUBNUB_USE_GZIP_COMPRESSION=0 ^
+            /DPUBNUB_USE_GRANT_TOKEN_API=0 ^
+            /DPUBNUB_USE_REVOKE_TOKEN_API=0 ^
+            /DPUBNUB_USE_ACTIONS_API=0 ^
+            /DPUBNUB_USE_OBJECTS_API=0 ^
+            /DPUBNUB_USE_AUTO_HEARTBEAT=0 ^
+            /DPUBNUB_USE_RETRY_CONFIGURATION=0 ^
+            /D_WINSOCKAPI_ ^
+            /I. /Icore /Icore\c99 /Iwindows /Ilib /Ilib\base64 ^
+            tests\dns_discovery\dns_discovery_test.c ^
+            windows\pubnub_dns_system_servers.c ^
+            core\pubnub_assert_std.c ^
+            ws2_32.lib iphlpapi.lib
+      - name: Build DNS discovery test (with validation)
+        shell: cmd
+        run: |
+          cl /nologo /W3 /Fe:tests\dns_discovery\dns_discovery_test_validated.exe ^
+            /DPUBNUB_CALLBACK_API ^
+            /DPUBNUB_USE_IPV6=1 ^
+            /DPUBNUB_USE_SSL=0 ^
+            /DPUBNUB_SET_DNS_SERVERS=1 ^
+            /DPUBNUB_CHANGE_DNS_SERVERS=0 ^
+            /DPUBNUB_USE_LOGGER=1 ^
+            /DPUBNUB_USE_DEFAULT_LOGGER=0 ^
+            /DPUBNUB_LOG_MIN_LEVEL=NONE ^
+            /DPUBNUB_DYNAMIC_REPLY_BUFFER=1 ^
+            /DPUBNUB_RECEIVE_GZIP_RESPONSE=0 ^
+            /DPUBNUB_ADVANCED_KEEP_ALIVE=0 ^
+            /DPUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=0 ^
+            /DPUBNUB_USE_SUBSCRIBE_V2=0 ^
+            /DPUBNUB_CRYPTO_API=0 ^
+            /DPUBNUB_USE_GZIP_COMPRESSION=0 ^
+            /DPUBNUB_USE_GRANT_TOKEN_API=0 ^
+            /DPUBNUB_USE_REVOKE_TOKEN_API=0 ^
+            /DPUBNUB_USE_ACTIONS_API=0 ^
+            /DPUBNUB_USE_OBJECTS_API=0 ^
+            /DPUBNUB_USE_AUTO_HEARTBEAT=0 ^
+            /DPUBNUB_USE_RETRY_CONFIGURATION=0 ^
+            /DPUBNUB_DNS_SERVERS_VALIDATION_TIMEOUT=2000 ^
+            /D_WINSOCKAPI_ ^
+            /I. /Icore /Icore\c99 /Iwindows /Ilib /Ilib\base64 ^
+            tests\dns_discovery\dns_discovery_test.c ^
+            windows\pubnub_dns_system_servers.c ^
+            core\pubnub_assert_std.c ^
+            ws2_32.lib iphlpapi.lib
+      - name: Run DNS discovery tests
+        run: |
+          cd tests\dns_discovery
+          .\run_tests.ps1 -TestExe .\dns_discovery_test.exe -ValidatedTestExe .\dns_discovery_test_validated.exe -FailOnSetupError
       - name: Cancel workflow runs for commit on error
         if: ${{ failure() }}
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
@@ -133,7 +224,7 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
-    needs: [tests, acceptance-tests]
+    needs: [ tests, dns-discovery-tests, acceptance-tests ]
     runs-on:
       group: organization/Default
     steps:

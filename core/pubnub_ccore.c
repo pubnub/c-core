@@ -275,7 +275,7 @@ enum pubnub_res pbcc_history_prep(
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
     if (user_id) { ADD_URL_PARAM(qparam, uuid, user_id); }
     char cnt_buf[sizeof(int) * 4 + 1];
-    snprintf(cnt_buf, sizeof(cnt_buf), "%d", count);
+    snprintf(cnt_buf, sizeof(cnt_buf), "%u", count);
     if (count) { ADD_URL_PARAM(qparam, count, cnt_buf); }
     ADD_URL_PARAM(qparam, include_token, include_token ? "true" : "false");
     if (string_token != pbccNotSet) {
@@ -423,11 +423,11 @@ enum pubnub_res pbcc_here_now_prep(
 
     if (!limit) { limit = PUBNUB_DEFAULT_HERE_NOW_LIMIT; }
     char limit_buf[sizeof(unsigned) * 4 + 1];
+    char offset_buf[sizeof(unsigned) * 4 + 1];
     snprintf(limit_buf, sizeof(limit_buf), "%u", limit);
     ADD_URL_PARAM(qparam, limit, limit_buf);
 
     if (offset) {
-        char offset_buf[sizeof(unsigned) * 4 + 1];
         snprintf(offset_buf, sizeof(offset_buf), "%u", offset);
         ADD_URL_PARAM(qparam, offset, offset_buf);
     }

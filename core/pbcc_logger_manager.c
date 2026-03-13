@@ -1,6 +1,9 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 #include "pbcc_logger_manager.h"
 
+#include "core/pubnub_logger_internal.h"
+#include "pubnub_internal.h"
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,9 +14,6 @@
 #elif defined(__unix__) || defined(__APPLE__) || defined(ESP_PLATFORM)
 #include <sys/time.h>
 #endif
-
-#include "core/pubnub_logger_internal.h"
-#include "pubnub_internal.h"
 #include "core/pubnub_logger.h"
 #include "core/pubnub_mutex.h"
 

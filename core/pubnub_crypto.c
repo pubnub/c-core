@@ -692,7 +692,7 @@ enum pubnub_res pn_gen_pam_v2_sign(
             qs_to_sign);
     }
     PUBNUB_LOG_TRACE(p, "Make PAMv2 signature for request: %s", str_to_sign);
-    char* part_sign = (char*)"";
+    char* part_sign = NULL;
 #if PUBNUB_CRYPTO_API
     part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
     if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }
@@ -773,7 +773,7 @@ enum pubnub_res pn_gen_pam_v3_sign(
         }
     }
     PUBNUB_LOG_TRACE(p, "Make PAMv3 signature for request: %s", str_to_sign);
-    char* part_sign = (char*)"";
+    char* part_sign = NULL;
 #if PUBNUB_CRYPTO_API
     part_sign = pn_pam_hmac_sha256_sign(p->core.secret_key, str_to_sign);
     if (NULL == part_sign) { sign_status = PNR_CRYPTO_NOT_SUPPORTED; }

@@ -56,6 +56,7 @@ enum DNSqueryType {
     If function succeedes, @p to_send 'carries' the length of prepared message.
     If function reports en error, @p to_send 'keeps' the length of successfully prepared segment
     before error occurred.
+    If @p o_id is not NULL, the generated DNS transaction ID is written to it.
 
     @retval 0 success, -1 on error
  */
@@ -64,7 +65,8 @@ int pbdns_prepare_dns_request(pubnub_t*         pb,
                               size_t            buf_size,
                               char const*       host,
                               int*              to_send,
-                              enum DNSqueryType query_type);
+                              enum DNSqueryType query_type,
+                              uint16_t*         o_id);
 
 /** Picks valid resolved(Ipv4, or Ipv6) domain name addresses from the response from DNS server.
     @p buf points to the beginning of that response and @p msg_size is its length in octets.
