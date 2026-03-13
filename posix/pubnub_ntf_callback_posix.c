@@ -4,7 +4,7 @@
 #include "posix/monotonic_clock_get_time.h"
 #include "posix/pbtimespec_elapsed_ms.h"
 
-#include "pubnub_internal.h"
+#include <pubnub_internal.h>
 #include "core/pubnub_assert.h"
 #include "core/pubnub_timer_list.h"
 #include "core/pbpal.h"

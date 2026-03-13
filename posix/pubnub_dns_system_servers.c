@@ -1,4 +1,4 @@
-#include "pubnub_internal.h"
+#include <pubnub_internal.h>
 #include "core/pubnub_assert.h"
 #include "core/pubnub_dns_servers.h"
 #include "core/pubnub_logger_internal.h"

@@ -1,13 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
 
-/* When building with OpenSSL, we need the OpenSSL version of pubnub_internal.h
-   because it has a different struct pubnub_pal definition. The build system
-   should define PUBNUB_USE_SSL=1 for OpenSSL builds. */
-#if PUBNUB_USE_SSL
-#include "openssl/pubnub_internal.h"
-#else
-#include "pubnub_internal.h"
-#endif
+/* Use angle brackets so the include path (openssl/ or windows/) picks the correct pubnub_internal.h */
+#include <pubnub_internal.h>
 #include "core/pubnub_proxy.h"
 #if PUBNUB_USE_LOGGER
 #include "core/pubnub_logger.h"

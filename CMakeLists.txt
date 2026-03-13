@@ -262,7 +262,7 @@ if (UNIX)
             ${CMAKE_CURRENT_LIST_DIR}/posix/msstopwatch_monotonic_clock.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pbtimespec_elapsed_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/posix/pb_sleep_ms.c)
-    if (NOT ${WITH_CPP})
+    if (NOT ${WITH_CPP} AND NOT ${OPENSSL})
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_version_posix.c)
     endif ()
 
@@ -284,7 +284,7 @@ elseif (WIN32 OR WIN64 OR MSVC)
             ${CMAKE_CURRENT_LIST_DIR}/windows/pb_sleep_ms.c
             ${CMAKE_CURRENT_LIST_DIR}/windows/pbauto_heartbeat_init_windows.c)
 
-    if (NOT ${WITH_CPP})
+    if (NOT ${WITH_CPP} AND NOT ${OPENSSL})
         set(OS_SOURCEFILES ${OS_SOURCEFILES} ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_version_windows.c)
     endif ()
 else ()
@@ -590,6 +590,12 @@ if (${OPENSSL})
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_connect_openssl.c
             ${CMAKE_CURRENT_LIST_DIR}/openssl/pbpal_openssl_blocking_io.c
             ${FEATURE_SOURCEFILES})
+
+    if (NOT ${WITH_CPP})
+        set(FEATURE_SOURCEFILES
+                ${CMAKE_CURRENT_LIST_DIR}/openssl/pubnub_version_openssl.c
+                ${FEATURE_SOURCEFILES})
+    endif ()
 
     if (UNIX)
         set(FEATURE_SOURCEFILES

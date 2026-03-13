@@ -1,6 +1,6 @@
 
 #include "pubnub_get_native_socket.h"
-#include "pubnub_internal.h"
+#include <pubnub_internal.h>
 
 #include <fcntl.h>
 

@@ -4,11 +4,7 @@
 
 #include "core/pubnub_assert.h"
 
-#if PUBNUB_USE_SSL
-#include "openssl/pubnub_internal.h"
-#else
-#include "pubnub_internal.h"
-#endif
+#include <pubnub_internal.h>
 
 #include <windows.h>
 

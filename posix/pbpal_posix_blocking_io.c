@@ -3,7 +3,7 @@
 #include "lib/sockets/pbpal_socket_blocking_io.h"
 #include "core/pubnub_assert.h"
 
-#include "pubnub_internal.h"
+#include <pubnub_internal.h>
 
 
 int pbpal_set_blocking_io(pubnub_t* pb)

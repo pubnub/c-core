@@ -2,7 +2,7 @@
 
 #if PUBNUB_USE_AUTO_HEARTBEAT
 
-#include "pubnub_internal.h"
+#include <pubnub_internal.h>
 
 #include <process.h>
 
