@@ -2,8 +2,9 @@
 #if !defined INC_PUBNUB_GET_NATIVE_SOCKET
 #define  INC_PUBNUB_GET_NATIVE_SOCKET
 
-#include "pubnub_internal.h"
+#include "core/pubnub_api_types.h"
 
+#include <winsock2.h>
 
 typedef SOCKET pbpal_native_socket_t;
 

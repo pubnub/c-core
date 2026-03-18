@@ -1,3 +1,10 @@
+## v7.1.2
+March 18 2026
+
+#### Fixed
+- Fix ABI mismatch where posix/windows sources picked the local `pubnub_internal.h` (wrong struct pubnub_pal size) on OpenSSL builds, so timeout fields were read as 0 and triggered an assertion. Use #include <pubnub_internal.h> so the include path selects the correct header per build.
+- Add missing `pubnub_uagent()` function implementation for OpenSSL platform as declared in `pubnub_version.h`. Update `pubnub_uname()` format to match Windows and POSIX implementations and add `PUBNUB_SDK_VERSION_SUFFIX` support.
+
 ## v7.1.1
 March 12 2026
 

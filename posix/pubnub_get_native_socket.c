@@ -1,6 +1,6 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
-#include "pubnub_internal.h"
 
+#include <pubnub_internal.h>
 #include "pubnub_get_native_socket.h"
 
 

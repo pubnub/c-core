@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "7.1.1"
+version: "7.1.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-03-18
+    version: v7.1.2
+    changes:
+      - type: bug
+        text: "Fix ABI mismatch where posix/windows sources picked the local `pubnub_internal.h` (wrong struct pubnub_pal size) on OpenSSL builds, so timeout fields were read as 0 and triggered an assertion. Use #include <pubnub_internal.h> so the include path selects the correct header per build."
+      - type: bug
+        text: "Add missing `pubnub_uagent()` function implementation for OpenSSL platform as declared in `pubnub_version.h`. Update `pubnub_uname()` format to match Windows and POSIX implementations and add `PUBNUB_SDK_VERSION_SUFFIX` support."
   - date: 2026-03-12
     version: v7.1.1
     changes:
@@ -1162,7 +1169,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1221,7 +1228,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1280,7 +1287,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1335,7 +1342,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1389,7 +1396,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1438,7 +1445,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1484,7 +1491,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.1.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.1.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
