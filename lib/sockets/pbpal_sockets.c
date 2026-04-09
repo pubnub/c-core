@@ -5,6 +5,9 @@
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+#include "windows/pbpal_dns_query_ex.h"
+#endif
 #if PUBNUB_USE_LOGGER
 #include "core/pubnub_logger.h"
 #endif // PUBNUB_USE_LOGGER
@@ -299,6 +302,12 @@ void pbpal_forget(pubnub_t* pb)
 int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    /* Cancel any pending DnsQueryEx queries. Must happen regardless of
+       socket state because the DnsQueryEx path does not create a UDP
+       socket (pb->pal.socket stays SOCKET_INVALID). */
+    pbpal_os_dns_cancel(pb);
+#endif
     if (pb->pal.socket != SOCKET_INVALID) {
         pbntf_lost_socket(pb);
         socket_close(pb->pal.socket);
@@ -313,6 +322,9 @@ int pbpal_close(pubnub_t* pb)
 
 void pbpal_free(pubnub_t* pb)
 {
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    pbpal_os_dns_cancel(pb);
+#endif
     if (pb->pal.socket != SOCKET_INVALID) {
         /* While this should not happen, it doesn't hurt to be paranoid.
          */
