@@ -398,49 +398,37 @@ void pbcc_logger_manager_log_network_response(
         (pbcc_logger_manager_t*)manager, (const pubnub_log_message_t*)&log);
 }
 
-/** Maximum number of loggers that can be dispatched in a single call.
- *  This is used to take a snapshot of the logger list under the lock
- *  so that iteration happens without holding the mutex and without
- *  dereferencing `logger->next` which may be concurrently modified. */
-#define PBCC_LOG_MAX_LOGGERS 8
-
 void pbcc_logger_manager_log_message(
     pbcc_logger_manager_t*      manager,
     const pubnub_log_message_t* message)
 {
-    /* Snapshot the logger list under the lock.  We copy pointers into
-     * a local array so that the subsequent iteration does NOT follow
+    /* Snapshot the logger list under the global lock.  We copy pointers
+     * into a local array so that the subsequent dispatch does NOT follow
      * `logger->next` -- that field may be concurrently modified by
-     * another manager's `logger_add` or `logger_remove_all`. */
-    const pubnub_logger_t* snapshot[PBCC_LOG_MAX_LOGGERS];
+     * another manager's `logger_add` or `logger_remove_all`.
+     *
+     * Dispatching happens outside the lock so that user callbacks cannot
+     * block other managers from logging or modifying their lists. */
+    const pubnub_logger_t* snapshot[PBCC_MAX_LOGGERS_PER_MANAGER];
     int                    count = 0;
 
     pubnub_mutex_init_static(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
+
 #if PUBNUB_USE_DEFAULT_LOGGER
     const pubnub_logger_t* logger = manager->default_logger;
 #else  // #if !PUBNUB_USE_DEFAULT_LOGGER
     const pubnub_logger_t* logger = manager->loggers;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
-    while (NULL != logger && count < PBCC_LOG_MAX_LOGGERS) {
+    while (NULL != logger && count < PBCC_MAX_LOGGERS_PER_MANAGER) {
         snapshot[count++] = logger;
         logger            = logger->next;
     }
-    if (NULL != logger) {
-        /* More loggers registered than the snapshot can hold.  The
-         * excess loggers will NOT receive this message. */
-        printf(
-            "[PubNub] Warning: more than %d loggers registered; "
-            "excess loggers will not receive this log message.\n",
-            PBCC_LOG_MAX_LOGGERS);
-    }
+
     pubnub_mutex_unlock(manager->mutw);
     pubnub_mutex_unlock(s_logger_list_lock);
 
-    /* Dispatch to each logger outside the lock.  The snapshot array
-     * contains stable pointers -- the logger objects themselves are
-     * owned by the user and must remain valid while registered. */
     for (int i = 0; i < count; ++i) {
         const pubnub_logger_t* lg = snapshot[i];
         if (NULL == lg->vtable) continue;
