@@ -430,6 +430,11 @@ PUBNUB_EXTERN void* pubnub_logger_user_data(pubnub_logger_t* logger);
  * loggers can be registered, and all will receive log messages of appropriate
  * levels.
  *
+ * @note Up to 8 custom loggers (including the default logger) can be
+ *       dispatched per log message. If more are registered, the excess
+ *       loggers will not receive log messages and a warning will be
+ *       printed to stdout.
+ *
  * @note Pointer to the custom logger object should be valid while used by the
  *       logging subsystem. It is the user's responsibility to
  *       call `pubnub_logger_free`.
