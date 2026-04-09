@@ -118,15 +118,27 @@ void pbcc_logger_manager_free(pbcc_logger_manager_t* manager)
 {
     if (NULL == manager) return;
 
-    // Remove all additional loggers.
-    pbcc_logger_manager_logger_remove_all(manager);
-
+    /* Hold the global lock across both the list detach and the default
+     * logger free.  This ensures no other thread is mid-dispatch
+     * (iterating loggers under the same lock) when we free the default
+     * logger object. */
+    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
+
+    /* Detach custom loggers (same as remove_all but already under lock). */
+#if PUBNUB_USE_DEFAULT_LOGGER
+    manager->default_logger->next = NULL;
+#endif // #if PUBNUB_USE_DEFAULT_LOGGER
+    manager->loggers = NULL;
+
 #if PUBNUB_USE_DEFAULT_LOGGER
     if (NULL != manager->default_logger)
         pubnub_logger_free(&manager->default_logger);
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
+
     pubnub_mutex_unlock(manager->mutw);
+    pubnub_mutex_unlock(s_logger_list_lock);
     pubnub_mutex_destroy(manager->mutw);
 
     free(manager);
@@ -402,16 +414,12 @@ void pbcc_logger_manager_log_message(
     pbcc_logger_manager_t*      manager,
     const pubnub_log_message_t* message)
 {
-    /* Snapshot the logger list under the global lock.  We copy pointers
-     * into a local array so that the subsequent dispatch does NOT follow
-     * `logger->next` -- that field may be concurrently modified by
-     * another manager's `logger_add` or `logger_remove_all`.
-     *
-     * Dispatching happens outside the lock so that user callbacks cannot
-     * block other managers from logging or modifying their lists. */
-    const pubnub_logger_t* snapshot[PBCC_MAX_LOGGERS_PER_MANAGER];
-    int                    count = 0;
-
+    /* Hold the global lock during the entire iteration and dispatch.
+     * This serializes all log message delivery across all managers,
+     * which is necessary because `logger->next` may be shared between
+     * managers and can only be safely read while no other thread is
+     * modifying it (via `logger_add`, `logger_remove`, `remove_all`,
+     * or `pbcc_logger_manager_free`). */
     pubnub_mutex_init_static(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
@@ -421,39 +429,43 @@ void pbcc_logger_manager_log_message(
 #else  // #if !PUBNUB_USE_DEFAULT_LOGGER
     const pubnub_logger_t* logger = manager->loggers;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
-    while (NULL != logger && count < PBCC_MAX_LOGGERS_PER_MANAGER) {
-        snapshot[count++] = logger;
-        logger            = logger->next;
-    }
-
-    pubnub_mutex_unlock(manager->mutw);
-    pubnub_mutex_unlock(s_logger_list_lock);
-
-    for (int i = 0; i < count; ++i) {
-        const pubnub_logger_t* lg = snapshot[i];
-        if (NULL == lg->vtable) continue;
+    while (NULL != logger) {
+        if (NULL == logger->vtable) {
+            logger = logger->next;
+            continue;
+        }
 
         switch (message->level) {
         case PUBNUB_LOG_LEVEL_TRACE:
-            if (NULL != lg->vtable->trace) lg->vtable->trace(lg, message);
+            if (NULL != logger->vtable->trace)
+                logger->vtable->trace(logger, message);
             break;
         case PUBNUB_LOG_LEVEL_DEBUG:
-            if (NULL != lg->vtable->debug) lg->vtable->debug(lg, message);
+            if (NULL != logger->vtable->debug)
+                logger->vtable->debug(logger, message);
             break;
         case PUBNUB_LOG_LEVEL_INFO:
-            if (NULL != lg->vtable->info) lg->vtable->info(lg, message);
+            if (NULL != logger->vtable->info)
+                logger->vtable->info(logger, message);
             break;
         case PUBNUB_LOG_LEVEL_WARNING:
-            if (NULL != lg->vtable->warn) lg->vtable->warn(lg, message);
+            if (NULL != logger->vtable->warn)
+                logger->vtable->warn(logger, message);
             break;
         case PUBNUB_LOG_LEVEL_ERROR:
-            if (NULL != lg->vtable->error) lg->vtable->error(lg, message);
+            if (NULL != logger->vtable->error)
+                logger->vtable->error(logger, message);
             break;
         default:
             /* Nothing to log */
             break;
         }
+
+        logger = logger->next;
     }
+
+    pubnub_mutex_unlock(manager->mutw);
+    pubnub_mutex_unlock(s_logger_list_lock);
 }
 
 pubnub_log_message_t pbcc_logger_manager_message_init(

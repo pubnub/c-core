@@ -17,13 +17,6 @@
 //                Types forwarding
 // ----------------------------------------------
 
-/** Maximum number of loggers that can be dispatched per log message.
- *  Increase this value if you need to register more custom loggers
- *  per PubNub context (default logger counts as one). */
-#ifndef PBCC_MAX_LOGGERS_PER_MANAGER
-#define PBCC_MAX_LOGGERS_PER_MANAGER 8
-#endif
-
 /** Logger manager definition. */
 struct pbcc_logger_manager;
 typedef struct pbcc_logger_manager pbcc_logger_manager_t;
