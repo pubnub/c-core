@@ -18,10 +18,10 @@
 #include <pubnub_internal.h>
 #include "core/pubnub_assert.h"
 #include "core/pubnub_dns_servers.h"
-#include "core/pubnub_log.h"
+#if PUBNUB_USE_LOGGER
+#include "core/pubnub_logger_internal.h"
+#endif // PUBNUB_USE_LOGGER
 
-#include <windns.h>
-#include <windows.h>
 #include <string.h>
 #include <time.h>
 
