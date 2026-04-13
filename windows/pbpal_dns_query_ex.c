@@ -88,7 +88,7 @@ int pbpal_os_dns_start(pubnub_t* pb, const char* hostname)
                  CP_UTF8, 0, hostname, -1,
                  whostname, PBDNS_MAX_HOSTNAME_WCHARS)) {
         PUBNUB_LOG_ERROR(pb,
-                         "DnsQueryEx: MultiByteToWideChar failed for '%s'\n",
+                         "DnsQueryEx: MultiByteToWideChar failed for '%s'",
                          hostname);
         return -1;
     }
@@ -116,7 +116,7 @@ int pbpal_os_dns_start(pubnub_t* pb, const char* hostname)
                         &pb->os_dns.cancel_a);
     if (status != DNS_REQUEST_PENDING && status != ERROR_SUCCESS) {
         PUBNUB_LOG_ERROR(pb,
-                         "DnsQueryEx(A) failed: status=%ld\n",
+                         "DnsQueryEx(A) failed: status=%ld",
                          (long)status);
         pb->os_dns.active = false;
         return -1;
@@ -144,7 +144,7 @@ int pbpal_os_dns_start(pubnub_t* pb, const char* hostname)
     if (status != DNS_REQUEST_PENDING && status != ERROR_SUCCESS) {
         PUBNUB_LOG_WARNING(pb,
                            "DnsQueryEx(AAAA) failed: status=%ld, "
-                           "continuing with A only\n",
+                           "continuing with A only",
                            (long)status);
         /* Mark AAAA as completed so we don't wait for it. */
         InterlockedExchange(&pb->os_dns.status_aaaa,
@@ -161,7 +161,7 @@ int pbpal_os_dns_start(pubnub_t* pb, const char* hostname)
 #endif
 
     PUBNUB_LOG_TRACE(pb,
-                     "DnsQueryEx started for '%s'\n",
+                     "DnsQueryEx started for '%s'",
                      hostname);
     return 0;
 }
@@ -237,7 +237,7 @@ int pbpal_os_dns_check(pubnub_t* pb)
                 got_any = true;
                 PUBNUB_LOG_TRACE(pb,
                                  "DnsQueryEx A resolved: %u.%u.%u.%u "
-                                 "(TTL=%lu)\n",
+                                 "(TTL=%lu)",
                                  ((uint8_t*)&rec->Data.A.IpAddress)[0],
                                  ((uint8_t*)&rec->Data.A.IpAddress)[1],
                                  ((uint8_t*)&rec->Data.A.IpAddress)[2],
@@ -267,7 +267,7 @@ int pbpal_os_dns_check(pubnub_t* pb)
         pb->dns_queries.received_a = true;
         pb->dns_queries.sent_a     = true;
         PUBNUB_LOG_DEBUG(pb,
-                         "DnsQueryEx A: no records (status=%ld)\n",
+                         "DnsQueryEx A: no records (status=%ld)",
                          (long)pb->os_dns.status_a);
     }
 
@@ -293,7 +293,7 @@ int pbpal_os_dns_check(pubnub_t* pb)
                 pb->dns_queries.received_aaaa = true;
                 pb->dns_queries.sent_aaaa     = true;
                 got_any = true;
-                PUBNUB_LOG_TRACE(pb, "DnsQueryEx AAAA resolved (TTL=%lu)\n",
+                PUBNUB_LOG_TRACE(pb, "DnsQueryEx AAAA resolved (TTL=%lu)",
                                  (unsigned long)rec->dwTtl);
             }
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
@@ -316,7 +316,7 @@ int pbpal_os_dns_check(pubnub_t* pb)
         pb->dns_queries.received_aaaa = true;
         pb->dns_queries.sent_aaaa     = true;
         PUBNUB_LOG_DEBUG(pb,
-                         "DnsQueryEx AAAA: no records (status=%ld)\n",
+                         "DnsQueryEx AAAA: no records (status=%ld)",
                          (long)pb->os_dns.status_aaaa);
     }
 #endif /* PUBNUB_USE_IPV6 */
@@ -343,7 +343,7 @@ int pbpal_os_dns_check(pubnub_t* pb)
     if (!got_any) {
         PUBNUB_LOG_ERROR(pb,
                          "DnsQueryEx: no addresses resolved "
-                         "(A status=%ld, AAAA status=%ld)\n",
+                         "(A status=%ld, AAAA status=%ld)",
                          (long)pb->os_dns.status_a,
                          (long)pb->os_dns.status_aaaa);
         return -1;
