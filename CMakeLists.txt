@@ -306,9 +306,11 @@ endif ()
 set(INTF_SOURCEFILES)
 
 if (${USE_CALLBACK_API})
-    set(CORE_SOURCEFILES
-            ${CORE_SOURCEFILES}
-            ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_dns_servers.c)
+    if (${USE_SET_DNS_SERVERS})
+        set(CORE_SOURCEFILES
+                ${CORE_SOURCEFILES}
+                ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_dns_servers.c)
+    endif ()
 
     set(INTF_SOURCEFILES
             ${CMAKE_CURRENT_LIST_DIR}/core/pubnub_timer_list.c
@@ -324,9 +326,11 @@ if (${USE_CALLBACK_API})
             ${INTF_SOURCEFILES})
 
     if (UNIX)
-        set(INTF_SOURCEFILES
-                ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c)
+        if (${USE_SET_DNS_SERVERS})
+            set(INTF_SOURCEFILES
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/posix/pubnub_dns_system_servers.c)
+        endif ()
         if (${OPENSSL})
             set(INTF_SOURCEFILES
                     ${INTF_SOURCEFILES}
@@ -340,9 +344,13 @@ if (${USE_CALLBACK_API})
         endif ()
 
     elseif (WIN32 OR WIN64 OR MSVC)
+        if (${USE_SET_DNS_SERVERS})
+            set(INTF_SOURCEFILES
+                    ${INTF_SOURCEFILES}
+                    ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c)
+        endif ()
         set(INTF_SOURCEFILES
                 ${INTF_SOURCEFILES}
-                ${CMAKE_CURRENT_LIST_DIR}/windows/pubnub_dns_system_servers.c
                 ${CMAKE_CURRENT_LIST_DIR}/windows/pbpal_dns_query_ex.c)
         if (${OPENSSL})
             set(INTF_SOURCEFILES
