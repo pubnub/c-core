@@ -98,6 +98,9 @@ void pbpal_init(pubnub_t* pb)
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     pbpal_multiple_addresses_reset_counters(&pb->spare_addresses);
 #endif
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    memset(&pb->os_dns, 0, sizeof pb->os_dns);
+#endif
 }
 
 
