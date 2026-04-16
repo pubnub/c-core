@@ -13,6 +13,7 @@
 #include "lib/sockets/pbpal_ntf_callback_poller_poll.h"
 #include "core/pbpal_ntf_callback_queue.h"
 #include "core/pbpal_ntf_callback_handle_timer_list.h"
+#include "windows/pbpal_dns_query_ex.h"
 
 #include <process.h>
 
@@ -177,6 +178,8 @@ MAYBE_INLINE int pbntf_got_socket_callback(pubnub_t* pb)
 
 MAYBE_INLINE void pbntf_lost_socket_callback(pubnub_t* pb)
 {
+    pbpal_os_dns_cancel(pb);
+
     EnterCriticalSection(&m_watcher.mutw);
     pbpal_ntf_callback_remove_socket(m_watcher.poll, pb);
     LeaveCriticalSection(&m_watcher.mutw);

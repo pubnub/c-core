@@ -268,6 +268,11 @@ DNS_SERVERS_SOURCE_FILES_POSIX = \
 DNS_SERVERS_SOURCE_FILES_WINDOWS = \
     ../windows/pubnub_dns_system_servers.c
 
+# Windows OS DNS resolver (DnsQueryEx) support for callback API.
+# Falls back to the OS resolver when no custom DNS servers are configured.
+DNS_QUERY_EX_SOURCE_FILES_WINDOWS = \
+    ../windows/pbpal_dns_query_ex.c
+
 # Custom DNS servers IPv4 support feature source files.
 #
 # Important: Can be used only together with `PUBNUB_CALLBACK_API` flag.

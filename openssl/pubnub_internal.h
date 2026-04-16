@@ -12,6 +12,10 @@
 */
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifdef PUBNUB_CALLBACK_API
+#include <windns.h>
+#pragma comment(lib, "dnsapi.lib")
+#endif
 #else
 #include <unistd.h>
 #include <sys/socket.h>
