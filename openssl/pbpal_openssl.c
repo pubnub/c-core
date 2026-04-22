@@ -7,6 +7,9 @@
 #include "core/pubnub_ntf_sync.h"
 #include "core/pubnub_netcore.h"
 #include "core/pubnub_assert.h"
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+#include "windows/pbpal_dns_query_ex.h"
+#endif
 #if PUBNUB_USE_LOGGER
 #include "core/pbcc_logger_manager.h"
 #endif // PUBNUB_USE_LOGGER
@@ -94,6 +97,9 @@ void pbpal_init(pubnub_t* pb)
     buf_setup(pb);
 #if PUBNUB_USE_MULTIPLE_ADDRESSES
     pbpal_multiple_addresses_reset_counters(&pb->spare_addresses);
+#endif
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    memset(&pb->os_dns, 0, sizeof pb->os_dns);
 #endif
 }
 
@@ -438,6 +444,9 @@ void pbpal_forget(pubnub_t* pb)
 int pbpal_close(pubnub_t* pb)
 {
     pb->unreadlen = 0;
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    pbpal_os_dns_cancel(pb);
+#endif
     if (pb->pal.ssl != NULL) {
         SSL_shutdown(pb->pal.ssl);
         SSL_free(pb->pal.ssl);
@@ -457,6 +466,9 @@ int pbpal_close(pubnub_t* pb)
 
 void pbpal_free(pubnub_t* pb)
 {
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+    pbpal_os_dns_cancel(pb);
+#endif
     /* While this should not happen, it doesn't hurt to 'catch' it, if it
      * happens..
      */

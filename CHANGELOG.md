@@ -1,3 +1,9 @@
+## v7.1.3
+April 16 2026
+
+#### Modified
+- Add Windows async DNS resolution via `DnsQueryEx` and improve IPv6 fallback.
+
 ## v7.1.2
 March 18 2026
 
