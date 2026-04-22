@@ -1,3 +1,9 @@
+## v7.2.0
+April 22 2026
+
+#### Added
+- Allow users to select if they want to cache or consume the value of the cypher key depending on their crypto module implementation.
+
 ## v7.1.3
 April 16 2026
 
