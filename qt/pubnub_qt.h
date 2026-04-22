@@ -4,6 +4,8 @@
 
 #include <stdexcept>
 
+#include <QSharedPointer>
+
 #include <QUrl>
 #include <QUuid>
 #include <QNetworkAccessManager>
@@ -346,6 +348,25 @@ public:
     ~into_crypto_provider_ptr() { }
 
     virtual pubnub_crypto_provider_t* into_provider() = 0;
+
+    /** Returns the cipher key used by this provider, if any.
+     *
+     * The PubNub C context stores the cipher key as a raw pointer
+     * and does not copy it internally. When `set_crypto_module` is
+     * called on a PubNub context, it calls this method and retains
+     * the returned QSharedPointer so the key memory stays valid for
+     * the lifetime of the context.
+     *
+     * Custom implementations may choose between two strategies:
+     *  - Override this method to return the cipher key, transferring
+     *    lifetime management to the PubNub context.
+     *  - Keep the default (returns null) and manage the cipher key
+     *    lifetime on their own.
+     *
+     * The built-in `crypto_module` factory methods (`aes_cbc`,
+     * `legacy`) already override this method.
+     */
+    virtual QSharedPointer<QByteArray> cipher_key() const { return {}; }
 };
 
 
@@ -396,32 +417,46 @@ public:
         this->d_module = pubnub_crypto_module_init(default_cryptor.into_cryptor(), cryptors, size);
     }
 
-    /* Constructor that creates C++ `crypto_module` object that mimics
-     * the `pubnub_crypto_aes_cbc_module_init` function. 
+    /* Factory method that creates a `crypto_module` using the AES-CBC
+     * algorithm as the default cryptor and the legacy algorithm as
+     * a fallback for decryption.
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     * The module takes ownership of a copy of the cipher key.
+     *
+     * @param cipher_key The cipher key to use for encryption/decryption.
      *
      * @return The `crypto_module` object
      *
      * @see pubnub_crypto_aes_cbc_module_init
      */
-    static crypto_module aes_cbc(QString &cipher_key)
+    static crypto_module aes_cbc(QString const& cipher_key)
     {
-        return crypto_module(pubnub_crypto_aes_cbc_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
+        QSharedPointer<QByteArray> key =
+            QSharedPointer<QByteArray>::create(cipher_key.toUtf8());
+        return crypto_module(
+            pubnub_crypto_aes_cbc_module_init((uint8_t*)(key->constData())),
+            key);
     }
 
-    /* Constructor that creates C++ `crypto_module` object that mimics
-     * the `pubnub_crypto_legacy_module_init` function. 
+    /* Factory method that creates a `crypto_module` using the legacy
+     * algorithm as the default cryptor and the AES-CBC algorithm as
+     * a fallback for decryption.
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap.
+     * The module takes ownership of a copy of the cipher key.
+     *
+     * @param cipher_key The cipher key to use for encryption/decryption.
      *
      * @return The `crypto_module` object
      *
      * @see pubnub_crypto_legacy_module_init
      */
-    static crypto_module legacy(QString &cipher_key)
+    static crypto_module legacy(QString const& cipher_key)
     {
-        return crypto_module(pubnub_crypto_legacy_module_init((uint8_t*)(cipher_key.toStdString().c_str())));
+        QSharedPointer<QByteArray> key =
+            QSharedPointer<QByteArray>::create(cipher_key.toUtf8());
+        return crypto_module(
+            pubnub_crypto_legacy_module_init((uint8_t*)(key->constData())),
+            key);
     }
 
     /* Encrypts the @p to_encrypt buffer and returns the encrypted
@@ -470,8 +505,18 @@ public:
         return this->d_module;
     }
 
+    QSharedPointer<QByteArray> cipher_key() const { return d_cipher_key; }
+
 private:
-    pubnub_crypto_provider_t* d_module;
+    crypto_module(pubnub_crypto_provider_t* module,
+                  QSharedPointer<QByteArray> cipher_key)
+        : d_module(module)
+        , d_cipher_key(std::move(cipher_key))
+    {
+    }
+
+    pubnub_crypto_provider_t*  d_module;
+    QSharedPointer<QByteArray> d_cipher_key;
 };
 
 /** @mainpage Pubnub C-core for Qt
@@ -2004,13 +2049,15 @@ public:
     }
 
 #if PUBNUB_CRYPTO_API
-    /// Set the crypto module to be set by the context
-    ///
-    /// This function sets the crypto module to be used by the context
+    /// Set the crypto module to be used by the context
     /// for encryption and decryption of messages.
+    ///
+    /// When a `crypto_module` is passed, the context retains its
+    /// cipher key so the caller does not need to keep it alive.
     /// @see pubnub_set_crypto_module()
     void set_crypto_module(into_crypto_provider_ptr &crypto)
     {
+        d_crypto_cipher_key = crypto.cipher_key();
         pbcc_set_crypto_module(&*d_context, crypto.into_provider());
     }
 
@@ -2276,6 +2323,11 @@ private:
     /// Qt's Reply (from a HTTP request)
     QScopedPointer<QNetworkReply> d_reply;
 
+#if PUBNUB_CRYPTO_API
+    /// Retains the cipher key from a crypto_module so it outlives
+    /// the module object that was passed to set_crypto_module().
+    QSharedPointer<QByteArray> d_crypto_cipher_key;
+#endif
     /// C-core context
     QScopedPointer<pbcc_context> d_context;
 

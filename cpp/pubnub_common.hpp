@@ -73,6 +73,7 @@ extern "C" {
 #include <cstring>
 #include <vector>
 #include <map>
+#include <memory>
 #include <stdexcept>
 
 #if __cplusplus >= 201103L
@@ -615,6 +616,25 @@ public:
     ~into_crypto_provider_ptr() {}
 
     virtual pubnub_crypto_provider_t* into_provider() = 0;
+
+    /** Returns the cipher key used by this provider, if any.
+     *
+     * The PubNub C context stores the cipher key as a raw pointer
+     * and does not copy it internally. When `set_crypto_module` is
+     * called on a PubNub context, it calls this method and retains
+     * the returned shared_ptr so the key memory stays valid for the
+     * lifetime of the context.
+     *
+     * Custom implementations may choose between two strategies:
+     *  - Override this method to return the cipher key, transferring
+     *    lifetime management to the PubNub context.
+     *  - Keep the default (returns null) and manage the cipher key
+     *    lifetime on their own.
+     *
+     * The built-in `crypto_module` factory methods (`aes_cbc`,
+     * `legacy`) already override this method.
+     */
+    virtual std::shared_ptr<std::string> cipher_key() const { return {}; }
 };
 
 
@@ -673,34 +693,46 @@ public:
             default_cryptor.into_cryptor(), cryptors, size);
     }
 
-    /* Constructor that creates C++ `crypto_module` object that mimics
-     * the `pubnub_crypto_aes_cbc_module_init` function.
+    /* Factory method that creates a `crypto_module` using the AES-CBC
+     * algorithm as the default cryptor and the legacy algorithm as
+     * a fallback for decryption.
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap.(it doesn't own the key - keep it alive)
+     * The module takes ownership of a copy of the cipher key.
+     *
+     * @param cipher_key The cipher key to use for encryption/decryption.
      *
      * @return The `crypto_module` object
      *
      * @see pubnub_crypto_aes_cbc_module_init
      */
-    static crypto_module aes_cbc(std::string& cipher_key)
+    static crypto_module aes_cbc(std::string const& cipher_key)
     {
+        std::shared_ptr<std::string> key =
+            std::make_shared<std::string>(cipher_key);
         return crypto_module(
-            pubnub_crypto_aes_cbc_module_init((uint8_t*)(cipher_key.c_str())));
+            pubnub_crypto_aes_cbc_module_init((uint8_t*)(key->c_str())),
+            key);
     }
 
-    /* Constructor that creates C++ `crypto_module` object that mimics
-     * the `pubnub_crypto_legacy_module_init` function.
+    /* Factory method that creates a `crypto_module` using the legacy
+     * algorithm as the default cryptor and the AES-CBC algorithm as
+     * a fallback for decryption.
      *
-     * @param cryptor The `pubnub_cryptor_t` structure to wrap. (it doesn't own the key - keep it alive)
+     * The module takes ownership of a copy of the cipher key.
+     *
+     * @param cipher_key The cipher key to use for encryption/decryption.
      *
      * @return The `crypto_module` object
      *
      * @see pubnub_crypto_legacy_module_init
      */
-    static crypto_module legacy(std::string& cipher_key)
+    static crypto_module legacy(std::string const& cipher_key)
     {
+        std::shared_ptr<std::string> key =
+            std::make_shared<std::string>(cipher_key);
         return crypto_module(
-            pubnub_crypto_legacy_module_init((uint8_t*)(cipher_key.c_str())));
+            pubnub_crypto_legacy_module_init((uint8_t*)(key->c_str())),
+            key);
     }
 
     /* Encrypts the @p to_encrypt buffer and returns the encrypted
@@ -753,8 +785,18 @@ public:
 
     pubnub_crypto_provider_t* into_provider() { return this->d_module; }
 
+    std::shared_ptr<std::string> cipher_key() const { return d_cipher_key; }
+
 private:
-    pubnub_crypto_provider_t* d_module;
+    crypto_module(pubnub_crypto_provider_t* module,
+                  std::shared_ptr<std::string> cipher_key)
+        : d_module(module)
+        , d_cipher_key(std::move(cipher_key))
+    {
+    }
+
+    pubnub_crypto_provider_t*    d_module;
+    std::shared_ptr<std::string> d_cipher_key;
 };
 #endif // #if PUBNUB_CRYPTO_API
 
@@ -2276,13 +2318,15 @@ public:
     }
 
 #if PUBNUB_CRYPTO_API
-    /// Set the crypto module to be set by the context
-    ///
-    /// This function sets the crypto module to be used by the context
+    /// Set the crypto module to be used by the context
     /// for encryption and decryption of messages.
+    ///
+    /// When a `crypto_module` is passed, the context retains its
+    /// cipher key so the caller does not need to keep it alive.
     /// @see pubnub_set_crypto_module()
     void set_crypto_module(into_crypto_provider_ptr& crypto)
     {
+        d_crypto_cipher_key = crypto.cipher_key();
         pubnub_set_crypto_module(d_pb, crypto.into_provider());
     }
 
@@ -2326,6 +2370,11 @@ private:
     /// The origin set last time (doen't have to be the one used,
     /// the default can be used instead)
     std::string d_origin;
+#if PUBNUB_CRYPTO_API
+    /// Retains the cipher key from a crypto_module so it outlives
+    /// the module object that was passed to set_crypto_module().
+    std::shared_ptr<std::string> d_crypto_cipher_key;
+#endif
     /// The (C) Pubnub context
     pubnub_t* d_pb;
 };
