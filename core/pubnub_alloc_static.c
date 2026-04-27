@@ -74,15 +74,16 @@ int pubnub_free(pubnub_t* pb)
 
     PUBNUB_LOG_TRACE(pb, "Try to free PubNub context");
 
+    pubnub_mutex_lock(pb->monitor);
+
     if (pb->state == PBS_NULL) {
         PUBNUB_LOG_TRACE(pb, "PubNub context not initialized. Freeing...");
-        PUBNUB_LOG_TRACE(pb, "pubnub_free: not initialized, freeing");
+        pubnub_mutex_unlock(pb->monitor);
         free(pb);
 
         return 0;
     }
 
-    pubnub_mutex_lock(pb->monitor);
     pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
         PUBNUB_LOG_TRACE(pb, "PubNub context is in idle state. Freeing...");
