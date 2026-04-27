@@ -127,6 +127,14 @@ void pbpal_ntf_callback_update_socket(
                 return;
             }
         }
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+        /* Context not found — this happens when the initial
+           pbpal_ntf_callback_save_socket() was skipped because no socket
+           existed yet (e.g. Windows DnsQueryEx async DNS path).
+           Register now with the real socket. */
+        pbpal_ntf_callback_save_socket(data, pb);
+        return;
+#endif
     }
     PUBNUB_LOG_WARNING(
         pb,

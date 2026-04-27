@@ -21,6 +21,9 @@
 #include <mstcpip.h>
 #include <winsock2.h>
 typedef ADDRESS_FAMILY sa_family_t;
+#if defined(PUBNUB_CALLBACK_API)
+#include "windows/pbpal_dns_query_ex.h"
+#endif
 #else
 #include "posix/pubnub_get_native_socket.h"
 #include <netinet/tcp.h>
@@ -58,16 +61,32 @@ typedef struct sockaddr_in sockaddr_inX_t;
 #endif /* PUBNUB_CALLBACK_API */
 
 #if PUBNUB_USE_IPV6
-/** Check whether the source address is a Global Unicast address (2000::/3).
+/** Check whether the source address is a Global Unicast address (2000::/3)
+ *  from a real interface — not a tunnel pseudo-interface.
  *
  *  Only addresses in this range are routable on the public IPv6 internet.
  *  Everything else — loopback (::1), link-local (fe80::/10),
  *  ULA (fc00::/7), site-local (fec0::/10, deprecated), multicast (ff00::/8),
  *  unspecified (::) — cannot reach global destinations.
+ *
+ *  Teredo (2001:0000::/32) and 6to4 (2002::/16) are excluded even though
+ *  they fall within 2000::/3: both are deprecated tunnel mechanisms
+ *  (RFC 7526 deprecates 6to4; Teredo is off by default on Windows 10+) that
+ *  Windows may assign a globally-scoped source address for even when there is
+ *  no real IPv6 upstream, causing false-positive detection of IPv6 support.
  */
 static bool is_global_unicast_ipv6(const struct in6_addr* addr)
 {
-    return (addr->s6_addr[0] & 0xe0) == 0x20;
+    if ((addr->s6_addr[0] & 0xe0) != 0x20)
+        return false;
+    /* Teredo: 2001:0000::/32 */
+    if (addr->s6_addr[0] == 0x20 && addr->s6_addr[1] == 0x01 &&
+        addr->s6_addr[2] == 0x00 && addr->s6_addr[3] == 0x00)
+        return false;
+    /* 6to4: 2002::/16 */
+    if (addr->s6_addr[0] == 0x20 && addr->s6_addr[1] == 0x02)
+        return false;
+    return true;
 }
 
 /** Check whether the host has a usable global IPv6 route.
@@ -271,9 +290,15 @@ static void get_dns_ip(
                 (dns_check->dns_server_check & dns_check->dns_mask)) {
                 dns_check->dns_mask <<= 1;
                 if (AF_INET == family) {
-                    // If only IPv4 supported we don't have to fall back to the
-                    // IPv6.
                     get_default_ipv4_dns_ip(pb, (struct pubnub_ipv4_address*)p);
+                    addr->sa_family = AF_INET;
+                }
+                else if (pubnub_dns_read_system_servers_ipv4(
+                             pb, (struct pubnub_ipv4_address*)p, 1) == 1) {
+                    /* AF_INET6 family but system has IPv4 DNS: use it to
+                       avoid the dead Google IPv6 path on broken IPv6 networks.
+                       Do NOT fall back to 8.8.8.8 here — that would prevent
+                       the IPv6 fallback below from running on IPv6-only hosts. */
                     addr->sa_family = AF_INET;
                 }
             }
@@ -326,11 +351,15 @@ static void get_dns_ip(pubnub_t* pb, sa_family_t family, struct sockaddr* addr)
         if ((pubnub_get_dns_primary_server_ipv4(
                  pb, (struct pubnub_ipv4_address*)p) == -1) &&
             (pubnub_get_dns_secondary_server_ipv4(
-                 pb, (struct pubnub_ipv4_address*)p) == -1) &&
-            AF_INET == family) {
-            // If only IPv4 supported we don't have to fall back to the IPv6.
-            get_default_ipv4_dns_ip(pb, (struct pubnub_ipv4_address*)p);
-            addr->sa_family = AF_INET;
+                 pb, (struct pubnub_ipv4_address*)p) == -1)) {
+            if (AF_INET == family) {
+                get_default_ipv4_dns_ip(pb, (struct pubnub_ipv4_address*)p);
+                addr->sa_family = AF_INET;
+            }
+            else if (pubnub_dns_read_system_servers_ipv4(
+                         pb, (struct pubnub_ipv4_address*)p, 1) == 1) {
+                addr->sa_family = AF_INET;
+            }
         }
 #if PUBNUB_USE_IPV6
     }
@@ -620,7 +649,10 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
     }
 #endif /* PUBNUB_USE_IPV6 */
 
-    if ((AF_INET == family || pbpal_connect_failed == rslt) &&
+    if ((AF_INET == family
+         || pbpal_connect_failed == rslt
+         || (AF_INET6 == family
+             && spare_addresses->ipv6_index >= spare_addresses->n_ipv6)) &&
         spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
 #if PUBNUB_LOG_ENABLED(TRACE)
         if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_TRACE)) {
@@ -788,6 +820,16 @@ enum pbpal_resolv_n_connect_result pbpal_resolv_and_connect(pubnub_t* pb)
             if (rslt != pbpal_resolv_resource_failure) return rslt;
         }
 #endif /* !defined(_WIN32) */
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+        if (SOCKET_INVALID == pb->pal.socket && pbpal_os_dns_should_use(pb)) {
+            memset(&pb->dns_queries, 0, sizeof(pb->dns_queries));
+            if (0 == pbpal_os_dns_start(pb, origin)) {
+                return pbpal_resolv_sent;
+            }
+            PUBNUB_LOG_WARNING(pb,
+                               "DnsQueryEx failed, falling back to UDP DNS");
+        }
+#endif /* defined(_WIN32) && defined(PUBNUB_CALLBACK_API) */
         if (SOCKET_INVALID == pb->pal.socket) {
             /* Reset DNS server address at the start of new resolution */
             memset(&pb->dns_queries, 0, sizeof(pb->dns_queries));
@@ -1001,6 +1043,20 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
 #if PUBNUB_PROXY_API
         if (pbproxyNONE != pb->proxy_type) { port = pb->proxy_port; }
 #endif
+
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+        if (pb->os_dns.active) {
+            switch (pbpal_os_dns_check(pb)) {
+            case -1: return pbpal_resolv_failed_rcv;
+            case +1: return pbpal_resolv_rcv_wouldblock;
+            case 0:  break;
+            }
+            /* DnsQueryEx path: no UDP socket to close. Jump to address
+               selection which is shared with the legacy UDP path. */
+            goto pbpal_pick_address_and_connect;
+        }
+#endif /* defined(_WIN32) && defined(PUBNUB_CALLBACK_API) */
+
         /* Reuse the DNS server address that was stored when sending the query
          */
         switch (read_dns_response(
@@ -1023,6 +1079,9 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
         }
         socket_close(pb->pal.socket);
 
+#if defined(_WIN32) && defined(PUBNUB_CALLBACK_API)
+pbpal_pick_address_and_connect:
+#endif
 #if PUBNUB_USE_IPV6
         if (is_ipv6_supported() &&
             !IN6_IS_ADDR_UNSPECIFIED(
@@ -1062,7 +1121,8 @@ enum pbpal_resolv_n_connect_result pbpal_check_resolv_and_connect(pubnub_t* pb)
             else if (AF_INET6 == ((struct sockaddr*)&dest)->sa_family) {
                 pb->flags.retry_after_close =
                     (++pb->spare_addresses.ipv6_index <
-                     pb->spare_addresses.n_ipv6);
+                     pb->spare_addresses.n_ipv6)
+                    || (pb->spare_addresses.n_ipv4 > 0);
             }
 #endif
 #if PUBNUB_USE_SSL
@@ -1144,14 +1204,35 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
             "Time since last DNS query: %ld seconds",
             (long)(time(NULL) -
                    pb->spare_addresses.time_of_the_last_dns_query));
+#if PUBNUB_USE_IPV6
+        {
+            /* Determine the failed connect's address family from the socket
+               so we increment the right spare-address index and allow
+               fallback to IPv4 when all IPv6 addresses are exhausted. */
+            struct sockaddr_storage local = { 0 };
+            socklen_t               len   = sizeof(local);
+            const int               family =
+                (0 == getsockname(pb->pal.socket,
+                                  (struct sockaddr*)&local,
+                                  &len))
+                    ? local.ss_family
+                    : AF_INET;
+            if (AF_INET6 == family) {
+                pb->flags.retry_after_close =
+                    (++pb->spare_addresses.ipv6_index <
+                     pb->spare_addresses.n_ipv6)
+                    || (pb->spare_addresses.n_ipv4 > 0);
+            }
+            else {
+                pb->flags.retry_after_close =
+                    (++pb->spare_addresses.ipv4_index <
+                     pb->spare_addresses.n_ipv4);
+            }
+        }
+#else  /* PUBNUB_USE_IPV6 */
         pb->flags.retry_after_close =
             (++pb->spare_addresses.ipv4_index < pb->spare_addresses.n_ipv4);
-#if PUBNUB_USE_IPV6
-        if (!pb->flags.retry_after_close) {
-            pb->flags.retry_after_close =
-                (++pb->spare_addresses.ipv6_index < pb->spare_addresses.n_ipv6);
-        }
-#endif
+#endif /* PUBNUB_USE_IPV6 */
 #if PUBNUB_USE_SSL
         pb->flags.trySSL = pb->options.useSSL;
 #endif

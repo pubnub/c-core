@@ -134,6 +134,11 @@ CALLBACK_SOURCE_FILES_ = \
 !endif
 !endif
 
+# Windows OS DNS resolver (DnsQueryEx) for callback API.
+CALLBACK_SOURCE_FILES_ = \
+    $(CALLBACK_SOURCE_FILES_)              \
+    $(DNS_QUERY_EX_SOURCE_FILES_WINDOWS)
+
 # Single channel history feature source files.
 !if $(USE_FETCH_HISTORY)
 SOURCE_FILES_ = \

@@ -5,6 +5,9 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifdef PUBNUB_CALLBACK_API
+#include <windns.h>
+#endif
 typedef SOCKET pb_socket_t;
 #else
 #include <unistd.h>

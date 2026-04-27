@@ -46,9 +46,9 @@ COMPILER_FLAGS = $(NMAKE_FLAGS) $(USER_C_FLAGS)
 ###############################################################################
 
 !if $(WITH_GCC)
-LDLIBS = -lws2_32 -lrpcrt4 -lsecur32
+LDLIBS = -lws2_32 -lrpcrt4 -lsecur32 -ldnsapi
 !else
-LDLIBS = ws2_32.lib IPHlpAPI.lib rpcrt4.lib
+LDLIBS = ws2_32.lib IPHlpAPI.lib rpcrt4.lib dnsapi.lib
 !endif
 
 # TODO: Add support of OpenSSL when built with GCC if possible.

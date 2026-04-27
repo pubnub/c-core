@@ -88,7 +88,9 @@ static bool is_valid_ipv6(const uint8_t addr[16])
         if (addr[i] != 0) loopback = false;
     }
 
-    if (all_zero || loopback || (addr[0] == 0xfe && (addr[1] & 0xc0) == 0x80))
+    if (all_zero || loopback
+        || (addr[0] == 0xfe && (addr[1] & 0xc0) == 0x80)   /* fe80::/10 link-local */
+        || (addr[0] == 0xfe && (addr[1] & 0xc0) == 0xc0))  /* fec0::/10 site-local (deprecated RFC 3879) */
         return false;
 
     return true;
