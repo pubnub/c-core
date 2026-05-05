@@ -35,7 +35,7 @@
  *  - list teardown   (detach head)      in
  * `pbcc_logger_manager_logger_remove_all`
  */
-pubnub_mutex_static_decl_and_init(s_logger_list_lock);
+pubnub_mutex_static_recursive_decl_and_init(s_logger_list_lock);
 
 
 // ----------------------------------------------
@@ -86,8 +86,9 @@ pbcc_logger_manager_t* pbcc_logger_manager_alloc(const char* pubnub_id)
     pbcc_logger_manager_t* manager =
         (pbcc_logger_manager_t*)malloc(sizeof(pbcc_logger_manager_t));
     if (NULL == manager) {
-        printf("[PubNub] Logger manager allocation error. Insufficient memory "
-               "error.\n");
+        printf(
+            "[PubNub] Logger manager allocation error. Insufficient memory "
+            "error.\n");
         return NULL;
     }
 
@@ -122,20 +123,18 @@ void pbcc_logger_manager_free(pbcc_logger_manager_t* manager)
      * logger free.  This ensures no other thread is mid-dispatch
      * (iterating loggers under the same lock) when we free the default
      * logger object. */
-    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_init_static_recursive(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
 
-    /* Detach custom loggers (same as remove_all but already under lock). */
 #if PUBNUB_USE_DEFAULT_LOGGER
-    manager->default_logger->next = NULL;
+    if (NULL != manager->default_logger) {
+        /* Detach custom loggers (same as remove_all but already under lock). */
+        manager->default_logger->next = NULL;
+        pubnub_logger_free(&manager->default_logger);
+    }
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
     manager->loggers = NULL;
-
-#if PUBNUB_USE_DEFAULT_LOGGER
-    if (NULL != manager->default_logger)
-        pubnub_logger_free(&manager->default_logger);
-#endif // #if PUBNUB_USE_DEFAULT_LOGGER
 
     pubnub_mutex_unlock(manager->mutw);
     pubnub_mutex_unlock(s_logger_list_lock);
@@ -161,7 +160,7 @@ int pbcc_logger_manager_logger_add(
 {
     if (NULL == manager || NULL == logger) return -1;
 
-    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_init_static_recursive(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
     const pubnub_logger_t* current = manager->loggers;
@@ -177,7 +176,8 @@ int pbcc_logger_manager_logger_add(
     manager->loggers = logger;
 #if PUBNUB_USE_DEFAULT_LOGGER
     // Make default logger first in a line for messages.
-    manager->default_logger->next = manager->loggers;
+    if (NULL != manager->default_logger)
+        manager->default_logger->next = manager->loggers;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
     pubnub_mutex_unlock(manager->mutw);
     pubnub_mutex_unlock(s_logger_list_lock);
@@ -191,7 +191,7 @@ int pbcc_logger_manager_logger_remove(
 {
     if (NULL == manager || NULL == logger) return -1;
 
-    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_init_static_recursive(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
     pubnub_logger_t** current = &manager->loggers;
@@ -201,7 +201,8 @@ int pbcc_logger_manager_logger_remove(
             logger->next = NULL;
 #if PUBNUB_USE_DEFAULT_LOGGER
             // Make default logger first in a line for messages.
-            manager->default_logger->next = manager->loggers;
+            if (NULL != manager->default_logger)
+                manager->default_logger->next = manager->loggers;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
             pubnub_mutex_unlock(manager->mutw);
             pubnub_mutex_unlock(s_logger_list_lock);
@@ -219,7 +220,7 @@ void pbcc_logger_manager_logger_remove_all(pbcc_logger_manager_t* manager)
 {
     if (NULL == manager) return;
 
-    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_init_static_recursive(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
     /* Detach the list from the manager without modifying the logger
@@ -228,7 +229,7 @@ void pbcc_logger_manager_logger_remove_all(pbcc_logger_manager_t* manager)
      * be registered with other managers that are still actively
      * iterating through them. */
 #if PUBNUB_USE_DEFAULT_LOGGER
-    manager->default_logger->next = NULL;
+    if (NULL != manager->default_logger) manager->default_logger->next = NULL;
 #endif // #if PUBNUB_USE_DEFAULT_LOGGER
     manager->loggers = NULL;
     pubnub_mutex_unlock(manager->mutw);
@@ -420,7 +421,7 @@ void pbcc_logger_manager_log_message(
      * managers and can only be safely read while no other thread is
      * modifying it (via `logger_add`, `logger_remove`, `remove_all`,
      * or `pbcc_logger_manager_free`). */
-    pubnub_mutex_init_static(s_logger_list_lock);
+    pubnub_mutex_init_static_recursive(s_logger_list_lock);
     pubnub_mutex_lock(s_logger_list_lock);
     pubnub_mutex_lock(manager->mutw);
 
@@ -490,7 +491,7 @@ pubnub_log_message_t pbcc_logger_manager_message_init(
     sec                          = (time_t)(unix_ms / 1000ULL);
     msec                         = (uint32_t)(unix_ms % 1000ULL);
 #elif defined(__unix__) || defined(__APPLE__) || defined(ESP_PLATFORM)
-    struct timeval         tv;
+    struct timeval tv;
     if (gettimeofday(&tv, NULL) != 0) {
         sec  = 0;
         msec = 0;

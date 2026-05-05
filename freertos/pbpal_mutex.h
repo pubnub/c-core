@@ -36,6 +36,8 @@ typedef SemaphoreHandle_t pbpal_mutex_t;
 } while(0)
 #endif /*ESP_PLATFORM*/
 
+#define pbpal_mutex_static_recursive_decl_and_init(m) pbpal_mutex_static_decl_and_init(m)
+#define pbpal_mutex_init_static_recursive(m) pbpal_mutex_init_static(m)
 
 
 #endif /*!defined INC_PBPAL_MUTEX*/
