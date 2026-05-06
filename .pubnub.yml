@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "7.2.0"
+version: "7.2.1"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-05-06
+    version: v7.2.1
+    changes:
+      - type: bug
+        text: "Initialise logger request/response buffers in pbcc_init to make sure that the loggers doesn't receive junked data when cancelation occurs before request preparation."
+      - type: bug
+        text: "Fixed data race in situation when one logger used via logger_manager is being called from two different contexts."
   - date: 2026-04-22
     version: v7.2.0
     changes:
@@ -1179,7 +1186,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1238,7 +1245,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1297,7 +1304,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1352,7 +1359,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1406,7 +1413,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1455,7 +1462,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1501,7 +1508,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.0
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
