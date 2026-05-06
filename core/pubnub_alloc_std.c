@@ -11,7 +11,7 @@
 #include <string.h>
 
 
-#if defined PUBNUB_ASSERT_LEVEL_EX
+#if defined       PUBNUB_ASSERT_LEVEL_EX
 static pubnub_t** m_allocated;
 static unsigned   m_n;
 static unsigned   m_cap;
@@ -149,15 +149,17 @@ int pubnub_free(pubnub_t* pb)
 
     PUBNUB_LOG_TRACE(pb, "Try to free PubNub context");
 
+    pubnub_mutex_lock(pb->monitor);
+
     if (pb->state == PBS_NULL) {
         PUBNUB_LOG_TRACE(pb, "PubNub context not initialized. Freeing...");
+        pubnub_mutex_unlock(pb->monitor);
         remove_allocated(pb);
         free(pb);
 
         return 0;
     }
 
-    pubnub_mutex_lock(pb->monitor);
     pbnc_stop(pb, PNR_CANCELLED);
     if (PBS_IDLE == pb->state) {
         PUBNUB_LOG_TRACE(pb, "PubNub context is in idle state. Freeing...");

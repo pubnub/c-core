@@ -17,7 +17,10 @@ typedef int pbpal_mutex_t;
 #define pbpal_mutex_destroy(m) 
 #define pbpal_mutex_decl_and_init(m) 
 #define pbpal_mutex_static_decl_and_init(m) 
-#define pbpal_mutex_init_static(m) 
+#define pbpal_mutex_init_static(m)
+
+#define pbpal_mutex_static_recursive_decl_and_init(m)
+#define pbpal_mutex_init_static_recursive(m)
 
 
 #endif /*!defined INC_PBPAL_MUTEX*/

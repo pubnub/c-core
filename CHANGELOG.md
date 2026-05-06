@@ -1,3 +1,10 @@
+## v7.2.1
+May 06 2026
+
+#### Fixed
+- Initialise logger request/response buffers in pbcc_init to make sure that the loggers doesn't receive junked data when cancelation occurs before request preparation.
+- Fixed data race in situation when one logger used via logger_manager is being called from two different contexts.
+
 ## v7.2.0
 April 22 2026
 

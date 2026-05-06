@@ -25,6 +25,9 @@ __inline int pubnub_InitCriticalSection(_Out_ LPCRITICAL_SECTION lpCS) {
 
 #define pbpal_mutex_init_static(m) do { if (0 == InterlockedExchange(&m_init_##m, 1)) InitializeCriticalSection(&m); } while(0)
 
+#define pbpal_mutex_static_recursive_decl_and_init(m) pbpal_mutex_static_decl_and_init(m)
+#define pbpal_mutex_init_static_recursive(m) pbpal_mutex_init_static(m)
+
 
 #endif /*!defined INC_PBPAL_MUTEX*/
 

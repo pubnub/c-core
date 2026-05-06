@@ -74,6 +74,18 @@ void pbcc_init(
         memcpy(p->id, str_uuid.uuid, sizeof(p->id));
     }
 #if PUBNUB_USE_LOGGER
+    /* The logger dispatch path (pbnc_stop, outcome_detected) guards logging
+     * of the cancelled/failed request on a single-byte check of
+     * `last_request_url[0]`. Because `pubnub_alloc()` does not zero the
+     * context memory, the buffer would otherwise hold arbitrary heap bytes
+     * until the first transaction runs — a cancel issued before the first
+     * transaction (a common defensive pattern in C++ wrappers that call
+     * pubnub_cancel() at the start of their subscribe) would dispatch the
+     * uninitialised buffer to user loggers. Initialise all logger-facing
+     * buffers here so every pre-transaction read is safe. */
+    p->last_request_url[0]       = '\0';
+    p->last_response_headers[0]  = '\0';
+    p->last_response_headers_len = 0;
     p->logger_manager = pbcc_logger_manager_alloc(p->id);
 #if PUBNUB_USE_DEFAULT_LOGGER
     pubnub_logger_t* default_logger = pubnub_default_logger_alloc();

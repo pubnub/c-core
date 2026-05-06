@@ -271,6 +271,12 @@ typedef struct pubnub_log_message_network_response pubnub_log_message_network_re
  * All function pointers are optional (can be `NULL`). If a function pointer is
  * `NULL`, that log level will not be processed by this logger.
  *
+ * @note Callback implementations must not call `pubnub_logger_add`,
+ *       `pubnub_logger_remove`, `pubnub_logger_remove_all`, or `pubnub_free`
+ *       from within a logger callback.  Doing so may corrupt the active
+ *       iteration over the logger list.  Calling other PubNub APIs that emit
+ *       log messages (e.g., `pubnub_publish`) is safe.
+ *
  * @see pubnub_logger_add
  */
 struct pubnub_logger_interface {

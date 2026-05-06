@@ -15,6 +15,8 @@
 #define pubnub_mutex_decl_and_init(m) pbpal_mutex_decl_and_init(m)
 #define pubnub_mutex_static_decl_and_init(m) pbpal_mutex_static_decl_and_init(m)
 #define pubnub_mutex_init_static(m) pbpal_mutex_init_static(m)
+#define pubnub_mutex_static_recursive_decl_and_init(m) pbpal_mutex_static_recursive_decl_and_init(m)
+#define pubnub_mutex_init_static_recursive(m) pbpal_mutex_init_static_recursive(m)
 
 #if defined(__clang__) && defined(__cplusplus)
 #define pubnub_guarded_by(x) __attribute__((guarded_by(x)))
@@ -34,6 +36,8 @@ typedef struct { int dummy; } pubnub_mutex_t;
 #define pubnub_mutex_decl_and_init(m)
 #define pubnub_mutex_static_decl_and_init(m)
 #define pubnub_mutex_init_static(m)
+#define pubnub_mutex_static_recursive_decl_and_init(m)
+#define pubnub_mutex_init_static_recursive(m)
 
 #define pubnub_guarded_by(x) 
 
