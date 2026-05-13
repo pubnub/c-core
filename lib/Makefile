@@ -1,5 +1,5 @@
 
-all: pubnub_parse_ipv6_addr_unit_test pubnub_dns_codec_unit_test
+all: pubnub_parse_ipv6_addr_unit_test pubnub_dns_codec_unit_test pbpal_ntf_callback_poller_poll_unit_test
 
 OS := $(shell uname)
 # Coverage doesn't seem to work on MacOS for some reason, but, since
@@ -48,6 +48,12 @@ pbhash_set_unit_test: pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_tes
 	gcc -o pbhash_set_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../core/c99 -Wall $(COVERAGE_FLAGS) pbref_counter.c pbhash_set.c pbarray.c pbhash_set_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pbhash_set_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
+
+POLLER_POLL_SOURCE_FILES = ../core/pubnub_assert_std.c sockets/pbpal_ntf_callback_poller_poll.c
+
+pbpal_ntf_callback_poller_poll_unit_test: sockets/pbpal_ntf_callback_poller_poll_unit_test.c sockets/pbpal_ntf_callback_poller_poll.c
+	gcc -o pbpal_ntf_callback_poller_poll_unit_test.so -shared $(CFLAGS) -I../posix -U PUBNUB_USE_LOGGER -D PUBNUB_USE_LOGGER=0 $(LDFLAGS) -Wall $(COVERAGE_FLAGS) -fPIC $(POLLER_POLL_SOURCE_FILES) sockets/pbpal_ntf_callback_poller_poll_unit_test.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pbpal_ntf_callback_poller_poll_unit_test.so
 
 clean:
 	find . -type d -iname "*.dSYM" -exec rm -rf {} \+
