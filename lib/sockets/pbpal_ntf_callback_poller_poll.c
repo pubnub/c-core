@@ -11,6 +11,7 @@
 #include "core/pubnub_logger.h"
 #endif // PUBNUB_USE_LOGGER
 
+#include <errno.h>
 #include <string.h>
 
 
@@ -188,6 +189,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
 
     rslt = poll(data->apoll, data->size, ms);
     if (SOCKET_ERROR == rslt) {
+#if PUBNUB_USE_LOGGER
 #if defined(_WIN32)
             int socket_error = WSAGetLastError();
 #else
@@ -198,6 +200,7 @@ int pbpal_ntf_poll_away(struct pbpal_poll_data* data, int ms)
                 "poll() failed with error %d (%u sockets polled)",
                 socket_error,
                 (unsigned)data->size);
+#endif /* PUBNUB_USE_LOGGER */
             return -1;
         }
     if (rslt > 0) {

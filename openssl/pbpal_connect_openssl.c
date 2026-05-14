@@ -6,7 +6,7 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #else
-#include <sys/select.h>
+#include <poll.h>
 #define SOCKET_ERROR -1
 #endif
 
@@ -361,32 +361,41 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
        when the FSM fires, so select() returns immediately. */
     if (PBS_WAIT_TLS_CONNECT == pb->state
         && 0 != pb->pal.tls_connect_last_error) {
-        fd_set         read_set, write_set;
-        struct timeval timev     = { 0, 300000 };
-        const bool     want_read =
+        const bool want_read =
             (SSL_ERROR_WANT_READ == pb->pal.tls_connect_last_error);
 
-        FD_ZERO(&read_set);
-        FD_ZERO(&write_set);
-        FD_SET(pb->pal.socket, want_read ? &read_set : &write_set);
-
-        rslt = select(
-            pb->pal.socket + 1,
-            want_read ? &read_set : NULL,
-            want_read ? NULL : &write_set,
-            NULL,
-            &timev);
+#if defined(_WIN32)
+        {
+            fd_set         read_set, write_set;
+            struct timeval timev = { 0, 300000 };
+            FD_ZERO(&read_set);
+            FD_ZERO(&write_set);
+            FD_SET(pb->pal.socket, want_read ? &read_set : &write_set);
+            rslt = select(
+                pb->pal.socket + 1,
+                want_read ? &read_set : NULL,
+                want_read ? NULL : &write_set,
+                NULL,
+                &timev);
+        }
+#else
+        {
+            struct pollfd pfd;
+            pfd.fd      = pb->pal.socket;
+            pfd.events  = want_read ? POLLIN : POLLOUT;
+            pfd.revents = 0;
+            rslt = poll(&pfd, 1, 300);
+        }
+#endif
         if (SOCKET_ERROR == rslt) {
-            PUBNUB_LOG_ERROR(pb, "TLS select() error during handshake.");
+            PUBNUB_LOG_ERROR(pb, "TLS poll/select error during handshake.");
             pb->pal.tls_connect_last_error = 0;
             return pbtlsFailed;
         }
         if (0 == rslt) {
-            /* select() timed out — socket not ready yet. Return the
-               same wait direction without calling SSL_connect(). */
             return want_read ? pbtlsStartedWaitRead : pbtlsStartedWaitWrite;
         }
-        PUBNUB_LOG_TRACE(pb, "TLS select() event, resuming handshake.");
+        PUBNUB_LOG_TRACE(pb, "TLS socket ready, resuming handshake.");
     }
 
     bool needRead = false, needWrite = false;

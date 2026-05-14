@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "7.2.1"
+version: "7.2.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-05-14
+    version: v7.2.2
+    changes:
+      - type: bug
+        text: "Replace inline `select()`/`FD_SET` with `poll()` on non-Windows platforms in `pbpal_check_connect()`. On Linux and macOS `FD_SET` writes to a fixed 1024-bit bitmap and corrupts the stack when a socket fd value exceeds `FD_SETSIZE`. `poll()` has no fd-value limitation. Windows retains `select()` because its `fd_set` is array-based and safe."
+      - type: improvement
+        text: "Add `pbpal_ntf_callback_poller_poll_unit_test.c` covering init/deinit, save/remove, watch events, poll detection of readable and writable sockets, multiple sockets, socket update, and a high fd number test case (fd=1500) that validates the fix for the `FD_SETSIZE` overflow."
   - date: 2026-05-06
     version: v7.2.1
     changes:
@@ -1186,7 +1193,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1245,7 +1252,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1304,7 +1311,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1359,7 +1366,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1413,7 +1420,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1462,7 +1469,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1508,7 +1515,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"

@@ -27,6 +27,7 @@ typedef ADDRESS_FAMILY sa_family_t;
 #else
 #include "posix/pubnub_get_native_socket.h"
 #include <netinet/tcp.h>
+#include <poll.h>
 #endif
 
 #define PUBNUB_DEFAULT_IPV4_DNS_SERVER "8.8.8.8"
@@ -1158,9 +1159,7 @@ pbpal_pick_address_and_connect:
 
 enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
 {
-    fd_set         write_set;
     int            rslt;
-    struct timeval timev           = { 0, 300000 };
     int            error_code      = 0;
     size_t         error_code_size = sizeof(error_code);
 
@@ -1240,19 +1239,32 @@ enum pbpal_resolv_n_connect_result pbpal_check_connect(pubnub_t* pb)
         return pbpal_connect_failed;
     }
 
-    FD_ZERO(&write_set);
-    FD_SET(pb->pal.socket, &write_set);
-    rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
+#if defined(_WIN32)
+    {
+        fd_set         write_set;
+        struct timeval timev = { 0, 300000 };
+        FD_ZERO(&write_set);
+        FD_SET(pb->pal.socket, &write_set);
+        rslt = select(pb->pal.socket + 1, NULL, &write_set, NULL, &timev);
+    }
+#else
+    {
+        struct pollfd pfd;
+        pfd.fd      = pb->pal.socket;
+        pfd.events  = POLLOUT;
+        pfd.revents = 0;
+        rslt = poll(&pfd, 1, 300);
+    }
+#endif
     if (SOCKET_ERROR == rslt) {
-        PUBNUB_LOG_ERROR(pb, "Socket select() error.");
+        PUBNUB_LOG_ERROR(pb, "Socket poll/select error.");
         return pbpal_connect_resource_failure;
     }
     else if (rslt > 0) {
-        PUBNUB_LOG_TRACE(pb, "Socket select() event.");
+        PUBNUB_LOG_TRACE(pb, "Socket connected.");
 #if defined(_WIN32)
-        // Complete TCP Keep-Alive configuration if connection established.
         pbpal_set_tcp_keepalive(pb);
-#endif /* defined(_WIN32) */
+#endif
         return pbpal_connect_success;
     }
     return pbpal_connect_wouldblock;
