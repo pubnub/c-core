@@ -1,3 +1,12 @@
+## v7.2.2
+May 14 2026
+
+#### Fixed
+- Replace inline `select()`/`FD_SET` with `poll()` on non-Windows platforms in `pbpal_check_connect()`. On Linux and macOS `FD_SET` writes to a fixed 1024-bit bitmap and corrupts the stack when a socket fd value exceeds `FD_SETSIZE`. `poll()` has no fd-value limitation. Windows retains `select()` because its `fd_set` is array-based and safe.
+
+#### Modified
+- Add `pbpal_ntf_callback_poller_poll_unit_test.c` covering init/deinit, save/remove, watch events, poll detection of readable and writable sockets, multiple sockets, socket update, and a high fd number test case (fd=1500) that validates the fix for the `FD_SETSIZE` overflow.
+
 ## v7.2.1
 May 06 2026
 
