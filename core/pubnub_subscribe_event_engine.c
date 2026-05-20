@@ -674,7 +674,7 @@ pbhash_set_t* pubnub_subscription_subscribables_(
     const pubnub_t*               pb   = sub->entity->pb;
 
     if (NULL != options) {
-        opts.receive_presence_events = sub->options.receive_presence_events;
+        opts.receive_presence_events = options->receive_presence_events;
     }
 
     const pubnub_subscribable_location location =
