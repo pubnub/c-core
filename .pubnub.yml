@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "7.2.2"
+version: "7.2.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-05-21
+    version: v7.2.3
+    changes:
+      - type: bug
+        text: "When building a subscription’s subscribable set, caller-supplied options now actually override `receive_presence_events` instead of copying `sub->options` again, so set-level presence settings are applied consistently."
+      - type: bug
+        text: "Removal no longer decrements the listener refcount twice (once manually and once in the array destructor), and add paths release the allocator's transient ref at the end, so shared listeners are not freed too early (use-after-free for N≥3 arrays) and global listeners are not leaked after a single remove."
   - date: 2026-05-14
     version: v7.2.2
     changes:
@@ -1193,7 +1200,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1252,7 +1259,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1311,7 +1318,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1366,7 +1373,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1420,7 +1427,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1469,7 +1476,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1515,7 +1522,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.2.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"

@@ -1,3 +1,10 @@
+## v7.2.3
+May 21 2026
+
+#### Fixed
+- When building a subscription’s subscribable set, caller-supplied options now actually override `receive_presence_events` instead of copying `sub->options` again, so set-level presence settings are applied consistently.
+- Removal no longer decrements the listener refcount twice (once manually and once in the array destructor), and add paths release the allocator's transient ref at the end, so shared listeners are not freed too early (use-after-free for N≥3 arrays) and global listeners are not leaked after a single remove.
+
 ## v7.2.2
 May 14 2026
 
