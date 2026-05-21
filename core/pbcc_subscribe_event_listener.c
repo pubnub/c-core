@@ -381,7 +381,12 @@ enum pubnub_res pbcc_event_listener_add_message_listener(
 
     const enum pubnub_res result =
         pbcc_add_listener_(listener->global_events, _listener);
-    if (PNR_OK != result) { pbcc_listener_free_(_listener); }
+    /*
+     * Release transient ref from pbcc_listener_alloc_. On success the array
+     * slot keeps the listener via pbcc_add_listener_'s increment; on failure
+     * no increment ran, so this frees the listener.
+     */
+    pbcc_listener_free_(_listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return result;
@@ -470,8 +475,12 @@ enum pubnub_res pbcc_event_listener_add_subscription_object_listener(
             pbcc_remove_object_listener_(listener, name, _listener);
         }
     }
-    /** Manual `free` required if arrays doesn't manage listener lifetime. */
-    if (PNR_OK != rslt && !added) { pbcc_listener_free_(_listener); }
+    /*
+     * Release transient ref from pbcc_listener_alloc_. Success: one ref per
+     * array remains from pbcc_add_listener_. Partial rollback / total failure:
+     * arrays no longer hold refs, so this drops the last ref and frees.
+     */
+    pbcc_listener_free_(_listener);
     pubnub_mutex_unlock(listener->mutw);
 
     return rslt;
@@ -701,7 +710,6 @@ enum pubnub_res pbcc_remove_listener_(
             _listener->subscription_object == listener->subscription_object &&
             _listener->callback == listener->callback &&
             _listener->user_data == listener->user_data) {
-            pbref_counter_decrement(_listener->counter);
             pbarray_remove(listeners, (void**)&_listener, true);
         }
         else {
