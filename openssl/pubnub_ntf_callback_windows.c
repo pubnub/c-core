@@ -167,6 +167,7 @@ MAYBE_INLINE int pbntf_got_socket_callback(pubnub_t* pb)
 
     if (PUBNUB_TIMERS_API) {
         EnterCriticalSection(&m_watcher.timerlock);
+        pbpal_remove_timer_safe(pb, &m_watcher.timer_head);
         m_watcher.timer_head = pubnub_timer_list_add(
             m_watcher.timer_head, pb, pb->transaction_timeout_ms);
         LeaveCriticalSection(&m_watcher.timerlock);
