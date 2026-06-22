@@ -1,3 +1,12 @@
+## v7.2.4
+June 22 2026
+
+#### Fixed
+- Fix timer-list assert in callback API on Windows when closing or reconnecting during async DnsQueryEx DNS resolution.
+
+#### Modified
+- Harden callback API timer-list handling on all platforms: remove before re-add in `pbntf_got_socket_callback()`, and always unregister watcher/timer/queue state from `pbpal_close()/pbpal_free()` on callback builds.
+
 ## v7.2.3
 May 21 2026
 
