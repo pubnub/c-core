@@ -8,6 +8,8 @@
 
 #include "lib/base64/pbbase64.h"
 
+#include <stdlib.h>
+
 
 void pbntlm_core_init(pubnub_t* pb)
 {
@@ -25,9 +27,7 @@ void pbntlm_core_deinit(pubnub_t* pb)
 
 void pbntlm_core_handle(pubnub_t* pb, char const* base64_msg, size_t length)
 {
-    int             i;
-    uint8_t         msg[512];
-    pubnub_bymebl_t data = { msg, sizeof msg / sizeof msg[0] };
+    pubnub_bymebl_t data;
 
     if (pbntlmDone == pb->ntlm_context.state) {
         pbntlm_core_init(pb);
@@ -42,14 +42,15 @@ void pbntlm_core_handle(pubnub_t* pb, char const* base64_msg, size_t length)
         pbntlm_core_deinit(pb);
         return;
     }
-    i = pbbase64_decode_std(base64_msg, length, &data);
-    if (0 != i) {
-        PUBNUB_LOG_ERROR(pb, "Base64 decode failed with error code: %d", i);
+    data = pbbase64_decode_alloc_std(base64_msg, length);
+    if (NULL == data.ptr) {
+        PUBNUB_LOG_ERROR(pb, "Base64 decode (alloc) of NTLM challenge failed");
         pbntlm_core_deinit(pb);
         return;
     }
     (void)pbntlm_unpack_type2(pb, &pb->ntlm_context, data);
     pb->ntlm_context.state = pbntlmSendAuthenticate;
+    free(data.ptr);
 }
 
 

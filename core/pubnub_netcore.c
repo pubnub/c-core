@@ -723,6 +723,7 @@ static enum pubnub_res finish(struct pubnub_* pb)
     case pbproxyFinRetry:
         PUBNUB_LOG_TRACE(pb, "Proxy: retry in current connection.");
         pb->flags.retry_after_close = true;
+        pb->core.http_buf_len = 0;
         if (pb->flags.should_close) {
             close_connection(pb);
             return PNR_OK;

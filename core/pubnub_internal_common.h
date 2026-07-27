@@ -160,7 +160,7 @@ enum NPBNTLM_State {
 };
 
 /** Maximum supported length of the NTLM token (message) */
-#define PUBNUB_NTLM_MAX_TOKEN 1024
+#define PUBNUB_NTLM_MAX_TOKEN 4096
 
 #if PUBNUB_USE_WIN_SSPI
 #define SECURITY_WIN32
