@@ -266,11 +266,13 @@ static void get_dns_ip(
                  pb, (struct pubnub_ipv6_address*)pv6->s6_addr) == -1) ||
             (dns_check->dns_server_check & dns_check->dns_mask)) {
             dns_check->dns_mask <<= 1;
+            memset(pv6, 0, sizeof(*pv6));
 
             if ((pubnub_get_dns_secondary_server_ipv6(
                      pb, (struct pubnub_ipv6_address*)pv6->s6_addr) == -1) ||
                 (dns_check->dns_server_check & dns_check->dns_mask)) {
                 dns_check->dns_mask <<= 1;
+                memset(pv6, 0, sizeof(*pv6));
             }
         }
         user_provided_ipv6_dns = !IN6_IS_ADDR_UNSPECIFIED(pv6);
