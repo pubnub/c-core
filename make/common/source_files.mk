@@ -309,17 +309,18 @@ APP_CONTEXT_SOURCE_FILES = \
 
 # Custom proxy feature source files.
 PROXY_SOURCE_FILES = \
-    ../core/pbhttp_digest.c     \
-    ../core/pbntlm_core.c       \
-    ../core/pbntlm_packer_std.c \
-    ../core/pubnub_proxy.c      \
+    ../core/pbhttp_digest.c    \
+    ../core/pbntlm_core.c      \
+    ../core/pubnub_proxy.c     \
     ../core/pubnub_proxy_core.c
 
 # `PROXY_SOURCE_FILES` extension for POSIX build.
-PROXY_SOURCE_FILES_POSIX =
+PROXY_SOURCE_FILES_POSIX = \
+    ../core/pbntlm_packer_std.c
 
 # `PROXY_SOURCE_FILES` extension for Windows build.
 PROXY_SOURCE_FILES_WINDOWS = \
+    ../core/pbntlm_packer_sspi.c                    \
     ../windows/pubnub_set_proxy_from_system_windows.c
 
 
