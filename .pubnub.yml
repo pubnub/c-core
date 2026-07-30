@@ -1,8 +1,23 @@
 name: c-core
 schema: 1
-version: "7.2.5"
+version: "7.3.0"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-07-30
+    version: v7.3.0
+    changes:
+      - type: feature
+        text: "`fill_sspi_identity` now splits `DOMAIN\user` and `user@domain` formats into separate User and Domain fields so proxies requiring domain-qualified credentials can authenticate."
+      - type: bug
+        text: "Reset `http_buf_len` to 0 in `pbproxyFinRetry` so the stale 407 body length does not trip the assert guarding `proxy_saved_path` memcpy on the next CONNECT attempt."
+      - type: bug
+        text: "The warning fired on the normal case instead of when SSPI needs more space than our buffer provides. Flip the comparison and update the log message."
+      - type: improvement
+        text: "Replace the 512-byte stack buffer with `pbbase64_decode_alloc_std` so large NTLM Type-2 challenges from domain-joined proxies are no longer silently dropped."
+      - type: improvement
+        text: "NTLMv2 Type-3 with extended target info and MIC frequently exceeds 1024 bytes. Raised to 4096 to cover all known SSPI scenarios."
+      - type: improvement
+        text: "Add tests for oversized 407 body triggering retry-path assert, and direct `pbntlm_core_handle` tests with 600, 2048, and 4200 byte challenges."
   - date: 2026-07-30
     version: v7.2.5
     changes:
@@ -1212,7 +1227,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1271,7 +1286,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1330,7 +1345,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1385,7 +1400,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1439,7 +1454,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1488,7 +1503,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1534,7 +1549,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.2.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.0
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
