@@ -1,3 +1,18 @@
+## v7.3.0
+July 30 2026
+
+#### Added
+- `fill_sspi_identity` now splits `DOMAIN\user` and `user@domain` formats into separate User and Domain fields so proxies requiring domain-qualified credentials can authenticate.
+
+#### Fixed
+- Reset `http_buf_len` to 0 in `pbproxyFinRetry` so the stale 407 body length does not trip the assert guarding `proxy_saved_path` memcpy on the next CONNECT attempt.
+- The warning fired on the normal case instead of when SSPI needs more space than our buffer provides. Flip the comparison and update the log message.
+
+#### Modified
+- Replace the 512-byte stack buffer with `pbbase64_decode_alloc_std` so large NTLM Type-2 challenges from domain-joined proxies are no longer silently dropped.
+- NTLMv2 Type-3 with extended target info and MIC frequently exceeds 1024 bytes. Raised to 4096 to cover all known SSPI scenarios.
+- Add tests for oversized 407 body triggering retry-path assert, and direct `pbntlm_core_handle` tests with 600, 2048, and 4200 byte challenges.
+
 ## v7.2.5
 July 30 2026
 

@@ -16,6 +16,8 @@
 
 #include "pubnub_json_parse.h"
 #include "pubnub_keep_alive.h"
+#include "pbntlm_core.h"
+#include "lib/base64/pbbase64.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -1459,6 +1461,267 @@ proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_alive(void)
     AfterEach();
 }
 
+static void CONNECT_NTLM_407_body_larger_than_http_buf_does_not_assert(void)
+{
+    int  proxy_port = 500;
+    char large_body[PUBNUB_BUF_MAXLEN + 100];
+
+    memset(large_body, 'X', sizeof large_body - 1);
+    large_body[sizeof large_body - 1] = '\0';
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+    attest(
+        pubnub_set_proxy_manual(
+            pbp, pbproxyHTTP_CONNECT, "proxy_server_url", proxy_port) == 0);
+    attest(
+        pubnub_set_proxy_authentication_username_password(
+            pbp, "serious", "password") == 0);
+    expect_have_dns_for_proxy_server();
+
+    expect_first_outgoing_CONNECT();
+
+    {
+        char content_length_hdr[64];
+        char* response;
+        size_t response_len;
+        char headers[] =
+            "HTTP/1.1 407 Proxy Authentication Required\r\n"
+            "Proxy-Authenticate: NTLM\r\n"
+            "Connection: close\r\n"
+            "Content-Type: text/html\r\n";
+        char end_headers[] = "\r\n";
+
+        snprintf(content_length_hdr,
+                 sizeof content_length_hdr,
+                 "Content-Length: %d\r\n",
+                 (int)(sizeof large_body - 1));
+
+        response_len = strlen(headers) + strlen(content_length_hdr)
+                       + strlen(end_headers) + strlen(large_body);
+        response = (char*)malloc(response_len + 1);
+        assert(response != NULL);
+        strcpy(response, headers);
+        strcat(response, content_length_hdr);
+        strcat(response, end_headers);
+        strcat(response, large_body);
+
+        incoming(response);
+        free(response);
+    }
+
+    expect("pbpal_close", pbp, "", 0);
+    expect_have_dns_for_proxy_server_without_enqueue_for_processing();
+    expect_outgoing_with_encoded_credentials_CONNECT(
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAKAKs/AAAADw==");
+    incoming(
+        "HTTP/1.1 407 ProxyAuthentication Required ( Access is denied. )\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Proxy-Authenticate: NTLM "
+        "TlRMTVNTUAACAAAAEAAQADgAAAA1goriluCDYHcYI/"
+        "sAAAAAAAAAAFQAVABIAAAABQLODgAAAA9TAFAASQBSAEkAVAAxAEIAAgAQAFMAUABJAFIA"
+        "SQBUADEAQgABABAAUwBQAEkAUgBJAFQAMQBCAAQAEABzAHAAaQByAGkAdAAxAGIAAwAQAH"
+        "MAcABpAHIAaQB0ADEAYgAAAAAA\r\n"
+        "Connection: Keep-Alive\r\n"
+        "Proxy-Connection: Keep-Alive\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 11\r\n"
+        "\r\n"
+        "<comment>\r\n");
+    expect_outgoing_with_encoded_credentials_CONNECT(
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1",
+        "\r\nProxy-Authorization: NTLM "
+        "TlRMTVNTUAADAAAAGAAYAIQAAADQANAAnAAAAAAAAABYAAAADgAOAFgAAAAeAB4AZgAAAA"
+        "AAAABsAQAABYKIogoAqz8AAAAPccZQvLc9g1+"
+        "Nren4B1Ib4HMAZQByAGkAbwB1AHMARABFAFMASwBUAE8AUAAtADcAMQA0ADQARgBSAEsAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPYV7z8b1u4i3PisNiYQE1QEBAAAAAAAAukU1J0O"
+        "40wGP8Kgb8CDzxgAAAAACABAAUwBQAEkAUgBJAFQAMQBCAAEAEABTAFAASQBSAEkAVAAxA"
+        "EIABAAQAHMAcABpAHIAaQB0ADEAYgADABAAcwBwAGkAcgBpAHQAMQBiAAgAMAAwAAAAAAA"
+        "AAAEAAAAAIAAAptCBZNmwVx+"
+        "C4b7LJ01Abe4XUAITMf9HDfeJZOCOJR8KABAAAAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAA"
+        "AAAAA==");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Expires: 7200\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n");
+    expect_outgoing_with_url(
+        "/subscribe/sub-key/health/0/0?pnsdk=unit-test-0.1");
+    incoming(
+        "HTTP/1.1 200 Connection established\r\n"
+        "Via: 1.1 SPIRIT1B\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "[[],\"1516014978925123457\"]");
+    attest(pubnub_subscribe(pbp, "health", NULL) == PNR_STARTED);
+
+    attest(pbnc_fsm(pbp) == 0);
+    attest(pbnc_fsm(pbp) == 0);
+    attest(pbnc_fsm(pbp) == 0);
+
+    expect("pbntf_lost_socket", pbp, "", 0);
+    expect("pbntf_trans_outcome", pbp, "", 0);
+    attest(pbnc_fsm(pbp) == 0);
+
+    attest(pubnub_get(pbp) == NULL);
+    attest(pubnub_last_http_code(pbp) == 200);
+
+    AfterEach();
+}
+
+static char* make_ntlm_type2_base64(size_t target_decoded_size, size_t* out_len)
+{
+    uint8_t* raw;
+    pubnub_bymebl_t raw_block;
+    size_t encoded_len;
+    char* encoded;
+
+    assert(target_decoded_size >= 56);
+    raw = (uint8_t*)calloc(1, target_decoded_size);
+    assert(raw != NULL);
+
+    /* NTLMSSP signature */
+    memcpy(raw, "NTLMSSP\0", 8);
+    /* Type 2 message indicator */
+    raw[8] = 0x02;
+    /* TargetNameFields: Len=16, MaxLen=16, Offset=56 */
+    raw[12] = 0x10; raw[14] = 0x10; raw[16] = 0x38;
+    /* NegotiateFlags */
+    raw[20] = 0x35; raw[21] = 0x82; raw[22] = 0x8a; raw[23] = 0xe2;
+    /* ServerChallenge (8 bytes at offset 24) */
+    raw[24] = 0x01; raw[25] = 0x02; raw[26] = 0x03; raw[27] = 0x04;
+    raw[28] = 0x05; raw[29] = 0x06; raw[30] = 0x07; raw[31] = 0x08;
+    /* TargetInfoFields: Len and MaxLen = (target_decoded_size - 72) at offset 40 */
+    {
+        uint16_t info_len = (uint16_t)(target_decoded_size - 72);
+        raw[40] = (uint8_t)(info_len & 0xFF);
+        raw[41] = (uint8_t)(info_len >> 8);
+        raw[42] = raw[40]; raw[43] = raw[41];
+        /* Offset = 72 */
+        raw[44] = 72;
+    }
+    /* TargetName at offset 56 (16 bytes): "DOMAIN" in UTF-16LE */
+    raw[56] = 'D'; raw[58] = 'O'; raw[60] = 'M'; raw[62] = 'A';
+    raw[64] = 'I'; raw[66] = 'N';
+
+    raw_block.ptr = raw;
+    raw_block.size = target_decoded_size;
+    encoded_len = ((target_decoded_size + 2) / 3) * 4 + 1;
+    encoded = (char*)malloc(encoded_len);
+    assert(encoded != NULL);
+    assert(0 == pbbase64_encode_std(raw_block, encoded, &encoded_len));
+
+    free(raw);
+    *out_len = encoded_len;
+    return encoded;
+}
+
+
+static void NTLM_core_handle_accepts_challenge_larger_than_512_bytes(void)
+{
+    size_t base64_len;
+    char* challenge;
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+
+    /* 600 bytes decoded — exceeds the old 512-byte stack buffer */
+    challenge = make_ntlm_type2_base64(600, &base64_len);
+
+    pbntlm_core_init(pbp);
+    attest(pbp->ntlm_context.state == pbntlmSendNegotiate);
+
+    /* Advance to RcvChallenge state (skip Negotiate since std packer can't) */
+    pbp->ntlm_context.state = pbntlmRcvChallenge;
+
+    pbntlm_core_handle(pbp, challenge, base64_len);
+
+    /* With the dynamic alloc fix, decode succeeds and state advances */
+    attest(pbp->ntlm_context.state == pbntlmSendAuthenticate);
+
+    pbntlm_core_deinit(pbp);
+    free(challenge);
+    AfterEach();
+}
+
+
+static void NTLM_core_handle_accepts_challenge_up_to_max_token_size(void)
+{
+    size_t base64_len;
+    char* challenge;
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+
+    /* 2048 bytes decoded — exceeds old PUBNUB_NTLM_MAX_TOKEN (1024) */
+    challenge = make_ntlm_type2_base64(2048, &base64_len);
+
+    pbntlm_core_init(pbp);
+    pbp->ntlm_context.state = pbntlmRcvChallenge;
+
+    pbntlm_core_handle(pbp, challenge, base64_len);
+
+    /* With PUBNUB_NTLM_MAX_TOKEN raised to 4096, this fits in in_token */
+    attest(pbp->ntlm_context.state == pbntlmSendAuthenticate);
+    attest(pbp->ntlm_context.in_token_size == 2048);
+
+    pbntlm_core_deinit(pbp);
+    free(challenge);
+    AfterEach();
+}
+
+
+static void NTLM_core_handle_rejects_challenge_exceeding_max_token(void)
+{
+    size_t base64_len;
+    char* challenge;
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+
+    /* 4200 bytes decoded — exceeds PUBNUB_NTLM_MAX_TOKEN (4096) */
+    challenge = make_ntlm_type2_base64(4200, &base64_len);
+
+    pbntlm_core_init(pbp);
+    pbp->ntlm_context.state = pbntlmRcvChallenge;
+
+    pbntlm_core_handle(pbp, challenge, base64_len);
+
+    /* Base64 decode succeeds (dynamic alloc handles any size), but
+       unpack_type2 rejects it (> in_token buffer). Handler detects the
+       failure and deinits the NTLM context. */
+    attest(pbp->ntlm_context.state == pbntlmDone);
+    attest(pbp->ntlm_context.in_token_size == 0);
+
+    free(challenge);
+    AfterEach();
+}
+
+
+static void NTLM_core_handle_rejects_invalid_base64(void)
+{
+    char const invalid_b64[] = "!!!not-valid-base64!!!";
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+
+    pbntlm_core_init(pbp);
+    pbp->ntlm_context.state = pbntlmRcvChallenge;
+
+    pbntlm_core_handle(pbp, invalid_b64, sizeof invalid_b64 - 1);
+
+    /* Base64 decode fails (returns NULL), handler deinits the context. */
+    attest(pbp->ntlm_context.state == pbntlmDone);
+
+    AfterEach();
+}
+
+
 /* Test runner */
 int main(int argc, char* argv[])
 {
@@ -1466,4 +1729,9 @@ int main(int argc, char* argv[])
     proxy_establishes_CONNECT_NTLM_connection();
     CONNECT_NTLM_proxy_closes_connection_on_407_dialogue_continues();
     proxy_CONNECT_NTLM_sets_timeout_and_max_operation_count_for_keep_alive();
+    CONNECT_NTLM_407_body_larger_than_http_buf_does_not_assert();
+    NTLM_core_handle_accepts_challenge_larger_than_512_bytes();
+    NTLM_core_handle_accepts_challenge_up_to_max_token_size();
+    NTLM_core_handle_rejects_challenge_exceeding_max_token();
+    NTLM_core_handle_rejects_invalid_base64();
 }

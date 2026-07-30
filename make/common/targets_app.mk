@@ -59,6 +59,20 @@ SYNC_OBJECTS_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_OBJECTS_SOURCES_))
 pubnub_objects_api_sample$(APP_EXT): $(SYNC_OBJECTS_SOURCES) pubnub_sync$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
+SYNC_PROXY_MANUAL_SOURCES_ = ../core/samples/pubnub_sync_proxy_manual_sample.c
+SYNC_PROXY_MANUAL_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_PROXY_MANUAL_SOURCES_))
+pubnub_sync_proxy_manual_sample$(APP_EXT): \
+    $(SYNC_PROXY_MANUAL_SOURCES) \
+    pubnub_sync$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+
+SYNC_PROXY_SYSTEM_SOURCES_ = ../core/samples/pubnub_sync_proxy_from_system_sample.c
+SYNC_PROXY_SYSTEM_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_PROXY_SYSTEM_SOURCES_))
+pubnub_sync_proxy_from_system_sample$(APP_EXT): \
+    $(SYNC_PROXY_SYSTEM_SOURCES) \
+    pubnub_sync$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+
 
 # ----------------- Samples based on callback PubNub library -----------------
 

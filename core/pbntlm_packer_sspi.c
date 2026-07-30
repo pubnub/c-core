@@ -6,6 +6,8 @@
 
 #include "pubnub_assert.h"
 
+#include <string.h>
+
 
 #pragma comment(lib, "secur32")
 
@@ -28,16 +30,36 @@ static void fill_sspi_identity(
     char const*              username,
     char const*              password)
 {
+    char const* sep;
+
     PUBNUB_ASSERT_OPT(NULL != identity);
     PUBNUB_ASSERT_OPT(NULL != username);
     PUBNUB_ASSERT_OPT(NULL != password);
 
-    identity->User       = (unsigned char*)username;
-    identity->UserLength = strlen(username);
-
-    /* For now, don't use the domain */
-    identity->Domain       = (unsigned char*)"";
-    identity->DomainLength = 0;
+    sep = strchr(username, '\\');
+    if (sep != NULL) {
+        /* DOMAIN\user format */
+        identity->Domain       = (unsigned char*)username;
+        identity->DomainLength = (unsigned long)(sep - username);
+        identity->User         = (unsigned char*)(sep + 1);
+        identity->UserLength   = strlen(sep + 1);
+    }
+    else {
+        sep = strchr(username, '@');
+        if (sep != NULL) {
+            /* user@domain (UPN) format */
+            identity->User         = (unsigned char*)username;
+            identity->UserLength   = (unsigned long)(sep - username);
+            identity->Domain       = (unsigned char*)(sep + 1);
+            identity->DomainLength = strlen(sep + 1);
+        }
+        else {
+            identity->User       = (unsigned char*)username;
+            identity->UserLength = strlen(username);
+            identity->Domain       = (unsigned char*)"";
+            identity->DomainLength = 0;
+        }
+    }
 
     identity->Password       = (unsigned char*)password;
     identity->PasswordLength = strlen(password);
@@ -52,11 +74,13 @@ void pbntlm_packer_init(pubnub_t* context, pbntlm_ctx_t* pb)
 
     PUBNUB_ASSERT_OPT(pb != NULL);
 
-    if (sspi_max_token <= PUBNUB_NTLM_MAX_TOKEN) {
+    if (sspi_max_token > PUBNUB_NTLM_MAX_TOKEN) {
         PUBNUB_LOG_WARNING(
             context,
-            "NTLM token for SSPI is smaller (%lu) that maximum allowed (%d).",
+            "SSPI max token (%lu) exceeds PUBNUB_NTLM_MAX_TOKEN (%d). "
+            "Type-2 challenges larger than %d bytes will be rejected.",
             sspi_max_token,
+            PUBNUB_NTLM_MAX_TOKEN,
             PUBNUB_NTLM_MAX_TOKEN);
     }
 

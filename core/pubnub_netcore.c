@@ -723,6 +723,7 @@ static enum pubnub_res finish(struct pubnub_* pb)
     case pbproxyFinRetry:
         PUBNUB_LOG_TRACE(pb, "Proxy: retry in current connection.");
         pb->flags.retry_after_close = true;
+        pb->core.http_buf_len = 0;
         if (pb->flags.should_close) {
             close_connection(pb);
             return PNR_OK;
@@ -1336,7 +1337,7 @@ next_state:
         else if (0 == i) {
 #if PUBNUB_PROXY_API
             if (!pb->proxy_tunnel_established) {
-                char hedr[1024] = "\r\n";
+                char hedr[PUBNUB_PROXY_AUTH_HEADER_MAX_SIZE] = "\r\n";
                 if (0 == pbproxy_http_header_to_send(
                              pb, hedr + 2, sizeof hedr - 2)) {
                     PUBNUB_LOG_TRACE(pb, "Sending HTTP proxy header: %s", hedr);
