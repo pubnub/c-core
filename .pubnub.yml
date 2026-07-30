@@ -7,7 +7,7 @@ changelog:
     version: v7.3.0
     changes:
       - type: feature
-        text: "`fill_sspi_identity` now splits `DOMAIN\user` and `user@domain` formats into separate User and Domain fields so proxies requiring domain-qualified credentials can authenticate."
+        text: "`fill_sspi_identity` now splits `DOMAIN\\user` and `user@domain` formats into separate User and Domain fields so proxies requiring domain-qualified credentials can authenticate."
       - type: bug
         text: "Reset `http_buf_len` to 0 in `pbproxyFinRetry` so the stale 407 body length does not trip the assert guarding `proxy_saved_path` memcpy on the next CONNECT attempt."
       - type: bug
