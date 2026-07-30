@@ -1,3 +1,9 @@
+## v7.2.5
+July 30 2026
+
+#### Fixed
+- Clear the IPv6 address buffer in `get_dns_ip()` when a server is skipped due to prior failure marking, so `user_provided_ipv6_dns` correctly becomes false and the rotation falls through to IPv4 DNS servers.
+
 ## v7.2.4
 June 22 2026
 
