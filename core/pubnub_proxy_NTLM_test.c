@@ -1693,13 +1693,31 @@ static void NTLM_core_handle_rejects_challenge_exceeding_max_token(void)
     pbntlm_core_handle(pbp, challenge, base64_len);
 
     /* Base64 decode succeeds (dynamic alloc handles any size), but
-       unpack_type2 rejects it (> in_token buffer). State still advances
-       since unpack_type2 return is ignored — no crash/abort. */
-    attest(pbp->ntlm_context.state == pbntlmSendAuthenticate);
+       unpack_type2 rejects it (> in_token buffer). Handler detects the
+       failure and deinits the NTLM context. */
+    attest(pbp->ntlm_context.state == pbntlmDone);
     attest(pbp->ntlm_context.in_token_size == 0);
 
-    pbntlm_core_deinit(pbp);
     free(challenge);
+    AfterEach();
+}
+
+
+static void NTLM_core_handle_rejects_invalid_base64(void)
+{
+    char const invalid_b64[] = "!!!not-valid-base64!!!";
+
+    BeforeEach();
+    pubnub_init(pbp, "publ-key", "sub-key");
+
+    pbntlm_core_init(pbp);
+    pbp->ntlm_context.state = pbntlmRcvChallenge;
+
+    pbntlm_core_handle(pbp, invalid_b64, sizeof invalid_b64 - 1);
+
+    /* Base64 decode fails (returns NULL), handler deinits the context. */
+    attest(pbp->ntlm_context.state == pbntlmDone);
+
     AfterEach();
 }
 
@@ -1715,4 +1733,5 @@ int main(int argc, char* argv[])
     NTLM_core_handle_accepts_challenge_larger_than_512_bytes();
     NTLM_core_handle_accepts_challenge_up_to_max_token_size();
     NTLM_core_handle_rejects_challenge_exceeding_max_token();
+    NTLM_core_handle_rejects_invalid_base64();
 }

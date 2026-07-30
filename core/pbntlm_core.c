@@ -48,7 +48,12 @@ void pbntlm_core_handle(pubnub_t* pb, char const* base64_msg, size_t length)
         pbntlm_core_deinit(pb);
         return;
     }
-    (void)pbntlm_unpack_type2(pb, &pb->ntlm_context, data);
+    if (0 != pbntlm_unpack_type2(pb, &pb->ntlm_context, data)) {
+        PUBNUB_LOG_ERROR(pb, "Failed to unpack NTLM Type-2 challenge");
+        free(data.ptr);
+        pbntlm_core_deinit(pb);
+        return;
+    }
     pb->ntlm_context.state = pbntlmSendAuthenticate;
     free(data.ptr);
 }

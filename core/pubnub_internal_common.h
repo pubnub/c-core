@@ -162,6 +162,11 @@ enum NPBNTLM_State {
 /** Maximum supported length of the NTLM token (message) */
 #define PUBNUB_NTLM_MAX_TOKEN 4096
 
+/** Buffer size for the proxy authorization header.
+    Accounts for base64 expansion (4/3) + prefix + padding. */
+#define PUBNUB_PROXY_AUTH_HEADER_MAX_SIZE \
+    ((PUBNUB_NTLM_MAX_TOKEN * 4 / 3 + 4) + 64)
+
 #if PUBNUB_USE_WIN_SSPI
 #define SECURITY_WIN32
 #include <sspi.h>
