@@ -1463,7 +1463,8 @@ Ensure(single_context_pubnub, fetch_history_default_options)
                              "&include_meta=false"
                              "&include_custom_message_type=false"
                              "&include_message_type=false"
-                             "&include_uuid=false");
+                             "&include_uuid=false"
+                             "&reverse=false");
     incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
              "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
              NULL);
@@ -1520,7 +1521,8 @@ Ensure(single_context_pubnub, fetch_history_with_custom_user_id)
                              "&include_meta=false"
                              "&include_custom_message_type=false"
                              "&include_message_type=false"
-                             "&include_uuid=false");
+                             "&include_uuid=false"
+                             "&reverse=false");
     incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
              "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
              NULL);
@@ -1545,7 +1547,8 @@ Ensure(single_context_pubnub, fetch_history_with_auth)
                              "&include_custom_message_type=false"
                              "&include_message_type=false"
                              "&include_uuid=false"
-                             "&auth=my-auth-key");
+                             "&auth=my-auth-key"
+                             "&reverse=false");
     incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
              "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
              NULL);
@@ -1568,7 +1571,8 @@ Ensure(single_context_pubnub, fetch_history_in_progress)
                              "&include_meta=false"
                              "&include_custom_message_type=false"
                              "&include_message_type=false"
-                             "&include_uuid=false");
+                             "&include_uuid=false"
+                             "&reverse=false");
     incoming("HTTP/1.1 200\r\n", NULL);
     incoming("", NULL);
     attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_STARTED));
@@ -1590,8 +1594,9 @@ Ensure(single_context_pubnub, fetch_history_error_forbidden)
                              "&include_meta=false"
                              "&include_custom_message_type=false"
                              "&include_message_type=false"
-                             "&include_uuid=false");
-    incoming("HTTP/1.1 403\r\nContent-Length: 37\r\n\r\n"
+                             "&include_uuid=false"
+                             "&reverse=false");
+    incoming("HTTP/1.1 403\r\nContent-Length: 40\r\n\r\n"
              "{\"status\":403,\"error\":true,\"message\":\"\"}",
              NULL);
     expect(pbntf_lost_socket, when(pb, equals(pbp)));
