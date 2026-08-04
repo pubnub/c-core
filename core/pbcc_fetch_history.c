@@ -35,7 +35,10 @@ enum pubnub_res pbcc_fetch_history_prep(
     char const*          end)
 {
     char const* const uname = pbcc_uname(pb);
+    char const*       user_id = pbcc_user_id_get(pb);
     enum pubnub_res   rslt  = PNR_OK;
+
+    PUBNUB_ASSERT_OPT(user_id != NULL);
 
     pb->http_content_len = 0;
     pb->msg_ofs = pb->msg_end = 0;
@@ -51,6 +54,7 @@ enum pubnub_res pbcc_fetch_history_prep(
 
     URL_PARAMS_INIT(qparam, PUBNUB_MAX_URL_PARAMS);
     if (uname) { ADD_URL_PARAM(qparam, pnsdk, uname); }
+    ADD_URL_PARAM(qparam, uuid, user_id);
 
     int   ch_count = 0;
     char* ch_lst   = (char*)strtok((char*)channel, ",");
