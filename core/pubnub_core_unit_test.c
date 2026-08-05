@@ -14,6 +14,9 @@
 #include "pubnub_memory_block.h"
 #include "pubnub_advanced_history.h"
 #endif
+#if PUBNUB_USE_FETCH_HISTORY
+#include "pubnub_fetch_history.h"
+#endif
 #include "pubnub_assert.h"
 #include "pubnub_alloc.h"
 
@@ -1443,6 +1446,164 @@ Ensure(single_context_pubnub,
 }
 
 #endif /* -- ADVANCED HISTORY message_counts -- */
+
+/* -- FETCH HISTORY operation -- */
+
+#if PUBNUB_USE_FETCH_HISTORY
+Ensure(single_context_pubnub, fetch_history_default_options)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=test_id&max=100"
+                             "&include_meta=false"
+                             "&include_custom_message_type=false"
+                             "&include_message_type=false"
+                             "&include_uuid=false"
+                             "&reverse=false");
+    incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
+             "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, fetch_history_with_all_options)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+    opt.include_meta                = true;
+    opt.include_message_type        = true;
+    opt.include_user_id             = true;
+    opt.include_message_actions     = true;
+    opt.include_custom_message_type = true;
+    opt.reverse                     = true;
+    opt.start                       = "16140000000000000";
+    opt.end                         = "16150000000000000";
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history-with-actions/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=test_id&max=25"
+                             "&include_meta=true"
+                             "&include_custom_message_type=true"
+                             "&include_message_type=true"
+                             "&include_uuid=true"
+                             "&reverse=true"
+                             "&start=16140000000000000"
+                             "&end=16150000000000000");
+    incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
+             "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, fetch_history_with_custom_user_id)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "my-custom-user-123");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=my-custom-user-123&max=100"
+                             "&include_meta=false"
+                             "&include_custom_message_type=false"
+                             "&include_message_type=false"
+                             "&include_uuid=false"
+                             "&reverse=false");
+    incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
+             "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, fetch_history_with_auth)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "test_id");
+    pubnub_set_auth(pbp, "my-auth-key");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=test_id&max=100"
+                             "&include_meta=false"
+                             "&include_custom_message_type=false"
+                             "&include_message_type=false"
+                             "&include_uuid=false"
+                             "&auth=my-auth-key"
+                             "&reverse=false");
+    incoming("HTTP/1.1 200\r\nContent-Length: 51\r\n\r\n"
+             "{\"status\":200,\"channels\":{\"ch\":[{\"message\":\"hi\"}]}}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_OK));
+    attest(pubnub_last_http_code(pbp), equals(200));
+}
+
+Ensure(single_context_pubnub, fetch_history_in_progress)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=test_id&max=100"
+                             "&include_meta=false"
+                             "&include_custom_message_type=false"
+                             "&include_message_type=false"
+                             "&include_uuid=false"
+                             "&reverse=false");
+    incoming("HTTP/1.1 200\r\n", NULL);
+    incoming("", NULL);
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_STARTED));
+    attest(pubnub_fetch_history(pbp, "x", opt), equals(PNR_IN_PROGRESS));
+
+    cancel_and_cleanup(pbp);
+}
+
+Ensure(single_context_pubnub, fetch_history_error_forbidden)
+{
+    pubnub_init(pbp, "pub-fetch", "sub-fetch");
+    pubnub_set_user_id(pbp, "test_id");
+
+    struct pubnub_fetch_history_options opt = pubnub_fetch_history_defopts();
+
+    expect_have_dns_for_pubnub_origin();
+    expect_outgoing_with_url("/v3/history/sub-key/sub-fetch/channel/"
+                             "ch?pnsdk=unit-test-0.1&uuid=test_id&max=100"
+                             "&include_meta=false"
+                             "&include_custom_message_type=false"
+                             "&include_message_type=false"
+                             "&include_uuid=false"
+                             "&reverse=false");
+    incoming("HTTP/1.1 403\r\nContent-Length: 40\r\n\r\n"
+             "{\"status\":403,\"error\":true,\"message\":\"\"}",
+             NULL);
+    expect(pbntf_lost_socket, when(pb, equals(pbp)));
+    expect(pbntf_trans_outcome, when(pb, equals(pbp)));
+    attest(pubnub_fetch_history(pbp, "ch", opt), equals(PNR_ACCESS_DENIED));
+}
+#endif /* -- FETCH HISTORY -- */
 
 /* -- SET_STATE operation -- */
 

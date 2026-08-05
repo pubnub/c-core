@@ -1,3 +1,12 @@
+## v7.3.1
+August 05 2026
+
+#### Fixed
+- `pbcc_fetch_history_prep` was the only prep function not appending the `uuid` query parameter that identifies the client. Retrieve `user_id` from the context and pass it as the `uuid` param so the request matches the contract used by every other API call.
+
+#### Modified
+- Add six tests covering default options, all options enabled, custom user ID, auth key, in-progress guard, and 403 error handling. Each test verifies the full outgoing URL including the `uuid` parameter.
+
 ## v7.3.0
 July 30 2026
 
