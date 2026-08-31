@@ -55,8 +55,8 @@ void pballoc_free_at_last(pubnub_t* pb)
 
     PUBNUB_ASSERT_OPT(pb->state == PBS_NULL);
 
-    pbcc_deinit(&pb->core);
     pbpal_free(pb);
+    pbcc_deinit(&pb->core);
     pubnub_mutex_unlock(pb->monitor);
     pubnub_mutex_destroy(pb->monitor);
 #if !defined(PUBNUB_CALLBACK_API) || defined(PUBNUB_NTF_RUNTIME_SELECTION)
@@ -79,7 +79,6 @@ int pubnub_free(pubnub_t* pb)
     if (pb->state == PBS_NULL) {
         PUBNUB_LOG_TRACE(pb, "PubNub context not initialized. Freeing...");
         pubnub_mutex_unlock(pb->monitor);
-        free(pb);
 
         return 0;
     }

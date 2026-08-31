@@ -19,6 +19,8 @@ int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec)
 
     PUBNUB_ASSERT_OPT(pbp != NULL);
 
+    PUBNUB_LOG_TRACE(pbp, "Freeing context with %u ms timeout", millisec);
+
     while (pubnub_free(pbp) != 0) {
         const pbms_t elapsed = pbms_elapsed(t0);
         if (elapsed > (pbms_t)millisec) {
@@ -28,10 +30,6 @@ int pubnub_free_with_timeout(pubnub_t* pbp, unsigned millisec)
         }
         pb_sleep_ms(PUBNUB_FREE_POLL_INTERVAL_MS);
     }
-    PUBNUB_LOG_TRACE(
-        pbp,
-        "Freed the context in %.3f seconds",
-        (double)pbms_elapsed(t0) / 1000.0);
 
     return 0;
 }
