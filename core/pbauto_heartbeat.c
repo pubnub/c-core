@@ -842,13 +842,13 @@ void pubnub_heartbeat_free_thumpers(void)
         pubnub_mutex_unlock(m_watcher.mutw);
 
         if (heartbeat_pb != NULL) {
+            PUBNUB_LOG_TRACE(
+                heartbeat_pb, "Freeing heartbeat thumper (%u)", i + 1);
             if (pubnub_free_with_timeout(heartbeat_pb, 1000) != 0) {
                 PUBNUB_LOG_ERROR(
                     heartbeat_pb, "Failed to free heartbeat thumper (%u)", i);
             }
             else {
-                PUBNUB_LOG_TRACE(
-                    heartbeat_pb, "Heartbeat thumper (%u) freed", i + 1);
                 pubnub_mutex_lock(m_watcher.mutw);
                 heartbeat_data[i].heartbeat_pb = NULL;
                 pubnub_mutex_unlock(m_watcher.mutw);

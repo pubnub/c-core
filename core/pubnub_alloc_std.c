@@ -124,8 +124,8 @@ void pballoc_free_at_last(pubnub_t* pb)
 
     PUBNUB_ASSERT_OPT(pb->state == PBS_NULL);
 
-    pbcc_deinit(&pb->core);
     pbpal_free(pb);
+    pbcc_deinit(&pb->core);
 
     pubnub_mutex_init_static(m_lock);
     pubnub_mutex_lock(m_lock);
