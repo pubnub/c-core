@@ -1,3 +1,14 @@
+## v7.3.2
+August 31 2026
+
+#### Fixed
+- `PUBNUB_LOG_TRACE` in `pubnub_free_with_timeout` dereferenced `pbp` after `pubnub_free` had already released the context and its logger manager. Replaced with a pre-loop trace that logs while the context is still valid.
+- `PUBNUB_LOG_TRACE` in the success branch of `pubnub_heartbeat_free_thumpers` dereferenced `heartbeat_pb` after `pubnub_free_with_timeout` had released the context. Moved the trace log before the free call.
+- The `PBS_NULL` early-return path in `pubnub_free` called `free(pb)` on a pointer into the static `m_aCtx` array which is undefined behavior. Removed the call since the static context is already reusable in `PBS_NULL` state.
+
+#### Modified
+- `pbcc_deinit` frees the logger manager so platform-specific trace logs in `pbpal_free` (such as the OpenSSL unexpected-socket warnings) were dead code. Swapping the call order lets those diagnostics emit while the logger is still alive.
+
 ## v7.3.1
 August 05 2026
 

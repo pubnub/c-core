@@ -1,8 +1,19 @@
 name: c-core
 schema: 1
-version: "7.3.1"
+version: "7.3.2"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-08-31
+    version: v7.3.2
+    changes:
+      - type: bug
+        text: "`PUBNUB_LOG_TRACE` in `pubnub_free_with_timeout` dereferenced `pbp` after `pubnub_free` had already released the context and its logger manager. Replaced with a pre-loop trace that logs while the context is still valid."
+      - type: bug
+        text: "`PUBNUB_LOG_TRACE` in the success branch of `pubnub_heartbeat_free_thumpers` dereferenced `heartbeat_pb` after `pubnub_free_with_timeout` had released the context. Moved the trace log before the free call."
+      - type: bug
+        text: "The `PBS_NULL` early-return path in `pubnub_free` called `free(pb)` on a pointer into the static `m_aCtx` array which is undefined behavior. Removed the call since the static context is already reusable in `PBS_NULL` state."
+      - type: improvement
+        text: "`pbcc_deinit` frees the logger manager so platform-specific trace logs in `pbpal_free` (such as the OpenSSL unexpected-socket warnings) were dead code. Swapping the call order lets those diagnostics emit while the logger is still alive."
   - date: 2026-08-05
     version: v7.3.1
     changes:
@@ -1234,7 +1245,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1293,7 +1304,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1352,7 +1363,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1407,7 +1418,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1461,7 +1472,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1510,7 +1521,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1556,7 +1567,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.1
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
