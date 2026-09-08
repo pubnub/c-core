@@ -51,7 +51,7 @@ enum pubnub_res pubnub_publish_ex(
 
 #if PUBNUB_LOG_ENABLED(DEBUG)
     if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_DEBUG)) {
-        char* method     = opts.method == pubnubSendViaGET ? "GET" : "POST";
+        const char* method = opts.method == pubnubSendViaGET ? "GET" : "POST";
         bool  compressed = opts.method == pubnubSendViaPOSTwithGZIP;
         pubnub_log_value_t data = pubnub_log_value_map_init();
         PUBNUB_LOG_MAP_SET_STRING(&data, channel)

@@ -1,3 +1,9 @@
+## v7.3.3
+September 08 2026
+
+#### Fixed
+- Qualify `method` in `pubnub_publish_ex()` and `method_verb` in `pn_gen_pam_v3_sign()` as `const char*` so C-core compiles when `.c` files are built as C++.
+
 ## v7.3.2
 August 31 2026
 
