@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "7.3.2"
+version: "7.3.3"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-09-08
+    version: v7.3.3
+    changes:
+      - type: bug
+        text: "Qualify `method` in `pubnub_publish_ex()` and `method_verb` in `pn_gen_pam_v3_sign()` as `const char*` so C-core compiles when `.c` files are built as C++."
   - date: 2026-08-31
     version: v7.3.2
     changes:
@@ -1245,7 +1250,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1304,7 +1309,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1363,7 +1368,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1418,7 +1423,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1472,7 +1477,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1521,7 +1526,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1567,7 +1572,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.2
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
