@@ -717,31 +717,31 @@ enum pubnub_res pn_gen_pam_v3_sign(
 {
     enum pubnub_res sign_status = PNR_OK;
     bool            hasBody     = false;
-    char*           method_verb;
+    const char*     method_verb;
     switch (p->method) {
     case pubnubSendViaGET:
-        method_verb = (char*)"GET";
+        method_verb = "GET";
         break;
     case pubnubSendViaPOST:
 #if PUBNUB_USE_GZIP_COMPRESSION
     case pubnubSendViaPOSTwithGZIP:
 #endif
-        method_verb = (char*)"POST";
+        method_verb = "POST";
         hasBody     = true;
         break;
     case pubnubUsePATCH:
 #if PUBNUB_USE_GZIP_COMPRESSION
     case pubnubUsePATCHwithGZIP:
 #endif
-        method_verb = (char*)"PATCH";
+        method_verb = "PATCH";
         hasBody     = true;
         break;
     case pubnubUseDELETE:
-        method_verb = (char*)"DELETE";
+        method_verb = "DELETE";
         break;
     default:
         PUBNUB_LOG_ERROR(p, "Unhandled  HTTP method: %u", p->method);
-        method_verb = (char*)"UNKOWN";
+        method_verb = "UNKOWN";
         return PNR_CRYPTO_NOT_SUPPORTED;
     }
     int str_to_sign_len = strlen(method_verb) + strlen(p->core.publish_key) +
