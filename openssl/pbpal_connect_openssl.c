@@ -343,9 +343,9 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 */
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 {
-    SSL*  ssl;
-    int   rslt;
-    X509* cert;
+    SSL*            ssl;
+    enum pubnub_res rslt;
+    X509*           cert;
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(
@@ -361,6 +361,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
        when the FSM fires, so select() returns immediately. */
     if (PBS_WAIT_TLS_CONNECT == pb->state
         && 0 != pb->pal.tls_connect_last_error) {
+        int        poll_rslt;
         const bool want_read =
             (SSL_ERROR_WANT_READ == pb->pal.tls_connect_last_error);
 
@@ -371,7 +372,7 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
             FD_ZERO(&read_set);
             FD_ZERO(&write_set);
             FD_SET(pb->pal.socket, want_read ? &read_set : &write_set);
-            rslt = select(
+            poll_rslt = select(
                 pb->pal.socket + 1,
                 want_read ? &read_set : NULL,
                 want_read ? NULL : &write_set,
@@ -384,24 +385,23 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
             pfd.fd      = pb->pal.socket;
             pfd.events  = want_read ? POLLIN : POLLOUT;
             pfd.revents = 0;
-            rslt = poll(&pfd, 1, 300);
+            poll_rslt = poll(&pfd, 1, 300);
         }
 #endif
-        if (SOCKET_ERROR == rslt) {
+        if (SOCKET_ERROR == poll_rslt) {
             PUBNUB_LOG_ERROR(pb, "TLS poll/select error during handshake.");
             pb->pal.tls_connect_last_error = 0;
             return pbtlsFailed;
         }
-        if (0 == rslt) {
+        if (0 == poll_rslt) {
             return want_read ? pbtlsStartedWaitRead : pbtlsStartedWaitWrite;
         }
         PUBNUB_LOG_TRACE(pb, "TLS socket ready, resuming handshake.");
     }
 
     bool needRead = false, needWrite = false;
-    rslt = SSL_connect(ssl);
     rslt = pbpal_handle_socket_condition(
-        rslt, pb, __FILE__, __LINE__, &needRead, &needWrite);
+        SSL_connect(ssl), pb, __FILE__, __LINE__, &needRead, &needWrite);
     if (PNR_OK != rslt) {
         /* Log socket condition only on first entry (from PBS_CONNECTED).
            On repeat polls the traces inside pbpal_handle_socket_condition
@@ -432,16 +432,16 @@ enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
     cert = SSL_get1_peer_certificate(ssl);
 #endif
     if (cert != NULL) {
-        rslt = SSL_get_verify_result(ssl);
+        long verify_rslt = SSL_get_verify_result(ssl);
         X509_free(cert);
-        if (rslt != X509_V_OK) {
+        if (verify_rslt != X509_V_OK) {
 #if PUBNUB_LOG_ENABLED(ERROR)
             pubnub_log_error(
                 pb,
                 PUBNUB_LOG_LOCATION,
-                rslt,
+                verify_rslt,
                 "SSL verification failed",
-                X509_verify_cert_error_string(rslt));
+                X509_verify_cert_error_string(verify_rslt));
 #endif // PUBNUB_LOG_ENABLED(ERROR)
             ERR_print_errors_cb(print_to_pubnub_log, pb);
 
