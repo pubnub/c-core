@@ -267,19 +267,19 @@ enum pbpal_tls_result pbpal_start_tls(pubnub_t* pb)
 
 enum pbpal_tls_result pbpal_check_tls(pubnub_t* pb)
 {
-    int  result;
-    int  tls_flags;
-    char error_buf[512]; // 512 bytes according to mbedtls example
+    enum pubnub_res result;
+    int             tls_flags;
+    char            error_buf[512];
 
     PUBNUB_ASSERT(pb_valid_ctx_ptr(pb));
     PUBNUB_ASSERT_OPT(PBS_CONNECTED == pb->state);
 
     bool needRead = false, needWrite = false;
-    result = mbedtls_ssl_handshake(pb->pal.ssl);
 
     if (PNR_OK !=
         (result = pbpal_handle_socket_condition(
-             result, pb, __FILE__, __LINE__, &needRead, &needWrite))) {
+             mbedtls_ssl_handshake(pb->pal.ssl),
+             pb, __FILE__, __LINE__, &needRead, &needWrite))) {
         PUBNUB_LOG_TRACE(
             pb,
             "Socket condition: %d (%s)",
