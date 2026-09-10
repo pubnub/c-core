@@ -1,3 +1,9 @@
+## v7.3.4
+September 10 2026
+
+#### Fixed
+- `pbpal_check_tls` in OpenSSL and mbedTLS backends stored `pbpal_handle_socket_condition` result in `int` and passed it to `pubnub_res_2_string(enum pubnub_res)` which is a hard error in C++.
+
 ## v7.3.3
 September 08 2026
 

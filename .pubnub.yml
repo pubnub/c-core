@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "7.3.3"
+version: "7.3.4"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-09-10
+    version: v7.3.4
+    changes:
+      - type: bug
+        text: "`pbpal_check_tls` in OpenSSL and mbedTLS backends stored `pbpal_handle_socket_condition` result in `int` and passed it to `pubnub_res_2_string(enum pubnub_res)` which is a hard error in C++."
   - date: 2026-09-08
     version: v7.3.3
     changes:
@@ -1250,7 +1255,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1309,7 +1314,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1368,7 +1373,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1423,7 +1428,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1477,7 +1482,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1526,7 +1531,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1572,7 +1577,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.3
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
