@@ -254,7 +254,8 @@ static void get_dns_ip(
     struct pbdns_servers_check* dns_check,
     struct sockaddr*            addr)
 {
-    dns_check->dns_mask = 1;
+    dns_check->dns_mask            = 1;
+    dns_check->last_server_reached = 0;
 #if PUBNUB_USE_IPV6
     bool user_provided_ipv6_dns = false;
     if (AF_INET6 == family) {
@@ -292,6 +293,10 @@ static void get_dns_ip(
                      pb, (struct pubnub_ipv4_address*)p) == -1) ||
                 (dns_check->dns_server_check & dns_check->dns_mask)) {
                 dns_check->dns_mask <<= 1;
+                /* Both user-provided IPv4 servers are exhausted; whatever is
+                   selected below (default, system, or the IPv6 fallback) is
+                   the last resort, with nothing left to rotate to. */
+                dns_check->last_server_reached = 1;
                 if (AF_INET == family) {
                     get_default_ipv4_dns_ip(pb, (struct pubnub_ipv4_address*)p);
                     addr->sa_family = AF_INET;
@@ -510,7 +515,7 @@ int pbpal_dns_rotate_server(pubnub_t* pb)
     struct pubnub_flags*        flags     = &pb->flags;
     dns_check->dns_server_check |= dns_check->dns_mask;
 
-    if ((dns_check->dns_mask >= PUBNUB_MAX_DNS_SERVERS_MASK) &&
+    if (dns_check->last_server_reached &&
         (flags->rotations_count < PUBNUB_MAX_DNS_ROTATION)) {
         dns_check->dns_server_check = 0;
         /** Update how many times all DNS servers has been tried to process
@@ -520,7 +525,7 @@ int pbpal_dns_rotate_server(pubnub_t* pb)
 
     if (flags->rotations_count >= PUBNUB_MAX_DNS_ROTATION) {
         flags->retry_after_close = false;
-        flags->rotations_count   = 1;
+        flags->rotations_count   = 0;
         return 1;
     }
 
@@ -536,7 +541,7 @@ static void check_dns_server_error(
 {
     /** We just checked(notified) error with current DNS server */
     dns_check->dns_server_check |= dns_check->dns_mask;
-    if (dns_check->dns_mask < PUBNUB_MAX_DNS_SERVERS_MASK) {
+    if (!dns_check->last_server_reached) {
         /** Going with new DNS server, after retry, brings new set of queries */
         flags->sent_queries      = 0;
         flags->retry_after_close = true;
@@ -654,9 +659,12 @@ static enum pbpal_resolv_n_connect_result try_TCP_connect_spare_address(
 
     if ((AF_INET == family
          || pbpal_connect_failed == rslt
+#if PUBNUB_USE_IPV6
          || (AF_INET6 == family
-             && spare_addresses->ipv6_index >= spare_addresses->n_ipv6)) &&
-        spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
+             && spare_addresses->ipv6_index >= spare_addresses->n_ipv6)
+#endif
+             )
+        && spare_addresses->ipv4_index < spare_addresses->n_ipv4) {
 #if PUBNUB_LOG_ENABLED(TRACE)
         if (pubnub_logger_should_log(pb, PUBNUB_LOG_LEVEL_TRACE)) {
             pubnub_log_value_t data = pubnub_log_value_map_init();

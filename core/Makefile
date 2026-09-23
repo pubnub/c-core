@@ -1,7 +1,7 @@
 PROJECT_SOURCEFILES = pbcc_set_state.c pubnub_pubsubapi.c pubnub_coreapi.c pubnub_ccore_pubsub.c pubnub_ccore.c pubnub_netcore.c pubnub_alloc_static.c pubnub_assert_std.c pubnub_json_parse.c pubnub_keep_alive.c pubnub_helper.c pubnub_url_encode.c ../lib/pb_strnlen_s.c ../lib/pb_strncasecmp.c ../lib/base64/pbbase64.c pubnub_coreapi_ex.c pubnub_generate_uuid.c pubnub_generate_uuid_v4_random_std.c pubnub_logger.c pbcc_logger_manager.c pubnub_log_value.c pubnub_stdio_logger.c
 # TODO: move coreapi_ex to new module
 
-all: pubnub_crypto_unittest pubnub_subscribe_v2_unittest pbcc_crypto_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest unittest
+all: pubnub_crypto_unittest pubnub_subscribe_v2_unittest pbcc_crypto_unittest pubnub_grant_token_api_unittest pubnub_proxy_unittest pubnub_timer_list_unittest pubnub_dns_rotation_unittest unittest
 
 OS := $(shell uname)
 # Coverage doesn't seem to work on MacOS for some reason, but, since
@@ -55,6 +55,15 @@ unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 #	gcc -o pubnub_core_unit_testo  $(CFLAGS) -Wall $(COVERAGE_FLAGS) $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_core_unit_test.so
 	#$(GCOVR) -r . --html --html-details -o coverage.html
+
+# Exercises the REAL get_dns_ip()/pbpal_dns_rotate_server() logic (the test
+# #includes the socket transport TU directly), so it must NOT link the PAL
+# mocks. The callback API + user DNS servers config comes from posix headers.
+DNS_ROTATION_SOURCEFILES = pubnub_dns_servers.c ../lib/pubnub_parse_ipv4_addr.c ../lib/pubnub_parse_ipv6_addr.c
+
+pubnub_dns_rotation_unittest: $(DNS_ROTATION_SOURCEFILES) test/pubnub_dns_rotation_unit_test.c
+	gcc -o pubnub_dns_rotation_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../posix -D PUBNUB_CALLBACK_API -Wall $(COVERAGE_FLAGS) -fPIC $(DNS_ROTATION_SOURCEFILES) test/pubnub_dns_rotation_unit_test.c -lcgreen -lm
+	$(CGREEN_RUNNER) ./pubnub_dns_rotation_unit_test.so
 
 
 TIMER_LIST_SOURCEFILES = pubnub_alloc_static.c pubnub_assert_std.c pubnub_timers.c pubnub_logger.c pbcc_logger_manager.c pubnub_log_value.c pubnub_stdio_logger.c
