@@ -236,7 +236,13 @@ jobs:
         run: |
           gcc -fsyntax-only -std=c11 -Wall \
             -I. -Iposix -Icore \
-            -D PUBNUB_CALLBACK_API -D PUBNUB_USE_IPV6=0 \
+            -D PUBNUB_CALLBACK_API -D PUBNUB_USE_IPV6=0 -D PUBNUB_USE_SSL=0 \
+            -D PUBNUB_USE_LOGGER=0 -D PUBNUB_ADVANCED_KEEP_ALIVE=0 \
+            -D PUBNUB_USE_SUBSCRIBE_EVENT_ENGINE=0 -D PUBNUB_USE_SUBSCRIBE_V2=0 \
+            -D PUBNUB_CRYPTO_API=0 -D PUBNUB_RECEIVE_GZIP_RESPONSE=0 \
+            -D PUBNUB_USE_GRANT_TOKEN_API=0 -D PUBNUB_USE_REVOKE_TOKEN_API=0 \
+            -D PUBNUB_USE_ACTIONS_API=0 -D PUBNUB_USE_OBJECTS_API=0 \
+            -D PUBNUB_USE_AUTO_HEARTBEAT=0 -D PUBNUB_USE_RETRY_CONFIGURATION=0 \
             lib/sockets/pbpal_resolv_and_connect_sockets.c
   all-tests:
     name: Tests
