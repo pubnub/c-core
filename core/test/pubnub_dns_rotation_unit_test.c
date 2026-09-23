@@ -46,6 +46,56 @@ int pubnub_dns_read_system_servers_ipv6(pubnub_t*                   pb,
 /* Pull in the real selection + rotation logic under test. */
 #include "lib/sockets/pbpal_resolv_and_connect_sockets.c"
 
+/* Stubs for the transport/connect helpers that the compiled-in translation
+   unit references but these tests never exercise (no real socket I/O). */
+int send_dns_query(pubnub_t*                    pb,
+                   pb_socket_t                  skt,
+                   struct sockaddr const*       dest,
+                   char const*                  host,
+                   struct dns_queries_tracking* tracking)
+{
+    (void)pb;
+    (void)skt;
+    (void)dest;
+    (void)host;
+    (void)tracking;
+    return -1;
+}
+int read_dns_response(pubnub_t*        pb,
+                      pb_socket_t      skt,
+                      struct sockaddr* dest,
+                      struct dns_queries_tracking* tracking
+                          PBDNS_OPTIONAL_PARAMS_DECLARATIONS)
+{
+    (void)pb;
+    (void)skt;
+    (void)dest;
+    (void)tracking;
+    return -1;
+}
+int pbpal_set_blocking_io(pubnub_t* pb)
+{
+    (void)pb;
+    return 0;
+}
+int pbpal_set_socket_blocking_io(pubnub_t*             pb,
+                                 pbpal_native_socket_t socket,
+                                 int                   use_blocking_io)
+{
+    (void)pb;
+    (void)socket;
+    (void)use_blocking_io;
+    return 0;
+}
+void pbpal_report_error_from_environment(pubnub_t*   pb,
+                                         char const* file,
+                                         int         line)
+{
+    (void)pb;
+    (void)file;
+    (void)line;
+}
+
 /* Absolute safety net for the "never terminates" case: if rotation does not
    converge within this many iterations the test FAILS (rather than hanging). */
 #define ITER_CAP 1000

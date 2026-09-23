@@ -58,11 +58,13 @@ unittest: $(PROJECT_SOURCEFILES) pubnub_core_unit_test.c
 
 # Exercises the REAL get_dns_ip()/pbpal_dns_rotate_server() logic (the test
 # #includes the socket transport TU directly), so it must NOT link the PAL
-# mocks. The callback API + user DNS servers config comes from posix headers.
+# mocks. Logger and asserts are disabled and the unused transport helpers are
+# stubbed in the test, so the shared object loads with no unresolved symbols.
 DNS_ROTATION_SOURCEFILES = pubnub_dns_servers.c ../lib/pubnub_parse_ipv4_addr.c ../lib/pubnub_parse_ipv6_addr.c
+DNS_ROTATION_CFLAGS = -g -I. -I../ -I../posix -I../cgreen/include -D PUBNUB_CALLBACK_API -D PUBNUB_USE_LOGGER=0 -D PUBNUB_ASSERT_LEVEL_NONE -Wall
 
 pubnub_dns_rotation_unittest: $(DNS_ROTATION_SOURCEFILES) test/pubnub_dns_rotation_unit_test.c
-	gcc -o pubnub_dns_rotation_unit_test.so -shared $(CFLAGS) $(LDFLAGS) -I../posix -D PUBNUB_CALLBACK_API -Wall $(COVERAGE_FLAGS) -fPIC $(DNS_ROTATION_SOURCEFILES) test/pubnub_dns_rotation_unit_test.c -lcgreen -lm
+	gcc -o pubnub_dns_rotation_unit_test.so -shared $(DNS_ROTATION_CFLAGS) $(LDFLAGS) $(COVERAGE_FLAGS) -fPIC $(DNS_ROTATION_SOURCEFILES) test/pubnub_dns_rotation_unit_test.c -lcgreen -lm
 	$(CGREEN_RUNNER) ./pubnub_dns_rotation_unit_test.so
 
 
