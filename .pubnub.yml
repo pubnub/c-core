@@ -1,8 +1,19 @@
 name: c-core
 schema: 1
-version: "7.3.4"
+version: "7.3.5"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-09-24
+    version: v7.3.5
+    changes:
+      - type: bug
+        text: "Replace the compile-time `PUBNUB_MAX_DNS_SERVERS_MASK` exhaustion check with a `last_server_reached` flag set by `get_dns_ip`, and make `rotations_count` an unsigned field reset per transaction, so IPv4 resolution gives up instead of looping forever."
+      - type: bug
+        text: "Guard the `AF_INET6` spare-address branch in `try_TCP_connect_spare_address` with `#if PUBNUB_USE_IPV6` so `PUBNUB_USE_IPV6=0` builds compile."
+      - type: improvement
+        text: "Add a `run-tests.yml` job that compiles the socket transport with `PUBNUB_USE_IPV6=0` to keep the IPv4-only build from breaking again."
+      - type: improvement
+        text: "Add `pubnub_dns_rotation_unit_test` over the real `get_dns_ip` and `pbpal_dns_rotate_server` to assert bounded termination and primary re-selection after a rotation."
   - date: 2026-09-10
     version: v7.3.4
     changes:
@@ -1255,7 +1266,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1314,7 +1325,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1373,7 +1384,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1428,7 +1439,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1482,7 +1493,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1531,7 +1542,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1577,7 +1588,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.4
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
