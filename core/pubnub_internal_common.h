@@ -319,16 +319,18 @@ struct pubnub_flags {
         but, sometimes, there could be more.
         Macro constant limiting number of retries is defined in 'pubnub_config.h'
       */
-    int sent_queries : SENT_QUERIES_SIZE_IN_BITS;
+    unsigned int sent_queries : SENT_QUERIES_SIZE_IN_BITS;
 #if PUBNUB_CHANGE_DNS_SERVERS
-#define ROTATIONS_COUNT_SIZE_IN_BITS 3
+#define ROTATIONS_COUNT_SIZE_IN_BITS 4
     /** Number of full DNS servers list rotations in single transaction to a single DNS
         server.
         Important when DNS server doesn't answer and transaction timeout. List of DNS
         servers should rotate to find the one which is able to respond on DNS query.
         Macro constant limiting number of full DNS servers list rotations.
+        Unsigned so the configured maximum is always representable (a signed
+        field silently could not hold values above its positive range).
      */
-    int rotations_count : ROTATIONS_COUNT_SIZE_IN_BITS;
+    unsigned int rotations_count : ROTATIONS_COUNT_SIZE_IN_BITS;
 #endif /* PUBNUB_CHANGE_DNS_SERVERS */
 #endif
 };
@@ -343,6 +345,11 @@ struct pbdns_servers_check {
        'uint8_t' conains 8 bits. In practise there is up to 5 dns servers).
      */
     uint8_t dns_server_check;
+    /* Set by get_dns_ip() when it hands back the last-resort DNS server for
+       the current query, i.e. the server list is exhausted and there is no
+       further server to rotate to. Decouples exhaustion detection from the
+       runtime address family / compile-time mask width. */
+    uint8_t last_server_reached;
 };
 #endif
 

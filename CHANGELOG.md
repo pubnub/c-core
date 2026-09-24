@@ -1,3 +1,14 @@
+## v7.3.5
+September 24 2026
+
+#### Fixed
+- Replace the compile-time `PUBNUB_MAX_DNS_SERVERS_MASK` exhaustion check with a `last_server_reached` flag set by `get_dns_ip`, and make `rotations_count` an unsigned field reset per transaction, so IPv4 resolution gives up instead of looping forever.
+- Guard the `AF_INET6` spare-address branch in `try_TCP_connect_spare_address` with `#if PUBNUB_USE_IPV6` so `PUBNUB_USE_IPV6=0` builds compile.
+
+#### Modified
+- Add a `run-tests.yml` job that compiles the socket transport with `PUBNUB_USE_IPV6=0` to keep the IPv4-only build from breaking again.
+- Add `pubnub_dns_rotation_unit_test` over the real `get_dns_ip` and `pbpal_dns_rotate_server` to assert bounded termination and primary re-selection after a rotation.
+
 ## v7.3.4
 September 10 2026
 

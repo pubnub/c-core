@@ -849,7 +849,16 @@ char const* pbcc_state_2_string(enum pubnub_state e)
 static void initialize_fields_in_state_IDLE(struct pubnub_* pb)
 {
 #if PUBNUB_CHANGE_DNS_SERVERS
-    pb->dns_check.dns_server_check = 0;
+    pb->dns_check.dns_server_check    = 0;
+    pb->dns_check.last_server_reached = 0;
+#endif
+#if defined(PUBNUB_CALLBACK_API)
+    pb->flags.sent_queries = 0;
+#if PUBNUB_CHANGE_DNS_SERVERS
+    /* Reset the DNS rotation budget so it does not depend on how the previous
+       transaction ended (a give-up must not shrink the next transaction). */
+    pb->flags.rotations_count = 0;
+#endif
 #endif
 #if PUBNUB_NEED_RETRY_AFTER_CLOSE
     pb->flags.retry_after_close = false;
