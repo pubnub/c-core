@@ -54,7 +54,6 @@ PUBNUB_EXTERN int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
     `categories` grants App Context enumeration for the whole keyset.
     Only the GET bit (32) is valid, and only on `channels` and `uuids`.
     A body that has `categories` and no resources or patterns is valid.
-    The string is sent as the POST body without filtering.
 
     @param pb The pubnub context. Can't be NULL
     @param perm_obj The JSON string with resource, pattern, and category permissions.
