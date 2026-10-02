@@ -7,12 +7,14 @@
 
 #include "pubnub_alloc.h"
 #include "pubnub_grant_token_api.h"
+#include "pbcc_grant_token_api.h"
 #include "pubnub_pubsubapi.h"
 #include "pubnub_internal.h"
 #include "pubnub_internal_common.h"
 #include "pubnub_assert.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static pubnub_t* pbp;
 
@@ -67,6 +69,31 @@ static TestCase parsing_test_cases[] = {
         .test_name = "JavaScript token 2",
         .raw_token = "qEF2AkF0GmOYAqZDdHRsD0NyZXOlRGNoYW6kZ3NwYWNlLWEBZ3NwYWNlLWMDZ3NwYWNlLWIDZ3NwYWNlLWQDQ2dycKBDc3BjoEN1c3KgRHV1aWSiaHVzZXJJZC1kGGBodXNlcklkLWMYIENwYXSlRGNoYW6hc15zcGFjZS1bQS1aYS16MC05XSQBQ2dycKBDc3BjoEN1c3KgRHV1aWSgRG1ldGGgRHV1aWR0bXktYXV0aG9yaXplZC11c2VySWRDc2lnWCDoFsHC17ekjsajmZXR6dpFHi1G_7Q7gxlw2YDgWKu0Mg==",
         .expected_parsed_token = "{\"v\":2, \"t\":1670906534, \"ttl\":15, \"res\":{\"chan\":{\"space-a\":1, \"space-c\":3, \"space-b\":3, \"space-d\":3}, \"grp\":{}, \"spc\":{}, \"usr\":{}, \"uuid\":{\"userId-d\":96, \"userId-c\":32}}, \"pat\":{\"chan\":{\"^space-[A-Za-z0-9]$\":1}, \"grp\":{}, \"spc\":{}, \"usr\":{}, \"uuid\":{}}, \"meta\":{}, \"uuid\":\"my-authorized-userId\",\"sig\":\"6BbBwte3pI7Go5mV0enaRR4tRv+0O4MZcNmA4FirtDI=\"}" 
+    },
+    {
+        .test_name = "category channels and uuids",
+        .raw_token = "pEF2AkN0dGwYPENjYXSiRGNoYW4YIER1dWlkGCBEbWV0YaA=",
+        .expected_parsed_token = "{\"v\":2, \"ttl\":60, \"cat\":{\"chan\":32, \"uuid\":32}, \"meta\":{}}"
+    },
+    {
+        .test_name = "category channels only",
+        .raw_token = "pEF2AkN0dGwYPENjYXShRGNoYW4YIERtZXRhoA==",
+        .expected_parsed_token = "{\"v\":2, \"ttl\":60, \"cat\":{\"chan\":32}, \"meta\":{}}"
+    },
+    {
+        .test_name = "category uuids only",
+        .raw_token = "pEF2AkN0dGwYPENjYXShRHV1aWQYIERtZXRhoA==",
+        .expected_parsed_token = "{\"v\":2, \"ttl\":60, \"cat\":{\"uuid\":32}, \"meta\":{}}"
+    },
+    {
+        .test_name = "category with named channel resource",
+        .raw_token = "pUF2AkN0dGwYPENyZXOhRGNoYW6hRG15Y2gYH0NjYXSiRGNoYW4YIER1dWlkGCBEbWV0YaA=",
+        .expected_parsed_token = "{\"v\":2, \"ttl\":60, \"res\":{\"chan\":{\"mych\":31}}, \"cat\":{\"chan\":32, \"uuid\":32}, \"meta\":{}}"
+    },
+    {
+        .test_name = "category with authorized uuid",
+        .raw_token = "pkF2AkN0dGwYPENjYXSiRGNoYW4YIER1dWlkGCBEbWV0YaBEdXVpZGZ1c2VyLTFDc2lnQQA=",
+        .expected_parsed_token = "{\"v\":2, \"ttl\":60, \"cat\":{\"chan\":32, \"uuid\":32}, \"meta\":{}, \"uuid\":\"user-1\",\"sig\":\"AA==\"}"
     }
 };
 
@@ -91,6 +118,28 @@ static char* crashing_test_cases[] = {
     "",
     "1234567890"
 };
+
+Ensure(token_parsing, passes_category_permissions_through_unchanged) {
+    static const char* bodies[] = {
+        "{\"ttl\":60,\"permissions\":{\"categories\":{\"channels\":32,\"uuids\":32}}}",
+        "{\"ttl\":60,\"permissions\":{\"categories\":{\"channels\":32}}}",
+        "{\"ttl\":60,\"permissions\":{\"categories\":{\"uuids\":32}}}",
+        "{\"ttl\":60,\"permissions\":{\"resources\":{\"channels\":{\"mych\":31}},\"patterns\":{},\"categories\":{\"channels\":32,\"uuids\":32}}}"
+    };
+    size_t body_count = sizeof(bodies) / sizeof(bodies[0]);
+    size_t i;
+
+    for (i = 0; i < body_count; i++) {
+        enum pubnub_res res = pbcc_grant_token_prep(&pbp->core, bodies[i], PBTT_GRANT_TOKEN);
+
+        assert_that(res, is_equal_to(PNR_STARTED));
+        assert_that(strncmp(pbp->core.http_buf,
+                            "/v3/pam/sub_key/grant",
+                            sizeof "/v3/pam/sub_key/grant" - 1),
+                    is_equal_to(0));
+        assert_that(pbp->core.message_to_send, is_equal_to_string(bodies[i]));
+    }
+}
 
 Ensure(token_parsing, should_not_crashing_for_not_valid_values) {
     size_t test_cases_count = sizeof(crashing_test_cases)/sizeof(crashing_test_cases[0]);

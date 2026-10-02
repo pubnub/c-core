@@ -1,3 +1,5 @@
+![PubNub C-Core SDK](images/c-core-header.png)
+
 ## Pubnub C/C++ client libraries
 
 [![Build Status](https://travis-ci.com/pubnub/c-core.svg?branch=master)](https://travis-ci.com/pubnub/c-core)

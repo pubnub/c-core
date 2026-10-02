@@ -43,12 +43,20 @@ PUBNUB_EXTERN int pubnub_get_grant_bit_mask_value(struct pam_permission pam);
             "users":{ "^$":1 },
             "spaces":{ "^$":1 }
           },
+          "categories":{
+            "channels":32,
+            "uuids":32
+          },
           "meta":{ }
       }
     }
 
+    `categories` grants App Context enumeration for the whole keyset.
+    Only the GET bit (32) is valid, and only on `channels` and `uuids`.
+    A body that has `categories` and no resources or patterns is valid.
+
     @param pb The pubnub context. Can't be NULL
-    @param perm_obj The JSON string with the permissions for resources and patterns.
+    @param perm_obj The JSON string with resource, pattern, and category permissions.
     @return #PNR_STARTED on success, an error otherwise
   */
 PUBNUB_EXTERN enum pubnub_res pubnub_grant_token(pubnub_t* pb, char const* perm_obj);
