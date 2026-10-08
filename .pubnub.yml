@@ -1,8 +1,13 @@
 name: c-core
 schema: 1
-version: "7.3.5"
+version: "7.3.6"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-10-08
+    version: v7.3.6
+    changes:
+      - type: improvement
+        text: "Document category permissions usage in `pubnub_grant_token` function."
   - date: 2026-09-24
     version: v7.3.5
     changes:
@@ -1266,7 +1271,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1325,7 +1330,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1384,7 +1389,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1439,7 +1444,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1493,7 +1498,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1542,7 +1547,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1588,7 +1593,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.5
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
