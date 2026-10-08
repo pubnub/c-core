@@ -1,3 +1,9 @@
+## v7.3.6
+October 08 2026
+
+#### Modified
+- Document category permissions usage in `pubnub_grant_token` function.
+
 ## v7.3.5
 September 24 2026
 
