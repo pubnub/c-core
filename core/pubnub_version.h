@@ -10,6 +10,11 @@
     platforms and have the same interface in all of them.
 */
 
+/* Match cpp/pubnub_version_*.cpp: when PUBNUB_USE_EXTERN_C is set, C++
+   callers (including core .c files built with -x c++ /TP) use C linkage. */
+#if defined(__cplusplus) && PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 
 /** Returns a string with the name of the Pubnub SDK client you
     are using.
@@ -31,6 +36,8 @@ PUBNUB_EXTERN char const *pubnub_uname(void);
  */
 PUBNUB_EXTERN char const *pubnub_uagent(void);
 
-
+#if defined(__cplusplus) && PUBNUB_USE_EXTERN_C
+}
+#endif
 
 #endif /* !defined INC_PUBNUB_VERSION */
