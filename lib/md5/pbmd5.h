@@ -61,7 +61,7 @@
 #define pbmd5_digest(m, l, d) do { MD5_CTX M_ctx_;      \
         MD5_Init(&M_ctx_);                              \
         MD5_Update(&M_ctx_, (m), (l));                  \
-        MD5_Final((d), &M_ctx);                         \
+        MD5_Final((d), &M_ctx_);                        \
     } while (0)
 
 /** This helper macro will calculate the MD5 on the message in @p str,
@@ -71,7 +71,7 @@
 #define pbmd5_digest_str(str, d) do { MD5_CTX M_ctx_;   \
         MD5_Init(&M_ctx_);                              \
         MD5_Update(&M_ctx_, (str), strlen(str));        \
-        MD5_Final((d), &M_ctx);                         \
+        MD5_Final((d), &M_ctx_);                        \
     } while (0)
 
 #endif /* !defined INC_PBMD5 */
