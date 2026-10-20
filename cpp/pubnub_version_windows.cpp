@@ -1,4 +1,7 @@
 /* -*- c-file-style:"stroustrup"; indent-tabs-mode: nil -*- */
+#if PUBNUB_USE_EXTERN_C
+extern "C" {
+#endif
 #include "core/pubnub_version.h"
 
 #include "core/pubnub_version_internal.h"
@@ -29,3 +32,6 @@ char const *pubnub_uagent(void)
 {
     return PUBNUB_SDK_NAME "-PubNub-C++-core/" PUBNUB_SDK_VERSION;
 }
+#if PUBNUB_USE_EXTERN_C
+}
+#endif
