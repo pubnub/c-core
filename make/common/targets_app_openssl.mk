@@ -47,6 +47,13 @@ pubnub_sync_grant_token_sample$(APP_EXT): \
     pubnub_sync_dynamiciv$(LIB_EXT)
 	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
 
+SYNC_GRANT_TOKEN_CATEGORIES_SOURCES_ = ../core/samples/pubnub_sync_grant_token_categories_sample.c
+SYNC_GRANT_TOKEN_CATEGORIES_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_GRANT_TOKEN_CATEGORIES_SOURCES_))
+pubnub_sync_grant_token_categories_sample$(APP_EXT): \
+    $(SYNC_GRANT_TOKEN_CATEGORIES_SOURCES) \
+    pubnub_sync_dynamiciv$(LIB_EXT)
+	$(COMPILER) $(OUT_FLAG)$@ $(COMPILER_FLAGS) $(CPPFLAGS) $(PREREQUISITES) $(LDLIBS)
+
 SYNC_REVOKE_TOKEN_SOURCES_ = ../core/samples/pubnub_sync_revoke_token_sample.c
 SYNC_REVOKE_TOKEN_SOURCES = $(subst /,$(PATH_SEP),$(SYNC_REVOKE_TOKEN_SOURCES_))
 pubnub_sync_revoke_token_sample$(APP_EXT): \
