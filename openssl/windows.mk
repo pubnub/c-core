@@ -43,6 +43,7 @@ all: \
 	pubnub_publish_via_post_sample$(APP_EXT)              \
 	pubnub_publish_via_post_secretkey_sample$(APP_EXT)    \
 	pubnub_sync_grant_token_sample$(APP_EXT)              \
+	pubnub_sync_grant_token_categories_sample$(APP_EXT)    \
 	pubnub_sync_publish_retry$(APP_EXT)                   \
 	pubnub_sync_revoke_token_sample$(APP_EXT)             \
 	pubnub_sync_sample$(APP_EXT)                          \

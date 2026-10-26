@@ -885,6 +885,7 @@ if (${EXAMPLES})
                 if (${USE_GRANT_TOKEN_API})
                     set(EXAMPLE_LIST
                             pubnub_sync_grant_token_sample
+                            pubnub_sync_grant_token_categories_sample
                             ${EXAMPLE_LIST})
                 endif ()
             endif ()
