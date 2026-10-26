@@ -1,105 +1,192 @@
-![PubNub C-Core SDK](images/c-core-header.png)
+> **Legacy SDK:** C-Core remains supported for existing applications. If you are starting a new C project, use the [new PubNub C SDK](https://www.pubnub.com/docs/sdks/c).
 
-## Pubnub C/C++ client libraries
+# PubNub C-Core (legacy) SDK
 
-[![Build Status](https://travis-ci.com/pubnub/c-core.svg?branch=master)](https://travis-ci.com/pubnub/c-core)
+[![GitHub release](https://img.shields.io/github/v/release/pubnub/c-core)](https://github.com/pubnub/c-core/releases)
 
-This repository has the source for the C/C++ client libraries,
-designed mostly for embedded systems, but perfectly suitable for
-"regular" (POSIX, Windows) systems, too.
+PubNub provides global infrastructure for real-time, interactive applications.
 
-### Official Docs 
-Docs for C/C++ for Posix, Windows, as well as FreeRTOS and other embedded platforms are available at 
-https://www.pubnub.com/docs/posix-c/pubnub-c-sdk
+Publish and receive messages in C-Core (legacy). Use this SDK for existing portable C applications on the platforms maintained by C-Core.
 
-## Please direct all Support Questions and Concerns to Support@PubNub.com
+[Documentation](https://www.pubnub.com/docs/sdks/c-core) · [API reference](https://www.pubnub.com/docs/sdks/c-core/api-reference/publish-and-subscribe) · [Changelog](https://www.pubnub.com/docs/sdks/c-core/changelog) · [Support](https://support.pubnub.com/)
 
-## Build 
+## Requirements
 
-Our repository can be build via two different approaches:
+| Requirement | Supported version or setup |
+| --- | --- |
+| C or C++ compiler | [Use the compiler and platform requirements listed in C-Core Platform Support](https://www.pubnub.com/docs/sdks/c-core/platform-support) |
+| Platform | [POSIX, Windows, FreeRTOS, Mbed, and other maintained C-Core targets](https://www.pubnub.com/docs/sdks/c-core/platform-support) |
+| Platform-specific networking and TLS implementation | Build and link the C-Core platform implementation matching the target operating system and networking stack. |
 
-### CMake (new but recommended)
+## Installation
 
-You can build repository using CMake using our [CMakeLists.txt file](CMakeLists.txt). 
+Clone the repository and build the POSIX target. Run `make` from the `posix` directory. The makefile paths are relative to that directory.
 
-- Unix:
 ```sh
-mkdir build && cd build
-cmake ..
-make
+git clone https://github.com/pubnub/c-core.git
+cd c-core/posix
+make -f posix.mk
 ```
 
-- Windows (MSVS tools required):
-```sh 
-mkdir build && cd build
-cmake .. -G "NMake Makefiles"
-nmake 
+For Windows, FreeRTOS, OpenSSL, Qt, and CMake, see [environment setup](https://www.pubnub.com/docs/sdks/c-core). Platform notes are in [`posix/README.md`](posix/README.md), [`windows/README.md`](windows/README.md), [`openssl/README.md`](openssl/README.md), [`freertos/README.md`](freertos/README.md), and [`CMakeLists.txt`](CMakeLists.txt).
+
+## Quickstart
+
+This example runs in POSIX C. It subscribes to `hello_world`, publishes one message, and prints the received text.
+
+A sync context runs one transaction at a time. The first subscribe connects and stores a timetoken. The sample publishes after that, then subscribes again to receive the message.
+
+### Get your keys
+
+1. Open the [PubNub Admin Portal](https://admin.pubnub.com/).
+2. Create an app and a keyset for development, or select an existing development keyset.
+3. Copy its publish key and subscribe key.
+
+If Access Manager is enabled, obtain a token from your trusted backend and call `pubnub_set_auth_token(pb, token)` before accessing protected resources. Keep the secret key on the backend.
+
+### Send and receive a message
+
+Create `hello_world.c` and build it with the POSIX sync library from the installation step.
+
+Replace the key placeholders. Use a User ID that identifies the user or device in your app.
+
+```c
+#include "pubnub_sync.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void)
+{
+    enum pubnub_res result;
+    char const*     message;
+    pubnub_t*       pb = pubnub_alloc();
+
+    if (NULL == pb) {
+        return EXIT_FAILURE;
+    }
+
+    /* Replace with your keys from the Admin Portal.
+       Use a User ID that identifies the user or device. */
+    pubnub_init(pb, "YOUR_PUBLISH_KEY", "YOUR_SUBSCRIBE_KEY");
+    pubnub_set_user_id(pb, "hello-world-user");
+
+    /* Connect to hello_world. This first subscribe only gets a timetoken.
+       Messages published before it finishes are missed. */
+    result = pubnub_subscribe(pb, "hello_world", NULL);
+    if (PNR_STARTED == result) {
+        result = pubnub_await(pb);
+    }
+    if (PNR_OK != result) {
+        printf("Failed to connect\n");
+        pubnub_free(pb);
+        return EXIT_FAILURE;
+    }
+
+    /* Drop anything returned by the connect so the next subscribe can start. */
+    while (NULL != pubnub_get(pb)) {
+        continue;
+    }
+
+    /* Publish Hello world. The payload is a JSON string. */
+    result = pubnub_publish(pb, "hello_world", "\"Hello world\"");
+    if (PNR_STARTED == result) {
+        result = pubnub_await(pb);
+    }
+    if (PNR_OK != result) {
+        printf("Failed to publish\n");
+        pubnub_free(pb);
+        return EXIT_FAILURE;
+    }
+
+    /* Subscribe again to receive the message published above. */
+    result = pubnub_subscribe(pb, "hello_world", NULL);
+    if (PNR_STARTED == result) {
+        result = pubnub_await(pb);
+    }
+    if (PNR_OK != result) {
+        printf("Failed to receive\n");
+        pubnub_free(pb);
+        return EXIT_FAILURE;
+    }
+
+    message = pubnub_get(pb);
+    if (NULL == message) {
+        printf("No message received\n");
+        pubnub_free(pb);
+        return EXIT_FAILURE;
+    }
+    printf("%s\n", message);
+
+    pubnub_free(pb);
+    return EXIT_SUCCESS;
+}
 ```
 
-- for other platforms you can search for information in [FreeRTOS](freertos/README.md) or [QT](qt/README.md) READMEs.
+### Run the example
 
-There are several options to be selected via switches (using GUI) or by using command line.
-```sh 
-cmake .. -DOPENSSL=ON -DEXAMPLES=ON <etc...>
+Build `hello_world.c` with the POSIX sync library, then run the `hello_world` binary.
+
+The terminal should show:
+
+```text
+"Hello world"
 ```
 
-Check the [CMakeLists file](CMakeLists.txt) for more info.
+The printed text includes quotes because the published payload is a JSON string.
 
-### Makefiles (legacy)
+Cancel unfinished transactions with `pubnub_cancel()` where necessary and release every context created with `pubnub_alloc()` by calling `pubnub_free()`.
 
-You can build our SDK using standard tooling depending on OS you're using. 
-For more info check those links:
+For a complete application, see the [getting started guide](https://www.pubnub.com/docs/sdks/c-core).
 
-- [posix](posix/README.md),
-- [windows](windows/README.md),
-- [openssl](openssl/README.md),
-- [freertos](freertos/README.md),
+## Next steps
 
-depending on what fits you best. 
+| Task | Documentation |
+| --- | --- |
+| Configure the client | [Configuration](https://www.pubnub.com/docs/sdks/c-core/api-reference/configuration) |
+| Work with subscriptions and messages | [Publish & Subscribe](https://www.pubnub.com/docs/sdks/c-core/api-reference/publish-and-subscribe) |
+| Check channel occupancy | [Presence](https://www.pubnub.com/docs/sdks/c-core/api-reference/presence) |
+| Read message history | [Message Persistence](https://www.pubnub.com/docs/sdks/c-core/api-reference/storage-and-playback) |
 
-## Directory Organization
+## Build with an AI coding assistant
 
-The directories of the library repository are:
+The [PubNub MCP server](https://www.pubnub.com/docs/ai/pubnub-mcp-server) gives an AI coding assistant access to PubNub SDK documentation and PubNub APIs. Connect the assistant to the hosted server at `https://mcp.pubnub.com`, or run `npx @pubnub/mcp@latest` locally.
 
-- `core` : The core part, with modules portable to all, or most, libraries for
-  specific platforms
+The [server repository](https://github.com/pubnub/pubnub-mcp-server) has setup steps for VS Code, Cursor, Claude Code, Claude Desktop, Codex, Gemini CLI, and OpenCode.
 
-- `lib` : Modules for libraries that are available on more than one platform
+## Before production
 
-- `windows` : Modules and Makefile for the Windows platform
+Use [Access Manager](https://www.pubnub.com/docs/sdks/c-core/api-reference/access-manager) to grant each client the permissions it needs. Keep the secret key on your backend. Never include it in a distributed client.
 
-- `posix` : Modules and Makefile for POSIX OSes (tested mostly on Linux)
+Reuse allocated C-Core contexts instead of allocating one for every operation. Cancel unfinished work with `pubnub_cancel()` and release contexts created by `pubnub_alloc()` with `pubnub_free()`.
 
-- `openssl`: Modules and Makefile(s) for OpenSSL (on POSIX and Windows)
+Live delivery through PubNub SDKs is at-most-once. A subscriber can miss messages while disconnected or if its buffer overflows. For longer-gap recovery, see [Message Persistence](https://www.pubnub.com/docs/sdks/c-core/api-reference/storage-and-playback).
 
-- `mbedtls`: Modules for MBedTLS
+## Troubleshooting
 
-- `cpp`: Modules, Makefile(s) and examples for the C++ wrapper
+| Symptom | Check |
+| --- | --- |
+| The application links the wrong C-Core platform implementation | Build and link the implementation matching the target operating system and networking stack. See [C-Core Platform Support](https://www.pubnub.com/docs/sdks/c-core/platform-support). |
+| A publish succeeds but no message appears | Check the keyset and channel name. The first `pubnub_subscribe()` only connects. Publish after that call finishes, then subscribe again to receive the message. |
+| A new C application is being started with C-Core | C-Core is the legacy SDK. New C applications should use the [new C SDK](https://www.pubnub.com/docs/sdks/c). |
+| Extra clients or duplicate messages during development | Reuse C-Core contexts rather than allocating contexts repeatedly. Cancel unfinished work and release allocated contexts when their owner terminates. |
 
-- `qt`: Modules, Qt projects and examples for Qt
+For setup help, see [troubleshooting](https://www.pubnub.com/docs/sdks/c-core/troubleshoot). Check [network status](https://status.pubnub.com/) for service incidents.
 
-- `freertos` : Modules and Makefile for the FreeRTOS and ESP32 platforms
+## Releases
 
-- `microchip_harmony` : Modules and project for Microchip MPLAB Harmony
+Read the [changelog](https://www.pubnub.com/docs/sdks/c-core/changelog) before upgrading.
 
-- `unreal` : Unreal Engine integration module
+To move an existing C-Core v7 application to the new C SDK, follow [Migrating from C-Core v7](https://www.pubnub.com/docs/sdks/c/migration-guides/migrating-from-c-core-v7).
 
-  
-## Files
+## Support and contributions
 
-In this root directory we have some files, too:
+For setup or account help, contact [PubNub Support](https://support.pubnub.com/).
 
-- `posix.mk`: a "master" Makefile for POSIX - will build all the POSIX
-  Makefiles there are (doesn't build Qt - you might not have Qt)
-- `windows.mk`: a "master" Makefile for Windows - will build all the 
-  Windows Makefiles there are (doesn't build Qt, you might not have Qt). For UWP support, use uwp.mk Makefile.
-- `.pubnub.yml`: Standard Pubnub library description in YAML
-- `.travis.yml`: Configuration for Travis CI (POSIX: Linux and MacOS)
-- `.appveyor.yml`: Configuration for Appveyor CI (Windows)
-- `.clang-format`: Configuration for Clang-format tool that we use to format
-  C/C++ source code
+For a reproducible SDK bug, use [GitHub Issues](https://github.com/pubnub/c-core/issues). Include the SDK version, runtime, and a small reproduction with credentials removed.
 
-  
-## Contributing
+See [CONTRIBUTING.md](https://github.com/pubnub/c-core/blob/master/CONTRIBUTING.md) and run the test suite for the affected platform before opening a pull request.
 
-Please read the [Contribution Guidelines](CONTRIBUTING.md).
+## License
+
+See the [PubNub Software Development Kit License](https://github.com/pubnub/c-core/blob/master/LICENSE).

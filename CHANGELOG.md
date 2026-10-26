@@ -1,3 +1,11 @@
+## v7.3.7
+October 26 2026
+
+#### Fixed
+- `pubnub_generate_uuid_v1_time` copied from the address of the `i_node` parameter instead of the six node bytes the caller passed. The node field of a version 1 UUID now matches that input.
+- `pbmd5_digest` and `pbmd5_digest_str` passed `M_ctx` to `MD5_Final` while the bytes were hashed in `M_ctx_`. Those macros now finalize the context they initialized and updated, in both `lib/md5/pbmd5.h` and `openssl/pbmd5.h`.
+- When `PUBNUB_USE_EXTERN_C` is set, `pubnub_version.h` and the POSIX and Windows C++ version sources declare and define `pubnub_uname`, `pubnub_uagent`, and the other version functions with C linkage. C++ callers, including core sources built as C++, resolve the same symbols as C. Fixed the following issues reported by [@MarcGeh](https://github.com/MarcGeh), [@spectrbro](https://github.com/spectrbro) and [@polar91760](https://github.com/polar91760): [#106](https://github.com/pubnub/c-core/issues/106), [#242](https://github.com/pubnub/c-core/issues/242) and [#225](https://github.com/pubnub/c-core/issues/225).
+
 ## v7.3.6
 October 08 2026
 
