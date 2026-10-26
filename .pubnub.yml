@@ -1,8 +1,17 @@
 name: c-core
 schema: 1
-version: "7.3.6"
+version: "7.3.7"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-10-26
+    version: v7.3.7
+    changes:
+      - type: bug
+        text: "`pubnub_generate_uuid_v1_time` copied from the address of the `i_node` parameter instead of the six node bytes the caller passed. The node field of a version 1 UUID now matches that input."
+      - type: bug
+        text: "`pbmd5_digest` and `pbmd5_digest_str` passed `M_ctx` to `MD5_Final` while the bytes were hashed in `M_ctx_`. Those macros now finalize the context they initialized and updated, in both `lib/md5/pbmd5.h` and `openssl/pbmd5.h`."
+      - type: bug
+        text: "When `PUBNUB_USE_EXTERN_C` is set, `pubnub_version.h` and the POSIX and Windows C++ version sources declare and define `pubnub_uname`, `pubnub_uagent`, and the other version functions with C linkage. C++ callers, including core sources built as C++, resolve the same symbols as C."
   - date: 2026-10-08
     version: v7.3.6
     changes:
@@ -1271,7 +1280,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1330,7 +1339,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1389,7 +1398,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1444,7 +1453,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1498,7 +1507,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1547,7 +1556,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1593,7 +1602,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.6
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
