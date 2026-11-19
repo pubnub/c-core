@@ -1,0 +1,194 @@
+name: Static analysis
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  clang-tidy:
+    name: clang-tidy
+    runs-on:
+      group: organization/Default
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Install analyzer tools
+        run: |
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          if command -v sudo >/dev/null 2>&1; then
+            APT=(sudo apt-get)
+          else
+            APT=(apt-get)
+          fi
+          "${APT[@]}" update
+          "${APT[@]}" install -y clang clang-tidy cmake ninja-build libssl-dev pkg-config python3
+
+      - name: Run clang-tidy
+        run: |
+          set -euo pipefail
+
+          # POSIX ERE matched against header paths. One path segment after the
+          # directory, so core/samples, core/test, core/fntest, and vendored
+          # lib/miniz, lib/cbor, and lib/md5 do not match. pbmd5.h is SDK code.
+          header_filter='.*/(core|cpp|posix|openssl|windows|mbedtls|qt|freertos)/[^/]+\.h(pp)?$|.*/core/c99/[^/]+\.h(pp)?$|.*/lib/(sockets|base64|msstopwatch)/[^/]+\.h(pp)?$|.*/lib/[^/]+\.h(pp)?$|.*/lib/md5/pbmd5\.h$'
+
+          cmake_common=(
+            -G Ninja
+            -DCOMPILE_COMMANDS=ON
+            -DSHARED_LIB=OFF
+            -DEXAMPLES=OFF
+            -DUNIT_TEST=OFF
+            -DWITH_CPP=ON
+            -DUSE_CPP11=ON
+            -DUSE_CALLBACK_API=ON
+            -DUSE_NTF_RUNTIME_SELECTION=ON
+            -DUSE_SUBSCRIBE_V2=ON
+            -DUSE_SUBSCRIBE_EVENT_ENGINE=ON
+            -DUSE_RETRY_CONFIGURATION=ON
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_C_COMPILER=clang
+            -DCMAKE_CXX_COMPILER=clang++
+          )
+
+          cmake -S . -B build-tidy-posix "${cmake_common[@]}"
+          cmake -S . -B build-tidy-openssl "${cmake_common[@]}" \
+            -DOPENSSL=ON \
+            -DUSE_CRYPTO_API=ON \
+            -DUSE_GRANT_TOKEN_API=ON \
+            -DUSE_REVOKE_TOKEN_API=ON
+
+          python3 - << 'PY'
+          import json, os, re, sys
+
+          skip_dir = re.compile(
+              r'(^|[/\\])(samples|snippets|tests|test|fntest|step_definitions)([/\\]|$)'
+          )
+          skip_name = re.compile(r'unit_test|_demo\.', re.IGNORECASE)
+          skip_vendor = re.compile(
+              r'(^|[/\\])lib[/\\](miniz|cbor)[/\\]|(^|[/\\])md5\.c$'
+          )
+
+          def keep(path):
+              norm = path.replace('\\', '/')
+              if skip_dir.search(norm):
+                  return False
+              if skip_name.search(os.path.basename(norm)):
+                  return False
+              if skip_vendor.search(norm):
+                  return False
+              return True
+
+          def load(path):
+              with open(path, encoding='utf-8') as handle:
+                  return json.load(handle)
+
+          def store(path, entries):
+              with open(path, 'w', encoding='utf-8') as handle:
+                  json.dump(entries, handle, indent=2)
+                  handle.write('\n')
+
+          def filter_db(path):
+              entries = load(path)
+              kept, dropped = [], []
+              for entry in entries:
+                  (kept if keep(entry['file']) else dropped).append(entry)
+              store(path, kept)
+              print(f'{path}: analyze {len(kept)}, skip {len(dropped)}')
+              for entry in dropped:
+                  print(f'  skip {entry["file"]}')
+              return kept
+
+          posix = filter_db('build-tidy-posix/compile_commands.json')
+          openssl = filter_db('build-tidy-openssl/compile_commands.json')
+          # Shared files are analyzed once, with OpenSSL enabled, so SSL-only
+          # branches in those files are compiled. The plain socket backend is a
+          # separate set of translation units and is analyzed from the other build.
+          openssl_files = {entry['file'] for entry in openssl}
+          posix_only = [entry for entry in posix if entry['file'] not in openssl_files]
+          store('build-tidy-posix/compile_commands.json', posix_only)
+          print(f'socket-backend translation units: {len(posix_only)}')
+          for entry in posix_only:
+              print(f'  add {entry["file"]}')
+          if not openssl:
+              sys.exit('OpenSSL compilation database has no SDK files to analyze')
+          PY
+
+          if command -v run-clang-tidy >/dev/null 2>&1; then
+            tidy=(run-clang-tidy)
+          else
+            script=$(compgen -G '/usr/bin/run-clang-tidy*' || true)
+            script=${script%%$'\n'*}
+            if [ -z "${script}" ]; then
+              echo "run-clang-tidy is not installed" >&2
+              exit 1
+            fi
+            tidy=(python3 "$script")
+          fi
+
+          run_one() {
+            local build="$1"
+            local log="$2"
+            local count tidy_status
+            count=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1], encoding="utf-8"))))' \
+              "$build/compile_commands.json")
+            if [ "$count" -eq 0 ]; then
+              echo "No files to analyze in ${build}"
+              : > "$log"
+              return 0
+            fi
+            echo "::group::clang-tidy (${build}, ${count} files)"
+            set +e
+            "${tidy[@]}" -p "$build" -checks='clang-analyzer-*' -header-filter="$header_filter" 2>&1 | tee "$log"
+            tidy_status=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
+            return "$tidy_status"
+          }
+
+          status=0
+          run_one build-tidy-openssl tidy-openssl.txt || status=$?
+          run_one build-tidy-posix tidy-posix.txt || status=$?
+          exit "$status"
+
+      - name: Summarize findings
+        if: always()
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(tidy-posix.txt tidy-openssl.txt)
+          warnings=0
+          if [ ${#reports[@]} -gt 0 ]; then
+            warnings=$(grep -h ': warning:' "${reports[@]}" 2>/dev/null | wc -l || true)
+            warnings=${warnings// /}
+          fi
+          {
+            echo "### clang-tidy"
+            echo
+            echo "Analyzer warnings: ${warnings:-0}"
+            echo
+            echo "The job fails when clang-tidy cannot analyze a file. Reported warnings stay in the log for review."
+            echo
+            echo "Skipped: \`samples/\`, \`snippets/\`, \`tests/\`, \`test/\`, \`fntest/\`, \`step_definitions/\`, \`*unit_test*\`, \`*_demo.*\`, and vendored \`lib/miniz\`, \`lib/cbor\`, and \`lib/md5/md5.c\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang-tidy-report
+          path: |
+            tidy-posix.txt
+            tidy-openssl.txt
+          if-no-files-found: ignore
