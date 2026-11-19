@@ -24,16 +24,54 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Install analyzer tools
+        timeout-minutes: 15
         run: |
           set -euo pipefail
           export DEBIAN_FRONTEND=noninteractive
           if command -v sudo >/dev/null 2>&1; then
-            APT=(sudo apt-get)
+            SUDO=(sudo)
           else
-            APT=(apt-get)
+            SUDO=()
           fi
-          "${APT[@]}" update
-          "${APT[@]}" install -y clang clang-tidy cmake ninja-build libssl-dev pkg-config python3
+
+          # The Azure Ubuntu mirror accepts the connection and then never
+          # answers, so apt retries it until the job looks stuck.
+          apt_opts=(
+            -o Acquire::Retries=2
+            -o Acquire::http::Timeout=20
+            -o Acquire::https::Timeout=20
+            -o Acquire::ForceIPv4=true
+          )
+          replace_azure_mirror() {
+            "${SUDO[@]}" sed -i \
+              -e 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
+              -e 's|https://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
+              "$1"
+          }
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            replace_azure_mirror /etc/apt/apt-mirrors.txt
+          fi
+          while IFS= read -r list; do
+            replace_azure_mirror "$list"
+          done < <(find /etc/apt -type f \( -name '*.list' -o -name '*.sources' -o -name 'sources.list' \))
+
+          missing=()
+          command -v clang >/dev/null 2>&1 || missing+=(clang)
+          command -v clang-tidy >/dev/null 2>&1 || missing+=(clang-tidy)
+          command -v cmake >/dev/null 2>&1 || missing+=(cmake)
+          command -v ninja >/dev/null 2>&1 || missing+=(ninja-build)
+          command -v python3 >/dev/null 2>&1 || missing+=(python3)
+          command -v pkg-config >/dev/null 2>&1 || missing+=(pkg-config)
+          dpkg -s libssl-dev >/dev/null 2>&1 || missing+=(libssl-dev)
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "Analyzer tools are already installed"
+            clang-tidy --version
+            exit 0
+          fi
+
+          echo "Installing: ${missing[*]}"
+          "${SUDO[@]}" apt-get "${apt_opts[@]}" update
+          "${SUDO[@]}" apt-get "${apt_opts[@]}" install -y --no-install-recommends "${missing[@]}"
 
       - name: Run clang-tidy
         run: |
