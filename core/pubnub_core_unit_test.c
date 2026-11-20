@@ -129,15 +129,15 @@ Ensure(/*pbjson_parse, */ get_object_value_invalid)
 
     elem.end = elem.start + 11;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
-           equals(jonmpMissingValueSeparator));
-    attest(pbjson_object_name_parse_result_2_string(jonmpMissingValueSeparator),
+           equals(jonmpValueIncomplete));
+    attest(pbjson_object_name_parse_result_2_string(jonmpValueIncomplete),
            differs(NULL));
-    attest(strlen(pbjson_object_name_parse_result_2_string(jonmpMissingValueSeparator)),
+    attest(strlen(pbjson_object_name_parse_result_2_string(jonmpValueIncomplete)),
            is_greater_than(1));
 
     elem.end = elem.start + 12;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
-           equals(jonmpMissingValueSeparator));
+           equals(jonmpValueIncomplete));
 
     elem.end = elem.start + 13;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
@@ -145,7 +145,7 @@ Ensure(/*pbjson_parse, */ get_object_value_invalid)
 
     elem.end = elem.start + 17;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
-           equals(jonmpObjectIncomplete));
+           equals(jonmpMissingValueSeparator));
 
     elem.end = elem.start + 18;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
@@ -165,7 +165,7 @@ Ensure(/*pbjson_parse, */ get_object_value_invalid)
 
     elem.end = elem.start + 27;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),
-           equals(jonmpMissingValueSeparator));
+           equals(jonmpValueIncomplete));
 
     elem.start = json + 1;
     attest(pbjson_get_object_value(&elem, "payload", &parsed),

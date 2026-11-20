@@ -335,7 +335,19 @@ const char* pbcc_decrypt_message(
     size_t               len,
     size_t*              out_len)
 {
-    char* trimmed = (char*)malloc(len + 1); // same length as message
+    char*  trimmed;
+    size_t trimmed_len;
+
+    /* `trimmed[strlen(trimmed) - 1]` writes the byte before this allocation
+       when len == 0. Keep the original text; there is nothing to decrypt. */
+    if (NULL == message || 0 == len || '\0' == message[0]) {
+        /* len == 0 is an empty span. strlen() would read past it and, when
+           the pointer happens to address a longer string, report that length. */
+        if (NULL != out_len) { *out_len = 0; }
+        return message;
+    }
+
+    trimmed = (char*)malloc(len + 1); // same length as message
     if (NULL == trimmed) {
         PBCC_LOG_ERROR(
             pb->logger_manager,
@@ -344,7 +356,8 @@ const char* pbcc_decrypt_message(
     }
     snprintf(trimmed, len + 1, "%s", message);
 
-    trimmed[strlen(trimmed) - 1] = '\0';
+    trimmed_len = strlen(trimmed);
+    trimmed[trimmed_len - 1] = '\0';
 
     pubnub_bymebl_t encrypted = pbcc_base64_decode(trimmed + 1);
     free(trimmed);

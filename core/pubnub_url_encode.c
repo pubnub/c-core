@@ -44,6 +44,11 @@ int pubnub_url_encode(struct pbcc_context* pb, char* buffer, char const* what, s
     PUBNUB_ASSERT_OPT(buffer != NULL);
     PUBNUB_ASSERT_OPT(what != NULL);
 
+    /* buffer_size is size_t. A zero-size buffer makes `buffer_size - i - 1`
+       wrap, the capacity check passes, and the copy writes past the buffer.
+       Reject it before the initial NUL write. */
+    if (0 == buffer_size) { return -1; }
+
     switch(pt){
 #if PUBNUB_USE_OBJECTS_API || PUBNUB_USE_REVOKE_TOKEN_API
 #if PUBNUB_USE_OBJECTS_API
@@ -81,7 +86,10 @@ int pubnub_url_encode(struct pbcc_context* pb, char* buffer, char const* what, s
         size_t okspan = strspn(what, okSpanChars);
 
         if (okspan > 0) {
-            if (okspan >= (unsigned)(buffer_size - i - 1)) {
+            /* Keep the subtraction in size_t and only after `i` is known
+               to leave a free byte, so a full buffer cannot wrap the check. */
+            if ((size_t)i + 1 >= buffer_size
+                || okspan >= buffer_size - (size_t)i - 1) {
 #if PUBNUB_LOG_ENABLED(ERROR)
                 log_buffer_overflow_(pb, buffer, buffer_size, what);
 #else
@@ -99,7 +107,9 @@ int pubnub_url_encode(struct pbcc_context* pb, char* buffer, char const* what, s
             char enc[4] = { '%' };
             enc[1]      = "0123456789ABCDEF"[(unsigned char)what[0] / 16];
             enc[2]      = "0123456789ABCDEF"[(unsigned char)what[0] % 16];
-            if (3 > buffer_size - i - 1) {
+            /* Percent-encoding writes three characters plus a NUL.
+               Compare in size_t so `buffer_size - i` cannot wrap. */
+            if ((size_t)i >= buffer_size || buffer_size - (size_t)i < 4) {
 #if PUBNUB_LOG_ENABLED(ERROR)
                 log_buffer_overflow_(pb, buffer, buffer_size, what);
 #else
