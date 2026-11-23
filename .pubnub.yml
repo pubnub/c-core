@@ -1,8 +1,15 @@
 name: c-core
 schema: 1
-version: "7.3.7"
+version: "7.3.8"
 scm: github.com/pubnub/c-core
 changelog:
+  - date: 2026-11-23
+    version: v7.3.8
+    changes:
+      - type: bug
+        text: "`pubnub_url_encode` returns -1 instead of writing past the destination buffer. `pbcc_decrypt_message` returns a null or empty message unchanged and sets `out_len` to 0, and `pbjson_find_end_element` and `pbjson_get_object_value` stop at the end of the caller's buffer."
+      - type: improvement
+        text: "Push and manual runs analyze the OpenSSL and POSIX socket builds with clang-tidy. A finding fails the job when it is new or more frequent than its entry in `.github/clang-tidy-baseline.txt`."
   - date: 2026-10-26
     version: v7.3.7
     changes:
@@ -1280,7 +1287,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1339,7 +1346,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1398,7 +1405,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1453,7 +1460,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1507,7 +1514,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1556,7 +1563,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"
@@ -1602,7 +1609,7 @@ sdks:
           - distribution-type: source code
             distribution-repository: GitHub release
             package-name: C-Core
-            location: https://github.com/pubnub/c-core/releases/tag/v7.3.7
+            location: https://github.com/pubnub/c-core/releases/tag/v7.3.8
             requires:
               - name: "miniz"
                 min-version: "2.0.8"

@@ -1,3 +1,12 @@
+## v7.3.8
+November 23 2026
+
+#### Fixed
+- `pubnub_url_encode` returns -1 instead of writing past the destination buffer. `pbcc_decrypt_message` returns a null or empty message unchanged and sets `out_len` to 0, and `pbjson_find_end_element` and `pbjson_get_object_value` stop at the end of the caller's buffer.
+
+#### Modified
+- Push and manual runs analyze the OpenSSL and POSIX socket builds with clang-tidy. A finding fails the job when it is new or more frequent than its entry in `.github/clang-tidy-baseline.txt`.
+
 ## v7.3.7
 October 26 2026
 

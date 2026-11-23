@@ -122,6 +122,8 @@ char const* pbjson_find_end_complex(char const* start, char const* end)
 
 char const* pbjson_find_end_element(char const* start, char const* end)
 {
+    /* `end` is one past the last character and is not readable. */
+    if (start >= end) { return end; }
     switch (*start) {
     case '"':
         return pbjson_find_end_string(start + 1, end);
@@ -144,6 +146,7 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(
     char const* end;
 
     if (0 == name_len) { return jonmpInvalidKeyName; }
+    if (s >= p->end) { return jonmpObjectIncomplete; }
     if (*s != '{') { return jonmpNoStartCurly; }
     while (s < p->end) {
         bool found = false;
@@ -158,18 +161,21 @@ enum pbjson_object_name_parse_result pbjson_get_object_value(
         s = pbjson_skip_whitespace(end + 1, p->end);
         if (s == p->end) { return jonmpMissingColon; }
         if (*s != ':') { return jonmpMissingColon; }
-        s   = pbjson_skip_whitespace(s + 1, p->end);
+        s = pbjson_skip_whitespace(s + 1, p->end);
+        /* A value that ends on the colon (for example `{"key":`) leaves
+           `s` at `p->end`. Parsing from there reads past the caller's buffer. */
+        if (s >= p->end) { return jonmpValueIncomplete; }
         end = pbjson_find_end_element(s, p->end);
         if (end == p->end) { return jonmpValueIncomplete; }
-        if ('\0' == *end) { return jonmpValueIncomplete; }
+        if (end > p->end || '\0' == *end) { return jonmpValueIncomplete; }
         if (found) {
             parsed->start = s;
             parsed->end   = end + 1;
             return jonmpOK;
         }
         s = pbjson_skip_whitespace(end + 1, p->end);
-        if (*s != ',') {
-            if (*s == '}') { break; }
+        if (s >= p->end || *s != ',') {
+            if (s < p->end && *s == '}') { break; }
             return jonmpMissingValueSeparator;
         }
     }
