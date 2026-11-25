@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 #include "core/pubnub_ntf_callback.h"
-#include "core/pubnub_assert.h"
+#include "core/pubnub_coreapi.h"
 #if PUBNUB_USE_EXTERN_C
 }
 #endif
@@ -14,6 +14,7 @@ extern "C" {
 #include <windows.h>
 #include <process.h>
 
+#include <new>
 #include <stdexcept>
 
 
@@ -24,25 +25,65 @@ static void futres_callback(pubnub_t*         pb,
                             enum pubnub_res   result,
                             void*             user_data);
 
+/// Serializes (un)registering the outcome callbacks, so that a future
+/// result doesn't unregister the callback of a newer one on the same
+/// context. Lock order: this lock, then the context monitor. `d_mutex` of
+/// a future result must not be held while calling the C API, because the
+/// C core calls the outcome callback, which takes it, under the monitor.
+static SRWLOCK m_registration_lock = SRWLOCK_INIT;
+
+class registration_guard {
+public:
+    registration_guard() { AcquireSRWLockExclusive(&m_registration_lock); }
+    ~registration_guard() { ReleaseSRWLockExclusive(&m_registration_lock); }
+
+private:
+    registration_guard(registration_guard const&);
+    registration_guard& operator=(registration_guard const&);
+};
+
+#if (__cplusplus < 201103L) && (_MSC_VER < 1600)
+typedef pubnub::caller_keeper then_function;
+/// Moves @p from to @p to (assigning a `caller_keeper` moves)
+static void take(then_function& to, then_function& from) { to = from; }
+#else
+typedef std::function<void(context&, pubnub_res)> then_function;
+/// Moves @p from to the empty @p to
+static void take(then_function& to, then_function& from) { to.swap(from); }
+#endif
+
+
 class futres::impl {
     friend class futres;
 
 public:
-    impl(pubnub_t* pb, pubnub_res initial)
+    impl(pubnub_t* pb, context& ctx, pubnub_res initial)
         : d_wevent(CreateEvent(NULL, TRUE, FALSE, NULL))
         , d_pb(pb)
-        , d_parent(nullptr)
+        , d_ctx(&ctx)
+        , d_then_dispatched(false)
         , d_thread(0)
+        , d_thread_id(0)
         , d_result(initial)
+        , d_outcome(initial)
     {
         pubnub_mutex_init(d_mutex);
         if (NULL == d_wevent) {
             throw std::runtime_error("Failed to create a Windows event handle");
         }
-        if (initial != PNR_IN_PROGRESS) {
-            lock_guard lck(d_mutex);
-            if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, this)) {
-                throw std::logic_error("Failed to register callback");
+        if (initial == PNR_STARTED) {
+            {
+                registration_guard lck;
+                if (PNR_OK != pubnub_register_callback(d_pb, futres_callback, this)) {
+                    throw std::logic_error("Failed to register callback");
+                }
+            }
+            // The transaction may have ended before the callback was
+            // registered. The C core makes the context idle and calls the
+            // callback in one critical section, so an idle context means
+            // the outcome is final (and `signal()` ignores a second one).
+            if (pubnub_can_start_transaction(d_pb)) {
+                signal(pubnub_last_result(d_pb));
             }
         }
     }
@@ -50,7 +91,12 @@ public:
     {
         wait4_then_thread_to_start();
         wait4_then_thread_to_finish();
-        (void)pubnub_register_callback(d_pb, NULL, NULL);
+        {
+            registration_guard lck;
+            if (pubnub_get_user_data(d_pb) == this) {
+                (void)pubnub_register_callback(d_pb, NULL, NULL);
+            }
+        }
         pubnub_mutex_destroy(d_mutex);
         CloseHandle(d_wevent);
     }
@@ -62,68 +108,93 @@ public:
             lock_guard lck(d_mutex);
             res = d_result;
         }
-        if (PNR_STARTED == res) {
-            WaitForSingleObject(d_wevent, INFINITE);
-            ResetEvent(d_wevent);
-            lock_guard lck(d_mutex);
-            return d_result = pubnub_last_result(d_pb);
-        }
-        else {
+        if (PNR_STARTED != res) {
             return res;
         }
+        WaitForSingleObject(d_wevent, INFINITE);
+        bool got_outcome = false;
+        {
+            lock_guard lck(d_mutex);
+            if (PNR_STARTED == d_result) {
+                d_result    = d_outcome;
+                got_outcome = true;
+            }
+            res = d_result;
+        }
+        if (got_outcome) {
+            // Lets the C core do its bookkeeping for the outcome, as it
+            // would for a C user getting it
+            (void)pubnub_last_result(d_pb);
+        }
+        return res;
     }
     pubnub_res last_result()
     {
-        lock_guard lck(d_mutex);
-        if (PNR_STARTED == d_result) {
-            return d_result = pubnub_last_result(d_pb);
+        bool over;
+        {
+            lock_guard lck(d_mutex);
+            over = is_ready() || PNR_STARTED != d_result;
         }
-        else {
-            return d_result;
-        }
+        return over ? end_await() : pubnub_last_result(d_pb);
     }
 
+    /// Records the outcome and starts the continuation, if it is set.
+    /// Only the first call has any effect.
     void signal(pubnub_res rslt)
     {
-        // SAFETY: it is safe to pass the `d_thread` without a lock because
-        // the only other usage of it is to join it, which is done in
-        // `wait4_then_thread_to_finish` which is called from the destructor.
-        if (d_thread) {
-            WaitForSingleObject(d_thread, INFINITE);
-            CloseHandle(d_thread);
-            d_thread = 0;
+        lock_guard lck(d_mutex);
+        if (is_ready()) {
+            return;
         }
-        futres_callback_data* data = new futres_callback_data{ this, rslt };
-        d_thread = (HANDLE)_beginthreadex(NULL, 0, signal_thread, data, 0, NULL);
-        if (NULL == d_thread) {
-            delete data;
-        }
+        d_outcome = rslt;
+        // Before the continuation starts, which may call `is_ready()`
+        SetEvent(d_wevent);
+        dispatch_then();
     }
     bool is_ready() const
     {
         return WAIT_OBJECT_0 == WaitForSingleObject(d_wevent, 0);
     }
-    void then(
-#if (__cplusplus < 201103L) && (_MSC_VER < 1600)
-        pubnub::caller_keeper f,
-#else
-        std::function<void(context&, pubnub_res)> f,
-#endif
-        futres* parent)
+    void then(then_function f)
     {
-        PUBNUB_ASSERT_OPT(parent != nullptr);
         lock_guard lck(d_mutex);
-        d_thenf  = f;
-        d_parent = parent;
+        if (d_then_dispatched) {
+            return;
+        }
+        take(d_thenf, f);
+        if (is_ready()) {
+            dispatch_then();
+        }
     }
 
 private:
+    /// Starts the continuation on its own thread, at most once. Called
+    /// with `d_mutex` held, maybe from the outcome callback in the C core.
+    void dispatch_then()
+    {
+        if (!d_thenf) {
+            return;
+        }
+        d_then_dispatched          = true;
+        futres_callback_data* data = new (std::nothrow) futres_callback_data;
+        if (NULL == data) {
+            return;
+        }
+        take(data->f, d_thenf);
+        data->ctx    = d_ctx;
+        data->result = d_outcome;
+        d_thread     = (HANDLE)_beginthreadex(
+            NULL, 0, then_thread, data, 0, &d_thread_id);
+        if (NULL == d_thread) {
+            delete data;
+        }
+    }
     void wait4_then_thread_to_start()
     {
         bool should_await;
         {
             lock_guard lck(d_mutex);
-            should_await = !is_ready() && !!d_thenf && d_parent;
+            should_await = !is_ready() && !!d_thenf;
         }
         if (should_await) {
             end_await();
@@ -132,56 +203,45 @@ private:
     void wait4_then_thread_to_finish()
     {
         if (d_thread) {
-            WaitForSingleObject(d_thread, INFINITE);
+            // Unless destroyed by its own continuation
+            if (d_thread_id != GetCurrentThreadId()) {
+                WaitForSingleObject(d_thread, INFINITE);
+            }
             CloseHandle(d_thread);
             d_thread = 0;
         }
     }
 
     struct futres_callback_data {
-        futres::impl* p;
+        then_function f;
+        context*      ctx;
         pubnub_res    result;
     };
 
-    static unsigned __stdcall signal_thread(void* parg)
+    static unsigned __stdcall then_thread(void* parg)
     {
-        futres_callback_data* d    = static_cast<futres_callback_data*>(parg);
-        futres::impl*         that = d->p;
-        pubnub_res            rslt = d->result;
+        futres_callback_data* d = static_cast<futres_callback_data*>(parg);
+        d->f(*d->ctx, d->result);
         delete d;
-        bool                  should_call_then = false;
-
-        {
-            lock_guard lck(that->d_mutex);
-            should_call_then = !!that->d_thenf && that->d_parent;
-
-            if (should_call_then) {
-                that->d_result = rslt;
-            }
-
-            SetEvent(that->d_wevent);
-        }
-
-        if (should_call_then) {
-            that->d_thenf(that->d_parent->d_ctx, that->d_result);
-        }
-
         return 0;
     }
 
+    /// Manual-reset event, set once the outcome is known
     HANDLE         d_wevent;
     pubnub_mutex_t d_mutex;
     /// The C Pubnub context that we are "wrapping"
     pubnub_t* d_pb;
+    /// The C++ Pubnub context passed to the continuation
+    context* d_ctx;
 
-#if (__cplusplus < 201103L) && (_MSC_VER < 1600)
-    pubnub::caller_keeper d_thenf;
-#else
-    std::function<void(context&, pubnub_res)> d_thenf;
-#endif
-    futres*    d_parent;
-    HANDLE     d_thread;
+    then_function d_thenf;
+    bool          d_then_dispatched;
+    HANDLE        d_thread;
+    unsigned      d_thread_id;
+    /// PNR_STARTED until the outcome is awaited, if the transaction started
     pubnub_res d_result;
+    /// The outcome, once `d_wevent` is set
+    pubnub_res d_outcome;
 };
 
 
@@ -197,7 +257,7 @@ static void futres_callback(pubnub_t*         pb,
 
 futres::futres(pubnub_t* pb, context& ctx, pubnub_res initial)
     : d_ctx(ctx)
-    , d_pimpl(new impl(pb, initial))
+    , d_pimpl(new impl(pb, ctx, initial))
 {
 }
 
@@ -205,7 +265,7 @@ futres::futres(pubnub_t* pb, context& ctx, pubnub_res initial)
 #if __cplusplus < 201103L
 futres::futres(futres const& x)
     : d_ctx(x.d_ctx)
-    , d_pimpl(new impl(x.d_pimpl->d_pb, x.d_pimpl->d_result))
+    , d_pimpl(new impl(x.d_pimpl->d_pb, x.d_ctx, x.d_pimpl->d_result))
 {
 }
 #endif
@@ -255,14 +315,14 @@ tribool futres::should_retry() const
 
 void futres::then(std::function<void(pubnub::context&, pubnub_res)> f)
 {
-    d_pimpl->then(f, this);
+    d_pimpl->then(f);
 }
 
 #else
 
 void futres::thenx(caller_keeper kiper)
 {
-    d_pimpl->then(kiper, this);
+    d_pimpl->then(kiper);
 }
 
 #endif
